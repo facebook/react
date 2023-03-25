@@ -642,10 +642,10 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-function shim$1() {
+function shim$2() {
   throw Error(formatProdErrorMessage(305));
 }
-function shim() {
+function shim$1() {
   throw Error(formatProdErrorMessage(357));
 }
 var pooledTransform = new Transform(),
@@ -2290,7 +2290,7 @@ function findFirstSuspended(row) {
   for (var node = row; null !== node; ) {
     if (13 === node.tag) {
       var state = node.memoizedState;
-      if (null !== state && (null === state.dehydrated || shim$1() || shim$1()))
+      if (null !== state && (null === state.dehydrated || shim$2() || shim$2()))
         return node;
     } else if (19 === node.tag && void 0 !== node.memoizedProps.revealOrder) {
       if (0 !== (node.flags & 128)) return node;
@@ -4517,9 +4517,9 @@ function updateDehydratedSuspenseComponent(
       renderLanes,
       null
     );
-  if (shim$1())
+  if (shim$2())
     return (
-      (suspenseState = shim$1().digest),
+      (suspenseState = shim$2().digest),
       (nextProps = Error(formatProdErrorMessage(419))),
       (nextProps.digest = suspenseState),
       (suspenseState = createCapturedValue(nextProps, suspenseState, void 0)),
@@ -4598,12 +4598,12 @@ function updateDehydratedSuspenseComponent(
       null
     );
   }
-  if (shim$1())
+  if (shim$2())
     return (
       (workInProgress.flags |= 128),
       (workInProgress.child = current.child),
       retryDehydratedSuspenseBoundary.bind(null, current),
-      shim$1(),
+      shim$2(),
       null
     );
   current = mountSuspensePrimaryChildren(workInProgress, nextProps.children);
@@ -5271,7 +5271,7 @@ function collectNearestChildContextValues(
   }
 }
 function DO_NOT_USE_queryAllNodes(fn) {
-  var currentFiber = shim();
+  var currentFiber = shim$1();
   if (null === currentFiber) return null;
   currentFiber = currentFiber.child;
   var scopedNodes = [];
@@ -5280,7 +5280,7 @@ function DO_NOT_USE_queryAllNodes(fn) {
   return 0 === scopedNodes.length ? null : scopedNodes;
 }
 function DO_NOT_USE_queryFirstNode(fn) {
-  var currentFiber = shim();
+  var currentFiber = shim$1();
   if (null === currentFiber) return null;
   currentFiber = currentFiber.child;
   return null !== currentFiber
@@ -5291,7 +5291,7 @@ function containsNode() {
   throw Error(formatProdErrorMessage(248));
 }
 function getChildContextValues(context) {
-  var currentFiber = shim();
+  var currentFiber = shim$1();
   if (null === currentFiber) return [];
   currentFiber = currentFiber.child;
   var childContextValues = [];
@@ -5654,7 +5654,7 @@ function completeWork(current, workInProgress, renderLanes) {
               containsNode: containsNode,
               getChildContextValues: getChildContextValues
             }),
-            shim(),
+            shim$1(),
             null !== workInProgress.ref &&
               ((workInProgress.flags |= 2097664), (workInProgress.flags |= 4)))
           : (null !== workInProgress.ref && (workInProgress.flags |= 4),
@@ -6468,7 +6468,7 @@ function commitDeletionEffectsOnFiber(
       null !== finishedRoot &&
         (finishedRoot = finishedRoot.onDeleted) &&
         finishedRoot(deletedFiber.stateNode);
-      null !== hostParent && shim$1();
+      null !== hostParent && shim$2();
       break;
     case 4:
       prevHostParent = hostParent;
@@ -6868,7 +6868,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       flags & 512 &&
         (null !== current && safelyDetachRef(finishedWork, finishedWork.return),
         safelyAttachRef(finishedWork, finishedWork.return));
-      flags & 4 && shim();
+      flags & 4 && shim$1();
       break;
     default:
       recursivelyTraverseMutationEffects(root, finishedWork),
@@ -7473,6 +7473,26 @@ function recursivelyTraverseAtomicPassiveEffects(
       parentFiber = parentFiber.sibling;
     }
 }
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & 16777216)
+    for (parentFiber = parentFiber.child; null !== parentFiber; )
+      accumulateSuspenseyCommitOnFiber(parentFiber),
+        (parentFiber = parentFiber.sibling);
+}
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case 26:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      if (fiber.flags & 16777216 && null !== fiber.memoizedState)
+        throw Error(formatProdErrorMessage(442));
+      break;
+    case 5:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    default:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+  }
+}
 function detachAlternateSiblings(parentFiber) {
   var previousFiber = parentFiber.alternate;
   if (
@@ -7990,7 +8010,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         case 1:
           throw Error(formatProdErrorMessage(345));
         case 2:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 3:
           markRootSuspended(root, lanes);
@@ -8013,7 +8039,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 4:
           markRootSuspended(root, lanes);
@@ -8057,10 +8089,22 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 5:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         default:
           throw Error(formatProdErrorMessage(329));
@@ -8103,7 +8147,14 @@ function queueRecoverableErrors(errors) {
         errors
       );
 }
-function commitRootWhenReady(root) {
+function commitRootWhenReady(
+  root,
+  finishedWork,
+  recoverableErrors,
+  transitions,
+  lanes
+) {
+  0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
@@ -9965,19 +10016,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1168 = {
+  devToolsConfig$jscomp$inline_1141 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-52e77af5",
+    version: "18.3.0-www-classic-2dcecc61",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1343 = {
-  bundleType: devToolsConfig$jscomp$inline_1168.bundleType,
-  version: devToolsConfig$jscomp$inline_1168.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1168.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1168.rendererConfig,
+var internals$jscomp$inline_1319 = {
+  bundleType: devToolsConfig$jscomp$inline_1141.bundleType,
+  version: devToolsConfig$jscomp$inline_1141.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1141.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1141.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9994,26 +10045,26 @@ var internals$jscomp$inline_1343 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1168.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1141.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-52e77af5"
+  reconcilerVersion: "18.3.0-www-classic-2dcecc61"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1344 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1320 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1344.isDisabled &&
-    hook$jscomp$inline_1344.supportsFiber
+    !hook$jscomp$inline_1320.isDisabled &&
+    hook$jscomp$inline_1320.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1344.inject(
-        internals$jscomp$inline_1343
+      (rendererID = hook$jscomp$inline_1320.inject(
+        internals$jscomp$inline_1319
       )),
-        (injectedHook = hook$jscomp$inline_1344);
+        (injectedHook = hook$jscomp$inline_1320);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

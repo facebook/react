@@ -25,8 +25,8 @@ if (
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
 "use strict";
-var React = require("react"),
-  Scheduler = require("scheduler"),
+var Scheduler = require("scheduler"),
+  React = require("react"),
   Internals = {
     usingClientEntryPoint: !1,
     Events: null,
@@ -47,6 +47,61 @@ function formatProdErrorMessage(code) {
     url +
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
+}
+var assign = Object.assign,
+  valueStack = [],
+  index = -1;
+function createCursor(defaultValue) {
+  return { current: defaultValue };
+}
+function pop(cursor) {
+  0 > index ||
+    ((cursor.current = valueStack[index]), (valueStack[index] = null), index--);
+}
+function push(cursor, value) {
+  index++;
+  valueStack[index] = cursor.current;
+  cursor.current = value;
+}
+var contextStackCursor = createCursor(null),
+  contextFiberStackCursor = createCursor(null),
+  rootInstanceStackCursor = createCursor(null);
+function pushHostContainer(fiber, nextRootInstance) {
+  push(rootInstanceStackCursor, nextRootInstance);
+  push(contextFiberStackCursor, fiber);
+  push(contextStackCursor, null);
+  fiber = nextRootInstance.nodeType;
+  switch (fiber) {
+    case 9:
+    case 11:
+      nextRootInstance = (nextRootInstance = nextRootInstance.documentElement)
+        ? nextRootInstance.namespaceURI
+        : getChildNamespace(null, "");
+      break;
+    default:
+      (fiber = 8 === fiber ? nextRootInstance.parentNode : nextRootInstance),
+        (nextRootInstance = fiber.namespaceURI || null),
+        (fiber = fiber.tagName),
+        (nextRootInstance = getChildNamespace(nextRootInstance, fiber));
+  }
+  pop(contextStackCursor);
+  push(contextStackCursor, nextRootInstance);
+}
+function popHostContainer() {
+  pop(contextStackCursor);
+  pop(contextFiberStackCursor);
+  pop(rootInstanceStackCursor);
+}
+function pushHostContext(fiber) {
+  var context = contextStackCursor.current;
+  var JSCompiler_inline_result = getChildNamespace(context, fiber.type);
+  context !== JSCompiler_inline_result &&
+    (push(contextFiberStackCursor, fiber),
+    push(contextStackCursor, JSCompiler_inline_result));
+}
+function popHostContext(fiber) {
+  contextFiberStackCursor.current === fiber &&
+    (pop(contextStackCursor), pop(contextFiberStackCursor));
 }
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableInputAttributeSyncing =
@@ -77,6 +132,445 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableProfilerNestedUpdateScheduledHook =
     dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
+  scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
+  cancelCallback$1 = Scheduler.unstable_cancelCallback,
+  shouldYield = Scheduler.unstable_shouldYield,
+  requestPaint = Scheduler.unstable_requestPaint,
+  now$1 = Scheduler.unstable_now,
+  getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel,
+  ImmediatePriority = Scheduler.unstable_ImmediatePriority,
+  UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
+  NormalPriority$1 = Scheduler.unstable_NormalPriority,
+  LowPriority = Scheduler.unstable_LowPriority,
+  IdlePriority = Scheduler.unstable_IdlePriority,
+  ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  rendererID = null,
+  injectedHook = null,
+  injectedProfilingHooks = null,
+  isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__;
+function onCommitRoot(root, eventPriority) {
+  if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
+    try {
+      var didError = 128 === (root.current.flags & 128);
+      switch (eventPriority) {
+        case 2:
+          var schedulerPriority = ImmediatePriority;
+          break;
+        case 8:
+          schedulerPriority = UserBlockingPriority;
+          break;
+        case 32:
+          schedulerPriority = NormalPriority$1;
+          break;
+        case 536870912:
+          schedulerPriority = IdlePriority;
+          break;
+        default:
+          schedulerPriority = NormalPriority$1;
+      }
+      injectedHook.onCommitFiberRoot(
+        rendererID,
+        root,
+        schedulerPriority,
+        didError
+      );
+    } catch (err) {}
+}
+function injectProfilingHooks(profilingHooks) {
+  injectedProfilingHooks = profilingHooks;
+}
+function getLaneLabelMap() {
+  if (enableSchedulingProfiler) {
+    for (var map = new Map(), lane = 1, index$0 = 0; 31 > index$0; index$0++) {
+      var label = getLabelForLane(lane);
+      map.set(lane, label);
+      lane *= 2;
+    }
+    return map;
+  }
+  return null;
+}
+function markCommitStopped() {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markCommitStopped &&
+    injectedProfilingHooks.markCommitStopped();
+}
+function markComponentRenderStarted(fiber) {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markComponentRenderStarted &&
+    injectedProfilingHooks.markComponentRenderStarted(fiber);
+}
+function markComponentRenderStopped() {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markComponentRenderStopped &&
+    injectedProfilingHooks.markComponentRenderStopped();
+}
+function markComponentLayoutEffectUnmountStarted(fiber) {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" ===
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
+    injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
+}
+function markComponentLayoutEffectUnmountStopped() {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" ===
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
+    injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
+}
+function markRenderStarted(lanes) {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markRenderStarted &&
+    injectedProfilingHooks.markRenderStarted(lanes);
+}
+function markRenderStopped() {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markRenderStopped &&
+    injectedProfilingHooks.markRenderStopped();
+}
+function markStateUpdateScheduled(fiber, lane) {
+  enableSchedulingProfiler &&
+    null !== injectedProfilingHooks &&
+    "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
+    injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
+}
+var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
+  log = Math.log,
+  LN2 = Math.LN2;
+function clz32Fallback(x) {
+  x >>>= 0;
+  return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
+}
+function getLabelForLane(lane) {
+  if (enableSchedulingProfiler) {
+    if (lane & 1) return "SyncHydrationLane";
+    if (lane & 2) return "Sync";
+    if (lane & 4) return "InputContinuousHydration";
+    if (lane & 8) return "InputContinuous";
+    if (lane & 16) return "DefaultHydration";
+    if (lane & 32) return "Default";
+    if (lane & 64) return "TransitionHydration";
+    if (lane & 8388480) return "Transition";
+    if (lane & 125829120) return "Retry";
+    if (lane & 134217728) return "SelectiveHydration";
+    if (lane & 268435456) return "IdleHydration";
+    if (lane & 536870912) return "Idle";
+    if (lane & 1073741824) return "Offscreen";
+  }
+}
+var nextTransitionLane = 128,
+  nextRetryLane = 8388608;
+function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & 42;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  }
+  switch (lanes & -lanes) {
+    case 1:
+      return 1;
+    case 2:
+      return 2;
+    case 4:
+      return 4;
+    case 8:
+      return 8;
+    case 16:
+      return 16;
+    case 32:
+      return 32;
+    case 64:
+      return 64;
+    case 128:
+    case 256:
+    case 512:
+    case 1024:
+    case 2048:
+    case 4096:
+    case 8192:
+    case 16384:
+    case 32768:
+    case 65536:
+    case 131072:
+    case 262144:
+    case 524288:
+    case 1048576:
+    case 2097152:
+    case 4194304:
+      return lanes & 8388480;
+    case 8388608:
+    case 16777216:
+    case 33554432:
+    case 67108864:
+      return lanes & 125829120;
+    case 134217728:
+      return 134217728;
+    case 268435456:
+      return 268435456;
+    case 536870912:
+      return 536870912;
+    case 1073741824:
+      return 1073741824;
+    default:
+      return lanes;
+  }
+}
+function getNextLanes(root, wipLanes) {
+  var pendingLanes = root.pendingLanes;
+  if (0 === pendingLanes) return 0;
+  var nextLanes = 0,
+    suspendedLanes = root.suspendedLanes,
+    pingedLanes = root.pingedLanes,
+    nonIdlePendingLanes = pendingLanes & 268435455;
+  if (0 !== nonIdlePendingLanes) {
+    var nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
+    0 !== nonIdleUnblockedLanes
+      ? (nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes))
+      : ((pingedLanes &= nonIdlePendingLanes),
+        0 !== pingedLanes &&
+          (nextLanes = getHighestPriorityLanes(pingedLanes)));
+  } else
+    (nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
+      0 !== nonIdlePendingLanes
+        ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
+        : 0 !== pingedLanes &&
+          (nextLanes = getHighestPriorityLanes(pingedLanes));
+  if (0 === nextLanes) return 0;
+  if (
+    0 !== wipLanes &&
+    wipLanes !== nextLanes &&
+    0 === (wipLanes & suspendedLanes) &&
+    ((suspendedLanes = nextLanes & -nextLanes),
+    (pingedLanes = wipLanes & -wipLanes),
+    suspendedLanes >= pingedLanes ||
+      (32 === suspendedLanes && 0 !== (pingedLanes & 8388480)))
+  )
+    return wipLanes;
+  0 === (root.current.mode & 32) &&
+    0 !== (nextLanes & 8) &&
+    (nextLanes |= pendingLanes & 32);
+  wipLanes = root.entangledLanes;
+  if (0 !== wipLanes)
+    for (root = root.entanglements, wipLanes &= nextLanes; 0 < wipLanes; )
+      (pendingLanes = 31 - clz32(wipLanes)),
+        (suspendedLanes = 1 << pendingLanes),
+        (nextLanes |= root[pendingLanes]),
+        (wipLanes &= ~suspendedLanes);
+  return nextLanes;
+}
+function computeExpirationTime(lane, currentTime) {
+  switch (lane) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+      return currentTime + 250;
+    case 16:
+    case 32:
+    case 64:
+    case 128:
+    case 256:
+    case 512:
+    case 1024:
+    case 2048:
+    case 4096:
+    case 8192:
+    case 16384:
+    case 32768:
+    case 65536:
+    case 131072:
+    case 262144:
+    case 524288:
+    case 1048576:
+    case 2097152:
+    case 4194304:
+      return currentTime + 5e3;
+    case 8388608:
+    case 16777216:
+    case 33554432:
+    case 67108864:
+      return -1;
+    case 134217728:
+    case 268435456:
+    case 536870912:
+    case 1073741824:
+      return -1;
+    default:
+      return -1;
+  }
+}
+function markStarvedLanesAsExpired(root, currentTime) {
+  for (
+    var suspendedLanes = root.suspendedLanes,
+      pingedLanes = root.pingedLanes,
+      expirationTimes = root.expirationTimes,
+      lanes = root.pendingLanes & -125829121;
+    0 < lanes;
+
+  ) {
+    var index$3 = 31 - clz32(lanes),
+      lane = 1 << index$3,
+      expirationTime = expirationTimes[index$3];
+    if (-1 === expirationTime) {
+      if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
+        expirationTimes[index$3] = computeExpirationTime(lane, currentTime);
+    } else expirationTime <= currentTime && (root.expiredLanes |= lane);
+    lanes &= ~lane;
+  }
+}
+function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
+  if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) return 0;
+  root = root.pendingLanes & -1073741825;
+  return 0 !== root ? root : root & 1073741824 ? 1073741824 : 0;
+}
+function includesBlockingLane(root, lanes) {
+  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
+}
+function claimNextTransitionLane() {
+  var lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  0 === (nextTransitionLane & 8388480) && (nextTransitionLane = 128);
+  return lane;
+}
+function claimNextRetryLane() {
+  var lane = nextRetryLane;
+  nextRetryLane <<= 1;
+  0 === (nextRetryLane & 125829120) && (nextRetryLane = 8388608);
+  return lane;
+}
+function createLaneMap(initial) {
+  for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
+  return laneMap;
+}
+function markRootUpdated(root, updateLane, eventTime) {
+  root.pendingLanes |= updateLane;
+  536870912 !== updateLane &&
+    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+  root = root.eventTimes;
+  updateLane = 31 - clz32(updateLane);
+  root[updateLane] = eventTime;
+}
+function markRootFinished(root, remainingLanes) {
+  var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+  root.pendingLanes = remainingLanes;
+  root.suspendedLanes = 0;
+  root.pingedLanes = 0;
+  root.expiredLanes &= remainingLanes;
+  root.mutableReadLanes &= remainingLanes;
+  root.entangledLanes &= remainingLanes;
+  root.errorRecoveryDisabledLanes &= remainingLanes;
+  remainingLanes = root.entanglements;
+  var eventTimes = root.eventTimes,
+    expirationTimes = root.expirationTimes;
+  for (root = root.hiddenUpdates; 0 < noLongerPendingLanes; ) {
+    var index$5 = 31 - clz32(noLongerPendingLanes),
+      lane = 1 << index$5;
+    remainingLanes[index$5] = 0;
+    eventTimes[index$5] = -1;
+    expirationTimes[index$5] = -1;
+    var hiddenUpdatesForLane = root[index$5];
+    if (null !== hiddenUpdatesForLane)
+      for (
+        root[index$5] = null, index$5 = 0;
+        index$5 < hiddenUpdatesForLane.length;
+        index$5++
+      ) {
+        var update = hiddenUpdatesForLane[index$5];
+        null !== update && (update.lane &= -1073741825);
+      }
+    noLongerPendingLanes &= ~lane;
+  }
+}
+function markRootEntangled(root, entangledLanes) {
+  var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
+  for (root = root.entanglements; rootEntangledLanes; ) {
+    var index$6 = 31 - clz32(rootEntangledLanes),
+      lane = 1 << index$6;
+    (lane & entangledLanes) | (root[index$6] & entangledLanes) &&
+      (root[index$6] |= entangledLanes);
+    rootEntangledLanes &= ~lane;
+  }
+}
+function addFiberToLanesMap(root, fiber, lanes) {
+  if (isDevToolsPresent)
+    for (root = root.pendingUpdatersLaneMap; 0 < lanes; ) {
+      var index$7 = 31 - clz32(lanes),
+        lane = 1 << index$7;
+      root[index$7].add(fiber);
+      lanes &= ~lane;
+    }
+}
+function movePendingFibersToMemoized(root, lanes) {
+  if (isDevToolsPresent)
+    for (
+      var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap,
+        memoizedUpdaters = root.memoizedUpdaters;
+      0 < lanes;
+
+    ) {
+      var index$8 = 31 - clz32(lanes);
+      root = 1 << index$8;
+      index$8 = pendingUpdatersLaneMap[index$8];
+      0 < index$8.size &&
+        (index$8.forEach(function (fiber) {
+          var alternate = fiber.alternate;
+          (null !== alternate && memoizedUpdaters.has(alternate)) ||
+            memoizedUpdaters.add(fiber);
+        }),
+        index$8.clear());
+      lanes &= ~root;
+    }
+}
+function getTransitionsForLanes(root, lanes) {
+  if (!enableTransitionTracing) return null;
+  for (var transitionsForLanes = []; 0 < lanes; ) {
+    var index$10 = 31 - clz32(lanes),
+      lane = 1 << index$10;
+    index$10 = root.transitionLanes[index$10];
+    null !== index$10 &&
+      index$10.forEach(function (transition) {
+        transitionsForLanes.push(transition);
+      });
+    lanes &= ~lane;
+  }
+  return 0 === transitionsForLanes.length ? null : transitionsForLanes;
+}
+function clearTransitionsForLanes(root, lanes) {
+  if (enableTransitionTracing)
+    for (; 0 < lanes; ) {
+      var index$11 = 31 - clz32(lanes),
+        lane = 1 << index$11;
+      null !== root.transitionLanes[index$11] &&
+        (root.transitionLanes[index$11] = null);
+      lanes &= ~lane;
+    }
+}
+var currentUpdatePriority = 0;
+function runWithPriority(priority, fn) {
+  var previousPriority = currentUpdatePriority;
+  try {
+    return (currentUpdatePriority = priority), fn();
+  } finally {
+    currentUpdatePriority = previousPriority;
+  }
+}
+function lanesToEventPriority(lanes) {
+  lanes &= -lanes;
+  return 2 < lanes
+    ? 8 < lanes
+      ? 0 !== (lanes & 268435455)
+        ? 32
+        : 536870912
+      : 8
+    : 2;
+}
+var hasOwnProperty = Object.prototype.hasOwnProperty,
   randomKey = Math.random().toString(36).slice(2),
   internalInstanceKey = "__reactFiber$" + randomKey,
   internalPropsKey = "__reactProps$" + randomKey,
@@ -195,7 +689,6 @@ var canUseDOM = !(
     "undefined" === typeof window.document ||
     "undefined" === typeof window.document.createElement
   ),
-  hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
   ),
@@ -519,9 +1012,7 @@ function setValueForPropertyOnCustomComponent(node, name, value) {
       );
     }
 }
-var ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -552,8 +1043,7 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-var assign = Object.assign,
-  prefix;
+var prefix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
@@ -592,16 +1082,16 @@ function describeNativeComponentFrame(fn, construct) {
       } else {
         try {
           construct.call();
-        } catch (x$1) {
-          control = x$1;
+        } catch (x$13) {
+          control = x$13;
         }
         fn.call(construct.prototype);
       }
     else {
       try {
         throw Error();
-      } catch (x$2) {
-        control = x$2;
+      } catch (x$14) {
+        control = x$14;
       }
       fn();
     }
@@ -1189,36 +1679,36 @@ function findCurrentFiberUsingSlowPath(fiber) {
     }
     if (a.return !== b.return) (a = parentA), (b = parentB);
     else {
-      for (var didFindChild = !1, child$6 = parentA.child; child$6; ) {
-        if (child$6 === a) {
+      for (var didFindChild = !1, child$18 = parentA.child; child$18; ) {
+        if (child$18 === a) {
           didFindChild = !0;
           a = parentA;
           b = parentB;
           break;
         }
-        if (child$6 === b) {
+        if (child$18 === b) {
           didFindChild = !0;
           b = parentA;
           a = parentB;
           break;
         }
-        child$6 = child$6.sibling;
+        child$18 = child$18.sibling;
       }
       if (!didFindChild) {
-        for (child$6 = parentB.child; child$6; ) {
-          if (child$6 === a) {
+        for (child$18 = parentB.child; child$18; ) {
+          if (child$18 === a) {
             didFindChild = !0;
             a = parentB;
             b = parentA;
             break;
           }
-          if (child$6 === b) {
+          if (child$18 === b) {
             didFindChild = !0;
             b = parentB;
             a = parentA;
             break;
           }
-          child$6 = child$6.sibling;
+          child$18 = child$18.sibling;
         }
         if (!didFindChild) throw Error(formatProdErrorMessage(189));
       }
@@ -1258,461 +1748,7 @@ function doesFiberContain(parentFiber, childFiber) {
   }
   return !1;
 }
-var valueStack = [],
-  index = -1;
-function createCursor(defaultValue) {
-  return { current: defaultValue };
-}
-function pop(cursor) {
-  0 > index ||
-    ((cursor.current = valueStack[index]), (valueStack[index] = null), index--);
-}
-function push(cursor, value) {
-  index++;
-  valueStack[index] = cursor.current;
-  cursor.current = value;
-}
-var emptyContextObject = {},
-  clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
-  log = Math.log,
-  LN2 = Math.LN2;
-function clz32Fallback(x) {
-  x >>>= 0;
-  return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
-}
-function getLabelForLane(lane) {
-  if (enableSchedulingProfiler) {
-    if (lane & 1) return "SyncHydrationLane";
-    if (lane & 2) return "Sync";
-    if (lane & 4) return "InputContinuousHydration";
-    if (lane & 8) return "InputContinuous";
-    if (lane & 16) return "DefaultHydration";
-    if (lane & 32) return "Default";
-    if (lane & 64) return "TransitionHydration";
-    if (lane & 8388480) return "Transition";
-    if (lane & 125829120) return "Retry";
-    if (lane & 134217728) return "SelectiveHydration";
-    if (lane & 268435456) return "IdleHydration";
-    if (lane & 536870912) return "Idle";
-    if (lane & 1073741824) return "Offscreen";
-  }
-}
-var nextTransitionLane = 128,
-  nextRetryLane = 8388608;
-function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & 42;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
-  switch (lanes & -lanes) {
-    case 1:
-      return 1;
-    case 2:
-      return 2;
-    case 4:
-      return 4;
-    case 8:
-      return 8;
-    case 16:
-      return 16;
-    case 32:
-      return 32;
-    case 64:
-      return 64;
-    case 128:
-    case 256:
-    case 512:
-    case 1024:
-    case 2048:
-    case 4096:
-    case 8192:
-    case 16384:
-    case 32768:
-    case 65536:
-    case 131072:
-    case 262144:
-    case 524288:
-    case 1048576:
-    case 2097152:
-    case 4194304:
-      return lanes & 8388480;
-    case 8388608:
-    case 16777216:
-    case 33554432:
-    case 67108864:
-      return lanes & 125829120;
-    case 134217728:
-      return 134217728;
-    case 268435456:
-      return 268435456;
-    case 536870912:
-      return 536870912;
-    case 1073741824:
-      return 1073741824;
-    default:
-      return lanes;
-  }
-}
-function getNextLanes(root, wipLanes) {
-  var pendingLanes = root.pendingLanes;
-  if (0 === pendingLanes) return 0;
-  var nextLanes = 0,
-    suspendedLanes = root.suspendedLanes,
-    pingedLanes = root.pingedLanes,
-    nonIdlePendingLanes = pendingLanes & 268435455;
-  if (0 !== nonIdlePendingLanes) {
-    var nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
-    0 !== nonIdleUnblockedLanes
-      ? (nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes))
-      : ((pingedLanes &= nonIdlePendingLanes),
-        0 !== pingedLanes &&
-          (nextLanes = getHighestPriorityLanes(pingedLanes)));
-  } else
-    (nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
-      0 !== nonIdlePendingLanes
-        ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
-        : 0 !== pingedLanes &&
-          (nextLanes = getHighestPriorityLanes(pingedLanes));
-  if (0 === nextLanes) return 0;
-  if (
-    0 !== wipLanes &&
-    wipLanes !== nextLanes &&
-    0 === (wipLanes & suspendedLanes) &&
-    ((suspendedLanes = nextLanes & -nextLanes),
-    (pingedLanes = wipLanes & -wipLanes),
-    suspendedLanes >= pingedLanes ||
-      (32 === suspendedLanes && 0 !== (pingedLanes & 8388480)))
-  )
-    return wipLanes;
-  0 === (root.current.mode & 32) &&
-    0 !== (nextLanes & 8) &&
-    (nextLanes |= pendingLanes & 32);
-  wipLanes = root.entangledLanes;
-  if (0 !== wipLanes)
-    for (root = root.entanglements, wipLanes &= nextLanes; 0 < wipLanes; )
-      (pendingLanes = 31 - clz32(wipLanes)),
-        (suspendedLanes = 1 << pendingLanes),
-        (nextLanes |= root[pendingLanes]),
-        (wipLanes &= ~suspendedLanes);
-  return nextLanes;
-}
-function computeExpirationTime(lane, currentTime) {
-  switch (lane) {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-      return currentTime + 250;
-    case 16:
-    case 32:
-    case 64:
-    case 128:
-    case 256:
-    case 512:
-    case 1024:
-    case 2048:
-    case 4096:
-    case 8192:
-    case 16384:
-    case 32768:
-    case 65536:
-    case 131072:
-    case 262144:
-    case 524288:
-    case 1048576:
-    case 2097152:
-    case 4194304:
-      return currentTime + 5e3;
-    case 8388608:
-    case 16777216:
-    case 33554432:
-    case 67108864:
-      return -1;
-    case 134217728:
-    case 268435456:
-    case 536870912:
-    case 1073741824:
-      return -1;
-    default:
-      return -1;
-  }
-}
-function markStarvedLanesAsExpired(root, currentTime) {
-  for (
-    var suspendedLanes = root.suspendedLanes,
-      pingedLanes = root.pingedLanes,
-      expirationTimes = root.expirationTimes,
-      lanes = root.pendingLanes & -125829121;
-    0 < lanes;
-
-  ) {
-    var index$9 = 31 - clz32(lanes),
-      lane = 1 << index$9,
-      expirationTime = expirationTimes[index$9];
-    if (-1 === expirationTime) {
-      if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
-        expirationTimes[index$9] = computeExpirationTime(lane, currentTime);
-    } else expirationTime <= currentTime && (root.expiredLanes |= lane);
-    lanes &= ~lane;
-  }
-}
-function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
-  if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) return 0;
-  root = root.pendingLanes & -1073741825;
-  return 0 !== root ? root : root & 1073741824 ? 1073741824 : 0;
-}
-function includesBlockingLane(root, lanes) {
-  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
-}
-function claimNextTransitionLane() {
-  var lane = nextTransitionLane;
-  nextTransitionLane <<= 1;
-  0 === (nextTransitionLane & 8388480) && (nextTransitionLane = 128);
-  return lane;
-}
-function claimNextRetryLane() {
-  var lane = nextRetryLane;
-  nextRetryLane <<= 1;
-  0 === (nextRetryLane & 125829120) && (nextRetryLane = 8388608);
-  return lane;
-}
-function createLaneMap(initial) {
-  for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
-  return laneMap;
-}
-function markRootUpdated(root, updateLane, eventTime) {
-  root.pendingLanes |= updateLane;
-  536870912 !== updateLane &&
-    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
-  root = root.eventTimes;
-  updateLane = 31 - clz32(updateLane);
-  root[updateLane] = eventTime;
-}
-function markRootFinished(root, remainingLanes) {
-  var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
-  root.pendingLanes = remainingLanes;
-  root.suspendedLanes = 0;
-  root.pingedLanes = 0;
-  root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
-  root.entangledLanes &= remainingLanes;
-  root.errorRecoveryDisabledLanes &= remainingLanes;
-  remainingLanes = root.entanglements;
-  var eventTimes = root.eventTimes,
-    expirationTimes = root.expirationTimes;
-  for (root = root.hiddenUpdates; 0 < noLongerPendingLanes; ) {
-    var index$11 = 31 - clz32(noLongerPendingLanes),
-      lane = 1 << index$11;
-    remainingLanes[index$11] = 0;
-    eventTimes[index$11] = -1;
-    expirationTimes[index$11] = -1;
-    var hiddenUpdatesForLane = root[index$11];
-    if (null !== hiddenUpdatesForLane)
-      for (
-        root[index$11] = null, index$11 = 0;
-        index$11 < hiddenUpdatesForLane.length;
-        index$11++
-      ) {
-        var update = hiddenUpdatesForLane[index$11];
-        null !== update && (update.lane &= -1073741825);
-      }
-    noLongerPendingLanes &= ~lane;
-  }
-}
-function markRootEntangled(root, entangledLanes) {
-  var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
-  for (root = root.entanglements; rootEntangledLanes; ) {
-    var index$12 = 31 - clz32(rootEntangledLanes),
-      lane = 1 << index$12;
-    (lane & entangledLanes) | (root[index$12] & entangledLanes) &&
-      (root[index$12] |= entangledLanes);
-    rootEntangledLanes &= ~lane;
-  }
-}
-function addFiberToLanesMap(root, fiber, lanes) {
-  if (isDevToolsPresent)
-    for (root = root.pendingUpdatersLaneMap; 0 < lanes; ) {
-      var index$13 = 31 - clz32(lanes),
-        lane = 1 << index$13;
-      root[index$13].add(fiber);
-      lanes &= ~lane;
-    }
-}
-function movePendingFibersToMemoized(root, lanes) {
-  if (isDevToolsPresent)
-    for (
-      var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap,
-        memoizedUpdaters = root.memoizedUpdaters;
-      0 < lanes;
-
-    ) {
-      var index$14 = 31 - clz32(lanes);
-      root = 1 << index$14;
-      index$14 = pendingUpdatersLaneMap[index$14];
-      0 < index$14.size &&
-        (index$14.forEach(function (fiber) {
-          var alternate = fiber.alternate;
-          (null !== alternate && memoizedUpdaters.has(alternate)) ||
-            memoizedUpdaters.add(fiber);
-        }),
-        index$14.clear());
-      lanes &= ~root;
-    }
-}
-function getTransitionsForLanes(root, lanes) {
-  if (!enableTransitionTracing) return null;
-  for (var transitionsForLanes = []; 0 < lanes; ) {
-    var index$16 = 31 - clz32(lanes),
-      lane = 1 << index$16;
-    index$16 = root.transitionLanes[index$16];
-    null !== index$16 &&
-      index$16.forEach(function (transition) {
-        transitionsForLanes.push(transition);
-      });
-    lanes &= ~lane;
-  }
-  return 0 === transitionsForLanes.length ? null : transitionsForLanes;
-}
-function clearTransitionsForLanes(root, lanes) {
-  if (enableTransitionTracing)
-    for (; 0 < lanes; ) {
-      var index$17 = 31 - clz32(lanes),
-        lane = 1 << index$17;
-      null !== root.transitionLanes[index$17] &&
-        (root.transitionLanes[index$17] = null);
-      lanes &= ~lane;
-    }
-}
-var currentUpdatePriority = 0;
-function runWithPriority(priority, fn) {
-  var previousPriority = currentUpdatePriority;
-  try {
-    return (currentUpdatePriority = priority), fn();
-  } finally {
-    currentUpdatePriority = previousPriority;
-  }
-}
-function lanesToEventPriority(lanes) {
-  lanes &= -lanes;
-  return 2 < lanes
-    ? 8 < lanes
-      ? 0 !== (lanes & 268435455)
-        ? 32
-        : 536870912
-      : 8
-    : 2;
-}
-var scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
-  cancelCallback$1 = Scheduler.unstable_cancelCallback,
-  shouldYield = Scheduler.unstable_shouldYield,
-  requestPaint = Scheduler.unstable_requestPaint,
-  now$1 = Scheduler.unstable_now,
-  getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel,
-  ImmediatePriority = Scheduler.unstable_ImmediatePriority,
-  UserBlockingPriority = Scheduler.unstable_UserBlockingPriority,
-  NormalPriority$1 = Scheduler.unstable_NormalPriority,
-  LowPriority = Scheduler.unstable_LowPriority,
-  IdlePriority = Scheduler.unstable_IdlePriority,
-  rendererID = null,
-  injectedHook = null,
-  injectedProfilingHooks = null,
-  isDevToolsPresent = "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__;
-function onCommitRoot(root, eventPriority) {
-  if (injectedHook && "function" === typeof injectedHook.onCommitFiberRoot)
-    try {
-      var didError = 128 === (root.current.flags & 128);
-      switch (eventPriority) {
-        case 2:
-          var schedulerPriority = ImmediatePriority;
-          break;
-        case 8:
-          schedulerPriority = UserBlockingPriority;
-          break;
-        case 32:
-          schedulerPriority = NormalPriority$1;
-          break;
-        case 536870912:
-          schedulerPriority = IdlePriority;
-          break;
-        default:
-          schedulerPriority = NormalPriority$1;
-      }
-      injectedHook.onCommitFiberRoot(
-        rendererID,
-        root,
-        schedulerPriority,
-        didError
-      );
-    } catch (err) {}
-}
-function injectProfilingHooks(profilingHooks) {
-  injectedProfilingHooks = profilingHooks;
-}
-function getLaneLabelMap() {
-  if (enableSchedulingProfiler) {
-    for (
-      var map = new Map(), lane = 1, index$18 = 0;
-      31 > index$18;
-      index$18++
-    ) {
-      var label = getLabelForLane(lane);
-      map.set(lane, label);
-      lane *= 2;
-    }
-    return map;
-  }
-  return null;
-}
-function markCommitStopped() {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markCommitStopped &&
-    injectedProfilingHooks.markCommitStopped();
-}
-function markComponentRenderStarted(fiber) {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markComponentRenderStarted &&
-    injectedProfilingHooks.markComponentRenderStarted(fiber);
-}
-function markComponentRenderStopped() {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markComponentRenderStopped &&
-    injectedProfilingHooks.markComponentRenderStopped();
-}
-function markComponentLayoutEffectUnmountStarted(fiber) {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" ===
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
-    injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
-}
-function markComponentLayoutEffectUnmountStopped() {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" ===
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
-    injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
-}
-function markRenderStarted(lanes) {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markRenderStarted &&
-    injectedProfilingHooks.markRenderStarted(lanes);
-}
-function markRenderStopped() {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markRenderStopped &&
-    injectedProfilingHooks.markRenderStopped();
-}
-function markStateUpdateScheduled(fiber, lane) {
-  enableSchedulingProfiler &&
-    null !== injectedProfilingHooks &&
-    "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
-    injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
-}
+var emptyContextObject = {};
 function is(x, y) {
   return (x === y && (0 !== x || 1 / x === 1 / y)) || (x !== x && y !== y);
 }
@@ -1828,46 +1864,6 @@ function popTreeContext(workInProgress) {
       (idStack[idStackIndex] = null),
       (treeContextId = idStack[--idStackIndex]),
       (idStack[idStackIndex] = null);
-}
-var contextStackCursor = createCursor(null),
-  contextFiberStackCursor = createCursor(null),
-  rootInstanceStackCursor = createCursor(null);
-function pushHostContainer(fiber, nextRootInstance) {
-  push(rootInstanceStackCursor, nextRootInstance);
-  push(contextFiberStackCursor, fiber);
-  push(contextStackCursor, null);
-  fiber = nextRootInstance.nodeType;
-  switch (fiber) {
-    case 9:
-    case 11:
-      nextRootInstance = (nextRootInstance = nextRootInstance.documentElement)
-        ? nextRootInstance.namespaceURI
-        : getChildNamespace(null, "");
-      break;
-    default:
-      (fiber = 8 === fiber ? nextRootInstance.parentNode : nextRootInstance),
-        (nextRootInstance = fiber.namespaceURI || null),
-        (fiber = fiber.tagName),
-        (nextRootInstance = getChildNamespace(nextRootInstance, fiber));
-  }
-  pop(contextStackCursor);
-  push(contextStackCursor, nextRootInstance);
-}
-function popHostContainer() {
-  pop(contextStackCursor);
-  pop(contextFiberStackCursor);
-  pop(rootInstanceStackCursor);
-}
-function pushHostContext(fiber) {
-  var context = contextStackCursor.current;
-  var JSCompiler_inline_result = getChildNamespace(context, fiber.type);
-  context !== JSCompiler_inline_result &&
-    (push(contextFiberStackCursor, fiber),
-    push(contextStackCursor, JSCompiler_inline_result));
-}
-function popHostContext(fiber) {
-  contextFiberStackCursor.current === fiber &&
-    (pop(contextStackCursor), pop(contextFiberStackCursor));
 }
 var hydrationParentFiber = null,
   nextHydratableInstance = null,
@@ -2040,7 +2036,7 @@ function prepareToHydrateHostInstance(fiber) {
     case "option":
       break;
     default:
-      "function" === typeof props.onClick && (instance.onclick = noop);
+      "function" === typeof props.onClick && (instance.onclick = noop$1);
   }
   instance = updatePayload;
   fiber.updateQueue = instance;
@@ -2463,12 +2459,12 @@ function isThenableResolved(thenable) {
   thenable = thenable.status;
   return "fulfilled" === thenable || "rejected" === thenable;
 }
-function noop$1() {}
+function noop$2() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
   void 0 === index
     ? thenableState.push(thenable)
-    : index !== thenable && (thenable.then(noop$1, noop$1), (thenable = index));
+    : index !== thenable && (thenable.then(noop$2, noop$2), (thenable = index));
   switch (thenable.status) {
     case "fulfilled":
       return thenable.value;
@@ -2476,7 +2472,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       throw thenable.reason;
     default:
       "string" === typeof thenable.status
-        ? thenable.then(noop$1, noop$1)
+        ? thenable.then(noop$2, noop$2)
         : ((thenableState = thenable),
           (thenableState.status = "pending"),
           thenableState.then(
@@ -6596,7 +6592,7 @@ function updateHostComponent(current, workInProgress, type, newProps) {
         (type = oldProps),
           "function" !== typeof type.onClick &&
             "function" === typeof newProps.onClick &&
-            (current.onclick = noop);
+            (current.onclick = noop$1);
     }
     var styleName;
     oldProps = null;
@@ -6868,18 +6864,28 @@ function completeWork(current, workInProgress, renderLanes) {
       return (
         (current ? current.ref : null) !== workInProgress.ref &&
           markRef(workInProgress),
+        (renderLanes = !1),
         null === current ||
         current.memoizedState !== workInProgress.memoizedState
-          ? markUpdate(workInProgress)
+          ? (null !== workInProgress.memoizedState
+              ? ((current = workInProgress.memoizedState),
+                (renderLanes =
+                  "stylesheet" === current.type &&
+                  0 === (current.state.loading & 4)))
+              : (renderLanes = !1),
+            markUpdate(workInProgress))
           : null === workInProgress.memoizedState &&
+            ((renderLanes = !1),
             updateHostComponent(
               current,
               workInProgress,
               workInProgress.type,
               workInProgress.pendingProps
-            ),
+            )),
         bubbleProperties(workInProgress),
-        (workInProgress.flags &= -16777217),
+        (workInProgress.flags = renderLanes
+          ? workInProgress.flags | 16777216
+          : workInProgress.flags & -16777217),
         null
       );
     case 27:
@@ -8357,7 +8363,7 @@ function insertOrAppendPlacementNodeIntoContainer(node, before, parent) {
           (parent = parent._reactRootContainer),
           (null !== parent && void 0 !== parent) ||
             null !== before.onclick ||
-            (before.onclick = noop));
+            (before.onclick = noop$1));
   else if (4 !== tag && 27 !== tag && ((node = node.child), null !== node))
     for (
       insertOrAppendPlacementNodeIntoContainer(node, before, parent),
@@ -9812,6 +9818,38 @@ function recursivelyTraverseAtomicPassiveEffects(
       parentFiber = parentFiber.sibling;
     }
 }
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & 16777216)
+    for (parentFiber = parentFiber.child; null !== parentFiber; )
+      accumulateSuspenseyCommitOnFiber(parentFiber),
+        (parentFiber = parentFiber.sibling);
+}
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case 26:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      fiber.flags & 16777216 &&
+        null !== fiber.memoizedState &&
+        suspendResource(
+          currentHoistableRoot,
+          fiber.memoizedState,
+          fiber.memoizedProps
+        );
+      break;
+    case 5:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    case 3:
+    case 4:
+      var previousHoistableRoot = currentHoistableRoot;
+      currentHoistableRoot = getHoistableRoot(fiber.stateNode.containerInfo);
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      currentHoistableRoot = previousHoistableRoot;
+      break;
+    default:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+  }
+}
 function detachAlternateSiblings(parentFiber) {
   var previousFiber = parentFiber.alternate;
   if (
@@ -10361,7 +10399,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         case 1:
           throw Error(formatProdErrorMessage(345));
         case 2:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 3:
           markRootSuspended(root, lanes);
@@ -10384,7 +10428,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 4:
           markRootSuspended(root, lanes);
@@ -10392,10 +10442,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           exitStatus = lanes;
           errorRetryLanes = root.eventTimes;
           for (errorRetryLanes$190 = -1; 0 < exitStatus; ) {
-            var index$8 = 31 - clz32(exitStatus),
-              lane = 1 << index$8;
-            index$8 = errorRetryLanes[index$8];
-            index$8 > errorRetryLanes$190 && (errorRetryLanes$190 = index$8);
+            var index$2 = 31 - clz32(exitStatus),
+              lane = 1 << index$2;
+            index$2 = errorRetryLanes[index$2];
+            index$2 > errorRetryLanes$190 && (errorRetryLanes$190 = index$2);
             exitStatus &= ~lane;
           }
           exitStatus = errorRetryLanes$190;
@@ -10428,10 +10478,22 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             );
             break;
           }
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         case 5:
-          commitRootWhenReady(root);
+          commitRootWhenReady(
+            root,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
+          );
           break;
         default:
           throw Error(formatProdErrorMessage(329));
@@ -10473,7 +10535,30 @@ function queueRecoverableErrors(errors) {
         errors
       );
 }
-function commitRootWhenReady(root) {
+function commitRootWhenReady(
+  root,
+  finishedWork,
+  recoverableErrors,
+  transitions,
+  lanes
+) {
+  if (
+    0 === (lanes & 42) &&
+    ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
+    accumulateSuspenseyCommitOnFiber(finishedWork),
+    (finishedWork = waitForCommitToBeReady()),
+    null !== finishedWork)
+  ) {
+    root.cancelPendingCommit = finishedWork(
+      commitRoot.bind(
+        null,
+        root,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions
+      )
+    );
+    return;
+  }
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
@@ -10520,9 +10605,9 @@ function markRootSuspended(root, suspendedLanes) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
   for (root = root.expirationTimes; 0 < suspendedLanes; ) {
-    var index$10 = 31 - clz32(suspendedLanes),
-      lane = 1 << index$10;
-    root[index$10] = -1;
+    var index$4 = 31 - clz32(suspendedLanes),
+      lane = 1 << index$4;
+    root[index$4] = -1;
     suspendedLanes &= ~lane;
   }
 }
@@ -13932,19 +14017,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$319;
+  var JSCompiler_inline_result$jscomp$317;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1616 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1616) {
-      var element$jscomp$inline_1617 = document.createElement("div");
-      element$jscomp$inline_1617.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1616 =
-        "function" === typeof element$jscomp$inline_1617.oninput;
+    var isSupported$jscomp$inline_1591 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1591) {
+      var element$jscomp$inline_1592 = document.createElement("div");
+      element$jscomp$inline_1592.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1591 =
+        "function" === typeof element$jscomp$inline_1592.oninput;
     }
-    JSCompiler_inline_result$jscomp$319 = isSupported$jscomp$inline_1616;
-  } else JSCompiler_inline_result$jscomp$319 = !1;
+    JSCompiler_inline_result$jscomp$317 = isSupported$jscomp$inline_1591;
+  } else JSCompiler_inline_result$jscomp$317 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$319 &&
+    JSCompiler_inline_result$jscomp$317 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14253,20 +14338,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1657 = 0;
-  i$jscomp$inline_1657 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1657++
+  var i$jscomp$inline_1632 = 0;
+  i$jscomp$inline_1632 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1632++
 ) {
-  var eventName$jscomp$inline_1658 =
-      simpleEventPluginEvents[i$jscomp$inline_1657],
-    domEventName$jscomp$inline_1659 =
-      eventName$jscomp$inline_1658.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1660 =
-      eventName$jscomp$inline_1658[0].toUpperCase() +
-      eventName$jscomp$inline_1658.slice(1);
+  var eventName$jscomp$inline_1633 =
+      simpleEventPluginEvents[i$jscomp$inline_1632],
+    domEventName$jscomp$inline_1634 =
+      eventName$jscomp$inline_1633.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1635 =
+      eventName$jscomp$inline_1633[0].toUpperCase() +
+      eventName$jscomp$inline_1633.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1659,
-    "on" + capitalizedEvent$jscomp$inline_1660
+    domEventName$jscomp$inline_1634,
+    "on" + capitalizedEvent$jscomp$inline_1635
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15105,7 +15190,7 @@ function getOwnerDocumentFromRootContainer(rootContainerElement) {
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
 }
-function noop() {}
+function noop$1() {}
 function createHTMLElement(type, props, ownerDocument) {
   return "string" === typeof props.is
     ? ownerDocument.createElement(type, { is: props.is })
@@ -15275,7 +15360,7 @@ function setInitialProperties(domElement, tag, rawProps) {
           );
       break;
     default:
-      "function" === typeof props.onClick && (domElement.onclick = noop);
+      "function" === typeof props.onClick && (domElement.onclick = noop$1);
   }
 }
 function updateProperties(
@@ -15342,447 +15427,7 @@ function updateProperties(
   }
 }
 var Dispatcher$1 = Internals.Dispatcher,
-  lastCurrentDocument = null,
-  previousDispatcher = null,
-  ReactDOMClientDispatcher = {
-    prefetchDNS: prefetchDNS$1,
-    preconnect: preconnect$1,
-    preload: preload$1,
-    preinit: preinit$1
-  },
-  preloadPropsMap = new Map(),
-  preconnectsSet = new Set();
-function getHoistableRoot(container) {
-  return "function" === typeof container.getRootNode
-    ? container.getRootNode()
-    : container.ownerDocument;
-}
-function getCurrentResourceRoot() {
-  var currentContainer = rootInstanceStackCursor.current;
-  return currentContainer ? getHoistableRoot(currentContainer) : null;
-}
-function getDocumentForPreloads() {
-  var root = getCurrentResourceRoot();
-  if (root) return root.ownerDocument || root;
-  try {
-    return lastCurrentDocument || window.document;
-  } catch (error) {
-    return null;
-  }
-}
-function preconnectAs(rel, crossOrigin, href) {
-  var ownerDocument = getDocumentForPreloads();
-  if ("string" === typeof href && href && ownerDocument) {
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    limitedEscapedHref =
-      'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
-    "string" === typeof crossOrigin &&
-      (limitedEscapedHref += '[crossorigin="' + crossOrigin + '"]');
-    preconnectsSet.has(limitedEscapedHref) ||
-      (preconnectsSet.add(limitedEscapedHref),
-      (rel = { rel: rel, crossOrigin: crossOrigin, href: href }),
-      null === ownerDocument.querySelector(limitedEscapedHref) &&
-        ((crossOrigin = ownerDocument.createElement("link")),
-        setInitialProperties(crossOrigin, "link", rel),
-        markNodeAsHoistable(crossOrigin),
-        ownerDocument.head.appendChild(crossOrigin)));
-  }
-}
-function prefetchDNS$1(href) {
-  preconnectAs("dns-prefetch", null, href);
-}
-function preconnect$1(href, options) {
-  preconnectAs(
-    "preconnect",
-    null == options || "string" !== typeof options.crossOrigin
-      ? null
-      : "use-credentials" === options.crossOrigin
-      ? "use-credentials"
-      : "",
-    href
-  );
-}
-function preload$1(href, options) {
-  var ownerDocument = getDocumentForPreloads();
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options &&
-    ownerDocument
-  ) {
-    var as = options.as,
-      limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href),
-      key = (limitedEscapedHref =
-        'link[rel="preload"][as="' +
-        as +
-        '"][href="' +
-        limitedEscapedHref +
-        '"]');
-    switch (as) {
-      case "style":
-        key = getStyleKey(href);
-        break;
-      case "script":
-        key = getScriptKey(href);
-    }
-    preloadPropsMap.has(key) ||
-      ((href = {
-        href: href,
-        rel: "preload",
-        as: as,
-        crossOrigin: "font" === as ? "" : options.crossOrigin,
-        integrity: options.integrity,
-        type: options.type
-      }),
-      preloadPropsMap.set(key, href),
-      null === ownerDocument.querySelector(limitedEscapedHref) &&
-        ((options = ownerDocument.createElement("link")),
-        setInitialProperties(options, "link", href),
-        markNodeAsHoistable(options),
-        ownerDocument.head.appendChild(options)));
-  }
-}
-function preinit$1(href, options) {
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options
-  ) {
-    var resourceRoot = getCurrentResourceRoot(),
-      as = options.as;
-    if (resourceRoot)
-      switch (as) {
-        case "style":
-          as = getResourcesFromRoot(resourceRoot).hoistableStyles;
-          var key$221 = getStyleKey(href),
-            precedence = options.precedence || "default",
-            resource = as.get(key$221);
-          if (resource) break;
-          resource = resourceRoot.querySelector(
-            getStylesheetSelectorFromKey(key$221)
-          );
-          resource ||
-            ((href = {
-              rel: "stylesheet",
-              href: href,
-              "data-precedence": precedence,
-              crossOrigin: options.crossOrigin
-            }),
-            (options = preloadPropsMap.get(key$221)) &&
-              adoptPreloadPropsForStylesheet(href, options),
-            (resource = (
-              resourceRoot.ownerDocument || resourceRoot
-            ).createElement("link")),
-            markNodeAsHoistable(resource),
-            setInitialProperties(resource, "link", href),
-            insertStylesheet(resource, precedence, resourceRoot));
-          resource = { type: "stylesheet", instance: resource, count: 1 };
-          as.set(key$221, resource);
-          break;
-        case "script":
-          (as = getResourcesFromRoot(resourceRoot).hoistableScripts),
-            (key$221 = getScriptKey(href)),
-            (precedence = as.get(key$221)),
-            precedence ||
-              ((precedence = resourceRoot.querySelector(
-                "script[async]" + key$221
-              )),
-              precedence ||
-                ((href = {
-                  src: href,
-                  async: !0,
-                  crossOrigin: options.crossOrigin,
-                  integrity: options.integrity
-                }),
-                (options = preloadPropsMap.get(key$221)) &&
-                  adoptPreloadPropsForScript(href, options),
-                (options = resourceRoot.ownerDocument || resourceRoot),
-                (precedence = options.createElement("script")),
-                markNodeAsHoistable(precedence),
-                setInitialProperties(precedence, "link", href),
-                options.head.appendChild(precedence)),
-              (precedence = { type: "script", instance: precedence, count: 1 }),
-              as.set(key$221, precedence));
-      }
-    else if ("style" === as || "script" === as)
-      if ((resourceRoot = getDocumentForPreloads())) {
-        key$221 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-        precedence = key$221 =
-          'link[rel="preload"][as="' + as + '"][href="' + key$221 + '"]';
-        switch (as) {
-          case "style":
-            precedence = getStyleKey(href);
-            break;
-          case "script":
-            precedence = getScriptKey(href);
-        }
-        preloadPropsMap.has(precedence) ||
-          ((href = {
-            href: href,
-            rel: "preload",
-            as: as,
-            crossOrigin: "font" === as ? "" : options.crossOrigin,
-            integrity: options.integrity
-          }),
-          preloadPropsMap.set(precedence, href),
-          null === resourceRoot.querySelector(key$221) &&
-            ((options = resourceRoot.createElement("link")),
-            setInitialProperties(options, "link", href),
-            markNodeAsHoistable(options),
-            resourceRoot.head.appendChild(options)));
-      }
-  }
-}
-function getResource(type, currentProps, pendingProps) {
-  currentProps = getCurrentResourceRoot();
-  if (!currentProps) throw Error(formatProdErrorMessage(446));
-  switch (type) {
-    case "meta":
-    case "title":
-      return null;
-    case "style":
-      return "string" === typeof pendingProps.precedence &&
-        "string" === typeof pendingProps.href
-        ? ((pendingProps = getStyleKey(pendingProps.href)),
-          (currentProps = getResourcesFromRoot(currentProps).hoistableStyles),
-          (type = currentProps.get(pendingProps)),
-          type ||
-            ((type = { type: "style", instance: null, count: 0 }),
-            currentProps.set(pendingProps, type)),
-          type)
-        : { type: "void", instance: null, count: 0 };
-    case "link":
-      if (
-        "stylesheet" === pendingProps.rel &&
-        "string" === typeof pendingProps.href &&
-        "string" === typeof pendingProps.precedence
-      ) {
-        var key$228 = getStyleKey(pendingProps.href),
-          styles$229 = getResourcesFromRoot(currentProps).hoistableStyles;
-        type = styles$229.get(key$228);
-        type ||
-          ((currentProps = currentProps.ownerDocument || currentProps),
-          (type = { type: "stylesheet", instance: null, count: 0 }),
-          styles$229.set(key$228, type),
-          preloadPropsMap.has(key$228) ||
-            ((pendingProps = {
-              rel: "preload",
-              as: "style",
-              href: pendingProps.href,
-              crossOrigin: pendingProps.crossOrigin,
-              integrity: pendingProps.integrity,
-              media: pendingProps.media,
-              hrefLang: pendingProps.hrefLang,
-              referrerPolicy: pendingProps.referrerPolicy
-            }),
-            preloadPropsMap.set(key$228, pendingProps),
-            currentProps.querySelector(getStylesheetSelectorFromKey(key$228)) ||
-              null !==
-                currentProps.querySelector(
-                  'link[rel="preload"][as="style"][' + key$228 + "]"
-                ) ||
-              ((key$228 = currentProps.createElement("link")),
-              setInitialProperties(key$228, "link", pendingProps),
-              markNodeAsHoistable(key$228),
-              currentProps.head.appendChild(key$228))));
-        return type;
-      }
-      return null;
-    case "script":
-      return "string" === typeof pendingProps.src && !0 === pendingProps.async
-        ? ((pendingProps = getScriptKey(pendingProps.src)),
-          (currentProps = getResourcesFromRoot(currentProps).hoistableScripts),
-          (type = currentProps.get(pendingProps)),
-          type ||
-            ((type = { type: "script", instance: null, count: 0 }),
-            currentProps.set(pendingProps, type)),
-          type)
-        : { type: "void", instance: null, count: 0 };
-    default:
-      throw Error(formatProdErrorMessage(444, type));
-  }
-}
-function getStyleKey(href) {
-  return 'href~="' + escapeSelectorAttributeValueInsideDoubleQuotes(href) + '"';
-}
-function getStylesheetSelectorFromKey(key) {
-  return 'link[rel="stylesheet"][' + key + "]";
-}
-function getScriptKey(src) {
-  return '[src="' + escapeSelectorAttributeValueInsideDoubleQuotes(src) + '"]';
-}
-function acquireResource(hoistableRoot, resource, props) {
-  resource.count++;
-  if (null === resource.instance)
-    switch (resource.type) {
-      case "style":
-        var key = getStyleKey(props.href);
-        if ((key = hoistableRoot.querySelector("style[data-" + key + "]")))
-          return (resource.instance = key), markNodeAsHoistable(key), key;
-        var styleProps = assign({}, props, {
-          "data-href": props.href,
-          "data-precedence": props.precedence,
-          href: null,
-          precedence: null
-        });
-        key = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
-          "style"
-        );
-        markNodeAsHoistable(key);
-        setInitialProperties(key, "style", styleProps);
-        insertStylesheet(key, props.precedence, hoistableRoot);
-        return (resource.instance = key);
-      case "stylesheet":
-        styleProps = getStyleKey(props.href);
-        var instance$236 = hoistableRoot.querySelector(
-          getStylesheetSelectorFromKey(styleProps)
-        );
-        if (instance$236)
-          return (
-            (resource.instance = instance$236),
-            markNodeAsHoistable(instance$236),
-            instance$236
-          );
-        key = assign({}, props, {
-          "data-precedence": props.precedence,
-          precedence: null
-        });
-        (styleProps = preloadPropsMap.get(styleProps)) &&
-          adoptPreloadPropsForStylesheet(key, styleProps);
-        instance$236 = (
-          hoistableRoot.ownerDocument || hoistableRoot
-        ).createElement("link");
-        markNodeAsHoistable(instance$236);
-        var linkInstance = instance$236;
-        linkInstance._p = new Promise(function (resolve, reject) {
-          linkInstance.onload = resolve;
-          linkInstance.onerror = reject;
-        }).then(
-          function () {
-            return (linkInstance._p.s = "l");
-          },
-          function () {
-            return (linkInstance._p.s = "e");
-          }
-        );
-        setInitialProperties(instance$236, "link", key);
-        insertStylesheet(instance$236, props.precedence, hoistableRoot);
-        return (resource.instance = instance$236);
-      case "script":
-        instance$236 = getScriptKey(props.src);
-        if (
-          (styleProps = hoistableRoot.querySelector(
-            "script[async]" + instance$236
-          ))
-        )
-          return (
-            (resource.instance = styleProps),
-            markNodeAsHoistable(styleProps),
-            styleProps
-          );
-        key = props;
-        if ((styleProps = preloadPropsMap.get(instance$236)))
-          (key = assign({}, props)),
-            adoptPreloadPropsForScript(key, styleProps);
-        hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
-        styleProps = hoistableRoot.createElement("script");
-        markNodeAsHoistable(styleProps);
-        setInitialProperties(styleProps, "link", key);
-        hoistableRoot.head.appendChild(styleProps);
-        return (resource.instance = styleProps);
-      case "void":
-        return null;
-      default:
-        throw Error(formatProdErrorMessage(443, resource.type));
-    }
-  return resource.instance;
-}
-function insertStylesheet(instance, precedence, root) {
-  for (
-    var nodes = root.querySelectorAll(
-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
-      ),
-      last = nodes.length ? nodes[nodes.length - 1] : null,
-      prior = last,
-      i = 0;
-    i < nodes.length;
-    i++
-  ) {
-    var node = nodes[i];
-    if (node.dataset.precedence === precedence) prior = node;
-    else if (prior !== last) break;
-  }
-  prior
-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
-    : ((precedence = 9 === root.nodeType ? root.head : root),
-      precedence.insertBefore(instance, precedence.firstChild));
-}
-function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
-  null == stylesheetProps.crossOrigin &&
-    (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
-  null == stylesheetProps.referrerPolicy &&
-    (stylesheetProps.referrerPolicy = preloadProps.referrerPolicy);
-  null == stylesheetProps.title && (stylesheetProps.title = preloadProps.title);
-}
-function adoptPreloadPropsForScript(scriptProps, preloadProps) {
-  null == scriptProps.crossOrigin &&
-    (scriptProps.crossOrigin = preloadProps.crossOrigin);
-  null == scriptProps.referrerPolicy &&
-    (scriptProps.referrerPolicy = preloadProps.referrerPolicy);
-  null == scriptProps.integrity &&
-    (scriptProps.referrerPolicy = preloadProps.integrity);
-}
-var tagCaches = null;
-function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
-  if (null === tagCaches) {
-    var cache = new Map();
-    var caches = (tagCaches = new Map());
-    caches.set(ownerDocument, cache);
-  } else
-    (caches = tagCaches),
-      (cache = caches.get(ownerDocument)),
-      cache || ((cache = new Map()), caches.set(ownerDocument, cache));
-  if (cache.has(type)) return cache;
-  cache.set(type, null);
-  ownerDocument = ownerDocument.getElementsByTagName(type);
-  for (caches = 0; caches < ownerDocument.length; caches++) {
-    var node = ownerDocument[caches];
-    if (
-      !(
-        node[internalHoistableMarker] ||
-        node[internalInstanceKey] ||
-        ("link" === type && "stylesheet" === node.getAttribute("rel"))
-      ) &&
-      "http://www.w3.org/2000/svg" !== node.namespaceURI
-    ) {
-      var nodeKey = node.getAttribute(keyAttribute) || "";
-      nodeKey = type + nodeKey;
-      var existing = cache.get(nodeKey);
-      existing ? existing.push(node) : cache.set(nodeKey, [node]);
-    }
-  }
-  return cache;
-}
-function mountHoistable(hoistableRoot, type, instance) {
-  hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
-  hoistableRoot.head.insertBefore(
-    instance,
-    "title" === type ? hoistableRoot.querySelector("head > title") : null
-  );
-}
-var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n"\\]/g;
-function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
-  return value.replace(
-    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    function (ch) {
-      return "\\" + ch.charCodeAt(0).toString(16);
-    }
-  );
-}
-var eventsEnabled = null,
+  eventsEnabled = null,
   selectionInformation = null;
 function beforeActiveInstanceBlur(internalInstanceHandle) {
   _enabled = !0;
@@ -15956,6 +15601,503 @@ function requestPostPaintCallback(callback) {
     });
   });
 }
+function resolveSingletonInstance(type, props, rootContainerInstance) {
+  props = getOwnerDocumentFromRootContainer(rootContainerInstance);
+  switch (type) {
+    case "html":
+      type = props.documentElement;
+      if (!type) throw Error(formatProdErrorMessage(452));
+      return type;
+    case "head":
+      type = props.head;
+      if (!type) throw Error(formatProdErrorMessage(453));
+      return type;
+    case "body":
+      type = props.body;
+      if (!type) throw Error(formatProdErrorMessage(454));
+      return type;
+    default:
+      throw Error(formatProdErrorMessage(451));
+  }
+}
+var lastCurrentDocument = null,
+  previousDispatcher = null,
+  preloadPropsMap = new Map(),
+  preconnectsSet = new Set();
+function getHoistableRoot(container) {
+  return "function" === typeof container.getRootNode
+    ? container.getRootNode()
+    : container.ownerDocument;
+}
+function getCurrentResourceRoot() {
+  var currentContainer = rootInstanceStackCursor.current;
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
+}
+function getDocumentForPreloads() {
+  var root = getCurrentResourceRoot();
+  if (root) return root.ownerDocument || root;
+  try {
+    return lastCurrentDocument || window.document;
+  } catch (error) {
+    return null;
+  }
+}
+var ReactDOMClientDispatcher = {
+  prefetchDNS: prefetchDNS$1,
+  preconnect: preconnect$1,
+  preload: preload$1,
+  preinit: preinit$1
+};
+function preconnectAs(rel, crossOrigin, href) {
+  var ownerDocument = getDocumentForPreloads();
+  if ("string" === typeof href && href && ownerDocument) {
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    limitedEscapedHref =
+      'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
+    "string" === typeof crossOrigin &&
+      (limitedEscapedHref += '[crossorigin="' + crossOrigin + '"]');
+    preconnectsSet.has(limitedEscapedHref) ||
+      (preconnectsSet.add(limitedEscapedHref),
+      (rel = { rel: rel, crossOrigin: crossOrigin, href: href }),
+      null === ownerDocument.querySelector(limitedEscapedHref) &&
+        ((crossOrigin = ownerDocument.createElement("link")),
+        setInitialProperties(crossOrigin, "link", rel),
+        markNodeAsHoistable(crossOrigin),
+        ownerDocument.head.appendChild(crossOrigin)));
+  }
+}
+function prefetchDNS$1(href) {
+  preconnectAs("dns-prefetch", null, href);
+}
+function preconnect$1(href, options) {
+  preconnectAs(
+    "preconnect",
+    null == options || "string" !== typeof options.crossOrigin
+      ? null
+      : "use-credentials" === options.crossOrigin
+      ? "use-credentials"
+      : "",
+    href
+  );
+}
+function preload$1(href, options) {
+  var ownerDocument = getDocumentForPreloads();
+  if (
+    "string" === typeof href &&
+    href &&
+    "object" === typeof options &&
+    null !== options &&
+    ownerDocument
+  ) {
+    var as = options.as,
+      limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href),
+      key = (limitedEscapedHref =
+        'link[rel="preload"][as="' +
+        as +
+        '"][href="' +
+        limitedEscapedHref +
+        '"]');
+    switch (as) {
+      case "style":
+        key = getStyleKey(href);
+        break;
+      case "script":
+        key = getScriptKey(href);
+    }
+    preloadPropsMap.has(key) ||
+      ((href = {
+        href: href,
+        rel: "preload",
+        as: as,
+        crossOrigin: "font" === as ? "" : options.crossOrigin,
+        integrity: options.integrity,
+        type: options.type
+      }),
+      preloadPropsMap.set(key, href),
+      null === ownerDocument.querySelector(limitedEscapedHref) &&
+        ((options = ownerDocument.createElement("link")),
+        setInitialProperties(options, "link", href),
+        markNodeAsHoistable(options),
+        ownerDocument.head.appendChild(options)));
+  }
+}
+function preinit$1(href, options) {
+  if (
+    "string" === typeof href &&
+    href &&
+    "object" === typeof options &&
+    null !== options
+  ) {
+    var resourceRoot = getCurrentResourceRoot(),
+      as = options.as;
+    if (resourceRoot)
+      switch (as) {
+        case "style":
+          as = getResourcesFromRoot(resourceRoot).hoistableStyles;
+          var key$219 = getStyleKey(href),
+            precedence = options.precedence || "default",
+            resource = as.get(key$219);
+          if (resource) break;
+          var state = { loading: 0, preload: null };
+          if (
+            (resource = resourceRoot.querySelector(
+              getStylesheetSelectorFromKey(key$219)
+            ))
+          )
+            state.loading = 1;
+          else {
+            href = {
+              rel: "stylesheet",
+              href: href,
+              "data-precedence": precedence,
+              crossOrigin: options.crossOrigin
+            };
+            (options = preloadPropsMap.get(key$219)) &&
+              adoptPreloadPropsForStylesheet(href, options);
+            var link = (resource = (
+              resourceRoot.ownerDocument || resourceRoot
+            ).createElement("link"));
+            markNodeAsHoistable(link);
+            setInitialProperties(link, "link", href);
+            link._p = new Promise(function (resolve, reject) {
+              link.onload = resolve;
+              link.onerror = reject;
+            });
+            link.addEventListener("load", function () {
+              state.loading |= 1;
+            });
+            link.addEventListener("error", function () {
+              state.loading |= 2;
+            });
+            insertStylesheet(resource, precedence, resourceRoot);
+          }
+          resource = {
+            type: "stylesheet",
+            instance: resource,
+            count: 1,
+            state: state
+          };
+          as.set(key$219, resource);
+          break;
+        case "script":
+          (as = getResourcesFromRoot(resourceRoot).hoistableScripts),
+            (key$219 = getScriptKey(href)),
+            (precedence = as.get(key$219)),
+            precedence ||
+              ((precedence = resourceRoot.querySelector(
+                "script[async]" + key$219
+              )),
+              precedence ||
+                ((href = {
+                  src: href,
+                  async: !0,
+                  crossOrigin: options.crossOrigin,
+                  integrity: options.integrity
+                }),
+                (options = preloadPropsMap.get(key$219)) &&
+                  adoptPreloadPropsForScript(href, options),
+                (options = resourceRoot.ownerDocument || resourceRoot),
+                (precedence = options.createElement("script")),
+                markNodeAsHoistable(precedence),
+                setInitialProperties(precedence, "link", href),
+                options.head.appendChild(precedence)),
+              (precedence = {
+                type: "script",
+                instance: precedence,
+                count: 1,
+                state: null
+              }),
+              as.set(key$219, precedence));
+      }
+    else if ("style" === as || "script" === as)
+      if ((resourceRoot = getDocumentForPreloads())) {
+        key$219 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+        precedence = key$219 =
+          'link[rel="preload"][as="' + as + '"][href="' + key$219 + '"]';
+        switch (as) {
+          case "style":
+            precedence = getStyleKey(href);
+            break;
+          case "script":
+            precedence = getScriptKey(href);
+        }
+        preloadPropsMap.has(precedence) ||
+          ((href = {
+            href: href,
+            rel: "preload",
+            as: as,
+            crossOrigin: "font" === as ? "" : options.crossOrigin,
+            integrity: options.integrity
+          }),
+          preloadPropsMap.set(precedence, href),
+          null === resourceRoot.querySelector(key$219) &&
+            ((options = resourceRoot.createElement("link")),
+            setInitialProperties(options, "link", href),
+            markNodeAsHoistable(options),
+            resourceRoot.head.appendChild(options)));
+      }
+  }
+}
+function getResource(type, currentProps, pendingProps) {
+  currentProps = getCurrentResourceRoot();
+  if (!currentProps) throw Error(formatProdErrorMessage(446));
+  switch (type) {
+    case "meta":
+    case "title":
+      return null;
+    case "style":
+      return "string" === typeof pendingProps.precedence &&
+        "string" === typeof pendingProps.href
+        ? ((pendingProps = getStyleKey(pendingProps.href)),
+          (currentProps = getResourcesFromRoot(currentProps).hoistableStyles),
+          (type = currentProps.get(pendingProps)),
+          type ||
+            ((type = { type: "style", instance: null, count: 0, state: null }),
+            currentProps.set(pendingProps, type)),
+          type)
+        : { type: "void", instance: null, count: 0, state: null };
+    case "link":
+      if (
+        "stylesheet" === pendingProps.rel &&
+        "string" === typeof pendingProps.href &&
+        "string" === typeof pendingProps.precedence
+      ) {
+        type = getStyleKey(pendingProps.href);
+        var styles$228 = getResourcesFromRoot(currentProps).hoistableStyles,
+          resource$229 = styles$228.get(type);
+        resource$229 ||
+          ((currentProps = currentProps.ownerDocument || currentProps),
+          (resource$229 = {
+            type: "stylesheet",
+            instance: null,
+            count: 0,
+            state: { loading: 0, preload: null }
+          }),
+          styles$228.set(type, resource$229),
+          preloadPropsMap.has(type) ||
+            preloadStylesheet(
+              currentProps,
+              type,
+              {
+                rel: "preload",
+                as: "style",
+                href: pendingProps.href,
+                crossOrigin: pendingProps.crossOrigin,
+                integrity: pendingProps.integrity,
+                media: pendingProps.media,
+                hrefLang: pendingProps.hrefLang,
+                referrerPolicy: pendingProps.referrerPolicy
+              },
+              resource$229.state
+            ));
+        return resource$229;
+      }
+      return null;
+    case "script":
+      return "string" === typeof pendingProps.src && !0 === pendingProps.async
+        ? ((pendingProps = getScriptKey(pendingProps.src)),
+          (currentProps = getResourcesFromRoot(currentProps).hoistableScripts),
+          (type = currentProps.get(pendingProps)),
+          type ||
+            ((type = { type: "script", instance: null, count: 0, state: null }),
+            currentProps.set(pendingProps, type)),
+          type)
+        : { type: "void", instance: null, count: 0, state: null };
+    default:
+      throw Error(formatProdErrorMessage(444, type));
+  }
+}
+function getStyleKey(href) {
+  return 'href~="' + escapeSelectorAttributeValueInsideDoubleQuotes(href) + '"';
+}
+function getStylesheetSelectorFromKey(key) {
+  return 'link[rel="stylesheet"][' + key + "]";
+}
+function stylesheetPropsFromRawProps(rawProps) {
+  return assign({}, rawProps, {
+    "data-precedence": rawProps.precedence,
+    precedence: null
+  });
+}
+function preloadStylesheet(ownerDocument, key, preloadProps, state) {
+  preloadPropsMap.set(key, preloadProps);
+  ownerDocument.querySelector(getStylesheetSelectorFromKey(key)) ||
+    (ownerDocument.querySelector('link[rel="preload"][as="style"][' + key + "]")
+      ? (state.loading = 1)
+      : ((key = ownerDocument.createElement("link")),
+        (state.preload = key),
+        key.addEventListener("load", function () {
+          return (state.loading |= 1);
+        }),
+        key.addEventListener("error", function () {
+          return (state.loading |= 2);
+        }),
+        setInitialProperties(key, "link", preloadProps),
+        markNodeAsHoistable(key),
+        ownerDocument.head.appendChild(key)));
+}
+function getScriptKey(src) {
+  return '[src="' + escapeSelectorAttributeValueInsideDoubleQuotes(src) + '"]';
+}
+function acquireResource(hoistableRoot, resource, props) {
+  resource.count++;
+  if (null === resource.instance)
+    switch (resource.type) {
+      case "style":
+        var key = getStyleKey(props.href);
+        if ((key = hoistableRoot.querySelector("style[data-" + key + "]")))
+          return (resource.instance = key), markNodeAsHoistable(key), key;
+        var styleProps = assign({}, props, {
+          "data-href": props.href,
+          "data-precedence": props.precedence,
+          href: null,
+          precedence: null
+        });
+        key = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
+          "style"
+        );
+        markNodeAsHoistable(key);
+        setInitialProperties(key, "style", styleProps);
+        insertStylesheet(key, props.precedence, hoistableRoot);
+        return (resource.instance = key);
+      case "stylesheet":
+        styleProps = getStyleKey(props.href);
+        var instance$234 = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(styleProps)
+        );
+        if (instance$234)
+          return (
+            (resource.instance = instance$234),
+            markNodeAsHoistable(instance$234),
+            instance$234
+          );
+        key = stylesheetPropsFromRawProps(props);
+        (styleProps = preloadPropsMap.get(styleProps)) &&
+          adoptPreloadPropsForStylesheet(key, styleProps);
+        instance$234 = (
+          hoistableRoot.ownerDocument || hoistableRoot
+        ).createElement("link");
+        markNodeAsHoistable(instance$234);
+        var linkInstance = instance$234;
+        linkInstance._p = new Promise(function (resolve, reject) {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        });
+        setInitialProperties(instance$234, "link", key);
+        insertStylesheet(instance$234, props.precedence, hoistableRoot);
+        return (resource.instance = instance$234);
+      case "script":
+        instance$234 = getScriptKey(props.src);
+        if (
+          (styleProps = hoistableRoot.querySelector(
+            "script[async]" + instance$234
+          ))
+        )
+          return (
+            (resource.instance = styleProps),
+            markNodeAsHoistable(styleProps),
+            styleProps
+          );
+        key = props;
+        if ((styleProps = preloadPropsMap.get(instance$234)))
+          (key = assign({}, props)),
+            adoptPreloadPropsForScript(key, styleProps);
+        hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
+        styleProps = hoistableRoot.createElement("script");
+        markNodeAsHoistable(styleProps);
+        setInitialProperties(styleProps, "link", key);
+        hoistableRoot.head.appendChild(styleProps);
+        return (resource.instance = styleProps);
+      case "void":
+        return null;
+      default:
+        throw Error(formatProdErrorMessage(443, resource.type));
+    }
+  return resource.instance;
+}
+function insertStylesheet(instance, precedence, root) {
+  for (
+    var nodes = root.querySelectorAll(
+        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+      ),
+      last = nodes.length ? nodes[nodes.length - 1] : null,
+      prior = last,
+      i = 0;
+    i < nodes.length;
+    i++
+  ) {
+    var node = nodes[i];
+    if (node.dataset.precedence === precedence) prior = node;
+    else if (prior !== last) break;
+  }
+  prior
+    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+    : ((precedence = 9 === root.nodeType ? root.head : root),
+      precedence.insertBefore(instance, precedence.firstChild));
+}
+function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+  null == stylesheetProps.crossOrigin &&
+    (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
+  null == stylesheetProps.referrerPolicy &&
+    (stylesheetProps.referrerPolicy = preloadProps.referrerPolicy);
+  null == stylesheetProps.title && (stylesheetProps.title = preloadProps.title);
+}
+function adoptPreloadPropsForScript(scriptProps, preloadProps) {
+  null == scriptProps.crossOrigin &&
+    (scriptProps.crossOrigin = preloadProps.crossOrigin);
+  null == scriptProps.referrerPolicy &&
+    (scriptProps.referrerPolicy = preloadProps.referrerPolicy);
+  null == scriptProps.integrity &&
+    (scriptProps.referrerPolicy = preloadProps.integrity);
+}
+var tagCaches = null;
+function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
+  if (null === tagCaches) {
+    var cache = new Map();
+    var caches = (tagCaches = new Map());
+    caches.set(ownerDocument, cache);
+  } else
+    (caches = tagCaches),
+      (cache = caches.get(ownerDocument)),
+      cache || ((cache = new Map()), caches.set(ownerDocument, cache));
+  if (cache.has(type)) return cache;
+  cache.set(type, null);
+  ownerDocument = ownerDocument.getElementsByTagName(type);
+  for (caches = 0; caches < ownerDocument.length; caches++) {
+    var node = ownerDocument[caches];
+    if (
+      !(
+        node[internalHoistableMarker] ||
+        node[internalInstanceKey] ||
+        ("link" === type && "stylesheet" === node.getAttribute("rel"))
+      ) &&
+      "http://www.w3.org/2000/svg" !== node.namespaceURI
+    ) {
+      var nodeKey = node.getAttribute(keyAttribute) || "";
+      nodeKey = type + nodeKey;
+      var existing = cache.get(nodeKey);
+      existing ? existing.push(node) : cache.set(nodeKey, [node]);
+    }
+  }
+  return cache;
+}
+function mountHoistable(hoistableRoot, type, instance) {
+  hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
+  hoistableRoot.head.insertBefore(
+    instance,
+    "title" === type ? hoistableRoot.querySelector("head > title") : null
+  );
+}
+var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n"\\]/g;
+function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
+  return value.replace(
+    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
+    function (ch) {
+      return "\\" + ch.charCodeAt(0).toString(16);
+    }
+  );
+}
 function isHostHoistableType(type, props, hostContext) {
   if ("http://www.w3.org/2000/svg" === hostContext || null != props.itemProp)
     return !1;
@@ -16001,23 +16143,141 @@ function isHostHoistableType(type, props, hostContext) {
   }
   return !1;
 }
-function resolveSingletonInstance(type, props, rootContainerInstance) {
-  props = getOwnerDocumentFromRootContainer(rootContainerInstance);
-  switch (type) {
-    case "html":
-      type = props.documentElement;
-      if (!type) throw Error(formatProdErrorMessage(452));
-      return type;
-    case "head":
-      type = props.head;
-      if (!type) throw Error(formatProdErrorMessage(453));
-      return type;
-    case "body":
-      type = props.body;
-      if (!type) throw Error(formatProdErrorMessage(454));
-      return type;
-    default:
-      throw Error(formatProdErrorMessage(451));
+var suspendedState = null;
+function noop() {}
+function suspendResource(hoistableRoot, resource, props) {
+  if (null === suspendedState) throw Error(formatProdErrorMessage(475));
+  var state = suspendedState;
+  if (
+    "stylesheet" === resource.type &&
+    ("string" !== typeof props.media || !1 !== matchMedia(props.media).matches)
+  ) {
+    if (null === resource.instance) {
+      var key = getStyleKey(props.href),
+        instance = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(key)
+        );
+      if (instance) {
+        hoistableRoot = instance._p;
+        null !== hoistableRoot &&
+          "object" === typeof hoistableRoot &&
+          "function" === typeof hoistableRoot.then &&
+          (state.count++,
+          (state = onUnsuspend.bind(state)),
+          hoistableRoot.then(state, state));
+        resource.state.loading |= 4;
+        resource.instance = instance;
+        markNodeAsHoistable(instance);
+        return;
+      }
+      instance = hoistableRoot.ownerDocument || hoistableRoot;
+      props = stylesheetPropsFromRawProps(props);
+      (key = preloadPropsMap.get(key)) &&
+        adoptPreloadPropsForStylesheet(props, key);
+      instance = instance.createElement("link");
+      markNodeAsHoistable(instance);
+      var linkInstance = instance;
+      linkInstance._p = new Promise(function (resolve, reject) {
+        linkInstance.onload = resolve;
+        linkInstance.onerror = reject;
+      });
+      setInitialProperties(instance, "link", props);
+      resource.instance = instance;
+    }
+    null === state.stylesheets && (state.stylesheets = new Map());
+    state.stylesheets.set(resource, hoistableRoot);
+    (hoistableRoot = resource.state.preload) &&
+      0 === (resource.state.loading & 3) &&
+      (state.count++,
+      (resource = onUnsuspend.bind(state)),
+      hoistableRoot.addEventListener("load", resource),
+      hoistableRoot.addEventListener("error", resource));
+  }
+}
+function waitForCommitToBeReady() {
+  if (null === suspendedState) throw Error(formatProdErrorMessage(475));
+  var state = suspendedState;
+  state.stylesheets &&
+    0 === state.count &&
+    insertSuspendedStylesheets(state, state.stylesheets);
+  return 0 < state.count
+    ? function (commit) {
+        unsuspendAfterTimeout(state);
+        state.unsuspend = commit;
+        return function () {
+          return (state.unsuspend = null);
+        };
+      }
+    : null;
+}
+function unsuspendAfterTimeout(state) {
+  setTimeout(function () {
+    state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
+    if (state.unsuspend) {
+      var unsuspend = state.unsuspend;
+      state.unsuspend = null;
+      unsuspend();
+    }
+  }, 500);
+}
+function onUnsuspend() {
+  this.count--;
+  if (0 === this.count)
+    if (this.stylesheets) insertSuspendedStylesheets(this, this.stylesheets);
+    else if (this.unsuspend) {
+      var unsuspend = this.unsuspend;
+      this.unsuspend = null;
+      unsuspend();
+    }
+}
+var precedencesByRoot = null;
+function insertSuspendedStylesheets(state, resources) {
+  state.stylesheets = null;
+  null !== state.unsuspend &&
+    (state.count++,
+    (precedencesByRoot = new Map()),
+    resources.forEach(insertStylesheetIntoRoot, state),
+    (precedencesByRoot = null),
+    onUnsuspend.call(state));
+}
+function insertStylesheetIntoRoot(root, resource) {
+  if (!(resource.state.loading & 4)) {
+    var precedences = precedencesByRoot.get(root);
+    if (precedences) var last = precedences.get("last");
+    else {
+      precedences = new Map();
+      precedencesByRoot.set(root, precedences);
+      for (
+        var nodes = root.querySelectorAll(
+            "link[data-precedence],style[data-precedence]"
+          ),
+          i = 0;
+        i < nodes.length;
+        i++
+      ) {
+        var node = nodes[i];
+        if (
+          "link" === node.nodeName ||
+          "not all" !== node.getAttribute("media")
+        )
+          precedences.set("p" + node.dataset.precedence, node), (last = node);
+      }
+      last && precedences.set("last", last);
+    }
+    nodes = resource.instance;
+    node = nodes.getAttribute("data-precedence");
+    i = precedences.get("p" + node) || last;
+    i === last && precedences.set("last", nodes);
+    precedences.set(node, nodes);
+    this.count++;
+    last = onUnsuspend.bind(this);
+    nodes.addEventListener("load", last);
+    nodes.addEventListener("error", last);
+    i
+      ? i.parentNode.insertBefore(nodes, i.nextSibling)
+      : ((root = 9 === root.nodeType ? root.head : root),
+        root.insertBefore(nodes, root.firstChild));
+    resource.state.loading |= 4;
   }
 }
 var Dispatcher = Internals.Dispatcher,
@@ -16105,10 +16365,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1836 = {
+var devToolsConfig$jscomp$inline_1805 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-8dc837cd",
+  version: "18.3.0-www-modern-ef93e10b",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16126,10 +16386,10 @@ var devToolsConfig$jscomp$inline_1836 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1836.bundleType,
-  version: devToolsConfig$jscomp$inline_1836.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1836.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1836.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1805.bundleType,
+  version: devToolsConfig$jscomp$inline_1805.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1805.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1805.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16146,14 +16406,14 @@ var devToolsConfig$jscomp$inline_1836 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1836.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1805.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-8dc837cd"
+  reconcilerVersion: "18.3.0-www-modern-ef93e10b"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16309,7 +16569,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-8dc837cd";
+exports.version = "18.3.0-www-modern-ef93e10b";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

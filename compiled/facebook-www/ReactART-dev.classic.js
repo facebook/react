@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-7d98bb40";
+var ReactVersion = "18.3.0-www-classic-dfeb256e";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2521,24 +2521,24 @@ function lanesToEventPriority(lanes) {
 
 // Renderers that don't support hydration
 // can re-export everything from this module.
-function shim$1() {
+function shim$2() {
   throw new Error(
     "The current renderer does not support hydration. " +
       "This error is likely caused by a bug in React. " +
       "Please file an issue."
   );
 } // Hydration (when unsupported)
-var isSuspenseInstancePending = shim$1;
-var isSuspenseInstanceFallback = shim$1;
-var getSuspenseInstanceFallbackErrorDetails = shim$1;
-var registerSuspenseInstanceRetry = shim$1;
-var clearSuspenseBoundary = shim$1;
-var clearSuspenseBoundaryFromContainer = shim$1;
-var errorHydratingContainer = shim$1;
+var isSuspenseInstancePending = shim$2;
+var isSuspenseInstanceFallback = shim$2;
+var getSuspenseInstanceFallbackErrorDetails = shim$2;
+var registerSuspenseInstanceRetry = shim$2;
+var clearSuspenseBoundary = shim$2;
+var clearSuspenseBoundaryFromContainer = shim$2;
+var errorHydratingContainer = shim$2;
 
 // Renderers that don't support React Scopes
 // can re-export everything from this module.
-function shim() {
+function shim$1() {
   throw new Error(
     "The current renderer does not support React Scopes. " +
       "This error is likely caused by a bug in React. " +
@@ -2546,8 +2546,19 @@ function shim() {
   );
 } // React Scopes (when unsupported)
 
-var prepareScopeUpdate = shim;
-var getInstanceFromScope = shim;
+var prepareScopeUpdate = shim$1;
+var getInstanceFromScope = shim$1;
+
+// Renderers that don't support hydration
+// can re-export everything from this module.
+function shim() {
+  throw new Error(
+    "The current renderer does not support Resources. " +
+      "This error is likely caused by a bug in React. " +
+      "Please file an issue."
+  );
+} // Resources (when unsupported)
+var suspendResource = shim;
 
 var pooledTransform = new Transform();
 var NO_CONTEXT = {};
@@ -2922,6 +2933,9 @@ function unhideTextInstance(textInstance, text) {
 }
 function getInstanceFromNode(node) {
   throw new Error("Not implemented.");
+}
+function maySuspendCommit(type, props) {
+  return false;
 }
 function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
@@ -5576,6 +5590,13 @@ function trackUsedThenable(thenableState, thenable, index) {
     }
   }
 }
+function suspendCommit() {
+  // This extra indirection only exists so it can handle passing
+  // noopSuspenseyCommitThenable through to throwException.
+  // TODO: Factor the thenable check out of throwException
+  suspendedThenable = noopSuspenseyCommitThenable;
+  throw SuspenseyCommitException;
+} // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -17687,16 +17708,28 @@ function preloadInstanceAndSuspendIfNeeded(
   props,
   renderLanes
 ) {
-  // Ask the renderer if this instance should suspend the commit.
-  {
-    // If this flag was set previously, we can remove it. The flag represents
-    // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for maySuspendCommit to always return true, but
-    // if the renderer is reasonably confident that the underlying resource
-    // won't be evicted, it can return false as a performance optimization.
-    workInProgress.flags &= ~SuspenseyCommit;
-    return;
-  } // Mark this fiber with a flag. We use this right before the commit phase to
+  workInProgress.flags |= SuspenseyCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
+  // check that `useDeferredValue` does to determine whether it needs to
+  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
+  // suspending until you opt in with startTransition or Suspense) but it
+  // also happens to be the desired behavior for the concrete use cases we've
+  // thought of so far, like CSS loading, fonts, images, etc.
+  // TODO: We may decide to expose a way to force a fallback even during a
+  // sync update.
+
+  if (!includesOnlyNonUrgentLanes(renderLanes));
+  else {
+    // Preload the instance
+    var isReady = preloadInstance();
+
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen());
+      else {
+        // Trigger a fallback rather than block the render.
+        suspendCommit();
+      }
+    }
+  }
 }
 
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -18129,6 +18162,8 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       var _type = workInProgress.type;
 
+      var _maySuspend = maySuspendCommit();
+
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(current, workInProgress, _type, newProps);
 
@@ -18183,7 +18218,17 @@ function completeWork(current, workInProgress, renderLanes) {
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
 
-      preloadInstanceAndSuspendIfNeeded(workInProgress);
+      if (_maySuspend) {
+        preloadInstanceAndSuspendIfNeeded(
+          workInProgress,
+          _type,
+          newProps,
+          renderLanes
+        );
+      } else {
+        workInProgress.flags &= ~SuspenseyCommit;
+      }
+
       return null;
     }
 
@@ -22559,6 +22604,50 @@ function commitPassiveUnmountEffects(finishedWork) {
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentFiber();
 }
+function accumulateSuspenseyCommit(finishedWork) {
+  accumulateSuspenseyCommitOnFiber(finishedWork);
+}
+
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+    var child = parentFiber.child;
+
+    while (child !== null) {
+      accumulateSuspenseyCommitOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case HostHoistable: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      if (fiber.flags & SuspenseyCommit) {
+        if (fiber.memoizedState !== null) {
+          suspendResource();
+        }
+      }
+
+      break;
+    }
+
+    case HostComponent: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      break;
+    }
+
+    case HostRoot:
+    case HostPortal:
+    // eslint-disable-next-line-no-fallthrough
+
+    default: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+    }
+  }
+}
 
 function detachAlternateSiblings(parentFiber) {
   // A fiber was deleted from this parent fiber, but it's still part of the
@@ -24161,6 +24250,11 @@ function commitRootWhenReady(
   lanes
 ) {
   if (includesOnlyNonUrgentLanes(lanes)) {
+    // the suspensey resources. The renderer is responsible for accumulating
+    // all the load events. This all happens in a single synchronous
+    // transaction, so it track state in its own module scope.
+
+    accumulateSuspenseyCommit(finishedWork); // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
 

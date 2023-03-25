@@ -1065,1313 +1065,153 @@ function getEventTarget(nativeEvent) {
   return target.nodeType === TEXT_NODE ? target.parentNode : target;
 }
 
-// Below code forked from dom-accessibility-api
-var tagToRoleMappings = {
-  ARTICLE: "article",
-  ASIDE: "complementary",
-  BODY: "document",
-  BUTTON: "button",
-  DATALIST: "listbox",
-  DD: "definition",
-  DETAILS: "group",
-  DIALOG: "dialog",
-  DT: "term",
-  FIELDSET: "group",
-  FIGURE: "figure",
-  // WARNING: Only with an accessible name
-  FORM: "form",
-  FOOTER: "contentinfo",
-  H1: "heading",
-  H2: "heading",
-  H3: "heading",
-  H4: "heading",
-  H5: "heading",
-  H6: "heading",
-  HEADER: "banner",
-  HR: "separator",
-  LEGEND: "legend",
-  LI: "listitem",
-  MATH: "math",
-  MAIN: "main",
-  MENU: "list",
-  NAV: "navigation",
-  OL: "list",
-  OPTGROUP: "group",
-  // WARNING: Only in certain context
-  OPTION: "option",
-  OUTPUT: "status",
-  PROGRESS: "progressbar",
-  // WARNING: Only with an accessible name
-  SECTION: "region",
-  SUMMARY: "button",
-  TABLE: "table",
-  TBODY: "rowgroup",
-  TEXTAREA: "textbox",
-  TFOOT: "rowgroup",
-  // WARNING: Only in certain context
-  TD: "cell",
-  TH: "columnheader",
-  THEAD: "rowgroup",
-  TR: "row",
-  UL: "list"
-};
+var valueStack = [];
+var fiberStack;
 
-function getImplicitRole(element) {
-  var mappedByTag = tagToRoleMappings[element.tagName];
-
-  if (mappedByTag !== undefined) {
-    return mappedByTag;
-  }
-
-  switch (element.tagName) {
-    case "A":
-    case "AREA":
-    case "LINK":
-      if (element.hasAttribute("href")) {
-        return "link";
-      }
-
-      break;
-
-    case "IMG":
-      if ((element.getAttribute("alt") || "").length > 0) {
-        return "img";
-      }
-
-      break;
-
-    case "INPUT": {
-      var type = element.type;
-
-      switch (type) {
-        case "button":
-        case "image":
-        case "reset":
-        case "submit":
-          return "button";
-
-        case "checkbox":
-        case "radio":
-          return type;
-
-        case "range":
-          return "slider";
-
-        case "email":
-        case "tel":
-        case "text":
-        case "url":
-          if (element.hasAttribute("list")) {
-            return "combobox";
-          }
-
-          return "textbox";
-
-        case "search":
-          if (element.hasAttribute("list")) {
-            return "combobox";
-          }
-
-          return "searchbox";
-
-        default:
-          return null;
-      }
-    }
-
-    case "SELECT":
-      if (element.hasAttribute("multiple") || element.size > 1) {
-        return "listbox";
-      }
-
-      return "combobox";
-  }
-
-  return null;
+{
+  fiberStack = [];
 }
 
-function getExplicitRoles(element) {
-  var role = element.getAttribute("role");
+var index = -1;
 
-  if (role) {
-    return role.trim().split(" ");
-  }
-
-  return null;
-} // https://w3c.github.io/html-aria/#document-conformance-requirements-for-use-of-aria-attributes-in-html
-
-function hasRole(element, role) {
-  var explicitRoles = getExplicitRoles(element);
-
-  if (explicitRoles !== null && explicitRoles.indexOf(role) >= 0) {
-    return true;
-  }
-
-  return role === getImplicitRole(element);
+function createCursor(defaultValue) {
+  return {
+    current: defaultValue
+  };
 }
 
-var canUseDOM = !!(
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined"
-);
-
-// $FlowFixMe[method-unbinding]
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-/*
- * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
- * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
- *
- * The functions in this module will throw an easier-to-understand,
- * easier-to-debug exception with a clear errors message message explaining the
- * problem. (Instead of a confusing exception thrown inside the implementation
- * of the `value` object).
- */
-// $FlowFixMe only called in DEV, so void return is not possible.
-function typeName(value) {
-  {
-    // toStringTag is needed for namespaced types like Temporal.Instant
-    var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-    var type =
-      (hasToStringTag && value[Symbol.toStringTag]) ||
-      value.constructor.name ||
-      "Object"; // $FlowFixMe
-
-    return type;
-  }
-} // $FlowFixMe only called in DEV, so void return is not possible.
-
-function willCoercionThrow(value) {
-  {
-    try {
-      testStringCoercion(value);
-      return false;
-    } catch (e) {
-      return true;
-    }
-  }
-}
-
-function testStringCoercion(value) {
-  // If you ended up here by following an exception call stack, here's what's
-  // happened: you supplied an object or symbol value to React (as a prop, key,
-  // DOM attribute, CSS property, string ref, etc.) and when React tried to
-  // coerce it to a string using `'' + value`, an exception was thrown.
-  //
-  // The most common types that will cause this exception are `Symbol` instances
-  // and Temporal objects like `Temporal.Instant`. But any object that has a
-  // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-  // exception. (Library authors do this to prevent users from using built-in
-  // numeric operators like `+` or comparison operators like `>=` because custom
-  // methods are needed to perform accurate arithmetic or comparison.)
-  //
-  // To fix the problem, coerce this object or symbol value to a string before
-  // passing it to React. The most reliable way is usually `String(value)`.
-  //
-  // To find which value is throwing, check the browser or debugger console.
-  // Before this exception was thrown, there should be `console.error` output
-  // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-  // problem and how that type was used: key, atrribute, input value prop, etc.
-  // In most cases, this console output also shows the component and its
-  // ancestor components where the exception happened.
-  //
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  return "" + value;
-}
-
-function checkAttributeStringCoercion(value, attributeName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` attribute is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        attributeName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkKeyStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided key is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkPropStringCoercion(value, propName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` prop is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        propName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkCSSPropertyStringCoercion(value, propName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` CSS property is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        propName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkHtmlStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided HTML markup uses a value of unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkFormFieldValueStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "Form field values (value, checked, defaultValue, or defaultChecked props)" +
-          " must be strings, not %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-
-// Attributes that aren't in the filter are presumed to have this type.
-
-var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
-// "enumerated" attributes with "true" and "false" as possible values.
-// When true, it should be set to a "true" string.
-// When false, it should be set to a "false" string.
-
-var BOOLEANISH_STRING = 2; // A real boolean attribute.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-
-var BOOLEAN = 3; // An attribute that can be used as a flag as well as with a value.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-// For any other value, should be present with that value.
-
-var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a numeric.
-// When falsy, it should be removed.
-
-var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
-// When falsy, it should be removed.
-
-var POSITIVE_NUMERIC = 6;
-/* eslint-disable max-len */
-
-var ATTRIBUTE_NAME_START_CHAR =
-  ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
-/* eslint-enable max-len */
-
-var ATTRIBUTE_NAME_CHAR =
-  ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
-var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
-);
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
-function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
-    return true;
-  }
-
-  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
-    return false;
-  }
-
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
-    return true;
-  }
-
-  illegalAttributeNameCache[attributeName] = true;
-
-  {
-    error("Invalid attribute name: `%s`", attributeName);
-  }
-
-  return false;
-}
-function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
-} // $FlowFixMe[missing-this-annot]
-
-function PropertyInfoRecord(
-  name,
-  type,
-  mustUseProperty,
-  attributeName,
-  attributeNamespace,
-  sanitizeURL,
-  removeEmptyString
-) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
-} // When adding attributes to this list, be sure to also add them to
-// the `possibleStandardNames` module to ensure casing and incorrect
-// name warnings.
-
-var properties = {}; // A few React string attributes have a different name.
-// This is a mapping from React prop names to the attribute names.
-
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  var name = _ref[0],
-    attributeName = _ref[1];
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" HTML attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
-  name
-) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML boolean attributes.
-
-[
-  "allowFullScreen",
-  "async", // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  "autoFocus",
-  "autoPlay",
-  "controls",
-  "default",
-  "defer",
-  "disabled",
-  "disablePictureInPicture",
-  "disableRemotePlayback",
-  "formNoValidate",
-  "hidden",
-  "loop",
-  "noModule",
-  "noValidate",
-  "open",
-  "playsInline",
-  "readOnly",
-  "required",
-  "reversed",
-  "scoped",
-  "seamless", // Microdata
-  "itemScope"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are the few React props that we set as DOM properties
-// rather than attributes. These are all booleans.
-
-[
-  "checked", // Note: `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`. We have special logic for handling this.
-  "multiple",
-  "muted",
-  "selected" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    true, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that are "overloaded booleans": they behave like
-// booleans, but can also accept a string value.
-
-[
-  "capture",
-  "download" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    OVERLOADED_BOOLEAN,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be positive numbers.
-
-[
-  "cols",
-  "rows",
-  "size",
-  "span" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    POSITIVE_NUMERIC,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be numbers.
-
-["rowSpan", "start"].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    NUMERIC,
-    false, // mustUseProperty
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-});
-var CAMELIZE = /[\-\:]([a-z])/g;
-
-var capitalize = function (token) {
-  return token[1].toUpperCase();
-}; // This is a list of all SVG attributes that need special casing, namespacing,
-// or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML attribute filter.
-// Some of these attributes can be hard to find. This list was created by
-// scraping the MDN documentation.
-
-[
-  "accent-height",
-  "alignment-baseline",
-  "arabic-form",
-  "baseline-shift",
-  "cap-height",
-  "clip-path",
-  "clip-rule",
-  "color-interpolation",
-  "color-interpolation-filters",
-  "color-profile",
-  "color-rendering",
-  "dominant-baseline",
-  "enable-background",
-  "fill-opacity",
-  "fill-rule",
-  "flood-color",
-  "flood-opacity",
-  "font-family",
-  "font-size",
-  "font-size-adjust",
-  "font-stretch",
-  "font-style",
-  "font-variant",
-  "font-weight",
-  "glyph-name",
-  "glyph-orientation-horizontal",
-  "glyph-orientation-vertical",
-  "horiz-adv-x",
-  "horiz-origin-x",
-  "image-rendering",
-  "letter-spacing",
-  "lighting-color",
-  "marker-end",
-  "marker-mid",
-  "marker-start",
-  "overline-position",
-  "overline-thickness",
-  "paint-order",
-  "panose-1",
-  "pointer-events",
-  "rendering-intent",
-  "shape-rendering",
-  "stop-color",
-  "stop-opacity",
-  "strikethrough-position",
-  "strikethrough-thickness",
-  "stroke-dasharray",
-  "stroke-dashoffset",
-  "stroke-linecap",
-  "stroke-linejoin",
-  "stroke-miterlimit",
-  "stroke-opacity",
-  "stroke-width",
-  "text-anchor",
-  "text-decoration",
-  "text-rendering",
-  "transform-origin",
-  "underline-position",
-  "underline-thickness",
-  "unicode-bidi",
-  "unicode-range",
-  "units-per-em",
-  "v-alphabetic",
-  "v-hanging",
-  "v-ideographic",
-  "v-mathematical",
-  "vector-effect",
-  "vert-adv-y",
-  "vert-origin-x",
-  "vert-origin-y",
-  "word-spacing",
-  "writing-mode",
-  "xmlns:xlink",
-  "x-height" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xlink namespace.
-
-[
-  "xlink:actuate",
-  "xlink:arcrole",
-  "xlink:role",
-  "xlink:show",
-  "xlink:title",
-  "xlink:type" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    "http://www.w3.org/1999/xlink",
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xml namespace.
-
-[
-  "xml:base",
-  "xml:lang",
-  "xml:space" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    name,
-    STRING,
-    false, // mustUseProperty
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    false, // sanitizeURL
-    false
-  );
-}); // These attribute exists both in HTML and SVG.
-// The attribute name is case-sensitive in SVG so we can't just use
-// the React name like we do for attributes that exist only in HTML.
-
-["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
-    STRING,
-    false, // mustUseProperty
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
-
-var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[xlinkHref] = new PropertyInfoRecord(
-  "xlinkHref",
-  STRING,
-  false, // mustUseProperty
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  true, // sanitizeURL
-  false
-);
-var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[formAction] = new PropertyInfoRecord(
-  "formAction",
-  STRING,
-  false, // mustUseProperty
-  "formaction", // attributeName
-  null, // attributeNamespace
-  true, // sanitizeURL
-  false
-);
-["src", "href", "action"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
-    STRING,
-    false, // mustUseProperty
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    true, // sanitizeURL
-    true
-  );
-});
-
-// and any newline or tab are filtered out as if they're not part of the URL.
-// https://url.spec.whatwg.org/#url-parsing
-// Tab or newline are defined as \r\n\t:
-// https://infra.spec.whatwg.org/#ascii-tab-or-newline
-// A C0 control is a code point in the range \u0000 NULL to \u001F
-// INFORMATION SEPARATOR ONE, inclusive:
-// https://infra.spec.whatwg.org/#c0-control-or-space
-
-/* eslint-disable max-len */
-
-var isJavaScriptProtocol =
-  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
-
-function sanitizeURL(url) {
-  {
-    if (isJavaScriptProtocol.test(url)) {
-      throw new Error(
-        "React has blocked a javascript: URL as a security precaution."
-      );
-    }
-  }
-}
-
-/**
- * Get the value for a property on a node. Only used in DEV for SSR validation.
- * The "expected" argument is used as a hint of what the expected value is.
- * Some properties have multiple equivalent values.
- */
-
-function getValueForProperty(node, name, expected, propertyInfo) {
-  {
-    if (propertyInfo.mustUseProperty) {
-      var propertyName = propertyInfo.propertyName;
-      return node[propertyName];
-    }
-
-    var attributeName = propertyInfo.attributeName;
-
-    if (!node.hasAttribute(attributeName)) {
-      // shouldRemoveAttribute
-      switch (typeof expected) {
-        case "function":
-        case "symbol":
-          // eslint-disable-line
-          return expected;
-
-        case "boolean": {
-          if (!propertyInfo.acceptsBooleans) {
-            return expected;
-          }
-        }
-      }
-
-      switch (propertyInfo.type) {
-        case BOOLEAN: {
-          if (!expected) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case OVERLOADED_BOOLEAN: {
-          if (expected === false) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case NUMERIC: {
-          if (isNaN(expected)) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case POSITIVE_NUMERIC: {
-          if (isNaN(expected) || expected < 1) {
-            return expected;
-          }
-
-          break;
-        }
-      }
-
-      {
-        if (propertyInfo.removeEmptyString && expected === "") {
-          {
-            if (name === "src") {
-              error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  "This may cause the browser to download the whole page again over the network. " +
-                  "To fix this, either do not render the element at all " +
-                  "or pass null to %s instead of an empty string.",
-                name,
-                name
-              );
-            } else {
-              error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  "To fix this, either do not render the element at all " +
-                  "or pass null to %s instead of an empty string.",
-                name,
-                name
-              );
-            }
-          }
-
-          return expected;
-        }
-      }
-
-      return expected === undefined ? undefined : null;
-    } // Even if this property uses a namespace we use getAttribute
-    // because we assume its namespaced name is the same as our config.
-    // To use getAttributeNS we need the local name which we don't have
-    // in our config atm.
-
-    var value = node.getAttribute(attributeName);
-
-    if (expected == null) {
-      // We had an attribute but shouldn't have had one, so read it
-      // for the error message.
-      return value;
-    } // shouldRemoveAttribute
-
-    switch (propertyInfo.type) {
-      case BOOLEAN: {
-        if (expected) {
-          // If this was a boolean, it doesn't matter what the value is
-          // the fact that we have it is the same as the expected.
-          // As long as it's positive.
-          return expected;
-        }
-
-        return value;
-      }
-
-      case OVERLOADED_BOOLEAN: {
-        if (value === "") {
-          return true;
-        }
-
-        if (expected === false) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-
-      case NUMERIC: {
-        if (isNaN(expected)) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-
-      case POSITIVE_NUMERIC: {
-        if (isNaN(expected) || expected < 1) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-    }
-
+function pop(cursor, fiber) {
+  if (index < 0) {
     {
-      checkAttributeStringCoercion(expected, name);
+      error("Unexpected pop.");
     }
 
-    if (value === "" + expected) {
-      return expected;
-    }
-
-    return value;
-  }
-}
-/**
- * Get the value for a attribute on a node. Only used in DEV for SSR validation.
- * The third argument is used as a hint of what the expected value is. Some
- * attributes have multiple equivalent values.
- */
-
-function getValueForAttribute(node, name, expected) {
-  {
-    if (!isAttributeNameSafe(name)) {
-      return;
-    }
-
-    if (!node.hasAttribute(name)) {
-      // shouldRemoveAttribute
-      switch (typeof expected) {
-        case "function":
-        case "symbol":
-          // eslint-disable-line
-          return expected;
-
-        case "boolean": {
-          var prefix = name.toLowerCase().slice(0, 5);
-
-          if (prefix !== "data-" && prefix !== "aria-") {
-            return expected;
-          }
-        }
-      }
-
-      return expected === undefined ? undefined : null;
-    }
-
-    var value = node.getAttribute(name);
-
-    {
-      checkAttributeStringCoercion(expected, name);
-    }
-
-    if (value === "" + expected) {
-      return expected;
-    }
-
-    return value;
-  }
-}
-function getValueForAttributeOnCustomComponent(node, name, expected) {
-  {
-    if (!isAttributeNameSafe(name)) {
-      return;
-    }
-
-    if (!node.hasAttribute(name)) {
-      // shouldRemoveAttribute
-      switch (typeof expected) {
-        case "symbol":
-        case "object":
-          // Symbols and objects are ignored when they're emitted so
-          // it would be expected that they end up not having an attribute.
-          return expected;
-
-        case "function":
-          if (enableCustomElementPropertySupport) {
-            return expected;
-          }
-
-          break;
-
-        case "boolean":
-          if (enableCustomElementPropertySupport) {
-            if (expected === false) {
-              return expected;
-            }
-          }
-      }
-
-      return expected === undefined ? undefined : null;
-    }
-
-    if (enableCustomElementPropertySupport && name === "className") {
-      // className is a special cased property on the server to render as an attribute.
-      name = "class";
-    }
-
-    var value = node.getAttribute(name);
-
-    if (enableCustomElementPropertySupport) {
-      if (value === "" && expected === true) {
-        return true;
-      }
-    }
-
-    {
-      checkAttributeStringCoercion(expected, name);
-    }
-
-    if (value === "" + expected) {
-      return expected;
-    }
-
-    return value;
-  }
-}
-/**
- * Sets the value for a property on a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- * @param {*} value
- */
-
-function setValueForProperty(node, name, value) {
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out reserved words.
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
     return;
   }
 
-  var propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo !== null) {
-    if (propertyInfo.mustUseProperty) {
-      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
-      // right now.
-      node[propertyInfo.propertyName] =
-        value && typeof value !== "function" && typeof value !== "symbol";
-      return;
-    } // The rest are treated as attributes with special cases.
-
-    var attributeName = propertyInfo.attributeName;
-
-    if (value === null) {
-      node.removeAttribute(attributeName);
-      return;
-    } // shouldRemoveAttribute
-
-    switch (typeof value) {
-      case "undefined":
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        node.removeAttribute(attributeName);
-        return;
-
-      case "boolean": {
-        if (!propertyInfo.acceptsBooleans) {
-          node.removeAttribute(attributeName);
-          return;
-        }
-      }
+  {
+    if (fiber !== fiberStack[index]) {
+      error("Unexpected Fiber popped.");
     }
-
-    {
-      if (propertyInfo.removeEmptyString && value === "") {
-        {
-          if (name === "src") {
-            error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                "This may cause the browser to download the whole page again over the network. " +
-                "To fix this, either do not render the element at all " +
-                "or pass null to %s instead of an empty string.",
-              name,
-              name
-            );
-          } else {
-            error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                "To fix this, either do not render the element at all " +
-                "or pass null to %s instead of an empty string.",
-              name,
-              name
-            );
-          }
-        }
-
-        node.removeAttribute(attributeName);
-        return;
-      }
-    }
-
-    switch (propertyInfo.type) {
-      case BOOLEAN:
-        if (value) {
-          node.setAttribute(attributeName, "");
-        } else {
-          node.removeAttribute(attributeName);
-          return;
-        }
-
-        break;
-
-      case OVERLOADED_BOOLEAN:
-        if (value === true) {
-          node.setAttribute(attributeName, "");
-        } else if (value === false) {
-          node.removeAttribute(attributeName);
-        } else {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          node.setAttribute(attributeName, value);
-        }
-
-        return;
-
-      case NUMERIC:
-        if (!isNaN(value)) {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          node.setAttribute(attributeName, value);
-        } else {
-          node.removeAttribute(attributeName);
-        }
-
-        break;
-
-      case POSITIVE_NUMERIC:
-        if (!isNaN(value) && value >= 1) {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          node.setAttribute(attributeName, value);
-        } else {
-          node.removeAttribute(attributeName);
-        }
-
-        break;
-
-      default: {
-        var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-
-        if (enableTrustedTypesIntegration) {
-          attributeValue = value;
-        } else {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          attributeValue = "" + value;
-        }
-
-        if (propertyInfo.sanitizeURL) {
-          sanitizeURL(attributeValue.toString());
-        }
-
-        var attributeNamespace = propertyInfo.attributeNamespace;
-
-        if (attributeNamespace) {
-          node.setAttributeNS(
-            attributeNamespace,
-            attributeName,
-            attributeValue
-          );
-        } else {
-          node.setAttribute(attributeName, attributeValue);
-        }
-      }
-    }
-  } else if (isAttributeNameSafe(name)) {
-    // If the prop isn't in the special list, treat it as a simple attribute.
-    // shouldRemoveAttribute
-    if (value === null) {
-      node.removeAttribute(name);
-      return;
-    }
-
-    switch (typeof value) {
-      case "undefined":
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        node.removeAttribute(name);
-        return;
-
-      case "boolean": {
-        var prefix = name.toLowerCase().slice(0, 5);
-
-        if (prefix !== "data-" && prefix !== "aria-") {
-          node.removeAttribute(name);
-          return;
-        }
-      }
-    }
-
-    {
-      checkAttributeStringCoercion(value, name);
-    }
-
-    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
   }
+
+  cursor.current = valueStack[index];
+  valueStack[index] = null;
+
+  {
+    fiberStack[index] = null;
+  }
+
+  index--;
 }
-function setValueForPropertyOnCustomComponent(node, name, value) {
-  if (
-    enableCustomElementPropertySupport &&
-    name[0] === "o" &&
-    name[1] === "n"
-  ) {
-    var useCapture = name.endsWith("Capture");
-    var eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
-    var prevProps = getFiberCurrentPropsFromNode(node);
-    var prevValue = prevProps != null ? prevProps[name] : null;
 
-    if (typeof prevValue === "function") {
-      node.removeEventListener(eventName, prevValue, useCapture);
-    }
+function push(cursor, value, fiber) {
+  index++;
+  valueStack[index] = cursor.current;
 
-    if (typeof value === "function") {
-      if (typeof prevValue !== "function" && prevValue !== null) {
-        // If we previously assigned a non-function type into this node, then
-        // remove it when switching to event listener mode.
-        if (name in node) {
-          node[name] = null;
-        } else if (node.hasAttribute(name)) {
-          node.removeAttribute(name);
-        }
-      } // $FlowFixMe value can't be casted to EventListener.
+  {
+    fiberStack[index] = fiber;
+  }
 
-      node.addEventListener(eventName, value, useCapture);
-      return;
+  cursor.current = value;
+}
+
+var contextStackCursor$1 = createCursor(null);
+var contextFiberStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null);
+
+function requiredContext(c) {
+  {
+    if (c === null) {
+      error(
+        "Expected host context to exist. This error is likely caused by a bug " +
+          "in React. Please file an issue."
+      );
     }
   }
 
-  if (enableCustomElementPropertySupport && name in node) {
-    node[name] = value;
+  return c;
+}
+
+function getCurrentRootHostContainer() {
+  return rootInstanceStackCursor.current;
+}
+
+function getRootHostContainer() {
+  var rootInstance = requiredContext(rootInstanceStackCursor.current);
+  return rootInstance;
+}
+
+function pushHostContainer(fiber, nextRootInstance) {
+  // Push current root instance onto the stack;
+  // This allows us to reset root when portals are popped.
+  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
+  // However, we can't just call getRootHostContext() and push it because
+  // we'd have a different number of entries on the stack depending on
+  // whether getRootHostContext() throws somewhere in renderer code or not.
+  // So we push an empty value first. This lets us safely unwind on errors.
+
+  push(contextStackCursor$1, null, fiber);
+  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
+
+  pop(contextStackCursor$1, fiber);
+  push(contextStackCursor$1, nextRootContext, fiber);
+}
+
+function popHostContainer(fiber) {
+  pop(contextStackCursor$1, fiber);
+  pop(contextFiberStackCursor, fiber);
+  pop(rootInstanceStackCursor, fiber);
+}
+
+function getHostContext() {
+  var context = requiredContext(contextStackCursor$1.current);
+  return context;
+}
+
+function pushHostContext(fiber) {
+  var context = requiredContext(contextStackCursor$1.current);
+  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
+
+  if (context === nextContext) {
+    return;
+  } // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber);
+  push(contextStackCursor$1, nextContext, fiber);
+}
+
+function popHostContext(fiber) {
+  // Do not pop unless this Fiber provided the current context.
+  // pushHostContext() only pushes Fibers that provide unique contexts.
+  if (contextFiberStackCursor.current !== fiber) {
     return;
   }
 
-  if (isAttributeNameSafe(name)) {
-    // shouldRemoveAttribute
-    if (value === null) {
-      node.removeAttribute(name);
-      return;
-    }
-
-    switch (typeof value) {
-      case "undefined":
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        node.removeAttribute(name);
-        return;
-
-      case "boolean": {
-        if (enableCustomElementPropertySupport) {
-          if (value === true) {
-            node.setAttribute(name, "");
-            return;
-          }
-
-          node.removeAttribute(name);
-          return;
-        }
-      }
-    }
-
-    {
-      checkAttributeStringCoercion(value, name);
-    }
-
-    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
-  }
+  pop(contextStackCursor$1, fiber);
+  pop(contextFiberStackCursor, fiber);
 }
+
+// This module only exists as an ESM wrapper around the external CommonJS
+var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
+var cancelCallback$1 = Scheduler.unstable_cancelCallback;
+var shouldYield = Scheduler.unstable_shouldYield;
+var requestPaint = Scheduler.unstable_requestPaint;
+var now$1 = Scheduler.unstable_now;
+var getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel;
+var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
+var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
+var NormalPriority$1 = Scheduler.unstable_NormalPriority;
+var LowPriority = Scheduler.unstable_LowPriority;
+var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
+// on scheduler/unstable_mock, which we'll need for internal testing
+
+var log$2 = Scheduler.log;
+var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
 
 // Helpers to patch console.logs to avoid logging during side-effect free
 // replaying on render function. This currently only patches the object
@@ -2469,5753 +1309,6 @@ function reenableLogs() {
     }
   }
 }
-
-var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
-var prefix;
-function describeBuiltInComponentFrame(name, source, ownerFn) {
-  {
-    if (prefix === undefined) {
-      // Extract the VM specific prefix used by each line.
-      try {
-        throw Error();
-      } catch (x) {
-        var match = x.stack.trim().match(/\n( *(at )?)/);
-        prefix = (match && match[1]) || "";
-      }
-    } // We use the prefix to ensure our stacks line up with native stack frames.
-
-    return "\n" + prefix + name;
-  }
-}
-var reentry = false;
-var componentFrameCache;
-
-{
-  var PossiblyWeakMap$2 = typeof WeakMap === "function" ? WeakMap : Map;
-  componentFrameCache = new PossiblyWeakMap$2();
-}
-
-function describeNativeComponentFrame(fn, construct) {
-  // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
-    return "";
-  }
-
-  {
-    var frame = componentFrameCache.get(fn);
-
-    if (frame !== undefined) {
-      return frame;
-    }
-  }
-
-  var control;
-  reentry = true;
-  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
-
-  Error.prepareStackTrace = undefined;
-  var previousDispatcher;
-
-  {
-    previousDispatcher = ReactCurrentDispatcher$2.current; // Set the dispatcher in DEV because this might be call in the render function
-    // for warnings.
-
-    ReactCurrentDispatcher$2.current = null;
-    disableLogs();
-  }
-
-  try {
-    // This should throw.
-    if (construct) {
-      // Something should be setting the props in the constructor.
-      var Fake = function () {
-        throw Error();
-      }; // $FlowFixMe
-
-      Object.defineProperty(Fake.prototype, "props", {
-        set: function () {
-          // We use a throwing setter instead of frozen or non-writable props
-          // because that won't throw in a non-strict mode function.
-          throw Error();
-        }
-      });
-
-      if (typeof Reflect === "object" && Reflect.construct) {
-        // We construct a different control for this case to include any extra
-        // frames added by the construct call.
-        try {
-          Reflect.construct(Fake, []);
-        } catch (x) {
-          control = x;
-        }
-
-        Reflect.construct(fn, [], Fake);
-      } else {
-        try {
-          Fake.call();
-        } catch (x) {
-          control = x;
-        } // $FlowFixMe[prop-missing] found when upgrading Flow
-
-        fn.call(Fake.prototype);
-      }
-    } else {
-      try {
-        throw Error();
-      } catch (x) {
-        control = x;
-      } // TODO(luna): This will currently only throw if the function component
-      // tries to access React/ReactDOM/props. We should probably make this throw
-      // in simple components too
-
-      fn();
-    }
-  } catch (sample) {
-    // This is inlined manually because closure doesn't do it for us.
-    if (sample && control && typeof sample.stack === "string") {
-      // This extracts the first frame from the sample that isn't also in the control.
-      // Skipping one frame that we assume is the frame that calls the two.
-      var sampleLines = sample.stack.split("\n");
-      var controlLines = control.stack.split("\n");
-      var s = sampleLines.length - 1;
-      var c = controlLines.length - 1;
-
-      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
-        // We expect at least one stack frame to be shared.
-        // Typically this will be the root most one. However, stack frames may be
-        // cut off due to maximum stack limits. In this case, one maybe cut off
-        // earlier than the other. We assume that the sample is longer or the same
-        // and there for cut off earlier. So we should find the root most frame in
-        // the sample somewhere in the control.
-        c--;
-      }
-
-      for (; s >= 1 && c >= 0; s--, c--) {
-        // Next we find the first one that isn't the same which should be the
-        // frame that called our sample function and the control.
-        if (sampleLines[s] !== controlLines[c]) {
-          // In V8, the first line is describing the message but other VMs don't.
-          // If we're about to return the first line, and the control is also on the same
-          // line, that's a pretty good indicator that our sample threw at same line as
-          // the control. I.e. before we entered the sample frame. So we ignore this result.
-          // This can happen if you passed a class to function component, or non-function.
-          if (s !== 1 || c !== 1) {
-            do {
-              s--;
-              c--; // We may still have similar intermediate frames from the construct call.
-              // The next one that isn't the same should be our match though.
-
-              if (c < 0 || sampleLines[s] !== controlLines[c]) {
-                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-                var _frame = "\n" + sampleLines[s].replace(" at new ", " at "); // If our component frame is labeled "<anonymous>"
-                // but we have a user-provided "displayName"
-                // splice it in to make the stack more readable.
-
-                if (fn.displayName && _frame.includes("<anonymous>")) {
-                  _frame = _frame.replace("<anonymous>", fn.displayName);
-                }
-
-                {
-                  if (typeof fn === "function") {
-                    componentFrameCache.set(fn, _frame);
-                  }
-                } // Return the line we found.
-
-                return _frame;
-              }
-            } while (s >= 1 && c >= 0);
-          }
-
-          break;
-        }
-      }
-    }
-  } finally {
-    reentry = false;
-
-    {
-      ReactCurrentDispatcher$2.current = previousDispatcher;
-      reenableLogs();
-    }
-
-    Error.prepareStackTrace = previousPrepareStackTrace;
-  } // Fallback to just using the name if we couldn't make it throw.
-
-  var name = fn ? fn.displayName || fn.name : "";
-  var syntheticFrame = name ? describeBuiltInComponentFrame(name) : "";
-
-  {
-    if (typeof fn === "function") {
-      componentFrameCache.set(fn, syntheticFrame);
-    }
-  }
-
-  return syntheticFrame;
-}
-
-function describeClassComponentFrame(ctor, source, ownerFn) {
-  {
-    return describeNativeComponentFrame(ctor, true);
-  }
-}
-function describeFunctionComponentFrame(fn, source, ownerFn) {
-  {
-    return describeNativeComponentFrame(fn, false);
-  }
-}
-
-function shouldConstruct$1(Component) {
-  var prototype = Component.prototype;
-  return !!(prototype && prototype.isReactComponent);
-}
-
-function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
-  if (type == null) {
-    return "";
-  }
-
-  if (typeof type === "function") {
-    {
-      return describeNativeComponentFrame(type, shouldConstruct$1(type));
-    }
-  }
-
-  if (typeof type === "string") {
-    return describeBuiltInComponentFrame(type);
-  }
-
-  switch (type) {
-    case REACT_SUSPENSE_TYPE:
-      return describeBuiltInComponentFrame("Suspense");
-
-    case REACT_SUSPENSE_LIST_TYPE:
-      return describeBuiltInComponentFrame("SuspenseList");
-  }
-
-  if (typeof type === "object") {
-    switch (type.$$typeof) {
-      case REACT_FORWARD_REF_TYPE:
-        return describeFunctionComponentFrame(type.render);
-
-      case REACT_MEMO_TYPE:
-        // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
-
-      case REACT_LAZY_TYPE: {
-        var lazyComponent = type;
-        var payload = lazyComponent._payload;
-        var init = lazyComponent._init;
-
-        try {
-          // Lazy may contain any component type so we recursively resolve it.
-          return describeUnknownElementTypeFrameInDEV(
-            init(payload),
-            source,
-            ownerFn
-          );
-        } catch (x) {}
-      }
-    }
-  }
-
-  return "";
-}
-
-function describeFiber(fiber) {
-  switch (fiber.tag) {
-    case HostHoistable:
-    case HostSingleton:
-    case HostComponent:
-      return describeBuiltInComponentFrame(fiber.type);
-
-    case LazyComponent:
-      return describeBuiltInComponentFrame("Lazy");
-
-    case SuspenseComponent:
-      return describeBuiltInComponentFrame("Suspense");
-
-    case SuspenseListComponent:
-      return describeBuiltInComponentFrame("SuspenseList");
-
-    case FunctionComponent:
-    case IndeterminateComponent:
-    case SimpleMemoComponent:
-      return describeFunctionComponentFrame(fiber.type);
-
-    case ForwardRef:
-      return describeFunctionComponentFrame(fiber.type.render);
-
-    case ClassComponent:
-      return describeClassComponentFrame(fiber.type);
-
-    default:
-      return "";
-  }
-}
-
-function getStackByFiberInDevAndProd(workInProgress) {
-  try {
-    var info = "";
-    var node = workInProgress;
-
-    do {
-      info += describeFiber(node); // $FlowFixMe[incompatible-type] we bail out when we get a null
-
-      node = node.return;
-    } while (node);
-
-    return info;
-  } catch (x) {
-    return "\nError generating stack: " + x.message + "\n" + x.stack;
-  }
-}
-
-var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
-var current = null;
-var isRendering = false;
-function getCurrentFiberOwnerNameInDevOrNull() {
-  {
-    if (current === null) {
-      return null;
-    }
-
-    var owner = current._debugOwner;
-
-    if (owner !== null && typeof owner !== "undefined") {
-      return getComponentNameFromFiber(owner);
-    }
-  }
-
-  return null;
-}
-
-function getCurrentFiberStackInDev() {
-  {
-    if (current === null) {
-      return "";
-    } // Safe because if current fiber exists, we are reconciling,
-    // and it is guaranteed to be the work-in-progress version.
-
-    return getStackByFiberInDevAndProd(current);
-  }
-}
-
-function resetCurrentFiber() {
-  {
-    ReactDebugCurrentFrame$1.getCurrentStack = null;
-    current = null;
-    isRendering = false;
-  }
-}
-function setCurrentFiber(fiber) {
-  {
-    ReactDebugCurrentFrame$1.getCurrentStack =
-      fiber === null ? null : getCurrentFiberStackInDev;
-    current = fiber;
-    isRendering = false;
-  }
-}
-function getCurrentFiber() {
-  {
-    return current;
-  }
-}
-function setIsRendering(rendering) {
-  {
-    isRendering = rendering;
-  }
-}
-
-// around this limitation, we use an opaque type that can only be obtained by
-// passing the value through getToStringValue first.
-
-function toString(value) {
-  // The coercion safety check is performed in getToStringValue().
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  return "" + value;
-}
-function getToStringValue(value) {
-  switch (typeof value) {
-    case "boolean":
-    case "number":
-    case "string":
-    case "undefined":
-      return value;
-
-    case "object":
-      {
-        checkFormFieldValueStringCoercion(value);
-      }
-
-      return value;
-
-    default:
-      // function, symbol are assigned as empty strings
-      return "";
-  }
-}
-
-var hasReadOnlyValue = {
-  button: true,
-  checkbox: true,
-  image: true,
-  hidden: true,
-  radio: true,
-  reset: true,
-  submit: true
-};
-function checkControlledValueProps(tagName, props) {
-  {
-    if (
-      !(
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.onInput ||
-        props.readOnly ||
-        props.disabled ||
-        props.value == null
-      )
-    ) {
-      error(
-        "You provided a `value` prop to a form field without an " +
-          "`onChange` handler. This will render a read-only field. If " +
-          "the field should be mutable use `defaultValue`. Otherwise, " +
-          "set either `onChange` or `readOnly`."
-      );
-    }
-
-    if (
-      !(
-        props.onChange ||
-        props.readOnly ||
-        props.disabled ||
-        props.checked == null
-      )
-    ) {
-      error(
-        "You provided a `checked` prop to a form field without an " +
-          "`onChange` handler. This will render a read-only field. If " +
-          "the field should be mutable use `defaultChecked`. Otherwise, " +
-          "set either `onChange` or `readOnly`."
-      );
-    }
-  }
-}
-
-function isCheckable(elem) {
-  var type = elem.type;
-  var nodeName = elem.nodeName;
-  return (
-    nodeName &&
-    nodeName.toLowerCase() === "input" &&
-    (type === "checkbox" || type === "radio")
-  );
-}
-
-function getTracker(node) {
-  return node._valueTracker;
-}
-
-function detachTracker(node) {
-  node._valueTracker = null;
-}
-
-function getValueFromNode(node) {
-  var value = "";
-
-  if (!node) {
-    return value;
-  }
-
-  if (isCheckable(node)) {
-    value = node.checked ? "true" : "false";
-  } else {
-    value = node.value;
-  }
-
-  return value;
-}
-
-function trackValueOnNode(node) {
-  var valueField = isCheckable(node) ? "checked" : "value";
-  var descriptor = Object.getOwnPropertyDescriptor(
-    node.constructor.prototype,
-    valueField
-  );
-
-  {
-    checkFormFieldValueStringCoercion(node[valueField]);
-  }
-
-  var currentValue = "" + node[valueField]; // if someone has already defined a value or Safari, then bail
-  // and don't track value will cause over reporting of changes,
-  // but it's better then a hard failure
-  // (needed for certain tests that spyOn input values and Safari)
-
-  if (
-    node.hasOwnProperty(valueField) ||
-    typeof descriptor === "undefined" ||
-    typeof descriptor.get !== "function" ||
-    typeof descriptor.set !== "function"
-  ) {
-    return;
-  }
-
-  var get = descriptor.get,
-    set = descriptor.set;
-  Object.defineProperty(node, valueField, {
-    configurable: true,
-    // $FlowFixMe[missing-this-annot]
-    get: function () {
-      return get.call(this);
-    },
-    // $FlowFixMe[missing-local-annot]
-    // $FlowFixMe[missing-this-annot]
-    set: function (value) {
-      {
-        checkFormFieldValueStringCoercion(value);
-      }
-
-      currentValue = "" + value;
-      set.call(this, value);
-    }
-  }); // We could've passed this the first time
-  // but it triggers a bug in IE11 and Edge 14/15.
-  // Calling defineProperty() again should be equivalent.
-  // https://github.com/facebook/react/issues/11768
-
-  Object.defineProperty(node, valueField, {
-    enumerable: descriptor.enumerable
-  });
-  var tracker = {
-    getValue: function () {
-      return currentValue;
-    },
-    setValue: function (value) {
-      {
-        checkFormFieldValueStringCoercion(value);
-      }
-
-      currentValue = "" + value;
-    },
-    stopTracking: function () {
-      detachTracker(node);
-      delete node[valueField];
-    }
-  };
-  return tracker;
-}
-
-function track(node) {
-  if (getTracker(node)) {
-    return;
-  } // TODO: Once it's just Fiber we can move this to node._wrapperState
-
-  node._valueTracker = trackValueOnNode(node);
-}
-function updateValueIfChanged(node) {
-  if (!node) {
-    return false;
-  }
-
-  var tracker = getTracker(node); // if there is no tracker at this point it's unlikely
-  // that trying again will succeed
-
-  if (!tracker) {
-    return true;
-  }
-
-  var lastValue = tracker.getValue();
-  var nextValue = getValueFromNode(node);
-
-  if (nextValue !== lastValue) {
-    tracker.setValue(nextValue);
-    return true;
-  }
-
-  return false;
-}
-
-function getActiveElement(doc) {
-  doc = doc || (typeof document !== "undefined" ? document : undefined);
-
-  if (typeof doc === "undefined") {
-    return null;
-  }
-
-  try {
-    return doc.activeElement || doc.body;
-  } catch (e) {
-    return doc.body;
-  }
-}
-
-var didWarnValueDefaultValue$1 = false;
-var didWarnCheckedDefaultChecked = false;
-var didWarnControlledToUncontrolled = false;
-var didWarnUncontrolledToControlled = false;
-
-function isControlled(props) {
-  var usesChecked = props.type === "checkbox" || props.type === "radio";
-  return usesChecked ? props.checked != null : props.value != null;
-}
-/**
- * Implements an <input> host component that allows setting these optional
- * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
- *
- * If `checked` or `value` are not supplied (or null/undefined), user actions
- * that affect the checked state or value will trigger updates to the element.
- *
- * If they are supplied (and not null/undefined), the rendered element will not
- * trigger updates to the element. Instead, the props must change in order for
- * the rendered element to be updated.
- *
- * The rendered element will be initialized as unchecked (or `defaultChecked`)
- * with an empty value (or `defaultValue`).
- *
- * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
- */
-
-function getHostProps$2(element, props) {
-  var node = element;
-  var checked = props.checked;
-  var hostProps = assign({}, props, {
-    defaultChecked: undefined,
-    defaultValue: undefined,
-    value: undefined,
-    checked: checked != null ? checked : node._wrapperState.initialChecked
-  });
-  return hostProps;
-}
-function initWrapperState$2(element, props) {
-  {
-    checkControlledValueProps("input", props);
-
-    if (
-      props.checked !== undefined &&
-      props.defaultChecked !== undefined &&
-      !didWarnCheckedDefaultChecked
-    ) {
-      error(
-        "%s contains an input of type %s with both checked and defaultChecked props. " +
-          "Input elements must be either controlled or uncontrolled " +
-          "(specify either the checked prop, or the defaultChecked prop, but not " +
-          "both). Decide between using a controlled or uncontrolled input " +
-          "element and remove one of these props. More info: " +
-          "https://reactjs.org/link/controlled-components",
-        getCurrentFiberOwnerNameInDevOrNull() || "A component",
-        props.type
-      );
-
-      didWarnCheckedDefaultChecked = true;
-    }
-
-    if (
-      props.value !== undefined &&
-      props.defaultValue !== undefined &&
-      !didWarnValueDefaultValue$1
-    ) {
-      error(
-        "%s contains an input of type %s with both value and defaultValue props. " +
-          "Input elements must be either controlled or uncontrolled " +
-          "(specify either the value prop, or the defaultValue prop, but not " +
-          "both). Decide between using a controlled or uncontrolled input " +
-          "element and remove one of these props. More info: " +
-          "https://reactjs.org/link/controlled-components",
-        getCurrentFiberOwnerNameInDevOrNull() || "A component",
-        props.type
-      );
-
-      didWarnValueDefaultValue$1 = true;
-    }
-  }
-
-  var node = element;
-  var defaultValue = props.defaultValue == null ? "" : props.defaultValue;
-  node._wrapperState = {
-    initialChecked:
-      props.checked != null ? props.checked : props.defaultChecked,
-    initialValue: getToStringValue(
-      props.value != null ? props.value : defaultValue
-    ),
-    controlled: isControlled(props)
-  };
-}
-function updateChecked(element, props) {
-  var node = element;
-  var checked = props.checked;
-
-  if (checked != null) {
-    node.checked = checked;
-  }
-}
-function updateWrapper$1(element, props) {
-  var node = element;
-
-  {
-    var controlled = isControlled(props);
-
-    if (
-      !node._wrapperState.controlled &&
-      controlled &&
-      !didWarnUncontrolledToControlled
-    ) {
-      error(
-        "A component is changing an uncontrolled input to be controlled. " +
-          "This is likely caused by the value changing from undefined to " +
-          "a defined value, which should not happen. " +
-          "Decide between using a controlled or uncontrolled input " +
-          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-      );
-
-      didWarnUncontrolledToControlled = true;
-    }
-
-    if (
-      node._wrapperState.controlled &&
-      !controlled &&
-      !didWarnControlledToUncontrolled
-    ) {
-      error(
-        "A component is changing a controlled input to be uncontrolled. " +
-          "This is likely caused by the value changing from a defined to " +
-          "undefined, which should not happen. " +
-          "Decide between using a controlled or uncontrolled input " +
-          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-      );
-
-      didWarnControlledToUncontrolled = true;
-    }
-  }
-
-  updateChecked(element, props);
-  var value = getToStringValue(props.value);
-  var type = props.type;
-
-  if (value != null) {
-    if (type === "number") {
-      if (
-        // $FlowFixMe[incompatible-type]
-        (value === 0 && node.value === "") || // We explicitly want to coerce to number here if possible.
-        // eslint-disable-next-line
-        node.value != value
-      ) {
-        node.value = toString(value);
-      }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
-    }
-  } else if (type === "submit" || type === "reset") {
-    // Submit/reset inputs need the attribute removed completely to avoid
-    // blank-text buttons.
-    node.removeAttribute("value");
-    return;
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the value attribute, React only assigns a new value
-    // whenever the defaultValue React prop has changed. When not present,
-    // React does nothing
-    if (props.hasOwnProperty("defaultValue")) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  } else {
-    // When syncing the value attribute, the value comes from a cascade of
-    // properties:
-    //  1. The value React property
-    //  2. The defaultValue React property
-    //  3. Otherwise there should be no change
-    if (props.hasOwnProperty("value")) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.hasOwnProperty("defaultValue")) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the attribute is directly
-    // controllable from the defaultValue React property. It needs to be
-    // updated as new props come in.
-    if (props.defaultChecked == null) {
-      node.removeAttribute("checked");
-    } else {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  } else {
-    // When syncing the checked attribute, it only changes when it needs
-    // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  }
-}
-function postMountWrapper$3(element, props, isHydrating) {
-  var node = element; // Do not assign value if it is already set. This prevents user text input
-  // from being lost during SSR hydration.
-
-  if (props.hasOwnProperty("value") || props.hasOwnProperty("defaultValue")) {
-    var type = props.type;
-    var isButton = type === "submit" || type === "reset"; // Avoid setting value attribute on submit/reset inputs as it overrides the
-    // default value provided by the browser. See: #12872
-
-    if (isButton && (props.value === undefined || props.value === null)) {
-      return;
-    }
-
-    var initialValue = toString(node._wrapperState.initialValue); // Do not assign value if it is already set. This prevents user text input
-    // from being lost during SSR hydration.
-
-    if (!isHydrating) {
-      if (disableInputAttributeSyncing) {
-        var value = getToStringValue(props.value); // When not syncing the value attribute, the value property points
-        // directly to the React prop. Only assign it if it exists.
-
-        if (value != null) {
-          // Always assign on buttons so that it is possible to assign an
-          // empty string to clear button text.
-          //
-          // Otherwise, do not re-assign the value property if is empty. This
-          // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
-          // prematurely marking required inputs as invalid. Equality is compared
-          // to the current value in case the browser provided value is not an
-          // empty string.
-          if (isButton || value !== node.value) {
-            node.value = toString(value);
-          }
-        }
-      } else {
-        // When syncing the value attribute, the value property should use
-        // the wrapperState._initialValue property. This uses:
-        //
-        //   1. The value React property when present
-        //   2. The defaultValue React property when present
-        //   3. An empty string
-        if (initialValue !== node.value) {
-          node.value = initialValue;
-        }
-      }
-    }
-
-    if (disableInputAttributeSyncing) {
-      // When not syncing the value attribute, assign the value attribute
-      // directly from the defaultValue React property (when present)
-      var defaultValue = getToStringValue(props.defaultValue);
-
-      if (defaultValue != null) {
-        node.defaultValue = toString(defaultValue);
-      }
-    } else {
-      // Otherwise, the value attribute is synchronized to the property,
-      // so we assign defaultValue to the same thing as the value property
-      // assignment step above.
-      node.defaultValue = initialValue;
-    }
-  } // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
-  // this is needed to work around a chrome bug where setting defaultChecked
-  // will sometimes influence the value of checked (even after detachment).
-  // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
-  // We need to temporarily unset name to avoid disrupting radio button groups.
-
-  var name = node.name;
-
-  if (name !== "") {
-    node.name = "";
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the checked property
-    // never gets assigned. It must be manually set. We don't want
-    // to do this when hydrating so that existing user input isn't
-    // modified
-    if (!isHydrating) {
-      updateChecked(element, props);
-    } // Only assign the checked attribute if it is defined. This saves
-    // a DOM write when controlling the checked attribute isn't needed
-    // (text inputs, submit/reset)
-
-    if (props.hasOwnProperty("defaultChecked")) {
-      node.defaultChecked = !node.defaultChecked;
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  } else {
-    // When syncing the checked attribute, both the checked property and
-    // attribute are assigned at the same time using defaultChecked. This uses:
-    //
-    //   1. The checked React property when present
-    //   2. The defaultChecked React property when present
-    //   3. Otherwise, false
-    node.defaultChecked = !node.defaultChecked;
-    node.defaultChecked = !!node._wrapperState.initialChecked;
-  }
-
-  if (name !== "") {
-    node.name = name;
-  }
-}
-function restoreControlledState$3(element, props) {
-  var node = element;
-  updateWrapper$1(node, props);
-  updateNamedCousins(node, props);
-}
-
-function updateNamedCousins(rootNode, props) {
-  var name = props.name;
-
-  if (props.type === "radio" && name != null) {
-    var queryRoot = rootNode;
-
-    while (queryRoot.parentNode) {
-      queryRoot = queryRoot.parentNode;
-    } // If `rootNode.form` was non-null, then we could try `form.elements`,
-    // but that sometimes behaves strangely in IE8. We could also try using
-    // `form.getElementsByName`, but that will only return direct children
-    // and won't include inputs that use the HTML5 `form=` attribute. Since
-    // the input might not even be in a form. It might not even be in the
-    // document. Let's just use the local `querySelectorAll` to ensure we don't
-    // miss anything.
-
-    {
-      checkAttributeStringCoercion(name, "name");
-    }
-
-    var group = queryRoot.querySelectorAll(
-      "input[name=" + JSON.stringify("" + name) + '][type="radio"]'
-    );
-
-    for (var i = 0; i < group.length; i++) {
-      var otherNode = group[i];
-
-      if (otherNode === rootNode || otherNode.form !== rootNode.form) {
-        continue;
-      } // This will throw if radio buttons rendered by different copies of React
-      // and the same name are rendered into the same form (same as #1939).
-      // That's probably okay; we don't support it just as we don't support
-      // mixing React radio buttons with non-React ones.
-
-      var otherProps = getFiberCurrentPropsFromNode(otherNode);
-
-      if (!otherProps) {
-        throw new Error(
-          "ReactDOMInput: Mixing React and non-React radio inputs with the " +
-            "same `name` is not supported."
-        );
-      } // We need update the tracked value on the named cousin since the value
-      // was changed but the input saw no event or value set
-
-      updateValueIfChanged(otherNode); // If this is a controlled radio button group, forcing the input that
-      // was previously checked to update will cause it to be come re-checked
-      // as appropriate.
-
-      updateWrapper$1(otherNode, otherProps);
-    }
-  }
-} // In Chrome, assigning defaultValue to certain input types triggers input validation.
-// For number inputs, the display value loses trailing decimal points. For email inputs,
-// Chrome raises "The specified value <x> is not a valid email address".
-//
-// Here we check to see if the defaultValue has actually changed, avoiding these problems
-// when the user is inputting text
-//
-// https://github.com/facebook/react/issues/7253
-
-function setDefaultValue(node, type, value) {
-  if (
-    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    type !== "number" ||
-    getActiveElement(node.ownerDocument) !== node
-  ) {
-    if (value == null) {
-      node.defaultValue = toString(node._wrapperState.initialValue);
-    } else if (node.defaultValue !== toString(value)) {
-      node.defaultValue = toString(value);
-    }
-  }
-}
-
-var didWarnSelectedSetOnOption = false;
-var didWarnInvalidChild = false;
-var didWarnInvalidInnerHTML = false;
-/**
- * Implements an <option> host component that warns when `selected` is set.
- */
-
-function validateProps(element, props) {
-  {
-    // If a value is not provided, then the children must be simple.
-    if (props.value == null) {
-      if (typeof props.children === "object" && props.children !== null) {
-        React.Children.forEach(props.children, function (child) {
-          if (child == null) {
-            return;
-          }
-
-          if (typeof child === "string" || typeof child === "number") {
-            return;
-          }
-
-          if (!didWarnInvalidChild) {
-            didWarnInvalidChild = true;
-
-            error(
-              "Cannot infer the option value of complex children. " +
-                "Pass a `value` prop or use a plain string as children to <option>."
-            );
-          }
-        });
-      } else if (props.dangerouslySetInnerHTML != null) {
-        if (!didWarnInvalidInnerHTML) {
-          didWarnInvalidInnerHTML = true;
-
-          error(
-            "Pass a `value` prop if you set dangerouslyInnerHTML so React knows " +
-              "which value should be selected."
-          );
-        }
-      }
-    } // TODO: Remove support for `selected` in <option>.
-
-    if (props.selected != null && !didWarnSelectedSetOnOption) {
-      error(
-        "Use the `defaultValue` or `value` props on <select> instead of " +
-          "setting `selected` on <option>."
-      );
-
-      didWarnSelectedSetOnOption = true;
-    }
-  }
-}
-function postMountWrapper$2(element, props) {
-  // value="" should make a value attribute (#6219)
-  if (props.value != null) {
-    element.setAttribute("value", toString(getToStringValue(props.value)));
-  }
-}
-
-var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-function isArray(a) {
-  return isArrayImpl(a);
-}
-
-var didWarnValueDefaultValue;
-
-{
-  didWarnValueDefaultValue = false;
-}
-
-function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentFiberOwnerNameInDevOrNull();
-
-  if (ownerName) {
-    return "\n\nCheck the render method of `" + ownerName + "`.";
-  }
-
-  return "";
-}
-
-var valuePropNames = ["value", "defaultValue"];
-/**
- * Validation function for `value` and `defaultValue`.
- */
-
-function checkSelectPropTypes(props) {
-  {
-    checkControlledValueProps("select", props);
-
-    for (var i = 0; i < valuePropNames.length; i++) {
-      var propName = valuePropNames[i];
-
-      if (props[propName] == null) {
-        continue;
-      }
-
-      var propNameIsArray = isArray(props[propName]);
-
-      if (props.multiple && !propNameIsArray) {
-        error(
-          "The `%s` prop supplied to <select> must be an array if " +
-            "`multiple` is true.%s",
-          propName,
-          getDeclarationErrorAddendum()
-        );
-      } else if (!props.multiple && propNameIsArray) {
-        error(
-          "The `%s` prop supplied to <select> must be a scalar " +
-            "value if `multiple` is false.%s",
-          propName,
-          getDeclarationErrorAddendum()
-        );
-      }
-    }
-  }
-}
-
-function updateOptions(node, multiple, propValue, setDefaultSelected) {
-  var options = node.options;
-
-  if (multiple) {
-    var selectedValues = propValue;
-    var selectedValue = {};
-
-    for (var i = 0; i < selectedValues.length; i++) {
-      // Prefix to avoid chaos with special keys.
-      selectedValue["$" + selectedValues[i]] = true;
-    }
-
-    for (var _i = 0; _i < options.length; _i++) {
-      var selected = selectedValue.hasOwnProperty("$" + options[_i].value);
-
-      if (options[_i].selected !== selected) {
-        options[_i].selected = selected;
-      }
-
-      if (selected && setDefaultSelected) {
-        options[_i].defaultSelected = true;
-      }
-    }
-  } else {
-    // Do not set `select.value` as exact behavior isn't consistent across all
-    // browsers for all cases.
-    var _selectedValue = toString(getToStringValue(propValue));
-
-    var defaultSelected = null;
-
-    for (var _i2 = 0; _i2 < options.length; _i2++) {
-      if (options[_i2].value === _selectedValue) {
-        options[_i2].selected = true;
-
-        if (setDefaultSelected) {
-          options[_i2].defaultSelected = true;
-        }
-
-        return;
-      }
-
-      if (defaultSelected === null && !options[_i2].disabled) {
-        defaultSelected = options[_i2];
-      }
-    }
-
-    if (defaultSelected !== null) {
-      defaultSelected.selected = true;
-    }
-  }
-}
-/**
- * Implements a <select> host component that allows optionally setting the
- * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
- * stringable. If `multiple` is true, the prop must be an array of stringables.
- *
- * If `value` is not supplied (or null/undefined), user actions that change the
- * selected option will trigger updates to the rendered options.
- *
- * If it is supplied (and not null/undefined), the rendered options will not
- * update in response to user actions. Instead, the `value` prop must change in
- * order for the rendered options to update.
- *
- * If `defaultValue` is provided, any options with the supplied values will be
- * selected.
- */
-
-function getHostProps$1(element, props) {
-  return assign({}, props, {
-    value: undefined
-  });
-}
-function initWrapperState$1(element, props) {
-  var node = element;
-
-  {
-    checkSelectPropTypes(props);
-  }
-
-  node._wrapperState = {
-    wasMultiple: !!props.multiple
-  };
-
-  {
-    if (
-      props.value !== undefined &&
-      props.defaultValue !== undefined &&
-      !didWarnValueDefaultValue
-    ) {
-      error(
-        "Select elements must be either controlled or uncontrolled " +
-          "(specify either the value prop, or the defaultValue prop, but not " +
-          "both). Decide between using a controlled or uncontrolled select " +
-          "element and remove one of these props. More info: " +
-          "https://reactjs.org/link/controlled-components"
-      );
-
-      didWarnValueDefaultValue = true;
-    }
-  }
-}
-function postMountWrapper$1(element, props) {
-  var node = element;
-  node.multiple = !!props.multiple;
-  var value = props.value;
-
-  if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (props.defaultValue != null) {
-    updateOptions(node, !!props.multiple, props.defaultValue, true);
-  }
-}
-function postUpdateWrapper(element, props) {
-  var node = element;
-  var wasMultiple = node._wrapperState.wasMultiple;
-  node._wrapperState.wasMultiple = !!props.multiple;
-  var value = props.value;
-
-  if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (wasMultiple !== !!props.multiple) {
-    // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-    if (props.defaultValue != null) {
-      updateOptions(node, !!props.multiple, props.defaultValue, true);
-    } else {
-      // Revert the select back to its default unselected state.
-      updateOptions(node, !!props.multiple, props.multiple ? [] : "", false);
-    }
-  }
-}
-function restoreControlledState$2(element, props) {
-  var node = element;
-  var value = props.value;
-
-  if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  }
-}
-
-var didWarnValDefaultVal = false;
-/**
- * Implements a <textarea> host component that allows setting `value`, and
- * `defaultValue`. This differs from the traditional DOM API because value is
- * usually set as PCDATA children.
- *
- * If `value` is not supplied (or null/undefined), user actions that affect the
- * value will trigger updates to the element.
- *
- * If `value` is supplied (and not null/undefined), the rendered element will
- * not trigger updates to the element. Instead, the `value` prop must change in
- * order for the rendered element to be updated.
- *
- * The rendered element will be initialized with an empty value, the prop
- * `defaultValue` if specified, or the children content (deprecated).
- */
-
-function getHostProps(element, props) {
-  var node = element;
-
-  if (props.dangerouslySetInnerHTML != null) {
-    throw new Error(
-      "`dangerouslySetInnerHTML` does not make sense on <textarea>."
-    );
-  } // Always set children to the same thing. In IE9, the selection range will
-  // get reset if `textContent` is mutated.  We could add a check in setTextContent
-  // to only set the value if/when the value differs from the node value (which would
-  // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
-  // solution. The value can be a boolean or object so that's why it's forced
-  // to be a string.
-
-  var hostProps = assign({}, props, {
-    value: undefined,
-    defaultValue: undefined,
-    children: toString(node._wrapperState.initialValue)
-  });
-
-  return hostProps;
-}
-function initWrapperState(element, props) {
-  var node = element;
-
-  {
-    checkControlledValueProps("textarea", props);
-
-    if (
-      props.value !== undefined &&
-      props.defaultValue !== undefined &&
-      !didWarnValDefaultVal
-    ) {
-      error(
-        "%s contains a textarea with both value and defaultValue props. " +
-          "Textarea elements must be either controlled or uncontrolled " +
-          "(specify either the value prop, or the defaultValue prop, but not " +
-          "both). Decide between using a controlled or uncontrolled textarea " +
-          "and remove one of these props. More info: " +
-          "https://reactjs.org/link/controlled-components",
-        getCurrentFiberOwnerNameInDevOrNull() || "A component"
-      );
-
-      didWarnValDefaultVal = true;
-    }
-  }
-
-  var initialValue = props.value; // Only bother fetching default value if we're going to use it
-
-  if (initialValue == null) {
-    var children = props.children,
-      defaultValue = props.defaultValue;
-
-    if (children != null) {
-      {
-        error(
-          "Use the `defaultValue` or `value` props instead of setting " +
-            "children on <textarea>."
-        );
-      }
-
-      {
-        if (defaultValue != null) {
-          throw new Error(
-            "If you supply `defaultValue` on a <textarea>, do not pass children."
-          );
-        }
-
-        if (isArray(children)) {
-          if (children.length > 1) {
-            throw new Error("<textarea> can only have at most one child.");
-          }
-
-          children = children[0];
-        }
-
-        defaultValue = children;
-      }
-    }
-
-    if (defaultValue == null) {
-      defaultValue = "";
-    }
-
-    initialValue = defaultValue;
-  }
-
-  node._wrapperState = {
-    initialValue: getToStringValue(initialValue)
-  };
-}
-function updateWrapper(element, props) {
-  var node = element;
-  var value = getToStringValue(props.value);
-  var defaultValue = getToStringValue(props.defaultValue);
-
-  if (value != null) {
-    // Cast `value` to a string to ensure the value is set correctly. While
-    // browsers typically do this as necessary, jsdom doesn't.
-    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
-
-    if (newValue !== node.value) {
-      node.value = newValue;
-    }
-
-    if (props.defaultValue == null && node.defaultValue !== newValue) {
-      node.defaultValue = newValue;
-    }
-  }
-
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
-  }
-}
-function postMountWrapper(element, props) {
-  var node = element; // This is in postMount because we need access to the DOM node, which is not
-  // available until after the component has mounted.
-
-  var textContent = node.textContent; // Only set node.value if textContent is equal to the expected
-  // initial value. In IE10/IE11 there is a bug where the placeholder attribute
-  // will populate textContent as well.
-  // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-
-  if (textContent === node._wrapperState.initialValue) {
-    if (textContent !== "" && textContent !== null) {
-      node.value = textContent;
-    }
-  }
-}
-function restoreControlledState$1(element, props) {
-  // DOM component is still mounted; update
-  updateWrapper(element, props);
-}
-
-var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-var MATH_NAMESPACE = "http://www.w3.org/1998/Math/MathML";
-var SVG_NAMESPACE = "http://www.w3.org/2000/svg"; // Assumes there is no parent namespace.
-
-function getIntrinsicNamespace(type) {
-  switch (type) {
-    case "svg":
-      return SVG_NAMESPACE;
-
-    case "math":
-      return MATH_NAMESPACE;
-
-    default:
-      return HTML_NAMESPACE;
-  }
-}
-function getChildNamespace(parentNamespace, type) {
-  if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
-    // No (or default) parent namespace: potential entry point.
-    return getIntrinsicNamespace(type);
-  }
-
-  if (parentNamespace === SVG_NAMESPACE && type === "foreignObject") {
-    // We're leaving SVG.
-    return HTML_NAMESPACE;
-  } // By default, pass namespace below.
-
-  return parentNamespace;
-}
-
-var reusableSVGContainer;
-
-function setInnerHTMLImpl(node, html) {
-  if (node.namespaceURI === SVG_NAMESPACE) {
-    {
-      if (enableTrustedTypesIntegration) {
-        // TODO: reconsider the text of this warning and when it should show
-        // before enabling the feature flag.
-        if (typeof trustedTypes !== "undefined") {
-          error(
-            "Using 'dangerouslySetInnerHTML' in an svg element with " +
-              "Trusted Types enabled in an Internet Explorer will cause " +
-              "the trusted value to be converted to string. Assigning string " +
-              "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-              "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
-              "on the enclosing div instead."
-          );
-        }
-      }
-    }
-
-    if (!("innerHTML" in node)) {
-      // IE does not have innerHTML for SVG nodes, so instead we inject the
-      // new markup in a temp node and then move the child nodes across into
-      // the target node
-      reusableSVGContainer =
-        reusableSVGContainer || document.createElement("div");
-      reusableSVGContainer.innerHTML =
-        "<svg>" + html.valueOf().toString() + "</svg>";
-      var svgNode = reusableSVGContainer.firstChild;
-
-      while (node.firstChild) {
-        node.removeChild(node.firstChild);
-      } // $FlowFixMe[incompatible-use]
-      // $FlowFixMe[incompatible-type]
-
-      while (svgNode.firstChild) {
-        node.appendChild(svgNode.firstChild);
-      }
-
-      return;
-    }
-  }
-
-  node.innerHTML = html;
-}
-
-var setInnerHTML = setInnerHTMLImpl; // $FlowFixMe[cannot-resolve-name]
-
-if (typeof MSApp !== "undefined" && MSApp.execUnsafeLocalFunction) {
-  /**
-   * Create a function which has 'unsafe' privileges (required by windows8 apps)
-   */
-  setInnerHTML = function (node, html) {
-    // $FlowFixMe[cannot-resolve-name]
-    return MSApp.execUnsafeLocalFunction(function () {
-      return setInnerHTMLImpl(node, html);
-    });
-  };
-}
-
-var setInnerHTML$1 = setInnerHTML;
-
-/**
- * Set the textContent property of a node. For text updates, it's faster
- * to set the `nodeValue` of the Text node directly instead of using
- * `.textContent` which will remove the existing node and create a new one.
- *
- * @param {DOMElement} node
- * @param {string} text
- * @internal
- */
-
-function setTextContent(node, text) {
-  if (text) {
-    var firstChild = node.firstChild;
-
-    if (
-      firstChild &&
-      firstChild === node.lastChild &&
-      firstChild.nodeType === TEXT_NODE
-    ) {
-      firstChild.nodeValue = text;
-      return;
-    }
-  }
-
-  node.textContent = text;
-}
-
-// List derived from Gecko source code:
-// https://github.com/mozilla/gecko-dev/blob/4e638efc71/layout/style/test/property_database.js
-var shorthandToLonghand = {
-  animation: [
-    "animationDelay",
-    "animationDirection",
-    "animationDuration",
-    "animationFillMode",
-    "animationIterationCount",
-    "animationName",
-    "animationPlayState",
-    "animationTimingFunction"
-  ],
-  background: [
-    "backgroundAttachment",
-    "backgroundClip",
-    "backgroundColor",
-    "backgroundImage",
-    "backgroundOrigin",
-    "backgroundPositionX",
-    "backgroundPositionY",
-    "backgroundRepeat",
-    "backgroundSize"
-  ],
-  backgroundPosition: ["backgroundPositionX", "backgroundPositionY"],
-  border: [
-    "borderBottomColor",
-    "borderBottomStyle",
-    "borderBottomWidth",
-    "borderImageOutset",
-    "borderImageRepeat",
-    "borderImageSlice",
-    "borderImageSource",
-    "borderImageWidth",
-    "borderLeftColor",
-    "borderLeftStyle",
-    "borderLeftWidth",
-    "borderRightColor",
-    "borderRightStyle",
-    "borderRightWidth",
-    "borderTopColor",
-    "borderTopStyle",
-    "borderTopWidth"
-  ],
-  borderBlockEnd: [
-    "borderBlockEndColor",
-    "borderBlockEndStyle",
-    "borderBlockEndWidth"
-  ],
-  borderBlockStart: [
-    "borderBlockStartColor",
-    "borderBlockStartStyle",
-    "borderBlockStartWidth"
-  ],
-  borderBottom: ["borderBottomColor", "borderBottomStyle", "borderBottomWidth"],
-  borderColor: [
-    "borderBottomColor",
-    "borderLeftColor",
-    "borderRightColor",
-    "borderTopColor"
-  ],
-  borderImage: [
-    "borderImageOutset",
-    "borderImageRepeat",
-    "borderImageSlice",
-    "borderImageSource",
-    "borderImageWidth"
-  ],
-  borderInlineEnd: [
-    "borderInlineEndColor",
-    "borderInlineEndStyle",
-    "borderInlineEndWidth"
-  ],
-  borderInlineStart: [
-    "borderInlineStartColor",
-    "borderInlineStartStyle",
-    "borderInlineStartWidth"
-  ],
-  borderLeft: ["borderLeftColor", "borderLeftStyle", "borderLeftWidth"],
-  borderRadius: [
-    "borderBottomLeftRadius",
-    "borderBottomRightRadius",
-    "borderTopLeftRadius",
-    "borderTopRightRadius"
-  ],
-  borderRight: ["borderRightColor", "borderRightStyle", "borderRightWidth"],
-  borderStyle: [
-    "borderBottomStyle",
-    "borderLeftStyle",
-    "borderRightStyle",
-    "borderTopStyle"
-  ],
-  borderTop: ["borderTopColor", "borderTopStyle", "borderTopWidth"],
-  borderWidth: [
-    "borderBottomWidth",
-    "borderLeftWidth",
-    "borderRightWidth",
-    "borderTopWidth"
-  ],
-  columnRule: ["columnRuleColor", "columnRuleStyle", "columnRuleWidth"],
-  columns: ["columnCount", "columnWidth"],
-  flex: ["flexBasis", "flexGrow", "flexShrink"],
-  flexFlow: ["flexDirection", "flexWrap"],
-  font: [
-    "fontFamily",
-    "fontFeatureSettings",
-    "fontKerning",
-    "fontLanguageOverride",
-    "fontSize",
-    "fontSizeAdjust",
-    "fontStretch",
-    "fontStyle",
-    "fontVariant",
-    "fontVariantAlternates",
-    "fontVariantCaps",
-    "fontVariantEastAsian",
-    "fontVariantLigatures",
-    "fontVariantNumeric",
-    "fontVariantPosition",
-    "fontWeight",
-    "lineHeight"
-  ],
-  fontVariant: [
-    "fontVariantAlternates",
-    "fontVariantCaps",
-    "fontVariantEastAsian",
-    "fontVariantLigatures",
-    "fontVariantNumeric",
-    "fontVariantPosition"
-  ],
-  gap: ["columnGap", "rowGap"],
-  grid: [
-    "gridAutoColumns",
-    "gridAutoFlow",
-    "gridAutoRows",
-    "gridTemplateAreas",
-    "gridTemplateColumns",
-    "gridTemplateRows"
-  ],
-  gridArea: ["gridColumnEnd", "gridColumnStart", "gridRowEnd", "gridRowStart"],
-  gridColumn: ["gridColumnEnd", "gridColumnStart"],
-  gridColumnGap: ["columnGap"],
-  gridGap: ["columnGap", "rowGap"],
-  gridRow: ["gridRowEnd", "gridRowStart"],
-  gridRowGap: ["rowGap"],
-  gridTemplate: [
-    "gridTemplateAreas",
-    "gridTemplateColumns",
-    "gridTemplateRows"
-  ],
-  listStyle: ["listStyleImage", "listStylePosition", "listStyleType"],
-  margin: ["marginBottom", "marginLeft", "marginRight", "marginTop"],
-  marker: ["markerEnd", "markerMid", "markerStart"],
-  mask: [
-    "maskClip",
-    "maskComposite",
-    "maskImage",
-    "maskMode",
-    "maskOrigin",
-    "maskPositionX",
-    "maskPositionY",
-    "maskRepeat",
-    "maskSize"
-  ],
-  maskPosition: ["maskPositionX", "maskPositionY"],
-  outline: ["outlineColor", "outlineStyle", "outlineWidth"],
-  overflow: ["overflowX", "overflowY"],
-  padding: ["paddingBottom", "paddingLeft", "paddingRight", "paddingTop"],
-  placeContent: ["alignContent", "justifyContent"],
-  placeItems: ["alignItems", "justifyItems"],
-  placeSelf: ["alignSelf", "justifySelf"],
-  textDecoration: [
-    "textDecorationColor",
-    "textDecorationLine",
-    "textDecorationStyle"
-  ],
-  textEmphasis: ["textEmphasisColor", "textEmphasisStyle"],
-  transition: [
-    "transitionDelay",
-    "transitionDuration",
-    "transitionProperty",
-    "transitionTimingFunction"
-  ],
-  wordWrap: ["overflowWrap"]
-};
-
-var uppercasePattern = /([A-Z])/g;
-var msPattern$1 = /^ms-/;
-/**
- * Hyphenates a camelcased CSS property name, for example:
- *
- *   > hyphenateStyleName('backgroundColor')
- *   < "background-color"
- *   > hyphenateStyleName('MozTransition')
- *   < "-moz-transition"
- *   > hyphenateStyleName('msTransition')
- *   < "-ms-transition"
- *
- * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
- * is converted to `-ms-`.
- */
-
-function hyphenateStyleName(name) {
-  return name
-    .replace(uppercasePattern, "-$1")
-    .toLowerCase()
-    .replace(msPattern$1, "-ms-");
-}
-
-// 'msTransform' is correct, but the other prefixes should be capitalized
-var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
-var msPattern = /^-ms-/;
-var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
-
-var badStyleValueWithSemicolonPattern = /;\s*$/;
-var warnedStyleNames = {};
-var warnedStyleValues = {};
-var warnedForNaNValue = false;
-var warnedForInfinityValue = false;
-
-function camelize(string) {
-  return string.replace(hyphenPattern, function (_, character) {
-    return character.toUpperCase();
-  });
-}
-
-function warnHyphenatedStyleName(name) {
-  {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
-
-    warnedStyleNames[name] = true;
-
-    error(
-      "Unsupported style property %s. Did you mean %s?",
-      name, // As Andi Smith suggests
-      // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
-      // is converted to lowercase `ms`.
-      camelize(name.replace(msPattern, "ms-"))
-    );
-  }
-}
-
-function warnBadVendoredStyleName(name) {
-  {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
-      return;
-    }
-
-    warnedStyleNames[name] = true;
-
-    error(
-      "Unsupported vendor-prefixed style property %s. Did you mean %s?",
-      name,
-      name.charAt(0).toUpperCase() + name.slice(1)
-    );
-  }
-}
-
-function warnStyleValueWithSemicolon(name, value) {
-  {
-    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
-      return;
-    }
-
-    warnedStyleValues[value] = true;
-
-    error(
-      "Style property values shouldn't contain a semicolon. " +
-        'Try "%s: %s" instead.',
-      name,
-      value.replace(badStyleValueWithSemicolonPattern, "")
-    );
-  }
-}
-
-function warnStyleValueIsNaN(name, value) {
-  {
-    if (warnedForNaNValue) {
-      return;
-    }
-
-    warnedForNaNValue = true;
-
-    error("`NaN` is an invalid value for the `%s` css style property.", name);
-  }
-}
-
-function warnStyleValueIsInfinity(name, value) {
-  {
-    if (warnedForInfinityValue) {
-      return;
-    }
-
-    warnedForInfinityValue = true;
-
-    error(
-      "`Infinity` is an invalid value for the `%s` css style property.",
-      name
-    );
-  }
-}
-
-function warnValidStyle(name, value) {
-  {
-    if (name.indexOf("-") > -1) {
-      warnHyphenatedStyleName(name);
-    } else if (badVendoredStyleNamePattern.test(name)) {
-      warnBadVendoredStyleName(name);
-    } else if (badStyleValueWithSemicolonPattern.test(value)) {
-      warnStyleValueWithSemicolon(name, value);
-    }
-
-    if (typeof value === "number") {
-      if (isNaN(value)) {
-        warnStyleValueIsNaN(name);
-      } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name);
-      }
-    }
-  }
-}
-
-/**
- * CSS properties which accept numbers but are not in units of "px".
- */
-var isUnitlessNumber = {
-  animationIterationCount: true,
-  aspectRatio: true,
-  borderImageOutset: true,
-  borderImageSlice: true,
-  borderImageWidth: true,
-  boxFlex: true,
-  boxFlexGroup: true,
-  boxOrdinalGroup: true,
-  columnCount: true,
-  columns: true,
-  flex: true,
-  flexGrow: true,
-  flexPositive: true,
-  flexShrink: true,
-  flexNegative: true,
-  flexOrder: true,
-  gridArea: true,
-  gridRow: true,
-  gridRowEnd: true,
-  gridRowSpan: true,
-  gridRowStart: true,
-  gridColumn: true,
-  gridColumnEnd: true,
-  gridColumnSpan: true,
-  gridColumnStart: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  scale: true,
-  tabSize: true,
-  widows: true,
-  zIndex: true,
-  zoom: true,
-  // SVG-related properties
-  fillOpacity: true,
-  floodOpacity: true,
-  stopOpacity: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  strokeMiterlimit: true,
-  strokeOpacity: true,
-  strokeWidth: true
-};
-/**
- * @param {string} prefix vendor-specific prefix, eg: Webkit
- * @param {string} key style name, eg: transitionDuration
- * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
- * WebkitTransitionDuration
- */
-
-function prefixKey(prefix, key) {
-  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
-}
-/**
- * Support style names that may come passed in prefixed by adding permutations
- * of vendor prefixes.
- */
-
-var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
-// infinite loop, because it iterates over the newly added props too.
-
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
-  });
-});
-
-/**
- * Operations for dealing with CSS properties.
- */
-
-/**
- * This creates a string that is expected to be equivalent to the style
- * attribute generated by server-side rendering. It by-passes warnings and
- * security checks so it's not safe to use this value for anything other than
- * comparison. It is only used in DEV for SSR validation.
- */
-
-function createDangerousStringForStyles(styles) {
-  {
-    var serialized = "";
-    var delimiter = "";
-
-    for (var styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
-        continue;
-      }
-
-      var value = styles[styleName];
-
-      if (value != null && typeof value !== "boolean" && value !== "") {
-        var isCustomProperty = styleName.indexOf("--") === 0;
-
-        if (isCustomProperty) {
-          {
-            checkCSSPropertyStringCoercion(value, styleName);
-          }
-
-          serialized += delimiter + styleName + ":" + ("" + value).trim();
-        } else {
-          if (
-            typeof value === "number" &&
-            value !== 0 &&
-            !(
-              isUnitlessNumber.hasOwnProperty(styleName) &&
-              isUnitlessNumber[styleName]
-            )
-          ) {
-            serialized +=
-              delimiter + hyphenateStyleName(styleName) + ":" + value + "px";
-          } else {
-            {
-              checkCSSPropertyStringCoercion(value, styleName);
-            }
-
-            serialized +=
-              delimiter +
-              hyphenateStyleName(styleName) +
-              ":" +
-              ("" + value).trim();
-          }
-        }
-
-        delimiter = ";";
-      }
-    }
-
-    return serialized || null;
-  }
-}
-/**
- * Sets the value for multiple styles on a node.  If a value is specified as
- * '' (empty string), the corresponding style property will be unset.
- *
- * @param {DOMElement} node
- * @param {object} styles
- */
-
-function setValueForStyles(node, styles) {
-  var style = node.style;
-
-  for (var styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-
-    var value = styles[styleName];
-    var isCustomProperty = styleName.indexOf("--") === 0;
-
-    {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, value);
-      }
-    }
-
-    if (value == null || typeof value === "boolean" || value === "") {
-      if (isCustomProperty) {
-        style.setProperty(styleName, "");
-      } else if (styleName === "float") {
-        style.cssFloat = "";
-      } else {
-        style[styleName] = "";
-      }
-    } else if (isCustomProperty) {
-      style.setProperty(styleName, value);
-    } else if (
-      typeof value === "number" &&
-      value !== 0 &&
-      !(
-        isUnitlessNumber.hasOwnProperty(styleName) &&
-        isUnitlessNumber[styleName]
-      )
-    ) {
-      style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
-    } else {
-      if (styleName === "float") {
-        style.cssFloat = value;
-      } else {
-        {
-          checkCSSPropertyStringCoercion(value, styleName);
-        }
-
-        style[styleName] = ("" + value).trim();
-      }
-    }
-  }
-}
-
-function isValueEmpty(value) {
-  return value == null || typeof value === "boolean" || value === "";
-}
-/**
- * Given {color: 'red', overflow: 'hidden'} returns {
- *   color: 'color',
- *   overflowX: 'overflow',
- *   overflowY: 'overflow',
- * }. This can be read as "the overflowY property was set by the overflow
- * shorthand". That is, the values are the property that each was derived from.
- */
-
-function expandShorthandMap(styles) {
-  var expanded = {};
-
-  for (var key in styles) {
-    var longhands = shorthandToLonghand[key] || [key];
-
-    for (var i = 0; i < longhands.length; i++) {
-      expanded[longhands[i]] = key;
-    }
-  }
-
-  return expanded;
-}
-/**
- * When mixing shorthand and longhand property names, we warn during updates if
- * we expect an incorrect result to occur. In particular, we warn for:
- *
- * Updating a shorthand property (longhand gets overwritten):
- *   {font: 'foo', fontVariant: 'bar'} -> {font: 'baz', fontVariant: 'bar'}
- *   becomes .style.font = 'baz'
- * Removing a shorthand property (longhand gets lost too):
- *   {font: 'foo', fontVariant: 'bar'} -> {fontVariant: 'bar'}
- *   becomes .style.font = ''
- * Removing a longhand property (should revert to shorthand; doesn't):
- *   {font: 'foo', fontVariant: 'bar'} -> {font: 'foo'}
- *   becomes .style.fontVariant = ''
- */
-
-function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
-  {
-    if (!nextStyles) {
-      return;
-    }
-
-    var expandedUpdates = expandShorthandMap(styleUpdates);
-    var expandedStyles = expandShorthandMap(nextStyles);
-    var warnedAbout = {};
-
-    for (var key in expandedUpdates) {
-      var originalKey = expandedUpdates[key];
-      var correctOriginalKey = expandedStyles[key];
-
-      if (correctOriginalKey && originalKey !== correctOriginalKey) {
-        var warningKey = originalKey + "," + correctOriginalKey;
-
-        if (warnedAbout[warningKey]) {
-          continue;
-        }
-
-        warnedAbout[warningKey] = true;
-
-        error(
-          "%s a style property during rerender (%s) when a " +
-            "conflicting property is set (%s) can lead to styling bugs. To " +
-            "avoid this, don't mix shorthand and non-shorthand properties " +
-            "for the same value; instead, replace the shorthand with " +
-            "separate values.",
-          isValueEmpty(styleUpdates[originalKey]) ? "Removing" : "Updating",
-          originalKey,
-          correctOriginalKey
-        );
-      }
-    }
-  }
-}
-
-function isCustomComponent(tagName, props) {
-  if (tagName.indexOf("-") === -1) {
-    return typeof props.is === "string";
-  }
-
-  switch (tagName) {
-    // These are reserved SVG and MathML elements.
-    // We don't mind this list too much because we expect it to never grow.
-    // The alternative is to track the namespace in a few places which is convoluted.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
-    case "annotation-xml":
-    case "color-profile":
-    case "font-face":
-    case "font-face-src":
-    case "font-face-uri":
-    case "font-face-format":
-    case "font-face-name":
-    case "missing-glyph":
-      return false;
-
-    default:
-      return true;
-  }
-}
-
-// When adding attributes to the HTML or SVG allowed attribute list, be sure to
-// also add them to this module to ensure casing and incorrect name
-// warnings.
-var possibleStandardNames = {
-  // HTML
-  accept: "accept",
-  acceptcharset: "acceptCharset",
-  "accept-charset": "acceptCharset",
-  accesskey: "accessKey",
-  action: "action",
-  allowfullscreen: "allowFullScreen",
-  alt: "alt",
-  as: "as",
-  async: "async",
-  autocapitalize: "autoCapitalize",
-  autocomplete: "autoComplete",
-  autocorrect: "autoCorrect",
-  autofocus: "autoFocus",
-  autoplay: "autoPlay",
-  autosave: "autoSave",
-  capture: "capture",
-  cellpadding: "cellPadding",
-  cellspacing: "cellSpacing",
-  challenge: "challenge",
-  charset: "charSet",
-  checked: "checked",
-  children: "children",
-  cite: "cite",
-  class: "className",
-  classid: "classID",
-  classname: "className",
-  cols: "cols",
-  colspan: "colSpan",
-  content: "content",
-  contenteditable: "contentEditable",
-  contextmenu: "contextMenu",
-  controls: "controls",
-  controlslist: "controlsList",
-  coords: "coords",
-  crossorigin: "crossOrigin",
-  dangerouslysetinnerhtml: "dangerouslySetInnerHTML",
-  data: "data",
-  datetime: "dateTime",
-  default: "default",
-  defaultchecked: "defaultChecked",
-  defaultvalue: "defaultValue",
-  defer: "defer",
-  dir: "dir",
-  disabled: "disabled",
-  disablepictureinpicture: "disablePictureInPicture",
-  disableremoteplayback: "disableRemotePlayback",
-  download: "download",
-  draggable: "draggable",
-  enctype: "encType",
-  enterkeyhint: "enterKeyHint",
-  fetchpriority: "fetchPriority",
-  for: "htmlFor",
-  form: "form",
-  formmethod: "formMethod",
-  formaction: "formAction",
-  formenctype: "formEncType",
-  formnovalidate: "formNoValidate",
-  formtarget: "formTarget",
-  frameborder: "frameBorder",
-  headers: "headers",
-  height: "height",
-  hidden: "hidden",
-  high: "high",
-  href: "href",
-  hreflang: "hrefLang",
-  htmlfor: "htmlFor",
-  httpequiv: "httpEquiv",
-  "http-equiv": "httpEquiv",
-  icon: "icon",
-  id: "id",
-  imagesizes: "imageSizes",
-  imagesrcset: "imageSrcSet",
-  innerhtml: "innerHTML",
-  inputmode: "inputMode",
-  integrity: "integrity",
-  is: "is",
-  itemid: "itemID",
-  itemprop: "itemProp",
-  itemref: "itemRef",
-  itemscope: "itemScope",
-  itemtype: "itemType",
-  keyparams: "keyParams",
-  keytype: "keyType",
-  kind: "kind",
-  label: "label",
-  lang: "lang",
-  list: "list",
-  loop: "loop",
-  low: "low",
-  manifest: "manifest",
-  marginwidth: "marginWidth",
-  marginheight: "marginHeight",
-  max: "max",
-  maxlength: "maxLength",
-  media: "media",
-  mediagroup: "mediaGroup",
-  method: "method",
-  min: "min",
-  minlength: "minLength",
-  multiple: "multiple",
-  muted: "muted",
-  name: "name",
-  nomodule: "noModule",
-  nonce: "nonce",
-  novalidate: "noValidate",
-  open: "open",
-  optimum: "optimum",
-  pattern: "pattern",
-  placeholder: "placeholder",
-  playsinline: "playsInline",
-  poster: "poster",
-  preload: "preload",
-  profile: "profile",
-  radiogroup: "radioGroup",
-  readonly: "readOnly",
-  referrerpolicy: "referrerPolicy",
-  rel: "rel",
-  required: "required",
-  reversed: "reversed",
-  role: "role",
-  rows: "rows",
-  rowspan: "rowSpan",
-  sandbox: "sandbox",
-  scope: "scope",
-  scoped: "scoped",
-  scrolling: "scrolling",
-  seamless: "seamless",
-  selected: "selected",
-  shape: "shape",
-  size: "size",
-  sizes: "sizes",
-  span: "span",
-  spellcheck: "spellCheck",
-  src: "src",
-  srcdoc: "srcDoc",
-  srclang: "srcLang",
-  srcset: "srcSet",
-  start: "start",
-  step: "step",
-  style: "style",
-  summary: "summary",
-  tabindex: "tabIndex",
-  target: "target",
-  title: "title",
-  type: "type",
-  usemap: "useMap",
-  value: "value",
-  width: "width",
-  wmode: "wmode",
-  wrap: "wrap",
-  // SVG
-  about: "about",
-  accentheight: "accentHeight",
-  "accent-height": "accentHeight",
-  accumulate: "accumulate",
-  additive: "additive",
-  alignmentbaseline: "alignmentBaseline",
-  "alignment-baseline": "alignmentBaseline",
-  allowreorder: "allowReorder",
-  alphabetic: "alphabetic",
-  amplitude: "amplitude",
-  arabicform: "arabicForm",
-  "arabic-form": "arabicForm",
-  ascent: "ascent",
-  attributename: "attributeName",
-  attributetype: "attributeType",
-  autoreverse: "autoReverse",
-  azimuth: "azimuth",
-  basefrequency: "baseFrequency",
-  baselineshift: "baselineShift",
-  "baseline-shift": "baselineShift",
-  baseprofile: "baseProfile",
-  bbox: "bbox",
-  begin: "begin",
-  bias: "bias",
-  by: "by",
-  calcmode: "calcMode",
-  capheight: "capHeight",
-  "cap-height": "capHeight",
-  clip: "clip",
-  clippath: "clipPath",
-  "clip-path": "clipPath",
-  clippathunits: "clipPathUnits",
-  cliprule: "clipRule",
-  "clip-rule": "clipRule",
-  color: "color",
-  colorinterpolation: "colorInterpolation",
-  "color-interpolation": "colorInterpolation",
-  colorinterpolationfilters: "colorInterpolationFilters",
-  "color-interpolation-filters": "colorInterpolationFilters",
-  colorprofile: "colorProfile",
-  "color-profile": "colorProfile",
-  colorrendering: "colorRendering",
-  "color-rendering": "colorRendering",
-  contentscripttype: "contentScriptType",
-  contentstyletype: "contentStyleType",
-  cursor: "cursor",
-  cx: "cx",
-  cy: "cy",
-  d: "d",
-  datatype: "datatype",
-  decelerate: "decelerate",
-  descent: "descent",
-  diffuseconstant: "diffuseConstant",
-  direction: "direction",
-  display: "display",
-  divisor: "divisor",
-  dominantbaseline: "dominantBaseline",
-  "dominant-baseline": "dominantBaseline",
-  dur: "dur",
-  dx: "dx",
-  dy: "dy",
-  edgemode: "edgeMode",
-  elevation: "elevation",
-  enablebackground: "enableBackground",
-  "enable-background": "enableBackground",
-  end: "end",
-  exponent: "exponent",
-  externalresourcesrequired: "externalResourcesRequired",
-  fill: "fill",
-  fillopacity: "fillOpacity",
-  "fill-opacity": "fillOpacity",
-  fillrule: "fillRule",
-  "fill-rule": "fillRule",
-  filter: "filter",
-  filterres: "filterRes",
-  filterunits: "filterUnits",
-  floodopacity: "floodOpacity",
-  "flood-opacity": "floodOpacity",
-  floodcolor: "floodColor",
-  "flood-color": "floodColor",
-  focusable: "focusable",
-  fontfamily: "fontFamily",
-  "font-family": "fontFamily",
-  fontsize: "fontSize",
-  "font-size": "fontSize",
-  fontsizeadjust: "fontSizeAdjust",
-  "font-size-adjust": "fontSizeAdjust",
-  fontstretch: "fontStretch",
-  "font-stretch": "fontStretch",
-  fontstyle: "fontStyle",
-  "font-style": "fontStyle",
-  fontvariant: "fontVariant",
-  "font-variant": "fontVariant",
-  fontweight: "fontWeight",
-  "font-weight": "fontWeight",
-  format: "format",
-  from: "from",
-  fx: "fx",
-  fy: "fy",
-  g1: "g1",
-  g2: "g2",
-  glyphname: "glyphName",
-  "glyph-name": "glyphName",
-  glyphorientationhorizontal: "glyphOrientationHorizontal",
-  "glyph-orientation-horizontal": "glyphOrientationHorizontal",
-  glyphorientationvertical: "glyphOrientationVertical",
-  "glyph-orientation-vertical": "glyphOrientationVertical",
-  glyphref: "glyphRef",
-  gradienttransform: "gradientTransform",
-  gradientunits: "gradientUnits",
-  hanging: "hanging",
-  horizadvx: "horizAdvX",
-  "horiz-adv-x": "horizAdvX",
-  horizoriginx: "horizOriginX",
-  "horiz-origin-x": "horizOriginX",
-  ideographic: "ideographic",
-  imagerendering: "imageRendering",
-  "image-rendering": "imageRendering",
-  in2: "in2",
-  in: "in",
-  inlist: "inlist",
-  intercept: "intercept",
-  k1: "k1",
-  k2: "k2",
-  k3: "k3",
-  k4: "k4",
-  k: "k",
-  kernelmatrix: "kernelMatrix",
-  kernelunitlength: "kernelUnitLength",
-  kerning: "kerning",
-  keypoints: "keyPoints",
-  keysplines: "keySplines",
-  keytimes: "keyTimes",
-  lengthadjust: "lengthAdjust",
-  letterspacing: "letterSpacing",
-  "letter-spacing": "letterSpacing",
-  lightingcolor: "lightingColor",
-  "lighting-color": "lightingColor",
-  limitingconeangle: "limitingConeAngle",
-  local: "local",
-  markerend: "markerEnd",
-  "marker-end": "markerEnd",
-  markerheight: "markerHeight",
-  markermid: "markerMid",
-  "marker-mid": "markerMid",
-  markerstart: "markerStart",
-  "marker-start": "markerStart",
-  markerunits: "markerUnits",
-  markerwidth: "markerWidth",
-  mask: "mask",
-  maskcontentunits: "maskContentUnits",
-  maskunits: "maskUnits",
-  mathematical: "mathematical",
-  mode: "mode",
-  numoctaves: "numOctaves",
-  offset: "offset",
-  opacity: "opacity",
-  operator: "operator",
-  order: "order",
-  orient: "orient",
-  orientation: "orientation",
-  origin: "origin",
-  overflow: "overflow",
-  overlineposition: "overlinePosition",
-  "overline-position": "overlinePosition",
-  overlinethickness: "overlineThickness",
-  "overline-thickness": "overlineThickness",
-  paintorder: "paintOrder",
-  "paint-order": "paintOrder",
-  panose1: "panose1",
-  "panose-1": "panose1",
-  pathlength: "pathLength",
-  patterncontentunits: "patternContentUnits",
-  patterntransform: "patternTransform",
-  patternunits: "patternUnits",
-  pointerevents: "pointerEvents",
-  "pointer-events": "pointerEvents",
-  points: "points",
-  pointsatx: "pointsAtX",
-  pointsaty: "pointsAtY",
-  pointsatz: "pointsAtZ",
-  prefix: "prefix",
-  preservealpha: "preserveAlpha",
-  preserveaspectratio: "preserveAspectRatio",
-  primitiveunits: "primitiveUnits",
-  property: "property",
-  r: "r",
-  radius: "radius",
-  refx: "refX",
-  refy: "refY",
-  renderingintent: "renderingIntent",
-  "rendering-intent": "renderingIntent",
-  repeatcount: "repeatCount",
-  repeatdur: "repeatDur",
-  requiredextensions: "requiredExtensions",
-  requiredfeatures: "requiredFeatures",
-  resource: "resource",
-  restart: "restart",
-  result: "result",
-  results: "results",
-  rotate: "rotate",
-  rx: "rx",
-  ry: "ry",
-  scale: "scale",
-  security: "security",
-  seed: "seed",
-  shaperendering: "shapeRendering",
-  "shape-rendering": "shapeRendering",
-  slope: "slope",
-  spacing: "spacing",
-  specularconstant: "specularConstant",
-  specularexponent: "specularExponent",
-  speed: "speed",
-  spreadmethod: "spreadMethod",
-  startoffset: "startOffset",
-  stddeviation: "stdDeviation",
-  stemh: "stemh",
-  stemv: "stemv",
-  stitchtiles: "stitchTiles",
-  stopcolor: "stopColor",
-  "stop-color": "stopColor",
-  stopopacity: "stopOpacity",
-  "stop-opacity": "stopOpacity",
-  strikethroughposition: "strikethroughPosition",
-  "strikethrough-position": "strikethroughPosition",
-  strikethroughthickness: "strikethroughThickness",
-  "strikethrough-thickness": "strikethroughThickness",
-  string: "string",
-  stroke: "stroke",
-  strokedasharray: "strokeDasharray",
-  "stroke-dasharray": "strokeDasharray",
-  strokedashoffset: "strokeDashoffset",
-  "stroke-dashoffset": "strokeDashoffset",
-  strokelinecap: "strokeLinecap",
-  "stroke-linecap": "strokeLinecap",
-  strokelinejoin: "strokeLinejoin",
-  "stroke-linejoin": "strokeLinejoin",
-  strokemiterlimit: "strokeMiterlimit",
-  "stroke-miterlimit": "strokeMiterlimit",
-  strokewidth: "strokeWidth",
-  "stroke-width": "strokeWidth",
-  strokeopacity: "strokeOpacity",
-  "stroke-opacity": "strokeOpacity",
-  suppresscontenteditablewarning: "suppressContentEditableWarning",
-  suppresshydrationwarning: "suppressHydrationWarning",
-  surfacescale: "surfaceScale",
-  systemlanguage: "systemLanguage",
-  tablevalues: "tableValues",
-  targetx: "targetX",
-  targety: "targetY",
-  textanchor: "textAnchor",
-  "text-anchor": "textAnchor",
-  textdecoration: "textDecoration",
-  "text-decoration": "textDecoration",
-  textlength: "textLength",
-  textrendering: "textRendering",
-  "text-rendering": "textRendering",
-  to: "to",
-  transform: "transform",
-  transformorigin: "transformOrigin",
-  "transform-origin": "transformOrigin",
-  typeof: "typeof",
-  u1: "u1",
-  u2: "u2",
-  underlineposition: "underlinePosition",
-  "underline-position": "underlinePosition",
-  underlinethickness: "underlineThickness",
-  "underline-thickness": "underlineThickness",
-  unicode: "unicode",
-  unicodebidi: "unicodeBidi",
-  "unicode-bidi": "unicodeBidi",
-  unicoderange: "unicodeRange",
-  "unicode-range": "unicodeRange",
-  unitsperem: "unitsPerEm",
-  "units-per-em": "unitsPerEm",
-  unselectable: "unselectable",
-  valphabetic: "vAlphabetic",
-  "v-alphabetic": "vAlphabetic",
-  values: "values",
-  vectoreffect: "vectorEffect",
-  "vector-effect": "vectorEffect",
-  version: "version",
-  vertadvy: "vertAdvY",
-  "vert-adv-y": "vertAdvY",
-  vertoriginx: "vertOriginX",
-  "vert-origin-x": "vertOriginX",
-  vertoriginy: "vertOriginY",
-  "vert-origin-y": "vertOriginY",
-  vhanging: "vHanging",
-  "v-hanging": "vHanging",
-  videographic: "vIdeographic",
-  "v-ideographic": "vIdeographic",
-  viewbox: "viewBox",
-  viewtarget: "viewTarget",
-  visibility: "visibility",
-  vmathematical: "vMathematical",
-  "v-mathematical": "vMathematical",
-  vocab: "vocab",
-  widths: "widths",
-  wordspacing: "wordSpacing",
-  "word-spacing": "wordSpacing",
-  writingmode: "writingMode",
-  "writing-mode": "writingMode",
-  x1: "x1",
-  x2: "x2",
-  x: "x",
-  xchannelselector: "xChannelSelector",
-  xheight: "xHeight",
-  "x-height": "xHeight",
-  xlinkactuate: "xlinkActuate",
-  "xlink:actuate": "xlinkActuate",
-  xlinkarcrole: "xlinkArcrole",
-  "xlink:arcrole": "xlinkArcrole",
-  xlinkhref: "xlinkHref",
-  "xlink:href": "xlinkHref",
-  xlinkrole: "xlinkRole",
-  "xlink:role": "xlinkRole",
-  xlinkshow: "xlinkShow",
-  "xlink:show": "xlinkShow",
-  xlinktitle: "xlinkTitle",
-  "xlink:title": "xlinkTitle",
-  xlinktype: "xlinkType",
-  "xlink:type": "xlinkType",
-  xmlbase: "xmlBase",
-  "xml:base": "xmlBase",
-  xmllang: "xmlLang",
-  "xml:lang": "xmlLang",
-  xmlns: "xmlns",
-  "xml:space": "xmlSpace",
-  xmlnsxlink: "xmlnsXlink",
-  "xmlns:xlink": "xmlnsXlink",
-  xmlspace: "xmlSpace",
-  y1: "y1",
-  y2: "y2",
-  y: "y",
-  ychannelselector: "yChannelSelector",
-  z: "z",
-  zoomandpan: "zoomAndPan"
-};
-
-var ariaProperties = {
-  "aria-current": 0,
-  // state
-  "aria-description": 0,
-  "aria-details": 0,
-  "aria-disabled": 0,
-  // state
-  "aria-hidden": 0,
-  // state
-  "aria-invalid": 0,
-  // state
-  "aria-keyshortcuts": 0,
-  "aria-label": 0,
-  "aria-roledescription": 0,
-  // Widget Attributes
-  "aria-autocomplete": 0,
-  "aria-checked": 0,
-  "aria-expanded": 0,
-  "aria-haspopup": 0,
-  "aria-level": 0,
-  "aria-modal": 0,
-  "aria-multiline": 0,
-  "aria-multiselectable": 0,
-  "aria-orientation": 0,
-  "aria-placeholder": 0,
-  "aria-pressed": 0,
-  "aria-readonly": 0,
-  "aria-required": 0,
-  "aria-selected": 0,
-  "aria-sort": 0,
-  "aria-valuemax": 0,
-  "aria-valuemin": 0,
-  "aria-valuenow": 0,
-  "aria-valuetext": 0,
-  // Live Region Attributes
-  "aria-atomic": 0,
-  "aria-busy": 0,
-  "aria-live": 0,
-  "aria-relevant": 0,
-  // Drag-and-Drop Attributes
-  "aria-dropeffect": 0,
-  "aria-grabbed": 0,
-  // Relationship Attributes
-  "aria-activedescendant": 0,
-  "aria-colcount": 0,
-  "aria-colindex": 0,
-  "aria-colspan": 0,
-  "aria-controls": 0,
-  "aria-describedby": 0,
-  "aria-errormessage": 0,
-  "aria-flowto": 0,
-  "aria-labelledby": 0,
-  "aria-owns": 0,
-  "aria-posinset": 0,
-  "aria-rowcount": 0,
-  "aria-rowindex": 0,
-  "aria-rowspan": 0,
-  "aria-setsize": 0
-};
-
-var warnedProperties$1 = {};
-var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
-
-function validateProperty$1(tagName, name) {
-  {
-    if (
-      hasOwnProperty.call(warnedProperties$1, name) &&
-      warnedProperties$1[name]
-    ) {
-      return true;
-    }
-
-    if (rARIACamel$1.test(name)) {
-      var ariaName = "aria-" + name.slice(4).toLowerCase();
-      var correctName = ariaProperties.hasOwnProperty(ariaName)
-        ? ariaName
-        : null; // If this is an aria-* attribute, but is not listed in the known DOM
-      // DOM properties, then it is an invalid aria-* attribute.
-
-      if (correctName == null) {
-        error(
-          "Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.",
-          name
-        );
-
-        warnedProperties$1[name] = true;
-        return true;
-      } // aria-* attributes should be lowercase; suggest the lowercase version.
-
-      if (name !== correctName) {
-        error(
-          "Invalid ARIA attribute `%s`. Did you mean `%s`?",
-          name,
-          correctName
-        );
-
-        warnedProperties$1[name] = true;
-        return true;
-      }
-    }
-
-    if (rARIA$1.test(name)) {
-      var lowerCasedName = name.toLowerCase();
-      var standardName = ariaProperties.hasOwnProperty(lowerCasedName)
-        ? lowerCasedName
-        : null; // If this is an aria-* attribute, but is not listed in the known DOM
-      // DOM properties, then it is an invalid aria-* attribute.
-
-      if (standardName == null) {
-        warnedProperties$1[name] = true;
-        return false;
-      } // aria-* attributes should be lowercase; suggest the lowercase version.
-
-      if (name !== standardName) {
-        error(
-          "Unknown ARIA attribute `%s`. Did you mean `%s`?",
-          name,
-          standardName
-        );
-
-        warnedProperties$1[name] = true;
-        return true;
-      }
-    }
-  }
-
-  return true;
-}
-
-function warnInvalidARIAProps(type, props) {
-  {
-    var invalidProps = [];
-
-    for (var key in props) {
-      var isValid = validateProperty$1(type, key);
-
-      if (!isValid) {
-        invalidProps.push(key);
-      }
-    }
-
-    var unknownPropString = invalidProps
-      .map(function (prop) {
-        return "`" + prop + "`";
-      })
-      .join(", ");
-
-    if (invalidProps.length === 1) {
-      error(
-        "Invalid aria prop %s on <%s> tag. " +
-          "For details, see https://reactjs.org/link/invalid-aria-props",
-        unknownPropString,
-        type
-      );
-    } else if (invalidProps.length > 1) {
-      error(
-        "Invalid aria props %s on <%s> tag. " +
-          "For details, see https://reactjs.org/link/invalid-aria-props",
-        unknownPropString,
-        type
-      );
-    }
-  }
-}
-
-function validateProperties$2(type, props) {
-  if (isCustomComponent(type, props)) {
-    return;
-  }
-
-  warnInvalidARIAProps(type, props);
-}
-
-var didWarnValueNull = false;
-function validateProperties$1(type, props) {
-  {
-    if (type !== "input" && type !== "textarea" && type !== "select") {
-      return;
-    }
-
-    if (props != null && props.value === null && !didWarnValueNull) {
-      didWarnValueNull = true;
-
-      if (type === "select" && props.multiple) {
-        error(
-          "`value` prop on `%s` should not be null. " +
-            "Consider using an empty array when `multiple` is set to `true` " +
-            "to clear the component or `undefined` for uncontrolled components.",
-          type
-        );
-      } else {
-        error(
-          "`value` prop on `%s` should not be null. " +
-            "Consider using an empty string to clear the component or `undefined` " +
-            "for uncontrolled components.",
-          type
-        );
-      }
-    }
-  }
-}
-
-var warnedProperties = {};
-var EVENT_NAME_REGEX = /^on./;
-var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
-var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
-
-function validateProperty(tagName, name, value, eventRegistry) {
-  {
-    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
-      return true;
-    }
-
-    var lowerCasedName = name.toLowerCase();
-
-    if (lowerCasedName === "onfocusin" || lowerCasedName === "onfocusout") {
-      error(
-        "React uses onFocus and onBlur instead of onFocusIn and onFocusOut. " +
-          "All React events are normalized to bubble, so onFocusIn and onFocusOut " +
-          "are not needed/supported by React."
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    } // We can't rely on the event system being injected on the server.
-
-    if (eventRegistry != null) {
-      var registrationNameDependencies =
-          eventRegistry.registrationNameDependencies,
-        possibleRegistrationNames = eventRegistry.possibleRegistrationNames;
-
-      if (registrationNameDependencies.hasOwnProperty(name)) {
-        return true;
-      }
-
-      var registrationName = possibleRegistrationNames.hasOwnProperty(
-        lowerCasedName
-      )
-        ? possibleRegistrationNames[lowerCasedName]
-        : null;
-
-      if (registrationName != null) {
-        error(
-          "Invalid event handler property `%s`. Did you mean `%s`?",
-          name,
-          registrationName
-        );
-
-        warnedProperties[name] = true;
-        return true;
-      }
-
-      if (EVENT_NAME_REGEX.test(name)) {
-        error("Unknown event handler property `%s`. It will be ignored.", name);
-
-        warnedProperties[name] = true;
-        return true;
-      }
-    } else if (EVENT_NAME_REGEX.test(name)) {
-      // If no event plugins have been injected, we are in a server environment.
-      // So we can't tell if the event name is correct for sure, but we can filter
-      // out known bad ones like `onclick`. We can't suggest a specific replacement though.
-      if (INVALID_EVENT_NAME_REGEX.test(name)) {
-        error(
-          "Invalid event handler property `%s`. " +
-            "React events use the camelCase naming convention, for example `onClick`.",
-          name
-        );
-      }
-
-      warnedProperties[name] = true;
-      return true;
-    } // Let the ARIA attribute hook validate ARIA attributes
-
-    if (rARIA.test(name) || rARIACamel.test(name)) {
-      return true;
-    }
-
-    if (lowerCasedName === "innerhtml") {
-      error(
-        "Directly setting property `innerHTML` is not permitted. " +
-          "For more information, lookup documentation on `dangerouslySetInnerHTML`."
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    if (lowerCasedName === "aria") {
-      error(
-        "The `aria` attribute is reserved for future use in React. " +
-          "Pass individual `aria-` attributes instead."
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    if (
-      lowerCasedName === "is" &&
-      value !== null &&
-      value !== undefined &&
-      typeof value !== "string"
-    ) {
-      error(
-        "Received a `%s` for a string attribute `is`. If this is expected, cast " +
-          "the value to a string.",
-        typeof value
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    if (typeof value === "number" && isNaN(value)) {
-      error(
-        "Received NaN for the `%s` attribute. If this is expected, cast " +
-          "the value to a string.",
-        name
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    var propertyInfo = getPropertyInfo(name); // Known attributes should match the casing specified in the property config.
-
-    if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
-      var standardName = possibleStandardNames[lowerCasedName];
-
-      if (standardName !== name) {
-        error(
-          "Invalid DOM property `%s`. Did you mean `%s`?",
-          name,
-          standardName
-        );
-
-        warnedProperties[name] = true;
-        return true;
-      }
-    } else if (name !== lowerCasedName) {
-      // Unknown attributes should have lowercase casing since that's how they
-      // will be cased anyway with server rendering.
-      error(
-        "React does not recognize the `%s` prop on a DOM element. If you " +
-          "intentionally want it to appear in the DOM as a custom " +
-          "attribute, spell it as lowercase `%s` instead. " +
-          "If you accidentally passed it from a parent component, remove " +
-          "it from the DOM element.",
-        name,
-        lowerCasedName
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    } // Now that we've validated casing, do not validate
-    // data types for reserved props
-
-    switch (name) {
-      case "dangerouslySetInnerHTML":
-      case "children":
-      case "style":
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        return true;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          return true;
-        }
-    }
-
-    if (typeof value === "boolean") {
-      var prefix = name.toLowerCase().slice(0, 5);
-      var acceptsBooleans =
-        propertyInfo !== null
-          ? propertyInfo.acceptsBooleans
-          : prefix === "data-" || prefix === "aria-";
-
-      if (!acceptsBooleans) {
-        if (value) {
-          error(
-            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-              "If you want to write it to the DOM, pass a string instead: " +
-              '%s="%s" or %s={value.toString()}.',
-            value,
-            name,
-            name,
-            value,
-            name
-          );
-        } else {
-          error(
-            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-              "If you want to write it to the DOM, pass a string instead: " +
-              '%s="%s" or %s={value.toString()}.\n\n' +
-              "If you used to conditionally omit it with %s={condition && value}, " +
-              "pass %s={condition ? value : undefined} instead.",
-            value,
-            name,
-            name,
-            value,
-            name,
-            name,
-            name
-          );
-        }
-      }
-
-      warnedProperties[name] = true;
-      return true;
-    } // Warn when a known attribute is a bad type
-
-    switch (typeof value) {
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        warnedProperties[name] = true;
-        return false;
-    } // Warn when passing the strings 'false' or 'true' into a boolean prop
-
-    if (
-      (value === "false" || value === "true") &&
-      propertyInfo !== null &&
-      propertyInfo.type === BOOLEAN
-    ) {
-      error(
-        "Received the string `%s` for the boolean attribute `%s`. " +
-          "%s " +
-          "Did you mean %s={%s}?",
-        value,
-        name,
-        value === "false"
-          ? "The browser will interpret it as a truthy value."
-          : 'Although this works, it will not work as expected if you pass the string "false".',
-        name,
-        value
-      );
-
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    return true;
-  }
-}
-
-function warnUnknownProperties(type, props, eventRegistry) {
-  {
-    var unknownProps = [];
-
-    for (var key in props) {
-      var isValid = validateProperty(type, key, props[key], eventRegistry);
-
-      if (!isValid) {
-        unknownProps.push(key);
-      }
-    }
-
-    var unknownPropString = unknownProps
-      .map(function (prop) {
-        return "`" + prop + "`";
-      })
-      .join(", ");
-
-    if (unknownProps.length === 1) {
-      error(
-        "Invalid value for prop %s on <%s> tag. Either remove it from the element, " +
-          "or pass a string or number value to keep it in the DOM. " +
-          "For details, see https://reactjs.org/link/attribute-behavior ",
-        unknownPropString,
-        type
-      );
-    } else if (unknownProps.length > 1) {
-      error(
-        "Invalid values for props %s on <%s> tag. Either remove them from the element, " +
-          "or pass a string or number value to keep them in the DOM. " +
-          "For details, see https://reactjs.org/link/attribute-behavior ",
-        unknownPropString,
-        type
-      );
-    }
-  }
-}
-
-function validateProperties(type, props, eventRegistry) {
-  if (isCustomComponent(type, props)) {
-    return;
-  }
-
-  warnUnknownProperties(type, props, eventRegistry);
-}
-
-var didWarnInvalidHydration = false;
-var didWarnScriptTags = false;
-var warnedUnknownTags;
-var canDiffStyleForHydrationWarning;
-
-{
-  warnedUnknownTags = {
-    // There are working polyfills for <dialog>. Let people use it.
-    dialog: true,
-    // Electron ships a custom <webview> tag to display external web content in
-    // an isolated frame and process.
-    // This tag is not present in non Electron environments such as JSDom which
-    // is often used for testing purposes.
-    // @see https://electronjs.org/docs/api/webview-tag
-    webview: true
-  }; // IE 11 parses & normalizes the style attribute as opposed to other
-  // browsers. It adds spaces and sorts the properties in some
-  // non-alphabetical order. Handling that would require sorting CSS
-  // properties in the client & server versions or applying
-  // `expectedStyle` to a temporary DOM node to read its `style` attribute
-  // normalized. Since it only affects IE, we're skipping style warnings
-  // in that browser completely in favor of doing all that work.
-  // See https://github.com/facebook/react/issues/11807
-
-  canDiffStyleForHydrationWarning =
-    disableIEWorkarounds || (canUseDOM && !document.documentMode);
-}
-
-function validatePropertiesInDevelopment(type, props) {
-  {
-    validateProperties$2(type, props);
-    validateProperties$1(type, props);
-    validateProperties(type, props, {
-      registrationNameDependencies: registrationNameDependencies,
-      possibleRegistrationNames: possibleRegistrationNames
-    });
-
-    if (
-      props.contentEditable &&
-      !props.suppressContentEditableWarning &&
-      props.children != null
-    ) {
-      error(
-        "A component is `contentEditable` and contains `children` managed by " +
-          "React. It is now your responsibility to guarantee that none of " +
-          "those nodes are unexpectedly modified or duplicated. This is " +
-          "probably not intentional."
-      );
-    }
-  }
-}
-
-function warnForPropDifference(propName, serverValue, clientValue) {
-  {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    var normalizedClientValue = normalizeMarkupForTextOrAttribute(clientValue);
-    var normalizedServerValue = normalizeMarkupForTextOrAttribute(serverValue);
-
-    if (normalizedServerValue === normalizedClientValue) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-
-    error(
-      "Prop `%s` did not match. Server: %s Client: %s",
-      propName,
-      JSON.stringify(normalizedServerValue),
-      JSON.stringify(normalizedClientValue)
-    );
-  }
-}
-
-function warnForExtraAttributes(attributeNames) {
-  {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-    var names = [];
-    attributeNames.forEach(function (name) {
-      names.push(name);
-    });
-
-    error("Extra attributes from the server: %s", names);
-  }
-}
-
-function warnForInvalidEventListener(registrationName, listener) {
-  {
-    if (listener === false) {
-      error(
-        "Expected `%s` listener to be a function, instead got `false`.\n\n" +
-          "If you used to conditionally omit it with %s={condition && value}, " +
-          "pass %s={condition ? value : undefined} instead.",
-        registrationName,
-        registrationName,
-        registrationName
-      );
-    } else {
-      error(
-        "Expected `%s` listener to be a function, instead got a value of `%s` type.",
-        registrationName,
-        typeof listener
-      );
-    }
-  }
-} // Parse the HTML and read it back to normalize the HTML string so that it
-// can be used for comparison.
-
-function normalizeHTML(parent, html) {
-  {
-    // We could have created a separate document here to avoid
-    // re-initializing custom elements if they exist. But this breaks
-    // how <noscript> is being handled. So we use the same document.
-    // See the discussion in https://github.com/facebook/react/pull/11157.
-    var testElement =
-      parent.namespaceURI === HTML_NAMESPACE
-        ? parent.ownerDocument.createElement(parent.tagName)
-        : parent.ownerDocument.createElementNS(
-            parent.namespaceURI,
-            parent.tagName
-          );
-    testElement.innerHTML = html;
-    return testElement.innerHTML;
-  }
-} // HTML parsing normalizes CR and CRLF to LF.
-// It also can turn \u0000 into \uFFFD inside attributes.
-// https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
-// If we have a mismatch, it might be caused by that.
-// We will still patch up in this case but not fire the warning.
-
-var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
-
-function normalizeMarkupForTextOrAttribute(markup) {
-  {
-    checkHtmlStringCoercion(markup);
-  }
-
-  var markupString = typeof markup === "string" ? markup : "" + markup;
-  return markupString
-    .replace(NORMALIZE_NEWLINES_REGEX, "\n")
-    .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
-}
-
-function checkForUnmatchedText(
-  serverText,
-  clientText,
-  isConcurrentMode,
-  shouldWarnDev
-) {
-  var normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
-  var normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
-
-  if (normalizedServerText === normalizedClientText) {
-    return;
-  }
-
-  if (shouldWarnDev) {
-    {
-      if (!didWarnInvalidHydration) {
-        didWarnInvalidHydration = true;
-
-        error(
-          'Text content did not match. Server: "%s" Client: "%s"',
-          normalizedServerText,
-          normalizedClientText
-        );
-      }
-    }
-  }
-
-  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
-    // In concurrent roots, we throw when there's a text mismatch and revert to
-    // client rendering, up to the nearest Suspense boundary.
-    throw new Error("Text content does not match server-rendered HTML.");
-  }
-}
-function getOwnerDocumentFromRootContainer(rootContainerElement) {
-  return rootContainerElement.nodeType === DOCUMENT_NODE
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-}
-
-function noop$1() {}
-
-function trapClickOnNonInteractiveElement(node) {
-  // Mobile Safari does not fire properly bubble click events on
-  // non-interactive elements, which means delegated click listeners do not
-  // fire. The workaround for this bug involves attaching an empty click
-  // listener on the target node.
-  // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-  // Just set it using the onclick property so that we don't have to manage any
-  // bookkeeping for it. Not sure if we need to clear it when the listener is
-  // removed.
-  // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = noop$1;
-}
-
-function setInitialDOMProperties(
-  tag,
-  domElement,
-  nextProps,
-  isCustomComponentTag
-) {
-  for (var propKey in nextProps) {
-    if (!nextProps.hasOwnProperty(propKey)) {
-      continue;
-    }
-
-    var nextProp = nextProps[propKey];
-
-    switch (propKey) {
-      case "style": {
-        if (nextProp != null && typeof nextProp !== "object") {
-          throw new Error(
-            "The `style` prop expects a mapping from style properties to values, " +
-              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-              "using JSX."
-          );
-        }
-
-        {
-          if (nextProp) {
-            // Freeze the next style object so that we can assume it won't be
-            // mutated. We have already warned for this in the past.
-            Object.freeze(nextProp);
-          }
-        } // Relies on `updateStylesByID` not mutating `styleUpdates`.
-
-        setValueForStyles(domElement, nextProp);
-        break;
-      }
-
-      case "dangerouslySetInnerHTML": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
-            throw new Error(
-              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
-                "for more information."
-            );
-          }
-
-          var nextHtml = nextProp.__html;
-
-          if (nextHtml != null) {
-            if (nextProps.children != null) {
-              throw new Error(
-                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
-              );
-            }
-
-            if (disableIEWorkarounds) {
-              domElement.innerHTML = nextHtml;
-            } else {
-              setInnerHTML$1(domElement, nextHtml);
-            }
-          }
-        }
-
-        break;
-      }
-
-      case "children": {
-        if (typeof nextProp === "string") {
-          // Avoid setting initial textContent when the text is empty. In IE11 setting
-          // textContent on a <textarea> will cause the placeholder to not
-          // show within the <textarea> until it has been focused and blurred again.
-          // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-          var canSetTextContent =
-            tag !== "body" && (tag !== "textarea" || nextProp !== "");
-
-          if (canSetTextContent) {
-            setTextContent(domElement, nextProp);
-          }
-        } else if (typeof nextProp === "number") {
-          var _canSetTextContent = tag !== "body";
-
-          if (_canSetTextContent) {
-            setTextContent(domElement, "" + nextProp);
-          }
-        }
-
-        break;
-      }
-
-      case "onScroll": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "function") {
-            warnForInvalidEventListener(propKey, nextProp);
-          }
-
-          listenToNonDelegatedEvent("scroll", domElement);
-        }
-
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // We polyfill it separately on the client during commit.
-        // We could have excluded it in the property list instead of
-        // adding a special case here, but then it wouldn't be emitted
-        // on server rendering (but we *do* want to emit it in SSR).
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          break;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          if (nextProp != null) {
-            if (typeof nextProp !== "function") {
-              warnForInvalidEventListener(propKey, nextProp);
-            }
-          }
-        } else if (nextProp != null) {
-          if (isCustomComponentTag) {
-            setValueForPropertyOnCustomComponent(domElement, propKey, nextProp);
-          } else {
-            setValueForProperty(domElement, propKey, nextProp);
-          }
-        }
-      }
-    }
-  }
-}
-
-function updateDOMProperties(
-  domElement,
-  updatePayload,
-  wasCustomComponentTag,
-  isCustomComponentTag
-) {
-  // TODO: Handle wasCustomComponentTag
-  for (var i = 0; i < updatePayload.length; i += 2) {
-    var propKey = updatePayload[i];
-    var propValue = updatePayload[i + 1];
-
-    switch (propKey) {
-      case "style":
-        setValueForStyles(domElement, propValue);
-        break;
-
-      case "dangerouslySetInnerHTML":
-        if (disableIEWorkarounds) {
-          domElement.innerHTML = propValue;
-        } else {
-          setInnerHTML$1(domElement, propValue);
-        }
-
-        break;
-
-      case "children":
-        setTextContent(domElement, propValue);
-        break;
-
-      default:
-        if (isCustomComponentTag) {
-          setValueForPropertyOnCustomComponent(domElement, propKey, propValue);
-        } else {
-          setValueForProperty(domElement, propKey, propValue);
-        }
-
-        break;
-    }
-  }
-} // creates a script element that won't execute
-
-function createPotentiallyInlineScriptElement(ownerDocument) {
-  // Create the script via .innerHTML so its "parser-inserted" flag is
-  // set to true and it does not execute
-  var div = ownerDocument.createElement("div");
-
-  {
-    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-      error(
-        "Encountered a script tag while rendering React component. " +
-          "Scripts inside React components are never executed when rendering " +
-          "on the client. Consider using template tag instead " +
-          "(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
-      );
-
-      didWarnScriptTags = true;
-    }
-  }
-
-  div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
-  // This is guaranteed to yield a script element.
-
-  var firstChild = div.firstChild;
-  var element = div.removeChild(firstChild);
-  return element;
-}
-function createSelectElement(props, ownerDocument) {
-  var element;
-
-  if (typeof props.is === "string") {
-    element = ownerDocument.createElement("select", {
-      is: props.is
-    });
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement("select");
-  }
-
-  if (props.multiple) {
-    element.multiple = true;
-  } else if (props.size) {
-    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-    // it is possible that no option is selected.
-    //
-    // This is only necessary when a select in "single selection mode".
-    element.size = props.size;
-  }
-
-  return element;
-} // Creates elements in the HTML namesapce
-
-function createHTMLElement(type, props, ownerDocument) {
-  {
-    switch (type) {
-      case "script":
-      case "select":
-        error(
-          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
-          type
-        );
-
-        break;
-
-      case "svg":
-      case "math":
-        error(
-          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
-          type
-        );
-    }
-  }
-
-  var isCustomComponentTag;
-  var element;
-
-  {
-    isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
-    // allow <SVG> or <mATH>.
-
-    if (!isCustomComponentTag && type !== type.toLowerCase()) {
-      error(
-        "<%s /> is using incorrect casing. " +
-          "Use PascalCase for React components, " +
-          "or lowercase for HTML elements.",
-        type
-      );
-    }
-  }
-
-  if (typeof props.is === "string") {
-    element = ownerDocument.createElement(type, {
-      is: props.is
-    });
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement(type);
-  }
-
-  {
-    if (
-      !isCustomComponentTag && // $FlowFixMe[method-unbinding]
-      Object.prototype.toString.call(element) ===
-        "[object HTMLUnknownElement]" &&
-      !hasOwnProperty.call(warnedUnknownTags, type)
-    ) {
-      warnedUnknownTags[type] = true;
-
-      error(
-        "The tag <%s> is unrecognized in this browser. " +
-          "If you meant to render a React component, start its name with " +
-          "an uppercase letter.",
-        type
-      );
-    }
-  }
-
-  return element;
-}
-function createTextNode(text, rootContainerElement) {
-  return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
-    text
-  );
-}
-function setInitialProperties(domElement, tag, rawProps) {
-  var isCustomComponentTag = isCustomComponent(tag, rawProps);
-
-  {
-    validatePropertiesInDevelopment(tag, rawProps);
-  } // TODO: Make sure that we check isMounted before firing any of these events.
-
-  var props;
-
-  switch (tag) {
-    case "dialog":
-      listenToNonDelegatedEvent("cancel", domElement);
-      listenToNonDelegatedEvent("close", domElement);
-      props = rawProps;
-      break;
-
-    case "embed":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-    // eslint-disable-next-line no-fallthrough
-
-    case "iframe":
-    case "object":
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the load event.
-      listenToNonDelegatedEvent("load", domElement);
-      props = rawProps;
-      break;
-
-    case "video":
-    case "audio":
-      // We listen to these events in case to ensure emulated bubble
-      // listeners still fire for all the media events.
-      for (var i = 0; i < mediaEventTypes.length; i++) {
-        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
-      }
-
-      props = rawProps;
-      break;
-
-    case "source":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      } // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the error event.
-
-      listenToNonDelegatedEvent("error", domElement);
-      props = rawProps;
-      break;
-
-    case "img":
-    case "link":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-    // eslint-disable-next-line no-fallthrough
-
-    case "image":
-      // We listen to these events in case to ensure emulated bubble
-      // listeners still fire for error and load events.
-      listenToNonDelegatedEvent("error", domElement);
-      listenToNonDelegatedEvent("load", domElement);
-      props = rawProps;
-      break;
-
-    case "details":
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the toggle event.
-      listenToNonDelegatedEvent("toggle", domElement);
-      props = rawProps;
-      break;
-
-    case "input":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-      initWrapperState$2(domElement, rawProps);
-      props = getHostProps$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "option":
-      validateProps(domElement, rawProps);
-      props = rawProps;
-      break;
-
-    case "select":
-      initWrapperState$1(domElement, rawProps);
-      props = getHostProps$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "textarea":
-      initWrapperState(domElement, rawProps);
-      props = getHostProps(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "area":
-    case "base":
-    case "br":
-    case "col":
-    case "hr":
-    case "keygen":
-    case "meta":
-    case "param":
-    case "track":
-    case "wbr":
-    case "menuitem": {
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-    }
-    // eslint-disable-next-line no-fallthrough
-
-    default:
-      props = rawProps;
-  }
-
-  setInitialDOMProperties(tag, domElement, props, isCustomComponentTag);
-
-  switch (tag) {
-    case "input":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper$3(domElement, rawProps, false);
-      break;
-
-    case "textarea":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper(domElement);
-      break;
-
-    case "option":
-      postMountWrapper$2(domElement, rawProps);
-      break;
-
-    case "select":
-      postMountWrapper$1(domElement, rawProps);
-      break;
-
-    default:
-      if (typeof props.onClick === "function") {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
-  }
-} // Calculate the diff between the two objects.
-
-function diffProperties(domElement, tag, lastRawProps, nextRawProps) {
-  {
-    validatePropertiesInDevelopment(tag, nextRawProps);
-  }
-
-  var updatePayload = null;
-  var lastProps;
-  var nextProps;
-
-  switch (tag) {
-    case "input":
-      if (
-        nextRawProps.children != null ||
-        nextRawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-      lastProps = getHostProps$2(domElement, lastRawProps);
-      nextProps = getHostProps$2(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "select":
-      lastProps = getHostProps$1(domElement, lastRawProps);
-      nextProps = getHostProps$1(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "textarea":
-      lastProps = getHostProps(domElement, lastRawProps);
-      nextProps = getHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "img":
-    case "link":
-    case "area":
-    case "base":
-    case "br":
-    case "col":
-    case "embed":
-    case "hr":
-    case "keygen":
-    case "meta":
-    case "param":
-    case "source":
-    case "track":
-    case "wbr":
-    case "menuitem": {
-      if (
-        nextRawProps.children != null ||
-        nextRawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-    }
-    // eslint-disable-next-line no-fallthrough
-
-    default:
-      lastProps = lastRawProps;
-      nextProps = nextRawProps;
-
-      if (
-        typeof lastProps.onClick !== "function" &&
-        typeof nextProps.onClick === "function"
-      ) {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
-  }
-
-  var propKey;
-  var styleName;
-  var styleUpdates = null;
-
-  for (propKey in lastProps) {
-    if (
-      nextProps.hasOwnProperty(propKey) ||
-      !lastProps.hasOwnProperty(propKey) ||
-      lastProps[propKey] == null
-    ) {
-      continue;
-    }
-
-    switch (propKey) {
-      case "style": {
-        var lastStyle = lastProps[propKey];
-
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            if (!styleUpdates) {
-              styleUpdates = {};
-            }
-
-            styleUpdates[styleName] = "";
-          }
-        }
-
-        break;
-      }
-
-      case "dangerouslySetInnerHTML":
-      case "children": {
-        // Noop. This is handled by the clear text mechanism.
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // Noop. It doesn't work on updates anyway.
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          break;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          // This is a special case. If any listener updates we need to ensure
-          // that the "current" fiber pointer gets updated so we need a commit
-          // to update this element.
-          if (!updatePayload) {
-            updatePayload = [];
-          }
-        } else {
-          // For all other deleted properties we add it to the queue. We use
-          // the allowed property list in the commit phase instead.
-          (updatePayload = updatePayload || []).push(propKey, null);
-        }
-      }
-    }
-  }
-
-  for (propKey in nextProps) {
-    var nextProp = nextProps[propKey];
-    var lastProp = lastProps != null ? lastProps[propKey] : undefined;
-
-    if (
-      !nextProps.hasOwnProperty(propKey) ||
-      nextProp === lastProp ||
-      (nextProp == null && lastProp == null)
-    ) {
-      continue;
-    }
-
-    switch (propKey) {
-      case "style": {
-        if (nextProp != null && typeof nextProp !== "object") {
-          throw new Error(
-            "The `style` prop expects a mapping from style properties to values, " +
-              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-              "using JSX."
-          );
-        }
-
-        {
-          if (nextProp) {
-            // Freeze the next style object so that we can assume it won't be
-            // mutated. We have already warned for this in the past.
-            Object.freeze(nextProp);
-          }
-        }
-
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (
-              lastProp.hasOwnProperty(styleName) &&
-              (!nextProp || !nextProp.hasOwnProperty(styleName))
-            ) {
-              if (!styleUpdates) {
-                styleUpdates = {};
-              }
-
-              styleUpdates[styleName] = "";
-            }
-          } // Update styles that changed since `lastProp`.
-
-          for (styleName in nextProp) {
-            if (
-              nextProp.hasOwnProperty(styleName) &&
-              lastProp[styleName] !== nextProp[styleName]
-            ) {
-              if (!styleUpdates) {
-                styleUpdates = {};
-              }
-
-              styleUpdates[styleName] = nextProp[styleName];
-            }
-          }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          if (!styleUpdates) {
-            if (!updatePayload) {
-              updatePayload = [];
-            }
-
-            updatePayload.push(propKey, styleUpdates);
-          }
-
-          styleUpdates = nextProp;
-        }
-
-        break;
-      }
-
-      case "dangerouslySetInnerHTML": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
-            throw new Error(
-              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
-                "for more information."
-            );
-          }
-
-          var nextHtml = nextProp.__html;
-
-          if (nextHtml != null) {
-            if (nextProps.children != null) {
-              throw new Error(
-                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
-              );
-            }
-
-            var lastHtml = lastProp ? lastProp.__html : undefined;
-
-            if (lastHtml !== nextHtml) {
-              (updatePayload = updatePayload || []).push(propKey, nextHtml);
-            }
-          }
-        }
-
-        break;
-      }
-
-      case "children": {
-        if (typeof nextProp === "string" || typeof nextProp === "number") {
-          (updatePayload = updatePayload || []).push(propKey, "" + nextProp);
-        }
-
-        break;
-      }
-
-      case "onScroll": {
-        if (nextProp != null) {
-          // We eagerly listen to this even though we haven't committed yet.
-          if (typeof nextProp !== "function") {
-            warnForInvalidEventListener(propKey, nextProp);
-          }
-
-          listenToNonDelegatedEvent("scroll", domElement);
-        }
-
-        if (!updatePayload && lastProp !== nextProp) {
-          // This is a special case. If any listener updates we need to ensure
-          // that the "current" props pointer gets updated so we need a commit
-          // to update this element.
-          updatePayload = [];
-        }
-
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // Noop on updates
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          break;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          if (nextProp != null) {
-            // We eagerly listen to this even though we haven't committed yet.
-            if (typeof nextProp !== "function") {
-              warnForInvalidEventListener(propKey, nextProp);
-            }
-          }
-
-          if (!updatePayload && lastProp !== nextProp) {
-            // This is a special case. If any listener updates we need to ensure
-            // that the "current" props pointer gets updated so we need a commit
-            // to update this element.
-            updatePayload = [];
-          }
-        } else {
-          // For any other property we always add it to the queue and then we
-          // filter it out using the allowed property list during the commit.
-          (updatePayload = updatePayload || []).push(propKey, nextProp);
-        }
-      }
-    }
-  }
-
-  if (styleUpdates) {
-    {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
-    }
-
-    (updatePayload = updatePayload || []).push("style", styleUpdates);
-  }
-
-  return updatePayload;
-} // Apply the diff.
-
-function updateProperties(
-  domElement,
-  updatePayload,
-  tag,
-  lastRawProps,
-  nextRawProps
-) {
-  // Update checked *before* name.
-  // In the middle of an update, it is possible to have multiple checked.
-  // When a checked radio tries to change name, browser makes another radio's checked false.
-  if (
-    tag === "input" &&
-    nextRawProps.type === "radio" &&
-    nextRawProps.name != null
-  ) {
-    updateChecked(domElement, nextRawProps);
-  }
-
-  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
-  var isCustomComponentTag = isCustomComponent(tag, nextRawProps); // Apply the diff.
-
-  updateDOMProperties(
-    domElement,
-    updatePayload,
-    wasCustomComponentTag,
-    isCustomComponentTag
-  ); // TODO: Ensure that an update gets scheduled if any of the special props
-  // changed.
-
-  switch (tag) {
-    case "input":
-      // Update the wrapper around inputs *after* updating props. This has to
-      // happen after `updateDOMProperties`. Otherwise HTML5 input validations
-      // raise warnings and prevent the new value from being assigned.
-      updateWrapper$1(domElement, nextRawProps);
-      break;
-
-    case "textarea":
-      updateWrapper(domElement, nextRawProps);
-      break;
-
-    case "select":
-      // <select> value update needs to occur after <option> children
-      // reconciliation
-      postUpdateWrapper(domElement, nextRawProps);
-      break;
-  }
-}
-
-function getPossibleStandardName(propName) {
-  {
-    var lowerCasedName = propName.toLowerCase();
-
-    if (!possibleStandardNames.hasOwnProperty(lowerCasedName)) {
-      return null;
-    }
-
-    return possibleStandardNames[lowerCasedName] || null;
-  }
-}
-
-function diffHydratedStyles(domElement, value) {
-  if (value != null && typeof value !== "object") {
-    throw new Error(
-      "The `style` prop expects a mapping from style properties to values, " +
-        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-        "using JSX."
-    );
-  }
-
-  if (canDiffStyleForHydrationWarning) {
-    var expectedStyle = createDangerousStringForStyles(value);
-    var serverValue = domElement.getAttribute("style");
-
-    if (expectedStyle !== serverValue) {
-      warnForPropDifference("style", serverValue, expectedStyle);
-    }
-  }
-}
-
-function diffHydratedCustomComponent(
-  domElement,
-  tag,
-  rawProps,
-  parentNamespaceDev,
-  extraAttributeNames
-) {
-  for (var propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
-      continue;
-    }
-
-    var nextProp = rawProps[propKey];
-
-    if (nextProp == null) {
-      continue;
-    }
-
-    if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== "function") {
-        warnForInvalidEventListener(propKey, nextProp);
-      }
-
-      continue;
-    }
-
-    if (rawProps.suppressHydrationWarning === true) {
-      // Don't bother comparing. We're ignoring all these warnings.
-      continue;
-    } // Validate that the properties correspond to their expected values.
-
-    switch (propKey) {
-      case "children": // Checked above already
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue":
-      case "defaultChecked":
-      case "innerHTML":
-        // Noop
-        continue;
-
-      case "dangerouslySetInnerHTML":
-        var serverHTML = domElement.innerHTML;
-        var nextHtml = nextProp ? nextProp.__html : undefined;
-
-        if (nextHtml != null) {
-          var expectedHTML = normalizeHTML(domElement, nextHtml);
-
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
-        }
-
-        continue;
-
-      case "style":
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.delete(propKey);
-        diffHydratedStyles(domElement, nextProp);
-        continue;
-
-      case "offsetParent":
-      case "offsetTop":
-      case "offsetLeft":
-      case "offsetWidth":
-      case "offsetHeight":
-      case "isContentEditable":
-      case "outerText":
-      case "outerHTML":
-        if (enableCustomElementPropertySupport) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey.toLowerCase());
-
-          {
-            error(
-              "Assignment to read-only property will result in a no-op: `%s`",
-              propKey
-            );
-          }
-
-          continue;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        var ownNamespaceDev = parentNamespaceDev;
-
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          ownNamespaceDev = getIntrinsicNamespace(tag);
-        }
-
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey.toLowerCase());
-        } else {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
-        }
-
-        var serverValue = getValueForAttributeOnCustomComponent(
-          domElement,
-          propKey,
-          nextProp
-        );
-
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
-        }
-      }
-    }
-  }
-}
-
-function diffHydratedGenericElement(
-  domElement,
-  tag,
-  rawProps,
-  parentNamespaceDev,
-  extraAttributeNames
-) {
-  for (var propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
-      continue;
-    }
-
-    var nextProp = rawProps[propKey];
-
-    if (nextProp == null) {
-      continue;
-    }
-
-    if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== "function") {
-        warnForInvalidEventListener(propKey, nextProp);
-      }
-
-      continue;
-    }
-
-    if (rawProps.suppressHydrationWarning === true) {
-      // Don't bother comparing. We're ignoring all these warnings.
-      continue;
-    } // Validate that the properties correspond to their expected values.
-
-    switch (propKey) {
-      case "children": // Checked above already
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "value": // Controlled attributes are not validated
-
-      case "checked": // TODO: Only ignore them on controlled tags.
-
-      case "selected":
-      case "defaultValue":
-      case "defaultChecked":
-      case "innerHTML":
-        // Noop
-        continue;
-
-      case "dangerouslySetInnerHTML":
-        var serverHTML = domElement.innerHTML;
-        var nextHtml = nextProp ? nextProp.__html : undefined;
-
-        if (nextHtml != null) {
-          var expectedHTML = normalizeHTML(domElement, nextHtml);
-
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
-        }
-
-        continue;
-
-      case "style":
-        // $FlowFixMe - Should be inferred as not undefined.
-        extraAttributeNames.delete(propKey);
-        diffHydratedStyles(domElement, nextProp);
-        continue;
-      // eslint-disable-next-line no-fallthrough
-
-      default:
-        if (
-          // shouldIgnoreAttribute
-          // We have already filtered out null/undefined and reserved words.
-          propKey.length > 2 &&
-          (propKey[0] === "o" || propKey[0] === "O") &&
-          (propKey[1] === "n" || propKey[1] === "N")
-        ) {
-          continue;
-        }
-
-        var propertyInfo = getPropertyInfo(propKey);
-        var isMismatchDueToBadCasing = false;
-        var serverValue = void 0;
-
-        if (propertyInfo !== null) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-            propertyInfo
-          );
-        } else {
-          var ownNamespaceDev = parentNamespaceDev;
-
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            ownNamespaceDev = getIntrinsicNamespace(tag);
-          }
-
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propKey.toLowerCase());
-          } else {
-            var standardName = getPossibleStandardName(propKey);
-
-            if (standardName !== null && standardName !== propKey) {
-              // If an SVG prop is supplied with bad casing, it will
-              // be successfully parsed from HTML, but will produce a mismatch
-              // (and would be incorrectly rendered on the client).
-              // However, we already warn about bad casing elsewhere.
-              // So we'll skip the misleading extra mismatch warning in this case.
-              isMismatchDueToBadCasing = true; // $FlowFixMe - Should be inferred as not undefined.
-
-              extraAttributeNames.delete(standardName);
-            } // $FlowFixMe - Should be inferred as not undefined.
-
-            extraAttributeNames.delete(propKey);
-          }
-
-          serverValue = getValueForAttribute(domElement, propKey, nextProp);
-        }
-
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, nextProp);
-        }
-    }
-  }
-}
-
-function diffHydratedProperties(
-  domElement,
-  tag,
-  rawProps,
-  isConcurrentMode,
-  shouldWarnDev,
-  parentNamespaceDev
-) {
-  {
-    validatePropertiesInDevelopment(tag, rawProps);
-  } // TODO: Make sure that we check isMounted before firing any of these events.
-
-  switch (tag) {
-    case "dialog":
-      listenToNonDelegatedEvent("cancel", domElement);
-      listenToNonDelegatedEvent("close", domElement);
-      break;
-
-    case "iframe":
-    case "object":
-    case "embed":
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the load event.
-      listenToNonDelegatedEvent("load", domElement);
-      break;
-
-    case "video":
-    case "audio":
-      // We listen to these events in case to ensure emulated bubble
-      // listeners still fire for all the media events.
-      for (var i = 0; i < mediaEventTypes.length; i++) {
-        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
-      }
-
-      break;
-
-    case "source":
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the error event.
-      listenToNonDelegatedEvent("error", domElement);
-      break;
-
-    case "img":
-    case "image":
-    case "link":
-      // We listen to these events in case to ensure emulated bubble
-      // listeners still fire for error and load events.
-      listenToNonDelegatedEvent("error", domElement);
-      listenToNonDelegatedEvent("load", domElement);
-      break;
-
-    case "details":
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the toggle event.
-      listenToNonDelegatedEvent("toggle", domElement);
-      break;
-
-    case "input":
-      initWrapperState$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "option":
-      validateProps(domElement, rawProps);
-      break;
-
-    case "select":
-      initWrapperState$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "textarea":
-      initWrapperState(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-  }
-
-  if (rawProps.hasOwnProperty("onScroll")) {
-    listenToNonDelegatedEvent("scroll", domElement);
-  }
-
-  var updatePayload = null;
-  var children = rawProps.children; // For text content children we compare against textContent. This
-  // might match additional HTML that is hidden when we read it using
-  // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
-  // satisfies our requirement. Our requirement is not to produce perfect
-  // HTML and attributes. Ideally we should preserve structure but it's
-  // ok not to if the visible content is still enough to indicate what
-  // even listeners these nodes might be wired up to.
-  // TODO: Warn if there is more than a single textNode as a child.
-  // TODO: Should we use domElement.firstChild.nodeValue to compare?
-
-  if (typeof children === "string" || typeof children === "number") {
-    if (domElement.textContent !== "" + children) {
-      if (rawProps.suppressHydrationWarning !== true) {
-        checkForUnmatchedText(
-          domElement.textContent,
-          children,
-          isConcurrentMode,
-          shouldWarnDev
-        );
-      }
-
-      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        updatePayload = ["children", children];
-      }
-    }
-  }
-
-  if (shouldWarnDev) {
-    var extraAttributeNames = new Set();
-    var attributes = domElement.attributes;
-
-    for (var _i = 0; _i < attributes.length; _i++) {
-      var name = attributes[_i].name.toLowerCase();
-
-      switch (name) {
-        // Controlled attributes are not validated
-        // TODO: Only ignore them on controlled tags.
-        case "value":
-          break;
-
-        case "checked":
-          break;
-
-        case "selected":
-          break;
-
-        default:
-          // Intentionally use the original name.
-          // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributeNames.add(attributes[_i].name);
-      }
-    }
-
-    if (isCustomComponent(tag, rawProps)) {
-      diffHydratedCustomComponent(
-        domElement,
-        tag,
-        rawProps,
-        parentNamespaceDev,
-        extraAttributeNames
-      );
-    } else {
-      diffHydratedGenericElement(
-        domElement,
-        tag,
-        rawProps,
-        parentNamespaceDev,
-        extraAttributeNames
-      );
-    }
-
-    if (
-      // $FlowFixMe - Should be inferred as not undefined.
-      extraAttributeNames.size > 0 &&
-      rawProps.suppressHydrationWarning !== true
-    ) {
-      // $FlowFixMe - Should be inferred as not undefined.
-      warnForExtraAttributes(extraAttributeNames);
-    }
-  }
-
-  switch (tag) {
-    case "input":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper$3(domElement, rawProps, true);
-      break;
-
-    case "textarea":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper(domElement);
-      break;
-
-    case "select":
-    case "option":
-      // For input and textarea we current always set the value property at
-      // post mount to force it to diverge from attributes. However, for
-      // option and select we don't quite do the same thing and select
-      // is not resilient to the DOM state changing so we don't do that here.
-      // TODO: Consider not doing this for input and textarea.
-      break;
-
-    default:
-      if (typeof rawProps.onClick === "function") {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
-  }
-
-  return updatePayload;
-}
-function diffHydratedText(textNode, text, isConcurrentMode) {
-  var isDifferent = textNode.nodeValue !== text;
-  return isDifferent;
-}
-function warnForDeletedHydratableElement(parentNode, child) {
-  {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-
-    error(
-      "Did not expect server HTML to contain a <%s> in <%s>.",
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase()
-    );
-  }
-}
-function warnForDeletedHydratableText(parentNode, child) {
-  {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-
-    error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase()
-    );
-  }
-}
-function warnForInsertedHydratedElement(parentNode, tag, props) {
-  {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-
-    error(
-      "Expected server HTML to contain a matching <%s> in <%s>.",
-      tag,
-      parentNode.nodeName.toLowerCase()
-    );
-  }
-}
-function warnForInsertedHydratedText(parentNode, text) {
-  {
-    if (text === "") {
-      // We expect to insert empty text nodes since they're not represented in
-      // the HTML.
-      // TODO: Remove this special case if we can just avoid inserting empty
-      // text nodes.
-      return;
-    }
-
-    if (didWarnInvalidHydration) {
-      return;
-    }
-
-    didWarnInvalidHydration = true;
-
-    error(
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-      text,
-      parentNode.nodeName.toLowerCase()
-    );
-  }
-}
-function restoreControlledState(domElement, tag, props) {
-  switch (tag) {
-    case "input":
-      restoreControlledState$3(domElement, props);
-      return;
-
-    case "textarea":
-      restoreControlledState$1(domElement, props);
-      return;
-
-    case "select":
-      restoreControlledState$2(domElement, props);
-      return;
-  }
-}
-
-/**
- * Given any node return the first leaf node without children.
- *
- * @param {DOMElement|DOMTextNode} node
- * @return {DOMElement|DOMTextNode}
- */
-
-function getLeafNode(node) {
-  while (node && node.firstChild) {
-    node = node.firstChild;
-  }
-
-  return node;
-}
-/**
- * Get the next sibling within a container. This will walk up the
- * DOM if a node's siblings have been exhausted.
- *
- * @param {DOMElement|DOMTextNode} node
- * @return {?DOMElement|DOMTextNode}
- */
-
-function getSiblingNode(node) {
-  while (node) {
-    if (node.nextSibling) {
-      return node.nextSibling;
-    }
-
-    node = node.parentNode;
-  }
-}
-/**
- * Get object describing the nodes which contain characters at offset.
- *
- * @param {DOMElement|DOMTextNode} root
- * @param {number} offset
- * @return {?object}
- */
-
-function getNodeForCharacterOffset(root, offset) {
-  var node = getLeafNode(root);
-  var nodeStart = 0;
-  var nodeEnd = 0;
-
-  while (node) {
-    if (node.nodeType === TEXT_NODE) {
-      nodeEnd = nodeStart + node.textContent.length;
-
-      if (nodeStart <= offset && nodeEnd >= offset) {
-        return {
-          node: node,
-          offset: offset - nodeStart
-        };
-      }
-
-      nodeStart = nodeEnd;
-    }
-
-    node = getLeafNode(getSiblingNode(node));
-  }
-}
-
-/**
- * @param {DOMElement} outerNode
- * @return {?object}
- */
-
-function getOffsets(outerNode) {
-  var ownerDocument = outerNode.ownerDocument;
-  var win = (ownerDocument && ownerDocument.defaultView) || window;
-  var selection = win.getSelection && win.getSelection();
-
-  if (!selection || selection.rangeCount === 0) {
-    return null;
-  }
-
-  var anchorNode = selection.anchorNode,
-    anchorOffset = selection.anchorOffset,
-    focusNode = selection.focusNode,
-    focusOffset = selection.focusOffset; // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
-  // up/down buttons on an <input type="number">. Anonymous divs do not seem to
-  // expose properties, triggering a "Permission denied error" if any of its
-  // properties are accessed. The only seemingly possible way to avoid erroring
-  // is to access a property that typically works for non-anonymous divs and
-  // catch any error that may otherwise arise. See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
-
-  try {
-    /* eslint-disable ft-flow/no-unused-expressions */
-    anchorNode.nodeType;
-    focusNode.nodeType;
-    /* eslint-enable ft-flow/no-unused-expressions */
-  } catch (e) {
-    return null;
-  }
-
-  return getModernOffsetsFromPoints(
-    outerNode,
-    anchorNode,
-    anchorOffset,
-    focusNode,
-    focusOffset
-  );
-}
-/**
- * Returns {start, end} where `start` is the character/codepoint index of
- * (anchorNode, anchorOffset) within the textContent of `outerNode`, and
- * `end` is the index of (focusNode, focusOffset).
- *
- * Returns null if you pass in garbage input but we should probably just crash.
- *
- * Exported only for testing.
- */
-
-function getModernOffsetsFromPoints(
-  outerNode,
-  anchorNode,
-  anchorOffset,
-  focusNode,
-  focusOffset
-) {
-  var length = 0;
-  var start = -1;
-  var end = -1;
-  var indexWithinAnchor = 0;
-  var indexWithinFocus = 0;
-  var node = outerNode;
-  var parentNode = null;
-
-  outer: while (true) {
-    var next = null;
-
-    while (true) {
-      if (
-        node === anchorNode &&
-        (anchorOffset === 0 || node.nodeType === TEXT_NODE)
-      ) {
-        start = length + anchorOffset;
-      }
-
-      if (
-        node === focusNode &&
-        (focusOffset === 0 || node.nodeType === TEXT_NODE)
-      ) {
-        end = length + focusOffset;
-      }
-
-      if (node.nodeType === TEXT_NODE) {
-        length += node.nodeValue.length;
-      }
-
-      if ((next = node.firstChild) === null) {
-        break;
-      } // Moving from `node` to its first child `next`.
-
-      parentNode = node;
-      node = next;
-    }
-
-    while (true) {
-      if (node === outerNode) {
-        // If `outerNode` has children, this is always the second time visiting
-        // it. If it has no children, this is still the first loop, and the only
-        // valid selection is anchorNode and focusNode both equal to this node
-        // and both offsets 0, in which case we will have handled above.
-        break outer;
-      }
-
-      if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
-        start = length;
-      }
-
-      if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
-        end = length;
-      }
-
-      if ((next = node.nextSibling) !== null) {
-        break;
-      }
-
-      node = parentNode;
-      parentNode = node.parentNode;
-    } // Moving from `node` to its next sibling `next`.
-
-    node = next;
-  }
-
-  if (start === -1 || end === -1) {
-    // This should never happen. (Would happen if the anchor/focus nodes aren't
-    // actually inside the passed-in node.)
-    return null;
-  }
-
-  return {
-    start: start,
-    end: end
-  };
-}
-/**
- * In modern non-IE browsers, we can support both forward and backward
- * selections.
- *
- * Note: IE10+ supports the Selection object, but it does not support
- * the `extend` method, which means that even in modern IE, it's not possible
- * to programmatically create a backward selection. Thus, for all IE
- * versions, we use the old IE API to create our selections.
- *
- * @param {DOMElement|DOMTextNode} node
- * @param {object} offsets
- */
-
-function setOffsets(node, offsets) {
-  var doc = node.ownerDocument || document;
-  var win = (doc && doc.defaultView) || window; // Edge fails with "Object expected" in some scenarios.
-  // (For instance: TinyMCE editor used in a list component that supports pasting to add more,
-  // fails when pasting 100+ items)
-
-  if (!win.getSelection) {
-    return;
-  }
-
-  var selection = win.getSelection();
-  var length = node.textContent.length;
-  var start = Math.min(offsets.start, length);
-  var end = offsets.end === undefined ? start : Math.min(offsets.end, length); // IE 11 uses modern selection, but doesn't support the extend method.
-  // Flip backward selections, so we can set with a single range.
-
-  if (!selection.extend && start > end) {
-    var temp = end;
-    end = start;
-    start = temp;
-  }
-
-  var startMarker = getNodeForCharacterOffset(node, start);
-  var endMarker = getNodeForCharacterOffset(node, end);
-
-  if (startMarker && endMarker) {
-    if (
-      selection.rangeCount === 1 &&
-      selection.anchorNode === startMarker.node &&
-      selection.anchorOffset === startMarker.offset &&
-      selection.focusNode === endMarker.node &&
-      selection.focusOffset === endMarker.offset
-    ) {
-      return;
-    }
-
-    var range = doc.createRange();
-    range.setStart(startMarker.node, startMarker.offset);
-    selection.removeAllRanges();
-
-    if (start > end) {
-      selection.addRange(range);
-      selection.extend(endMarker.node, endMarker.offset);
-    } else {
-      range.setEnd(endMarker.node, endMarker.offset);
-      selection.addRange(range);
-    }
-  }
-}
-
-function isTextNode(node) {
-  return node && node.nodeType === TEXT_NODE;
-}
-
-function containsNode$1(outerNode, innerNode) {
-  if (!outerNode || !innerNode) {
-    return false;
-  } else if (outerNode === innerNode) {
-    return true;
-  } else if (isTextNode(outerNode)) {
-    return false;
-  } else if (isTextNode(innerNode)) {
-    return containsNode$1(outerNode, innerNode.parentNode);
-  } else if ("contains" in outerNode) {
-    return outerNode.contains(innerNode);
-  } else if (outerNode.compareDocumentPosition) {
-    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
-  } else {
-    return false;
-  }
-}
-
-function isInDocument(node) {
-  return (
-    node &&
-    node.ownerDocument &&
-    containsNode$1(node.ownerDocument.documentElement, node)
-  );
-}
-
-function isSameOriginFrame(iframe) {
-  try {
-    // Accessing the contentDocument of a HTMLIframeElement can cause the browser
-    // to throw, e.g. if it has a cross-origin src attribute.
-    // Safari will show an error in the console when the access results in "Blocked a frame with origin". e.g:
-    // iframe.contentDocument.defaultView;
-    // A safety way is to access one of the cross origin properties: Window or Location
-    // Which might result in "SecurityError" DOM Exception and it is compatible to Safari.
-    // https://html.spec.whatwg.org/multipage/browsers.html#integration-with-idl
-    return typeof iframe.contentWindow.location.href === "string";
-  } catch (err) {
-    return false;
-  }
-}
-
-function getActiveElementDeep() {
-  var win = window;
-  var element = getActiveElement();
-
-  while (element instanceof win.HTMLIFrameElement) {
-    if (isSameOriginFrame(element)) {
-      win = element.contentWindow;
-    } else {
-      return element;
-    }
-
-    element = getActiveElement(win.document);
-  }
-
-  return element;
-}
-/**
- * @ReactInputSelection: React input selection module. Based on Selection.js,
- * but modified to be suitable for react and has a couple of bug fixes (doesn't
- * assume buttons have range selections allowed).
- * Input selection module for React.
- */
-
-/**
- * @hasSelectionCapabilities: we get the element types that support selection
- * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
- * and `selectionEnd` rows.
- */
-
-function hasSelectionCapabilities(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-  return (
-    nodeName &&
-    ((nodeName === "input" &&
-      (elem.type === "text" ||
-        elem.type === "search" ||
-        elem.type === "tel" ||
-        elem.type === "url" ||
-        elem.type === "password")) ||
-      nodeName === "textarea" ||
-      elem.contentEditable === "true")
-  );
-}
-function getSelectionInformation() {
-  var focusedElem = getActiveElementDeep();
-  return {
-    focusedElem: focusedElem,
-    selectionRange: hasSelectionCapabilities(focusedElem)
-      ? getSelection$1(focusedElem)
-      : null
-  };
-}
-/**
- * @restoreSelection: If any selection information was potentially lost,
- * restore it. This is useful when performing operations that could remove dom
- * nodes and place them back in, resulting in focus being lost.
- */
-
-function restoreSelection(priorSelectionInformation) {
-  var curFocusedElem = getActiveElementDeep();
-  var priorFocusedElem = priorSelectionInformation.focusedElem;
-  var priorSelectionRange = priorSelectionInformation.selectionRange;
-
-  if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-    if (
-      priorSelectionRange !== null &&
-      hasSelectionCapabilities(priorFocusedElem)
-    ) {
-      setSelection(priorFocusedElem, priorSelectionRange);
-    } // Focusing a node can change the scroll position, which is undesirable
-
-    var ancestors = [];
-    var ancestor = priorFocusedElem;
-
-    while ((ancestor = ancestor.parentNode)) {
-      if (ancestor.nodeType === ELEMENT_NODE) {
-        ancestors.push({
-          element: ancestor,
-          left: ancestor.scrollLeft,
-          top: ancestor.scrollTop
-        });
-      }
-    }
-
-    if (typeof priorFocusedElem.focus === "function") {
-      priorFocusedElem.focus();
-    }
-
-    for (var i = 0; i < ancestors.length; i++) {
-      var info = ancestors[i];
-      info.element.scrollLeft = info.left;
-      info.element.scrollTop = info.top;
-    }
-  }
-}
-/**
- * @getSelection: Gets the selection bounds of a focused textarea, input or
- * contentEditable node.
- * -@input: Look up selection bounds of this input
- * -@return {start: selectionStart, end: selectionEnd}
- */
-
-function getSelection$1(input) {
-  var selection;
-
-  if ("selectionStart" in input) {
-    // Modern browser with input or textarea.
-    selection = {
-      start: input.selectionStart,
-      end: input.selectionEnd
-    };
-  } else {
-    // Content editable or old IE textarea.
-    selection = getOffsets(input);
-  }
-
-  return (
-    selection || {
-      start: 0,
-      end: 0
-    }
-  );
-}
-/**
- * @setSelection: Sets the selection bounds of a textarea or input and focuses
- * the input.
- * -@input     Set selection bounds of this input or textarea
- * -@offsets   Object of same form that is returned from get*
- */
-
-function setSelection(input, offsets) {
-  var start = offsets.start;
-  var end = offsets.end;
-
-  if (end === undefined) {
-    end = start;
-  }
-
-  if ("selectionStart" in input) {
-    input.selectionStart = start;
-    input.selectionEnd = Math.min(end, input.value.length);
-  } else {
-    setOffsets(input, offsets);
-  }
-}
-
-// This validation code was written based on the HTML5 parsing spec:
-// https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-//
-// Note: this does not catch all invalid nesting, nor does it try to (as it's
-// not clear what practical benefit doing so provides); instead, we warn only
-// for cases where the parser will give a parse tree differing from what React
-// intended. For example, <b><div></div></b> is invalid but we don't warn
-// because it still parses correctly; we do warn for other cases like nested
-// <p> tags where the beginning of the second element implicitly closes the
-// first, causing a confusing mess.
-// https://html.spec.whatwg.org/multipage/syntax.html#special
-var specialTags = [
-  "address",
-  "applet",
-  "area",
-  "article",
-  "aside",
-  "base",
-  "basefont",
-  "bgsound",
-  "blockquote",
-  "body",
-  "br",
-  "button",
-  "caption",
-  "center",
-  "col",
-  "colgroup",
-  "dd",
-  "details",
-  "dir",
-  "div",
-  "dl",
-  "dt",
-  "embed",
-  "fieldset",
-  "figcaption",
-  "figure",
-  "footer",
-  "form",
-  "frame",
-  "frameset",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "head",
-  "header",
-  "hgroup",
-  "hr",
-  "html",
-  "iframe",
-  "img",
-  "input",
-  "isindex",
-  "li",
-  "link",
-  "listing",
-  "main",
-  "marquee",
-  "menu",
-  "menuitem",
-  "meta",
-  "nav",
-  "noembed",
-  "noframes",
-  "noscript",
-  "object",
-  "ol",
-  "p",
-  "param",
-  "plaintext",
-  "pre",
-  "script",
-  "section",
-  "select",
-  "source",
-  "style",
-  "summary",
-  "table",
-  "tbody",
-  "td",
-  "template",
-  "textarea",
-  "tfoot",
-  "th",
-  "thead",
-  "title",
-  "tr",
-  "track",
-  "ul",
-  "wbr",
-  "xmp"
-]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-
-var inScopeTags = [
-  "applet",
-  "caption",
-  "html",
-  "table",
-  "td",
-  "th",
-  "marquee",
-  "object",
-  "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
-  // TODO: Distinguish by namespace here -- for <title>, including it here
-  // errs on the side of fewer warnings
-  "foreignObject",
-  "desc",
-  "title"
-]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
-
-var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
-
-var impliedEndTags = ["dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"];
-var emptyAncestorInfoDev = {
-  current: null,
-  formTag: null,
-  aTagInScope: null,
-  buttonTagInScope: null,
-  nobrTagInScope: null,
-  pTagInButtonScope: null,
-  listItemTagAutoclosing: null,
-  dlItemTagAutoclosing: null,
-  containerTagInScope: null
-};
-
-function updatedAncestorInfoDev(oldInfo, tag) {
-  {
-    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev);
-
-    var info = {
-      tag: tag
-    };
-
-    if (inScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.aTagInScope = null;
-      ancestorInfo.buttonTagInScope = null;
-      ancestorInfo.nobrTagInScope = null;
-    }
-
-    if (buttonScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.pTagInButtonScope = null;
-    } // See rules for 'li', 'dd', 'dt' start tags in
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-
-    if (
-      specialTags.indexOf(tag) !== -1 &&
-      tag !== "address" &&
-      tag !== "div" &&
-      tag !== "p"
-    ) {
-      ancestorInfo.listItemTagAutoclosing = null;
-      ancestorInfo.dlItemTagAutoclosing = null;
-    }
-
-    ancestorInfo.current = info;
-
-    if (tag === "form") {
-      ancestorInfo.formTag = info;
-    }
-
-    if (tag === "a") {
-      ancestorInfo.aTagInScope = info;
-    }
-
-    if (tag === "button") {
-      ancestorInfo.buttonTagInScope = info;
-    }
-
-    if (tag === "nobr") {
-      ancestorInfo.nobrTagInScope = info;
-    }
-
-    if (tag === "p") {
-      ancestorInfo.pTagInButtonScope = info;
-    }
-
-    if (tag === "li") {
-      ancestorInfo.listItemTagAutoclosing = info;
-    }
-
-    if (tag === "dd" || tag === "dt") {
-      ancestorInfo.dlItemTagAutoclosing = info;
-    }
-
-    if (tag === "#document" || tag === "html") {
-      ancestorInfo.containerTagInScope = null;
-    } else if (!ancestorInfo.containerTagInScope) {
-      ancestorInfo.containerTagInScope = info;
-    }
-
-    return ancestorInfo;
-  }
-}
-/**
- * Returns whether
- */
-
-function isTagValidWithParent(tag, parentTag) {
-  // First, let's check if we're in an unusual parsing mode...
-  switch (parentTag) {
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
-    case "select":
-      return tag === "option" || tag === "optgroup" || tag === "#text";
-
-    case "optgroup":
-      return tag === "option" || tag === "#text";
-    // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
-    // but
-
-    case "option":
-      return tag === "#text";
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
-    // No special behavior since these rules fall back to "in body" mode for
-    // all except special table nodes which cause bad parsing behavior anyway.
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
-
-    case "tr":
-      return (
-        tag === "th" ||
-        tag === "td" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
-
-    case "tbody":
-    case "thead":
-    case "tfoot":
-      return (
-        tag === "tr" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
-
-    case "colgroup":
-      return tag === "col" || tag === "template";
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
-
-    case "table":
-      return (
-        tag === "caption" ||
-        tag === "colgroup" ||
-        tag === "tbody" ||
-        tag === "tfoot" ||
-        tag === "thead" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
-
-    case "head":
-      return (
-        tag === "base" ||
-        tag === "basefont" ||
-        tag === "bgsound" ||
-        tag === "link" ||
-        tag === "meta" ||
-        tag === "title" ||
-        tag === "noscript" ||
-        tag === "noframes" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
-
-    case "html":
-      return tag === "head" || tag === "body" || tag === "frameset";
-
-    case "frameset":
-      return tag === "frame";
-
-    case "#document":
-      return tag === "html";
-  } // Probably in the "in body" parsing mode, so we outlaw only tag combos
-  // where the parsing rules cause implicit opens or closes to be added.
-  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-
-  switch (tag) {
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6":
-      return (
-        parentTag !== "h1" &&
-        parentTag !== "h2" &&
-        parentTag !== "h3" &&
-        parentTag !== "h4" &&
-        parentTag !== "h5" &&
-        parentTag !== "h6"
-      );
-
-    case "rp":
-    case "rt":
-      return impliedEndTags.indexOf(parentTag) === -1;
-
-    case "body":
-    case "caption":
-    case "col":
-    case "colgroup":
-    case "frameset":
-    case "frame":
-    case "head":
-    case "html":
-    case "tbody":
-    case "td":
-    case "tfoot":
-    case "th":
-    case "thead":
-    case "tr":
-      // These tags are only valid with a few parents that have special child
-      // parsing rules -- if we're down here, then none of those matched and
-      // so we allow it only if we don't know what the parent is, as all other
-      // cases are invalid.
-      return parentTag == null;
-  }
-
-  return true;
-}
-/**
- * Returns whether
- */
-
-function findInvalidAncestorForTag(tag, ancestorInfo) {
-  switch (tag) {
-    case "address":
-    case "article":
-    case "aside":
-    case "blockquote":
-    case "center":
-    case "details":
-    case "dialog":
-    case "dir":
-    case "div":
-    case "dl":
-    case "fieldset":
-    case "figcaption":
-    case "figure":
-    case "footer":
-    case "header":
-    case "hgroup":
-    case "main":
-    case "menu":
-    case "nav":
-    case "ol":
-    case "p":
-    case "section":
-    case "summary":
-    case "ul":
-    case "pre":
-    case "listing":
-    case "table":
-    case "hr":
-    case "xmp":
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6":
-      return ancestorInfo.pTagInButtonScope;
-
-    case "form":
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
-
-    case "li":
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case "dd":
-    case "dt":
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case "button":
-      return ancestorInfo.buttonTagInScope;
-
-    case "a":
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case "nobr":
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
-}
-
-var didWarn = {};
-
-function validateDOMNesting(childTag, childText, ancestorInfo) {
-  {
-    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
-    var parentInfo = ancestorInfo.current;
-    var parentTag = parentInfo && parentInfo.tag;
-
-    if (childText != null) {
-      if (childTag != null) {
-        error(
-          "validateDOMNesting: when childText is passed, childTag should be null"
-        );
-      }
-
-      childTag = "#text";
-    } else if (childTag == null) {
-      error("validateDOMNesting: when childText or childTag must be provided");
-
-      return;
-    }
-
-    var invalidParent = isTagValidWithParent(childTag, parentTag)
-      ? null
-      : parentInfo;
-    var invalidAncestor = invalidParent
-      ? null
-      : findInvalidAncestorForTag(childTag, ancestorInfo);
-    var invalidParentOrAncestor = invalidParent || invalidAncestor;
-
-    if (!invalidParentOrAncestor) {
-      return;
-    }
-
-    var ancestorTag = invalidParentOrAncestor.tag;
-    var warnKey = String(!!invalidParent) + "|" + childTag + "|" + ancestorTag; // eslint-disable-next-line react-internal/safe-string-coercion
-
-    if (didWarn[warnKey]) {
-      return;
-    }
-
-    didWarn[warnKey] = true;
-    var tagDisplayName = childTag;
-    var whitespaceInfo = "";
-
-    if (childTag === "#text") {
-      if (childText != null && /\S/.test(childText)) {
-        tagDisplayName = "Text nodes";
-      } else {
-        tagDisplayName = "Whitespace text nodes";
-        whitespaceInfo =
-          " Make sure you don't have any extra whitespace between tags on " +
-          "each line of your source code.";
-      }
-    } else {
-      tagDisplayName = "<" + childTag + ">";
-    }
-
-    if (invalidParent) {
-      var info = "";
-
-      if (ancestorTag === "table" && childTag === "tr") {
-        info +=
-          " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by " +
-          "the browser.";
-      }
-
-      error(
-        "validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s",
-        tagDisplayName,
-        ancestorTag,
-        whitespaceInfo,
-        info
-      );
-    } else {
-      error(
-        "validateDOMNesting(...): %s cannot appear as a descendant of " +
-          "<%s>.",
-        tagDisplayName,
-        ancestorTag
-      );
-    }
-  }
-}
-
-// This module only exists as an ESM wrapper around the external CommonJS
-var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
-var cancelCallback$1 = Scheduler.unstable_cancelCallback;
-var shouldYield = Scheduler.unstable_shouldYield;
-var requestPaint = Scheduler.unstable_requestPaint;
-var now$1 = Scheduler.unstable_now;
-var getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel;
-var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
-var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
-var NormalPriority$1 = Scheduler.unstable_NormalPriority;
-var LowPriority = Scheduler.unstable_LowPriority;
-var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
-// on scheduler/unstable_mock, which we'll need for internal testing
-
-var log$2 = Scheduler.log;
-var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
 
 var rendererID = null;
 var injectedHook = null;
@@ -9691,135 +2784,151 @@ function lanesToEventPriority(lanes) {
   return IdleEventPriority;
 }
 
-var valueStack = [];
-var fiberStack;
+// $FlowFixMe[method-unbinding]
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-{
-  fiberStack = [];
-}
+/*
+ * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+ * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+ *
+ * The functions in this module will throw an easier-to-understand,
+ * easier-to-debug exception with a clear errors message message explaining the
+ * problem. (Instead of a confusing exception thrown inside the implementation
+ * of the `value` object).
+ */
+// $FlowFixMe only called in DEV, so void return is not possible.
+function typeName(value) {
+  {
+    // toStringTag is needed for namespaced types like Temporal.Instant
+    var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+    var type =
+      (hasToStringTag && value[Symbol.toStringTag]) ||
+      value.constructor.name ||
+      "Object"; // $FlowFixMe
 
-var index = -1;
+    return type;
+  }
+} // $FlowFixMe only called in DEV, so void return is not possible.
 
-function createCursor(defaultValue) {
-  return {
-    current: defaultValue
-  };
-}
-
-function pop(cursor, fiber) {
-  if (index < 0) {
-    {
-      error("Unexpected pop.");
+function willCoercionThrow(value) {
+  {
+    try {
+      testStringCoercion(value);
+      return false;
+    } catch (e) {
+      return true;
     }
-
-    return;
   }
-
-  {
-    if (fiber !== fiberStack[index]) {
-      error("Unexpected Fiber popped.");
-    }
-  }
-
-  cursor.current = valueStack[index];
-  valueStack[index] = null;
-
-  {
-    fiberStack[index] = null;
-  }
-
-  index--;
 }
 
-function push(cursor, value, fiber) {
-  index++;
-  valueStack[index] = cursor.current;
-
-  {
-    fiberStack[index] = fiber;
-  }
-
-  cursor.current = value;
+function testStringCoercion(value) {
+  // If you ended up here by following an exception call stack, here's what's
+  // happened: you supplied an object or symbol value to React (as a prop, key,
+  // DOM attribute, CSS property, string ref, etc.) and when React tried to
+  // coerce it to a string using `'' + value`, an exception was thrown.
+  //
+  // The most common types that will cause this exception are `Symbol` instances
+  // and Temporal objects like `Temporal.Instant`. But any object that has a
+  // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+  // exception. (Library authors do this to prevent users from using built-in
+  // numeric operators like `+` or comparison operators like `>=` because custom
+  // methods are needed to perform accurate arithmetic or comparison.)
+  //
+  // To fix the problem, coerce this object or symbol value to a string before
+  // passing it to React. The most reliable way is usually `String(value)`.
+  //
+  // To find which value is throwing, check the browser or debugger console.
+  // Before this exception was thrown, there should be `console.error` output
+  // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+  // problem and how that type was used: key, atrribute, input value prop, etc.
+  // In most cases, this console output also shows the component and its
+  // ancestor components where the exception happened.
+  //
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return "" + value;
 }
 
-var contextStackCursor$1 = createCursor(null);
-var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
-
-function requiredContext(c) {
+function checkAttributeStringCoercion(value, attributeName) {
   {
-    if (c === null) {
+    if (willCoercionThrow(value)) {
       error(
-        "Expected host context to exist. This error is likely caused by a bug " +
-          "in React. Please file an issue."
+        "The provided `%s` attribute is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        attributeName,
+        typeName(value)
       );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
     }
   }
-
-  return c;
 }
+function checkKeyStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided key is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
 
-function getCurrentRootHostContainer() {
-  return rootInstanceStackCursor.current;
-}
-
-function getRootHostContainer() {
-  var rootInstance = requiredContext(rootInstanceStackCursor.current);
-  return rootInstance;
-}
-
-function pushHostContainer(fiber, nextRootInstance) {
-  // Push current root instance onto the stack;
-  // This allows us to reset root when portals are popped.
-  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
-  // However, we can't just call getRootHostContext() and push it because
-  // we'd have a different number of entries on the stack depending on
-  // whether getRootHostContext() throws somewhere in renderer code or not.
-  // So we push an empty value first. This lets us safely unwind on errors.
-
-  push(contextStackCursor$1, null, fiber);
-  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
-
-  pop(contextStackCursor$1, fiber);
-  push(contextStackCursor$1, nextRootContext, fiber);
-}
-
-function popHostContainer(fiber) {
-  pop(contextStackCursor$1, fiber);
-  pop(contextFiberStackCursor, fiber);
-  pop(rootInstanceStackCursor, fiber);
-}
-
-function getHostContext() {
-  var context = requiredContext(contextStackCursor$1.current);
-  return context;
-}
-
-function pushHostContext(fiber) {
-  var context = requiredContext(contextStackCursor$1.current);
-  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
-
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor$1, nextContext, fiber);
-}
-
-function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
   }
+}
+function checkPropStringCoercion(value, propName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` prop is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        propName,
+        typeName(value)
+      );
 
-  pop(contextStackCursor$1, fiber);
-  pop(contextFiberStackCursor, fiber);
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkCSSPropertyStringCoercion(value, propName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` CSS property is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        propName,
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkHtmlStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided HTML markup uses a value of unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkFormFieldValueStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "Form field values (value, checked, defaultValue, or defaultChecked props)" +
+          " must be strings, not %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
 }
 
 var Internals = {
@@ -9830,8 +2939,265 @@ var Internals = {
   }
 };
 
+var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+function isArray(a) {
+  return isArrayImpl(a);
+}
+
+var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
+var prefix;
+function describeBuiltInComponentFrame(name, source, ownerFn) {
+  {
+    if (prefix === undefined) {
+      // Extract the VM specific prefix used by each line.
+      try {
+        throw Error();
+      } catch (x) {
+        var match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = (match && match[1]) || "";
+      }
+    } // We use the prefix to ensure our stacks line up with native stack frames.
+
+    return "\n" + prefix + name;
+  }
+}
+var reentry = false;
+var componentFrameCache;
+
+{
+  var PossiblyWeakMap$2 = typeof WeakMap === "function" ? WeakMap : Map;
+  componentFrameCache = new PossiblyWeakMap$2();
+}
+
+function describeNativeComponentFrame(fn, construct) {
+  // If something asked for a stack inside a fake render, it should get ignored.
+  if (disableNativeComponentFrames || !fn || reentry) {
+    return "";
+  }
+
+  {
+    var frame = componentFrameCache.get(fn);
+
+    if (frame !== undefined) {
+      return frame;
+    }
+  }
+
+  var control;
+  reentry = true;
+  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
+
+  Error.prepareStackTrace = undefined;
+  var previousDispatcher;
+
+  {
+    previousDispatcher = ReactCurrentDispatcher$2.current; // Set the dispatcher in DEV because this might be call in the render function
+    // for warnings.
+
+    ReactCurrentDispatcher$2.current = null;
+    disableLogs();
+  }
+
+  try {
+    // This should throw.
+    if (construct) {
+      // Something should be setting the props in the constructor.
+      var Fake = function () {
+        throw Error();
+      }; // $FlowFixMe
+
+      Object.defineProperty(Fake.prototype, "props", {
+        set: function () {
+          // We use a throwing setter instead of frozen or non-writable props
+          // because that won't throw in a non-strict mode function.
+          throw Error();
+        }
+      });
+
+      if (typeof Reflect === "object" && Reflect.construct) {
+        // We construct a different control for this case to include any extra
+        // frames added by the construct call.
+        try {
+          Reflect.construct(Fake, []);
+        } catch (x) {
+          control = x;
+        }
+
+        Reflect.construct(fn, [], Fake);
+      } else {
+        try {
+          Fake.call();
+        } catch (x) {
+          control = x;
+        } // $FlowFixMe[prop-missing] found when upgrading Flow
+
+        fn.call(Fake.prototype);
+      }
+    } else {
+      try {
+        throw Error();
+      } catch (x) {
+        control = x;
+      } // TODO(luna): This will currently only throw if the function component
+      // tries to access React/ReactDOM/props. We should probably make this throw
+      // in simple components too
+
+      fn();
+    }
+  } catch (sample) {
+    // This is inlined manually because closure doesn't do it for us.
+    if (sample && control && typeof sample.stack === "string") {
+      // This extracts the first frame from the sample that isn't also in the control.
+      // Skipping one frame that we assume is the frame that calls the two.
+      var sampleLines = sample.stack.split("\n");
+      var controlLines = control.stack.split("\n");
+      var s = sampleLines.length - 1;
+      var c = controlLines.length - 1;
+
+      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+        // We expect at least one stack frame to be shared.
+        // Typically this will be the root most one. However, stack frames may be
+        // cut off due to maximum stack limits. In this case, one maybe cut off
+        // earlier than the other. We assume that the sample is longer or the same
+        // and there for cut off earlier. So we should find the root most frame in
+        // the sample somewhere in the control.
+        c--;
+      }
+
+      for (; s >= 1 && c >= 0; s--, c--) {
+        // Next we find the first one that isn't the same which should be the
+        // frame that called our sample function and the control.
+        if (sampleLines[s] !== controlLines[c]) {
+          // In V8, the first line is describing the message but other VMs don't.
+          // If we're about to return the first line, and the control is also on the same
+          // line, that's a pretty good indicator that our sample threw at same line as
+          // the control. I.e. before we entered the sample frame. So we ignore this result.
+          // This can happen if you passed a class to function component, or non-function.
+          if (s !== 1 || c !== 1) {
+            do {
+              s--;
+              c--; // We may still have similar intermediate frames from the construct call.
+              // The next one that isn't the same should be our match though.
+
+              if (c < 0 || sampleLines[s] !== controlLines[c]) {
+                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+                var _frame = "\n" + sampleLines[s].replace(" at new ", " at "); // If our component frame is labeled "<anonymous>"
+                // but we have a user-provided "displayName"
+                // splice it in to make the stack more readable.
+
+                if (fn.displayName && _frame.includes("<anonymous>")) {
+                  _frame = _frame.replace("<anonymous>", fn.displayName);
+                }
+
+                {
+                  if (typeof fn === "function") {
+                    componentFrameCache.set(fn, _frame);
+                  }
+                } // Return the line we found.
+
+                return _frame;
+              }
+            } while (s >= 1 && c >= 0);
+          }
+
+          break;
+        }
+      }
+    }
+  } finally {
+    reentry = false;
+
+    {
+      ReactCurrentDispatcher$2.current = previousDispatcher;
+      reenableLogs();
+    }
+
+    Error.prepareStackTrace = previousPrepareStackTrace;
+  } // Fallback to just using the name if we couldn't make it throw.
+
+  var name = fn ? fn.displayName || fn.name : "";
+  var syntheticFrame = name ? describeBuiltInComponentFrame(name) : "";
+
+  {
+    if (typeof fn === "function") {
+      componentFrameCache.set(fn, syntheticFrame);
+    }
+  }
+
+  return syntheticFrame;
+}
+
+function describeClassComponentFrame(ctor, source, ownerFn) {
+  {
+    return describeNativeComponentFrame(ctor, true);
+  }
+}
+function describeFunctionComponentFrame(fn, source, ownerFn) {
+  {
+    return describeNativeComponentFrame(fn, false);
+  }
+}
+
+function shouldConstruct$1(Component) {
+  var prototype = Component.prototype;
+  return !!(prototype && prototype.isReactComponent);
+}
+
+function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+  if (type == null) {
+    return "";
+  }
+
+  if (typeof type === "function") {
+    {
+      return describeNativeComponentFrame(type, shouldConstruct$1(type));
+    }
+  }
+
+  if (typeof type === "string") {
+    return describeBuiltInComponentFrame(type);
+  }
+
+  switch (type) {
+    case REACT_SUSPENSE_TYPE:
+      return describeBuiltInComponentFrame("Suspense");
+
+    case REACT_SUSPENSE_LIST_TYPE:
+      return describeBuiltInComponentFrame("SuspenseList");
+  }
+
+  if (typeof type === "object") {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE:
+        return describeFunctionComponentFrame(type.render);
+
+      case REACT_MEMO_TYPE:
+        // Memo may contain any component type so we recursively resolve it.
+        return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
+
+      case REACT_LAZY_TYPE: {
+        var lazyComponent = type;
+        var payload = lazyComponent._payload;
+        var init = lazyComponent._init;
+
+        try {
+          // Lazy may contain any component type so we recursively resolve it.
+          return describeUnknownElementTypeFrameInDEV(
+            init(payload),
+            source,
+            ownerFn
+          );
+        } catch (x) {}
+      }
+    }
+  }
+
+  return "";
+}
+
 var loggedTypeFailures = {};
-var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
 
 function setCurrentlyValidatingElement(element) {
   {
@@ -9842,9 +3208,9 @@ function setCurrentlyValidatingElement(element) {
         element._source,
         owner ? owner.type : null
       );
-      ReactDebugCurrentFrame.setExtraStackFrame(stack);
+      ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
     } else {
-      ReactDebugCurrentFrame.setExtraStackFrame(null);
+      ReactDebugCurrentFrame$1.setExtraStackFrame(null);
     }
   }
 }
@@ -12370,6 +5736,111 @@ function shallowEqual(objA, objB) {
   return true;
 }
 
+function describeFiber(fiber) {
+  switch (fiber.tag) {
+    case HostHoistable:
+    case HostSingleton:
+    case HostComponent:
+      return describeBuiltInComponentFrame(fiber.type);
+
+    case LazyComponent:
+      return describeBuiltInComponentFrame("Lazy");
+
+    case SuspenseComponent:
+      return describeBuiltInComponentFrame("Suspense");
+
+    case SuspenseListComponent:
+      return describeBuiltInComponentFrame("SuspenseList");
+
+    case FunctionComponent:
+    case IndeterminateComponent:
+    case SimpleMemoComponent:
+      return describeFunctionComponentFrame(fiber.type);
+
+    case ForwardRef:
+      return describeFunctionComponentFrame(fiber.type.render);
+
+    case ClassComponent:
+      return describeClassComponentFrame(fiber.type);
+
+    default:
+      return "";
+  }
+}
+
+function getStackByFiberInDevAndProd(workInProgress) {
+  try {
+    var info = "";
+    var node = workInProgress;
+
+    do {
+      info += describeFiber(node); // $FlowFixMe[incompatible-type] we bail out when we get a null
+
+      node = node.return;
+    } while (node);
+
+    return info;
+  } catch (x) {
+    return "\nError generating stack: " + x.message + "\n" + x.stack;
+  }
+}
+
+var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+var current = null;
+var isRendering = false;
+function getCurrentFiberOwnerNameInDevOrNull() {
+  {
+    if (current === null) {
+      return null;
+    }
+
+    var owner = current._debugOwner;
+
+    if (owner !== null && typeof owner !== "undefined") {
+      return getComponentNameFromFiber(owner);
+    }
+  }
+
+  return null;
+}
+
+function getCurrentFiberStackInDev() {
+  {
+    if (current === null) {
+      return "";
+    } // Safe because if current fiber exists, we are reconciling,
+    // and it is guaranteed to be the work-in-progress version.
+
+    return getStackByFiberInDevAndProd(current);
+  }
+}
+
+function resetCurrentFiber() {
+  {
+    ReactDebugCurrentFrame.getCurrentStack = null;
+    current = null;
+    isRendering = false;
+  }
+}
+function setCurrentFiber(fiber) {
+  {
+    ReactDebugCurrentFrame.getCurrentStack =
+      fiber === null ? null : getCurrentFiberStackInDev;
+    current = fiber;
+    isRendering = false;
+  }
+}
+function getCurrentFiber() {
+  {
+    return current;
+  }
+}
+function setIsRendering(rendering) {
+  {
+    isRendering = rendering;
+  }
+}
+
 var ReactStrictModeWarnings = {
   recordUnsafeLifecycleWarnings: function (fiber, instance) {},
   flushPendingUnsafeLifecycleWarnings: function () {},
@@ -12751,7 +6222,7 @@ function isThenableResolved(thenable) {
   return status === "fulfilled" || status === "rejected";
 }
 
-function noop() {}
+function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   if (ReactCurrentActQueue$2.current !== null) {
@@ -12768,7 +6239,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // they represent the same value, because components are idempotent.
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.
-      thenable.then(noop, noop);
+      thenable.then(noop$2, noop$2);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -12796,7 +6267,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         // some custom userspace implementation. We treat it as "pending".
         // Attach a dummy listener, to ensure that any lazy initialization can
         // happen. Flight lazily parses JSON when the value is actually awaited.
-        thenable.then(noop, noop);
+        thenable.then(noop$2, noop$2);
       } else {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
@@ -12846,6 +6317,13 @@ function trackUsedThenable(thenableState, thenable, index) {
     }
   }
 }
+function suspendCommit() {
+  // This extra indirection only exists so it can handle passing
+  // noopSuspenseyCommitThenable through to throwException.
+  // TODO: Factor the thenable check out of throwException
+  suspendedThenable = noopSuspenseyCommitThenable;
+  throw SuspenseyCommitException;
+} // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -25249,7 +18727,7 @@ function DO_NOT_USE_queryFirstNode(fn) {
   return null;
 }
 
-function containsNode(node) {
+function containsNode$1(node) {
   var fiber = getInstanceFromNode$1(node);
 
   while (fiber !== null) {
@@ -25284,7 +18762,7 @@ function createScopeInstance() {
   return {
     DO_NOT_USE_queryAllNodes: DO_NOT_USE_queryAllNodes,
     DO_NOT_USE_queryFirstNode: DO_NOT_USE_queryFirstNode,
-    containsNode: containsNode,
+    containsNode: containsNode$1,
     getChildContextValues: getChildContextValues
   };
 }
@@ -25391,16 +18869,28 @@ function preloadInstanceAndSuspendIfNeeded(
   props,
   renderLanes
 ) {
-  // Ask the renderer if this instance should suspend the commit.
-  {
-    // If this flag was set previously, we can remove it. The flag represents
-    // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for maySuspendCommit to always return true, but
-    // if the renderer is reasonably confident that the underlying resource
-    // won't be evicted, it can return false as a performance optimization.
-    workInProgress.flags &= ~SuspenseyCommit;
-    return;
-  } // Mark this fiber with a flag. We use this right before the commit phase to
+  workInProgress.flags |= SuspenseyCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
+  // check that `useDeferredValue` does to determine whether it needs to
+  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
+  // suspending until you opt in with startTransition or Suspense) but it
+  // also happens to be the desired behavior for the concrete use cases we've
+  // thought of so far, like CSS loading, fonts, images, etc.
+  // TODO: We may decide to expose a way to force a fallback even during a
+  // sync update.
+
+  if (!includesOnlyNonUrgentLanes(renderLanes));
+  else {
+    // Preload the instance
+    var isReady = preloadInstance();
+
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen());
+      else {
+        // Trigger a fallback rather than block the render.
+        suspendCommit();
+      }
+    }
+  }
 }
 
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -25857,17 +19347,27 @@ function completeWork(current, workInProgress, renderLanes) {
           markRef(workInProgress);
         }
 
+        var maySuspend = false; // @TODO refactor this block to create the instance here in complete phase if we
+        // are not hydrating.
+
         if (
           // We are mounting and must Update this Hoistable in this commit
           current === null || // We are transitioning to, from, or between Hoistable Resources
           // and require an update
           current.memoizedState !== workInProgress.memoizedState
         ) {
+          if (workInProgress.memoizedState !== null) {
+            maySuspend = mayResourceSuspendCommit(workInProgress.memoizedState);
+          } else {
+            maySuspend = maySuspendCommit();
+          }
+
           markUpdate(workInProgress);
         } else if (workInProgress.memoizedState === null) {
-          // We may have props to update on the Hoistable instance. We use the
+          maySuspend = maySuspendCommit(); // We may have props to update on the Hoistable instance. We use the
           // updateHostComponent path becuase it produces the update queue
           // we need for Hoistables
+
           updateHostComponent(
             current,
             workInProgress,
@@ -25881,7 +19381,17 @@ function completeWork(current, workInProgress, renderLanes) {
         // will resume rendering as if the work-in-progress completed. So it must
         // fully complete.
 
-        preloadInstanceAndSuspendIfNeeded(workInProgress);
+        if (maySuspend) {
+          preloadInstanceAndSuspendIfNeeded(
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes
+          );
+        } else {
+          workInProgress.flags &= ~SuspenseyCommit;
+        }
+
         return null;
       }
     }
@@ -25952,6 +19462,8 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       var _type = workInProgress.type;
 
+      var _maySuspend = maySuspendCommit();
+
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(current, workInProgress, _type, newProps);
 
@@ -26020,7 +19532,17 @@ function completeWork(current, workInProgress, renderLanes) {
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
 
-      preloadInstanceAndSuspendIfNeeded(workInProgress);
+      if (_maySuspend) {
+        preloadInstanceAndSuspendIfNeeded(
+          workInProgress,
+          _type,
+          newProps,
+          renderLanes
+        );
+      } else {
+        workInProgress.flags &= ~SuspenseyCommit;
+      }
+
       return null;
     }
 
@@ -30761,6 +24283,64 @@ function commitPassiveUnmountEffects(finishedWork) {
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentFiber();
 }
+function accumulateSuspenseyCommit(finishedWork) {
+  accumulateSuspenseyCommitOnFiber(finishedWork);
+}
+
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+    var child = parentFiber.child;
+
+    while (child !== null) {
+      accumulateSuspenseyCommitOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case HostHoistable: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      if (fiber.flags & SuspenseyCommit) {
+        if (fiber.memoizedState !== null) {
+          suspendResource(
+            // This should always be set by visiting HostRoot first
+            currentHoistableRoot,
+            fiber.memoizedState,
+            fiber.memoizedProps
+          );
+        }
+      }
+
+      break;
+    }
+
+    case HostComponent: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      break;
+    }
+
+    case HostRoot:
+    case HostPortal: {
+      {
+        var previousHoistableRoot = currentHoistableRoot;
+        var container = fiber.stateNode.containerInfo;
+        currentHoistableRoot = getHoistableRoot(container);
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        currentHoistableRoot = previousHoistableRoot;
+        break;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
+
+    default: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+    }
+  }
+}
 
 function detachAlternateSiblings(parentFiber) {
   // A fiber was deleted from this parent fiber, but it's still part of the
@@ -32909,6 +26489,14 @@ function commitRootWhenReady(
   lanes
 ) {
   if (includesOnlyNonUrgentLanes(lanes)) {
+    // Before committing, ask the renderer whether the host tree is ready.
+    // If it's not, we'll wait until it notifies us.
+    startSuspendingCommit(); // This will walk the completed fiber tree and attach listeners to all
+    // the suspensey resources. The renderer is responsible for accumulating
+    // all the load events. This all happens in a single synchronous
+    // transaction, so it track state in its own module scope.
+
+    accumulateSuspenseyCommit(finishedWork); // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
 
@@ -36863,7 +30451,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-08ca8562";
+var ReactVersion = "18.3.0-www-classic-173231f6";
 
 function createPortal$1(
   children,
@@ -38347,6 +31935,5455 @@ function createEventHandle(type, options) {
   }
 }
 
+var canUseDOM = !!(
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined"
+);
+
+// Attributes that aren't in the filter are presumed to have this type.
+
+var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
+// "enumerated" attributes with "true" and "false" as possible values.
+// When true, it should be set to a "true" string.
+// When false, it should be set to a "false" string.
+
+var BOOLEANISH_STRING = 2; // A real boolean attribute.
+// When true, it should be present (set either to an empty string or its name).
+// When false, it should be omitted.
+
+var BOOLEAN = 3; // An attribute that can be used as a flag as well as with a value.
+// When true, it should be present (set either to an empty string or its name).
+// When false, it should be omitted.
+// For any other value, should be present with that value.
+
+var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a numeric.
+// When falsy, it should be removed.
+
+var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
+// When falsy, it should be removed.
+
+var POSITIVE_NUMERIC = 6;
+/* eslint-disable max-len */
+
+var ATTRIBUTE_NAME_START_CHAR =
+  ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
+/* eslint-enable max-len */
+
+var ATTRIBUTE_NAME_CHAR =
+  ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
+var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
+  "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
+);
+var illegalAttributeNameCache = {};
+var validatedAttributeNameCache = {};
+function isAttributeNameSafe(attributeName) {
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
+    return true;
+  }
+
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
+    return false;
+  }
+
+  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
+    validatedAttributeNameCache[attributeName] = true;
+    return true;
+  }
+
+  illegalAttributeNameCache[attributeName] = true;
+
+  {
+    error("Invalid attribute name: `%s`", attributeName);
+  }
+
+  return false;
+}
+function getPropertyInfo(name) {
+  return properties.hasOwnProperty(name) ? properties[name] : null;
+} // $FlowFixMe[missing-this-annot]
+
+function PropertyInfoRecord(
+  name,
+  type,
+  mustUseProperty,
+  attributeName,
+  attributeNamespace,
+  sanitizeURL,
+  removeEmptyString
+) {
+  this.acceptsBooleans =
+    type === BOOLEANISH_STRING ||
+    type === BOOLEAN ||
+    type === OVERLOADED_BOOLEAN;
+  this.attributeName = attributeName;
+  this.attributeNamespace = attributeNamespace;
+  this.mustUseProperty = mustUseProperty;
+  this.propertyName = name;
+  this.type = type;
+  this.sanitizeURL = sanitizeURL;
+  this.removeEmptyString = removeEmptyString;
+} // When adding attributes to this list, be sure to also add them to
+// the `possibleStandardNames` module to ensure casing and incorrect
+// name warnings.
+
+var properties = {}; // A few React string attributes have a different name.
+// This is a mapping from React prop names to the attribute names.
+
+[
+  ["acceptCharset", "accept-charset"],
+  ["className", "class"],
+  ["htmlFor", "for"],
+  ["httpEquiv", "http-equiv"]
+].forEach(function (_ref) {
+  var name = _ref[0],
+    attributeName = _ref[1];
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are "enumerated" HTML attributes that accept "true" and "false".
+// In React, we let users pass `true` and `false` even though technically
+// these aren't boolean attributes (they are coerced to strings).
+
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEANISH_STRING,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are "enumerated" SVG attributes that accept "true" and "false".
+// In React, we let users pass `true` and `false` even though technically
+// these aren't boolean attributes (they are coerced to strings).
+// Since these are SVG attributes, their attribute names are case-sensitive.
+
+[
+  "autoReverse",
+  "externalResourcesRequired",
+  "focusable",
+  "preserveAlpha"
+].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEANISH_STRING,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are HTML boolean attributes.
+
+[
+  "allowFullScreen",
+  "async", // Note: there is a special case that prevents it from being written to the DOM
+  // on the client side because the browsers are inconsistent. Instead we call focus().
+  "autoFocus",
+  "autoPlay",
+  "controls",
+  "default",
+  "defer",
+  "disabled",
+  "disablePictureInPicture",
+  "disableRemotePlayback",
+  "formNoValidate",
+  "hidden",
+  "loop",
+  "noModule",
+  "noValidate",
+  "open",
+  "playsInline",
+  "readOnly",
+  "required",
+  "reversed",
+  "scoped",
+  "seamless", // Microdata
+  "itemScope"
+].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEAN,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are the few React props that we set as DOM properties
+// rather than attributes. These are all booleans.
+
+[
+  "checked", // Note: `option.selected` is not updated if `select.multiple` is
+  // disabled with `removeAttribute`. We have special logic for handling this.
+  "multiple",
+  "muted",
+  "selected" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEAN,
+    true, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are HTML attributes that are "overloaded booleans": they behave like
+// booleans, but can also accept a string value.
+
+[
+  "capture",
+  "download" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    OVERLOADED_BOOLEAN,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are HTML attributes that must be positive numbers.
+
+[
+  "cols",
+  "rows",
+  "size",
+  "span" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    POSITIVE_NUMERIC,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These are HTML attributes that must be numbers.
+
+["rowSpan", "start"].forEach(function (name) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[name] = new PropertyInfoRecord(
+    name,
+    NUMERIC,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+});
+var CAMELIZE = /[\-\:]([a-z])/g;
+
+var capitalize = function (token) {
+  return token[1].toUpperCase();
+}; // This is a list of all SVG attributes that need special casing, namespacing,
+// or boolean value assignment. Regular attributes that just accept strings
+// and have the same names are omitted, just like in the HTML attribute filter.
+// Some of these attributes can be hard to find. This list was created by
+// scraping the MDN documentation.
+
+[
+  "accent-height",
+  "alignment-baseline",
+  "arabic-form",
+  "baseline-shift",
+  "cap-height",
+  "clip-path",
+  "clip-rule",
+  "color-interpolation",
+  "color-interpolation-filters",
+  "color-profile",
+  "color-rendering",
+  "dominant-baseline",
+  "enable-background",
+  "fill-opacity",
+  "fill-rule",
+  "flood-color",
+  "flood-opacity",
+  "font-family",
+  "font-size",
+  "font-size-adjust",
+  "font-stretch",
+  "font-style",
+  "font-variant",
+  "font-weight",
+  "glyph-name",
+  "glyph-orientation-horizontal",
+  "glyph-orientation-vertical",
+  "horiz-adv-x",
+  "horiz-origin-x",
+  "image-rendering",
+  "letter-spacing",
+  "lighting-color",
+  "marker-end",
+  "marker-mid",
+  "marker-start",
+  "overline-position",
+  "overline-thickness",
+  "paint-order",
+  "panose-1",
+  "pointer-events",
+  "rendering-intent",
+  "shape-rendering",
+  "stop-color",
+  "stop-opacity",
+  "strikethrough-position",
+  "strikethrough-thickness",
+  "stroke-dasharray",
+  "stroke-dashoffset",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-miterlimit",
+  "stroke-opacity",
+  "stroke-width",
+  "text-anchor",
+  "text-decoration",
+  "text-rendering",
+  "transform-origin",
+  "underline-position",
+  "underline-thickness",
+  "unicode-bidi",
+  "unicode-range",
+  "units-per-em",
+  "v-alphabetic",
+  "v-hanging",
+  "v-ideographic",
+  "v-mathematical",
+  "vector-effect",
+  "vert-adv-y",
+  "vert-origin-x",
+  "vert-origin-y",
+  "word-spacing",
+  "writing-mode",
+  "xmlns:xlink",
+  "x-height" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (attributeName) {
+  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // String SVG attributes with the xlink namespace.
+
+[
+  "xlink:actuate",
+  "xlink:arcrole",
+  "xlink:role",
+  "xlink:show",
+  "xlink:title",
+  "xlink:type" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (attributeName) {
+  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    "http://www.w3.org/1999/xlink",
+    false, // sanitizeURL
+    false
+  );
+}); // String SVG attributes with the xml namespace.
+
+[
+  "xml:base",
+  "xml:lang",
+  "xml:space" // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(function (attributeName) {
+  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    "http://www.w3.org/XML/1998/namespace",
+    false, // sanitizeURL
+    false
+  );
+}); // These attribute exists both in HTML and SVG.
+// The attribute name is case-sensitive in SVG so we can't just use
+// the React name like we do for attributes that exist only in HTML.
+
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[attributeName] = new PropertyInfoRecord(
+    attributeName,
+    STRING,
+    false, // mustUseProperty
+    attributeName.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false
+  );
+}); // These attributes accept URLs. These must not allow javascript: URLS.
+// These will also need to accept Trusted Types object in the future.
+
+var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+properties[xlinkHref] = new PropertyInfoRecord(
+  "xlinkHref",
+  STRING,
+  false, // mustUseProperty
+  "xlink:href",
+  "http://www.w3.org/1999/xlink",
+  true, // sanitizeURL
+  false
+);
+var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+
+properties[formAction] = new PropertyInfoRecord(
+  "formAction",
+  STRING,
+  false, // mustUseProperty
+  "formaction", // attributeName
+  null, // attributeNamespace
+  true, // sanitizeURL
+  false
+);
+["src", "href", "action"].forEach(function (attributeName) {
+  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  properties[attributeName] = new PropertyInfoRecord(
+    attributeName,
+    STRING,
+    false, // mustUseProperty
+    attributeName.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    true, // sanitizeURL
+    true
+  );
+});
+
+// and any newline or tab are filtered out as if they're not part of the URL.
+// https://url.spec.whatwg.org/#url-parsing
+// Tab or newline are defined as \r\n\t:
+// https://infra.spec.whatwg.org/#ascii-tab-or-newline
+// A C0 control is a code point in the range \u0000 NULL to \u001F
+// INFORMATION SEPARATOR ONE, inclusive:
+// https://infra.spec.whatwg.org/#c0-control-or-space
+
+/* eslint-disable max-len */
+
+var isJavaScriptProtocol =
+  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
+
+function sanitizeURL(url) {
+  {
+    if (isJavaScriptProtocol.test(url)) {
+      throw new Error(
+        "React has blocked a javascript: URL as a security precaution."
+      );
+    }
+  }
+}
+
+/**
+ * Get the value for a property on a node. Only used in DEV for SSR validation.
+ * The "expected" argument is used as a hint of what the expected value is.
+ * Some properties have multiple equivalent values.
+ */
+
+function getValueForProperty(node, name, expected, propertyInfo) {
+  {
+    if (propertyInfo.mustUseProperty) {
+      var propertyName = propertyInfo.propertyName;
+      return node[propertyName];
+    }
+
+    var attributeName = propertyInfo.attributeName;
+
+    if (!node.hasAttribute(attributeName)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case "function":
+        case "symbol":
+          // eslint-disable-line
+          return expected;
+
+        case "boolean": {
+          if (!propertyInfo.acceptsBooleans) {
+            return expected;
+          }
+        }
+      }
+
+      switch (propertyInfo.type) {
+        case BOOLEAN: {
+          if (!expected) {
+            return expected;
+          }
+
+          break;
+        }
+
+        case OVERLOADED_BOOLEAN: {
+          if (expected === false) {
+            return expected;
+          }
+
+          break;
+        }
+
+        case NUMERIC: {
+          if (isNaN(expected)) {
+            return expected;
+          }
+
+          break;
+        }
+
+        case POSITIVE_NUMERIC: {
+          if (isNaN(expected) || expected < 1) {
+            return expected;
+          }
+
+          break;
+        }
+      }
+
+      {
+        if (propertyInfo.removeEmptyString && expected === "") {
+          {
+            if (name === "src") {
+              error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  "This may cause the browser to download the whole page again over the network. " +
+                  "To fix this, either do not render the element at all " +
+                  "or pass null to %s instead of an empty string.",
+                name,
+                name
+              );
+            } else {
+              error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  "To fix this, either do not render the element at all " +
+                  "or pass null to %s instead of an empty string.",
+                name,
+                name
+              );
+            }
+          }
+
+          return expected;
+        }
+      }
+
+      return expected === undefined ? undefined : null;
+    } // Even if this property uses a namespace we use getAttribute
+    // because we assume its namespaced name is the same as our config.
+    // To use getAttributeNS we need the local name which we don't have
+    // in our config atm.
+
+    var value = node.getAttribute(attributeName);
+
+    if (expected == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+      return value;
+    } // shouldRemoveAttribute
+
+    switch (propertyInfo.type) {
+      case BOOLEAN: {
+        if (expected) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          // As long as it's positive.
+          return expected;
+        }
+
+        return value;
+      }
+
+      case OVERLOADED_BOOLEAN: {
+        if (value === "") {
+          return true;
+        }
+
+        if (expected === false) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+
+        break;
+      }
+
+      case NUMERIC: {
+        if (isNaN(expected)) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+
+        break;
+      }
+
+      case POSITIVE_NUMERIC: {
+        if (isNaN(expected) || expected < 1) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return value;
+        }
+
+        break;
+      }
+    }
+
+    {
+      checkAttributeStringCoercion(expected, name);
+    }
+
+    if (value === "" + expected) {
+      return expected;
+    }
+
+    return value;
+  }
+}
+/**
+ * Get the value for a attribute on a node. Only used in DEV for SSR validation.
+ * The third argument is used as a hint of what the expected value is. Some
+ * attributes have multiple equivalent values.
+ */
+
+function getValueForAttribute(node, name, expected) {
+  {
+    if (!isAttributeNameSafe(name)) {
+      return;
+    }
+
+    if (!node.hasAttribute(name)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case "function":
+        case "symbol":
+          // eslint-disable-line
+          return expected;
+
+        case "boolean": {
+          var prefix = name.toLowerCase().slice(0, 5);
+
+          if (prefix !== "data-" && prefix !== "aria-") {
+            return expected;
+          }
+        }
+      }
+
+      return expected === undefined ? undefined : null;
+    }
+
+    var value = node.getAttribute(name);
+
+    {
+      checkAttributeStringCoercion(expected, name);
+    }
+
+    if (value === "" + expected) {
+      return expected;
+    }
+
+    return value;
+  }
+}
+function getValueForAttributeOnCustomComponent(node, name, expected) {
+  {
+    if (!isAttributeNameSafe(name)) {
+      return;
+    }
+
+    if (!node.hasAttribute(name)) {
+      // shouldRemoveAttribute
+      switch (typeof expected) {
+        case "symbol":
+        case "object":
+          // Symbols and objects are ignored when they're emitted so
+          // it would be expected that they end up not having an attribute.
+          return expected;
+
+        case "function":
+          if (enableCustomElementPropertySupport) {
+            return expected;
+          }
+
+          break;
+
+        case "boolean":
+          if (enableCustomElementPropertySupport) {
+            if (expected === false) {
+              return expected;
+            }
+          }
+      }
+
+      return expected === undefined ? undefined : null;
+    }
+
+    if (enableCustomElementPropertySupport && name === "className") {
+      // className is a special cased property on the server to render as an attribute.
+      name = "class";
+    }
+
+    var value = node.getAttribute(name);
+
+    if (enableCustomElementPropertySupport) {
+      if (value === "" && expected === true) {
+        return true;
+      }
+    }
+
+    {
+      checkAttributeStringCoercion(expected, name);
+    }
+
+    if (value === "" + expected) {
+      return expected;
+    }
+
+    return value;
+  }
+}
+/**
+ * Sets the value for a property on a node.
+ *
+ * @param {DOMElement} node
+ * @param {string} name
+ * @param {*} value
+ */
+
+function setValueForProperty(node, name, value) {
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out reserved words.
+    name.length > 2 &&
+    (name[0] === "o" || name[0] === "O") &&
+    (name[1] === "n" || name[1] === "N")
+  ) {
+    return;
+  }
+
+  var propertyInfo = getPropertyInfo(name);
+
+  if (propertyInfo !== null) {
+    if (propertyInfo.mustUseProperty) {
+      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
+      // right now.
+      node[propertyInfo.propertyName] =
+        value && typeof value !== "function" && typeof value !== "symbol";
+      return;
+    } // The rest are treated as attributes with special cases.
+
+    var attributeName = propertyInfo.attributeName;
+
+    if (value === null) {
+      node.removeAttribute(attributeName);
+      return;
+    } // shouldRemoveAttribute
+
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        node.removeAttribute(attributeName);
+        return;
+
+      case "boolean": {
+        if (!propertyInfo.acceptsBooleans) {
+          node.removeAttribute(attributeName);
+          return;
+        }
+      }
+    }
+
+    {
+      if (propertyInfo.removeEmptyString && value === "") {
+        {
+          if (name === "src") {
+            error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                "This may cause the browser to download the whole page again over the network. " +
+                "To fix this, either do not render the element at all " +
+                "or pass null to %s instead of an empty string.",
+              name,
+              name
+            );
+          } else {
+            error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                "To fix this, either do not render the element at all " +
+                "or pass null to %s instead of an empty string.",
+              name,
+              name
+            );
+          }
+        }
+
+        node.removeAttribute(attributeName);
+        return;
+      }
+    }
+
+    switch (propertyInfo.type) {
+      case BOOLEAN:
+        if (value) {
+          node.setAttribute(attributeName, "");
+        } else {
+          node.removeAttribute(attributeName);
+          return;
+        }
+
+        break;
+
+      case OVERLOADED_BOOLEAN:
+        if (value === true) {
+          node.setAttribute(attributeName, "");
+        } else if (value === false) {
+          node.removeAttribute(attributeName);
+        } else {
+          {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+
+          node.setAttribute(attributeName, value);
+        }
+
+        return;
+
+      case NUMERIC:
+        if (!isNaN(value)) {
+          {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+
+          node.setAttribute(attributeName, value);
+        } else {
+          node.removeAttribute(attributeName);
+        }
+
+        break;
+
+      case POSITIVE_NUMERIC:
+        if (!isNaN(value) && value >= 1) {
+          {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+
+          node.setAttribute(attributeName, value);
+        } else {
+          node.removeAttribute(attributeName);
+        }
+
+        break;
+
+      default: {
+        var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
+        // ('' + value) makes it output the correct toString()-value.
+
+        if (enableTrustedTypesIntegration) {
+          attributeValue = value;
+        } else {
+          {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+
+          attributeValue = "" + value;
+        }
+
+        if (propertyInfo.sanitizeURL) {
+          sanitizeURL(attributeValue.toString());
+        }
+
+        var attributeNamespace = propertyInfo.attributeNamespace;
+
+        if (attributeNamespace) {
+          node.setAttributeNS(
+            attributeNamespace,
+            attributeName,
+            attributeValue
+          );
+        } else {
+          node.setAttribute(attributeName, attributeValue);
+        }
+      }
+    }
+  } else if (isAttributeNameSafe(name)) {
+    // If the prop isn't in the special list, treat it as a simple attribute.
+    // shouldRemoveAttribute
+    if (value === null) {
+      node.removeAttribute(name);
+      return;
+    }
+
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        node.removeAttribute(name);
+        return;
+
+      case "boolean": {
+        var prefix = name.toLowerCase().slice(0, 5);
+
+        if (prefix !== "data-" && prefix !== "aria-") {
+          node.removeAttribute(name);
+          return;
+        }
+      }
+    }
+
+    {
+      checkAttributeStringCoercion(value, name);
+    }
+
+    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
+  }
+}
+function setValueForPropertyOnCustomComponent(node, name, value) {
+  if (
+    enableCustomElementPropertySupport &&
+    name[0] === "o" &&
+    name[1] === "n"
+  ) {
+    var useCapture = name.endsWith("Capture");
+    var eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
+    var prevProps = getFiberCurrentPropsFromNode(node);
+    var prevValue = prevProps != null ? prevProps[name] : null;
+
+    if (typeof prevValue === "function") {
+      node.removeEventListener(eventName, prevValue, useCapture);
+    }
+
+    if (typeof value === "function") {
+      if (typeof prevValue !== "function" && prevValue !== null) {
+        // If we previously assigned a non-function type into this node, then
+        // remove it when switching to event listener mode.
+        if (name in node) {
+          node[name] = null;
+        } else if (node.hasAttribute(name)) {
+          node.removeAttribute(name);
+        }
+      } // $FlowFixMe value can't be casted to EventListener.
+
+      node.addEventListener(eventName, value, useCapture);
+      return;
+    }
+  }
+
+  if (enableCustomElementPropertySupport && name in node) {
+    node[name] = value;
+    return;
+  }
+
+  if (isAttributeNameSafe(name)) {
+    // shouldRemoveAttribute
+    if (value === null) {
+      node.removeAttribute(name);
+      return;
+    }
+
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        node.removeAttribute(name);
+        return;
+
+      case "boolean": {
+        if (enableCustomElementPropertySupport) {
+          if (value === true) {
+            node.setAttribute(name, "");
+            return;
+          }
+
+          node.removeAttribute(name);
+          return;
+        }
+      }
+    }
+
+    {
+      checkAttributeStringCoercion(value, name);
+    }
+
+    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
+  }
+}
+
+// around this limitation, we use an opaque type that can only be obtained by
+// passing the value through getToStringValue first.
+
+function toString(value) {
+  // The coercion safety check is performed in getToStringValue().
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return "" + value;
+}
+function getToStringValue(value) {
+  switch (typeof value) {
+    case "boolean":
+    case "number":
+    case "string":
+    case "undefined":
+      return value;
+
+    case "object":
+      {
+        checkFormFieldValueStringCoercion(value);
+      }
+
+      return value;
+
+    default:
+      // function, symbol are assigned as empty strings
+      return "";
+  }
+}
+
+var hasReadOnlyValue = {
+  button: true,
+  checkbox: true,
+  image: true,
+  hidden: true,
+  radio: true,
+  reset: true,
+  submit: true
+};
+function checkControlledValueProps(tagName, props) {
+  {
+    if (
+      !(
+        hasReadOnlyValue[props.type] ||
+        props.onChange ||
+        props.onInput ||
+        props.readOnly ||
+        props.disabled ||
+        props.value == null
+      )
+    ) {
+      error(
+        "You provided a `value` prop to a form field without an " +
+          "`onChange` handler. This will render a read-only field. If " +
+          "the field should be mutable use `defaultValue`. Otherwise, " +
+          "set either `onChange` or `readOnly`."
+      );
+    }
+
+    if (
+      !(
+        props.onChange ||
+        props.readOnly ||
+        props.disabled ||
+        props.checked == null
+      )
+    ) {
+      error(
+        "You provided a `checked` prop to a form field without an " +
+          "`onChange` handler. This will render a read-only field. If " +
+          "the field should be mutable use `defaultChecked`. Otherwise, " +
+          "set either `onChange` or `readOnly`."
+      );
+    }
+  }
+}
+
+function isCheckable(elem) {
+  var type = elem.type;
+  var nodeName = elem.nodeName;
+  return (
+    nodeName &&
+    nodeName.toLowerCase() === "input" &&
+    (type === "checkbox" || type === "radio")
+  );
+}
+
+function getTracker(node) {
+  return node._valueTracker;
+}
+
+function detachTracker(node) {
+  node._valueTracker = null;
+}
+
+function getValueFromNode(node) {
+  var value = "";
+
+  if (!node) {
+    return value;
+  }
+
+  if (isCheckable(node)) {
+    value = node.checked ? "true" : "false";
+  } else {
+    value = node.value;
+  }
+
+  return value;
+}
+
+function trackValueOnNode(node) {
+  var valueField = isCheckable(node) ? "checked" : "value";
+  var descriptor = Object.getOwnPropertyDescriptor(
+    node.constructor.prototype,
+    valueField
+  );
+
+  {
+    checkFormFieldValueStringCoercion(node[valueField]);
+  }
+
+  var currentValue = "" + node[valueField]; // if someone has already defined a value or Safari, then bail
+  // and don't track value will cause over reporting of changes,
+  // but it's better then a hard failure
+  // (needed for certain tests that spyOn input values and Safari)
+
+  if (
+    node.hasOwnProperty(valueField) ||
+    typeof descriptor === "undefined" ||
+    typeof descriptor.get !== "function" ||
+    typeof descriptor.set !== "function"
+  ) {
+    return;
+  }
+
+  var get = descriptor.get,
+    set = descriptor.set;
+  Object.defineProperty(node, valueField, {
+    configurable: true,
+    // $FlowFixMe[missing-this-annot]
+    get: function () {
+      return get.call(this);
+    },
+    // $FlowFixMe[missing-local-annot]
+    // $FlowFixMe[missing-this-annot]
+    set: function (value) {
+      {
+        checkFormFieldValueStringCoercion(value);
+      }
+
+      currentValue = "" + value;
+      set.call(this, value);
+    }
+  }); // We could've passed this the first time
+  // but it triggers a bug in IE11 and Edge 14/15.
+  // Calling defineProperty() again should be equivalent.
+  // https://github.com/facebook/react/issues/11768
+
+  Object.defineProperty(node, valueField, {
+    enumerable: descriptor.enumerable
+  });
+  var tracker = {
+    getValue: function () {
+      return currentValue;
+    },
+    setValue: function (value) {
+      {
+        checkFormFieldValueStringCoercion(value);
+      }
+
+      currentValue = "" + value;
+    },
+    stopTracking: function () {
+      detachTracker(node);
+      delete node[valueField];
+    }
+  };
+  return tracker;
+}
+
+function track(node) {
+  if (getTracker(node)) {
+    return;
+  } // TODO: Once it's just Fiber we can move this to node._wrapperState
+
+  node._valueTracker = trackValueOnNode(node);
+}
+function updateValueIfChanged(node) {
+  if (!node) {
+    return false;
+  }
+
+  var tracker = getTracker(node); // if there is no tracker at this point it's unlikely
+  // that trying again will succeed
+
+  if (!tracker) {
+    return true;
+  }
+
+  var lastValue = tracker.getValue();
+  var nextValue = getValueFromNode(node);
+
+  if (nextValue !== lastValue) {
+    tracker.setValue(nextValue);
+    return true;
+  }
+
+  return false;
+}
+
+function getActiveElement(doc) {
+  doc = doc || (typeof document !== "undefined" ? document : undefined);
+
+  if (typeof doc === "undefined") {
+    return null;
+  }
+
+  try {
+    return doc.activeElement || doc.body;
+  } catch (e) {
+    return doc.body;
+  }
+}
+
+var didWarnValueDefaultValue$1 = false;
+var didWarnCheckedDefaultChecked = false;
+var didWarnControlledToUncontrolled = false;
+var didWarnUncontrolledToControlled = false;
+
+function isControlled(props) {
+  var usesChecked = props.type === "checkbox" || props.type === "radio";
+  return usesChecked ? props.checked != null : props.value != null;
+}
+/**
+ * Implements an <input> host component that allows setting these optional
+ * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
+ *
+ * If `checked` or `value` are not supplied (or null/undefined), user actions
+ * that affect the checked state or value will trigger updates to the element.
+ *
+ * If they are supplied (and not null/undefined), the rendered element will not
+ * trigger updates to the element. Instead, the props must change in order for
+ * the rendered element to be updated.
+ *
+ * The rendered element will be initialized as unchecked (or `defaultChecked`)
+ * with an empty value (or `defaultValue`).
+ *
+ * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
+ */
+
+function getHostProps$2(element, props) {
+  var node = element;
+  var checked = props.checked;
+  var hostProps = assign({}, props, {
+    defaultChecked: undefined,
+    defaultValue: undefined,
+    value: undefined,
+    checked: checked != null ? checked : node._wrapperState.initialChecked
+  });
+  return hostProps;
+}
+function initWrapperState$2(element, props) {
+  {
+    checkControlledValueProps("input", props);
+
+    if (
+      props.checked !== undefined &&
+      props.defaultChecked !== undefined &&
+      !didWarnCheckedDefaultChecked
+    ) {
+      error(
+        "%s contains an input of type %s with both checked and defaultChecked props. " +
+          "Input elements must be either controlled or uncontrolled " +
+          "(specify either the checked prop, or the defaultChecked prop, but not " +
+          "both). Decide between using a controlled or uncontrolled input " +
+          "element and remove one of these props. More info: " +
+          "https://reactjs.org/link/controlled-components",
+        getCurrentFiberOwnerNameInDevOrNull() || "A component",
+        props.type
+      );
+
+      didWarnCheckedDefaultChecked = true;
+    }
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValueDefaultValue$1
+    ) {
+      error(
+        "%s contains an input of type %s with both value and defaultValue props. " +
+          "Input elements must be either controlled or uncontrolled " +
+          "(specify either the value prop, or the defaultValue prop, but not " +
+          "both). Decide between using a controlled or uncontrolled input " +
+          "element and remove one of these props. More info: " +
+          "https://reactjs.org/link/controlled-components",
+        getCurrentFiberOwnerNameInDevOrNull() || "A component",
+        props.type
+      );
+
+      didWarnValueDefaultValue$1 = true;
+    }
+  }
+
+  var node = element;
+  var defaultValue = props.defaultValue == null ? "" : props.defaultValue;
+  node._wrapperState = {
+    initialChecked:
+      props.checked != null ? props.checked : props.defaultChecked,
+    initialValue: getToStringValue(
+      props.value != null ? props.value : defaultValue
+    ),
+    controlled: isControlled(props)
+  };
+}
+function updateChecked(element, props) {
+  var node = element;
+  var checked = props.checked;
+
+  if (checked != null) {
+    node.checked = checked;
+  }
+}
+function updateWrapper$1(element, props) {
+  var node = element;
+
+  {
+    var controlled = isControlled(props);
+
+    if (
+      !node._wrapperState.controlled &&
+      controlled &&
+      !didWarnUncontrolledToControlled
+    ) {
+      error(
+        "A component is changing an uncontrolled input to be controlled. " +
+          "This is likely caused by the value changing from undefined to " +
+          "a defined value, which should not happen. " +
+          "Decide between using a controlled or uncontrolled input " +
+          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+      );
+
+      didWarnUncontrolledToControlled = true;
+    }
+
+    if (
+      node._wrapperState.controlled &&
+      !controlled &&
+      !didWarnControlledToUncontrolled
+    ) {
+      error(
+        "A component is changing a controlled input to be uncontrolled. " +
+          "This is likely caused by the value changing from a defined to " +
+          "undefined, which should not happen. " +
+          "Decide between using a controlled or uncontrolled input " +
+          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+      );
+
+      didWarnControlledToUncontrolled = true;
+    }
+  }
+
+  updateChecked(element, props);
+  var value = getToStringValue(props.value);
+  var type = props.type;
+
+  if (value != null) {
+    if (type === "number") {
+      if (
+        // $FlowFixMe[incompatible-type]
+        (value === 0 && node.value === "") || // We explicitly want to coerce to number here if possible.
+        // eslint-disable-next-line
+        node.value != value
+      ) {
+        node.value = toString(value);
+      }
+    } else if (node.value !== toString(value)) {
+      node.value = toString(value);
+    }
+  } else if (type === "submit" || type === "reset") {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute("value");
+    return;
+  }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the value attribute, React only assigns a new value
+    // whenever the defaultValue React prop has changed. When not present,
+    // React does nothing
+    if (props.hasOwnProperty("defaultValue")) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    }
+  } else {
+    // When syncing the value attribute, the value comes from a cascade of
+    // properties:
+    //  1. The value React property
+    //  2. The defaultValue React property
+    //  3. Otherwise there should be no change
+    if (props.hasOwnProperty("value")) {
+      setDefaultValue(node, props.type, value);
+    } else if (props.hasOwnProperty("defaultValue")) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    }
+  }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the attribute is directly
+    // controllable from the defaultValue React property. It needs to be
+    // updated as new props come in.
+    if (props.defaultChecked == null) {
+      node.removeAttribute("checked");
+    } else {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
+    // When syncing the checked attribute, it only changes when it needs
+    // to be removed, such as transitioning from a checkbox into a text input
+    if (props.checked == null && props.defaultChecked != null) {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  }
+}
+function postMountWrapper$3(element, props, isHydrating) {
+  var node = element; // Do not assign value if it is already set. This prevents user text input
+  // from being lost during SSR hydration.
+
+  if (props.hasOwnProperty("value") || props.hasOwnProperty("defaultValue")) {
+    var type = props.type;
+    var isButton = type === "submit" || type === "reset"; // Avoid setting value attribute on submit/reset inputs as it overrides the
+    // default value provided by the browser. See: #12872
+
+    if (isButton && (props.value === undefined || props.value === null)) {
+      return;
+    }
+
+    var initialValue = toString(node._wrapperState.initialValue); // Do not assign value if it is already set. This prevents user text input
+    // from being lost during SSR hydration.
+
+    if (!isHydrating) {
+      if (disableInputAttributeSyncing) {
+        var value = getToStringValue(props.value); // When not syncing the value attribute, the value property points
+        // directly to the React prop. Only assign it if it exists.
+
+        if (value != null) {
+          // Always assign on buttons so that it is possible to assign an
+          // empty string to clear button text.
+          //
+          // Otherwise, do not re-assign the value property if is empty. This
+          // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
+          // prematurely marking required inputs as invalid. Equality is compared
+          // to the current value in case the browser provided value is not an
+          // empty string.
+          if (isButton || value !== node.value) {
+            node.value = toString(value);
+          }
+        }
+      } else {
+        // When syncing the value attribute, the value property should use
+        // the wrapperState._initialValue property. This uses:
+        //
+        //   1. The value React property when present
+        //   2. The defaultValue React property when present
+        //   3. An empty string
+        if (initialValue !== node.value) {
+          node.value = initialValue;
+        }
+      }
+    }
+
+    if (disableInputAttributeSyncing) {
+      // When not syncing the value attribute, assign the value attribute
+      // directly from the defaultValue React property (when present)
+      var defaultValue = getToStringValue(props.defaultValue);
+
+      if (defaultValue != null) {
+        node.defaultValue = toString(defaultValue);
+      }
+    } else {
+      // Otherwise, the value attribute is synchronized to the property,
+      // so we assign defaultValue to the same thing as the value property
+      // assignment step above.
+      node.defaultValue = initialValue;
+    }
+  } // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
+  // this is needed to work around a chrome bug where setting defaultChecked
+  // will sometimes influence the value of checked (even after detachment).
+  // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
+  // We need to temporarily unset name to avoid disrupting radio button groups.
+
+  var name = node.name;
+
+  if (name !== "") {
+    node.name = "";
+  }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the checked property
+    // never gets assigned. It must be manually set. We don't want
+    // to do this when hydrating so that existing user input isn't
+    // modified
+    if (!isHydrating) {
+      updateChecked(element, props);
+    } // Only assign the checked attribute if it is defined. This saves
+    // a DOM write when controlling the checked attribute isn't needed
+    // (text inputs, submit/reset)
+
+    if (props.hasOwnProperty("defaultChecked")) {
+      node.defaultChecked = !node.defaultChecked;
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
+    // When syncing the checked attribute, both the checked property and
+    // attribute are assigned at the same time using defaultChecked. This uses:
+    //
+    //   1. The checked React property when present
+    //   2. The defaultChecked React property when present
+    //   3. Otherwise, false
+    node.defaultChecked = !node.defaultChecked;
+    node.defaultChecked = !!node._wrapperState.initialChecked;
+  }
+
+  if (name !== "") {
+    node.name = name;
+  }
+}
+function restoreControlledState$3(element, props) {
+  var node = element;
+  updateWrapper$1(node, props);
+  updateNamedCousins(node, props);
+}
+
+function updateNamedCousins(rootNode, props) {
+  var name = props.name;
+
+  if (props.type === "radio" && name != null) {
+    var queryRoot = rootNode;
+
+    while (queryRoot.parentNode) {
+      queryRoot = queryRoot.parentNode;
+    } // If `rootNode.form` was non-null, then we could try `form.elements`,
+    // but that sometimes behaves strangely in IE8. We could also try using
+    // `form.getElementsByName`, but that will only return direct children
+    // and won't include inputs that use the HTML5 `form=` attribute. Since
+    // the input might not even be in a form. It might not even be in the
+    // document. Let's just use the local `querySelectorAll` to ensure we don't
+    // miss anything.
+
+    {
+      checkAttributeStringCoercion(name, "name");
+    }
+
+    var group = queryRoot.querySelectorAll(
+      "input[name=" + JSON.stringify("" + name) + '][type="radio"]'
+    );
+
+    for (var i = 0; i < group.length; i++) {
+      var otherNode = group[i];
+
+      if (otherNode === rootNode || otherNode.form !== rootNode.form) {
+        continue;
+      } // This will throw if radio buttons rendered by different copies of React
+      // and the same name are rendered into the same form (same as #1939).
+      // That's probably okay; we don't support it just as we don't support
+      // mixing React radio buttons with non-React ones.
+
+      var otherProps = getFiberCurrentPropsFromNode(otherNode);
+
+      if (!otherProps) {
+        throw new Error(
+          "ReactDOMInput: Mixing React and non-React radio inputs with the " +
+            "same `name` is not supported."
+        );
+      } // We need update the tracked value on the named cousin since the value
+      // was changed but the input saw no event or value set
+
+      updateValueIfChanged(otherNode); // If this is a controlled radio button group, forcing the input that
+      // was previously checked to update will cause it to be come re-checked
+      // as appropriate.
+
+      updateWrapper$1(otherNode, otherProps);
+    }
+  }
+} // In Chrome, assigning defaultValue to certain input types triggers input validation.
+// For number inputs, the display value loses trailing decimal points. For email inputs,
+// Chrome raises "The specified value <x> is not a valid email address".
+//
+// Here we check to see if the defaultValue has actually changed, avoiding these problems
+// when the user is inputting text
+//
+// https://github.com/facebook/react/issues/7253
+
+function setDefaultValue(node, type, value) {
+  if (
+    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
+    type !== "number" ||
+    getActiveElement(node.ownerDocument) !== node
+  ) {
+    if (value == null) {
+      node.defaultValue = toString(node._wrapperState.initialValue);
+    } else if (node.defaultValue !== toString(value)) {
+      node.defaultValue = toString(value);
+    }
+  }
+}
+
+var didWarnSelectedSetOnOption = false;
+var didWarnInvalidChild = false;
+var didWarnInvalidInnerHTML = false;
+/**
+ * Implements an <option> host component that warns when `selected` is set.
+ */
+
+function validateProps(element, props) {
+  {
+    // If a value is not provided, then the children must be simple.
+    if (props.value == null) {
+      if (typeof props.children === "object" && props.children !== null) {
+        React.Children.forEach(props.children, function (child) {
+          if (child == null) {
+            return;
+          }
+
+          if (typeof child === "string" || typeof child === "number") {
+            return;
+          }
+
+          if (!didWarnInvalidChild) {
+            didWarnInvalidChild = true;
+
+            error(
+              "Cannot infer the option value of complex children. " +
+                "Pass a `value` prop or use a plain string as children to <option>."
+            );
+          }
+        });
+      } else if (props.dangerouslySetInnerHTML != null) {
+        if (!didWarnInvalidInnerHTML) {
+          didWarnInvalidInnerHTML = true;
+
+          error(
+            "Pass a `value` prop if you set dangerouslyInnerHTML so React knows " +
+              "which value should be selected."
+          );
+        }
+      }
+    } // TODO: Remove support for `selected` in <option>.
+
+    if (props.selected != null && !didWarnSelectedSetOnOption) {
+      error(
+        "Use the `defaultValue` or `value` props on <select> instead of " +
+          "setting `selected` on <option>."
+      );
+
+      didWarnSelectedSetOnOption = true;
+    }
+  }
+}
+function postMountWrapper$2(element, props) {
+  // value="" should make a value attribute (#6219)
+  if (props.value != null) {
+    element.setAttribute("value", toString(getToStringValue(props.value)));
+  }
+}
+
+var didWarnValueDefaultValue;
+
+{
+  didWarnValueDefaultValue = false;
+}
+
+function getDeclarationErrorAddendum() {
+  var ownerName = getCurrentFiberOwnerNameInDevOrNull();
+
+  if (ownerName) {
+    return "\n\nCheck the render method of `" + ownerName + "`.";
+  }
+
+  return "";
+}
+
+var valuePropNames = ["value", "defaultValue"];
+/**
+ * Validation function for `value` and `defaultValue`.
+ */
+
+function checkSelectPropTypes(props) {
+  {
+    checkControlledValueProps("select", props);
+
+    for (var i = 0; i < valuePropNames.length; i++) {
+      var propName = valuePropNames[i];
+
+      if (props[propName] == null) {
+        continue;
+      }
+
+      var propNameIsArray = isArray(props[propName]);
+
+      if (props.multiple && !propNameIsArray) {
+        error(
+          "The `%s` prop supplied to <select> must be an array if " +
+            "`multiple` is true.%s",
+          propName,
+          getDeclarationErrorAddendum()
+        );
+      } else if (!props.multiple && propNameIsArray) {
+        error(
+          "The `%s` prop supplied to <select> must be a scalar " +
+            "value if `multiple` is false.%s",
+          propName,
+          getDeclarationErrorAddendum()
+        );
+      }
+    }
+  }
+}
+
+function updateOptions(node, multiple, propValue, setDefaultSelected) {
+  var options = node.options;
+
+  if (multiple) {
+    var selectedValues = propValue;
+    var selectedValue = {};
+
+    for (var i = 0; i < selectedValues.length; i++) {
+      // Prefix to avoid chaos with special keys.
+      selectedValue["$" + selectedValues[i]] = true;
+    }
+
+    for (var _i = 0; _i < options.length; _i++) {
+      var selected = selectedValue.hasOwnProperty("$" + options[_i].value);
+
+      if (options[_i].selected !== selected) {
+        options[_i].selected = selected;
+      }
+
+      if (selected && setDefaultSelected) {
+        options[_i].defaultSelected = true;
+      }
+    }
+  } else {
+    // Do not set `select.value` as exact behavior isn't consistent across all
+    // browsers for all cases.
+    var _selectedValue = toString(getToStringValue(propValue));
+
+    var defaultSelected = null;
+
+    for (var _i2 = 0; _i2 < options.length; _i2++) {
+      if (options[_i2].value === _selectedValue) {
+        options[_i2].selected = true;
+
+        if (setDefaultSelected) {
+          options[_i2].defaultSelected = true;
+        }
+
+        return;
+      }
+
+      if (defaultSelected === null && !options[_i2].disabled) {
+        defaultSelected = options[_i2];
+      }
+    }
+
+    if (defaultSelected !== null) {
+      defaultSelected.selected = true;
+    }
+  }
+}
+/**
+ * Implements a <select> host component that allows optionally setting the
+ * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
+ * stringable. If `multiple` is true, the prop must be an array of stringables.
+ *
+ * If `value` is not supplied (or null/undefined), user actions that change the
+ * selected option will trigger updates to the rendered options.
+ *
+ * If it is supplied (and not null/undefined), the rendered options will not
+ * update in response to user actions. Instead, the `value` prop must change in
+ * order for the rendered options to update.
+ *
+ * If `defaultValue` is provided, any options with the supplied values will be
+ * selected.
+ */
+
+function getHostProps$1(element, props) {
+  return assign({}, props, {
+    value: undefined
+  });
+}
+function initWrapperState$1(element, props) {
+  var node = element;
+
+  {
+    checkSelectPropTypes(props);
+  }
+
+  node._wrapperState = {
+    wasMultiple: !!props.multiple
+  };
+
+  {
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValueDefaultValue
+    ) {
+      error(
+        "Select elements must be either controlled or uncontrolled " +
+          "(specify either the value prop, or the defaultValue prop, but not " +
+          "both). Decide between using a controlled or uncontrolled select " +
+          "element and remove one of these props. More info: " +
+          "https://reactjs.org/link/controlled-components"
+      );
+
+      didWarnValueDefaultValue = true;
+    }
+  }
+}
+function postMountWrapper$1(element, props) {
+  var node = element;
+  node.multiple = !!props.multiple;
+  var value = props.value;
+
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (props.defaultValue != null) {
+    updateOptions(node, !!props.multiple, props.defaultValue, true);
+  }
+}
+function postUpdateWrapper(element, props) {
+  var node = element;
+  var wasMultiple = node._wrapperState.wasMultiple;
+  node._wrapperState.wasMultiple = !!props.multiple;
+  var value = props.value;
+
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (wasMultiple !== !!props.multiple) {
+    // For simplicity, reapply `defaultValue` if `multiple` is toggled.
+    if (props.defaultValue != null) {
+      updateOptions(node, !!props.multiple, props.defaultValue, true);
+    } else {
+      // Revert the select back to its default unselected state.
+      updateOptions(node, !!props.multiple, props.multiple ? [] : "", false);
+    }
+  }
+}
+function restoreControlledState$2(element, props) {
+  var node = element;
+  var value = props.value;
+
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  }
+}
+
+var didWarnValDefaultVal = false;
+/**
+ * Implements a <textarea> host component that allows setting `value`, and
+ * `defaultValue`. This differs from the traditional DOM API because value is
+ * usually set as PCDATA children.
+ *
+ * If `value` is not supplied (or null/undefined), user actions that affect the
+ * value will trigger updates to the element.
+ *
+ * If `value` is supplied (and not null/undefined), the rendered element will
+ * not trigger updates to the element. Instead, the `value` prop must change in
+ * order for the rendered element to be updated.
+ *
+ * The rendered element will be initialized with an empty value, the prop
+ * `defaultValue` if specified, or the children content (deprecated).
+ */
+
+function getHostProps(element, props) {
+  var node = element;
+
+  if (props.dangerouslySetInnerHTML != null) {
+    throw new Error(
+      "`dangerouslySetInnerHTML` does not make sense on <textarea>."
+    );
+  } // Always set children to the same thing. In IE9, the selection range will
+  // get reset if `textContent` is mutated.  We could add a check in setTextContent
+  // to only set the value if/when the value differs from the node value (which would
+  // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
+  // solution. The value can be a boolean or object so that's why it's forced
+  // to be a string.
+
+  var hostProps = assign({}, props, {
+    value: undefined,
+    defaultValue: undefined,
+    children: toString(node._wrapperState.initialValue)
+  });
+
+  return hostProps;
+}
+function initWrapperState(element, props) {
+  var node = element;
+
+  {
+    checkControlledValueProps("textarea", props);
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValDefaultVal
+    ) {
+      error(
+        "%s contains a textarea with both value and defaultValue props. " +
+          "Textarea elements must be either controlled or uncontrolled " +
+          "(specify either the value prop, or the defaultValue prop, but not " +
+          "both). Decide between using a controlled or uncontrolled textarea " +
+          "and remove one of these props. More info: " +
+          "https://reactjs.org/link/controlled-components",
+        getCurrentFiberOwnerNameInDevOrNull() || "A component"
+      );
+
+      didWarnValDefaultVal = true;
+    }
+  }
+
+  var initialValue = props.value; // Only bother fetching default value if we're going to use it
+
+  if (initialValue == null) {
+    var children = props.children,
+      defaultValue = props.defaultValue;
+
+    if (children != null) {
+      {
+        error(
+          "Use the `defaultValue` or `value` props instead of setting " +
+            "children on <textarea>."
+        );
+      }
+
+      {
+        if (defaultValue != null) {
+          throw new Error(
+            "If you supply `defaultValue` on a <textarea>, do not pass children."
+          );
+        }
+
+        if (isArray(children)) {
+          if (children.length > 1) {
+            throw new Error("<textarea> can only have at most one child.");
+          }
+
+          children = children[0];
+        }
+
+        defaultValue = children;
+      }
+    }
+
+    if (defaultValue == null) {
+      defaultValue = "";
+    }
+
+    initialValue = defaultValue;
+  }
+
+  node._wrapperState = {
+    initialValue: getToStringValue(initialValue)
+  };
+}
+function updateWrapper(element, props) {
+  var node = element;
+  var value = getToStringValue(props.value);
+  var defaultValue = getToStringValue(props.defaultValue);
+
+  if (value != null) {
+    // Cast `value` to a string to ensure the value is set correctly. While
+    // browsers typically do this as necessary, jsdom doesn't.
+    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
+
+    if (newValue !== node.value) {
+      node.value = newValue;
+    }
+
+    if (props.defaultValue == null && node.defaultValue !== newValue) {
+      node.defaultValue = newValue;
+    }
+  }
+
+  if (defaultValue != null) {
+    node.defaultValue = toString(defaultValue);
+  }
+}
+function postMountWrapper(element, props) {
+  var node = element; // This is in postMount because we need access to the DOM node, which is not
+  // available until after the component has mounted.
+
+  var textContent = node.textContent; // Only set node.value if textContent is equal to the expected
+  // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+  // will populate textContent as well.
+  // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+
+  if (textContent === node._wrapperState.initialValue) {
+    if (textContent !== "" && textContent !== null) {
+      node.value = textContent;
+    }
+  }
+}
+function restoreControlledState$1(element, props) {
+  // DOM component is still mounted; update
+  updateWrapper(element, props);
+}
+
+var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+var MATH_NAMESPACE = "http://www.w3.org/1998/Math/MathML";
+var SVG_NAMESPACE = "http://www.w3.org/2000/svg"; // Assumes there is no parent namespace.
+
+function getIntrinsicNamespace(type) {
+  switch (type) {
+    case "svg":
+      return SVG_NAMESPACE;
+
+    case "math":
+      return MATH_NAMESPACE;
+
+    default:
+      return HTML_NAMESPACE;
+  }
+}
+function getChildNamespace(parentNamespace, type) {
+  if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
+    // No (or default) parent namespace: potential entry point.
+    return getIntrinsicNamespace(type);
+  }
+
+  if (parentNamespace === SVG_NAMESPACE && type === "foreignObject") {
+    // We're leaving SVG.
+    return HTML_NAMESPACE;
+  } // By default, pass namespace below.
+
+  return parentNamespace;
+}
+
+var reusableSVGContainer;
+
+function setInnerHTMLImpl(node, html) {
+  if (node.namespaceURI === SVG_NAMESPACE) {
+    {
+      if (enableTrustedTypesIntegration) {
+        // TODO: reconsider the text of this warning and when it should show
+        // before enabling the feature flag.
+        if (typeof trustedTypes !== "undefined") {
+          error(
+            "Using 'dangerouslySetInnerHTML' in an svg element with " +
+              "Trusted Types enabled in an Internet Explorer will cause " +
+              "the trusted value to be converted to string. Assigning string " +
+              "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
+              "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
+              "on the enclosing div instead."
+          );
+        }
+      }
+    }
+
+    if (!("innerHTML" in node)) {
+      // IE does not have innerHTML for SVG nodes, so instead we inject the
+      // new markup in a temp node and then move the child nodes across into
+      // the target node
+      reusableSVGContainer =
+        reusableSVGContainer || document.createElement("div");
+      reusableSVGContainer.innerHTML =
+        "<svg>" + html.valueOf().toString() + "</svg>";
+      var svgNode = reusableSVGContainer.firstChild;
+
+      while (node.firstChild) {
+        node.removeChild(node.firstChild);
+      } // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[incompatible-type]
+
+      while (svgNode.firstChild) {
+        node.appendChild(svgNode.firstChild);
+      }
+
+      return;
+    }
+  }
+
+  node.innerHTML = html;
+}
+
+var setInnerHTML = setInnerHTMLImpl; // $FlowFixMe[cannot-resolve-name]
+
+if (typeof MSApp !== "undefined" && MSApp.execUnsafeLocalFunction) {
+  /**
+   * Create a function which has 'unsafe' privileges (required by windows8 apps)
+   */
+  setInnerHTML = function (node, html) {
+    // $FlowFixMe[cannot-resolve-name]
+    return MSApp.execUnsafeLocalFunction(function () {
+      return setInnerHTMLImpl(node, html);
+    });
+  };
+}
+
+var setInnerHTML$1 = setInnerHTML;
+
+/**
+ * Set the textContent property of a node. For text updates, it's faster
+ * to set the `nodeValue` of the Text node directly instead of using
+ * `.textContent` which will remove the existing node and create a new one.
+ *
+ * @param {DOMElement} node
+ * @param {string} text
+ * @internal
+ */
+
+function setTextContent(node, text) {
+  if (text) {
+    var firstChild = node.firstChild;
+
+    if (
+      firstChild &&
+      firstChild === node.lastChild &&
+      firstChild.nodeType === TEXT_NODE
+    ) {
+      firstChild.nodeValue = text;
+      return;
+    }
+  }
+
+  node.textContent = text;
+}
+
+// List derived from Gecko source code:
+// https://github.com/mozilla/gecko-dev/blob/4e638efc71/layout/style/test/property_database.js
+var shorthandToLonghand = {
+  animation: [
+    "animationDelay",
+    "animationDirection",
+    "animationDuration",
+    "animationFillMode",
+    "animationIterationCount",
+    "animationName",
+    "animationPlayState",
+    "animationTimingFunction"
+  ],
+  background: [
+    "backgroundAttachment",
+    "backgroundClip",
+    "backgroundColor",
+    "backgroundImage",
+    "backgroundOrigin",
+    "backgroundPositionX",
+    "backgroundPositionY",
+    "backgroundRepeat",
+    "backgroundSize"
+  ],
+  backgroundPosition: ["backgroundPositionX", "backgroundPositionY"],
+  border: [
+    "borderBottomColor",
+    "borderBottomStyle",
+    "borderBottomWidth",
+    "borderImageOutset",
+    "borderImageRepeat",
+    "borderImageSlice",
+    "borderImageSource",
+    "borderImageWidth",
+    "borderLeftColor",
+    "borderLeftStyle",
+    "borderLeftWidth",
+    "borderRightColor",
+    "borderRightStyle",
+    "borderRightWidth",
+    "borderTopColor",
+    "borderTopStyle",
+    "borderTopWidth"
+  ],
+  borderBlockEnd: [
+    "borderBlockEndColor",
+    "borderBlockEndStyle",
+    "borderBlockEndWidth"
+  ],
+  borderBlockStart: [
+    "borderBlockStartColor",
+    "borderBlockStartStyle",
+    "borderBlockStartWidth"
+  ],
+  borderBottom: ["borderBottomColor", "borderBottomStyle", "borderBottomWidth"],
+  borderColor: [
+    "borderBottomColor",
+    "borderLeftColor",
+    "borderRightColor",
+    "borderTopColor"
+  ],
+  borderImage: [
+    "borderImageOutset",
+    "borderImageRepeat",
+    "borderImageSlice",
+    "borderImageSource",
+    "borderImageWidth"
+  ],
+  borderInlineEnd: [
+    "borderInlineEndColor",
+    "borderInlineEndStyle",
+    "borderInlineEndWidth"
+  ],
+  borderInlineStart: [
+    "borderInlineStartColor",
+    "borderInlineStartStyle",
+    "borderInlineStartWidth"
+  ],
+  borderLeft: ["borderLeftColor", "borderLeftStyle", "borderLeftWidth"],
+  borderRadius: [
+    "borderBottomLeftRadius",
+    "borderBottomRightRadius",
+    "borderTopLeftRadius",
+    "borderTopRightRadius"
+  ],
+  borderRight: ["borderRightColor", "borderRightStyle", "borderRightWidth"],
+  borderStyle: [
+    "borderBottomStyle",
+    "borderLeftStyle",
+    "borderRightStyle",
+    "borderTopStyle"
+  ],
+  borderTop: ["borderTopColor", "borderTopStyle", "borderTopWidth"],
+  borderWidth: [
+    "borderBottomWidth",
+    "borderLeftWidth",
+    "borderRightWidth",
+    "borderTopWidth"
+  ],
+  columnRule: ["columnRuleColor", "columnRuleStyle", "columnRuleWidth"],
+  columns: ["columnCount", "columnWidth"],
+  flex: ["flexBasis", "flexGrow", "flexShrink"],
+  flexFlow: ["flexDirection", "flexWrap"],
+  font: [
+    "fontFamily",
+    "fontFeatureSettings",
+    "fontKerning",
+    "fontLanguageOverride",
+    "fontSize",
+    "fontSizeAdjust",
+    "fontStretch",
+    "fontStyle",
+    "fontVariant",
+    "fontVariantAlternates",
+    "fontVariantCaps",
+    "fontVariantEastAsian",
+    "fontVariantLigatures",
+    "fontVariantNumeric",
+    "fontVariantPosition",
+    "fontWeight",
+    "lineHeight"
+  ],
+  fontVariant: [
+    "fontVariantAlternates",
+    "fontVariantCaps",
+    "fontVariantEastAsian",
+    "fontVariantLigatures",
+    "fontVariantNumeric",
+    "fontVariantPosition"
+  ],
+  gap: ["columnGap", "rowGap"],
+  grid: [
+    "gridAutoColumns",
+    "gridAutoFlow",
+    "gridAutoRows",
+    "gridTemplateAreas",
+    "gridTemplateColumns",
+    "gridTemplateRows"
+  ],
+  gridArea: ["gridColumnEnd", "gridColumnStart", "gridRowEnd", "gridRowStart"],
+  gridColumn: ["gridColumnEnd", "gridColumnStart"],
+  gridColumnGap: ["columnGap"],
+  gridGap: ["columnGap", "rowGap"],
+  gridRow: ["gridRowEnd", "gridRowStart"],
+  gridRowGap: ["rowGap"],
+  gridTemplate: [
+    "gridTemplateAreas",
+    "gridTemplateColumns",
+    "gridTemplateRows"
+  ],
+  listStyle: ["listStyleImage", "listStylePosition", "listStyleType"],
+  margin: ["marginBottom", "marginLeft", "marginRight", "marginTop"],
+  marker: ["markerEnd", "markerMid", "markerStart"],
+  mask: [
+    "maskClip",
+    "maskComposite",
+    "maskImage",
+    "maskMode",
+    "maskOrigin",
+    "maskPositionX",
+    "maskPositionY",
+    "maskRepeat",
+    "maskSize"
+  ],
+  maskPosition: ["maskPositionX", "maskPositionY"],
+  outline: ["outlineColor", "outlineStyle", "outlineWidth"],
+  overflow: ["overflowX", "overflowY"],
+  padding: ["paddingBottom", "paddingLeft", "paddingRight", "paddingTop"],
+  placeContent: ["alignContent", "justifyContent"],
+  placeItems: ["alignItems", "justifyItems"],
+  placeSelf: ["alignSelf", "justifySelf"],
+  textDecoration: [
+    "textDecorationColor",
+    "textDecorationLine",
+    "textDecorationStyle"
+  ],
+  textEmphasis: ["textEmphasisColor", "textEmphasisStyle"],
+  transition: [
+    "transitionDelay",
+    "transitionDuration",
+    "transitionProperty",
+    "transitionTimingFunction"
+  ],
+  wordWrap: ["overflowWrap"]
+};
+
+var uppercasePattern = /([A-Z])/g;
+var msPattern$1 = /^ms-/;
+/**
+ * Hyphenates a camelcased CSS property name, for example:
+ *
+ *   > hyphenateStyleName('backgroundColor')
+ *   < "background-color"
+ *   > hyphenateStyleName('MozTransition')
+ *   < "-moz-transition"
+ *   > hyphenateStyleName('msTransition')
+ *   < "-ms-transition"
+ *
+ * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
+ * is converted to `-ms-`.
+ */
+
+function hyphenateStyleName(name) {
+  return name
+    .replace(uppercasePattern, "-$1")
+    .toLowerCase()
+    .replace(msPattern$1, "-ms-");
+}
+
+// 'msTransform' is correct, but the other prefixes should be capitalized
+var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+var msPattern = /^-ms-/;
+var hyphenPattern = /-(.)/g; // style values shouldn't contain a semicolon
+
+var badStyleValueWithSemicolonPattern = /;\s*$/;
+var warnedStyleNames = {};
+var warnedStyleValues = {};
+var warnedForNaNValue = false;
+var warnedForInfinityValue = false;
+
+function camelize(string) {
+  return string.replace(hyphenPattern, function (_, character) {
+    return character.toUpperCase();
+  });
+}
+
+function warnHyphenatedStyleName(name) {
+  {
+    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+      return;
+    }
+
+    warnedStyleNames[name] = true;
+
+    error(
+      "Unsupported style property %s. Did you mean %s?",
+      name, // As Andi Smith suggests
+      // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
+      // is converted to lowercase `ms`.
+      camelize(name.replace(msPattern, "ms-"))
+    );
+  }
+}
+
+function warnBadVendoredStyleName(name) {
+  {
+    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+      return;
+    }
+
+    warnedStyleNames[name] = true;
+
+    error(
+      "Unsupported vendor-prefixed style property %s. Did you mean %s?",
+      name,
+      name.charAt(0).toUpperCase() + name.slice(1)
+    );
+  }
+}
+
+function warnStyleValueWithSemicolon(name, value) {
+  {
+    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
+      return;
+    }
+
+    warnedStyleValues[value] = true;
+
+    error(
+      "Style property values shouldn't contain a semicolon. " +
+        'Try "%s: %s" instead.',
+      name,
+      value.replace(badStyleValueWithSemicolonPattern, "")
+    );
+  }
+}
+
+function warnStyleValueIsNaN(name, value) {
+  {
+    if (warnedForNaNValue) {
+      return;
+    }
+
+    warnedForNaNValue = true;
+
+    error("`NaN` is an invalid value for the `%s` css style property.", name);
+  }
+}
+
+function warnStyleValueIsInfinity(name, value) {
+  {
+    if (warnedForInfinityValue) {
+      return;
+    }
+
+    warnedForInfinityValue = true;
+
+    error(
+      "`Infinity` is an invalid value for the `%s` css style property.",
+      name
+    );
+  }
+}
+
+function warnValidStyle(name, value) {
+  {
+    if (name.indexOf("-") > -1) {
+      warnHyphenatedStyleName(name);
+    } else if (badVendoredStyleNamePattern.test(name)) {
+      warnBadVendoredStyleName(name);
+    } else if (badStyleValueWithSemicolonPattern.test(value)) {
+      warnStyleValueWithSemicolon(name, value);
+    }
+
+    if (typeof value === "number") {
+      if (isNaN(value)) {
+        warnStyleValueIsNaN(name);
+      } else if (!isFinite(value)) {
+        warnStyleValueIsInfinity(name);
+      }
+    }
+  }
+}
+
+/**
+ * CSS properties which accept numbers but are not in units of "px".
+ */
+var isUnitlessNumber = {
+  animationIterationCount: true,
+  aspectRatio: true,
+  borderImageOutset: true,
+  borderImageSlice: true,
+  borderImageWidth: true,
+  boxFlex: true,
+  boxFlexGroup: true,
+  boxOrdinalGroup: true,
+  columnCount: true,
+  columns: true,
+  flex: true,
+  flexGrow: true,
+  flexPositive: true,
+  flexShrink: true,
+  flexNegative: true,
+  flexOrder: true,
+  gridArea: true,
+  gridRow: true,
+  gridRowEnd: true,
+  gridRowSpan: true,
+  gridRowStart: true,
+  gridColumn: true,
+  gridColumnEnd: true,
+  gridColumnSpan: true,
+  gridColumnStart: true,
+  fontWeight: true,
+  lineClamp: true,
+  lineHeight: true,
+  opacity: true,
+  order: true,
+  orphans: true,
+  scale: true,
+  tabSize: true,
+  widows: true,
+  zIndex: true,
+  zoom: true,
+  // SVG-related properties
+  fillOpacity: true,
+  floodOpacity: true,
+  stopOpacity: true,
+  strokeDasharray: true,
+  strokeDashoffset: true,
+  strokeMiterlimit: true,
+  strokeOpacity: true,
+  strokeWidth: true
+};
+/**
+ * @param {string} prefix vendor-specific prefix, eg: Webkit
+ * @param {string} key style name, eg: transitionDuration
+ * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
+ * WebkitTransitionDuration
+ */
+
+function prefixKey(prefix, key) {
+  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
+}
+/**
+ * Support style names that may come passed in prefixed by adding permutations
+ * of vendor prefixes.
+ */
+
+var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
+// infinite loop, because it iterates over the newly added props too.
+
+Object.keys(isUnitlessNumber).forEach(function (prop) {
+  prefixes.forEach(function (prefix) {
+    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
+  });
+});
+
+/**
+ * Operations for dealing with CSS properties.
+ */
+
+/**
+ * This creates a string that is expected to be equivalent to the style
+ * attribute generated by server-side rendering. It by-passes warnings and
+ * security checks so it's not safe to use this value for anything other than
+ * comparison. It is only used in DEV for SSR validation.
+ */
+
+function createDangerousStringForStyles(styles) {
+  {
+    var serialized = "";
+    var delimiter = "";
+
+    for (var styleName in styles) {
+      if (!styles.hasOwnProperty(styleName)) {
+        continue;
+      }
+
+      var value = styles[styleName];
+
+      if (value != null && typeof value !== "boolean" && value !== "") {
+        var isCustomProperty = styleName.indexOf("--") === 0;
+
+        if (isCustomProperty) {
+          {
+            checkCSSPropertyStringCoercion(value, styleName);
+          }
+
+          serialized += delimiter + styleName + ":" + ("" + value).trim();
+        } else {
+          if (
+            typeof value === "number" &&
+            value !== 0 &&
+            !(
+              isUnitlessNumber.hasOwnProperty(styleName) &&
+              isUnitlessNumber[styleName]
+            )
+          ) {
+            serialized +=
+              delimiter + hyphenateStyleName(styleName) + ":" + value + "px";
+          } else {
+            {
+              checkCSSPropertyStringCoercion(value, styleName);
+            }
+
+            serialized +=
+              delimiter +
+              hyphenateStyleName(styleName) +
+              ":" +
+              ("" + value).trim();
+          }
+        }
+
+        delimiter = ";";
+      }
+    }
+
+    return serialized || null;
+  }
+}
+/**
+ * Sets the value for multiple styles on a node.  If a value is specified as
+ * '' (empty string), the corresponding style property will be unset.
+ *
+ * @param {DOMElement} node
+ * @param {object} styles
+ */
+
+function setValueForStyles(node, styles) {
+  var style = node.style;
+
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+
+    var value = styles[styleName];
+    var isCustomProperty = styleName.indexOf("--") === 0;
+
+    {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, value);
+      }
+    }
+
+    if (value == null || typeof value === "boolean" || value === "") {
+      if (isCustomProperty) {
+        style.setProperty(styleName, "");
+      } else if (styleName === "float") {
+        style.cssFloat = "";
+      } else {
+        style[styleName] = "";
+      }
+    } else if (isCustomProperty) {
+      style.setProperty(styleName, value);
+    } else if (
+      typeof value === "number" &&
+      value !== 0 &&
+      !(
+        isUnitlessNumber.hasOwnProperty(styleName) &&
+        isUnitlessNumber[styleName]
+      )
+    ) {
+      style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
+    } else {
+      if (styleName === "float") {
+        style.cssFloat = value;
+      } else {
+        {
+          checkCSSPropertyStringCoercion(value, styleName);
+        }
+
+        style[styleName] = ("" + value).trim();
+      }
+    }
+  }
+}
+
+function isValueEmpty(value) {
+  return value == null || typeof value === "boolean" || value === "";
+}
+/**
+ * Given {color: 'red', overflow: 'hidden'} returns {
+ *   color: 'color',
+ *   overflowX: 'overflow',
+ *   overflowY: 'overflow',
+ * }. This can be read as "the overflowY property was set by the overflow
+ * shorthand". That is, the values are the property that each was derived from.
+ */
+
+function expandShorthandMap(styles) {
+  var expanded = {};
+
+  for (var key in styles) {
+    var longhands = shorthandToLonghand[key] || [key];
+
+    for (var i = 0; i < longhands.length; i++) {
+      expanded[longhands[i]] = key;
+    }
+  }
+
+  return expanded;
+}
+/**
+ * When mixing shorthand and longhand property names, we warn during updates if
+ * we expect an incorrect result to occur. In particular, we warn for:
+ *
+ * Updating a shorthand property (longhand gets overwritten):
+ *   {font: 'foo', fontVariant: 'bar'} -> {font: 'baz', fontVariant: 'bar'}
+ *   becomes .style.font = 'baz'
+ * Removing a shorthand property (longhand gets lost too):
+ *   {font: 'foo', fontVariant: 'bar'} -> {fontVariant: 'bar'}
+ *   becomes .style.font = ''
+ * Removing a longhand property (should revert to shorthand; doesn't):
+ *   {font: 'foo', fontVariant: 'bar'} -> {font: 'foo'}
+ *   becomes .style.fontVariant = ''
+ */
+
+function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
+  {
+    if (!nextStyles) {
+      return;
+    }
+
+    var expandedUpdates = expandShorthandMap(styleUpdates);
+    var expandedStyles = expandShorthandMap(nextStyles);
+    var warnedAbout = {};
+
+    for (var key in expandedUpdates) {
+      var originalKey = expandedUpdates[key];
+      var correctOriginalKey = expandedStyles[key];
+
+      if (correctOriginalKey && originalKey !== correctOriginalKey) {
+        var warningKey = originalKey + "," + correctOriginalKey;
+
+        if (warnedAbout[warningKey]) {
+          continue;
+        }
+
+        warnedAbout[warningKey] = true;
+
+        error(
+          "%s a style property during rerender (%s) when a " +
+            "conflicting property is set (%s) can lead to styling bugs. To " +
+            "avoid this, don't mix shorthand and non-shorthand properties " +
+            "for the same value; instead, replace the shorthand with " +
+            "separate values.",
+          isValueEmpty(styleUpdates[originalKey]) ? "Removing" : "Updating",
+          originalKey,
+          correctOriginalKey
+        );
+      }
+    }
+  }
+}
+
+function isCustomComponent(tagName, props) {
+  if (tagName.indexOf("-") === -1) {
+    return typeof props.is === "string";
+  }
+
+  switch (tagName) {
+    // These are reserved SVG and MathML elements.
+    // We don't mind this list too much because we expect it to never grow.
+    // The alternative is to track the namespace in a few places which is convoluted.
+    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    case "annotation-xml":
+    case "color-profile":
+    case "font-face":
+    case "font-face-src":
+    case "font-face-uri":
+    case "font-face-format":
+    case "font-face-name":
+    case "missing-glyph":
+      return false;
+
+    default:
+      return true;
+  }
+}
+
+// When adding attributes to the HTML or SVG allowed attribute list, be sure to
+// also add them to this module to ensure casing and incorrect name
+// warnings.
+var possibleStandardNames = {
+  // HTML
+  accept: "accept",
+  acceptcharset: "acceptCharset",
+  "accept-charset": "acceptCharset",
+  accesskey: "accessKey",
+  action: "action",
+  allowfullscreen: "allowFullScreen",
+  alt: "alt",
+  as: "as",
+  async: "async",
+  autocapitalize: "autoCapitalize",
+  autocomplete: "autoComplete",
+  autocorrect: "autoCorrect",
+  autofocus: "autoFocus",
+  autoplay: "autoPlay",
+  autosave: "autoSave",
+  capture: "capture",
+  cellpadding: "cellPadding",
+  cellspacing: "cellSpacing",
+  challenge: "challenge",
+  charset: "charSet",
+  checked: "checked",
+  children: "children",
+  cite: "cite",
+  class: "className",
+  classid: "classID",
+  classname: "className",
+  cols: "cols",
+  colspan: "colSpan",
+  content: "content",
+  contenteditable: "contentEditable",
+  contextmenu: "contextMenu",
+  controls: "controls",
+  controlslist: "controlsList",
+  coords: "coords",
+  crossorigin: "crossOrigin",
+  dangerouslysetinnerhtml: "dangerouslySetInnerHTML",
+  data: "data",
+  datetime: "dateTime",
+  default: "default",
+  defaultchecked: "defaultChecked",
+  defaultvalue: "defaultValue",
+  defer: "defer",
+  dir: "dir",
+  disabled: "disabled",
+  disablepictureinpicture: "disablePictureInPicture",
+  disableremoteplayback: "disableRemotePlayback",
+  download: "download",
+  draggable: "draggable",
+  enctype: "encType",
+  enterkeyhint: "enterKeyHint",
+  fetchpriority: "fetchPriority",
+  for: "htmlFor",
+  form: "form",
+  formmethod: "formMethod",
+  formaction: "formAction",
+  formenctype: "formEncType",
+  formnovalidate: "formNoValidate",
+  formtarget: "formTarget",
+  frameborder: "frameBorder",
+  headers: "headers",
+  height: "height",
+  hidden: "hidden",
+  high: "high",
+  href: "href",
+  hreflang: "hrefLang",
+  htmlfor: "htmlFor",
+  httpequiv: "httpEquiv",
+  "http-equiv": "httpEquiv",
+  icon: "icon",
+  id: "id",
+  imagesizes: "imageSizes",
+  imagesrcset: "imageSrcSet",
+  innerhtml: "innerHTML",
+  inputmode: "inputMode",
+  integrity: "integrity",
+  is: "is",
+  itemid: "itemID",
+  itemprop: "itemProp",
+  itemref: "itemRef",
+  itemscope: "itemScope",
+  itemtype: "itemType",
+  keyparams: "keyParams",
+  keytype: "keyType",
+  kind: "kind",
+  label: "label",
+  lang: "lang",
+  list: "list",
+  loop: "loop",
+  low: "low",
+  manifest: "manifest",
+  marginwidth: "marginWidth",
+  marginheight: "marginHeight",
+  max: "max",
+  maxlength: "maxLength",
+  media: "media",
+  mediagroup: "mediaGroup",
+  method: "method",
+  min: "min",
+  minlength: "minLength",
+  multiple: "multiple",
+  muted: "muted",
+  name: "name",
+  nomodule: "noModule",
+  nonce: "nonce",
+  novalidate: "noValidate",
+  open: "open",
+  optimum: "optimum",
+  pattern: "pattern",
+  placeholder: "placeholder",
+  playsinline: "playsInline",
+  poster: "poster",
+  preload: "preload",
+  profile: "profile",
+  radiogroup: "radioGroup",
+  readonly: "readOnly",
+  referrerpolicy: "referrerPolicy",
+  rel: "rel",
+  required: "required",
+  reversed: "reversed",
+  role: "role",
+  rows: "rows",
+  rowspan: "rowSpan",
+  sandbox: "sandbox",
+  scope: "scope",
+  scoped: "scoped",
+  scrolling: "scrolling",
+  seamless: "seamless",
+  selected: "selected",
+  shape: "shape",
+  size: "size",
+  sizes: "sizes",
+  span: "span",
+  spellcheck: "spellCheck",
+  src: "src",
+  srcdoc: "srcDoc",
+  srclang: "srcLang",
+  srcset: "srcSet",
+  start: "start",
+  step: "step",
+  style: "style",
+  summary: "summary",
+  tabindex: "tabIndex",
+  target: "target",
+  title: "title",
+  type: "type",
+  usemap: "useMap",
+  value: "value",
+  width: "width",
+  wmode: "wmode",
+  wrap: "wrap",
+  // SVG
+  about: "about",
+  accentheight: "accentHeight",
+  "accent-height": "accentHeight",
+  accumulate: "accumulate",
+  additive: "additive",
+  alignmentbaseline: "alignmentBaseline",
+  "alignment-baseline": "alignmentBaseline",
+  allowreorder: "allowReorder",
+  alphabetic: "alphabetic",
+  amplitude: "amplitude",
+  arabicform: "arabicForm",
+  "arabic-form": "arabicForm",
+  ascent: "ascent",
+  attributename: "attributeName",
+  attributetype: "attributeType",
+  autoreverse: "autoReverse",
+  azimuth: "azimuth",
+  basefrequency: "baseFrequency",
+  baselineshift: "baselineShift",
+  "baseline-shift": "baselineShift",
+  baseprofile: "baseProfile",
+  bbox: "bbox",
+  begin: "begin",
+  bias: "bias",
+  by: "by",
+  calcmode: "calcMode",
+  capheight: "capHeight",
+  "cap-height": "capHeight",
+  clip: "clip",
+  clippath: "clipPath",
+  "clip-path": "clipPath",
+  clippathunits: "clipPathUnits",
+  cliprule: "clipRule",
+  "clip-rule": "clipRule",
+  color: "color",
+  colorinterpolation: "colorInterpolation",
+  "color-interpolation": "colorInterpolation",
+  colorinterpolationfilters: "colorInterpolationFilters",
+  "color-interpolation-filters": "colorInterpolationFilters",
+  colorprofile: "colorProfile",
+  "color-profile": "colorProfile",
+  colorrendering: "colorRendering",
+  "color-rendering": "colorRendering",
+  contentscripttype: "contentScriptType",
+  contentstyletype: "contentStyleType",
+  cursor: "cursor",
+  cx: "cx",
+  cy: "cy",
+  d: "d",
+  datatype: "datatype",
+  decelerate: "decelerate",
+  descent: "descent",
+  diffuseconstant: "diffuseConstant",
+  direction: "direction",
+  display: "display",
+  divisor: "divisor",
+  dominantbaseline: "dominantBaseline",
+  "dominant-baseline": "dominantBaseline",
+  dur: "dur",
+  dx: "dx",
+  dy: "dy",
+  edgemode: "edgeMode",
+  elevation: "elevation",
+  enablebackground: "enableBackground",
+  "enable-background": "enableBackground",
+  end: "end",
+  exponent: "exponent",
+  externalresourcesrequired: "externalResourcesRequired",
+  fill: "fill",
+  fillopacity: "fillOpacity",
+  "fill-opacity": "fillOpacity",
+  fillrule: "fillRule",
+  "fill-rule": "fillRule",
+  filter: "filter",
+  filterres: "filterRes",
+  filterunits: "filterUnits",
+  floodopacity: "floodOpacity",
+  "flood-opacity": "floodOpacity",
+  floodcolor: "floodColor",
+  "flood-color": "floodColor",
+  focusable: "focusable",
+  fontfamily: "fontFamily",
+  "font-family": "fontFamily",
+  fontsize: "fontSize",
+  "font-size": "fontSize",
+  fontsizeadjust: "fontSizeAdjust",
+  "font-size-adjust": "fontSizeAdjust",
+  fontstretch: "fontStretch",
+  "font-stretch": "fontStretch",
+  fontstyle: "fontStyle",
+  "font-style": "fontStyle",
+  fontvariant: "fontVariant",
+  "font-variant": "fontVariant",
+  fontweight: "fontWeight",
+  "font-weight": "fontWeight",
+  format: "format",
+  from: "from",
+  fx: "fx",
+  fy: "fy",
+  g1: "g1",
+  g2: "g2",
+  glyphname: "glyphName",
+  "glyph-name": "glyphName",
+  glyphorientationhorizontal: "glyphOrientationHorizontal",
+  "glyph-orientation-horizontal": "glyphOrientationHorizontal",
+  glyphorientationvertical: "glyphOrientationVertical",
+  "glyph-orientation-vertical": "glyphOrientationVertical",
+  glyphref: "glyphRef",
+  gradienttransform: "gradientTransform",
+  gradientunits: "gradientUnits",
+  hanging: "hanging",
+  horizadvx: "horizAdvX",
+  "horiz-adv-x": "horizAdvX",
+  horizoriginx: "horizOriginX",
+  "horiz-origin-x": "horizOriginX",
+  ideographic: "ideographic",
+  imagerendering: "imageRendering",
+  "image-rendering": "imageRendering",
+  in2: "in2",
+  in: "in",
+  inlist: "inlist",
+  intercept: "intercept",
+  k1: "k1",
+  k2: "k2",
+  k3: "k3",
+  k4: "k4",
+  k: "k",
+  kernelmatrix: "kernelMatrix",
+  kernelunitlength: "kernelUnitLength",
+  kerning: "kerning",
+  keypoints: "keyPoints",
+  keysplines: "keySplines",
+  keytimes: "keyTimes",
+  lengthadjust: "lengthAdjust",
+  letterspacing: "letterSpacing",
+  "letter-spacing": "letterSpacing",
+  lightingcolor: "lightingColor",
+  "lighting-color": "lightingColor",
+  limitingconeangle: "limitingConeAngle",
+  local: "local",
+  markerend: "markerEnd",
+  "marker-end": "markerEnd",
+  markerheight: "markerHeight",
+  markermid: "markerMid",
+  "marker-mid": "markerMid",
+  markerstart: "markerStart",
+  "marker-start": "markerStart",
+  markerunits: "markerUnits",
+  markerwidth: "markerWidth",
+  mask: "mask",
+  maskcontentunits: "maskContentUnits",
+  maskunits: "maskUnits",
+  mathematical: "mathematical",
+  mode: "mode",
+  numoctaves: "numOctaves",
+  offset: "offset",
+  opacity: "opacity",
+  operator: "operator",
+  order: "order",
+  orient: "orient",
+  orientation: "orientation",
+  origin: "origin",
+  overflow: "overflow",
+  overlineposition: "overlinePosition",
+  "overline-position": "overlinePosition",
+  overlinethickness: "overlineThickness",
+  "overline-thickness": "overlineThickness",
+  paintorder: "paintOrder",
+  "paint-order": "paintOrder",
+  panose1: "panose1",
+  "panose-1": "panose1",
+  pathlength: "pathLength",
+  patterncontentunits: "patternContentUnits",
+  patterntransform: "patternTransform",
+  patternunits: "patternUnits",
+  pointerevents: "pointerEvents",
+  "pointer-events": "pointerEvents",
+  points: "points",
+  pointsatx: "pointsAtX",
+  pointsaty: "pointsAtY",
+  pointsatz: "pointsAtZ",
+  prefix: "prefix",
+  preservealpha: "preserveAlpha",
+  preserveaspectratio: "preserveAspectRatio",
+  primitiveunits: "primitiveUnits",
+  property: "property",
+  r: "r",
+  radius: "radius",
+  refx: "refX",
+  refy: "refY",
+  renderingintent: "renderingIntent",
+  "rendering-intent": "renderingIntent",
+  repeatcount: "repeatCount",
+  repeatdur: "repeatDur",
+  requiredextensions: "requiredExtensions",
+  requiredfeatures: "requiredFeatures",
+  resource: "resource",
+  restart: "restart",
+  result: "result",
+  results: "results",
+  rotate: "rotate",
+  rx: "rx",
+  ry: "ry",
+  scale: "scale",
+  security: "security",
+  seed: "seed",
+  shaperendering: "shapeRendering",
+  "shape-rendering": "shapeRendering",
+  slope: "slope",
+  spacing: "spacing",
+  specularconstant: "specularConstant",
+  specularexponent: "specularExponent",
+  speed: "speed",
+  spreadmethod: "spreadMethod",
+  startoffset: "startOffset",
+  stddeviation: "stdDeviation",
+  stemh: "stemh",
+  stemv: "stemv",
+  stitchtiles: "stitchTiles",
+  stopcolor: "stopColor",
+  "stop-color": "stopColor",
+  stopopacity: "stopOpacity",
+  "stop-opacity": "stopOpacity",
+  strikethroughposition: "strikethroughPosition",
+  "strikethrough-position": "strikethroughPosition",
+  strikethroughthickness: "strikethroughThickness",
+  "strikethrough-thickness": "strikethroughThickness",
+  string: "string",
+  stroke: "stroke",
+  strokedasharray: "strokeDasharray",
+  "stroke-dasharray": "strokeDasharray",
+  strokedashoffset: "strokeDashoffset",
+  "stroke-dashoffset": "strokeDashoffset",
+  strokelinecap: "strokeLinecap",
+  "stroke-linecap": "strokeLinecap",
+  strokelinejoin: "strokeLinejoin",
+  "stroke-linejoin": "strokeLinejoin",
+  strokemiterlimit: "strokeMiterlimit",
+  "stroke-miterlimit": "strokeMiterlimit",
+  strokewidth: "strokeWidth",
+  "stroke-width": "strokeWidth",
+  strokeopacity: "strokeOpacity",
+  "stroke-opacity": "strokeOpacity",
+  suppresscontenteditablewarning: "suppressContentEditableWarning",
+  suppresshydrationwarning: "suppressHydrationWarning",
+  surfacescale: "surfaceScale",
+  systemlanguage: "systemLanguage",
+  tablevalues: "tableValues",
+  targetx: "targetX",
+  targety: "targetY",
+  textanchor: "textAnchor",
+  "text-anchor": "textAnchor",
+  textdecoration: "textDecoration",
+  "text-decoration": "textDecoration",
+  textlength: "textLength",
+  textrendering: "textRendering",
+  "text-rendering": "textRendering",
+  to: "to",
+  transform: "transform",
+  transformorigin: "transformOrigin",
+  "transform-origin": "transformOrigin",
+  typeof: "typeof",
+  u1: "u1",
+  u2: "u2",
+  underlineposition: "underlinePosition",
+  "underline-position": "underlinePosition",
+  underlinethickness: "underlineThickness",
+  "underline-thickness": "underlineThickness",
+  unicode: "unicode",
+  unicodebidi: "unicodeBidi",
+  "unicode-bidi": "unicodeBidi",
+  unicoderange: "unicodeRange",
+  "unicode-range": "unicodeRange",
+  unitsperem: "unitsPerEm",
+  "units-per-em": "unitsPerEm",
+  unselectable: "unselectable",
+  valphabetic: "vAlphabetic",
+  "v-alphabetic": "vAlphabetic",
+  values: "values",
+  vectoreffect: "vectorEffect",
+  "vector-effect": "vectorEffect",
+  version: "version",
+  vertadvy: "vertAdvY",
+  "vert-adv-y": "vertAdvY",
+  vertoriginx: "vertOriginX",
+  "vert-origin-x": "vertOriginX",
+  vertoriginy: "vertOriginY",
+  "vert-origin-y": "vertOriginY",
+  vhanging: "vHanging",
+  "v-hanging": "vHanging",
+  videographic: "vIdeographic",
+  "v-ideographic": "vIdeographic",
+  viewbox: "viewBox",
+  viewtarget: "viewTarget",
+  visibility: "visibility",
+  vmathematical: "vMathematical",
+  "v-mathematical": "vMathematical",
+  vocab: "vocab",
+  widths: "widths",
+  wordspacing: "wordSpacing",
+  "word-spacing": "wordSpacing",
+  writingmode: "writingMode",
+  "writing-mode": "writingMode",
+  x1: "x1",
+  x2: "x2",
+  x: "x",
+  xchannelselector: "xChannelSelector",
+  xheight: "xHeight",
+  "x-height": "xHeight",
+  xlinkactuate: "xlinkActuate",
+  "xlink:actuate": "xlinkActuate",
+  xlinkarcrole: "xlinkArcrole",
+  "xlink:arcrole": "xlinkArcrole",
+  xlinkhref: "xlinkHref",
+  "xlink:href": "xlinkHref",
+  xlinkrole: "xlinkRole",
+  "xlink:role": "xlinkRole",
+  xlinkshow: "xlinkShow",
+  "xlink:show": "xlinkShow",
+  xlinktitle: "xlinkTitle",
+  "xlink:title": "xlinkTitle",
+  xlinktype: "xlinkType",
+  "xlink:type": "xlinkType",
+  xmlbase: "xmlBase",
+  "xml:base": "xmlBase",
+  xmllang: "xmlLang",
+  "xml:lang": "xmlLang",
+  xmlns: "xmlns",
+  "xml:space": "xmlSpace",
+  xmlnsxlink: "xmlnsXlink",
+  "xmlns:xlink": "xmlnsXlink",
+  xmlspace: "xmlSpace",
+  y1: "y1",
+  y2: "y2",
+  y: "y",
+  ychannelselector: "yChannelSelector",
+  z: "z",
+  zoomandpan: "zoomAndPan"
+};
+
+var ariaProperties = {
+  "aria-current": 0,
+  // state
+  "aria-description": 0,
+  "aria-details": 0,
+  "aria-disabled": 0,
+  // state
+  "aria-hidden": 0,
+  // state
+  "aria-invalid": 0,
+  // state
+  "aria-keyshortcuts": 0,
+  "aria-label": 0,
+  "aria-roledescription": 0,
+  // Widget Attributes
+  "aria-autocomplete": 0,
+  "aria-checked": 0,
+  "aria-expanded": 0,
+  "aria-haspopup": 0,
+  "aria-level": 0,
+  "aria-modal": 0,
+  "aria-multiline": 0,
+  "aria-multiselectable": 0,
+  "aria-orientation": 0,
+  "aria-placeholder": 0,
+  "aria-pressed": 0,
+  "aria-readonly": 0,
+  "aria-required": 0,
+  "aria-selected": 0,
+  "aria-sort": 0,
+  "aria-valuemax": 0,
+  "aria-valuemin": 0,
+  "aria-valuenow": 0,
+  "aria-valuetext": 0,
+  // Live Region Attributes
+  "aria-atomic": 0,
+  "aria-busy": 0,
+  "aria-live": 0,
+  "aria-relevant": 0,
+  // Drag-and-Drop Attributes
+  "aria-dropeffect": 0,
+  "aria-grabbed": 0,
+  // Relationship Attributes
+  "aria-activedescendant": 0,
+  "aria-colcount": 0,
+  "aria-colindex": 0,
+  "aria-colspan": 0,
+  "aria-controls": 0,
+  "aria-describedby": 0,
+  "aria-errormessage": 0,
+  "aria-flowto": 0,
+  "aria-labelledby": 0,
+  "aria-owns": 0,
+  "aria-posinset": 0,
+  "aria-rowcount": 0,
+  "aria-rowindex": 0,
+  "aria-rowspan": 0,
+  "aria-setsize": 0
+};
+
+var warnedProperties$1 = {};
+var rARIA$1 = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel$1 = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+
+function validateProperty$1(tagName, name) {
+  {
+    if (
+      hasOwnProperty.call(warnedProperties$1, name) &&
+      warnedProperties$1[name]
+    ) {
+      return true;
+    }
+
+    if (rARIACamel$1.test(name)) {
+      var ariaName = "aria-" + name.slice(4).toLowerCase();
+      var correctName = ariaProperties.hasOwnProperty(ariaName)
+        ? ariaName
+        : null; // If this is an aria-* attribute, but is not listed in the known DOM
+      // DOM properties, then it is an invalid aria-* attribute.
+
+      if (correctName == null) {
+        error(
+          "Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.",
+          name
+        );
+
+        warnedProperties$1[name] = true;
+        return true;
+      } // aria-* attributes should be lowercase; suggest the lowercase version.
+
+      if (name !== correctName) {
+        error(
+          "Invalid ARIA attribute `%s`. Did you mean `%s`?",
+          name,
+          correctName
+        );
+
+        warnedProperties$1[name] = true;
+        return true;
+      }
+    }
+
+    if (rARIA$1.test(name)) {
+      var lowerCasedName = name.toLowerCase();
+      var standardName = ariaProperties.hasOwnProperty(lowerCasedName)
+        ? lowerCasedName
+        : null; // If this is an aria-* attribute, but is not listed in the known DOM
+      // DOM properties, then it is an invalid aria-* attribute.
+
+      if (standardName == null) {
+        warnedProperties$1[name] = true;
+        return false;
+      } // aria-* attributes should be lowercase; suggest the lowercase version.
+
+      if (name !== standardName) {
+        error(
+          "Unknown ARIA attribute `%s`. Did you mean `%s`?",
+          name,
+          standardName
+        );
+
+        warnedProperties$1[name] = true;
+        return true;
+      }
+    }
+  }
+
+  return true;
+}
+
+function warnInvalidARIAProps(type, props) {
+  {
+    var invalidProps = [];
+
+    for (var key in props) {
+      var isValid = validateProperty$1(type, key);
+
+      if (!isValid) {
+        invalidProps.push(key);
+      }
+    }
+
+    var unknownPropString = invalidProps
+      .map(function (prop) {
+        return "`" + prop + "`";
+      })
+      .join(", ");
+
+    if (invalidProps.length === 1) {
+      error(
+        "Invalid aria prop %s on <%s> tag. " +
+          "For details, see https://reactjs.org/link/invalid-aria-props",
+        unknownPropString,
+        type
+      );
+    } else if (invalidProps.length > 1) {
+      error(
+        "Invalid aria props %s on <%s> tag. " +
+          "For details, see https://reactjs.org/link/invalid-aria-props",
+        unknownPropString,
+        type
+      );
+    }
+  }
+}
+
+function validateProperties$2(type, props) {
+  if (isCustomComponent(type, props)) {
+    return;
+  }
+
+  warnInvalidARIAProps(type, props);
+}
+
+var didWarnValueNull = false;
+function validateProperties$1(type, props) {
+  {
+    if (type !== "input" && type !== "textarea" && type !== "select") {
+      return;
+    }
+
+    if (props != null && props.value === null && !didWarnValueNull) {
+      didWarnValueNull = true;
+
+      if (type === "select" && props.multiple) {
+        error(
+          "`value` prop on `%s` should not be null. " +
+            "Consider using an empty array when `multiple` is set to `true` " +
+            "to clear the component or `undefined` for uncontrolled components.",
+          type
+        );
+      } else {
+        error(
+          "`value` prop on `%s` should not be null. " +
+            "Consider using an empty string to clear the component or `undefined` " +
+            "for uncontrolled components.",
+          type
+        );
+      }
+    }
+  }
+}
+
+var warnedProperties = {};
+var EVENT_NAME_REGEX = /^on./;
+var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
+var rARIA = new RegExp("^(aria)-[" + ATTRIBUTE_NAME_CHAR + "]*$");
+var rARIACamel = new RegExp("^(aria)[A-Z][" + ATTRIBUTE_NAME_CHAR + "]*$");
+
+function validateProperty(tagName, name, value, eventRegistry) {
+  {
+    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
+      return true;
+    }
+
+    var lowerCasedName = name.toLowerCase();
+
+    if (lowerCasedName === "onfocusin" || lowerCasedName === "onfocusout") {
+      error(
+        "React uses onFocus and onBlur instead of onFocusIn and onFocusOut. " +
+          "All React events are normalized to bubble, so onFocusIn and onFocusOut " +
+          "are not needed/supported by React."
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    } // We can't rely on the event system being injected on the server.
+
+    if (eventRegistry != null) {
+      var registrationNameDependencies =
+          eventRegistry.registrationNameDependencies,
+        possibleRegistrationNames = eventRegistry.possibleRegistrationNames;
+
+      if (registrationNameDependencies.hasOwnProperty(name)) {
+        return true;
+      }
+
+      var registrationName = possibleRegistrationNames.hasOwnProperty(
+        lowerCasedName
+      )
+        ? possibleRegistrationNames[lowerCasedName]
+        : null;
+
+      if (registrationName != null) {
+        error(
+          "Invalid event handler property `%s`. Did you mean `%s`?",
+          name,
+          registrationName
+        );
+
+        warnedProperties[name] = true;
+        return true;
+      }
+
+      if (EVENT_NAME_REGEX.test(name)) {
+        error("Unknown event handler property `%s`. It will be ignored.", name);
+
+        warnedProperties[name] = true;
+        return true;
+      }
+    } else if (EVENT_NAME_REGEX.test(name)) {
+      // If no event plugins have been injected, we are in a server environment.
+      // So we can't tell if the event name is correct for sure, but we can filter
+      // out known bad ones like `onclick`. We can't suggest a specific replacement though.
+      if (INVALID_EVENT_NAME_REGEX.test(name)) {
+        error(
+          "Invalid event handler property `%s`. " +
+            "React events use the camelCase naming convention, for example `onClick`.",
+          name
+        );
+      }
+
+      warnedProperties[name] = true;
+      return true;
+    } // Let the ARIA attribute hook validate ARIA attributes
+
+    if (rARIA.test(name) || rARIACamel.test(name)) {
+      return true;
+    }
+
+    if (lowerCasedName === "innerhtml") {
+      error(
+        "Directly setting property `innerHTML` is not permitted. " +
+          "For more information, lookup documentation on `dangerouslySetInnerHTML`."
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    if (lowerCasedName === "aria") {
+      error(
+        "The `aria` attribute is reserved for future use in React. " +
+          "Pass individual `aria-` attributes instead."
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    if (
+      lowerCasedName === "is" &&
+      value !== null &&
+      value !== undefined &&
+      typeof value !== "string"
+    ) {
+      error(
+        "Received a `%s` for a string attribute `is`. If this is expected, cast " +
+          "the value to a string.",
+        typeof value
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    if (typeof value === "number" && isNaN(value)) {
+      error(
+        "Received NaN for the `%s` attribute. If this is expected, cast " +
+          "the value to a string.",
+        name
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    var propertyInfo = getPropertyInfo(name); // Known attributes should match the casing specified in the property config.
+
+    if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+      var standardName = possibleStandardNames[lowerCasedName];
+
+      if (standardName !== name) {
+        error(
+          "Invalid DOM property `%s`. Did you mean `%s`?",
+          name,
+          standardName
+        );
+
+        warnedProperties[name] = true;
+        return true;
+      }
+    } else if (name !== lowerCasedName) {
+      // Unknown attributes should have lowercase casing since that's how they
+      // will be cased anyway with server rendering.
+      error(
+        "React does not recognize the `%s` prop on a DOM element. If you " +
+          "intentionally want it to appear in the DOM as a custom " +
+          "attribute, spell it as lowercase `%s` instead. " +
+          "If you accidentally passed it from a parent component, remove " +
+          "it from the DOM element.",
+        name,
+        lowerCasedName
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    } // Now that we've validated casing, do not validate
+    // data types for reserved props
+
+    switch (name) {
+      case "dangerouslySetInnerHTML":
+      case "children":
+      case "style":
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue": // Reserved
+
+      case "defaultChecked":
+      case "innerHTML": {
+        return true;
+      }
+
+      case "innerText": // Properties
+
+      case "textContent":
+        if (enableCustomElementPropertySupport) {
+          return true;
+        }
+    }
+
+    if (typeof value === "boolean") {
+      var prefix = name.toLowerCase().slice(0, 5);
+      var acceptsBooleans =
+        propertyInfo !== null
+          ? propertyInfo.acceptsBooleans
+          : prefix === "data-" || prefix === "aria-";
+
+      if (!acceptsBooleans) {
+        if (value) {
+          error(
+            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+              "If you want to write it to the DOM, pass a string instead: " +
+              '%s="%s" or %s={value.toString()}.',
+            value,
+            name,
+            name,
+            value,
+            name
+          );
+        } else {
+          error(
+            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+              "If you want to write it to the DOM, pass a string instead: " +
+              '%s="%s" or %s={value.toString()}.\n\n' +
+              "If you used to conditionally omit it with %s={condition && value}, " +
+              "pass %s={condition ? value : undefined} instead.",
+            value,
+            name,
+            name,
+            value,
+            name,
+            name,
+            name
+          );
+        }
+      }
+
+      warnedProperties[name] = true;
+      return true;
+    } // Warn when a known attribute is a bad type
+
+    switch (typeof value) {
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        warnedProperties[name] = true;
+        return false;
+    } // Warn when passing the strings 'false' or 'true' into a boolean prop
+
+    if (
+      (value === "false" || value === "true") &&
+      propertyInfo !== null &&
+      propertyInfo.type === BOOLEAN
+    ) {
+      error(
+        "Received the string `%s` for the boolean attribute `%s`. " +
+          "%s " +
+          "Did you mean %s={%s}?",
+        value,
+        name,
+        value === "false"
+          ? "The browser will interpret it as a truthy value."
+          : 'Although this works, it will not work as expected if you pass the string "false".',
+        name,
+        value
+      );
+
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    return true;
+  }
+}
+
+function warnUnknownProperties(type, props, eventRegistry) {
+  {
+    var unknownProps = [];
+
+    for (var key in props) {
+      var isValid = validateProperty(type, key, props[key], eventRegistry);
+
+      if (!isValid) {
+        unknownProps.push(key);
+      }
+    }
+
+    var unknownPropString = unknownProps
+      .map(function (prop) {
+        return "`" + prop + "`";
+      })
+      .join(", ");
+
+    if (unknownProps.length === 1) {
+      error(
+        "Invalid value for prop %s on <%s> tag. Either remove it from the element, " +
+          "or pass a string or number value to keep it in the DOM. " +
+          "For details, see https://reactjs.org/link/attribute-behavior ",
+        unknownPropString,
+        type
+      );
+    } else if (unknownProps.length > 1) {
+      error(
+        "Invalid values for props %s on <%s> tag. Either remove them from the element, " +
+          "or pass a string or number value to keep them in the DOM. " +
+          "For details, see https://reactjs.org/link/attribute-behavior ",
+        unknownPropString,
+        type
+      );
+    }
+  }
+}
+
+function validateProperties(type, props, eventRegistry) {
+  if (isCustomComponent(type, props)) {
+    return;
+  }
+
+  warnUnknownProperties(type, props, eventRegistry);
+}
+
+var didWarnInvalidHydration = false;
+var didWarnScriptTags = false;
+var warnedUnknownTags;
+var canDiffStyleForHydrationWarning;
+
+{
+  warnedUnknownTags = {
+    // There are working polyfills for <dialog>. Let people use it.
+    dialog: true,
+    // Electron ships a custom <webview> tag to display external web content in
+    // an isolated frame and process.
+    // This tag is not present in non Electron environments such as JSDom which
+    // is often used for testing purposes.
+    // @see https://electronjs.org/docs/api/webview-tag
+    webview: true
+  }; // IE 11 parses & normalizes the style attribute as opposed to other
+  // browsers. It adds spaces and sorts the properties in some
+  // non-alphabetical order. Handling that would require sorting CSS
+  // properties in the client & server versions or applying
+  // `expectedStyle` to a temporary DOM node to read its `style` attribute
+  // normalized. Since it only affects IE, we're skipping style warnings
+  // in that browser completely in favor of doing all that work.
+  // See https://github.com/facebook/react/issues/11807
+
+  canDiffStyleForHydrationWarning =
+    disableIEWorkarounds || (canUseDOM && !document.documentMode);
+}
+
+function validatePropertiesInDevelopment(type, props) {
+  {
+    validateProperties$2(type, props);
+    validateProperties$1(type, props);
+    validateProperties(type, props, {
+      registrationNameDependencies: registrationNameDependencies,
+      possibleRegistrationNames: possibleRegistrationNames
+    });
+
+    if (
+      props.contentEditable &&
+      !props.suppressContentEditableWarning &&
+      props.children != null
+    ) {
+      error(
+        "A component is `contentEditable` and contains `children` managed by " +
+          "React. It is now your responsibility to guarantee that none of " +
+          "those nodes are unexpectedly modified or duplicated. This is " +
+          "probably not intentional."
+      );
+    }
+  }
+}
+
+function warnForPropDifference(propName, serverValue, clientValue) {
+  {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    var normalizedClientValue = normalizeMarkupForTextOrAttribute(clientValue);
+    var normalizedServerValue = normalizeMarkupForTextOrAttribute(serverValue);
+
+    if (normalizedServerValue === normalizedClientValue) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+
+    error(
+      "Prop `%s` did not match. Server: %s Client: %s",
+      propName,
+      JSON.stringify(normalizedServerValue),
+      JSON.stringify(normalizedClientValue)
+    );
+  }
+}
+
+function warnForExtraAttributes(attributeNames) {
+  {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+    var names = [];
+    attributeNames.forEach(function (name) {
+      names.push(name);
+    });
+
+    error("Extra attributes from the server: %s", names);
+  }
+}
+
+function warnForInvalidEventListener(registrationName, listener) {
+  {
+    if (listener === false) {
+      error(
+        "Expected `%s` listener to be a function, instead got `false`.\n\n" +
+          "If you used to conditionally omit it with %s={condition && value}, " +
+          "pass %s={condition ? value : undefined} instead.",
+        registrationName,
+        registrationName,
+        registrationName
+      );
+    } else {
+      error(
+        "Expected `%s` listener to be a function, instead got a value of `%s` type.",
+        registrationName,
+        typeof listener
+      );
+    }
+  }
+} // Parse the HTML and read it back to normalize the HTML string so that it
+// can be used for comparison.
+
+function normalizeHTML(parent, html) {
+  {
+    // We could have created a separate document here to avoid
+    // re-initializing custom elements if they exist. But this breaks
+    // how <noscript> is being handled. So we use the same document.
+    // See the discussion in https://github.com/facebook/react/pull/11157.
+    var testElement =
+      parent.namespaceURI === HTML_NAMESPACE
+        ? parent.ownerDocument.createElement(parent.tagName)
+        : parent.ownerDocument.createElementNS(
+            parent.namespaceURI,
+            parent.tagName
+          );
+    testElement.innerHTML = html;
+    return testElement.innerHTML;
+  }
+} // HTML parsing normalizes CR and CRLF to LF.
+// It also can turn \u0000 into \uFFFD inside attributes.
+// https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+// If we have a mismatch, it might be caused by that.
+// We will still patch up in this case but not fire the warning.
+
+var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+function normalizeMarkupForTextOrAttribute(markup) {
+  {
+    checkHtmlStringCoercion(markup);
+  }
+
+  var markupString = typeof markup === "string" ? markup : "" + markup;
+  return markupString
+    .replace(NORMALIZE_NEWLINES_REGEX, "\n")
+    .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
+}
+
+function checkForUnmatchedText(
+  serverText,
+  clientText,
+  isConcurrentMode,
+  shouldWarnDev
+) {
+  var normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+  var normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+
+  if (normalizedServerText === normalizedClientText) {
+    return;
+  }
+
+  if (shouldWarnDev) {
+    {
+      if (!didWarnInvalidHydration) {
+        didWarnInvalidHydration = true;
+
+        error(
+          'Text content did not match. Server: "%s" Client: "%s"',
+          normalizedServerText,
+          normalizedClientText
+        );
+      }
+    }
+  }
+
+  if (isConcurrentMode && enableClientRenderFallbackOnTextMismatch) {
+    // In concurrent roots, we throw when there's a text mismatch and revert to
+    // client rendering, up to the nearest Suspense boundary.
+    throw new Error("Text content does not match server-rendered HTML.");
+  }
+}
+function getOwnerDocumentFromRootContainer(rootContainerElement) {
+  return rootContainerElement.nodeType === DOCUMENT_NODE
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+}
+
+function noop$1() {}
+
+function trapClickOnNonInteractiveElement(node) {
+  // Mobile Safari does not fire properly bubble click events on
+  // non-interactive elements, which means delegated click listeners do not
+  // fire. The workaround for this bug involves attaching an empty click
+  // listener on the target node.
+  // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+  // Just set it using the onclick property so that we don't have to manage any
+  // bookkeeping for it. Not sure if we need to clear it when the listener is
+  // removed.
+  // TODO: Only do this for the relevant Safaris maybe?
+  node.onclick = noop$1;
+}
+
+function setInitialDOMProperties(
+  tag,
+  domElement,
+  nextProps,
+  isCustomComponentTag
+) {
+  for (var propKey in nextProps) {
+    if (!nextProps.hasOwnProperty(propKey)) {
+      continue;
+    }
+
+    var nextProp = nextProps[propKey];
+
+    switch (propKey) {
+      case "style": {
+        if (nextProp != null && typeof nextProp !== "object") {
+          throw new Error(
+            "The `style` prop expects a mapping from style properties to values, " +
+              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+              "using JSX."
+          );
+        }
+
+        {
+          if (nextProp) {
+            // Freeze the next style object so that we can assume it won't be
+            // mutated. We have already warned for this in the past.
+            Object.freeze(nextProp);
+          }
+        } // Relies on `updateStylesByID` not mutating `styleUpdates`.
+
+        setValueForStyles(domElement, nextProp);
+        break;
+      }
+
+      case "dangerouslySetInnerHTML": {
+        if (nextProp != null) {
+          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
+            throw new Error(
+              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
+                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+                "for more information."
+            );
+          }
+
+          var nextHtml = nextProp.__html;
+
+          if (nextHtml != null) {
+            if (nextProps.children != null) {
+              throw new Error(
+                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
+              );
+            }
+
+            if (disableIEWorkarounds) {
+              domElement.innerHTML = nextHtml;
+            } else {
+              setInnerHTML$1(domElement, nextHtml);
+            }
+          }
+        }
+
+        break;
+      }
+
+      case "children": {
+        if (typeof nextProp === "string") {
+          // Avoid setting initial textContent when the text is empty. In IE11 setting
+          // textContent on a <textarea> will cause the placeholder to not
+          // show within the <textarea> until it has been focused and blurred again.
+          // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+          var canSetTextContent =
+            tag !== "body" && (tag !== "textarea" || nextProp !== "");
+
+          if (canSetTextContent) {
+            setTextContent(domElement, nextProp);
+          }
+        } else if (typeof nextProp === "number") {
+          var _canSetTextContent = tag !== "body";
+
+          if (_canSetTextContent) {
+            setTextContent(domElement, "" + nextProp);
+          }
+        }
+
+        break;
+      }
+
+      case "onScroll": {
+        if (nextProp != null) {
+          if (typeof nextProp !== "function") {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
+
+          listenToNonDelegatedEvent("scroll", domElement);
+        }
+
+        break;
+      }
+
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue": // Reserved
+
+      case "defaultChecked":
+      case "innerHTML": {
+        // Noop
+        break;
+      }
+
+      case "autoFocus": {
+        // We polyfill it separately on the client during commit.
+        // We could have excluded it in the property list instead of
+        // adding a special case here, but then it wouldn't be emitted
+        // on server rendering (but we *do* want to emit it in SSR).
+        break;
+      }
+
+      case "innerText": // Properties
+
+      case "textContent":
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          if (nextProp != null) {
+            if (typeof nextProp !== "function") {
+              warnForInvalidEventListener(propKey, nextProp);
+            }
+          }
+        } else if (nextProp != null) {
+          if (isCustomComponentTag) {
+            setValueForPropertyOnCustomComponent(domElement, propKey, nextProp);
+          } else {
+            setValueForProperty(domElement, propKey, nextProp);
+          }
+        }
+      }
+    }
+  }
+}
+
+function updateDOMProperties(
+  domElement,
+  updatePayload,
+  wasCustomComponentTag,
+  isCustomComponentTag
+) {
+  // TODO: Handle wasCustomComponentTag
+  for (var i = 0; i < updatePayload.length; i += 2) {
+    var propKey = updatePayload[i];
+    var propValue = updatePayload[i + 1];
+
+    switch (propKey) {
+      case "style":
+        setValueForStyles(domElement, propValue);
+        break;
+
+      case "dangerouslySetInnerHTML":
+        if (disableIEWorkarounds) {
+          domElement.innerHTML = propValue;
+        } else {
+          setInnerHTML$1(domElement, propValue);
+        }
+
+        break;
+
+      case "children":
+        setTextContent(domElement, propValue);
+        break;
+
+      default:
+        if (isCustomComponentTag) {
+          setValueForPropertyOnCustomComponent(domElement, propKey, propValue);
+        } else {
+          setValueForProperty(domElement, propKey, propValue);
+        }
+
+        break;
+    }
+  }
+} // creates a script element that won't execute
+
+function createPotentiallyInlineScriptElement(ownerDocument) {
+  // Create the script via .innerHTML so its "parser-inserted" flag is
+  // set to true and it does not execute
+  var div = ownerDocument.createElement("div");
+
+  {
+    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+      error(
+        "Encountered a script tag while rendering React component. " +
+          "Scripts inside React components are never executed when rendering " +
+          "on the client. Consider using template tag instead " +
+          "(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
+      );
+
+      didWarnScriptTags = true;
+    }
+  }
+
+  div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
+  // This is guaranteed to yield a script element.
+
+  var firstChild = div.firstChild;
+  var element = div.removeChild(firstChild);
+  return element;
+}
+function createSelectElement(props, ownerDocument) {
+  var element;
+
+  if (typeof props.is === "string") {
+    element = ownerDocument.createElement("select", {
+      is: props.is
+    });
+  } else {
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement("select");
+  }
+
+  if (props.multiple) {
+    element.multiple = true;
+  } else if (props.size) {
+    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+    // it is possible that no option is selected.
+    //
+    // This is only necessary when a select in "single selection mode".
+    element.size = props.size;
+  }
+
+  return element;
+} // Creates elements in the HTML namesapce
+
+function createHTMLElement(type, props, ownerDocument) {
+  {
+    switch (type) {
+      case "script":
+      case "select":
+        error(
+          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
+          type
+        );
+
+        break;
+
+      case "svg":
+      case "math":
+        error(
+          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
+          type
+        );
+    }
+  }
+
+  var isCustomComponentTag;
+  var element;
+
+  {
+    isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
+    // allow <SVG> or <mATH>.
+
+    if (!isCustomComponentTag && type !== type.toLowerCase()) {
+      error(
+        "<%s /> is using incorrect casing. " +
+          "Use PascalCase for React components, " +
+          "or lowercase for HTML elements.",
+        type
+      );
+    }
+  }
+
+  if (typeof props.is === "string") {
+    element = ownerDocument.createElement(type, {
+      is: props.is
+    });
+  } else {
+    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+    // See discussion in https://github.com/facebook/react/pull/6896
+    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+    element = ownerDocument.createElement(type);
+  }
+
+  {
+    if (
+      !isCustomComponentTag && // $FlowFixMe[method-unbinding]
+      Object.prototype.toString.call(element) ===
+        "[object HTMLUnknownElement]" &&
+      !hasOwnProperty.call(warnedUnknownTags, type)
+    ) {
+      warnedUnknownTags[type] = true;
+
+      error(
+        "The tag <%s> is unrecognized in this browser. " +
+          "If you meant to render a React component, start its name with " +
+          "an uppercase letter.",
+        type
+      );
+    }
+  }
+
+  return element;
+}
+function createTextNode(text, rootContainerElement) {
+  return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
+    text
+  );
+}
+function setInitialProperties(domElement, tag, rawProps) {
+  var isCustomComponentTag = isCustomComponent(tag, rawProps);
+
+  {
+    validatePropertiesInDevelopment(tag, rawProps);
+  } // TODO: Make sure that we check isMounted before firing any of these events.
+
+  var props;
+
+  switch (tag) {
+    case "dialog":
+      listenToNonDelegatedEvent("cancel", domElement);
+      listenToNonDelegatedEvent("close", domElement);
+      props = rawProps;
+      break;
+
+    case "embed":
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+
+    // eslint-disable-next-line no-fallthrough
+
+    case "iframe":
+    case "object":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent("load", domElement);
+      props = rawProps;
+      break;
+
+    case "video":
+    case "audio":
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (var i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+
+      props = rawProps;
+      break;
+
+    case "source":
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      } // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+
+      listenToNonDelegatedEvent("error", domElement);
+      props = rawProps;
+      break;
+
+    case "img":
+    case "link":
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+
+    // eslint-disable-next-line no-fallthrough
+
+    case "image":
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent("error", domElement);
+      listenToNonDelegatedEvent("load", domElement);
+      props = rawProps;
+      break;
+
+    case "details":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent("toggle", domElement);
+      props = rawProps;
+      break;
+
+    case "input":
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+
+      initWrapperState$2(domElement, rawProps);
+      props = getHostProps$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+
+    case "option":
+      validateProps(domElement, rawProps);
+      props = rawProps;
+      break;
+
+    case "select":
+      initWrapperState$1(domElement, rawProps);
+      props = getHostProps$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+
+    case "textarea":
+      initWrapperState(domElement, rawProps);
+      props = getHostProps(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+
+    case "area":
+    case "base":
+    case "br":
+    case "col":
+    case "hr":
+    case "keygen":
+    case "meta":
+    case "param":
+    case "track":
+    case "wbr":
+    case "menuitem": {
+      if (
+        rawProps.children != null ||
+        rawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
+
+    default:
+      props = rawProps;
+  }
+
+  setInitialDOMProperties(tag, domElement, props, isCustomComponentTag);
+
+  switch (tag) {
+    case "input":
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track(domElement);
+      postMountWrapper$3(domElement, rawProps, false);
+      break;
+
+    case "textarea":
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track(domElement);
+      postMountWrapper(domElement);
+      break;
+
+    case "option":
+      postMountWrapper$2(domElement, rawProps);
+      break;
+
+    case "select":
+      postMountWrapper$1(domElement, rawProps);
+      break;
+
+    default:
+      if (typeof props.onClick === "function") {
+        // TODO: This cast may not be sound for SVG, MathML or custom elements.
+        trapClickOnNonInteractiveElement(domElement);
+      }
+
+      break;
+  }
+} // Calculate the diff between the two objects.
+
+function diffProperties(domElement, tag, lastRawProps, nextRawProps) {
+  {
+    validatePropertiesInDevelopment(tag, nextRawProps);
+  }
+
+  var updatePayload = null;
+  var lastProps;
+  var nextProps;
+
+  switch (tag) {
+    case "input":
+      if (
+        nextRawProps.children != null ||
+        nextRawProps.dangerouslySetInnerHTML != null
+      ) {
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+
+      lastProps = getHostProps$2(domElement, lastRawProps);
+      nextProps = getHostProps$2(domElement, nextRawProps);
+      updatePayload = [];
+      break;
+
+    case "select":
+      lastProps = getHostProps$1(domElement, lastRawProps);
+      nextProps = getHostProps$1(domElement, nextRawProps);
+      updatePayload = [];
+      break;
+
+    case "textarea":
+      lastProps = getHostProps(domElement, lastRawProps);
+      nextProps = getHostProps(domElement, nextRawProps);
+      updatePayload = [];
+      break;
+
+    case "img":
+    case "link":
+    case "area":
+    case "base":
+    case "br":
+    case "col":
+    case "embed":
+    case "hr":
+    case "keygen":
+    case "meta":
+    case "param":
+    case "source":
+    case "track":
+    case "wbr":
+    case "menuitem": {
+      if (
+        nextRawProps.children != null ||
+        nextRawProps.dangerouslySetInnerHTML != null
+      ) {
+        // TODO: Can we make this a DEV warning to avoid this deny list?
+        throw new Error(
+          tag +
+            " is a void element tag and must neither have `children` nor " +
+            "use `dangerouslySetInnerHTML`."
+        );
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
+
+    default:
+      lastProps = lastRawProps;
+      nextProps = nextRawProps;
+
+      if (
+        typeof lastProps.onClick !== "function" &&
+        typeof nextProps.onClick === "function"
+      ) {
+        // TODO: This cast may not be sound for SVG, MathML or custom elements.
+        trapClickOnNonInteractiveElement(domElement);
+      }
+
+      break;
+  }
+
+  var propKey;
+  var styleName;
+  var styleUpdates = null;
+
+  for (propKey in lastProps) {
+    if (
+      nextProps.hasOwnProperty(propKey) ||
+      !lastProps.hasOwnProperty(propKey) ||
+      lastProps[propKey] == null
+    ) {
+      continue;
+    }
+
+    switch (propKey) {
+      case "style": {
+        var lastStyle = lastProps[propKey];
+
+        for (styleName in lastStyle) {
+          if (lastStyle.hasOwnProperty(styleName)) {
+            if (!styleUpdates) {
+              styleUpdates = {};
+            }
+
+            styleUpdates[styleName] = "";
+          }
+        }
+
+        break;
+      }
+
+      case "dangerouslySetInnerHTML":
+      case "children": {
+        // Noop. This is handled by the clear text mechanism.
+        break;
+      }
+
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue": // Reserved
+
+      case "defaultChecked":
+      case "innerHTML": {
+        // Noop
+        break;
+      }
+
+      case "autoFocus": {
+        // Noop. It doesn't work on updates anyway.
+        break;
+      }
+
+      case "innerText": // Properties
+
+      case "textContent":
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          // This is a special case. If any listener updates we need to ensure
+          // that the "current" fiber pointer gets updated so we need a commit
+          // to update this element.
+          if (!updatePayload) {
+            updatePayload = [];
+          }
+        } else {
+          // For all other deleted properties we add it to the queue. We use
+          // the allowed property list in the commit phase instead.
+          (updatePayload = updatePayload || []).push(propKey, null);
+        }
+      }
+    }
+  }
+
+  for (propKey in nextProps) {
+    var nextProp = nextProps[propKey];
+    var lastProp = lastProps != null ? lastProps[propKey] : undefined;
+
+    if (
+      !nextProps.hasOwnProperty(propKey) ||
+      nextProp === lastProp ||
+      (nextProp == null && lastProp == null)
+    ) {
+      continue;
+    }
+
+    switch (propKey) {
+      case "style": {
+        if (nextProp != null && typeof nextProp !== "object") {
+          throw new Error(
+            "The `style` prop expects a mapping from style properties to values, " +
+              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+              "using JSX."
+          );
+        }
+
+        {
+          if (nextProp) {
+            // Freeze the next style object so that we can assume it won't be
+            // mutated. We have already warned for this in the past.
+            Object.freeze(nextProp);
+          }
+        }
+
+        if (lastProp) {
+          // Unset styles on `lastProp` but not on `nextProp`.
+          for (styleName in lastProp) {
+            if (
+              lastProp.hasOwnProperty(styleName) &&
+              (!nextProp || !nextProp.hasOwnProperty(styleName))
+            ) {
+              if (!styleUpdates) {
+                styleUpdates = {};
+              }
+
+              styleUpdates[styleName] = "";
+            }
+          } // Update styles that changed since `lastProp`.
+
+          for (styleName in nextProp) {
+            if (
+              nextProp.hasOwnProperty(styleName) &&
+              lastProp[styleName] !== nextProp[styleName]
+            ) {
+              if (!styleUpdates) {
+                styleUpdates = {};
+              }
+
+              styleUpdates[styleName] = nextProp[styleName];
+            }
+          }
+        } else {
+          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          if (!styleUpdates) {
+            if (!updatePayload) {
+              updatePayload = [];
+            }
+
+            updatePayload.push(propKey, styleUpdates);
+          }
+
+          styleUpdates = nextProp;
+        }
+
+        break;
+      }
+
+      case "dangerouslySetInnerHTML": {
+        if (nextProp != null) {
+          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
+            throw new Error(
+              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
+                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+                "for more information."
+            );
+          }
+
+          var nextHtml = nextProp.__html;
+
+          if (nextHtml != null) {
+            if (nextProps.children != null) {
+              throw new Error(
+                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
+              );
+            }
+
+            var lastHtml = lastProp ? lastProp.__html : undefined;
+
+            if (lastHtml !== nextHtml) {
+              (updatePayload = updatePayload || []).push(propKey, nextHtml);
+            }
+          }
+        }
+
+        break;
+      }
+
+      case "children": {
+        if (typeof nextProp === "string" || typeof nextProp === "number") {
+          (updatePayload = updatePayload || []).push(propKey, "" + nextProp);
+        }
+
+        break;
+      }
+
+      case "onScroll": {
+        if (nextProp != null) {
+          // We eagerly listen to this even though we haven't committed yet.
+          if (typeof nextProp !== "function") {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
+
+          listenToNonDelegatedEvent("scroll", domElement);
+        }
+
+        if (!updatePayload && lastProp !== nextProp) {
+          // This is a special case. If any listener updates we need to ensure
+          // that the "current" props pointer gets updated so we need a commit
+          // to update this element.
+          updatePayload = [];
+        }
+
+        break;
+      }
+
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue": // Reserved
+
+      case "defaultChecked":
+      case "innerHTML": {
+        // Noop
+        break;
+      }
+
+      case "autoFocus": {
+        // Noop on updates
+        break;
+      }
+
+      case "innerText": // Properties
+
+      case "textContent":
+        if (enableCustomElementPropertySupport) {
+          break;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+
+      default: {
+        if (registrationNameDependencies.hasOwnProperty(propKey)) {
+          if (nextProp != null) {
+            // We eagerly listen to this even though we haven't committed yet.
+            if (typeof nextProp !== "function") {
+              warnForInvalidEventListener(propKey, nextProp);
+            }
+          }
+
+          if (!updatePayload && lastProp !== nextProp) {
+            // This is a special case. If any listener updates we need to ensure
+            // that the "current" props pointer gets updated so we need a commit
+            // to update this element.
+            updatePayload = [];
+          }
+        } else {
+          // For any other property we always add it to the queue and then we
+          // filter it out using the allowed property list during the commit.
+          (updatePayload = updatePayload || []).push(propKey, nextProp);
+        }
+      }
+    }
+  }
+
+  if (styleUpdates) {
+    {
+      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
+    }
+
+    (updatePayload = updatePayload || []).push("style", styleUpdates);
+  }
+
+  return updatePayload;
+} // Apply the diff.
+
+function updateProperties(
+  domElement,
+  updatePayload,
+  tag,
+  lastRawProps,
+  nextRawProps
+) {
+  // Update checked *before* name.
+  // In the middle of an update, it is possible to have multiple checked.
+  // When a checked radio tries to change name, browser makes another radio's checked false.
+  if (
+    tag === "input" &&
+    nextRawProps.type === "radio" &&
+    nextRawProps.name != null
+  ) {
+    updateChecked(domElement, nextRawProps);
+  }
+
+  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
+  var isCustomComponentTag = isCustomComponent(tag, nextRawProps); // Apply the diff.
+
+  updateDOMProperties(
+    domElement,
+    updatePayload,
+    wasCustomComponentTag,
+    isCustomComponentTag
+  ); // TODO: Ensure that an update gets scheduled if any of the special props
+  // changed.
+
+  switch (tag) {
+    case "input":
+      // Update the wrapper around inputs *after* updating props. This has to
+      // happen after `updateDOMProperties`. Otherwise HTML5 input validations
+      // raise warnings and prevent the new value from being assigned.
+      updateWrapper$1(domElement, nextRawProps);
+      break;
+
+    case "textarea":
+      updateWrapper(domElement, nextRawProps);
+      break;
+
+    case "select":
+      // <select> value update needs to occur after <option> children
+      // reconciliation
+      postUpdateWrapper(domElement, nextRawProps);
+      break;
+  }
+}
+
+function getPossibleStandardName(propName) {
+  {
+    var lowerCasedName = propName.toLowerCase();
+
+    if (!possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+      return null;
+    }
+
+    return possibleStandardNames[lowerCasedName] || null;
+  }
+}
+
+function diffHydratedStyles(domElement, value) {
+  if (value != null && typeof value !== "object") {
+    throw new Error(
+      "The `style` prop expects a mapping from style properties to values, " +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        "using JSX."
+    );
+  }
+
+  if (canDiffStyleForHydrationWarning) {
+    var expectedStyle = createDangerousStringForStyles(value);
+    var serverValue = domElement.getAttribute("style");
+
+    if (expectedStyle !== serverValue) {
+      warnForPropDifference("style", serverValue, expectedStyle);
+    }
+  }
+}
+
+function diffHydratedCustomComponent(
+  domElement,
+  tag,
+  rawProps,
+  parentNamespaceDev,
+  extraAttributeNames
+) {
+  for (var propKey in rawProps) {
+    if (!rawProps.hasOwnProperty(propKey)) {
+      continue;
+    }
+
+    var nextProp = rawProps[propKey];
+
+    if (nextProp == null) {
+      continue;
+    }
+
+    if (registrationNameDependencies.hasOwnProperty(propKey)) {
+      if (typeof nextProp !== "function") {
+        warnForInvalidEventListener(propKey, nextProp);
+      }
+
+      continue;
+    }
+
+    if (rawProps.suppressHydrationWarning === true) {
+      // Don't bother comparing. We're ignoring all these warnings.
+      continue;
+    } // Validate that the properties correspond to their expected values.
+
+    switch (propKey) {
+      case "children": // Checked above already
+
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "defaultValue":
+      case "defaultChecked":
+      case "innerHTML":
+        // Noop
+        continue;
+
+      case "dangerouslySetInnerHTML":
+        var serverHTML = domElement.innerHTML;
+        var nextHtml = nextProp ? nextProp.__html : undefined;
+
+        if (nextHtml != null) {
+          var expectedHTML = normalizeHTML(domElement, nextHtml);
+
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
+        }
+
+        continue;
+
+      case "style":
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey);
+        diffHydratedStyles(domElement, nextProp);
+        continue;
+
+      case "offsetParent":
+      case "offsetTop":
+      case "offsetLeft":
+      case "offsetWidth":
+      case "offsetHeight":
+      case "isContentEditable":
+      case "outerText":
+      case "outerHTML":
+        if (enableCustomElementPropertySupport) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
+
+          {
+            error(
+              "Assignment to read-only property will result in a no-op: `%s`",
+              propKey
+            );
+          }
+
+          continue;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+
+      default: {
+        var ownNamespaceDev = parentNamespaceDev;
+
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          ownNamespaceDev = getIntrinsicNamespace(tag);
+        }
+
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey.toLowerCase());
+        } else {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey);
+        }
+
+        var serverValue = getValueForAttributeOnCustomComponent(
+          domElement,
+          propKey,
+          nextProp
+        );
+
+        if (nextProp !== serverValue) {
+          warnForPropDifference(propKey, serverValue, nextProp);
+        }
+      }
+    }
+  }
+}
+
+function diffHydratedGenericElement(
+  domElement,
+  tag,
+  rawProps,
+  parentNamespaceDev,
+  extraAttributeNames
+) {
+  for (var propKey in rawProps) {
+    if (!rawProps.hasOwnProperty(propKey)) {
+      continue;
+    }
+
+    var nextProp = rawProps[propKey];
+
+    if (nextProp == null) {
+      continue;
+    }
+
+    if (registrationNameDependencies.hasOwnProperty(propKey)) {
+      if (typeof nextProp !== "function") {
+        warnForInvalidEventListener(propKey, nextProp);
+      }
+
+      continue;
+    }
+
+    if (rawProps.suppressHydrationWarning === true) {
+      // Don't bother comparing. We're ignoring all these warnings.
+      continue;
+    } // Validate that the properties correspond to their expected values.
+
+    switch (propKey) {
+      case "children": // Checked above already
+
+      case "suppressContentEditableWarning":
+      case "suppressHydrationWarning":
+      case "value": // Controlled attributes are not validated
+
+      case "checked": // TODO: Only ignore them on controlled tags.
+
+      case "selected":
+      case "defaultValue":
+      case "defaultChecked":
+      case "innerHTML":
+        // Noop
+        continue;
+
+      case "dangerouslySetInnerHTML":
+        var serverHTML = domElement.innerHTML;
+        var nextHtml = nextProp ? nextProp.__html : undefined;
+
+        if (nextHtml != null) {
+          var expectedHTML = normalizeHTML(domElement, nextHtml);
+
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
+        }
+
+        continue;
+
+      case "style":
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey);
+        diffHydratedStyles(domElement, nextProp);
+        continue;
+      // eslint-disable-next-line no-fallthrough
+
+      default:
+        if (
+          // shouldIgnoreAttribute
+          // We have already filtered out null/undefined and reserved words.
+          propKey.length > 2 &&
+          (propKey[0] === "o" || propKey[0] === "O") &&
+          (propKey[1] === "n" || propKey[1] === "N")
+        ) {
+          continue;
+        }
+
+        var propertyInfo = getPropertyInfo(propKey);
+        var isMismatchDueToBadCasing = false;
+        var serverValue = void 0;
+
+        if (propertyInfo !== null) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propertyInfo.attributeName);
+          serverValue = getValueForProperty(
+            domElement,
+            propKey,
+            nextProp,
+            propertyInfo
+          );
+        } else {
+          var ownNamespaceDev = parentNamespaceDev;
+
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            ownNamespaceDev = getIntrinsicNamespace(tag);
+          }
+
+          if (ownNamespaceDev === HTML_NAMESPACE) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey.toLowerCase());
+          } else {
+            var standardName = getPossibleStandardName(propKey);
+
+            if (standardName !== null && standardName !== propKey) {
+              // If an SVG prop is supplied with bad casing, it will
+              // be successfully parsed from HTML, but will produce a mismatch
+              // (and would be incorrectly rendered on the client).
+              // However, we already warn about bad casing elsewhere.
+              // So we'll skip the misleading extra mismatch warning in this case.
+              isMismatchDueToBadCasing = true; // $FlowFixMe - Should be inferred as not undefined.
+
+              extraAttributeNames.delete(standardName);
+            } // $FlowFixMe - Should be inferred as not undefined.
+
+            extraAttributeNames.delete(propKey);
+          }
+
+          serverValue = getValueForAttribute(domElement, propKey, nextProp);
+        }
+
+        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
+          warnForPropDifference(propKey, serverValue, nextProp);
+        }
+    }
+  }
+}
+
+function diffHydratedProperties(
+  domElement,
+  tag,
+  rawProps,
+  isConcurrentMode,
+  shouldWarnDev,
+  parentNamespaceDev
+) {
+  {
+    validatePropertiesInDevelopment(tag, rawProps);
+  } // TODO: Make sure that we check isMounted before firing any of these events.
+
+  switch (tag) {
+    case "dialog":
+      listenToNonDelegatedEvent("cancel", domElement);
+      listenToNonDelegatedEvent("close", domElement);
+      break;
+
+    case "iframe":
+    case "object":
+    case "embed":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent("load", domElement);
+      break;
+
+    case "video":
+    case "audio":
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (var i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+
+      break;
+
+    case "source":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent("error", domElement);
+      break;
+
+    case "img":
+    case "image":
+    case "link":
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent("error", domElement);
+      listenToNonDelegatedEvent("load", domElement);
+      break;
+
+    case "details":
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent("toggle", domElement);
+      break;
+
+    case "input":
+      initWrapperState$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+
+    case "option":
+      validateProps(domElement, rawProps);
+      break;
+
+    case "select":
+      initWrapperState$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+
+    case "textarea":
+      initWrapperState(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      break;
+  }
+
+  if (rawProps.hasOwnProperty("onScroll")) {
+    listenToNonDelegatedEvent("scroll", domElement);
+  }
+
+  var updatePayload = null;
+  var children = rawProps.children; // For text content children we compare against textContent. This
+  // might match additional HTML that is hidden when we read it using
+  // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
+  // satisfies our requirement. Our requirement is not to produce perfect
+  // HTML and attributes. Ideally we should preserve structure but it's
+  // ok not to if the visible content is still enough to indicate what
+  // even listeners these nodes might be wired up to.
+  // TODO: Warn if there is more than a single textNode as a child.
+  // TODO: Should we use domElement.firstChild.nodeValue to compare?
+
+  if (typeof children === "string" || typeof children === "number") {
+    if (domElement.textContent !== "" + children) {
+      if (rawProps.suppressHydrationWarning !== true) {
+        checkForUnmatchedText(
+          domElement.textContent,
+          children,
+          isConcurrentMode,
+          shouldWarnDev
+        );
+      }
+
+      if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
+        updatePayload = ["children", children];
+      }
+    }
+  }
+
+  if (shouldWarnDev) {
+    var extraAttributeNames = new Set();
+    var attributes = domElement.attributes;
+
+    for (var _i = 0; _i < attributes.length; _i++) {
+      var name = attributes[_i].name.toLowerCase();
+
+      switch (name) {
+        // Controlled attributes are not validated
+        // TODO: Only ignore them on controlled tags.
+        case "value":
+          break;
+
+        case "checked":
+          break;
+
+        case "selected":
+          break;
+
+        default:
+          // Intentionally use the original name.
+          // See discussion in https://github.com/facebook/react/pull/10676.
+          extraAttributeNames.add(attributes[_i].name);
+      }
+    }
+
+    if (isCustomComponent(tag, rawProps)) {
+      diffHydratedCustomComponent(
+        domElement,
+        tag,
+        rawProps,
+        parentNamespaceDev,
+        extraAttributeNames
+      );
+    } else {
+      diffHydratedGenericElement(
+        domElement,
+        tag,
+        rawProps,
+        parentNamespaceDev,
+        extraAttributeNames
+      );
+    }
+
+    if (
+      // $FlowFixMe - Should be inferred as not undefined.
+      extraAttributeNames.size > 0 &&
+      rawProps.suppressHydrationWarning !== true
+    ) {
+      // $FlowFixMe - Should be inferred as not undefined.
+      warnForExtraAttributes(extraAttributeNames);
+    }
+  }
+
+  switch (tag) {
+    case "input":
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track(domElement);
+      postMountWrapper$3(domElement, rawProps, true);
+      break;
+
+    case "textarea":
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track(domElement);
+      postMountWrapper(domElement);
+      break;
+
+    case "select":
+    case "option":
+      // For input and textarea we current always set the value property at
+      // post mount to force it to diverge from attributes. However, for
+      // option and select we don't quite do the same thing and select
+      // is not resilient to the DOM state changing so we don't do that here.
+      // TODO: Consider not doing this for input and textarea.
+      break;
+
+    default:
+      if (typeof rawProps.onClick === "function") {
+        // TODO: This cast may not be sound for SVG, MathML or custom elements.
+        trapClickOnNonInteractiveElement(domElement);
+      }
+
+      break;
+  }
+
+  return updatePayload;
+}
+function diffHydratedText(textNode, text, isConcurrentMode) {
+  var isDifferent = textNode.nodeValue !== text;
+  return isDifferent;
+}
+function warnForDeletedHydratableElement(parentNode, child) {
+  {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+
+    error(
+      "Did not expect server HTML to contain a <%s> in <%s>.",
+      child.nodeName.toLowerCase(),
+      parentNode.nodeName.toLowerCase()
+    );
+  }
+}
+function warnForDeletedHydratableText(parentNode, child) {
+  {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+
+    error(
+      'Did not expect server HTML to contain the text node "%s" in <%s>.',
+      child.nodeValue,
+      parentNode.nodeName.toLowerCase()
+    );
+  }
+}
+function warnForInsertedHydratedElement(parentNode, tag, props) {
+  {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+
+    error(
+      "Expected server HTML to contain a matching <%s> in <%s>.",
+      tag,
+      parentNode.nodeName.toLowerCase()
+    );
+  }
+}
+function warnForInsertedHydratedText(parentNode, text) {
+  {
+    if (text === "") {
+      // We expect to insert empty text nodes since they're not represented in
+      // the HTML.
+      // TODO: Remove this special case if we can just avoid inserting empty
+      // text nodes.
+      return;
+    }
+
+    if (didWarnInvalidHydration) {
+      return;
+    }
+
+    didWarnInvalidHydration = true;
+
+    error(
+      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      text,
+      parentNode.nodeName.toLowerCase()
+    );
+  }
+}
+function restoreControlledState(domElement, tag, props) {
+  switch (tag) {
+    case "input":
+      restoreControlledState$3(domElement, props);
+      return;
+
+    case "textarea":
+      restoreControlledState$1(domElement, props);
+      return;
+
+    case "select":
+      restoreControlledState$2(domElement, props);
+      return;
+  }
+}
+
 var restoreTarget = null;
 var restoreQueue = null;
 
@@ -38572,6 +37609,1086 @@ var foundDevTools = injectIntoDevTools({
 
 var ReactDOMSharedInternals = Internals;
 
+// Below code forked from dom-accessibility-api
+var tagToRoleMappings = {
+  ARTICLE: "article",
+  ASIDE: "complementary",
+  BODY: "document",
+  BUTTON: "button",
+  DATALIST: "listbox",
+  DD: "definition",
+  DETAILS: "group",
+  DIALOG: "dialog",
+  DT: "term",
+  FIELDSET: "group",
+  FIGURE: "figure",
+  // WARNING: Only with an accessible name
+  FORM: "form",
+  FOOTER: "contentinfo",
+  H1: "heading",
+  H2: "heading",
+  H3: "heading",
+  H4: "heading",
+  H5: "heading",
+  H6: "heading",
+  HEADER: "banner",
+  HR: "separator",
+  LEGEND: "legend",
+  LI: "listitem",
+  MATH: "math",
+  MAIN: "main",
+  MENU: "list",
+  NAV: "navigation",
+  OL: "list",
+  OPTGROUP: "group",
+  // WARNING: Only in certain context
+  OPTION: "option",
+  OUTPUT: "status",
+  PROGRESS: "progressbar",
+  // WARNING: Only with an accessible name
+  SECTION: "region",
+  SUMMARY: "button",
+  TABLE: "table",
+  TBODY: "rowgroup",
+  TEXTAREA: "textbox",
+  TFOOT: "rowgroup",
+  // WARNING: Only in certain context
+  TD: "cell",
+  TH: "columnheader",
+  THEAD: "rowgroup",
+  TR: "row",
+  UL: "list"
+};
+
+function getImplicitRole(element) {
+  var mappedByTag = tagToRoleMappings[element.tagName];
+
+  if (mappedByTag !== undefined) {
+    return mappedByTag;
+  }
+
+  switch (element.tagName) {
+    case "A":
+    case "AREA":
+    case "LINK":
+      if (element.hasAttribute("href")) {
+        return "link";
+      }
+
+      break;
+
+    case "IMG":
+      if ((element.getAttribute("alt") || "").length > 0) {
+        return "img";
+      }
+
+      break;
+
+    case "INPUT": {
+      var type = element.type;
+
+      switch (type) {
+        case "button":
+        case "image":
+        case "reset":
+        case "submit":
+          return "button";
+
+        case "checkbox":
+        case "radio":
+          return type;
+
+        case "range":
+          return "slider";
+
+        case "email":
+        case "tel":
+        case "text":
+        case "url":
+          if (element.hasAttribute("list")) {
+            return "combobox";
+          }
+
+          return "textbox";
+
+        case "search":
+          if (element.hasAttribute("list")) {
+            return "combobox";
+          }
+
+          return "searchbox";
+
+        default:
+          return null;
+      }
+    }
+
+    case "SELECT":
+      if (element.hasAttribute("multiple") || element.size > 1) {
+        return "listbox";
+      }
+
+      return "combobox";
+  }
+
+  return null;
+}
+
+function getExplicitRoles(element) {
+  var role = element.getAttribute("role");
+
+  if (role) {
+    return role.trim().split(" ");
+  }
+
+  return null;
+} // https://w3c.github.io/html-aria/#document-conformance-requirements-for-use-of-aria-attributes-in-html
+
+function hasRole(element, role) {
+  var explicitRoles = getExplicitRoles(element);
+
+  if (explicitRoles !== null && explicitRoles.indexOf(role) >= 0) {
+    return true;
+  }
+
+  return role === getImplicitRole(element);
+}
+
+/**
+ * Given any node return the first leaf node without children.
+ *
+ * @param {DOMElement|DOMTextNode} node
+ * @return {DOMElement|DOMTextNode}
+ */
+
+function getLeafNode(node) {
+  while (node && node.firstChild) {
+    node = node.firstChild;
+  }
+
+  return node;
+}
+/**
+ * Get the next sibling within a container. This will walk up the
+ * DOM if a node's siblings have been exhausted.
+ *
+ * @param {DOMElement|DOMTextNode} node
+ * @return {?DOMElement|DOMTextNode}
+ */
+
+function getSiblingNode(node) {
+  while (node) {
+    if (node.nextSibling) {
+      return node.nextSibling;
+    }
+
+    node = node.parentNode;
+  }
+}
+/**
+ * Get object describing the nodes which contain characters at offset.
+ *
+ * @param {DOMElement|DOMTextNode} root
+ * @param {number} offset
+ * @return {?object}
+ */
+
+function getNodeForCharacterOffset(root, offset) {
+  var node = getLeafNode(root);
+  var nodeStart = 0;
+  var nodeEnd = 0;
+
+  while (node) {
+    if (node.nodeType === TEXT_NODE) {
+      nodeEnd = nodeStart + node.textContent.length;
+
+      if (nodeStart <= offset && nodeEnd >= offset) {
+        return {
+          node: node,
+          offset: offset - nodeStart
+        };
+      }
+
+      nodeStart = nodeEnd;
+    }
+
+    node = getLeafNode(getSiblingNode(node));
+  }
+}
+
+/**
+ * @param {DOMElement} outerNode
+ * @return {?object}
+ */
+
+function getOffsets(outerNode) {
+  var ownerDocument = outerNode.ownerDocument;
+  var win = (ownerDocument && ownerDocument.defaultView) || window;
+  var selection = win.getSelection && win.getSelection();
+
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
+
+  var anchorNode = selection.anchorNode,
+    anchorOffset = selection.anchorOffset,
+    focusNode = selection.focusNode,
+    focusOffset = selection.focusOffset; // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
+  // up/down buttons on an <input type="number">. Anonymous divs do not seem to
+  // expose properties, triggering a "Permission denied error" if any of its
+  // properties are accessed. The only seemingly possible way to avoid erroring
+  // is to access a property that typically works for non-anonymous divs and
+  // catch any error that may otherwise arise. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
+
+  try {
+    /* eslint-disable ft-flow/no-unused-expressions */
+    anchorNode.nodeType;
+    focusNode.nodeType;
+    /* eslint-enable ft-flow/no-unused-expressions */
+  } catch (e) {
+    return null;
+  }
+
+  return getModernOffsetsFromPoints(
+    outerNode,
+    anchorNode,
+    anchorOffset,
+    focusNode,
+    focusOffset
+  );
+}
+/**
+ * Returns {start, end} where `start` is the character/codepoint index of
+ * (anchorNode, anchorOffset) within the textContent of `outerNode`, and
+ * `end` is the index of (focusNode, focusOffset).
+ *
+ * Returns null if you pass in garbage input but we should probably just crash.
+ *
+ * Exported only for testing.
+ */
+
+function getModernOffsetsFromPoints(
+  outerNode,
+  anchorNode,
+  anchorOffset,
+  focusNode,
+  focusOffset
+) {
+  var length = 0;
+  var start = -1;
+  var end = -1;
+  var indexWithinAnchor = 0;
+  var indexWithinFocus = 0;
+  var node = outerNode;
+  var parentNode = null;
+
+  outer: while (true) {
+    var next = null;
+
+    while (true) {
+      if (
+        node === anchorNode &&
+        (anchorOffset === 0 || node.nodeType === TEXT_NODE)
+      ) {
+        start = length + anchorOffset;
+      }
+
+      if (
+        node === focusNode &&
+        (focusOffset === 0 || node.nodeType === TEXT_NODE)
+      ) {
+        end = length + focusOffset;
+      }
+
+      if (node.nodeType === TEXT_NODE) {
+        length += node.nodeValue.length;
+      }
+
+      if ((next = node.firstChild) === null) {
+        break;
+      } // Moving from `node` to its first child `next`.
+
+      parentNode = node;
+      node = next;
+    }
+
+    while (true) {
+      if (node === outerNode) {
+        // If `outerNode` has children, this is always the second time visiting
+        // it. If it has no children, this is still the first loop, and the only
+        // valid selection is anchorNode and focusNode both equal to this node
+        // and both offsets 0, in which case we will have handled above.
+        break outer;
+      }
+
+      if (parentNode === anchorNode && ++indexWithinAnchor === anchorOffset) {
+        start = length;
+      }
+
+      if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
+        end = length;
+      }
+
+      if ((next = node.nextSibling) !== null) {
+        break;
+      }
+
+      node = parentNode;
+      parentNode = node.parentNode;
+    } // Moving from `node` to its next sibling `next`.
+
+    node = next;
+  }
+
+  if (start === -1 || end === -1) {
+    // This should never happen. (Would happen if the anchor/focus nodes aren't
+    // actually inside the passed-in node.)
+    return null;
+  }
+
+  return {
+    start: start,
+    end: end
+  };
+}
+/**
+ * In modern non-IE browsers, we can support both forward and backward
+ * selections.
+ *
+ * Note: IE10+ supports the Selection object, but it does not support
+ * the `extend` method, which means that even in modern IE, it's not possible
+ * to programmatically create a backward selection. Thus, for all IE
+ * versions, we use the old IE API to create our selections.
+ *
+ * @param {DOMElement|DOMTextNode} node
+ * @param {object} offsets
+ */
+
+function setOffsets(node, offsets) {
+  var doc = node.ownerDocument || document;
+  var win = (doc && doc.defaultView) || window; // Edge fails with "Object expected" in some scenarios.
+  // (For instance: TinyMCE editor used in a list component that supports pasting to add more,
+  // fails when pasting 100+ items)
+
+  if (!win.getSelection) {
+    return;
+  }
+
+  var selection = win.getSelection();
+  var length = node.textContent.length;
+  var start = Math.min(offsets.start, length);
+  var end = offsets.end === undefined ? start : Math.min(offsets.end, length); // IE 11 uses modern selection, but doesn't support the extend method.
+  // Flip backward selections, so we can set with a single range.
+
+  if (!selection.extend && start > end) {
+    var temp = end;
+    end = start;
+    start = temp;
+  }
+
+  var startMarker = getNodeForCharacterOffset(node, start);
+  var endMarker = getNodeForCharacterOffset(node, end);
+
+  if (startMarker && endMarker) {
+    if (
+      selection.rangeCount === 1 &&
+      selection.anchorNode === startMarker.node &&
+      selection.anchorOffset === startMarker.offset &&
+      selection.focusNode === endMarker.node &&
+      selection.focusOffset === endMarker.offset
+    ) {
+      return;
+    }
+
+    var range = doc.createRange();
+    range.setStart(startMarker.node, startMarker.offset);
+    selection.removeAllRanges();
+
+    if (start > end) {
+      selection.addRange(range);
+      selection.extend(endMarker.node, endMarker.offset);
+    } else {
+      range.setEnd(endMarker.node, endMarker.offset);
+      selection.addRange(range);
+    }
+  }
+}
+
+function isTextNode(node) {
+  return node && node.nodeType === TEXT_NODE;
+}
+
+function containsNode(outerNode, innerNode) {
+  if (!outerNode || !innerNode) {
+    return false;
+  } else if (outerNode === innerNode) {
+    return true;
+  } else if (isTextNode(outerNode)) {
+    return false;
+  } else if (isTextNode(innerNode)) {
+    return containsNode(outerNode, innerNode.parentNode);
+  } else if ("contains" in outerNode) {
+    return outerNode.contains(innerNode);
+  } else if (outerNode.compareDocumentPosition) {
+    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
+  } else {
+    return false;
+  }
+}
+
+function isInDocument(node) {
+  return (
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
+  );
+}
+
+function isSameOriginFrame(iframe) {
+  try {
+    // Accessing the contentDocument of a HTMLIframeElement can cause the browser
+    // to throw, e.g. if it has a cross-origin src attribute.
+    // Safari will show an error in the console when the access results in "Blocked a frame with origin". e.g:
+    // iframe.contentDocument.defaultView;
+    // A safety way is to access one of the cross origin properties: Window or Location
+    // Which might result in "SecurityError" DOM Exception and it is compatible to Safari.
+    // https://html.spec.whatwg.org/multipage/browsers.html#integration-with-idl
+    return typeof iframe.contentWindow.location.href === "string";
+  } catch (err) {
+    return false;
+  }
+}
+
+function getActiveElementDeep() {
+  var win = window;
+  var element = getActiveElement();
+
+  while (element instanceof win.HTMLIFrameElement) {
+    if (isSameOriginFrame(element)) {
+      win = element.contentWindow;
+    } else {
+      return element;
+    }
+
+    element = getActiveElement(win.document);
+  }
+
+  return element;
+}
+/**
+ * @ReactInputSelection: React input selection module. Based on Selection.js,
+ * but modified to be suitable for react and has a couple of bug fixes (doesn't
+ * assume buttons have range selections allowed).
+ * Input selection module for React.
+ */
+
+/**
+ * @hasSelectionCapabilities: we get the element types that support selection
+ * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
+ * and `selectionEnd` rows.
+ */
+
+function hasSelectionCapabilities(elem) {
+  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  return (
+    nodeName &&
+    ((nodeName === "input" &&
+      (elem.type === "text" ||
+        elem.type === "search" ||
+        elem.type === "tel" ||
+        elem.type === "url" ||
+        elem.type === "password")) ||
+      nodeName === "textarea" ||
+      elem.contentEditable === "true")
+  );
+}
+function getSelectionInformation() {
+  var focusedElem = getActiveElementDeep();
+  return {
+    focusedElem: focusedElem,
+    selectionRange: hasSelectionCapabilities(focusedElem)
+      ? getSelection$1(focusedElem)
+      : null
+  };
+}
+/**
+ * @restoreSelection: If any selection information was potentially lost,
+ * restore it. This is useful when performing operations that could remove dom
+ * nodes and place them back in, resulting in focus being lost.
+ */
+
+function restoreSelection(priorSelectionInformation) {
+  var curFocusedElem = getActiveElementDeep();
+  var priorFocusedElem = priorSelectionInformation.focusedElem;
+  var priorSelectionRange = priorSelectionInformation.selectionRange;
+
+  if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
+    if (
+      priorSelectionRange !== null &&
+      hasSelectionCapabilities(priorFocusedElem)
+    ) {
+      setSelection(priorFocusedElem, priorSelectionRange);
+    } // Focusing a node can change the scroll position, which is undesirable
+
+    var ancestors = [];
+    var ancestor = priorFocusedElem;
+
+    while ((ancestor = ancestor.parentNode)) {
+      if (ancestor.nodeType === ELEMENT_NODE) {
+        ancestors.push({
+          element: ancestor,
+          left: ancestor.scrollLeft,
+          top: ancestor.scrollTop
+        });
+      }
+    }
+
+    if (typeof priorFocusedElem.focus === "function") {
+      priorFocusedElem.focus();
+    }
+
+    for (var i = 0; i < ancestors.length; i++) {
+      var info = ancestors[i];
+      info.element.scrollLeft = info.left;
+      info.element.scrollTop = info.top;
+    }
+  }
+}
+/**
+ * @getSelection: Gets the selection bounds of a focused textarea, input or
+ * contentEditable node.
+ * -@input: Look up selection bounds of this input
+ * -@return {start: selectionStart, end: selectionEnd}
+ */
+
+function getSelection$1(input) {
+  var selection;
+
+  if ("selectionStart" in input) {
+    // Modern browser with input or textarea.
+    selection = {
+      start: input.selectionStart,
+      end: input.selectionEnd
+    };
+  } else {
+    // Content editable or old IE textarea.
+    selection = getOffsets(input);
+  }
+
+  return (
+    selection || {
+      start: 0,
+      end: 0
+    }
+  );
+}
+/**
+ * @setSelection: Sets the selection bounds of a textarea or input and focuses
+ * the input.
+ * -@input     Set selection bounds of this input or textarea
+ * -@offsets   Object of same form that is returned from get*
+ */
+
+function setSelection(input, offsets) {
+  var start = offsets.start;
+  var end = offsets.end;
+
+  if (end === undefined) {
+    end = start;
+  }
+
+  if ("selectionStart" in input) {
+    input.selectionStart = start;
+    input.selectionEnd = Math.min(end, input.value.length);
+  } else {
+    setOffsets(input, offsets);
+  }
+}
+
+// This validation code was written based on the HTML5 parsing spec:
+// https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+//
+// Note: this does not catch all invalid nesting, nor does it try to (as it's
+// not clear what practical benefit doing so provides); instead, we warn only
+// for cases where the parser will give a parse tree differing from what React
+// intended. For example, <b><div></div></b> is invalid but we don't warn
+// because it still parses correctly; we do warn for other cases like nested
+// <p> tags where the beginning of the second element implicitly closes the
+// first, causing a confusing mess.
+// https://html.spec.whatwg.org/multipage/syntax.html#special
+var specialTags = [
+  "address",
+  "applet",
+  "area",
+  "article",
+  "aside",
+  "base",
+  "basefont",
+  "bgsound",
+  "blockquote",
+  "body",
+  "br",
+  "button",
+  "caption",
+  "center",
+  "col",
+  "colgroup",
+  "dd",
+  "details",
+  "dir",
+  "div",
+  "dl",
+  "dt",
+  "embed",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "frame",
+  "frameset",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "head",
+  "header",
+  "hgroup",
+  "hr",
+  "html",
+  "iframe",
+  "img",
+  "input",
+  "isindex",
+  "li",
+  "link",
+  "listing",
+  "main",
+  "marquee",
+  "menu",
+  "menuitem",
+  "meta",
+  "nav",
+  "noembed",
+  "noframes",
+  "noscript",
+  "object",
+  "ol",
+  "p",
+  "param",
+  "plaintext",
+  "pre",
+  "script",
+  "section",
+  "select",
+  "source",
+  "style",
+  "summary",
+  "table",
+  "tbody",
+  "td",
+  "template",
+  "textarea",
+  "tfoot",
+  "th",
+  "thead",
+  "title",
+  "tr",
+  "track",
+  "ul",
+  "wbr",
+  "xmp"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+
+var inScopeTags = [
+  "applet",
+  "caption",
+  "html",
+  "table",
+  "td",
+  "th",
+  "marquee",
+  "object",
+  "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
+  // TODO: Distinguish by namespace here -- for <title>, including it here
+  // errs on the side of fewer warnings
+  "foreignObject",
+  "desc",
+  "title"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
+
+var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
+
+var impliedEndTags = ["dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"];
+var emptyAncestorInfoDev = {
+  current: null,
+  formTag: null,
+  aTagInScope: null,
+  buttonTagInScope: null,
+  nobrTagInScope: null,
+  pTagInButtonScope: null,
+  listItemTagAutoclosing: null,
+  dlItemTagAutoclosing: null,
+  containerTagInScope: null
+};
+
+function updatedAncestorInfoDev(oldInfo, tag) {
+  {
+    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev);
+
+    var info = {
+      tag: tag
+    };
+
+    if (inScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.aTagInScope = null;
+      ancestorInfo.buttonTagInScope = null;
+      ancestorInfo.nobrTagInScope = null;
+    }
+
+    if (buttonScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.pTagInButtonScope = null;
+    } // See rules for 'li', 'dd', 'dt' start tags in
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+
+    if (
+      specialTags.indexOf(tag) !== -1 &&
+      tag !== "address" &&
+      tag !== "div" &&
+      tag !== "p"
+    ) {
+      ancestorInfo.listItemTagAutoclosing = null;
+      ancestorInfo.dlItemTagAutoclosing = null;
+    }
+
+    ancestorInfo.current = info;
+
+    if (tag === "form") {
+      ancestorInfo.formTag = info;
+    }
+
+    if (tag === "a") {
+      ancestorInfo.aTagInScope = info;
+    }
+
+    if (tag === "button") {
+      ancestorInfo.buttonTagInScope = info;
+    }
+
+    if (tag === "nobr") {
+      ancestorInfo.nobrTagInScope = info;
+    }
+
+    if (tag === "p") {
+      ancestorInfo.pTagInButtonScope = info;
+    }
+
+    if (tag === "li") {
+      ancestorInfo.listItemTagAutoclosing = info;
+    }
+
+    if (tag === "dd" || tag === "dt") {
+      ancestorInfo.dlItemTagAutoclosing = info;
+    }
+
+    if (tag === "#document" || tag === "html") {
+      ancestorInfo.containerTagInScope = null;
+    } else if (!ancestorInfo.containerTagInScope) {
+      ancestorInfo.containerTagInScope = info;
+    }
+
+    return ancestorInfo;
+  }
+}
+/**
+ * Returns whether
+ */
+
+function isTagValidWithParent(tag, parentTag) {
+  // First, let's check if we're in an unusual parsing mode...
+  switch (parentTag) {
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
+    case "select":
+      return tag === "option" || tag === "optgroup" || tag === "#text";
+
+    case "optgroup":
+      return tag === "option" || tag === "#text";
+    // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
+    // but
+
+    case "option":
+      return tag === "#text";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
+    // No special behavior since these rules fall back to "in body" mode for
+    // all except special table nodes which cause bad parsing behavior anyway.
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
+
+    case "tr":
+      return (
+        tag === "th" ||
+        tag === "td" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
+
+    case "tbody":
+    case "thead":
+    case "tfoot":
+      return (
+        tag === "tr" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
+
+    case "colgroup":
+      return tag === "col" || tag === "template";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
+
+    case "table":
+      return (
+        tag === "caption" ||
+        tag === "colgroup" ||
+        tag === "tbody" ||
+        tag === "tfoot" ||
+        tag === "thead" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
+
+    case "head":
+      return (
+        tag === "base" ||
+        tag === "basefont" ||
+        tag === "bgsound" ||
+        tag === "link" ||
+        tag === "meta" ||
+        tag === "title" ||
+        tag === "noscript" ||
+        tag === "noframes" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
+
+    case "html":
+      return tag === "head" || tag === "body" || tag === "frameset";
+
+    case "frameset":
+      return tag === "frame";
+
+    case "#document":
+      return tag === "html";
+  } // Probably in the "in body" parsing mode, so we outlaw only tag combos
+  // where the parsing rules cause implicit opens or closes to be added.
+  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+
+  switch (tag) {
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return (
+        parentTag !== "h1" &&
+        parentTag !== "h2" &&
+        parentTag !== "h3" &&
+        parentTag !== "h4" &&
+        parentTag !== "h5" &&
+        parentTag !== "h6"
+      );
+
+    case "rp":
+    case "rt":
+      return impliedEndTags.indexOf(parentTag) === -1;
+
+    case "body":
+    case "caption":
+    case "col":
+    case "colgroup":
+    case "frameset":
+    case "frame":
+    case "head":
+    case "html":
+    case "tbody":
+    case "td":
+    case "tfoot":
+    case "th":
+    case "thead":
+    case "tr":
+      // These tags are only valid with a few parents that have special child
+      // parsing rules -- if we're down here, then none of those matched and
+      // so we allow it only if we don't know what the parent is, as all other
+      // cases are invalid.
+      return parentTag == null;
+  }
+
+  return true;
+}
+/**
+ * Returns whether
+ */
+
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  switch (tag) {
+    case "address":
+    case "article":
+    case "aside":
+    case "blockquote":
+    case "center":
+    case "details":
+    case "dialog":
+    case "dir":
+    case "div":
+    case "dl":
+    case "fieldset":
+    case "figcaption":
+    case "figure":
+    case "footer":
+    case "header":
+    case "hgroup":
+    case "main":
+    case "menu":
+    case "nav":
+    case "ol":
+    case "p":
+    case "section":
+    case "summary":
+    case "ul":
+    case "pre":
+    case "listing":
+    case "table":
+    case "hr":
+    case "xmp":
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return ancestorInfo.pTagInButtonScope;
+
+    case "form":
+      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+
+    case "li":
+      return ancestorInfo.listItemTagAutoclosing;
+
+    case "dd":
+    case "dt":
+      return ancestorInfo.dlItemTagAutoclosing;
+
+    case "button":
+      return ancestorInfo.buttonTagInScope;
+
+    case "a":
+      // Spec says something about storing a list of markers, but it sounds
+      // equivalent to this check.
+      return ancestorInfo.aTagInScope;
+
+    case "nobr":
+      return ancestorInfo.nobrTagInScope;
+  }
+
+  return null;
+}
+
+var didWarn = {};
+
+function validateDOMNesting(childTag, childText, ancestorInfo) {
+  {
+    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
+    var parentInfo = ancestorInfo.current;
+    var parentTag = parentInfo && parentInfo.tag;
+
+    if (childText != null) {
+      if (childTag != null) {
+        error(
+          "validateDOMNesting: when childText is passed, childTag should be null"
+        );
+      }
+
+      childTag = "#text";
+    } else if (childTag == null) {
+      error("validateDOMNesting: when childText or childTag must be provided");
+
+      return;
+    }
+
+    var invalidParent = isTagValidWithParent(childTag, parentTag)
+      ? null
+      : parentInfo;
+    var invalidAncestor = invalidParent
+      ? null
+      : findInvalidAncestorForTag(childTag, ancestorInfo);
+    var invalidParentOrAncestor = invalidParent || invalidAncestor;
+
+    if (!invalidParentOrAncestor) {
+      return;
+    }
+
+    var ancestorTag = invalidParentOrAncestor.tag;
+    var warnKey = String(!!invalidParent) + "|" + childTag + "|" + ancestorTag; // eslint-disable-next-line react-internal/safe-string-coercion
+
+    if (didWarn[warnKey]) {
+      return;
+    }
+
+    didWarn[warnKey] = true;
+    var tagDisplayName = childTag;
+    var whitespaceInfo = "";
+
+    if (childTag === "#text") {
+      if (childText != null && /\S/.test(childText)) {
+        tagDisplayName = "Text nodes";
+      } else {
+        tagDisplayName = "Whitespace text nodes";
+        whitespaceInfo =
+          " Make sure you don't have any extra whitespace between tags on " +
+          "each line of your source code.";
+      }
+    } else {
+      tagDisplayName = "<" + childTag + ">";
+    }
+
+    if (invalidParent) {
+      var info = "";
+
+      if (ancestorTag === "table" && childTag === "tr") {
+        info +=
+          " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by " +
+          "the browser.";
+      }
+
+      error(
+        "validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s",
+        tagDisplayName,
+        ancestorTag,
+        whitespaceInfo,
+        info
+      );
+    } else {
+      error(
+        "validateDOMNesting(...): %s cannot appear as a descendant of " +
+          "<%s>.",
+        tagDisplayName,
+        ancestorTag
+      );
+    }
+  }
+}
+
 function validateLinkPropsForStyleResource(props) {
   {
     // This should only be called when we know we are opting into Resource semantics (i.e. precedence is not null)
@@ -38755,1012 +38872,6 @@ function getValueDescriptorExpectingEnumForWarning(thing) {
 }
 
 var Dispatcher = ReactDOMSharedInternals.Dispatcher;
-// In the future this may need to change, especially when modules / scripts are supported
-// It is valid to preload even when we aren't actively rendering. For cases where Float functions are
-// called when there is no rendering we track the last used document. It is not safe to insert
-// arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
-// that the resource is meant to apply too (for example stylesheets or scripts). This is only
-// appropriate for resources that don't really have a strict tie to the document itself for example
-// preloads
-
-var lastCurrentDocument = null;
-var previousDispatcher = null;
-function prepareToRenderResources(rootContainer) {
-  var rootNode = getHoistableRoot(rootContainer);
-  lastCurrentDocument = getDocumentFromRoot(rootNode);
-  previousDispatcher = Dispatcher.current;
-  Dispatcher.current = ReactDOMClientDispatcher;
-}
-function cleanupAfterRenderResources() {
-  Dispatcher.current = previousDispatcher;
-  previousDispatcher = null;
-}
-function prepareToCommitHoistables() {
-  tagCaches = null;
-} // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
-
-var ReactDOMClientDispatcher = {
-  prefetchDNS: prefetchDNS,
-  preconnect: preconnect,
-  preload: preload,
-  preinit: preinit
-}; // global collections of Resources
-
-var preloadPropsMap = new Map();
-var preconnectsSet = new Set(); // getRootNode is missing from IE and old jsdom versions
-
-function getHoistableRoot(container) {
-  // $FlowFixMe[method-unbinding]
-  return typeof container.getRootNode === "function"
-    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
-       * but it's either a `Document` or `ShadowRoot`. */
-      container.getRootNode()
-    : container.ownerDocument;
-}
-
-function getCurrentResourceRoot() {
-  var currentContainer = getCurrentRootHostContainer();
-  return currentContainer ? getHoistableRoot(currentContainer) : null;
-} // Preloads are somewhat special. Even if we don't have the Document
-// used by the root that is rendering a component trying to insert a preload
-// we can still seed the file cache by doing the preload on any document we have
-// access to. We prefer the currentDocument if it exists, we also prefer the
-// lastCurrentDocument if that exists. As a fallback we will use the window.document
-// if available.
-
-function getDocumentForPreloads() {
-  var root = getCurrentResourceRoot();
-
-  if (root) {
-    return root.ownerDocument || root;
-  } else {
-    try {
-      return lastCurrentDocument || window.document;
-    } catch (error) {
-      return null;
-    }
-  }
-}
-
-function getDocumentFromRoot(root) {
-  return root.ownerDocument || root;
-}
-
-function preconnectAs(rel, crossOrigin, href) {
-  var ownerDocument = getDocumentForPreloads();
-
-  if (typeof href === "string" && href && ownerDocument) {
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
-
-    if (typeof crossOrigin === "string") {
-      key += '[crossorigin="' + crossOrigin + '"]';
-    }
-
-    if (!preconnectsSet.has(key)) {
-      preconnectsSet.add(key);
-      var preconnectProps = {
-        rel: rel,
-        crossOrigin: crossOrigin,
-        href: href
-      };
-
-      if (null === ownerDocument.querySelector(key)) {
-        var preloadInstance = ownerDocument.createElement("link");
-        setInitialProperties(preloadInstance, "link", preconnectProps);
-        markNodeAsHoistable(preloadInstance);
-        ownerDocument.head.appendChild(preloadInstance);
-      }
-    }
-  }
-} // --------------------------------------
-//      ReactDOM.prefetchDNS
-// --------------------------------------
-
-function prefetchDNS(href, options) {
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null) {
-      if (
-        typeof options === "object" &&
-        hasOwnProperty.call(options, "crossOrigin")
-      ) {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      } else {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      }
-    }
-  }
-
-  preconnectAs("dns-prefetch", null, href);
-} // --------------------------------------
-//      ReactDOM.preconnect
-// --------------------------------------
-
-function preconnect(href, options) {
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null && typeof options !== "object") {
-      error(
-        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
-        getValueDescriptorExpectingEnumForWarning(options)
-      );
-    } else if (options != null && typeof options.crossOrigin !== "string") {
-      error(
-        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
-        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
-      );
-    }
-  }
-
-  var crossOrigin =
-    options == null || typeof options.crossOrigin !== "string"
-      ? null
-      : options.crossOrigin === "use-credentials"
-      ? "use-credentials"
-      : "";
-  preconnectAs("preconnect", crossOrigin, href);
-} // --------------------------------------
-//      ReactDOM.preload
-// --------------------------------------
-
-function preload(href, options) {
-  {
-    validatePreloadArguments(href, options);
-  }
-
-  var ownerDocument = getDocumentForPreloads();
-
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null &&
-    ownerDocument
-  ) {
-    var as = options.as;
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    var preloadKey =
-      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]';
-    var key = preloadKey;
-
-    switch (as) {
-      case "style":
-        key = getStyleKey(href);
-        break;
-
-      case "script":
-        key = getScriptKey(href);
-        break;
-    }
-
-    if (!preloadPropsMap.has(key)) {
-      var preloadProps = preloadPropsFromPreloadOptions(href, as, options);
-      preloadPropsMap.set(key, preloadProps);
-
-      if (null === ownerDocument.querySelector(preloadKey)) {
-        var preloadInstance = ownerDocument.createElement("link");
-        setInitialProperties(preloadInstance, "link", preloadProps);
-        markNodeAsHoistable(preloadInstance);
-        ownerDocument.head.appendChild(preloadInstance);
-      }
-    }
-  }
-}
-
-function preloadPropsFromPreloadOptions(href, as, options) {
-  return {
-    href: href,
-    rel: "preload",
-    as: as,
-    crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity,
-    type: options.type
-  };
-} // --------------------------------------
-//      ReactDOM.preinit
-// --------------------------------------
-
-function preinit(href, options) {
-  {
-    validatePreinitArguments(href, options);
-  }
-
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null
-  ) {
-    var resourceRoot = getCurrentResourceRoot();
-    var as = options.as;
-
-    if (!resourceRoot) {
-      if (as === "style" || as === "script") {
-        // We are going to emit a preload as a best effort fallback since this preinit
-        // was called outside of a render. Given the passive nature of this fallback
-        // we do not warn in dev when props disagree if there happens to already be a
-        // matching preload with this href
-        var preloadDocument = getDocumentForPreloads();
-
-        if (preloadDocument) {
-          var limitedEscapedHref =
-            escapeSelectorAttributeValueInsideDoubleQuotes(href);
-          var preloadKey =
-            'link[rel="preload"][as="' +
-            as +
-            '"][href="' +
-            limitedEscapedHref +
-            '"]';
-          var key = preloadKey;
-
-          switch (as) {
-            case "style":
-              key = getStyleKey(href);
-              break;
-
-            case "script":
-              key = getScriptKey(href);
-              break;
-          }
-
-          if (!preloadPropsMap.has(key)) {
-            var preloadProps = preloadPropsFromPreinitOptions(
-              href,
-              as,
-              options
-            );
-            preloadPropsMap.set(key, preloadProps);
-
-            if (null === preloadDocument.querySelector(preloadKey)) {
-              var preloadInstance = preloadDocument.createElement("link");
-              setInitialProperties(preloadInstance, "link", preloadProps);
-              markNodeAsHoistable(preloadInstance);
-              preloadDocument.head.appendChild(preloadInstance);
-            }
-          }
-        }
-      }
-
-      return;
-    }
-
-    switch (as) {
-      case "style": {
-        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-
-        var _key = getStyleKey(href);
-
-        var precedence = options.precedence || "default"; // Check if this resource already exists
-
-        var resource = styles.get(_key);
-
-        if (resource) {
-          // We can early return. The resource exists and there is nothing
-          // more to do
-          return;
-        } // Attempt to hydrate instance from DOM
-
-        var instance = resourceRoot.querySelector(
-          getStylesheetSelectorFromKey(_key)
-        );
-
-        if (!instance) {
-          // Construct a new instance and insert it
-          var stylesheetProps = stylesheetPropsFromPreinitOptions(
-            href,
-            precedence,
-            options
-          );
-
-          var _preloadProps = preloadPropsMap.get(_key);
-
-          if (_preloadProps) {
-            adoptPreloadPropsForStylesheet(stylesheetProps, _preloadProps);
-          }
-
-          var ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = ownerDocument.createElement("link");
-          markNodeAsHoistable(instance);
-          setInitialProperties(instance, "link", stylesheetProps);
-          insertStylesheet(instance, precedence, resourceRoot);
-        } // Construct a Resource and cache it
-
-        resource = {
-          type: "stylesheet",
-          instance: instance,
-          count: 1
-        };
-        styles.set(_key, resource);
-        return;
-      }
-
-      case "script": {
-        var src = href;
-        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
-
-        var _key2 = getScriptKey(src); // Check if this resource already exists
-
-        var _resource = scripts.get(_key2);
-
-        if (_resource) {
-          // We can early return. The resource exists and there is nothing
-          // more to do
-          return;
-        } // Attempt to hydrate instance from DOM
-
-        var _instance = resourceRoot.querySelector(
-          getScriptSelectorFromKey(_key2)
-        );
-
-        if (!_instance) {
-          // Construct a new instance and insert it
-          var scriptProps = scriptPropsFromPreinitOptions(src, options); // Adopt certain preload props
-
-          var _preloadProps2 = preloadPropsMap.get(_key2);
-
-          if (_preloadProps2) {
-            adoptPreloadPropsForScript(scriptProps, _preloadProps2);
-          }
-
-          var _ownerDocument = getDocumentFromRoot(resourceRoot);
-
-          _instance = _ownerDocument.createElement("script");
-          markNodeAsHoistable(_instance);
-          setInitialProperties(_instance, "link", scriptProps);
-
-          _ownerDocument.head.appendChild(_instance);
-        } // Construct a Resource and cache it
-
-        _resource = {
-          type: "script",
-          instance: _instance,
-          count: 1
-        };
-        scripts.set(_key2, _resource);
-        return;
-      }
-    }
-  }
-}
-
-function preloadPropsFromPreinitOptions(href, as, options) {
-  return {
-    href: href,
-    rel: "preload",
-    as: as,
-    crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity
-  };
-}
-
-function stylesheetPropsFromPreinitOptions(href, precedence, options) {
-  return {
-    rel: "stylesheet",
-    href: href,
-    "data-precedence": precedence,
-    crossOrigin: options.crossOrigin
-  };
-}
-
-function scriptPropsFromPreinitOptions(src, options) {
-  return {
-    src: src,
-    async: true,
-    crossOrigin: options.crossOrigin,
-    integrity: options.integrity
-  };
-} // --------------------------------------
-//      Resources from render
-// --------------------------------------
-// This function is called in begin work and we should always have a currentDocument set
-
-function getResource(type, currentProps, pendingProps) {
-  var resourceRoot = getCurrentResourceRoot();
-
-  if (!resourceRoot) {
-    throw new Error(
-      '"resourceRoot" was expected to exist. This is a bug in React.'
-    );
-  }
-
-  switch (type) {
-    case "meta":
-    case "title": {
-      return null;
-    }
-
-    case "style": {
-      if (
-        typeof pendingProps.precedence === "string" &&
-        typeof pendingProps.href === "string"
-      ) {
-        var key = getStyleKey(pendingProps.href);
-        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-        var resource = styles.get(key);
-
-        if (!resource) {
-          resource = {
-            type: "style",
-            instance: null,
-            count: 0
-          };
-          styles.set(key, resource);
-        }
-
-        return resource;
-      }
-
-      return {
-        type: "void",
-        instance: null,
-        count: 0
-      };
-    }
-
-    case "link": {
-      if (
-        pendingProps.rel === "stylesheet" &&
-        typeof pendingProps.href === "string" &&
-        typeof pendingProps.precedence === "string"
-      ) {
-        var qualifiedProps = pendingProps;
-
-        var _key3 = getStyleKey(qualifiedProps.href);
-
-        var _styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-
-        var _resource2 = _styles.get(_key3);
-
-        if (!_resource2) {
-          // We asserted this above but Flow can't figure out that the type satisfies
-          var ownerDocument = getDocumentFromRoot(resourceRoot);
-          _resource2 = {
-            type: "stylesheet",
-            instance: null,
-            count: 0
-          };
-
-          _styles.set(_key3, _resource2);
-
-          if (!preloadPropsMap.has(_key3)) {
-            preloadStylesheet(
-              ownerDocument,
-              _key3,
-              preloadPropsFromStylesheet(qualifiedProps)
-            );
-          }
-        }
-
-        return _resource2;
-      }
-
-      return null;
-    }
-
-    case "script": {
-      if (typeof pendingProps.src === "string" && pendingProps.async === true) {
-        var scriptProps = pendingProps;
-
-        var _key4 = getScriptKey(scriptProps.src);
-
-        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
-
-        var _resource3 = scripts.get(_key4);
-
-        if (!_resource3) {
-          _resource3 = {
-            type: "script",
-            instance: null,
-            count: 0
-          };
-          scripts.set(_key4, _resource3);
-        }
-
-        return _resource3;
-      }
-
-      return {
-        type: "void",
-        instance: null,
-        count: 0
-      };
-    }
-
-    default: {
-      throw new Error(
-        'getResource encountered a type it did not expect: "' +
-          type +
-          '". this is a bug in React.'
-      );
-    }
-  }
-}
-
-function styleTagPropsFromRawProps(rawProps) {
-  return assign({}, rawProps, {
-    "data-href": rawProps.href,
-    "data-precedence": rawProps.precedence,
-    href: null,
-    precedence: null
-  });
-}
-
-function getStyleKey(href) {
-  var limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return 'href~="' + limitedEscapedHref + '"';
-}
-
-function getStyleTagSelectorFromKey(key) {
-  return "style[data-" + key + "]";
-}
-
-function getStylesheetSelectorFromKey(key) {
-  return 'link[rel="stylesheet"][' + key + "]";
-}
-
-function getPreloadStylesheetSelectorFromKey(key) {
-  return 'link[rel="preload"][as="style"][' + key + "]";
-}
-
-function stylesheetPropsFromRawProps(rawProps) {
-  return assign({}, rawProps, {
-    "data-precedence": rawProps.precedence,
-    precedence: null
-  });
-}
-
-function preloadStylesheet(ownerDocument, key, preloadProps) {
-  preloadPropsMap.set(key, preloadProps);
-
-  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
-    // There is no matching stylesheet instance in the Document.
-    // We will insert a preload now to kick off loading because
-    // we expect this stylesheet to commit
-    if (
-      null ===
-      ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
-    ) {
-      var preloadInstance = ownerDocument.createElement("link");
-      setInitialProperties(preloadInstance, "link", preloadProps);
-      markNodeAsHoistable(preloadInstance);
-      ownerDocument.head.appendChild(preloadInstance);
-    }
-  }
-}
-
-function preloadPropsFromStylesheet(props) {
-  return {
-    rel: "preload",
-    as: "style",
-    href: props.href,
-    crossOrigin: props.crossOrigin,
-    integrity: props.integrity,
-    media: props.media,
-    hrefLang: props.hrefLang,
-    referrerPolicy: props.referrerPolicy
-  };
-}
-
-function getScriptKey(src) {
-  var limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
-  return '[src="' + limitedEscapedSrc + '"]';
-}
-
-function getScriptSelectorFromKey(key) {
-  return "script[async]" + key;
-} // --------------------------------------
-//      Hoistable Resource Reconciliation
-// --------------------------------------
-
-function acquireResource(hoistableRoot, resource, props) {
-  resource.count++;
-
-  if (resource.instance === null) {
-    switch (resource.type) {
-      case "style": {
-        var qualifiedProps = props;
-        var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
-
-        var instance = hoistableRoot.querySelector(
-          getStyleTagSelectorFromKey(key)
-        );
-
-        if (instance) {
-          resource.instance = instance;
-          markNodeAsHoistable(instance);
-          return instance;
-        }
-
-        var styleProps = styleTagPropsFromRawProps(props);
-        var ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = ownerDocument.createElement("style");
-        markNodeAsHoistable(instance);
-        setInitialProperties(instance, "style", styleProps);
-        insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
-        resource.instance = instance;
-        return instance;
-      }
-
-      case "stylesheet": {
-        // This typing is enforce by `getResource`. If we change the logic
-        // there for what qualifies as a stylesheet resource we need to ensure
-        // this cast still makes sense;
-        var _qualifiedProps = props;
-
-        var _key5 = getStyleKey(_qualifiedProps.href); // Attempt to hydrate instance from DOM
-
-        var _instance2 = hoistableRoot.querySelector(
-          getStylesheetSelectorFromKey(_key5)
-        );
-
-        if (_instance2) {
-          resource.instance = _instance2;
-          markNodeAsHoistable(_instance2);
-          return _instance2;
-        }
-
-        var stylesheetProps = stylesheetPropsFromRawProps(props);
-        var preloadProps = preloadPropsMap.get(_key5);
-
-        if (preloadProps) {
-          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
-        } // Construct and insert a new instance
-
-        var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
-
-        _instance2 = _ownerDocument2.createElement("link");
-        markNodeAsHoistable(_instance2);
-        var linkInstance = _instance2;
-        linkInstance._p = new Promise(function (resolve, reject) {
-          linkInstance.onload = resolve;
-          linkInstance.onerror = reject;
-        }).then(
-          function () {
-            return (linkInstance._p.s = "l");
-          },
-          function () {
-            return (linkInstance._p.s = "e");
-          }
-        );
-        setInitialProperties(_instance2, "link", stylesheetProps);
-        insertStylesheet(_instance2, _qualifiedProps.precedence, hoistableRoot);
-        resource.instance = _instance2;
-        return _instance2;
-      }
-
-      case "script": {
-        // This typing is enforce by `getResource`. If we change the logic
-        // there for what qualifies as a stylesheet resource we need to ensure
-        // this cast still makes sense;
-        var borrowedScriptProps = props;
-
-        var _key6 = getScriptKey(borrowedScriptProps.src); // Attempt to hydrate instance from DOM
-
-        var _instance3 = hoistableRoot.querySelector(
-          getScriptSelectorFromKey(_key6)
-        );
-
-        if (_instance3) {
-          resource.instance = _instance3;
-          markNodeAsHoistable(_instance3);
-          return _instance3;
-        }
-
-        var scriptProps = borrowedScriptProps;
-
-        var _preloadProps3 = preloadPropsMap.get(_key6);
-
-        if (_preloadProps3) {
-          scriptProps = assign({}, borrowedScriptProps);
-          adoptPreloadPropsForScript(scriptProps, _preloadProps3);
-        } // Construct and insert a new instance
-
-        var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
-
-        _instance3 = _ownerDocument3.createElement("script");
-        markNodeAsHoistable(_instance3);
-        setInitialProperties(_instance3, "link", scriptProps);
-
-        _ownerDocument3.head.appendChild(_instance3);
-
-        resource.instance = _instance3;
-        return _instance3;
-      }
-
-      case "void": {
-        return null;
-      }
-
-      default: {
-        throw new Error(
-          'acquireResource encountered a resource type it did not expect: "' +
-            resource.type +
-            '". this is a bug in React.'
-        );
-      }
-    }
-  }
-
-  return resource.instance;
-}
-function releaseResource(resource) {
-  resource.count--;
-}
-
-function insertStylesheet(instance, precedence, root) {
-  var nodes = root.querySelectorAll(
-    'link[rel="stylesheet"][data-precedence],style[data-precedence]'
-  );
-  var last = nodes.length ? nodes[nodes.length - 1] : null;
-  var prior = last;
-
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-    var nodePrecedence = node.dataset.precedence;
-
-    if (nodePrecedence === precedence) {
-      prior = node;
-    } else if (prior !== last) {
-      break;
-    }
-  }
-
-  if (prior) {
-    // We get the prior from the document so we know it is in the tree.
-    // We also know that links can't be the topmost Node so the parentNode
-    // must exist.
-    prior.parentNode.insertBefore(instance, prior.nextSibling);
-  } else {
-    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
-    parent.insertBefore(instance, parent.firstChild);
-  }
-}
-
-function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
-  if (stylesheetProps.crossOrigin == null)
-    stylesheetProps.crossOrigin = preloadProps.crossOrigin;
-  if (stylesheetProps.referrerPolicy == null)
-    stylesheetProps.referrerPolicy = preloadProps.referrerPolicy;
-  if (stylesheetProps.title == null) stylesheetProps.title = preloadProps.title;
-}
-
-function adoptPreloadPropsForScript(scriptProps, preloadProps) {
-  if (scriptProps.crossOrigin == null)
-    scriptProps.crossOrigin = preloadProps.crossOrigin;
-  if (scriptProps.referrerPolicy == null)
-    scriptProps.referrerPolicy = preloadProps.referrerPolicy;
-  if (scriptProps.integrity == null)
-    scriptProps.referrerPolicy = preloadProps.integrity;
-} // --------------------------------------
-//      Hoistable Element Reconciliation
-// --------------------------------------
-
-var tagCaches = null;
-function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
-  var ownerDocument = getDocumentFromRoot(hoistableRoot);
-  var instance = null;
-
-  getInstance: switch (type) {
-    case "title": {
-      instance = ownerDocument.getElementsByTagName("title")[0];
-
-      if (
-        !instance ||
-        isOwnedInstance(instance) ||
-        instance.namespaceURI === SVG_NAMESPACE ||
-        instance.hasAttribute("itemprop")
-      ) {
-        instance = ownerDocument.createElement(type);
-        ownerDocument.head.insertBefore(
-          instance,
-          ownerDocument.querySelector("head > title")
-        );
-      }
-
-      setInitialProperties(instance, type, props);
-      precacheFiberNode(internalInstanceHandle, instance);
-      markNodeAsHoistable(instance);
-      return instance;
-    }
-
-    case "link": {
-      var cache = getHydratableHoistableCache("link", "href", ownerDocument);
-      var key = type + (props.href || "");
-      var maybeNodes = cache.get(key);
-
-      if (maybeNodes) {
-        var nodes = maybeNodes;
-
-        for (var i = 0; i < nodes.length; i++) {
-          var node = nodes[i];
-
-          if (
-            node.getAttribute("href") !==
-              (props.href == null ? null : props.href) ||
-            node.getAttribute("rel") !==
-              (props.rel == null ? null : props.rel) ||
-            node.getAttribute("title") !==
-              (props.title == null ? null : props.title) ||
-            node.getAttribute("crossorigin") !==
-              (props.crossOrigin == null ? null : props.crossOrigin)
-          ) {
-            // mismatch, try the next node;
-            continue;
-          }
-
-          instance = node;
-          nodes.splice(i, 1);
-          break getInstance;
-        }
-      }
-
-      instance = ownerDocument.createElement(type);
-      setInitialProperties(instance, type, props);
-      ownerDocument.head.appendChild(instance);
-      break;
-    }
-
-    case "meta": {
-      var _cache = getHydratableHoistableCache(
-        "meta",
-        "content",
-        ownerDocument
-      );
-
-      var _key7 = type + (props.content || "");
-
-      var _maybeNodes = _cache.get(_key7);
-
-      if (_maybeNodes) {
-        var _nodes = _maybeNodes;
-
-        for (var _i = 0; _i < _nodes.length; _i++) {
-          var _node = _nodes[_i]; // We coerce content to string because it is the most likely one to
-          // use a `toString` capable value. For the rest we just do identity match
-          // passing non-strings here is not really valid anyway.
-
-          {
-            checkAttributeStringCoercion(props.content, "content");
-          }
-
-          if (
-            _node.getAttribute("content") !==
-              (props.content == null ? null : "" + props.content) ||
-            _node.getAttribute("name") !==
-              (props.name == null ? null : props.name) ||
-            _node.getAttribute("property") !==
-              (props.property == null ? null : props.property) ||
-            _node.getAttribute("http-equiv") !==
-              (props.httpEquiv == null ? null : props.httpEquiv) ||
-            _node.getAttribute("charset") !==
-              (props.charSet == null ? null : props.charSet)
-          ) {
-            // mismatch, try the next node;
-            continue;
-          }
-
-          instance = _node;
-
-          _nodes.splice(_i, 1);
-
-          break getInstance;
-        }
-      }
-
-      instance = ownerDocument.createElement(type);
-      setInitialProperties(instance, type, props);
-      ownerDocument.head.appendChild(instance);
-      break;
-    }
-
-    default:
-      throw new Error(
-        'getNodesForType encountered a type it did not expect: "' +
-          type +
-          '". This is a bug in React.'
-      );
-  } // This node is a match
-
-  precacheFiberNode(internalInstanceHandle, instance);
-  markNodeAsHoistable(instance);
-  return instance;
-}
-
-function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
-  var cache;
-  var caches;
-
-  if (tagCaches === null) {
-    cache = new Map();
-    caches = tagCaches = new Map();
-    caches.set(ownerDocument, cache);
-  } else {
-    caches = tagCaches;
-    var maybeCache = caches.get(ownerDocument);
-
-    if (!maybeCache) {
-      cache = new Map();
-      caches.set(ownerDocument, cache);
-    } else {
-      cache = maybeCache;
-    }
-  }
-
-  if (cache.has(type)) {
-    // We use type as a special key that signals that this cache has been seeded for this type
-    return cache;
-  } // Mark this cache as seeded for this type
-
-  cache.set(type, null);
-  var nodes = ownerDocument.getElementsByTagName(type);
-
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-
-    if (
-      !isOwnedInstance(node) &&
-      (type !== "link" || node.getAttribute("rel") !== "stylesheet") &&
-      node.namespaceURI !== SVG_NAMESPACE
-    ) {
-      var nodeKey = node.getAttribute(keyAttribute) || "";
-      var key = type + nodeKey;
-      var existing = cache.get(key);
-
-      if (existing) {
-        existing.push(node);
-      } else {
-        cache.set(key, [node]);
-      }
-    }
-  }
-
-  return cache;
-}
-
-function mountHoistable(hoistableRoot, type, instance) {
-  var ownerDocument = getDocumentFromRoot(hoistableRoot);
-  ownerDocument.head.insertBefore(
-    instance,
-    type === "title" ? ownerDocument.querySelector("head > title") : null
-  );
-}
-function unmountHoistable(instance) {
-  instance.parentNode.removeChild(instance);
-} // When passing user input into querySelector(All) the embedded string must not alter
-// the semantics of the query. This escape function is safe to use when we know the
-// provided value is going to be wrapped in double quotes as part of an attribute selector
-// Do not use it anywhere else
-// we escape double quotes and backslashes
-
-var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
-
-function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
-  return value.replace(
-    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    function (ch) {
-      return "\\" + ch.charCodeAt(0).toString(16);
-    }
-  );
-}
 
 var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
 var SUSPENSE_START_DATA = "$";
@@ -40970,14 +40081,1204 @@ function requestPostPaintCallback(callback) {
       return callback(time);
     });
   });
-}
-function preloadInstance(type, props) {
-  // Return true to indicate it's already loaded
-  return true;
-}
-function waitForCommitToBeReady() {
-  return null;
 } // -------------------
+function isHostSingletonType(type) {
+  return type === "html" || type === "head" || type === "body";
+}
+function resolveSingletonInstance(
+  type,
+  props,
+  rootContainerInstance,
+  hostContext,
+  validateDOMNestingDev
+) {
+  {
+    var hostContextDev = hostContext;
+
+    if (validateDOMNestingDev) {
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
+    }
+  }
+
+  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
+
+  switch (type) {
+    case "html": {
+      var documentElement = ownerDocument.documentElement;
+
+      if (!documentElement) {
+        throw new Error(
+          "React expected an <html> element (document.documentElement) to exist in the Document but one was" +
+            " not found. React never removes the documentElement for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return documentElement;
+    }
+
+    case "head": {
+      var head = ownerDocument.head;
+
+      if (!head) {
+        throw new Error(
+          "React expected a <head> element (document.head) to exist in the Document but one was" +
+            " not found. React never removes the head for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return head;
+    }
+
+    case "body": {
+      var body = ownerDocument.body;
+
+      if (!body) {
+        throw new Error(
+          "React expected a <body> element (document.body) to exist in the Document but one was" +
+            " not found. React never removes the body for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return body;
+    }
+
+    default: {
+      throw new Error(
+        "resolveSingletonInstance was called with an element type that is not supported. This is a bug in React."
+      );
+    }
+  }
+}
+function acquireSingletonInstance(
+  type,
+  props,
+  instance,
+  internalInstanceHandle
+) {
+  {
+    var currentInstanceHandle = getInstanceFromNode(instance);
+
+    if (currentInstanceHandle) {
+      var tagName = instance.tagName.toLowerCase();
+
+      error(
+        "You are mounting a new %s component when a previous one has not first unmounted. It is an" +
+          " error to render more than one %s component at a time and attributes and children of these" +
+          " components will likely fail in unpredictable ways. Please only render a single instance of" +
+          " <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
+        tagName,
+        tagName,
+        tagName
+      );
+    }
+
+    switch (type) {
+      case "html":
+      case "head":
+      case "body": {
+        break;
+      }
+
+      default: {
+        error(
+          "acquireSingletonInstance was called with an element type that is not supported. This is a bug in React."
+        );
+      }
+    }
+  }
+
+  var attributes = instance.attributes;
+
+  while (attributes.length) {
+    instance.removeAttributeNode(attributes[0]);
+  }
+
+  setInitialProperties(instance, type, props);
+  precacheFiberNode(internalInstanceHandle, instance);
+  updateFiberProps(instance, props);
+}
+function releaseSingletonInstance(instance) {
+  var attributes = instance.attributes;
+
+  while (attributes.length) {
+    instance.removeAttributeNode(attributes[0]);
+  }
+
+  detachDeletedInstance(instance);
+}
+function clearSingleton(instance) {
+  var element = instance;
+  var node = element.firstChild;
+
+  while (node) {
+    var nextNode = node.nextSibling;
+    var nodeName = node.nodeName;
+
+    if (
+      isMarkedHoistable(node) ||
+      nodeName === "HEAD" ||
+      nodeName === "BODY" ||
+      nodeName === "STYLE" ||
+      (nodeName === "LINK" && node.rel.toLowerCase() === "stylesheet")
+    );
+    else {
+      element.removeChild(node);
+    }
+
+    node = nextNode;
+  }
+
+  return;
+} // -------------------
+// In the future this may need to change, especially when modules / scripts are supported
+
+var NotLoaded =
+  /*       */
+  0;
+var Loaded =
+  /*          */
+  1;
+var Errored =
+  /*         */
+  2;
+var Settled =
+  /*         */
+  3;
+var Inserted =
+  /*        */
+  4;
+function prepareToCommitHoistables() {
+  tagCaches = null;
+} // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
+// called when there is no rendering we track the last used document. It is not safe to insert
+// arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
+// that the resource is meant to apply too (for example stylesheets or scripts). This is only
+// appropriate for resources that don't really have a strict tie to the document itself for example
+// preloads
+
+var lastCurrentDocument = null;
+var previousDispatcher = null;
+function prepareRendererToRender(rootContainer) {
+  {
+    var rootNode = getHoistableRoot(rootContainer);
+    lastCurrentDocument = getDocumentFromRoot(rootNode);
+    previousDispatcher = Dispatcher.current;
+    Dispatcher.current = ReactDOMClientDispatcher;
+  }
+}
+function resetRendererAfterRender() {
+  {
+    Dispatcher.current = previousDispatcher;
+    previousDispatcher = null;
+  }
+} // global collections of Resources
+
+var preloadPropsMap = new Map();
+var preconnectsSet = new Set(); // getRootNode is missing from IE and old jsdom versions
+
+function getHoistableRoot(container) {
+  // $FlowFixMe[method-unbinding]
+  return typeof container.getRootNode === "function"
+    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+       * but it's either a `Document` or `ShadowRoot`. */
+      container.getRootNode()
+    : container.ownerDocument;
+}
+
+function getCurrentResourceRoot() {
+  var currentContainer = getCurrentRootHostContainer();
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
+} // Preloads are somewhat special. Even if we don't have the Document
+// used by the root that is rendering a component trying to insert a preload
+// we can still seed the file cache by doing the preload on any document we have
+// access to. We prefer the currentDocument if it exists, we also prefer the
+// lastCurrentDocument if that exists. As a fallback we will use the window.document
+// if available.
+
+function getDocumentForPreloads() {
+  var root = getCurrentResourceRoot();
+
+  if (root) {
+    return root.ownerDocument || root;
+  } else {
+    try {
+      return lastCurrentDocument || window.document;
+    } catch (error) {
+      return null;
+    }
+  }
+}
+
+function getDocumentFromRoot(root) {
+  return root.ownerDocument || root;
+} // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
+// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
+// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
+
+var ReactDOMClientDispatcher = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preinit: preinit
+};
+
+function preconnectAs(rel, crossOrigin, href) {
+  var ownerDocument = getDocumentForPreloads();
+
+  if (typeof href === "string" && href && ownerDocument) {
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
+
+    if (typeof crossOrigin === "string") {
+      key += '[crossorigin="' + crossOrigin + '"]';
+    }
+
+    if (!preconnectsSet.has(key)) {
+      preconnectsSet.add(key);
+      var preconnectProps = {
+        rel: rel,
+        crossOrigin: crossOrigin,
+        href: href
+      };
+
+      if (null === ownerDocument.querySelector(key)) {
+        var instance = ownerDocument.createElement("link");
+        setInitialProperties(instance, "link", preconnectProps);
+        markNodeAsHoistable(instance);
+        ownerDocument.head.appendChild(instance);
+      }
+    }
+  }
+}
+
+function prefetchDNS(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null) {
+      if (
+        typeof options === "object" &&
+        hasOwnProperty.call(options, "crossOrigin")
+      ) {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      } else {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      }
+    }
+  }
+
+  preconnectAs("dns-prefetch", null, href);
+}
+
+function preconnect(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null && typeof options !== "object") {
+      error(
+        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
+        getValueDescriptorExpectingEnumForWarning(options)
+      );
+    } else if (options != null && typeof options.crossOrigin !== "string") {
+      error(
+        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
+      );
+    }
+  }
+
+  var crossOrigin =
+    options == null || typeof options.crossOrigin !== "string"
+      ? null
+      : options.crossOrigin === "use-credentials"
+      ? "use-credentials"
+      : "";
+  preconnectAs("preconnect", crossOrigin, href);
+}
+
+function preload(href, options) {
+  {
+    validatePreloadArguments(href, options);
+  }
+
+  var ownerDocument = getDocumentForPreloads();
+
+  if (
+    typeof href === "string" &&
+    href &&
+    typeof options === "object" &&
+    options !== null &&
+    ownerDocument
+  ) {
+    var as = options.as;
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    var preloadKey =
+      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]';
+    var key = preloadKey;
+
+    switch (as) {
+      case "style":
+        key = getStyleKey(href);
+        break;
+
+      case "script":
+        key = getScriptKey(href);
+        break;
+    }
+
+    if (!preloadPropsMap.has(key)) {
+      var preloadProps = preloadPropsFromPreloadOptions(href, as, options);
+      preloadPropsMap.set(key, preloadProps);
+
+      if (null === ownerDocument.querySelector(preloadKey)) {
+        var instance = ownerDocument.createElement("link");
+        setInitialProperties(instance, "link", preloadProps);
+        markNodeAsHoistable(instance);
+        ownerDocument.head.appendChild(instance);
+      }
+    }
+  }
+}
+
+function preloadPropsFromPreloadOptions(href, as, options) {
+  return {
+    href: href,
+    rel: "preload",
+    as: as,
+    crossOrigin: as === "font" ? "" : options.crossOrigin,
+    integrity: options.integrity,
+    type: options.type
+  };
+}
+
+function preinit(href, options) {
+  {
+    validatePreinitArguments(href, options);
+  }
+
+  if (
+    typeof href === "string" &&
+    href &&
+    typeof options === "object" &&
+    options !== null
+  ) {
+    var resourceRoot = getCurrentResourceRoot();
+    var as = options.as;
+
+    if (!resourceRoot) {
+      if (as === "style" || as === "script") {
+        // We are going to emit a preload as a best effort fallback since this preinit
+        // was called outside of a render. Given the passive nature of this fallback
+        // we do not warn in dev when props disagree if there happens to already be a
+        // matching preload with this href
+        var preloadDocument = getDocumentForPreloads();
+
+        if (preloadDocument) {
+          var limitedEscapedHref =
+            escapeSelectorAttributeValueInsideDoubleQuotes(href);
+          var preloadKey =
+            'link[rel="preload"][as="' +
+            as +
+            '"][href="' +
+            limitedEscapedHref +
+            '"]';
+          var key = preloadKey;
+
+          switch (as) {
+            case "style":
+              key = getStyleKey(href);
+              break;
+
+            case "script":
+              key = getScriptKey(href);
+              break;
+          }
+
+          if (!preloadPropsMap.has(key)) {
+            var preloadProps = preloadPropsFromPreinitOptions(
+              href,
+              as,
+              options
+            );
+            preloadPropsMap.set(key, preloadProps);
+
+            if (null === preloadDocument.querySelector(preloadKey)) {
+              var instance = preloadDocument.createElement("link");
+              setInitialProperties(instance, "link", preloadProps);
+              markNodeAsHoistable(instance);
+              preloadDocument.head.appendChild(instance);
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    switch (as) {
+      case "style": {
+        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+
+        var _key = getStyleKey(href);
+
+        var precedence = options.precedence || "default"; // Check if this resource already exists
+
+        var resource = styles.get(_key);
+
+        if (resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        }
+
+        var state = {
+          loading: NotLoaded,
+          preload: null
+        }; // Attempt to hydrate instance from DOM
+
+        var _instance = resourceRoot.querySelector(
+          getStylesheetSelectorFromKey(_key)
+        );
+
+        if (_instance) {
+          state.loading = Loaded;
+        } else {
+          // Construct a new instance and insert it
+          var stylesheetProps = stylesheetPropsFromPreinitOptions(
+            href,
+            precedence,
+            options
+          );
+
+          var _preloadProps = preloadPropsMap.get(_key);
+
+          if (_preloadProps) {
+            adoptPreloadPropsForStylesheet(stylesheetProps, _preloadProps);
+          }
+
+          var ownerDocument = getDocumentFromRoot(resourceRoot);
+
+          var link = (_instance = ownerDocument.createElement("link"));
+
+          markNodeAsHoistable(link);
+          setInitialProperties(link, "link", stylesheetProps);
+          link._p = new Promise(function (resolve, reject) {
+            link.onload = resolve;
+            link.onerror = reject;
+          });
+          link.addEventListener("load", function () {
+            state.loading |= Loaded;
+          });
+          link.addEventListener("error", function () {
+            state.loading |= Errored;
+          });
+          insertStylesheet(_instance, precedence, resourceRoot);
+        } // Construct a Resource and cache it
+
+        resource = {
+          type: "stylesheet",
+          instance: _instance,
+          count: 1,
+          state: state
+        };
+        styles.set(_key, resource);
+        return;
+      }
+
+      case "script": {
+        var src = href;
+        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
+
+        var _key2 = getScriptKey(src); // Check if this resource already exists
+
+        var _resource = scripts.get(_key2);
+
+        if (_resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        } // Attempt to hydrate instance from DOM
+
+        var _instance2 = resourceRoot.querySelector(
+          getScriptSelectorFromKey(_key2)
+        );
+
+        if (!_instance2) {
+          // Construct a new instance and insert it
+          var scriptProps = scriptPropsFromPreinitOptions(src, options); // Adopt certain preload props
+
+          var _preloadProps2 = preloadPropsMap.get(_key2);
+
+          if (_preloadProps2) {
+            adoptPreloadPropsForScript(scriptProps, _preloadProps2);
+          }
+
+          var _ownerDocument = getDocumentFromRoot(resourceRoot);
+
+          _instance2 = _ownerDocument.createElement("script");
+          markNodeAsHoistable(_instance2);
+          setInitialProperties(_instance2, "link", scriptProps);
+
+          _ownerDocument.head.appendChild(_instance2);
+        } // Construct a Resource and cache it
+
+        _resource = {
+          type: "script",
+          instance: _instance2,
+          count: 1,
+          state: null
+        };
+        scripts.set(_key2, _resource);
+        return;
+      }
+    }
+  }
+}
+
+function preloadPropsFromPreinitOptions(href, as, options) {
+  return {
+    href: href,
+    rel: "preload",
+    as: as,
+    crossOrigin: as === "font" ? "" : options.crossOrigin,
+    integrity: options.integrity
+  };
+}
+
+function stylesheetPropsFromPreinitOptions(href, precedence, options) {
+  return {
+    rel: "stylesheet",
+    href: href,
+    "data-precedence": precedence,
+    crossOrigin: options.crossOrigin
+  };
+}
+
+function scriptPropsFromPreinitOptions(src, options) {
+  return {
+    src: src,
+    async: true,
+    crossOrigin: options.crossOrigin,
+    integrity: options.integrity
+  };
+} // This function is called in begin work and we should always have a currentDocument set
+
+function getResource(type, currentProps, pendingProps) {
+  var resourceRoot = getCurrentResourceRoot();
+
+  if (!resourceRoot) {
+    throw new Error(
+      '"resourceRoot" was expected to exist. This is a bug in React.'
+    );
+  }
+
+  switch (type) {
+    case "meta":
+    case "title": {
+      return null;
+    }
+
+    case "style": {
+      if (
+        typeof pendingProps.precedence === "string" &&
+        typeof pendingProps.href === "string"
+      ) {
+        var key = getStyleKey(pendingProps.href);
+        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+        var resource = styles.get(key);
+
+        if (!resource) {
+          resource = {
+            type: "style",
+            instance: null,
+            count: 0,
+            state: null
+          };
+          styles.set(key, resource);
+        }
+
+        return resource;
+      }
+
+      return {
+        type: "void",
+        instance: null,
+        count: 0,
+        state: null
+      };
+    }
+
+    case "link": {
+      if (
+        pendingProps.rel === "stylesheet" &&
+        typeof pendingProps.href === "string" &&
+        typeof pendingProps.precedence === "string"
+      ) {
+        var qualifiedProps = pendingProps;
+
+        var _key3 = getStyleKey(qualifiedProps.href);
+
+        var _styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+
+        var _resource2 = _styles.get(_key3);
+
+        if (!_resource2) {
+          // We asserted this above but Flow can't figure out that the type satisfies
+          var ownerDocument = getDocumentFromRoot(resourceRoot);
+          _resource2 = {
+            type: "stylesheet",
+            instance: null,
+            count: 0,
+            state: {
+              loading: NotLoaded,
+              preload: null
+            }
+          };
+
+          _styles.set(_key3, _resource2);
+
+          if (!preloadPropsMap.has(_key3)) {
+            preloadStylesheet(
+              ownerDocument,
+              _key3,
+              preloadPropsFromStylesheet(qualifiedProps),
+              _resource2.state
+            );
+          }
+        }
+
+        return _resource2;
+      }
+
+      return null;
+    }
+
+    case "script": {
+      if (typeof pendingProps.src === "string" && pendingProps.async === true) {
+        var scriptProps = pendingProps;
+
+        var _key4 = getScriptKey(scriptProps.src);
+
+        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
+
+        var _resource3 = scripts.get(_key4);
+
+        if (!_resource3) {
+          _resource3 = {
+            type: "script",
+            instance: null,
+            count: 0,
+            state: null
+          };
+          scripts.set(_key4, _resource3);
+        }
+
+        return _resource3;
+      }
+
+      return {
+        type: "void",
+        instance: null,
+        count: 0,
+        state: null
+      };
+    }
+
+    default: {
+      throw new Error(
+        'getResource encountered a type it did not expect: "' +
+          type +
+          '". this is a bug in React.'
+      );
+    }
+  }
+}
+
+function styleTagPropsFromRawProps(rawProps) {
+  return assign({}, rawProps, {
+    "data-href": rawProps.href,
+    "data-precedence": rawProps.precedence,
+    href: null,
+    precedence: null
+  });
+}
+
+function getStyleKey(href) {
+  var limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+  return 'href~="' + limitedEscapedHref + '"';
+}
+
+function getStyleTagSelectorFromKey(key) {
+  return "style[data-" + key + "]";
+}
+
+function getStylesheetSelectorFromKey(key) {
+  return 'link[rel="stylesheet"][' + key + "]";
+}
+
+function getPreloadStylesheetSelectorFromKey(key) {
+  return 'link[rel="preload"][as="style"][' + key + "]";
+}
+
+function stylesheetPropsFromRawProps(rawProps) {
+  return assign({}, rawProps, {
+    "data-precedence": rawProps.precedence,
+    precedence: null
+  });
+}
+
+function preloadStylesheet(ownerDocument, key, preloadProps, state) {
+  preloadPropsMap.set(key, preloadProps);
+
+  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
+    // There is no matching stylesheet instance in the Document.
+    // We will insert a preload now to kick off loading because
+    // we expect this stylesheet to commit
+    var preloadEl = ownerDocument.querySelector(
+      getPreloadStylesheetSelectorFromKey(key)
+    );
+
+    if (preloadEl) {
+      // If we find a preload already it was SSR'd and we won't have an actual
+      // loading state to track. For now we will just assume it is loaded
+      state.loading = Loaded;
+    } else {
+      var instance = ownerDocument.createElement("link");
+      state.preload = instance;
+      instance.addEventListener("load", function () {
+        return (state.loading |= Loaded);
+      });
+      instance.addEventListener("error", function () {
+        return (state.loading |= Errored);
+      });
+      setInitialProperties(instance, "link", preloadProps);
+      markNodeAsHoistable(instance);
+      ownerDocument.head.appendChild(instance);
+    }
+  }
+}
+
+function preloadPropsFromStylesheet(props) {
+  return {
+    rel: "preload",
+    as: "style",
+    href: props.href,
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    media: props.media,
+    hrefLang: props.hrefLang,
+    referrerPolicy: props.referrerPolicy
+  };
+}
+
+function getScriptKey(src) {
+  var limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
+  return '[src="' + limitedEscapedSrc + '"]';
+}
+
+function getScriptSelectorFromKey(key) {
+  return "script[async]" + key;
+}
+
+function acquireResource(hoistableRoot, resource, props) {
+  resource.count++;
+
+  if (resource.instance === null) {
+    switch (resource.type) {
+      case "style": {
+        var qualifiedProps = props;
+        var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+        var instance = hoistableRoot.querySelector(
+          getStyleTagSelectorFromKey(key)
+        );
+
+        if (instance) {
+          resource.instance = instance;
+          markNodeAsHoistable(instance);
+          return instance;
+        }
+
+        var styleProps = styleTagPropsFromRawProps(props);
+        var ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = ownerDocument.createElement("style");
+        markNodeAsHoistable(instance);
+        setInitialProperties(instance, "style", styleProps);
+        insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
+        resource.instance = instance;
+        return instance;
+      }
+
+      case "stylesheet": {
+        // This typing is enforce by `getResource`. If we change the logic
+        // there for what qualifies as a stylesheet resource we need to ensure
+        // this cast still makes sense;
+        var _qualifiedProps = props;
+
+        var _key5 = getStyleKey(_qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+        var _instance3 = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(_key5)
+        );
+
+        if (_instance3) {
+          resource.instance = _instance3;
+          markNodeAsHoistable(_instance3);
+          return _instance3;
+        }
+
+        var stylesheetProps = stylesheetPropsFromRawProps(props);
+        var preloadProps = preloadPropsMap.get(_key5);
+
+        if (preloadProps) {
+          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+        } // Construct and insert a new instance
+
+        var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
+
+        _instance3 = _ownerDocument2.createElement("link");
+        markNodeAsHoistable(_instance3);
+        var linkInstance = _instance3;
+        linkInstance._p = new Promise(function (resolve, reject) {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        });
+        setInitialProperties(_instance3, "link", stylesheetProps);
+        insertStylesheet(_instance3, _qualifiedProps.precedence, hoistableRoot);
+        resource.instance = _instance3;
+        return _instance3;
+      }
+
+      case "script": {
+        // This typing is enforce by `getResource`. If we change the logic
+        // there for what qualifies as a stylesheet resource we need to ensure
+        // this cast still makes sense;
+        var borrowedScriptProps = props;
+
+        var _key6 = getScriptKey(borrowedScriptProps.src); // Attempt to hydrate instance from DOM
+
+        var _instance4 = hoistableRoot.querySelector(
+          getScriptSelectorFromKey(_key6)
+        );
+
+        if (_instance4) {
+          resource.instance = _instance4;
+          markNodeAsHoistable(_instance4);
+          return _instance4;
+        }
+
+        var scriptProps = borrowedScriptProps;
+
+        var _preloadProps3 = preloadPropsMap.get(_key6);
+
+        if (_preloadProps3) {
+          scriptProps = assign({}, borrowedScriptProps);
+          adoptPreloadPropsForScript(scriptProps, _preloadProps3);
+        } // Construct and insert a new instance
+
+        var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
+
+        _instance4 = _ownerDocument3.createElement("script");
+        markNodeAsHoistable(_instance4);
+        setInitialProperties(_instance4, "link", scriptProps);
+
+        _ownerDocument3.head.appendChild(_instance4);
+
+        resource.instance = _instance4;
+        return _instance4;
+      }
+
+      case "void": {
+        return null;
+      }
+
+      default: {
+        throw new Error(
+          'acquireResource encountered a resource type it did not expect: "' +
+            resource.type +
+            '". this is a bug in React.'
+        );
+      }
+    }
+  }
+
+  return resource.instance;
+}
+function releaseResource(resource) {
+  resource.count--;
+}
+
+function insertStylesheet(instance, precedence, root) {
+  var nodes = root.querySelectorAll(
+    'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+  );
+  var last = nodes.length ? nodes[nodes.length - 1] : null;
+  var prior = last;
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    var nodePrecedence = node.dataset.precedence;
+
+    if (nodePrecedence === precedence) {
+      prior = node;
+    } else if (prior !== last) {
+      break;
+    }
+  }
+
+  if (prior) {
+    // We get the prior from the document so we know it is in the tree.
+    // We also know that links can't be the topmost Node so the parentNode
+    // must exist.
+    prior.parentNode.insertBefore(instance, prior.nextSibling);
+  } else {
+    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
+    parent.insertBefore(instance, parent.firstChild);
+  }
+}
+
+function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+  if (stylesheetProps.crossOrigin == null)
+    stylesheetProps.crossOrigin = preloadProps.crossOrigin;
+  if (stylesheetProps.referrerPolicy == null)
+    stylesheetProps.referrerPolicy = preloadProps.referrerPolicy;
+  if (stylesheetProps.title == null) stylesheetProps.title = preloadProps.title;
+}
+
+function adoptPreloadPropsForScript(scriptProps, preloadProps) {
+  if (scriptProps.crossOrigin == null)
+    scriptProps.crossOrigin = preloadProps.crossOrigin;
+  if (scriptProps.referrerPolicy == null)
+    scriptProps.referrerPolicy = preloadProps.referrerPolicy;
+  if (scriptProps.integrity == null)
+    scriptProps.referrerPolicy = preloadProps.integrity;
+}
+
+var tagCaches = null;
+function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
+  var ownerDocument = getDocumentFromRoot(hoistableRoot);
+  var instance = null;
+
+  getInstance: switch (type) {
+    case "title": {
+      instance = ownerDocument.getElementsByTagName("title")[0];
+
+      if (
+        !instance ||
+        isOwnedInstance(instance) ||
+        instance.namespaceURI === SVG_NAMESPACE ||
+        instance.hasAttribute("itemprop")
+      ) {
+        instance = ownerDocument.createElement(type);
+        ownerDocument.head.insertBefore(
+          instance,
+          ownerDocument.querySelector("head > title")
+        );
+      }
+
+      setInitialProperties(instance, type, props);
+      precacheFiberNode(internalInstanceHandle, instance);
+      markNodeAsHoistable(instance);
+      return instance;
+    }
+
+    case "link": {
+      var cache = getHydratableHoistableCache("link", "href", ownerDocument);
+      var key = type + (props.href || "");
+      var maybeNodes = cache.get(key);
+
+      if (maybeNodes) {
+        var nodes = maybeNodes;
+
+        for (var i = 0; i < nodes.length; i++) {
+          var node = nodes[i];
+
+          if (
+            node.getAttribute("href") !==
+              (props.href == null ? null : props.href) ||
+            node.getAttribute("rel") !==
+              (props.rel == null ? null : props.rel) ||
+            node.getAttribute("title") !==
+              (props.title == null ? null : props.title) ||
+            node.getAttribute("crossorigin") !==
+              (props.crossOrigin == null ? null : props.crossOrigin)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = node;
+          nodes.splice(i, 1);
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    case "meta": {
+      var _cache = getHydratableHoistableCache(
+        "meta",
+        "content",
+        ownerDocument
+      );
+
+      var _key7 = type + (props.content || "");
+
+      var _maybeNodes = _cache.get(_key7);
+
+      if (_maybeNodes) {
+        var _nodes = _maybeNodes;
+
+        for (var _i = 0; _i < _nodes.length; _i++) {
+          var _node = _nodes[_i]; // We coerce content to string because it is the most likely one to
+          // use a `toString` capable value. For the rest we just do identity match
+          // passing non-strings here is not really valid anyway.
+
+          {
+            checkAttributeStringCoercion(props.content, "content");
+          }
+
+          if (
+            _node.getAttribute("content") !==
+              (props.content == null ? null : "" + props.content) ||
+            _node.getAttribute("name") !==
+              (props.name == null ? null : props.name) ||
+            _node.getAttribute("property") !==
+              (props.property == null ? null : props.property) ||
+            _node.getAttribute("http-equiv") !==
+              (props.httpEquiv == null ? null : props.httpEquiv) ||
+            _node.getAttribute("charset") !==
+              (props.charSet == null ? null : props.charSet)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = _node;
+
+          _nodes.splice(_i, 1);
+
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    default:
+      throw new Error(
+        'getNodesForType encountered a type it did not expect: "' +
+          type +
+          '". This is a bug in React.'
+      );
+  } // This node is a match
+
+  precacheFiberNode(internalInstanceHandle, instance);
+  markNodeAsHoistable(instance);
+  return instance;
+}
+
+function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
+  var cache;
+  var caches;
+
+  if (tagCaches === null) {
+    cache = new Map();
+    caches = tagCaches = new Map();
+    caches.set(ownerDocument, cache);
+  } else {
+    caches = tagCaches;
+    var maybeCache = caches.get(ownerDocument);
+
+    if (!maybeCache) {
+      cache = new Map();
+      caches.set(ownerDocument, cache);
+    } else {
+      cache = maybeCache;
+    }
+  }
+
+  if (cache.has(type)) {
+    // We use type as a special key that signals that this cache has been seeded for this type
+    return cache;
+  } // Mark this cache as seeded for this type
+
+  cache.set(type, null);
+  var nodes = ownerDocument.getElementsByTagName(type);
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+
+    if (
+      !isOwnedInstance(node) &&
+      (type !== "link" || node.getAttribute("rel") !== "stylesheet") &&
+      node.namespaceURI !== SVG_NAMESPACE
+    ) {
+      var nodeKey = node.getAttribute(keyAttribute) || "";
+      var key = type + nodeKey;
+      var existing = cache.get(key);
+
+      if (existing) {
+        existing.push(node);
+      } else {
+        cache.set(key, [node]);
+      }
+    }
+  }
+
+  return cache;
+}
+
+function mountHoistable(hoistableRoot, type, instance) {
+  var ownerDocument = getDocumentFromRoot(hoistableRoot);
+  ownerDocument.head.insertBefore(
+    instance,
+    type === "title" ? ownerDocument.querySelector("head > title") : null
+  );
+}
+function unmountHoistable(instance) {
+  instance.parentNode.removeChild(instance);
+} // When passing user input into querySelector(All) the embedded string must not alter
+// the semantics of the query. This escape function is safe to use when we know the
+// provided value is going to be wrapped in double quotes as part of an attribute selector
+// Do not use it anywhere else
+// we escape double quotes and backslashes
+
+var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
+
+function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
+  return value.replace(
+    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
+    function (ch) {
+      return "\\" + ch.charCodeAt(0).toString(16);
+    }
+  );
+}
+
 function isHostHoistableType(type, props, hostContext) {
   var outsideHostContainerContext;
   var namespace;
@@ -41163,166 +41464,268 @@ function isHostHoistableType(type, props, hostContext) {
 
   return false;
 }
-function prepareRendererToRender(rootContainer) {
-  {
-    prepareToRenderResources(rootContainer);
-  }
+function maySuspendCommit(type, props) {
+  return false;
 }
-function resetRendererAfterRender() {
-  {
-    cleanupAfterRenderResources();
-  }
+function mayResourceSuspendCommit(resource) {
+  return (
+    resource.type === "stylesheet" &&
+    (resource.state.loading & Inserted) === NotLoaded
+  );
 }
-function isHostSingletonType(type) {
-  return type === "html" || type === "head" || type === "body";
+function preloadInstance(type, props) {
+  // Return true to indicate it's already loaded
+  return true;
 }
-function resolveSingletonInstance(
-  type,
-  props,
-  rootContainerInstance,
-  hostContext,
-  validateDOMNestingDev
-) {
-  {
-    var hostContextDev = hostContext;
+var suspendedState = null; // We use a noop function when we begin suspending because if possible we want the
+// waitfor step to finish synchronously. If it doesn't we'll return a function to
+// provide the actual unsuspend function and that will get completed when the count
+// hits zero or it will get cancelled if the root starts new work.
 
-    if (validateDOMNestingDev) {
-      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
-    }
-  }
+function noop() {}
 
-  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
-
-  switch (type) {
-    case "html": {
-      var documentElement = ownerDocument.documentElement;
-
-      if (!documentElement) {
-        throw new Error(
-          "React expected an <html> element (document.documentElement) to exist in the Document but one was" +
-            " not found. React never removes the documentElement for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return documentElement;
-    }
-
-    case "head": {
-      var head = ownerDocument.head;
-
-      if (!head) {
-        throw new Error(
-          "React expected a <head> element (document.head) to exist in the Document but one was" +
-            " not found. React never removes the head for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return head;
-    }
-
-    case "body": {
-      var body = ownerDocument.body;
-
-      if (!body) {
-        throw new Error(
-          "React expected a <body> element (document.body) to exist in the Document but one was" +
-            " not found. React never removes the body for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return body;
-    }
-
-    default: {
-      throw new Error(
-        "resolveSingletonInstance was called with an element type that is not supported. This is a bug in React."
-      );
-    }
-  }
+function startSuspendingCommit() {
+  suspendedState = {
+    stylesheets: null,
+    count: 0,
+    unsuspend: noop
+  };
 }
-function acquireSingletonInstance(
-  type,
-  props,
-  instance,
-  internalInstanceHandle
-) {
-  {
-    var currentInstanceHandle = getInstanceFromNode(instance);
-
-    if (currentInstanceHandle) {
-      var tagName = instance.tagName.toLowerCase();
-
-      error(
-        "You are mounting a new %s component when a previous one has not first unmounted. It is an" +
-          " error to render more than one %s component at a time and attributes and children of these" +
-          " components will likely fail in unpredictable ways. Please only render a single instance of" +
-          " <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
-        tagName,
-        tagName,
-        tagName
-      );
-    }
-
-    switch (type) {
-      case "html":
-      case "head":
-      case "body": {
-        break;
-      }
-
-      default: {
-        error(
-          "acquireSingletonInstance was called with an element type that is not supported. This is a bug in React."
-        );
-      }
-    }
-  }
-
-  var attributes = instance.attributes;
-
-  while (attributes.length) {
-    instance.removeAttributeNode(attributes[0]);
-  }
-
-  setInitialProperties(instance, type, props);
-  precacheFiberNode(internalInstanceHandle, instance);
-  updateFiberProps(instance, props);
-}
-function releaseSingletonInstance(instance) {
-  var attributes = instance.attributes;
-
-  while (attributes.length) {
-    instance.removeAttributeNode(attributes[0]);
-  }
-
-  detachDeletedInstance(instance);
-}
-function clearSingleton(instance) {
-  var element = instance;
-  var node = element.firstChild;
-
-  while (node) {
-    var nextNode = node.nextSibling;
-    var nodeName = node.nodeName;
-
-    if (
-      isMarkedHoistable(node) ||
-      nodeName === "HEAD" ||
-      nodeName === "BODY" ||
-      nodeName === "STYLE" ||
-      (nodeName === "LINK" && node.rel.toLowerCase() === "stylesheet")
+function suspendResource(hoistableRoot, resource, props) {
+  if (suspendedState === null) {
+    throw new Error(
+      "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug."
     );
-    else {
-      element.removeChild(node);
-    }
-
-    node = nextNode;
   }
 
-  return;
+  var state = suspendedState;
+
+  if (resource.type === "stylesheet") {
+    if (typeof props.media === "string") {
+      // If we don't currently match media we avoid suspending on this resource
+      // and let it insert on the mutation path
+      if (matchMedia(props.media).matches === false) {
+        return;
+      }
+    }
+
+    if (resource.instance === null) {
+      var qualifiedProps = props;
+      var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+      var instance = hoistableRoot.querySelector(
+        getStylesheetSelectorFromKey(key)
+      );
+
+      if (instance) {
+        // If this instance has a loading state it came from the Fizz runtime.
+        // If there is not loading state it is assumed to have been server rendered
+        // as part of the preamble and therefore synchronously loaded. It could have
+        // errored however which we still do not yet have a means to detect. For now
+        // we assume it is loaded.
+        var maybeLoadingState = instance._p;
+
+        if (
+          maybeLoadingState !== null &&
+          typeof maybeLoadingState === "object" && // $FlowFixMe[method-unbinding]
+          typeof maybeLoadingState.then === "function"
+        ) {
+          var loadingState = maybeLoadingState;
+          state.count++;
+          var ping = onUnsuspend.bind(state);
+          loadingState.then(ping, ping);
+        }
+
+        resource.state.loading |= Inserted;
+        resource.instance = instance;
+        markNodeAsHoistable(instance);
+        return;
+      }
+
+      var ownerDocument = getDocumentFromRoot(hoistableRoot);
+      var stylesheetProps = stylesheetPropsFromRawProps(props);
+      var preloadProps = preloadPropsMap.get(key);
+
+      if (preloadProps) {
+        adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+      } // Construct and insert a new instance
+
+      instance = ownerDocument.createElement("link");
+      markNodeAsHoistable(instance);
+      var linkInstance = instance; // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+      // between this resource being rendered on the client and being rendered with a late completed boundary.
+
+      linkInstance._p = new Promise(function (resolve, reject) {
+        linkInstance.onload = resolve;
+        linkInstance.onerror = reject;
+      });
+      setInitialProperties(instance, "link", stylesheetProps);
+      resource.instance = instance;
+    }
+
+    if (state.stylesheets === null) {
+      state.stylesheets = new Map();
+    }
+
+    state.stylesheets.set(resource, hoistableRoot);
+    var preloadEl = resource.state.preload;
+
+    if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
+      state.count++;
+
+      var _ping = onUnsuspend.bind(state);
+
+      preloadEl.addEventListener("load", _ping);
+      preloadEl.addEventListener("error", _ping);
+    }
+  }
+}
+function waitForCommitToBeReady() {
+  if (suspendedState === null) {
+    throw new Error(
+      "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug."
+    );
+  }
+
+  var state = suspendedState;
+
+  if (state.stylesheets && state.count === 0) {
+    // We are not currently blocked but we have not inserted all stylesheets.
+    // If this insertion happens and loads or errors synchronously then we can
+    // avoid suspending the commit. To do this we check the count again immediately after
+    insertSuspendedStylesheets(state, state.stylesheets);
+  } // We need to check the count again because the inserted stylesheets may have led to new
+  // tasks to wait on.
+
+  if (state.count > 0) {
+    return function (commit) {
+      unsuspendAfterTimeout(state);
+      state.unsuspend = commit;
+      return function () {
+        return (state.unsuspend = null);
+      };
+    };
+  }
+
+  return null;
+}
+
+function unsuspendAfterTimeout(state) {
+  setTimeout(function () {
+    if (state.stylesheets) {
+      insertSuspendedStylesheets(state, state.stylesheets);
+    }
+
+    if (state.unsuspend) {
+      var unsuspend = state.unsuspend;
+      state.unsuspend = null;
+      unsuspend();
+    }
+  }, 500);
+}
+
+function onUnsuspend() {
+  this.count--;
+
+  if (this.count === 0) {
+    if (this.stylesheets) {
+      // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
+      // The reason we do this after everything else has finished is because we want to have all the stylesheets
+      // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
+      // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
+      // wait for them to load before actually continuing. We expect this to increase the count above zero
+      insertSuspendedStylesheets(this, this.stylesheets);
+    } else if (this.unsuspend) {
+      var unsuspend = this.unsuspend;
+      this.unsuspend = null;
+      unsuspend();
+    }
+  }
+} // This is typecast to non-null because it will always be set before read.
+// it is important that this not be used except when the stack guarantees it exists.
+// Currentlyt his is only during insertSuspendedStylesheet.
+
+var precedencesByRoot = null;
+
+function insertSuspendedStylesheets(state, resources) {
+  // We need to clear this out so we don't try to reinsert after the stylesheets have loaded
+  state.stylesheets = null;
+
+  if (state.unsuspend === null) {
+    // The suspended commit was cancelled. We don't need to insert any stylesheets.
+    return;
+  } // Temporarily increment count. we don't want any synchronously loaded stylesheets to try to unsuspend
+  // before we finish inserting all stylesheets.
+
+  state.count++;
+  precedencesByRoot = new Map();
+  resources.forEach(insertStylesheetIntoRoot, state);
+  precedencesByRoot = null; // We can remove our temporary count and if we're still at zero we can unsuspend.
+  // If we are in the synchronous phase before deciding if the commit should suspend and this
+  // ends up hitting the unsuspend path it will just invoke the noop unsuspend.
+
+  onUnsuspend.call(state);
+}
+
+function insertStylesheetIntoRoot(root, resource, map) {
+  if (resource.state.loading & Inserted) {
+    // This resource was inserted by another root committing. we don't need to insert it again
+    return;
+  }
+
+  var last;
+  var precedences = precedencesByRoot.get(root);
+
+  if (!precedences) {
+    precedences = new Map();
+    precedencesByRoot.set(root, precedences);
+    var nodes = root.querySelectorAll(
+      "link[data-precedence],style[data-precedence]"
+    );
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+
+      if (
+        node.nodeName === "link" || // We omit style tags with media="not all" because they are not in the right position
+        // and will be hoisted by the Fizz runtime imminently.
+        node.getAttribute("media") !== "not all"
+      ) {
+        precedences.set("p" + node.dataset.precedence, node);
+        last = node;
+      }
+    }
+
+    if (last) {
+      precedences.set("last", last);
+    }
+  } else {
+    last = precedences.get("last");
+  } // We only call this after we have constructed an instance so we assume it here
+
+  var instance = resource.instance; // We will always have a precedence for stylesheet instances
+
+  var precedence = instance.getAttribute("data-precedence");
+  var prior = precedences.get("p" + precedence) || last;
+
+  if (prior === last) {
+    precedences.set("last", instance);
+  }
+
+  precedences.set(precedence, instance);
+  this.count++;
+  var onComplete = onUnsuspend.bind(this);
+  instance.addEventListener("load", onComplete);
+  instance.addEventListener("error", onComplete);
+
+  if (prior) {
+    prior.parentNode.insertBefore(instance, prior.nextSibling);
+  } else {
+    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
+    parent.insertBefore(instance, parent.firstChild);
+  }
+
+  resource.state.loading |= Inserted;
 }
 
 var randomKey = Math.random().toString(36).slice(2);

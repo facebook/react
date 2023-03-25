@@ -27,8 +27,8 @@ if (
 }
           "use strict";
 
-var React = require("react");
 var Scheduler = require("scheduler");
+var React = require("react");
 
 var Internals = {
   usingClientEntryPoint: false,
@@ -105,36 +105,138 @@ function printWarning(level, format, args) {
   }
 }
 
-var FunctionComponent = 0;
-var ClassComponent = 1;
-var IndeterminateComponent = 2; // Before we know whether it is function or class
+var assign = Object.assign;
 
-var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+var valueStack = [];
+var fiberStack;
 
-var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+{
+  fiberStack = [];
+}
 
-var HostComponent = 5;
-var HostText = 6;
-var Fragment = 7;
-var Mode = 8;
-var ContextConsumer = 9;
-var ContextProvider = 10;
-var ForwardRef = 11;
-var Profiler = 12;
-var SuspenseComponent = 13;
-var MemoComponent = 14;
-var SimpleMemoComponent = 15;
-var LazyComponent = 16;
-var IncompleteClassComponent = 17;
-var DehydratedFragment = 18;
-var SuspenseListComponent = 19;
-var ScopeComponent = 21;
-var OffscreenComponent = 22;
-var LegacyHiddenComponent = 23;
-var CacheComponent = 24;
-var TracingMarkerComponent = 25;
-var HostHoistable = 26;
-var HostSingleton = 27;
+var index = -1;
+
+function createCursor(defaultValue) {
+  return {
+    current: defaultValue
+  };
+}
+
+function pop(cursor, fiber) {
+  if (index < 0) {
+    {
+      error("Unexpected pop.");
+    }
+
+    return;
+  }
+
+  {
+    if (fiber !== fiberStack[index]) {
+      error("Unexpected Fiber popped.");
+    }
+  }
+
+  cursor.current = valueStack[index];
+  valueStack[index] = null;
+
+  {
+    fiberStack[index] = null;
+  }
+
+  index--;
+}
+
+function push(cursor, value, fiber) {
+  index++;
+  valueStack[index] = cursor.current;
+
+  {
+    fiberStack[index] = fiber;
+  }
+
+  cursor.current = value;
+}
+
+var contextStackCursor = createCursor(null);
+var contextFiberStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null);
+
+function requiredContext(c) {
+  {
+    if (c === null) {
+      error(
+        "Expected host context to exist. This error is likely caused by a bug " +
+          "in React. Please file an issue."
+      );
+    }
+  }
+
+  return c;
+}
+
+function getCurrentRootHostContainer() {
+  return rootInstanceStackCursor.current;
+}
+
+function getRootHostContainer() {
+  var rootInstance = requiredContext(rootInstanceStackCursor.current);
+  return rootInstance;
+}
+
+function pushHostContainer(fiber, nextRootInstance) {
+  // Push current root instance onto the stack;
+  // This allows us to reset root when portals are popped.
+  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
+  // However, we can't just call getRootHostContext() and push it because
+  // we'd have a different number of entries on the stack depending on
+  // whether getRootHostContext() throws somewhere in renderer code or not.
+  // So we push an empty value first. This lets us safely unwind on errors.
+
+  push(contextStackCursor, null, fiber);
+  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
+
+  pop(contextStackCursor, fiber);
+  push(contextStackCursor, nextRootContext, fiber);
+}
+
+function popHostContainer(fiber) {
+  pop(contextStackCursor, fiber);
+  pop(contextFiberStackCursor, fiber);
+  pop(rootInstanceStackCursor, fiber);
+}
+
+function getHostContext() {
+  var context = requiredContext(contextStackCursor.current);
+  return context;
+}
+
+function pushHostContext(fiber) {
+  var context = requiredContext(contextStackCursor.current);
+  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
+
+  if (context === nextContext) {
+    return;
+  } // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+
+  push(contextFiberStackCursor, fiber, fiber);
+  push(contextStackCursor, nextContext, fiber);
+}
+
+function popHostContext(fiber) {
+  // Do not pop unless this Fiber provided the current context.
+  // pushHostContext() only pushes Fibers that provide unique contexts.
+  if (contextFiberStackCursor.current !== fiber) {
+    return;
+  }
+
+  pop(contextStackCursor, fiber);
+  pop(contextFiberStackCursor, fiber);
+}
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
@@ -176,6 +278,1906 @@ var enableClientRenderFallbackOnTextMismatch = false;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
 var enableSuspenseCallback = true;
+
+var NoFlags$1 =
+  /*                      */
+  0;
+var PerformedWork =
+  /*                */
+  1;
+var Placement =
+  /*                    */
+  2;
+var DidCapture =
+  /*                   */
+  128;
+var Hydrating =
+  /*                    */
+  4096; // You can change the rest (and add more).
+
+var Update =
+  /*                       */
+  4;
+/* Skipped value:                                 0b0000000000000000000000001000; */
+
+var ChildDeletion =
+  /*                */
+  16;
+var ContentReset =
+  /*                 */
+  32;
+var Callback =
+  /*                     */
+  64;
+/* Used by DidCapture:                            0b0000000000000000000010000000; */
+
+var ForceClientRender =
+  /*            */
+  256;
+var Ref =
+  /*                          */
+  512;
+var Snapshot =
+  /*                     */
+  1024;
+var Passive$1 =
+  /*                      */
+  2048;
+/* Used by Hydrating:                             0b0000000000000001000000000000; */
+
+var Visibility =
+  /*                   */
+  8192;
+var StoreConsistency =
+  /*             */
+  16384; // It's OK to reuse this bit because these flags are mutually exclusive for
+// different fiber types. We should really be doing this for as many flags as
+// possible, because we're about to run out of bits.
+
+var ScheduleRetry = StoreConsistency;
+var LifecycleEffectMask =
+  Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
+
+var HostEffectMask =
+  /*               */
+  32767; // These are not really side effects, but we still reuse this field.
+
+var Incomplete =
+  /*                   */
+  32768;
+var ShouldCapture =
+  /*                */
+  65536;
+var ForceUpdateForLegacySuspense =
+  /* */
+  131072;
+var DidPropagateContext =
+  /*          */
+  262144;
+var NeedsPropagation =
+  /*             */
+  524288;
+var Forked =
+  /*                       */
+  1048576; // Static tags describe aspects of a fiber that are not specific to a render,
+// e.g. a fiber uses a passive effect (even if there are no updates on this particular render).
+// This enables us to defer more work in the unmount case,
+// since we can defer traversing the tree during layout to look for Passive effects,
+// and instead rely on the static flag as a signal that there may be cleanup work.
+
+var RefStatic =
+  /*                    */
+  2097152;
+var LayoutStatic =
+  /*                 */
+  4194304;
+var PassiveStatic =
+  /*                */
+  8388608;
+var SuspenseyCommit =
+  /*              */
+  16777216; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
+
+var PlacementDEV =
+  /*                 */
+  33554432;
+var MountLayoutDev =
+  /*               */
+  67108864;
+var MountPassiveDev =
+  /*              */
+  134217728; // Groups of flags that are used in the commit phase to skip over trees that
+// don't contain effects, by checking subtreeFlags.
+
+var BeforeMutationMask = // TODO: Remove Update flag from before mutation phase by re-landing Visibility
+  // flag logic (see #20043)
+  Update |
+  Snapshot | // createEventHandle needs to visit deleted and hidden trees to
+  // fire beforeblur
+  // TODO: Only need to visit Deletions during BeforeMutation phase if an
+  // element is focused.
+  (ChildDeletion | Visibility);
+var MutationMask =
+  Placement |
+  Update |
+  ChildDeletion |
+  ContentReset |
+  Ref |
+  Hydrating |
+  Visibility;
+var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
+
+var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
+// This allows certain concepts to persist without recalculating them,
+// e.g. whether a subtree contains passive effects or portals.
+
+var StaticMask = LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
+
+// This module only exists as an ESM wrapper around the external CommonJS
+var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
+var cancelCallback$1 = Scheduler.unstable_cancelCallback;
+var shouldYield = Scheduler.unstable_shouldYield;
+var requestPaint = Scheduler.unstable_requestPaint;
+var now$1 = Scheduler.unstable_now;
+var getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel;
+var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
+var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
+var NormalPriority$1 = Scheduler.unstable_NormalPriority;
+var LowPriority = Scheduler.unstable_LowPriority;
+var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
+// on scheduler/unstable_mock, which we'll need for internal testing
+
+var log$2 = Scheduler.log;
+var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
+
+// Helpers to patch console.logs to avoid logging during side-effect free
+// replaying on render function. This currently only patches the object
+// lazily which won't cover if the log function was extracted eagerly.
+// We could also eagerly patch the method.
+var disabledDepth = 0;
+var prevLog;
+var prevInfo;
+var prevWarn;
+var prevError;
+var prevGroup;
+var prevGroupCollapsed;
+var prevGroupEnd;
+
+function disabledLog() {}
+
+disabledLog.__reactDisabledLog = true;
+function disableLogs() {
+  {
+    if (disabledDepth === 0) {
+      /* eslint-disable react-internal/no-production-logging */
+      prevLog = console.log;
+      prevInfo = console.info;
+      prevWarn = console.warn;
+      prevError = console.error;
+      prevGroup = console.group;
+      prevGroupCollapsed = console.groupCollapsed;
+      prevGroupEnd = console.groupEnd; // https://github.com/facebook/react/issues/19099
+
+      var props = {
+        configurable: true,
+        enumerable: true,
+        value: disabledLog,
+        writable: true
+      }; // $FlowFixMe Flow thinks console is immutable.
+
+      Object.defineProperties(console, {
+        info: props,
+        log: props,
+        warn: props,
+        error: props,
+        group: props,
+        groupCollapsed: props,
+        groupEnd: props
+      });
+      /* eslint-enable react-internal/no-production-logging */
+    }
+
+    disabledDepth++;
+  }
+}
+function reenableLogs() {
+  {
+    disabledDepth--;
+
+    if (disabledDepth === 0) {
+      /* eslint-disable react-internal/no-production-logging */
+      var props = {
+        configurable: true,
+        enumerable: true,
+        writable: true
+      }; // $FlowFixMe Flow thinks console is immutable.
+
+      Object.defineProperties(console, {
+        log: assign({}, props, {
+          value: prevLog
+        }),
+        info: assign({}, props, {
+          value: prevInfo
+        }),
+        warn: assign({}, props, {
+          value: prevWarn
+        }),
+        error: assign({}, props, {
+          value: prevError
+        }),
+        group: assign({}, props, {
+          value: prevGroup
+        }),
+        groupCollapsed: assign({}, props, {
+          value: prevGroupCollapsed
+        }),
+        groupEnd: assign({}, props, {
+          value: prevGroupEnd
+        })
+      });
+      /* eslint-enable react-internal/no-production-logging */
+    }
+
+    if (disabledDepth < 0) {
+      error(
+        "disabledDepth fell below zero. " +
+          "This is a bug in React. Please file an issue."
+      );
+    }
+  }
+}
+
+var rendererID = null;
+var injectedHook = null;
+var injectedProfilingHooks = null;
+var hasLoggedError = false;
+var isDevToolsPresent = typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined";
+function injectInternals(internals) {
+  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined") {
+    // No DevTools
+    return false;
+  }
+
+  var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  if (hook.isDisabled) {
+    // This isn't a real property on the hook, but it can be set to opt out
+    // of DevTools integration and associated warnings and logs.
+    // https://github.com/facebook/react/issues/3877
+    return true;
+  }
+
+  if (!hook.supportsFiber) {
+    {
+      error(
+        "The installed version of React DevTools is too old and will not work " +
+          "with the current version of React. Please update React DevTools. " +
+          "https://reactjs.org/link/react-devtools"
+      );
+    } // DevTools exists, even though it doesn't support Fiber.
+
+    return true;
+  }
+
+  try {
+    if (enableSchedulingProfiler) {
+      // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+      // This gives DevTools a way to feature detect that isn't tied to version number
+      // (since profiling and timeline are controlled by different feature flags).
+      internals = assign({}, internals, {
+        getLaneLabelMap: getLaneLabelMap,
+        injectProfilingHooks: injectProfilingHooks
+      });
+    }
+
+    rendererID = hook.inject(internals); // We have successfully injected, so now it is safe to set up hooks.
+
+    injectedHook = hook;
+  } catch (err) {
+    // Catch all errors because it is unsafe to throw during initialization.
+    {
+      error("React instrumentation encountered an error: %s.", err);
+    }
+  }
+
+  if (hook.checkDCE) {
+    // This is the real DevTools.
+    return true;
+  } else {
+    // This is likely a hook installed by Fast Refresh runtime.
+    return false;
+  }
+}
+function onScheduleRoot(root, children) {
+  {
+    if (
+      injectedHook &&
+      typeof injectedHook.onScheduleFiberRoot === "function"
+    ) {
+      try {
+        injectedHook.onScheduleFiberRoot(rendererID, root, children);
+      } catch (err) {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+
+          error("React instrumentation encountered an error: %s", err);
+        }
+      }
+    }
+  }
+}
+function onCommitRoot$1(root, eventPriority) {
+  if (injectedHook && typeof injectedHook.onCommitFiberRoot === "function") {
+    try {
+      var didError = (root.current.flags & DidCapture) === DidCapture;
+
+      if (enableProfilerTimer) {
+        var schedulerPriority;
+
+        switch (eventPriority) {
+          case DiscreteEventPriority:
+            schedulerPriority = ImmediatePriority;
+            break;
+
+          case ContinuousEventPriority:
+            schedulerPriority = UserBlockingPriority;
+            break;
+
+          case DefaultEventPriority:
+            schedulerPriority = NormalPriority$1;
+            break;
+
+          case IdleEventPriority:
+            schedulerPriority = IdlePriority;
+            break;
+
+          default:
+            schedulerPriority = NormalPriority$1;
+            break;
+        }
+
+        injectedHook.onCommitFiberRoot(
+          rendererID,
+          root,
+          schedulerPriority,
+          didError
+        );
+      }
+    } catch (err) {
+      {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+
+          error("React instrumentation encountered an error: %s", err);
+        }
+      }
+    }
+  }
+}
+function onPostCommitRoot(root) {
+  if (
+    injectedHook &&
+    typeof injectedHook.onPostCommitFiberRoot === "function"
+  ) {
+    try {
+      injectedHook.onPostCommitFiberRoot(rendererID, root);
+    } catch (err) {
+      {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+
+          error("React instrumentation encountered an error: %s", err);
+        }
+      }
+    }
+  }
+}
+function onCommitUnmount(fiber) {
+  if (injectedHook && typeof injectedHook.onCommitFiberUnmount === "function") {
+    try {
+      injectedHook.onCommitFiberUnmount(rendererID, fiber);
+    } catch (err) {
+      {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+
+          error("React instrumentation encountered an error: %s", err);
+        }
+      }
+    }
+  }
+}
+function setIsStrictModeForDevtools(newIsStrictMode) {
+  {
+    if (typeof log$2 === "function") {
+      // We're in a test because Scheduler.log only exists
+      // in SchedulerMock. To reduce the noise in strict mode tests,
+      // suppress warnings and disable scheduler yielding during the double render
+      unstable_setDisableYieldValue(newIsStrictMode);
+      setSuppressWarning(newIsStrictMode);
+    }
+
+    if (injectedHook && typeof injectedHook.setStrictMode === "function") {
+      try {
+        injectedHook.setStrictMode(rendererID, newIsStrictMode);
+      } catch (err) {
+        {
+          if (!hasLoggedError) {
+            hasLoggedError = true;
+
+            error("React instrumentation encountered an error: %s", err);
+          }
+        }
+      }
+    }
+  }
+} // Profiler API hooks
+
+function injectProfilingHooks(profilingHooks) {
+  injectedProfilingHooks = profilingHooks;
+}
+
+function getLaneLabelMap() {
+  if (enableSchedulingProfiler) {
+    var map = new Map();
+    var lane = 1;
+
+    for (var index = 0; index < TotalLanes; index++) {
+      var label = getLabelForLane(lane);
+      map.set(lane, label);
+      lane *= 2;
+    }
+
+    return map;
+  } else {
+    return null;
+  }
+}
+
+function markCommitStarted(lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markCommitStarted === "function"
+    ) {
+      injectedProfilingHooks.markCommitStarted(lanes);
+    }
+  }
+}
+function markCommitStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markCommitStopped === "function"
+    ) {
+      injectedProfilingHooks.markCommitStopped();
+    }
+  }
+}
+function markComponentRenderStarted(fiber) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentRenderStarted === "function"
+    ) {
+      injectedProfilingHooks.markComponentRenderStarted(fiber);
+    }
+  }
+}
+function markComponentRenderStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentRenderStopped === "function"
+    ) {
+      injectedProfilingHooks.markComponentRenderStopped();
+    }
+  }
+}
+function markComponentPassiveEffectMountStarted(fiber) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectMountStarted(fiber);
+    }
+  }
+}
+function markComponentPassiveEffectMountStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectMountStopped();
+    }
+  }
+}
+function markComponentPassiveEffectUnmountStarted(fiber) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(fiber);
+    }
+  }
+}
+function markComponentPassiveEffectUnmountStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectUnmountStopped();
+    }
+  }
+}
+function markComponentLayoutEffectMountStarted(fiber) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectMountStarted(fiber);
+    }
+  }
+}
+function markComponentLayoutEffectMountStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectMountStopped();
+    }
+  }
+}
+function markComponentLayoutEffectUnmountStarted(fiber) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
+    }
+  }
+}
+function markComponentLayoutEffectUnmountStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped ===
+        "function"
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
+    }
+  }
+}
+function markComponentErrored(fiber, thrownValue, lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentErrored === "function"
+    ) {
+      injectedProfilingHooks.markComponentErrored(fiber, thrownValue, lanes);
+    }
+  }
+}
+function markComponentSuspended(fiber, wakeable, lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentSuspended === "function"
+    ) {
+      injectedProfilingHooks.markComponentSuspended(fiber, wakeable, lanes);
+    }
+  }
+}
+function markLayoutEffectsStarted(lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markLayoutEffectsStarted === "function"
+    ) {
+      injectedProfilingHooks.markLayoutEffectsStarted(lanes);
+    }
+  }
+}
+function markLayoutEffectsStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markLayoutEffectsStopped === "function"
+    ) {
+      injectedProfilingHooks.markLayoutEffectsStopped();
+    }
+  }
+}
+function markPassiveEffectsStarted(lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markPassiveEffectsStarted === "function"
+    ) {
+      injectedProfilingHooks.markPassiveEffectsStarted(lanes);
+    }
+  }
+}
+function markPassiveEffectsStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markPassiveEffectsStopped === "function"
+    ) {
+      injectedProfilingHooks.markPassiveEffectsStopped();
+    }
+  }
+}
+function markRenderStarted(lanes) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderStarted === "function"
+    ) {
+      injectedProfilingHooks.markRenderStarted(lanes);
+    }
+  }
+}
+function markRenderYielded() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderYielded === "function"
+    ) {
+      injectedProfilingHooks.markRenderYielded();
+    }
+  }
+}
+function markRenderStopped() {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderStopped === "function"
+    ) {
+      injectedProfilingHooks.markRenderStopped();
+    }
+  }
+}
+function markRenderScheduled(lane) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderScheduled === "function"
+    ) {
+      injectedProfilingHooks.markRenderScheduled(lane);
+    }
+  }
+}
+function markForceUpdateScheduled(fiber, lane) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markForceUpdateScheduled === "function"
+    ) {
+      injectedProfilingHooks.markForceUpdateScheduled(fiber, lane);
+    }
+  }
+}
+function markStateUpdateScheduled(fiber, lane) {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markStateUpdateScheduled === "function"
+    ) {
+      injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
+    }
+  }
+}
+
+var NoMode =
+  /*                         */
+  0; // TODO: Remove ConcurrentMode by reading from the root tag instead
+
+var ConcurrentMode =
+  /*                 */
+  1;
+var ProfileMode =
+  /*                    */
+  2;
+var DebugTracingMode =
+  /*               */
+  4;
+var StrictLegacyMode =
+  /*               */
+  8;
+var StrictEffectsMode =
+  /*              */
+  16;
+var ConcurrentUpdatesByDefaultMode =
+  /* */
+  32;
+
+// TODO: This is pretty well supported by browsers. Maybe we can drop it.
+var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback; // Count leading zeros.
+// Based on:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
+
+var log$1 = Math.log;
+var LN2 = Math.LN2;
+
+function clz32Fallback(x) {
+  var asUint = x >>> 0;
+
+  if (asUint === 0) {
+    return 32;
+  }
+
+  return (31 - ((log$1(asUint) / LN2) | 0)) | 0;
+}
+
+// If those values are changed that package should be rebuilt and redeployed.
+
+var TotalLanes = 31;
+var NoLanes =
+  /*                        */
+  0;
+var NoLane =
+  /*                          */
+  0;
+var SyncHydrationLane =
+  /*               */
+  1;
+var SyncLane =
+  /*                        */
+  2;
+var InputContinuousHydrationLane =
+  /*    */
+  4;
+var InputContinuousLane =
+  /*             */
+  8;
+var DefaultHydrationLane =
+  /*            */
+  16;
+var DefaultLane =
+  /*                     */
+  32;
+var SyncUpdateLanes =
+  /*                */
+  42;
+var TransitionHydrationLane =
+  /*                */
+  64;
+var TransitionLanes =
+  /*                       */
+  8388480;
+var TransitionLane1 =
+  /*                        */
+  128;
+var TransitionLane2 =
+  /*                        */
+  256;
+var TransitionLane3 =
+  /*                        */
+  512;
+var TransitionLane4 =
+  /*                        */
+  1024;
+var TransitionLane5 =
+  /*                        */
+  2048;
+var TransitionLane6 =
+  /*                        */
+  4096;
+var TransitionLane7 =
+  /*                        */
+  8192;
+var TransitionLane8 =
+  /*                        */
+  16384;
+var TransitionLane9 =
+  /*                        */
+  32768;
+var TransitionLane10 =
+  /*                       */
+  65536;
+var TransitionLane11 =
+  /*                       */
+  131072;
+var TransitionLane12 =
+  /*                       */
+  262144;
+var TransitionLane13 =
+  /*                       */
+  524288;
+var TransitionLane14 =
+  /*                       */
+  1048576;
+var TransitionLane15 =
+  /*                       */
+  2097152;
+var TransitionLane16 =
+  /*                       */
+  4194304;
+var RetryLanes =
+  /*                            */
+  125829120;
+var RetryLane1 =
+  /*                             */
+  8388608;
+var RetryLane2 =
+  /*                             */
+  16777216;
+var RetryLane3 =
+  /*                             */
+  33554432;
+var RetryLane4 =
+  /*                             */
+  67108864;
+var SomeRetryLane = RetryLane1;
+var SelectiveHydrationLane =
+  /*          */
+  134217728;
+var NonIdleLanes =
+  /*                          */
+  268435455;
+var IdleHydrationLane =
+  /*               */
+  268435456;
+var IdleLane =
+  /*                        */
+  536870912;
+var OffscreenLane =
+  /*                   */
+  1073741824; // This function is used for the experimental timeline (react-devtools-timeline)
+// It should be kept in sync with the Lanes values above.
+
+function getLabelForLane(lane) {
+  if (enableSchedulingProfiler) {
+    if (lane & SyncHydrationLane) {
+      return "SyncHydrationLane";
+    }
+
+    if (lane & SyncLane) {
+      return "Sync";
+    }
+
+    if (lane & InputContinuousHydrationLane) {
+      return "InputContinuousHydration";
+    }
+
+    if (lane & InputContinuousLane) {
+      return "InputContinuous";
+    }
+
+    if (lane & DefaultHydrationLane) {
+      return "DefaultHydration";
+    }
+
+    if (lane & DefaultLane) {
+      return "Default";
+    }
+
+    if (lane & TransitionHydrationLane) {
+      return "TransitionHydration";
+    }
+
+    if (lane & TransitionLanes) {
+      return "Transition";
+    }
+
+    if (lane & RetryLanes) {
+      return "Retry";
+    }
+
+    if (lane & SelectiveHydrationLane) {
+      return "SelectiveHydration";
+    }
+
+    if (lane & IdleHydrationLane) {
+      return "IdleHydration";
+    }
+
+    if (lane & IdleLane) {
+      return "Idle";
+    }
+
+    if (lane & OffscreenLane) {
+      return "Offscreen";
+    }
+  }
+}
+var NoTimestamp = -1;
+var nextTransitionLane = TransitionLane1;
+var nextRetryLane = RetryLane1;
+
+function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
+
+    if (pendingSyncLanes !== 0) {
+      return pendingSyncLanes;
+    }
+  }
+
+  switch (getHighestPriorityLane(lanes)) {
+    case SyncHydrationLane:
+      return SyncHydrationLane;
+
+    case SyncLane:
+      return SyncLane;
+
+    case InputContinuousHydrationLane:
+      return InputContinuousHydrationLane;
+
+    case InputContinuousLane:
+      return InputContinuousLane;
+
+    case DefaultHydrationLane:
+      return DefaultHydrationLane;
+
+    case DefaultLane:
+      return DefaultLane;
+
+    case TransitionHydrationLane:
+      return TransitionHydrationLane;
+
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+      return lanes & TransitionLanes;
+
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+      return lanes & RetryLanes;
+
+    case SelectiveHydrationLane:
+      return SelectiveHydrationLane;
+
+    case IdleHydrationLane:
+      return IdleHydrationLane;
+
+    case IdleLane:
+      return IdleLane;
+
+    case OffscreenLane:
+      return OffscreenLane;
+
+    default:
+      {
+        error("Should have found matching lanes. This is a bug in React.");
+      } // This shouldn't be reachable, but as a fallback, return the entire bitmask.
+
+      return lanes;
+  }
+}
+
+function getNextLanes(root, wipLanes) {
+  // Early bailout if there's no pending work left.
+  var pendingLanes = root.pendingLanes;
+
+  if (pendingLanes === NoLanes) {
+    return NoLanes;
+  }
+
+  var nextLanes = NoLanes;
+  var suspendedLanes = root.suspendedLanes;
+  var pingedLanes = root.pingedLanes; // Do not work on any idle work until all the non-idle work has finished,
+  // even if the work is suspended.
+
+  var nonIdlePendingLanes = pendingLanes & NonIdleLanes;
+
+  if (nonIdlePendingLanes !== NoLanes) {
+    var nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
+
+    if (nonIdleUnblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
+    } else {
+      var nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
+
+      if (nonIdlePingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
+      }
+    }
+  } else {
+    // The only remaining work is Idle.
+    var unblockedLanes = pendingLanes & ~suspendedLanes;
+
+    if (unblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(unblockedLanes);
+    } else {
+      if (pingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(pingedLanes);
+      }
+    }
+  }
+
+  if (nextLanes === NoLanes) {
+    // This should only be reachable if we're suspended
+    // TODO: Consider warning in this path if a fallback timer is not scheduled.
+    return NoLanes;
+  } // If we're already in the middle of a render, switching lanes will interrupt
+  // it and we'll lose our progress. We should only do this if the new lanes are
+  // higher priority.
+
+  if (
+    wipLanes !== NoLanes &&
+    wipLanes !== nextLanes && // If we already suspended with a delay, then interrupting is fine. Don't
+    // bother waiting until the root is complete.
+    (wipLanes & suspendedLanes) === NoLanes
+  ) {
+    var nextLane = getHighestPriorityLane(nextLanes);
+    var wipLane = getHighestPriorityLane(wipLanes);
+
+    if (
+      // Tests whether the next lane is equal or lower priority than the wip
+      // one. This works because the bits decrease in priority as you go left.
+      nextLane >= wipLane || // Default priority updates should not interrupt transition updates. The
+      // only difference between default updates and transition updates is that
+      // default updates do not support refresh transitions.
+      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
+    ) {
+      // Keep working on the existing in-progress tree. Do not interrupt.
+      return wipLanes;
+    }
+  }
+
+  if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode);
+  else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+    // When updates are sync by default, we entangle continuous priority updates
+    // and default updates, so they render in the same batch. The only reason
+    // they use separate lanes is because continuous updates should interrupt
+    // transitions, but default updates should not.
+    nextLanes |= pendingLanes & DefaultLane;
+  } // Check for entangled lanes and add them to the batch.
+  //
+  // A lane is said to be entangled with another when it's not allowed to render
+  // in a batch that does not also include the other lane. Typically we do this
+  // when multiple updates have the same source, and we only want to respond to
+  // the most recent event from that source.
+  //
+  // Note that we apply entanglements *after* checking for partial work above.
+  // This means that if a lane is entangled during an interleaved event while
+  // it's already rendering, we won't interrupt it. This is intentional, since
+  // entanglement is usually "best effort": we'll try our best to render the
+  // lanes in the same batch, but it's not worth throwing out partially
+  // completed work in order to do it.
+  // TODO: Reconsider this. The counter-argument is that the partial work
+  // represents an intermediate state, which we don't want to show to the user.
+  // And by spending extra time finishing it, we're increasing the amount of
+  // time it takes to show the final state, which is what they are actually
+  // waiting for.
+  //
+  // For those exceptions where entanglement is semantically important, like
+  // useMutableSource, we should ensure that there is no partial work at the
+  // time we apply the entanglement.
+
+  var entangledLanes = root.entangledLanes;
+
+  if (entangledLanes !== NoLanes) {
+    var entanglements = root.entanglements;
+    var lanes = nextLanes & entangledLanes;
+
+    while (lanes > 0) {
+      var index = pickArbitraryLaneIndex(lanes);
+      var lane = 1 << index;
+      nextLanes |= entanglements[index];
+      lanes &= ~lane;
+    }
+  }
+
+  return nextLanes;
+}
+function getMostRecentEventTime(root, lanes) {
+  var eventTimes = root.eventTimes;
+  var mostRecentEventTime = NoTimestamp;
+
+  while (lanes > 0) {
+    var index = pickArbitraryLaneIndex(lanes);
+    var lane = 1 << index;
+    var eventTime = eventTimes[index];
+
+    if (eventTime > mostRecentEventTime) {
+      mostRecentEventTime = eventTime;
+    }
+
+    lanes &= ~lane;
+  }
+
+  return mostRecentEventTime;
+}
+
+function computeExpirationTime(lane, currentTime) {
+  switch (lane) {
+    case SyncHydrationLane:
+    case SyncLane:
+    case InputContinuousHydrationLane:
+    case InputContinuousLane:
+      // User interactions should expire slightly more quickly.
+      //
+      // NOTE: This is set to the corresponding constant as in Scheduler.js.
+      // When we made it larger, a product metric in www regressed, suggesting
+      // there's a user interaction that's being starved by a series of
+      // synchronous updates. If that theory is correct, the proper solution is
+      // to fix the starvation. However, this scenario supports the idea that
+      // expiration times are an important safeguard when starvation
+      // does happen.
+      return currentTime + 250;
+
+    case DefaultHydrationLane:
+    case DefaultLane:
+    case TransitionHydrationLane:
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+      return currentTime + 5000;
+
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+      // TODO: Retries should be allowed to expire if they are CPU bound for
+      // too long, but when I made this change it caused a spike in browser
+      // crashes. There must be some other underlying bug; not super urgent but
+      // ideally should figure out why and fix it. Unfortunately we don't have
+      // a repro for the crashes, only detected via production metrics.
+      return NoTimestamp;
+
+    case SelectiveHydrationLane:
+    case IdleHydrationLane:
+    case IdleLane:
+    case OffscreenLane:
+      // Anything idle priority or lower should never expire.
+      return NoTimestamp;
+
+    default:
+      {
+        error("Should have found matching lanes. This is a bug in React.");
+      }
+
+      return NoTimestamp;
+  }
+}
+
+function markStarvedLanesAsExpired(root, currentTime) {
+  // TODO: This gets called every time we yield. We can optimize by storing
+  // the earliest expiration time on the root. Then use that to quickly bail out
+  // of this function.
+  var pendingLanes = root.pendingLanes;
+  var suspendedLanes = root.suspendedLanes;
+  var pingedLanes = root.pingedLanes;
+  var expirationTimes = root.expirationTimes; // Iterate through the pending lanes and check if we've reached their
+  // expiration time. If so, we'll assume the update is being starved and mark
+  // it as expired to force it to finish.
+  //
+  // We exclude retry lanes because those must always be time sliced, in order
+  // to unwrap uncached promises.
+  // TODO: Write a test for this
+
+  var lanes = pendingLanes & ~RetryLanes;
+
+  while (lanes > 0) {
+    var index = pickArbitraryLaneIndex(lanes);
+    var lane = 1 << index;
+    var expirationTime = expirationTimes[index];
+
+    if (expirationTime === NoTimestamp) {
+      // Found a pending lane with no expiration time. If it's not suspended, or
+      // if it's pinged, assume it's CPU-bound. Compute a new expiration time
+      // using the current time.
+      if (
+        (lane & suspendedLanes) === NoLanes ||
+        (lane & pingedLanes) !== NoLanes
+      ) {
+        // Assumes timestamps are monotonically increasing.
+        expirationTimes[index] = computeExpirationTime(lane, currentTime);
+      }
+    } else if (expirationTime <= currentTime) {
+      // This lane expired
+      root.expiredLanes |= lane;
+    }
+
+    lanes &= ~lane;
+  }
+} // This returns the highest priority pending lanes regardless of whether they
+// are suspended.
+
+function getHighestPriorityPendingLanes(root) {
+  return getHighestPriorityLanes(root.pendingLanes);
+}
+function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
+  if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) {
+    // The error recovery mechanism is disabled until these lanes are cleared.
+    return NoLanes;
+  }
+
+  var everythingButOffscreen = root.pendingLanes & ~OffscreenLane;
+
+  if (everythingButOffscreen !== NoLanes) {
+    return everythingButOffscreen;
+  }
+
+  if (everythingButOffscreen & OffscreenLane) {
+    return OffscreenLane;
+  }
+
+  return NoLanes;
+}
+function includesSyncLane(lanes) {
+  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
+}
+function includesNonIdleWork(lanes) {
+  return (lanes & NonIdleLanes) !== NoLanes;
+}
+function includesOnlyRetries(lanes) {
+  return (lanes & RetryLanes) === lanes;
+}
+function includesOnlyNonUrgentLanes(lanes) {
+  // TODO: Should hydration lanes be included here? This function is only
+  // used in `updateDeferredValueImpl`.
+  var UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
+  return (lanes & UrgentLanes) === NoLanes;
+}
+function includesOnlyTransitions(lanes) {
+  return (lanes & TransitionLanes) === lanes;
+}
+function includesBlockingLane(root, lanes) {
+  if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode) {
+    // Concurrent updates by default always use time slicing.
+    return false;
+  }
+
+  var SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lanes & SyncDefaultLanes) !== NoLanes;
+}
+function includesExpiredLane(root, lanes) {
+  // This is a separate check from includesBlockingLane because a lane can
+  // expire after a render has already started.
+  return (lanes & root.expiredLanes) !== NoLanes;
+}
+function isTransitionLane(lane) {
+  return (lane & TransitionLanes) !== NoLanes;
+}
+function claimNextTransitionLane() {
+  // Cycle through the lanes, assigning each new transition to the next lane.
+  // In most cases, this means every transition gets its own lane, until we
+  // run out of lanes and cycle back to the beginning.
+  var lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+
+  if ((nextTransitionLane & TransitionLanes) === NoLanes) {
+    nextTransitionLane = TransitionLane1;
+  }
+
+  return lane;
+}
+function claimNextRetryLane() {
+  var lane = nextRetryLane;
+  nextRetryLane <<= 1;
+
+  if ((nextRetryLane & RetryLanes) === NoLanes) {
+    nextRetryLane = RetryLane1;
+  }
+
+  return lane;
+}
+function getHighestPriorityLane(lanes) {
+  return lanes & -lanes;
+}
+function pickArbitraryLane(lanes) {
+  // This wrapper function gets inlined. Only exists so to communicate that it
+  // doesn't matter which bit is selected; you can pick any bit without
+  // affecting the algorithms where its used. Here I'm using
+  // getHighestPriorityLane because it requires the fewest operations.
+  return getHighestPriorityLane(lanes);
+}
+
+function pickArbitraryLaneIndex(lanes) {
+  return 31 - clz32(lanes);
+}
+
+function laneToIndex(lane) {
+  return pickArbitraryLaneIndex(lane);
+}
+
+function includesSomeLane(a, b) {
+  return (a & b) !== NoLanes;
+}
+function isSubsetOfLanes(set, subset) {
+  return (set & subset) === subset;
+}
+function mergeLanes(a, b) {
+  return a | b;
+}
+function removeLanes(set, subset) {
+  return set & ~subset;
+}
+function intersectLanes(a, b) {
+  return a & b;
+} // Seems redundant, but it changes the type from a single lane (used for
+// updates) to a group of lanes (used for flushing work).
+
+function laneToLanes(lane) {
+  return lane;
+}
+function higherPriorityLane(a, b) {
+  // This works because the bit ranges decrease in priority as you go left.
+  return a !== NoLane && a < b ? a : b;
+}
+function createLaneMap(initial) {
+  // Intentionally pushing one by one.
+  // https://v8.dev/blog/elements-kinds#avoid-creating-holes
+  var laneMap = [];
+
+  for (var i = 0; i < TotalLanes; i++) {
+    laneMap.push(initial);
+  }
+
+  return laneMap;
+}
+function markRootUpdated(root, updateLane, eventTime) {
+  root.pendingLanes |= updateLane; // If there are any suspended transitions, it's possible this new update
+  // could unblock them. Clear the suspended lanes so that we can try rendering
+  // them again.
+  //
+  // TODO: We really only need to unsuspend only lanes that are in the
+  // `subtreeLanes` of the updated fiber, or the update lanes of the return
+  // path. This would exclude suspended updates in an unrelated sibling tree,
+  // since there's no way for this update to unblock it.
+  //
+  // We don't do this if the incoming update is idle, because we never process
+  // idle updates until after all the regular updates have finished; there's no
+  // way it could unblock a transition.
+
+  if (updateLane !== IdleLane) {
+    root.suspendedLanes = NoLanes;
+    root.pingedLanes = NoLanes;
+  }
+
+  var eventTimes = root.eventTimes;
+  var index = laneToIndex(updateLane); // We can always overwrite an existing timestamp because we prefer the most
+  // recent event, and we assume time is monotonically increasing.
+
+  eventTimes[index] = eventTime;
+}
+function markRootSuspended$1(root, suspendedLanes) {
+  root.suspendedLanes |= suspendedLanes;
+  root.pingedLanes &= ~suspendedLanes; // The suspended lanes are no longer CPU-bound. Clear their expiration times.
+
+  var expirationTimes = root.expirationTimes;
+  var lanes = suspendedLanes;
+
+  while (lanes > 0) {
+    var index = pickArbitraryLaneIndex(lanes);
+    var lane = 1 << index;
+    expirationTimes[index] = NoTimestamp;
+    lanes &= ~lane;
+  }
+}
+function markRootPinged(root, pingedLanes) {
+  root.pingedLanes |= root.suspendedLanes & pingedLanes;
+}
+function markRootMutableRead(root, updateLane) {
+  root.mutableReadLanes |= updateLane & root.pendingLanes;
+}
+function markRootFinished(root, remainingLanes) {
+  var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
+  root.pendingLanes = remainingLanes; // Let's try everything again
+
+  root.suspendedLanes = NoLanes;
+  root.pingedLanes = NoLanes;
+  root.expiredLanes &= remainingLanes;
+  root.mutableReadLanes &= remainingLanes;
+  root.entangledLanes &= remainingLanes;
+  root.errorRecoveryDisabledLanes &= remainingLanes;
+  var entanglements = root.entanglements;
+  var eventTimes = root.eventTimes;
+  var expirationTimes = root.expirationTimes;
+  var hiddenUpdates = root.hiddenUpdates; // Clear the lanes that no longer have pending work
+
+  var lanes = noLongerPendingLanes;
+
+  while (lanes > 0) {
+    var index = pickArbitraryLaneIndex(lanes);
+    var lane = 1 << index;
+    entanglements[index] = NoLanes;
+    eventTimes[index] = NoTimestamp;
+    expirationTimes[index] = NoTimestamp;
+    var hiddenUpdatesForLane = hiddenUpdates[index];
+
+    if (hiddenUpdatesForLane !== null) {
+      hiddenUpdates[index] = null; // "Hidden" updates are updates that were made to a hidden component. They
+      // have special logic associated with them because they may be entangled
+      // with updates that occur outside that tree. But once the outer tree
+      // commits, they behave like regular updates.
+
+      for (var i = 0; i < hiddenUpdatesForLane.length; i++) {
+        var update = hiddenUpdatesForLane[i];
+
+        if (update !== null) {
+          update.lane &= ~OffscreenLane;
+        }
+      }
+    }
+
+    lanes &= ~lane;
+  }
+}
+function markRootEntangled(root, entangledLanes) {
+  // In addition to entangling each of the given lanes with each other, we also
+  // have to consider _transitive_ entanglements. For each lane that is already
+  // entangled with *any* of the given lanes, that lane is now transitively
+  // entangled with *all* the given lanes.
+  //
+  // Translated: If C is entangled with A, then entangling A with B also
+  // entangles C with B.
+  //
+  // If this is hard to grasp, it might help to intentionally break this
+  // function and look at the tests that fail in ReactTransition-test.js. Try
+  // commenting out one of the conditions below.
+  var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
+  var entanglements = root.entanglements;
+  var lanes = rootEntangledLanes;
+
+  while (lanes) {
+    var index = pickArbitraryLaneIndex(lanes);
+    var lane = 1 << index;
+
+    if (
+      // Is this one of the newly entangled lanes?
+      (lane & entangledLanes) | // Is this lane transitively entangled with the newly entangled lanes?
+      (entanglements[index] & entangledLanes)
+    ) {
+      entanglements[index] |= entangledLanes;
+    }
+
+    lanes &= ~lane;
+  }
+}
+function markHiddenUpdate(root, update, lane) {
+  var index = laneToIndex(lane);
+  var hiddenUpdates = root.hiddenUpdates;
+  var hiddenUpdatesForLane = hiddenUpdates[index];
+
+  if (hiddenUpdatesForLane === null) {
+    hiddenUpdates[index] = [update];
+  } else {
+    hiddenUpdatesForLane.push(update);
+  }
+
+  update.lane = lane | OffscreenLane;
+}
+function getBumpedLaneForHydration(root, renderLanes) {
+  var renderLane = getHighestPriorityLane(renderLanes);
+  var lane;
+
+  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+    lane = SyncHydrationLane;
+  } else {
+    switch (renderLane) {
+      case SyncLane:
+        lane = SyncHydrationLane;
+        break;
+
+      case InputContinuousLane:
+        lane = InputContinuousHydrationLane;
+        break;
+
+      case DefaultLane:
+        lane = DefaultHydrationLane;
+        break;
+
+      case TransitionLane1:
+      case TransitionLane2:
+      case TransitionLane3:
+      case TransitionLane4:
+      case TransitionLane5:
+      case TransitionLane6:
+      case TransitionLane7:
+      case TransitionLane8:
+      case TransitionLane9:
+      case TransitionLane10:
+      case TransitionLane11:
+      case TransitionLane12:
+      case TransitionLane13:
+      case TransitionLane14:
+      case TransitionLane15:
+      case TransitionLane16:
+      case RetryLane1:
+      case RetryLane2:
+      case RetryLane3:
+      case RetryLane4:
+        lane = TransitionHydrationLane;
+        break;
+
+      case IdleLane:
+        lane = IdleHydrationLane;
+        break;
+
+      default:
+        // Everything else is already either a hydration lane, or shouldn't
+        // be retried at a hydration lane.
+        lane = NoLane;
+        break;
+    }
+  } // Check if the lane we chose is suspended. If so, that indicates that we
+  // already attempted and failed to hydrate at that level. Also check if we're
+  // already rendering that lane, which is rare but could happen.
+
+  if ((lane & (root.suspendedLanes | renderLanes)) !== NoLane) {
+    // Give up trying to hydrate and fall back to client render.
+    return NoLane;
+  }
+
+  return lane;
+}
+function addFiberToLanesMap(root, fiber, lanes) {
+  if (!isDevToolsPresent) {
+    return;
+  }
+
+  var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+
+  while (lanes > 0) {
+    var index = laneToIndex(lanes);
+    var lane = 1 << index;
+    var updaters = pendingUpdatersLaneMap[index];
+    updaters.add(fiber);
+    lanes &= ~lane;
+  }
+}
+function movePendingFibersToMemoized(root, lanes) {
+  if (!isDevToolsPresent) {
+    return;
+  }
+
+  var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  var memoizedUpdaters = root.memoizedUpdaters;
+
+  while (lanes > 0) {
+    var index = laneToIndex(lanes);
+    var lane = 1 << index;
+    var updaters = pendingUpdatersLaneMap[index];
+
+    if (updaters.size > 0) {
+      updaters.forEach(function (fiber) {
+        var alternate = fiber.alternate;
+
+        if (alternate === null || !memoizedUpdaters.has(alternate)) {
+          memoizedUpdaters.add(fiber);
+        }
+      });
+      updaters.clear();
+    }
+
+    lanes &= ~lane;
+  }
+}
+function addTransitionToLanesMap(root, transition, lane) {
+  if (enableTransitionTracing) {
+    var transitionLanesMap = root.transitionLanes;
+    var index = laneToIndex(lane);
+    var transitions = transitionLanesMap[index];
+
+    if (transitions === null) {
+      transitions = new Set();
+    }
+
+    transitions.add(transition);
+    transitionLanesMap[index] = transitions;
+  }
+}
+function getTransitionsForLanes(root, lanes) {
+  if (!enableTransitionTracing) {
+    return null;
+  }
+
+  var transitionsForLanes = [];
+
+  while (lanes > 0) {
+    var index = laneToIndex(lanes);
+    var lane = 1 << index;
+    var transitions = root.transitionLanes[index];
+
+    if (transitions !== null) {
+      transitions.forEach(function (transition) {
+        transitionsForLanes.push(transition);
+      });
+    }
+
+    lanes &= ~lane;
+  }
+
+  if (transitionsForLanes.length === 0) {
+    return null;
+  }
+
+  return transitionsForLanes;
+}
+function clearTransitionsForLanes(root, lanes) {
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  while (lanes > 0) {
+    var index = laneToIndex(lanes);
+    var lane = 1 << index;
+    var transitions = root.transitionLanes[index];
+
+    if (transitions !== null) {
+      root.transitionLanes[index] = null;
+    }
+
+    lanes &= ~lane;
+  }
+}
+
+var DiscreteEventPriority = SyncLane;
+var ContinuousEventPriority = InputContinuousLane;
+var DefaultEventPriority = DefaultLane;
+var IdleEventPriority = IdleLane;
+var currentUpdatePriority = NoLane;
+function getCurrentUpdatePriority() {
+  return currentUpdatePriority;
+}
+function setCurrentUpdatePriority(newPriority) {
+  currentUpdatePriority = newPriority;
+}
+function runWithPriority(priority, fn) {
+  var previousPriority = currentUpdatePriority;
+
+  try {
+    currentUpdatePriority = priority;
+    return fn();
+  } finally {
+    currentUpdatePriority = previousPriority;
+  }
+}
+function higherEventPriority(a, b) {
+  return a !== 0 && a < b ? a : b;
+}
+function lowerEventPriority(a, b) {
+  return a === 0 || a > b ? a : b;
+}
+function isHigherEventPriority(a, b) {
+  return a !== 0 && a < b;
+}
+function lanesToEventPriority(lanes) {
+  var lane = getHighestPriorityLane(lanes);
+
+  if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
+    return DiscreteEventPriority;
+  }
+
+  if (!isHigherEventPriority(ContinuousEventPriority, lane)) {
+    return ContinuousEventPriority;
+  }
+
+  if (includesNonIdleWork(lane)) {
+    return DefaultEventPriority;
+  }
+
+  return IdleEventPriority;
+}
+
+// $FlowFixMe[method-unbinding]
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+/*
+ * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+ * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+ *
+ * The functions in this module will throw an easier-to-understand,
+ * easier-to-debug exception with a clear errors message message explaining the
+ * problem. (Instead of a confusing exception thrown inside the implementation
+ * of the `value` object).
+ */
+// $FlowFixMe only called in DEV, so void return is not possible.
+function typeName(value) {
+  {
+    // toStringTag is needed for namespaced types like Temporal.Instant
+    var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+    var type =
+      (hasToStringTag && value[Symbol.toStringTag]) ||
+      value.constructor.name ||
+      "Object"; // $FlowFixMe
+
+    return type;
+  }
+} // $FlowFixMe only called in DEV, so void return is not possible.
+
+function willCoercionThrow(value) {
+  {
+    try {
+      testStringCoercion(value);
+      return false;
+    } catch (e) {
+      return true;
+    }
+  }
+}
+
+function testStringCoercion(value) {
+  // If you ended up here by following an exception call stack, here's what's
+  // happened: you supplied an object or symbol value to React (as a prop, key,
+  // DOM attribute, CSS property, string ref, etc.) and when React tried to
+  // coerce it to a string using `'' + value`, an exception was thrown.
+  //
+  // The most common types that will cause this exception are `Symbol` instances
+  // and Temporal objects like `Temporal.Instant`. But any object that has a
+  // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+  // exception. (Library authors do this to prevent users from using built-in
+  // numeric operators like `+` or comparison operators like `>=` because custom
+  // methods are needed to perform accurate arithmetic or comparison.)
+  //
+  // To fix the problem, coerce this object or symbol value to a string before
+  // passing it to React. The most reliable way is usually `String(value)`.
+  //
+  // To find which value is throwing, check the browser or debugger console.
+  // Before this exception was thrown, there should be `console.error` output
+  // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+  // problem and how that type was used: key, atrribute, input value prop, etc.
+  // In most cases, this console output also shows the component and its
+  // ancestor components where the exception happened.
+  //
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return "" + value;
+}
+
+function checkAttributeStringCoercion(value, attributeName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` attribute is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        attributeName,
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkKeyStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided key is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkPropStringCoercion(value, propName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` prop is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        propName,
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkCSSPropertyStringCoercion(value, propName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` CSS property is an unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        propName,
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkHtmlStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided HTML markup uses a value of unsupported type %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkFormFieldValueStringCoercion(value) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "Form field values (value, checked, defaultValue, or defaultChecked props)" +
+          " must be strings, not %s." +
+          " This value must be coerced to a string before before using it here.",
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+
+var FunctionComponent = 0;
+var ClassComponent = 1;
+var IndeterminateComponent = 2; // Before we know whether it is function or class
+
+var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+
+var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+
+var HostComponent = 5;
+var HostText = 6;
+var Fragment = 7;
+var Mode = 8;
+var ContextConsumer = 9;
+var ContextProvider = 10;
+var ForwardRef = 11;
+var Profiler = 12;
+var SuspenseComponent = 13;
+var MemoComponent = 14;
+var SimpleMemoComponent = 15;
+var LazyComponent = 16;
+var IncompleteClassComponent = 17;
+var DehydratedFragment = 18;
+var SuspenseListComponent = 19;
+var ScopeComponent = 21;
+var OffscreenComponent = 22;
+var LegacyHiddenComponent = 23;
+var CacheComponent = 24;
+var TracingMarkerComponent = 25;
+var HostHoistable = 26;
+var HostSingleton = 27;
 
 var randomKey = Math.random().toString(36).slice(2);
 var internalInstanceKey = "__reactFiber$" + randomKey;
@@ -470,153 +2472,6 @@ var canUseDOM = !!(
   typeof window.document !== "undefined" &&
   typeof window.document.createElement !== "undefined"
 );
-
-// $FlowFixMe[method-unbinding]
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-/*
- * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
- * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
- *
- * The functions in this module will throw an easier-to-understand,
- * easier-to-debug exception with a clear errors message message explaining the
- * problem. (Instead of a confusing exception thrown inside the implementation
- * of the `value` object).
- */
-// $FlowFixMe only called in DEV, so void return is not possible.
-function typeName(value) {
-  {
-    // toStringTag is needed for namespaced types like Temporal.Instant
-    var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-    var type =
-      (hasToStringTag && value[Symbol.toStringTag]) ||
-      value.constructor.name ||
-      "Object"; // $FlowFixMe
-
-    return type;
-  }
-} // $FlowFixMe only called in DEV, so void return is not possible.
-
-function willCoercionThrow(value) {
-  {
-    try {
-      testStringCoercion(value);
-      return false;
-    } catch (e) {
-      return true;
-    }
-  }
-}
-
-function testStringCoercion(value) {
-  // If you ended up here by following an exception call stack, here's what's
-  // happened: you supplied an object or symbol value to React (as a prop, key,
-  // DOM attribute, CSS property, string ref, etc.) and when React tried to
-  // coerce it to a string using `'' + value`, an exception was thrown.
-  //
-  // The most common types that will cause this exception are `Symbol` instances
-  // and Temporal objects like `Temporal.Instant`. But any object that has a
-  // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-  // exception. (Library authors do this to prevent users from using built-in
-  // numeric operators like `+` or comparison operators like `>=` because custom
-  // methods are needed to perform accurate arithmetic or comparison.)
-  //
-  // To fix the problem, coerce this object or symbol value to a string before
-  // passing it to React. The most reliable way is usually `String(value)`.
-  //
-  // To find which value is throwing, check the browser or debugger console.
-  // Before this exception was thrown, there should be `console.error` output
-  // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-  // problem and how that type was used: key, atrribute, input value prop, etc.
-  // In most cases, this console output also shows the component and its
-  // ancestor components where the exception happened.
-  //
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  return "" + value;
-}
-
-function checkAttributeStringCoercion(value, attributeName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` attribute is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        attributeName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkKeyStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided key is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkPropStringCoercion(value, propName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` prop is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        propName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkCSSPropertyStringCoercion(value, propName) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided `%s` CSS property is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        propName,
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkHtmlStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "The provided HTML markup uses a value of unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkFormFieldValueStringCoercion(value) {
-  {
-    if (willCoercionThrow(value)) {
-      error(
-        "Form field values (value, checked, defaultValue, or defaultChecked props)" +
-          " must be strings, not %s." +
-          " This value must be coerced to a string before before using it here.",
-        typeName(value)
-      );
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
 
 // Attributes that aren't in the filter are presumed to have this type.
 
@@ -1674,105 +3529,6 @@ function getIteratorFn(maybeIterable) {
   }
 
   return null;
-}
-
-var assign = Object.assign;
-
-// Helpers to patch console.logs to avoid logging during side-effect free
-// replaying on render function. This currently only patches the object
-// lazily which won't cover if the log function was extracted eagerly.
-// We could also eagerly patch the method.
-var disabledDepth = 0;
-var prevLog;
-var prevInfo;
-var prevWarn;
-var prevError;
-var prevGroup;
-var prevGroupCollapsed;
-var prevGroupEnd;
-
-function disabledLog() {}
-
-disabledLog.__reactDisabledLog = true;
-function disableLogs() {
-  {
-    if (disabledDepth === 0) {
-      /* eslint-disable react-internal/no-production-logging */
-      prevLog = console.log;
-      prevInfo = console.info;
-      prevWarn = console.warn;
-      prevError = console.error;
-      prevGroup = console.group;
-      prevGroupCollapsed = console.groupCollapsed;
-      prevGroupEnd = console.groupEnd; // https://github.com/facebook/react/issues/19099
-
-      var props = {
-        configurable: true,
-        enumerable: true,
-        value: disabledLog,
-        writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
-
-      Object.defineProperties(console, {
-        info: props,
-        log: props,
-        warn: props,
-        error: props,
-        group: props,
-        groupCollapsed: props,
-        groupEnd: props
-      });
-      /* eslint-enable react-internal/no-production-logging */
-    }
-
-    disabledDepth++;
-  }
-}
-function reenableLogs() {
-  {
-    disabledDepth--;
-
-    if (disabledDepth === 0) {
-      /* eslint-disable react-internal/no-production-logging */
-      var props = {
-        configurable: true,
-        enumerable: true,
-        writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
-
-      Object.defineProperties(console, {
-        log: assign({}, props, {
-          value: prevLog
-        }),
-        info: assign({}, props, {
-          value: prevInfo
-        }),
-        warn: assign({}, props, {
-          value: prevWarn
-        }),
-        error: assign({}, props, {
-          value: prevError
-        }),
-        group: assign({}, props, {
-          value: prevGroup
-        }),
-        groupCollapsed: assign({}, props, {
-          value: prevGroupCollapsed
-        }),
-        groupEnd: assign({}, props, {
-          value: prevGroupEnd
-        })
-      });
-      /* eslint-enable react-internal/no-production-logging */
-    }
-
-    if (disabledDepth < 0) {
-      error(
-        "disabledDepth fell below zero. " +
-          "This is a bug in React. Please file an issue."
-      );
-    }
-  }
 }
 
 var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
@@ -5240,140 +6996,6 @@ function set(key, value) {
   key._reactInternals = value;
 }
 
-var NoFlags$1 =
-  /*                      */
-  0;
-var PerformedWork =
-  /*                */
-  1;
-var Placement =
-  /*                    */
-  2;
-var DidCapture =
-  /*                   */
-  128;
-var Hydrating =
-  /*                    */
-  4096; // You can change the rest (and add more).
-
-var Update =
-  /*                       */
-  4;
-/* Skipped value:                                 0b0000000000000000000000001000; */
-
-var ChildDeletion =
-  /*                */
-  16;
-var ContentReset =
-  /*                 */
-  32;
-var Callback =
-  /*                     */
-  64;
-/* Used by DidCapture:                            0b0000000000000000000010000000; */
-
-var ForceClientRender =
-  /*            */
-  256;
-var Ref =
-  /*                          */
-  512;
-var Snapshot =
-  /*                     */
-  1024;
-var Passive$1 =
-  /*                      */
-  2048;
-/* Used by Hydrating:                             0b0000000000000001000000000000; */
-
-var Visibility =
-  /*                   */
-  8192;
-var StoreConsistency =
-  /*             */
-  16384; // It's OK to reuse this bit because these flags are mutually exclusive for
-// different fiber types. We should really be doing this for as many flags as
-// possible, because we're about to run out of bits.
-
-var ScheduleRetry = StoreConsistency;
-var LifecycleEffectMask =
-  Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
-
-var HostEffectMask =
-  /*               */
-  32767; // These are not really side effects, but we still reuse this field.
-
-var Incomplete =
-  /*                   */
-  32768;
-var ShouldCapture =
-  /*                */
-  65536;
-var ForceUpdateForLegacySuspense =
-  /* */
-  131072;
-var DidPropagateContext =
-  /*          */
-  262144;
-var NeedsPropagation =
-  /*             */
-  524288;
-var Forked =
-  /*                       */
-  1048576; // Static tags describe aspects of a fiber that are not specific to a render,
-// e.g. a fiber uses a passive effect (even if there are no updates on this particular render).
-// This enables us to defer more work in the unmount case,
-// since we can defer traversing the tree during layout to look for Passive effects,
-// and instead rely on the static flag as a signal that there may be cleanup work.
-
-var RefStatic =
-  /*                    */
-  2097152;
-var LayoutStatic =
-  /*                 */
-  4194304;
-var PassiveStatic =
-  /*                */
-  8388608;
-var SuspenseyCommit =
-  /*              */
-  16777216; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
-
-var PlacementDEV =
-  /*                 */
-  33554432;
-var MountLayoutDev =
-  /*               */
-  67108864;
-var MountPassiveDev =
-  /*              */
-  134217728; // Groups of flags that are used in the commit phase to skip over trees that
-// don't contain effects, by checking subtreeFlags.
-
-var BeforeMutationMask = // TODO: Remove Update flag from before mutation phase by re-landing Visibility
-  // flag logic (see #20043)
-  Update |
-  Snapshot | // createEventHandle needs to visit deleted and hidden trees to
-  // fire beforeblur
-  // TODO: Only need to visit Deletions during BeforeMutation phase if an
-  // element is focused.
-  (ChildDeletion | Visibility);
-var MutationMask =
-  Placement |
-  Update |
-  ChildDeletion |
-  ContentReset |
-  Ref |
-  Hydrating |
-  Visibility;
-var LayoutMask = Update | Callback | Ref | Visibility; // TODO: Split into PassiveMountMask and PassiveUnmountMask
-
-var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that don't get reset on clones.
-// This allows certain concepts to persist without recalculating them,
-// e.g. whether a subtree contains passive effects or portals.
-
-var StaticMask = LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
-
 var ReactCurrentOwner$2 = ReactSharedInternals.ReactCurrentOwner;
 function getNearestMountedFiber(fiber) {
   var node = fiber;
@@ -5787,57 +7409,6 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
   }
 }
 
-var valueStack = [];
-var fiberStack;
-
-{
-  fiberStack = [];
-}
-
-var index = -1;
-
-function createCursor(defaultValue) {
-  return {
-    current: defaultValue
-  };
-}
-
-function pop(cursor, fiber) {
-  if (index < 0) {
-    {
-      error("Unexpected pop.");
-    }
-
-    return;
-  }
-
-  {
-    if (fiber !== fiberStack[index]) {
-      error("Unexpected Fiber popped.");
-    }
-  }
-
-  cursor.current = valueStack[index];
-  valueStack[index] = null;
-
-  {
-    fiberStack[index] = null;
-  }
-
-  index--;
-}
-
-function push(cursor, value, fiber) {
-  index++;
-  valueStack[index] = cursor.current;
-
-  {
-    fiberStack[index] = fiber;
-  }
-
-  cursor.current = value;
-}
-
 var emptyContextObject = {};
 
 {
@@ -5887,1497 +7458,6 @@ function isOffscreenManual(offscreenFiber) {
     offscreenFiber.memoizedProps !== null &&
     offscreenFiber.memoizedProps.mode === "manual"
   );
-}
-
-var NoMode =
-  /*                         */
-  0; // TODO: Remove ConcurrentMode by reading from the root tag instead
-
-var ConcurrentMode =
-  /*                 */
-  1;
-var ProfileMode =
-  /*                    */
-  2;
-var DebugTracingMode =
-  /*               */
-  4;
-var StrictLegacyMode =
-  /*               */
-  8;
-var StrictEffectsMode =
-  /*              */
-  16;
-var ConcurrentUpdatesByDefaultMode =
-  /* */
-  32;
-
-// TODO: This is pretty well supported by browsers. Maybe we can drop it.
-var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback; // Count leading zeros.
-// Based on:
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-
-var log$2 = Math.log;
-var LN2 = Math.LN2;
-
-function clz32Fallback(x) {
-  var asUint = x >>> 0;
-
-  if (asUint === 0) {
-    return 32;
-  }
-
-  return (31 - ((log$2(asUint) / LN2) | 0)) | 0;
-}
-
-// If those values are changed that package should be rebuilt and redeployed.
-
-var TotalLanes = 31;
-var NoLanes =
-  /*                        */
-  0;
-var NoLane =
-  /*                          */
-  0;
-var SyncHydrationLane =
-  /*               */
-  1;
-var SyncLane =
-  /*                        */
-  2;
-var InputContinuousHydrationLane =
-  /*    */
-  4;
-var InputContinuousLane =
-  /*             */
-  8;
-var DefaultHydrationLane =
-  /*            */
-  16;
-var DefaultLane =
-  /*                     */
-  32;
-var SyncUpdateLanes =
-  /*                */
-  42;
-var TransitionHydrationLane =
-  /*                */
-  64;
-var TransitionLanes =
-  /*                       */
-  8388480;
-var TransitionLane1 =
-  /*                        */
-  128;
-var TransitionLane2 =
-  /*                        */
-  256;
-var TransitionLane3 =
-  /*                        */
-  512;
-var TransitionLane4 =
-  /*                        */
-  1024;
-var TransitionLane5 =
-  /*                        */
-  2048;
-var TransitionLane6 =
-  /*                        */
-  4096;
-var TransitionLane7 =
-  /*                        */
-  8192;
-var TransitionLane8 =
-  /*                        */
-  16384;
-var TransitionLane9 =
-  /*                        */
-  32768;
-var TransitionLane10 =
-  /*                       */
-  65536;
-var TransitionLane11 =
-  /*                       */
-  131072;
-var TransitionLane12 =
-  /*                       */
-  262144;
-var TransitionLane13 =
-  /*                       */
-  524288;
-var TransitionLane14 =
-  /*                       */
-  1048576;
-var TransitionLane15 =
-  /*                       */
-  2097152;
-var TransitionLane16 =
-  /*                       */
-  4194304;
-var RetryLanes =
-  /*                            */
-  125829120;
-var RetryLane1 =
-  /*                             */
-  8388608;
-var RetryLane2 =
-  /*                             */
-  16777216;
-var RetryLane3 =
-  /*                             */
-  33554432;
-var RetryLane4 =
-  /*                             */
-  67108864;
-var SomeRetryLane = RetryLane1;
-var SelectiveHydrationLane =
-  /*          */
-  134217728;
-var NonIdleLanes =
-  /*                          */
-  268435455;
-var IdleHydrationLane =
-  /*               */
-  268435456;
-var IdleLane =
-  /*                        */
-  536870912;
-var OffscreenLane =
-  /*                   */
-  1073741824; // This function is used for the experimental timeline (react-devtools-timeline)
-// It should be kept in sync with the Lanes values above.
-
-function getLabelForLane(lane) {
-  if (enableSchedulingProfiler) {
-    if (lane & SyncHydrationLane) {
-      return "SyncHydrationLane";
-    }
-
-    if (lane & SyncLane) {
-      return "Sync";
-    }
-
-    if (lane & InputContinuousHydrationLane) {
-      return "InputContinuousHydration";
-    }
-
-    if (lane & InputContinuousLane) {
-      return "InputContinuous";
-    }
-
-    if (lane & DefaultHydrationLane) {
-      return "DefaultHydration";
-    }
-
-    if (lane & DefaultLane) {
-      return "Default";
-    }
-
-    if (lane & TransitionHydrationLane) {
-      return "TransitionHydration";
-    }
-
-    if (lane & TransitionLanes) {
-      return "Transition";
-    }
-
-    if (lane & RetryLanes) {
-      return "Retry";
-    }
-
-    if (lane & SelectiveHydrationLane) {
-      return "SelectiveHydration";
-    }
-
-    if (lane & IdleHydrationLane) {
-      return "IdleHydration";
-    }
-
-    if (lane & IdleLane) {
-      return "Idle";
-    }
-
-    if (lane & OffscreenLane) {
-      return "Offscreen";
-    }
-  }
-}
-var NoTimestamp = -1;
-var nextTransitionLane = TransitionLane1;
-var nextRetryLane = RetryLane1;
-
-function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-
-    if (pendingSyncLanes !== 0) {
-      return pendingSyncLanes;
-    }
-  }
-
-  switch (getHighestPriorityLane(lanes)) {
-    case SyncHydrationLane:
-      return SyncHydrationLane;
-
-    case SyncLane:
-      return SyncLane;
-
-    case InputContinuousHydrationLane:
-      return InputContinuousHydrationLane;
-
-    case InputContinuousLane:
-      return InputContinuousLane;
-
-    case DefaultHydrationLane:
-      return DefaultHydrationLane;
-
-    case DefaultLane:
-      return DefaultLane;
-
-    case TransitionHydrationLane:
-      return TransitionHydrationLane;
-
-    case TransitionLane1:
-    case TransitionLane2:
-    case TransitionLane3:
-    case TransitionLane4:
-    case TransitionLane5:
-    case TransitionLane6:
-    case TransitionLane7:
-    case TransitionLane8:
-    case TransitionLane9:
-    case TransitionLane10:
-    case TransitionLane11:
-    case TransitionLane12:
-    case TransitionLane13:
-    case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
-      return lanes & TransitionLanes;
-
-    case RetryLane1:
-    case RetryLane2:
-    case RetryLane3:
-    case RetryLane4:
-      return lanes & RetryLanes;
-
-    case SelectiveHydrationLane:
-      return SelectiveHydrationLane;
-
-    case IdleHydrationLane:
-      return IdleHydrationLane;
-
-    case IdleLane:
-      return IdleLane;
-
-    case OffscreenLane:
-      return OffscreenLane;
-
-    default:
-      {
-        error("Should have found matching lanes. This is a bug in React.");
-      } // This shouldn't be reachable, but as a fallback, return the entire bitmask.
-
-      return lanes;
-  }
-}
-
-function getNextLanes(root, wipLanes) {
-  // Early bailout if there's no pending work left.
-  var pendingLanes = root.pendingLanes;
-
-  if (pendingLanes === NoLanes) {
-    return NoLanes;
-  }
-
-  var nextLanes = NoLanes;
-  var suspendedLanes = root.suspendedLanes;
-  var pingedLanes = root.pingedLanes; // Do not work on any idle work until all the non-idle work has finished,
-  // even if the work is suspended.
-
-  var nonIdlePendingLanes = pendingLanes & NonIdleLanes;
-
-  if (nonIdlePendingLanes !== NoLanes) {
-    var nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
-
-    if (nonIdleUnblockedLanes !== NoLanes) {
-      nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
-    } else {
-      var nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
-
-      if (nonIdlePingedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
-      }
-    }
-  } else {
-    // The only remaining work is Idle.
-    var unblockedLanes = pendingLanes & ~suspendedLanes;
-
-    if (unblockedLanes !== NoLanes) {
-      nextLanes = getHighestPriorityLanes(unblockedLanes);
-    } else {
-      if (pingedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(pingedLanes);
-      }
-    }
-  }
-
-  if (nextLanes === NoLanes) {
-    // This should only be reachable if we're suspended
-    // TODO: Consider warning in this path if a fallback timer is not scheduled.
-    return NoLanes;
-  } // If we're already in the middle of a render, switching lanes will interrupt
-  // it and we'll lose our progress. We should only do this if the new lanes are
-  // higher priority.
-
-  if (
-    wipLanes !== NoLanes &&
-    wipLanes !== nextLanes && // If we already suspended with a delay, then interrupting is fine. Don't
-    // bother waiting until the root is complete.
-    (wipLanes & suspendedLanes) === NoLanes
-  ) {
-    var nextLane = getHighestPriorityLane(nextLanes);
-    var wipLane = getHighestPriorityLane(wipLanes);
-
-    if (
-      // Tests whether the next lane is equal or lower priority than the wip
-      // one. This works because the bits decrease in priority as you go left.
-      nextLane >= wipLane || // Default priority updates should not interrupt transition updates. The
-      // only difference between default updates and transition updates is that
-      // default updates do not support refresh transitions.
-      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
-    ) {
-      // Keep working on the existing in-progress tree. Do not interrupt.
-      return wipLanes;
-    }
-  }
-
-  if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode);
-  else if ((nextLanes & InputContinuousLane) !== NoLanes) {
-    // When updates are sync by default, we entangle continuous priority updates
-    // and default updates, so they render in the same batch. The only reason
-    // they use separate lanes is because continuous updates should interrupt
-    // transitions, but default updates should not.
-    nextLanes |= pendingLanes & DefaultLane;
-  } // Check for entangled lanes and add them to the batch.
-  //
-  // A lane is said to be entangled with another when it's not allowed to render
-  // in a batch that does not also include the other lane. Typically we do this
-  // when multiple updates have the same source, and we only want to respond to
-  // the most recent event from that source.
-  //
-  // Note that we apply entanglements *after* checking for partial work above.
-  // This means that if a lane is entangled during an interleaved event while
-  // it's already rendering, we won't interrupt it. This is intentional, since
-  // entanglement is usually "best effort": we'll try our best to render the
-  // lanes in the same batch, but it's not worth throwing out partially
-  // completed work in order to do it.
-  // TODO: Reconsider this. The counter-argument is that the partial work
-  // represents an intermediate state, which we don't want to show to the user.
-  // And by spending extra time finishing it, we're increasing the amount of
-  // time it takes to show the final state, which is what they are actually
-  // waiting for.
-  //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
-  // time we apply the entanglement.
-
-  var entangledLanes = root.entangledLanes;
-
-  if (entangledLanes !== NoLanes) {
-    var entanglements = root.entanglements;
-    var lanes = nextLanes & entangledLanes;
-
-    while (lanes > 0) {
-      var index = pickArbitraryLaneIndex(lanes);
-      var lane = 1 << index;
-      nextLanes |= entanglements[index];
-      lanes &= ~lane;
-    }
-  }
-
-  return nextLanes;
-}
-function getMostRecentEventTime(root, lanes) {
-  var eventTimes = root.eventTimes;
-  var mostRecentEventTime = NoTimestamp;
-
-  while (lanes > 0) {
-    var index = pickArbitraryLaneIndex(lanes);
-    var lane = 1 << index;
-    var eventTime = eventTimes[index];
-
-    if (eventTime > mostRecentEventTime) {
-      mostRecentEventTime = eventTime;
-    }
-
-    lanes &= ~lane;
-  }
-
-  return mostRecentEventTime;
-}
-
-function computeExpirationTime(lane, currentTime) {
-  switch (lane) {
-    case SyncHydrationLane:
-    case SyncLane:
-    case InputContinuousHydrationLane:
-    case InputContinuousLane:
-      // User interactions should expire slightly more quickly.
-      //
-      // NOTE: This is set to the corresponding constant as in Scheduler.js.
-      // When we made it larger, a product metric in www regressed, suggesting
-      // there's a user interaction that's being starved by a series of
-      // synchronous updates. If that theory is correct, the proper solution is
-      // to fix the starvation. However, this scenario supports the idea that
-      // expiration times are an important safeguard when starvation
-      // does happen.
-      return currentTime + 250;
-
-    case DefaultHydrationLane:
-    case DefaultLane:
-    case TransitionHydrationLane:
-    case TransitionLane1:
-    case TransitionLane2:
-    case TransitionLane3:
-    case TransitionLane4:
-    case TransitionLane5:
-    case TransitionLane6:
-    case TransitionLane7:
-    case TransitionLane8:
-    case TransitionLane9:
-    case TransitionLane10:
-    case TransitionLane11:
-    case TransitionLane12:
-    case TransitionLane13:
-    case TransitionLane14:
-    case TransitionLane15:
-    case TransitionLane16:
-      return currentTime + 5000;
-
-    case RetryLane1:
-    case RetryLane2:
-    case RetryLane3:
-    case RetryLane4:
-      // TODO: Retries should be allowed to expire if they are CPU bound for
-      // too long, but when I made this change it caused a spike in browser
-      // crashes. There must be some other underlying bug; not super urgent but
-      // ideally should figure out why and fix it. Unfortunately we don't have
-      // a repro for the crashes, only detected via production metrics.
-      return NoTimestamp;
-
-    case SelectiveHydrationLane:
-    case IdleHydrationLane:
-    case IdleLane:
-    case OffscreenLane:
-      // Anything idle priority or lower should never expire.
-      return NoTimestamp;
-
-    default:
-      {
-        error("Should have found matching lanes. This is a bug in React.");
-      }
-
-      return NoTimestamp;
-  }
-}
-
-function markStarvedLanesAsExpired(root, currentTime) {
-  // TODO: This gets called every time we yield. We can optimize by storing
-  // the earliest expiration time on the root. Then use that to quickly bail out
-  // of this function.
-  var pendingLanes = root.pendingLanes;
-  var suspendedLanes = root.suspendedLanes;
-  var pingedLanes = root.pingedLanes;
-  var expirationTimes = root.expirationTimes; // Iterate through the pending lanes and check if we've reached their
-  // expiration time. If so, we'll assume the update is being starved and mark
-  // it as expired to force it to finish.
-  //
-  // We exclude retry lanes because those must always be time sliced, in order
-  // to unwrap uncached promises.
-  // TODO: Write a test for this
-
-  var lanes = pendingLanes & ~RetryLanes;
-
-  while (lanes > 0) {
-    var index = pickArbitraryLaneIndex(lanes);
-    var lane = 1 << index;
-    var expirationTime = expirationTimes[index];
-
-    if (expirationTime === NoTimestamp) {
-      // Found a pending lane with no expiration time. If it's not suspended, or
-      // if it's pinged, assume it's CPU-bound. Compute a new expiration time
-      // using the current time.
-      if (
-        (lane & suspendedLanes) === NoLanes ||
-        (lane & pingedLanes) !== NoLanes
-      ) {
-        // Assumes timestamps are monotonically increasing.
-        expirationTimes[index] = computeExpirationTime(lane, currentTime);
-      }
-    } else if (expirationTime <= currentTime) {
-      // This lane expired
-      root.expiredLanes |= lane;
-    }
-
-    lanes &= ~lane;
-  }
-} // This returns the highest priority pending lanes regardless of whether they
-// are suspended.
-
-function getHighestPriorityPendingLanes(root) {
-  return getHighestPriorityLanes(root.pendingLanes);
-}
-function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
-  if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) {
-    // The error recovery mechanism is disabled until these lanes are cleared.
-    return NoLanes;
-  }
-
-  var everythingButOffscreen = root.pendingLanes & ~OffscreenLane;
-
-  if (everythingButOffscreen !== NoLanes) {
-    return everythingButOffscreen;
-  }
-
-  if (everythingButOffscreen & OffscreenLane) {
-    return OffscreenLane;
-  }
-
-  return NoLanes;
-}
-function includesSyncLane(lanes) {
-  return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
-}
-function includesNonIdleWork(lanes) {
-  return (lanes & NonIdleLanes) !== NoLanes;
-}
-function includesOnlyRetries(lanes) {
-  return (lanes & RetryLanes) === lanes;
-}
-function includesOnlyNonUrgentLanes(lanes) {
-  // TODO: Should hydration lanes be included here? This function is only
-  // used in `updateDeferredValueImpl`.
-  var UrgentLanes = SyncLane | InputContinuousLane | DefaultLane;
-  return (lanes & UrgentLanes) === NoLanes;
-}
-function includesOnlyTransitions(lanes) {
-  return (lanes & TransitionLanes) === lanes;
-}
-function includesBlockingLane(root, lanes) {
-  if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode) {
-    // Concurrent updates by default always use time slicing.
-    return false;
-  }
-
-  var SyncDefaultLanes =
-    InputContinuousHydrationLane |
-    InputContinuousLane |
-    DefaultHydrationLane |
-    DefaultLane;
-  return (lanes & SyncDefaultLanes) !== NoLanes;
-}
-function includesExpiredLane(root, lanes) {
-  // This is a separate check from includesBlockingLane because a lane can
-  // expire after a render has already started.
-  return (lanes & root.expiredLanes) !== NoLanes;
-}
-function isTransitionLane(lane) {
-  return (lane & TransitionLanes) !== NoLanes;
-}
-function claimNextTransitionLane() {
-  // Cycle through the lanes, assigning each new transition to the next lane.
-  // In most cases, this means every transition gets its own lane, until we
-  // run out of lanes and cycle back to the beginning.
-  var lane = nextTransitionLane;
-  nextTransitionLane <<= 1;
-
-  if ((nextTransitionLane & TransitionLanes) === NoLanes) {
-    nextTransitionLane = TransitionLane1;
-  }
-
-  return lane;
-}
-function claimNextRetryLane() {
-  var lane = nextRetryLane;
-  nextRetryLane <<= 1;
-
-  if ((nextRetryLane & RetryLanes) === NoLanes) {
-    nextRetryLane = RetryLane1;
-  }
-
-  return lane;
-}
-function getHighestPriorityLane(lanes) {
-  return lanes & -lanes;
-}
-function pickArbitraryLane(lanes) {
-  // This wrapper function gets inlined. Only exists so to communicate that it
-  // doesn't matter which bit is selected; you can pick any bit without
-  // affecting the algorithms where its used. Here I'm using
-  // getHighestPriorityLane because it requires the fewest operations.
-  return getHighestPriorityLane(lanes);
-}
-
-function pickArbitraryLaneIndex(lanes) {
-  return 31 - clz32(lanes);
-}
-
-function laneToIndex(lane) {
-  return pickArbitraryLaneIndex(lane);
-}
-
-function includesSomeLane(a, b) {
-  return (a & b) !== NoLanes;
-}
-function isSubsetOfLanes(set, subset) {
-  return (set & subset) === subset;
-}
-function mergeLanes(a, b) {
-  return a | b;
-}
-function removeLanes(set, subset) {
-  return set & ~subset;
-}
-function intersectLanes(a, b) {
-  return a & b;
-} // Seems redundant, but it changes the type from a single lane (used for
-// updates) to a group of lanes (used for flushing work).
-
-function laneToLanes(lane) {
-  return lane;
-}
-function higherPriorityLane(a, b) {
-  // This works because the bit ranges decrease in priority as you go left.
-  return a !== NoLane && a < b ? a : b;
-}
-function createLaneMap(initial) {
-  // Intentionally pushing one by one.
-  // https://v8.dev/blog/elements-kinds#avoid-creating-holes
-  var laneMap = [];
-
-  for (var i = 0; i < TotalLanes; i++) {
-    laneMap.push(initial);
-  }
-
-  return laneMap;
-}
-function markRootUpdated(root, updateLane, eventTime) {
-  root.pendingLanes |= updateLane; // If there are any suspended transitions, it's possible this new update
-  // could unblock them. Clear the suspended lanes so that we can try rendering
-  // them again.
-  //
-  // TODO: We really only need to unsuspend only lanes that are in the
-  // `subtreeLanes` of the updated fiber, or the update lanes of the return
-  // path. This would exclude suspended updates in an unrelated sibling tree,
-  // since there's no way for this update to unblock it.
-  //
-  // We don't do this if the incoming update is idle, because we never process
-  // idle updates until after all the regular updates have finished; there's no
-  // way it could unblock a transition.
-
-  if (updateLane !== IdleLane) {
-    root.suspendedLanes = NoLanes;
-    root.pingedLanes = NoLanes;
-  }
-
-  var eventTimes = root.eventTimes;
-  var index = laneToIndex(updateLane); // We can always overwrite an existing timestamp because we prefer the most
-  // recent event, and we assume time is monotonically increasing.
-
-  eventTimes[index] = eventTime;
-}
-function markRootSuspended$1(root, suspendedLanes) {
-  root.suspendedLanes |= suspendedLanes;
-  root.pingedLanes &= ~suspendedLanes; // The suspended lanes are no longer CPU-bound. Clear their expiration times.
-
-  var expirationTimes = root.expirationTimes;
-  var lanes = suspendedLanes;
-
-  while (lanes > 0) {
-    var index = pickArbitraryLaneIndex(lanes);
-    var lane = 1 << index;
-    expirationTimes[index] = NoTimestamp;
-    lanes &= ~lane;
-  }
-}
-function markRootPinged(root, pingedLanes) {
-  root.pingedLanes |= root.suspendedLanes & pingedLanes;
-}
-function markRootMutableRead(root, updateLane) {
-  root.mutableReadLanes |= updateLane & root.pendingLanes;
-}
-function markRootFinished(root, remainingLanes) {
-  var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
-  root.pendingLanes = remainingLanes; // Let's try everything again
-
-  root.suspendedLanes = NoLanes;
-  root.pingedLanes = NoLanes;
-  root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
-  root.entangledLanes &= remainingLanes;
-  root.errorRecoveryDisabledLanes &= remainingLanes;
-  var entanglements = root.entanglements;
-  var eventTimes = root.eventTimes;
-  var expirationTimes = root.expirationTimes;
-  var hiddenUpdates = root.hiddenUpdates; // Clear the lanes that no longer have pending work
-
-  var lanes = noLongerPendingLanes;
-
-  while (lanes > 0) {
-    var index = pickArbitraryLaneIndex(lanes);
-    var lane = 1 << index;
-    entanglements[index] = NoLanes;
-    eventTimes[index] = NoTimestamp;
-    expirationTimes[index] = NoTimestamp;
-    var hiddenUpdatesForLane = hiddenUpdates[index];
-
-    if (hiddenUpdatesForLane !== null) {
-      hiddenUpdates[index] = null; // "Hidden" updates are updates that were made to a hidden component. They
-      // have special logic associated with them because they may be entangled
-      // with updates that occur outside that tree. But once the outer tree
-      // commits, they behave like regular updates.
-
-      for (var i = 0; i < hiddenUpdatesForLane.length; i++) {
-        var update = hiddenUpdatesForLane[i];
-
-        if (update !== null) {
-          update.lane &= ~OffscreenLane;
-        }
-      }
-    }
-
-    lanes &= ~lane;
-  }
-}
-function markRootEntangled(root, entangledLanes) {
-  // In addition to entangling each of the given lanes with each other, we also
-  // have to consider _transitive_ entanglements. For each lane that is already
-  // entangled with *any* of the given lanes, that lane is now transitively
-  // entangled with *all* the given lanes.
-  //
-  // Translated: If C is entangled with A, then entangling A with B also
-  // entangles C with B.
-  //
-  // If this is hard to grasp, it might help to intentionally break this
-  // function and look at the tests that fail in ReactTransition-test.js. Try
-  // commenting out one of the conditions below.
-  var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
-  var entanglements = root.entanglements;
-  var lanes = rootEntangledLanes;
-
-  while (lanes) {
-    var index = pickArbitraryLaneIndex(lanes);
-    var lane = 1 << index;
-
-    if (
-      // Is this one of the newly entangled lanes?
-      (lane & entangledLanes) | // Is this lane transitively entangled with the newly entangled lanes?
-      (entanglements[index] & entangledLanes)
-    ) {
-      entanglements[index] |= entangledLanes;
-    }
-
-    lanes &= ~lane;
-  }
-}
-function markHiddenUpdate(root, update, lane) {
-  var index = laneToIndex(lane);
-  var hiddenUpdates = root.hiddenUpdates;
-  var hiddenUpdatesForLane = hiddenUpdates[index];
-
-  if (hiddenUpdatesForLane === null) {
-    hiddenUpdates[index] = [update];
-  } else {
-    hiddenUpdatesForLane.push(update);
-  }
-
-  update.lane = lane | OffscreenLane;
-}
-function getBumpedLaneForHydration(root, renderLanes) {
-  var renderLane = getHighestPriorityLane(renderLanes);
-  var lane;
-
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
-    lane = SyncHydrationLane;
-  } else {
-    switch (renderLane) {
-      case SyncLane:
-        lane = SyncHydrationLane;
-        break;
-
-      case InputContinuousLane:
-        lane = InputContinuousHydrationLane;
-        break;
-
-      case DefaultLane:
-        lane = DefaultHydrationLane;
-        break;
-
-      case TransitionLane1:
-      case TransitionLane2:
-      case TransitionLane3:
-      case TransitionLane4:
-      case TransitionLane5:
-      case TransitionLane6:
-      case TransitionLane7:
-      case TransitionLane8:
-      case TransitionLane9:
-      case TransitionLane10:
-      case TransitionLane11:
-      case TransitionLane12:
-      case TransitionLane13:
-      case TransitionLane14:
-      case TransitionLane15:
-      case TransitionLane16:
-      case RetryLane1:
-      case RetryLane2:
-      case RetryLane3:
-      case RetryLane4:
-        lane = TransitionHydrationLane;
-        break;
-
-      case IdleLane:
-        lane = IdleHydrationLane;
-        break;
-
-      default:
-        // Everything else is already either a hydration lane, or shouldn't
-        // be retried at a hydration lane.
-        lane = NoLane;
-        break;
-    }
-  } // Check if the lane we chose is suspended. If so, that indicates that we
-  // already attempted and failed to hydrate at that level. Also check if we're
-  // already rendering that lane, which is rare but could happen.
-
-  if ((lane & (root.suspendedLanes | renderLanes)) !== NoLane) {
-    // Give up trying to hydrate and fall back to client render.
-    return NoLane;
-  }
-
-  return lane;
-}
-function addFiberToLanesMap(root, fiber, lanes) {
-  if (!isDevToolsPresent) {
-    return;
-  }
-
-  var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
-
-  while (lanes > 0) {
-    var index = laneToIndex(lanes);
-    var lane = 1 << index;
-    var updaters = pendingUpdatersLaneMap[index];
-    updaters.add(fiber);
-    lanes &= ~lane;
-  }
-}
-function movePendingFibersToMemoized(root, lanes) {
-  if (!isDevToolsPresent) {
-    return;
-  }
-
-  var pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
-  var memoizedUpdaters = root.memoizedUpdaters;
-
-  while (lanes > 0) {
-    var index = laneToIndex(lanes);
-    var lane = 1 << index;
-    var updaters = pendingUpdatersLaneMap[index];
-
-    if (updaters.size > 0) {
-      updaters.forEach(function (fiber) {
-        var alternate = fiber.alternate;
-
-        if (alternate === null || !memoizedUpdaters.has(alternate)) {
-          memoizedUpdaters.add(fiber);
-        }
-      });
-      updaters.clear();
-    }
-
-    lanes &= ~lane;
-  }
-}
-function addTransitionToLanesMap(root, transition, lane) {
-  if (enableTransitionTracing) {
-    var transitionLanesMap = root.transitionLanes;
-    var index = laneToIndex(lane);
-    var transitions = transitionLanesMap[index];
-
-    if (transitions === null) {
-      transitions = new Set();
-    }
-
-    transitions.add(transition);
-    transitionLanesMap[index] = transitions;
-  }
-}
-function getTransitionsForLanes(root, lanes) {
-  if (!enableTransitionTracing) {
-    return null;
-  }
-
-  var transitionsForLanes = [];
-
-  while (lanes > 0) {
-    var index = laneToIndex(lanes);
-    var lane = 1 << index;
-    var transitions = root.transitionLanes[index];
-
-    if (transitions !== null) {
-      transitions.forEach(function (transition) {
-        transitionsForLanes.push(transition);
-      });
-    }
-
-    lanes &= ~lane;
-  }
-
-  if (transitionsForLanes.length === 0) {
-    return null;
-  }
-
-  return transitionsForLanes;
-}
-function clearTransitionsForLanes(root, lanes) {
-  if (!enableTransitionTracing) {
-    return;
-  }
-
-  while (lanes > 0) {
-    var index = laneToIndex(lanes);
-    var lane = 1 << index;
-    var transitions = root.transitionLanes[index];
-
-    if (transitions !== null) {
-      root.transitionLanes[index] = null;
-    }
-
-    lanes &= ~lane;
-  }
-}
-
-var DiscreteEventPriority = SyncLane;
-var ContinuousEventPriority = InputContinuousLane;
-var DefaultEventPriority = DefaultLane;
-var IdleEventPriority = IdleLane;
-var currentUpdatePriority = NoLane;
-function getCurrentUpdatePriority() {
-  return currentUpdatePriority;
-}
-function setCurrentUpdatePriority(newPriority) {
-  currentUpdatePriority = newPriority;
-}
-function runWithPriority(priority, fn) {
-  var previousPriority = currentUpdatePriority;
-
-  try {
-    currentUpdatePriority = priority;
-    return fn();
-  } finally {
-    currentUpdatePriority = previousPriority;
-  }
-}
-function higherEventPriority(a, b) {
-  return a !== 0 && a < b ? a : b;
-}
-function lowerEventPriority(a, b) {
-  return a === 0 || a > b ? a : b;
-}
-function isHigherEventPriority(a, b) {
-  return a !== 0 && a < b;
-}
-function lanesToEventPriority(lanes) {
-  var lane = getHighestPriorityLane(lanes);
-
-  if (!isHigherEventPriority(DiscreteEventPriority, lane)) {
-    return DiscreteEventPriority;
-  }
-
-  if (!isHigherEventPriority(ContinuousEventPriority, lane)) {
-    return ContinuousEventPriority;
-  }
-
-  if (includesNonIdleWork(lane)) {
-    return DefaultEventPriority;
-  }
-
-  return IdleEventPriority;
-}
-
-// This module only exists as an ESM wrapper around the external CommonJS
-var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
-var cancelCallback$1 = Scheduler.unstable_cancelCallback;
-var shouldYield = Scheduler.unstable_shouldYield;
-var requestPaint = Scheduler.unstable_requestPaint;
-var now$1 = Scheduler.unstable_now;
-var getCurrentPriorityLevel = Scheduler.unstable_getCurrentPriorityLevel;
-var ImmediatePriority = Scheduler.unstable_ImmediatePriority;
-var UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
-var NormalPriority$1 = Scheduler.unstable_NormalPriority;
-var LowPriority = Scheduler.unstable_LowPriority;
-var IdlePriority = Scheduler.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
-// on scheduler/unstable_mock, which we'll need for internal testing
-
-var log$1 = Scheduler.log;
-var unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue;
-
-var rendererID = null;
-var injectedHook = null;
-var injectedProfilingHooks = null;
-var hasLoggedError = false;
-var isDevToolsPresent = typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined";
-function injectInternals(internals) {
-  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined") {
-    // No DevTools
-    return false;
-  }
-
-  var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
-
-  if (hook.isDisabled) {
-    // This isn't a real property on the hook, but it can be set to opt out
-    // of DevTools integration and associated warnings and logs.
-    // https://github.com/facebook/react/issues/3877
-    return true;
-  }
-
-  if (!hook.supportsFiber) {
-    {
-      error(
-        "The installed version of React DevTools is too old and will not work " +
-          "with the current version of React. Please update React DevTools. " +
-          "https://reactjs.org/link/react-devtools"
-      );
-    } // DevTools exists, even though it doesn't support Fiber.
-
-    return true;
-  }
-
-  try {
-    if (enableSchedulingProfiler) {
-      // Conditionally inject these hooks only if Timeline profiler is supported by this build.
-      // This gives DevTools a way to feature detect that isn't tied to version number
-      // (since profiling and timeline are controlled by different feature flags).
-      internals = assign({}, internals, {
-        getLaneLabelMap: getLaneLabelMap,
-        injectProfilingHooks: injectProfilingHooks
-      });
-    }
-
-    rendererID = hook.inject(internals); // We have successfully injected, so now it is safe to set up hooks.
-
-    injectedHook = hook;
-  } catch (err) {
-    // Catch all errors because it is unsafe to throw during initialization.
-    {
-      error("React instrumentation encountered an error: %s.", err);
-    }
-  }
-
-  if (hook.checkDCE) {
-    // This is the real DevTools.
-    return true;
-  } else {
-    // This is likely a hook installed by Fast Refresh runtime.
-    return false;
-  }
-}
-function onScheduleRoot(root, children) {
-  {
-    if (
-      injectedHook &&
-      typeof injectedHook.onScheduleFiberRoot === "function"
-    ) {
-      try {
-        injectedHook.onScheduleFiberRoot(rendererID, root, children);
-      } catch (err) {
-        if (!hasLoggedError) {
-          hasLoggedError = true;
-
-          error("React instrumentation encountered an error: %s", err);
-        }
-      }
-    }
-  }
-}
-function onCommitRoot$1(root, eventPriority) {
-  if (injectedHook && typeof injectedHook.onCommitFiberRoot === "function") {
-    try {
-      var didError = (root.current.flags & DidCapture) === DidCapture;
-
-      if (enableProfilerTimer) {
-        var schedulerPriority;
-
-        switch (eventPriority) {
-          case DiscreteEventPriority:
-            schedulerPriority = ImmediatePriority;
-            break;
-
-          case ContinuousEventPriority:
-            schedulerPriority = UserBlockingPriority;
-            break;
-
-          case DefaultEventPriority:
-            schedulerPriority = NormalPriority$1;
-            break;
-
-          case IdleEventPriority:
-            schedulerPriority = IdlePriority;
-            break;
-
-          default:
-            schedulerPriority = NormalPriority$1;
-            break;
-        }
-
-        injectedHook.onCommitFiberRoot(
-          rendererID,
-          root,
-          schedulerPriority,
-          didError
-        );
-      }
-    } catch (err) {
-      {
-        if (!hasLoggedError) {
-          hasLoggedError = true;
-
-          error("React instrumentation encountered an error: %s", err);
-        }
-      }
-    }
-  }
-}
-function onPostCommitRoot(root) {
-  if (
-    injectedHook &&
-    typeof injectedHook.onPostCommitFiberRoot === "function"
-  ) {
-    try {
-      injectedHook.onPostCommitFiberRoot(rendererID, root);
-    } catch (err) {
-      {
-        if (!hasLoggedError) {
-          hasLoggedError = true;
-
-          error("React instrumentation encountered an error: %s", err);
-        }
-      }
-    }
-  }
-}
-function onCommitUnmount(fiber) {
-  if (injectedHook && typeof injectedHook.onCommitFiberUnmount === "function") {
-    try {
-      injectedHook.onCommitFiberUnmount(rendererID, fiber);
-    } catch (err) {
-      {
-        if (!hasLoggedError) {
-          hasLoggedError = true;
-
-          error("React instrumentation encountered an error: %s", err);
-        }
-      }
-    }
-  }
-}
-function setIsStrictModeForDevtools(newIsStrictMode) {
-  {
-    if (typeof log$1 === "function") {
-      // We're in a test because Scheduler.log only exists
-      // in SchedulerMock. To reduce the noise in strict mode tests,
-      // suppress warnings and disable scheduler yielding during the double render
-      unstable_setDisableYieldValue(newIsStrictMode);
-      setSuppressWarning(newIsStrictMode);
-    }
-
-    if (injectedHook && typeof injectedHook.setStrictMode === "function") {
-      try {
-        injectedHook.setStrictMode(rendererID, newIsStrictMode);
-      } catch (err) {
-        {
-          if (!hasLoggedError) {
-            hasLoggedError = true;
-
-            error("React instrumentation encountered an error: %s", err);
-          }
-        }
-      }
-    }
-  }
-} // Profiler API hooks
-
-function injectProfilingHooks(profilingHooks) {
-  injectedProfilingHooks = profilingHooks;
-}
-
-function getLaneLabelMap() {
-  if (enableSchedulingProfiler) {
-    var map = new Map();
-    var lane = 1;
-
-    for (var index = 0; index < TotalLanes; index++) {
-      var label = getLabelForLane(lane);
-      map.set(lane, label);
-      lane *= 2;
-    }
-
-    return map;
-  } else {
-    return null;
-  }
-}
-
-function markCommitStarted(lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markCommitStarted === "function"
-    ) {
-      injectedProfilingHooks.markCommitStarted(lanes);
-    }
-  }
-}
-function markCommitStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markCommitStopped === "function"
-    ) {
-      injectedProfilingHooks.markCommitStopped();
-    }
-  }
-}
-function markComponentRenderStarted(fiber) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentRenderStarted === "function"
-    ) {
-      injectedProfilingHooks.markComponentRenderStarted(fiber);
-    }
-  }
-}
-function markComponentRenderStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentRenderStopped === "function"
-    ) {
-      injectedProfilingHooks.markComponentRenderStopped();
-    }
-  }
-}
-function markComponentPassiveEffectMountStarted(fiber) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentPassiveEffectMountStarted(fiber);
-    }
-  }
-}
-function markComponentPassiveEffectMountStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentPassiveEffectMountStopped();
-    }
-  }
-}
-function markComponentPassiveEffectUnmountStarted(fiber) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(fiber);
-    }
-  }
-}
-function markComponentPassiveEffectUnmountStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentPassiveEffectUnmountStopped();
-    }
-  }
-}
-function markComponentLayoutEffectMountStarted(fiber) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentLayoutEffectMountStarted(fiber);
-    }
-  }
-}
-function markComponentLayoutEffectMountStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentLayoutEffectMountStopped();
-    }
-  }
-}
-function markComponentLayoutEffectUnmountStarted(fiber) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
-    }
-  }
-}
-function markComponentLayoutEffectUnmountStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped ===
-        "function"
-    ) {
-      injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
-    }
-  }
-}
-function markComponentErrored(fiber, thrownValue, lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentErrored === "function"
-    ) {
-      injectedProfilingHooks.markComponentErrored(fiber, thrownValue, lanes);
-    }
-  }
-}
-function markComponentSuspended(fiber, wakeable, lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markComponentSuspended === "function"
-    ) {
-      injectedProfilingHooks.markComponentSuspended(fiber, wakeable, lanes);
-    }
-  }
-}
-function markLayoutEffectsStarted(lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markLayoutEffectsStarted === "function"
-    ) {
-      injectedProfilingHooks.markLayoutEffectsStarted(lanes);
-    }
-  }
-}
-function markLayoutEffectsStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markLayoutEffectsStopped === "function"
-    ) {
-      injectedProfilingHooks.markLayoutEffectsStopped();
-    }
-  }
-}
-function markPassiveEffectsStarted(lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markPassiveEffectsStarted === "function"
-    ) {
-      injectedProfilingHooks.markPassiveEffectsStarted(lanes);
-    }
-  }
-}
-function markPassiveEffectsStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markPassiveEffectsStopped === "function"
-    ) {
-      injectedProfilingHooks.markPassiveEffectsStopped();
-    }
-  }
-}
-function markRenderStarted(lanes) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markRenderStarted === "function"
-    ) {
-      injectedProfilingHooks.markRenderStarted(lanes);
-    }
-  }
-}
-function markRenderYielded() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markRenderYielded === "function"
-    ) {
-      injectedProfilingHooks.markRenderYielded();
-    }
-  }
-}
-function markRenderStopped() {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markRenderStopped === "function"
-    ) {
-      injectedProfilingHooks.markRenderStopped();
-    }
-  }
-}
-function markRenderScheduled(lane) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markRenderScheduled === "function"
-    ) {
-      injectedProfilingHooks.markRenderScheduled(lane);
-    }
-  }
-}
-function markForceUpdateScheduled(fiber, lane) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markForceUpdateScheduled === "function"
-    ) {
-      injectedProfilingHooks.markForceUpdateScheduled(fiber, lane);
-    }
-  }
-}
-function markStateUpdateScheduled(fiber, lane) {
-  if (enableSchedulingProfiler) {
-    if (
-      injectedProfilingHooks !== null &&
-      typeof injectedProfilingHooks.markStateUpdateScheduled === "function"
-    ) {
-      injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
-    }
-  }
 }
 
 /**
@@ -7893,86 +7973,6 @@ function warnIfNotHydrating() {
       );
     }
   }
-}
-
-var contextStackCursor = createCursor(null);
-var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
-
-function requiredContext(c) {
-  {
-    if (c === null) {
-      error(
-        "Expected host context to exist. This error is likely caused by a bug " +
-          "in React. Please file an issue."
-      );
-    }
-  }
-
-  return c;
-}
-
-function getCurrentRootHostContainer() {
-  return rootInstanceStackCursor.current;
-}
-
-function getRootHostContainer() {
-  var rootInstance = requiredContext(rootInstanceStackCursor.current);
-  return rootInstance;
-}
-
-function pushHostContainer(fiber, nextRootInstance) {
-  // Push current root instance onto the stack;
-  // This allows us to reset root when portals are popped.
-  push(rootInstanceStackCursor, nextRootInstance, fiber); // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber); // Finally, we need to push the host context to the stack.
-  // However, we can't just call getRootHostContext() and push it because
-  // we'd have a different number of entries on the stack depending on
-  // whether getRootHostContext() throws somewhere in renderer code or not.
-  // So we push an empty value first. This lets us safely unwind on errors.
-
-  push(contextStackCursor, null, fiber);
-  var nextRootContext = getRootHostContext(nextRootInstance); // Now that we know this function doesn't throw, replace it.
-
-  pop(contextStackCursor, fiber);
-  push(contextStackCursor, nextRootContext, fiber);
-}
-
-function popHostContainer(fiber) {
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
-  pop(rootInstanceStackCursor, fiber);
-}
-
-function getHostContext() {
-  var context = requiredContext(contextStackCursor.current);
-  return context;
-}
-
-function pushHostContext(fiber) {
-  var context = requiredContext(contextStackCursor.current);
-  var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
-
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
-}
-
-function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
-  }
-
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
 }
 
 // This may have been an insertion or a hydration.
@@ -9989,7 +9989,7 @@ function isThenableResolved(thenable) {
   return status === "fulfilled" || status === "rejected";
 }
 
-function noop$1() {}
+function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
   if (ReactCurrentActQueue$2.current !== null) {
@@ -10006,7 +10006,7 @@ function trackUsedThenable(thenableState, thenable, index) {
       // they represent the same value, because components are idempotent.
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.
-      thenable.then(noop$1, noop$1);
+      thenable.then(noop$2, noop$2);
       thenable = previous;
     }
   } // We use an expando to track the status and result of a thenable so that we
@@ -10034,7 +10034,7 @@ function trackUsedThenable(thenableState, thenable, index) {
         // some custom userspace implementation. We treat it as "pending".
         // Attach a dummy listener, to ensure that any lazy initialization can
         // happen. Flight lazily parses JSON when the value is actually awaited.
-        thenable.then(noop$1, noop$1);
+        thenable.then(noop$2, noop$2);
       } else {
         var pendingThenable = thenable;
         pendingThenable.status = "pending";
@@ -10084,6 +10084,13 @@ function trackUsedThenable(thenableState, thenable, index) {
     }
   }
 }
+function suspendCommit() {
+  // This extra indirection only exists so it can handle passing
+  // noopSuspenseyCommitThenable through to throwException.
+  // TODO: Factor the thenable check out of throwException
+  suspendedThenable = noopSuspenseyCommitThenable;
+  throw SuspenseyCommitException;
+} // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -22562,16 +22569,28 @@ function preloadInstanceAndSuspendIfNeeded(
   props,
   renderLanes
 ) {
-  // Ask the renderer if this instance should suspend the commit.
-  {
-    // If this flag was set previously, we can remove it. The flag represents
-    // whether this particular set of props might ever need to suspend. The
-    // safest thing to do is for maySuspendCommit to always return true, but
-    // if the renderer is reasonably confident that the underlying resource
-    // won't be evicted, it can return false as a performance optimization.
-    workInProgress.flags &= ~SuspenseyCommit;
-    return;
-  } // Mark this fiber with a flag. We use this right before the commit phase to
+  workInProgress.flags |= SuspenseyCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
+  // check that `useDeferredValue` does to determine whether it needs to
+  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
+  // suspending until you opt in with startTransition or Suspense) but it
+  // also happens to be the desired behavior for the concrete use cases we've
+  // thought of so far, like CSS loading, fonts, images, etc.
+  // TODO: We may decide to expose a way to force a fallback even during a
+  // sync update.
+
+  if (!includesOnlyNonUrgentLanes(renderLanes));
+  else {
+    // Preload the instance
+    var isReady = preloadInstance();
+
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen());
+      else {
+        // Trigger a fallback rather than block the render.
+        suspendCommit();
+      }
+    }
+  }
 }
 
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -23021,17 +23040,27 @@ function completeWork(current, workInProgress, renderLanes) {
           markRef(workInProgress);
         }
 
+        var maySuspend = false; // @TODO refactor this block to create the instance here in complete phase if we
+        // are not hydrating.
+
         if (
           // We are mounting and must Update this Hoistable in this commit
           current === null || // We are transitioning to, from, or between Hoistable Resources
           // and require an update
           current.memoizedState !== workInProgress.memoizedState
         ) {
+          if (workInProgress.memoizedState !== null) {
+            maySuspend = mayResourceSuspendCommit(workInProgress.memoizedState);
+          } else {
+            maySuspend = maySuspendCommit();
+          }
+
           markUpdate(workInProgress);
         } else if (workInProgress.memoizedState === null) {
-          // We may have props to update on the Hoistable instance. We use the
+          maySuspend = maySuspendCommit(); // We may have props to update on the Hoistable instance. We use the
           // updateHostComponent path becuase it produces the update queue
           // we need for Hoistables
+
           updateHostComponent(
             current,
             workInProgress,
@@ -23045,7 +23074,17 @@ function completeWork(current, workInProgress, renderLanes) {
         // will resume rendering as if the work-in-progress completed. So it must
         // fully complete.
 
-        preloadInstanceAndSuspendIfNeeded(workInProgress);
+        if (maySuspend) {
+          preloadInstanceAndSuspendIfNeeded(
+            workInProgress,
+            workInProgress.type,
+            workInProgress.pendingProps,
+            renderLanes
+          );
+        } else {
+          workInProgress.flags &= ~SuspenseyCommit;
+        }
+
         return null;
       }
     }
@@ -23116,6 +23155,8 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       var _type = workInProgress.type;
 
+      var _maySuspend = maySuspendCommit();
+
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(current, workInProgress, _type, newProps);
 
@@ -23184,7 +23225,17 @@ function completeWork(current, workInProgress, renderLanes) {
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
 
-      preloadInstanceAndSuspendIfNeeded(workInProgress);
+      if (_maySuspend) {
+        preloadInstanceAndSuspendIfNeeded(
+          workInProgress,
+          _type,
+          newProps,
+          renderLanes
+        );
+      } else {
+        workInProgress.flags &= ~SuspenseyCommit;
+      }
+
       return null;
     }
 
@@ -27903,6 +27954,64 @@ function commitPassiveUnmountEffects(finishedWork) {
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentFiber();
 }
+function accumulateSuspenseyCommit(finishedWork) {
+  accumulateSuspenseyCommitOnFiber(finishedWork);
+}
+
+function recursivelyAccumulateSuspenseyCommit(parentFiber) {
+  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+    var child = parentFiber.child;
+
+    while (child !== null) {
+      accumulateSuspenseyCommitOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function accumulateSuspenseyCommitOnFiber(fiber) {
+  switch (fiber.tag) {
+    case HostHoistable: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      if (fiber.flags & SuspenseyCommit) {
+        if (fiber.memoizedState !== null) {
+          suspendResource(
+            // This should always be set by visiting HostRoot first
+            currentHoistableRoot,
+            fiber.memoizedState,
+            fiber.memoizedProps
+          );
+        }
+      }
+
+      break;
+    }
+
+    case HostComponent: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+
+      break;
+    }
+
+    case HostRoot:
+    case HostPortal: {
+      {
+        var previousHoistableRoot = currentHoistableRoot;
+        var container = fiber.stateNode.containerInfo;
+        currentHoistableRoot = getHoistableRoot(container);
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        currentHoistableRoot = previousHoistableRoot;
+        break;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
+
+    default: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+    }
+  }
+}
 
 function detachAlternateSiblings(parentFiber) {
   // A fiber was deleted from this parent fiber, but it's still part of the
@@ -29568,6 +29677,14 @@ function commitRootWhenReady(
   lanes
 ) {
   if (includesOnlyNonUrgentLanes(lanes)) {
+    // Before committing, ask the renderer whether the host tree is ready.
+    // If it's not, we'll wait until it notifies us.
+    startSuspendingCommit(); // This will walk the completed fiber tree and attach listeners to all
+    // the suspensey resources. The renderer is responsible for accumulating
+    // all the load events. This all happens in a single synchronous
+    // transaction, so it track state in its own module scope.
+
+    accumulateSuspenseyCommit(finishedWork); // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
 
@@ -33522,7 +33639,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-b7692384";
+var ReactVersion = "18.3.0-www-modern-ef21bdef";
 
 function createPortal$1(
   children,
@@ -38949,7 +39066,7 @@ function getOwnerDocumentFromRootContainer(rootContainerElement) {
     : rootContainerElement.ownerDocument;
 }
 
-function noop() {}
+function noop$1() {}
 
 function trapClickOnNonInteractiveElement(node) {
   // Mobile Safari does not fire properly bubble click events on
@@ -38961,7 +39078,7 @@ function trapClickOnNonInteractiveElement(node) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = noop;
+  node.onclick = noop$1;
 }
 
 function setInitialDOMProperties(
@@ -41111,1012 +41228,6 @@ function getValueDescriptorExpectingEnumForWarning(thing) {
 }
 
 var Dispatcher$1 = Internals.Dispatcher;
-// In the future this may need to change, especially when modules / scripts are supported
-// It is valid to preload even when we aren't actively rendering. For cases where Float functions are
-// called when there is no rendering we track the last used document. It is not safe to insert
-// arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
-// that the resource is meant to apply too (for example stylesheets or scripts). This is only
-// appropriate for resources that don't really have a strict tie to the document itself for example
-// preloads
-
-var lastCurrentDocument = null;
-var previousDispatcher = null;
-function prepareToRenderResources(rootContainer) {
-  var rootNode = getHoistableRoot(rootContainer);
-  lastCurrentDocument = getDocumentFromRoot(rootNode);
-  previousDispatcher = Dispatcher$1.current;
-  Dispatcher$1.current = ReactDOMClientDispatcher;
-}
-function cleanupAfterRenderResources() {
-  Dispatcher$1.current = previousDispatcher;
-  previousDispatcher = null;
-}
-function prepareToCommitHoistables() {
-  tagCaches = null;
-} // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> FloatClient -> Internals so this doesn't introduce a new one.
-
-var ReactDOMClientDispatcher = {
-  prefetchDNS: prefetchDNS$1,
-  preconnect: preconnect$1,
-  preload: preload$1,
-  preinit: preinit$1
-}; // global collections of Resources
-
-var preloadPropsMap = new Map();
-var preconnectsSet = new Set(); // getRootNode is missing from IE and old jsdom versions
-
-function getHoistableRoot(container) {
-  // $FlowFixMe[method-unbinding]
-  return typeof container.getRootNode === "function"
-    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
-       * but it's either a `Document` or `ShadowRoot`. */
-      container.getRootNode()
-    : container.ownerDocument;
-}
-
-function getCurrentResourceRoot() {
-  var currentContainer = getCurrentRootHostContainer();
-  return currentContainer ? getHoistableRoot(currentContainer) : null;
-} // Preloads are somewhat special. Even if we don't have the Document
-// used by the root that is rendering a component trying to insert a preload
-// we can still seed the file cache by doing the preload on any document we have
-// access to. We prefer the currentDocument if it exists, we also prefer the
-// lastCurrentDocument if that exists. As a fallback we will use the window.document
-// if available.
-
-function getDocumentForPreloads() {
-  var root = getCurrentResourceRoot();
-
-  if (root) {
-    return root.ownerDocument || root;
-  } else {
-    try {
-      return lastCurrentDocument || window.document;
-    } catch (error) {
-      return null;
-    }
-  }
-}
-
-function getDocumentFromRoot(root) {
-  return root.ownerDocument || root;
-}
-
-function preconnectAs(rel, crossOrigin, href) {
-  var ownerDocument = getDocumentForPreloads();
-
-  if (typeof href === "string" && href && ownerDocument) {
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
-
-    if (typeof crossOrigin === "string") {
-      key += '[crossorigin="' + crossOrigin + '"]';
-    }
-
-    if (!preconnectsSet.has(key)) {
-      preconnectsSet.add(key);
-      var preconnectProps = {
-        rel: rel,
-        crossOrigin: crossOrigin,
-        href: href
-      };
-
-      if (null === ownerDocument.querySelector(key)) {
-        var preloadInstance = ownerDocument.createElement("link");
-        setInitialProperties(preloadInstance, "link", preconnectProps);
-        markNodeAsHoistable(preloadInstance);
-        ownerDocument.head.appendChild(preloadInstance);
-      }
-    }
-  }
-} // --------------------------------------
-//      ReactDOM.prefetchDNS
-// --------------------------------------
-
-function prefetchDNS$1(href, options) {
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null) {
-      if (
-        typeof options === "object" &&
-        hasOwnProperty.call(options, "crossOrigin")
-      ) {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      } else {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      }
-    }
-  }
-
-  preconnectAs("dns-prefetch", null, href);
-} // --------------------------------------
-//      ReactDOM.preconnect
-// --------------------------------------
-
-function preconnect$1(href, options) {
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null && typeof options !== "object") {
-      error(
-        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
-        getValueDescriptorExpectingEnumForWarning(options)
-      );
-    } else if (options != null && typeof options.crossOrigin !== "string") {
-      error(
-        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
-        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
-      );
-    }
-  }
-
-  var crossOrigin =
-    options == null || typeof options.crossOrigin !== "string"
-      ? null
-      : options.crossOrigin === "use-credentials"
-      ? "use-credentials"
-      : "";
-  preconnectAs("preconnect", crossOrigin, href);
-} // --------------------------------------
-//      ReactDOM.preload
-// --------------------------------------
-
-function preload$1(href, options) {
-  {
-    validatePreloadArguments(href, options);
-  }
-
-  var ownerDocument = getDocumentForPreloads();
-
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null &&
-    ownerDocument
-  ) {
-    var as = options.as;
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    var preloadKey =
-      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]';
-    var key = preloadKey;
-
-    switch (as) {
-      case "style":
-        key = getStyleKey(href);
-        break;
-
-      case "script":
-        key = getScriptKey(href);
-        break;
-    }
-
-    if (!preloadPropsMap.has(key)) {
-      var preloadProps = preloadPropsFromPreloadOptions(href, as, options);
-      preloadPropsMap.set(key, preloadProps);
-
-      if (null === ownerDocument.querySelector(preloadKey)) {
-        var preloadInstance = ownerDocument.createElement("link");
-        setInitialProperties(preloadInstance, "link", preloadProps);
-        markNodeAsHoistable(preloadInstance);
-        ownerDocument.head.appendChild(preloadInstance);
-      }
-    }
-  }
-}
-
-function preloadPropsFromPreloadOptions(href, as, options) {
-  return {
-    href: href,
-    rel: "preload",
-    as: as,
-    crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity,
-    type: options.type
-  };
-} // --------------------------------------
-//      ReactDOM.preinit
-// --------------------------------------
-
-function preinit$1(href, options) {
-  {
-    validatePreinitArguments(href, options);
-  }
-
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null
-  ) {
-    var resourceRoot = getCurrentResourceRoot();
-    var as = options.as;
-
-    if (!resourceRoot) {
-      if (as === "style" || as === "script") {
-        // We are going to emit a preload as a best effort fallback since this preinit
-        // was called outside of a render. Given the passive nature of this fallback
-        // we do not warn in dev when props disagree if there happens to already be a
-        // matching preload with this href
-        var preloadDocument = getDocumentForPreloads();
-
-        if (preloadDocument) {
-          var limitedEscapedHref =
-            escapeSelectorAttributeValueInsideDoubleQuotes(href);
-          var preloadKey =
-            'link[rel="preload"][as="' +
-            as +
-            '"][href="' +
-            limitedEscapedHref +
-            '"]';
-          var key = preloadKey;
-
-          switch (as) {
-            case "style":
-              key = getStyleKey(href);
-              break;
-
-            case "script":
-              key = getScriptKey(href);
-              break;
-          }
-
-          if (!preloadPropsMap.has(key)) {
-            var preloadProps = preloadPropsFromPreinitOptions(
-              href,
-              as,
-              options
-            );
-            preloadPropsMap.set(key, preloadProps);
-
-            if (null === preloadDocument.querySelector(preloadKey)) {
-              var preloadInstance = preloadDocument.createElement("link");
-              setInitialProperties(preloadInstance, "link", preloadProps);
-              markNodeAsHoistable(preloadInstance);
-              preloadDocument.head.appendChild(preloadInstance);
-            }
-          }
-        }
-      }
-
-      return;
-    }
-
-    switch (as) {
-      case "style": {
-        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-
-        var _key = getStyleKey(href);
-
-        var precedence = options.precedence || "default"; // Check if this resource already exists
-
-        var resource = styles.get(_key);
-
-        if (resource) {
-          // We can early return. The resource exists and there is nothing
-          // more to do
-          return;
-        } // Attempt to hydrate instance from DOM
-
-        var instance = resourceRoot.querySelector(
-          getStylesheetSelectorFromKey(_key)
-        );
-
-        if (!instance) {
-          // Construct a new instance and insert it
-          var stylesheetProps = stylesheetPropsFromPreinitOptions(
-            href,
-            precedence,
-            options
-          );
-
-          var _preloadProps = preloadPropsMap.get(_key);
-
-          if (_preloadProps) {
-            adoptPreloadPropsForStylesheet(stylesheetProps, _preloadProps);
-          }
-
-          var ownerDocument = getDocumentFromRoot(resourceRoot);
-          instance = ownerDocument.createElement("link");
-          markNodeAsHoistable(instance);
-          setInitialProperties(instance, "link", stylesheetProps);
-          insertStylesheet(instance, precedence, resourceRoot);
-        } // Construct a Resource and cache it
-
-        resource = {
-          type: "stylesheet",
-          instance: instance,
-          count: 1
-        };
-        styles.set(_key, resource);
-        return;
-      }
-
-      case "script": {
-        var src = href;
-        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
-
-        var _key2 = getScriptKey(src); // Check if this resource already exists
-
-        var _resource = scripts.get(_key2);
-
-        if (_resource) {
-          // We can early return. The resource exists and there is nothing
-          // more to do
-          return;
-        } // Attempt to hydrate instance from DOM
-
-        var _instance = resourceRoot.querySelector(
-          getScriptSelectorFromKey(_key2)
-        );
-
-        if (!_instance) {
-          // Construct a new instance and insert it
-          var scriptProps = scriptPropsFromPreinitOptions(src, options); // Adopt certain preload props
-
-          var _preloadProps2 = preloadPropsMap.get(_key2);
-
-          if (_preloadProps2) {
-            adoptPreloadPropsForScript(scriptProps, _preloadProps2);
-          }
-
-          var _ownerDocument = getDocumentFromRoot(resourceRoot);
-
-          _instance = _ownerDocument.createElement("script");
-          markNodeAsHoistable(_instance);
-          setInitialProperties(_instance, "link", scriptProps);
-
-          _ownerDocument.head.appendChild(_instance);
-        } // Construct a Resource and cache it
-
-        _resource = {
-          type: "script",
-          instance: _instance,
-          count: 1
-        };
-        scripts.set(_key2, _resource);
-        return;
-      }
-    }
-  }
-}
-
-function preloadPropsFromPreinitOptions(href, as, options) {
-  return {
-    href: href,
-    rel: "preload",
-    as: as,
-    crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity
-  };
-}
-
-function stylesheetPropsFromPreinitOptions(href, precedence, options) {
-  return {
-    rel: "stylesheet",
-    href: href,
-    "data-precedence": precedence,
-    crossOrigin: options.crossOrigin
-  };
-}
-
-function scriptPropsFromPreinitOptions(src, options) {
-  return {
-    src: src,
-    async: true,
-    crossOrigin: options.crossOrigin,
-    integrity: options.integrity
-  };
-} // --------------------------------------
-//      Resources from render
-// --------------------------------------
-// This function is called in begin work and we should always have a currentDocument set
-
-function getResource(type, currentProps, pendingProps) {
-  var resourceRoot = getCurrentResourceRoot();
-
-  if (!resourceRoot) {
-    throw new Error(
-      '"resourceRoot" was expected to exist. This is a bug in React.'
-    );
-  }
-
-  switch (type) {
-    case "meta":
-    case "title": {
-      return null;
-    }
-
-    case "style": {
-      if (
-        typeof pendingProps.precedence === "string" &&
-        typeof pendingProps.href === "string"
-      ) {
-        var key = getStyleKey(pendingProps.href);
-        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-        var resource = styles.get(key);
-
-        if (!resource) {
-          resource = {
-            type: "style",
-            instance: null,
-            count: 0
-          };
-          styles.set(key, resource);
-        }
-
-        return resource;
-      }
-
-      return {
-        type: "void",
-        instance: null,
-        count: 0
-      };
-    }
-
-    case "link": {
-      if (
-        pendingProps.rel === "stylesheet" &&
-        typeof pendingProps.href === "string" &&
-        typeof pendingProps.precedence === "string"
-      ) {
-        var qualifiedProps = pendingProps;
-
-        var _key3 = getStyleKey(qualifiedProps.href);
-
-        var _styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
-
-        var _resource2 = _styles.get(_key3);
-
-        if (!_resource2) {
-          // We asserted this above but Flow can't figure out that the type satisfies
-          var ownerDocument = getDocumentFromRoot(resourceRoot);
-          _resource2 = {
-            type: "stylesheet",
-            instance: null,
-            count: 0
-          };
-
-          _styles.set(_key3, _resource2);
-
-          if (!preloadPropsMap.has(_key3)) {
-            preloadStylesheet(
-              ownerDocument,
-              _key3,
-              preloadPropsFromStylesheet(qualifiedProps)
-            );
-          }
-        }
-
-        return _resource2;
-      }
-
-      return null;
-    }
-
-    case "script": {
-      if (typeof pendingProps.src === "string" && pendingProps.async === true) {
-        var scriptProps = pendingProps;
-
-        var _key4 = getScriptKey(scriptProps.src);
-
-        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
-
-        var _resource3 = scripts.get(_key4);
-
-        if (!_resource3) {
-          _resource3 = {
-            type: "script",
-            instance: null,
-            count: 0
-          };
-          scripts.set(_key4, _resource3);
-        }
-
-        return _resource3;
-      }
-
-      return {
-        type: "void",
-        instance: null,
-        count: 0
-      };
-    }
-
-    default: {
-      throw new Error(
-        'getResource encountered a type it did not expect: "' +
-          type +
-          '". this is a bug in React.'
-      );
-    }
-  }
-}
-
-function styleTagPropsFromRawProps(rawProps) {
-  return assign({}, rawProps, {
-    "data-href": rawProps.href,
-    "data-precedence": rawProps.precedence,
-    href: null,
-    precedence: null
-  });
-}
-
-function getStyleKey(href) {
-  var limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return 'href~="' + limitedEscapedHref + '"';
-}
-
-function getStyleTagSelectorFromKey(key) {
-  return "style[data-" + key + "]";
-}
-
-function getStylesheetSelectorFromKey(key) {
-  return 'link[rel="stylesheet"][' + key + "]";
-}
-
-function getPreloadStylesheetSelectorFromKey(key) {
-  return 'link[rel="preload"][as="style"][' + key + "]";
-}
-
-function stylesheetPropsFromRawProps(rawProps) {
-  return assign({}, rawProps, {
-    "data-precedence": rawProps.precedence,
-    precedence: null
-  });
-}
-
-function preloadStylesheet(ownerDocument, key, preloadProps) {
-  preloadPropsMap.set(key, preloadProps);
-
-  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
-    // There is no matching stylesheet instance in the Document.
-    // We will insert a preload now to kick off loading because
-    // we expect this stylesheet to commit
-    if (
-      null ===
-      ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key))
-    ) {
-      var preloadInstance = ownerDocument.createElement("link");
-      setInitialProperties(preloadInstance, "link", preloadProps);
-      markNodeAsHoistable(preloadInstance);
-      ownerDocument.head.appendChild(preloadInstance);
-    }
-  }
-}
-
-function preloadPropsFromStylesheet(props) {
-  return {
-    rel: "preload",
-    as: "style",
-    href: props.href,
-    crossOrigin: props.crossOrigin,
-    integrity: props.integrity,
-    media: props.media,
-    hrefLang: props.hrefLang,
-    referrerPolicy: props.referrerPolicy
-  };
-}
-
-function getScriptKey(src) {
-  var limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
-  return '[src="' + limitedEscapedSrc + '"]';
-}
-
-function getScriptSelectorFromKey(key) {
-  return "script[async]" + key;
-} // --------------------------------------
-//      Hoistable Resource Reconciliation
-// --------------------------------------
-
-function acquireResource(hoistableRoot, resource, props) {
-  resource.count++;
-
-  if (resource.instance === null) {
-    switch (resource.type) {
-      case "style": {
-        var qualifiedProps = props;
-        var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
-
-        var instance = hoistableRoot.querySelector(
-          getStyleTagSelectorFromKey(key)
-        );
-
-        if (instance) {
-          resource.instance = instance;
-          markNodeAsHoistable(instance);
-          return instance;
-        }
-
-        var styleProps = styleTagPropsFromRawProps(props);
-        var ownerDocument = getDocumentFromRoot(hoistableRoot);
-        instance = ownerDocument.createElement("style");
-        markNodeAsHoistable(instance);
-        setInitialProperties(instance, "style", styleProps);
-        insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
-        resource.instance = instance;
-        return instance;
-      }
-
-      case "stylesheet": {
-        // This typing is enforce by `getResource`. If we change the logic
-        // there for what qualifies as a stylesheet resource we need to ensure
-        // this cast still makes sense;
-        var _qualifiedProps = props;
-
-        var _key5 = getStyleKey(_qualifiedProps.href); // Attempt to hydrate instance from DOM
-
-        var _instance2 = hoistableRoot.querySelector(
-          getStylesheetSelectorFromKey(_key5)
-        );
-
-        if (_instance2) {
-          resource.instance = _instance2;
-          markNodeAsHoistable(_instance2);
-          return _instance2;
-        }
-
-        var stylesheetProps = stylesheetPropsFromRawProps(props);
-        var preloadProps = preloadPropsMap.get(_key5);
-
-        if (preloadProps) {
-          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
-        } // Construct and insert a new instance
-
-        var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
-
-        _instance2 = _ownerDocument2.createElement("link");
-        markNodeAsHoistable(_instance2);
-        var linkInstance = _instance2;
-        linkInstance._p = new Promise(function (resolve, reject) {
-          linkInstance.onload = resolve;
-          linkInstance.onerror = reject;
-        }).then(
-          function () {
-            return (linkInstance._p.s = "l");
-          },
-          function () {
-            return (linkInstance._p.s = "e");
-          }
-        );
-        setInitialProperties(_instance2, "link", stylesheetProps);
-        insertStylesheet(_instance2, _qualifiedProps.precedence, hoistableRoot);
-        resource.instance = _instance2;
-        return _instance2;
-      }
-
-      case "script": {
-        // This typing is enforce by `getResource`. If we change the logic
-        // there for what qualifies as a stylesheet resource we need to ensure
-        // this cast still makes sense;
-        var borrowedScriptProps = props;
-
-        var _key6 = getScriptKey(borrowedScriptProps.src); // Attempt to hydrate instance from DOM
-
-        var _instance3 = hoistableRoot.querySelector(
-          getScriptSelectorFromKey(_key6)
-        );
-
-        if (_instance3) {
-          resource.instance = _instance3;
-          markNodeAsHoistable(_instance3);
-          return _instance3;
-        }
-
-        var scriptProps = borrowedScriptProps;
-
-        var _preloadProps3 = preloadPropsMap.get(_key6);
-
-        if (_preloadProps3) {
-          scriptProps = assign({}, borrowedScriptProps);
-          adoptPreloadPropsForScript(scriptProps, _preloadProps3);
-        } // Construct and insert a new instance
-
-        var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
-
-        _instance3 = _ownerDocument3.createElement("script");
-        markNodeAsHoistable(_instance3);
-        setInitialProperties(_instance3, "link", scriptProps);
-
-        _ownerDocument3.head.appendChild(_instance3);
-
-        resource.instance = _instance3;
-        return _instance3;
-      }
-
-      case "void": {
-        return null;
-      }
-
-      default: {
-        throw new Error(
-          'acquireResource encountered a resource type it did not expect: "' +
-            resource.type +
-            '". this is a bug in React.'
-        );
-      }
-    }
-  }
-
-  return resource.instance;
-}
-function releaseResource(resource) {
-  resource.count--;
-}
-
-function insertStylesheet(instance, precedence, root) {
-  var nodes = root.querySelectorAll(
-    'link[rel="stylesheet"][data-precedence],style[data-precedence]'
-  );
-  var last = nodes.length ? nodes[nodes.length - 1] : null;
-  var prior = last;
-
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-    var nodePrecedence = node.dataset.precedence;
-
-    if (nodePrecedence === precedence) {
-      prior = node;
-    } else if (prior !== last) {
-      break;
-    }
-  }
-
-  if (prior) {
-    // We get the prior from the document so we know it is in the tree.
-    // We also know that links can't be the topmost Node so the parentNode
-    // must exist.
-    prior.parentNode.insertBefore(instance, prior.nextSibling);
-  } else {
-    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
-    parent.insertBefore(instance, parent.firstChild);
-  }
-}
-
-function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
-  if (stylesheetProps.crossOrigin == null)
-    stylesheetProps.crossOrigin = preloadProps.crossOrigin;
-  if (stylesheetProps.referrerPolicy == null)
-    stylesheetProps.referrerPolicy = preloadProps.referrerPolicy;
-  if (stylesheetProps.title == null) stylesheetProps.title = preloadProps.title;
-}
-
-function adoptPreloadPropsForScript(scriptProps, preloadProps) {
-  if (scriptProps.crossOrigin == null)
-    scriptProps.crossOrigin = preloadProps.crossOrigin;
-  if (scriptProps.referrerPolicy == null)
-    scriptProps.referrerPolicy = preloadProps.referrerPolicy;
-  if (scriptProps.integrity == null)
-    scriptProps.referrerPolicy = preloadProps.integrity;
-} // --------------------------------------
-//      Hoistable Element Reconciliation
-// --------------------------------------
-
-var tagCaches = null;
-function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
-  var ownerDocument = getDocumentFromRoot(hoistableRoot);
-  var instance = null;
-
-  getInstance: switch (type) {
-    case "title": {
-      instance = ownerDocument.getElementsByTagName("title")[0];
-
-      if (
-        !instance ||
-        isOwnedInstance(instance) ||
-        instance.namespaceURI === SVG_NAMESPACE ||
-        instance.hasAttribute("itemprop")
-      ) {
-        instance = ownerDocument.createElement(type);
-        ownerDocument.head.insertBefore(
-          instance,
-          ownerDocument.querySelector("head > title")
-        );
-      }
-
-      setInitialProperties(instance, type, props);
-      precacheFiberNode(internalInstanceHandle, instance);
-      markNodeAsHoistable(instance);
-      return instance;
-    }
-
-    case "link": {
-      var cache = getHydratableHoistableCache("link", "href", ownerDocument);
-      var key = type + (props.href || "");
-      var maybeNodes = cache.get(key);
-
-      if (maybeNodes) {
-        var nodes = maybeNodes;
-
-        for (var i = 0; i < nodes.length; i++) {
-          var node = nodes[i];
-
-          if (
-            node.getAttribute("href") !==
-              (props.href == null ? null : props.href) ||
-            node.getAttribute("rel") !==
-              (props.rel == null ? null : props.rel) ||
-            node.getAttribute("title") !==
-              (props.title == null ? null : props.title) ||
-            node.getAttribute("crossorigin") !==
-              (props.crossOrigin == null ? null : props.crossOrigin)
-          ) {
-            // mismatch, try the next node;
-            continue;
-          }
-
-          instance = node;
-          nodes.splice(i, 1);
-          break getInstance;
-        }
-      }
-
-      instance = ownerDocument.createElement(type);
-      setInitialProperties(instance, type, props);
-      ownerDocument.head.appendChild(instance);
-      break;
-    }
-
-    case "meta": {
-      var _cache = getHydratableHoistableCache(
-        "meta",
-        "content",
-        ownerDocument
-      );
-
-      var _key7 = type + (props.content || "");
-
-      var _maybeNodes = _cache.get(_key7);
-
-      if (_maybeNodes) {
-        var _nodes = _maybeNodes;
-
-        for (var _i = 0; _i < _nodes.length; _i++) {
-          var _node = _nodes[_i]; // We coerce content to string because it is the most likely one to
-          // use a `toString` capable value. For the rest we just do identity match
-          // passing non-strings here is not really valid anyway.
-
-          {
-            checkAttributeStringCoercion(props.content, "content");
-          }
-
-          if (
-            _node.getAttribute("content") !==
-              (props.content == null ? null : "" + props.content) ||
-            _node.getAttribute("name") !==
-              (props.name == null ? null : props.name) ||
-            _node.getAttribute("property") !==
-              (props.property == null ? null : props.property) ||
-            _node.getAttribute("http-equiv") !==
-              (props.httpEquiv == null ? null : props.httpEquiv) ||
-            _node.getAttribute("charset") !==
-              (props.charSet == null ? null : props.charSet)
-          ) {
-            // mismatch, try the next node;
-            continue;
-          }
-
-          instance = _node;
-
-          _nodes.splice(_i, 1);
-
-          break getInstance;
-        }
-      }
-
-      instance = ownerDocument.createElement(type);
-      setInitialProperties(instance, type, props);
-      ownerDocument.head.appendChild(instance);
-      break;
-    }
-
-    default:
-      throw new Error(
-        'getNodesForType encountered a type it did not expect: "' +
-          type +
-          '". This is a bug in React.'
-      );
-  } // This node is a match
-
-  precacheFiberNode(internalInstanceHandle, instance);
-  markNodeAsHoistable(instance);
-  return instance;
-}
-
-function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
-  var cache;
-  var caches;
-
-  if (tagCaches === null) {
-    cache = new Map();
-    caches = tagCaches = new Map();
-    caches.set(ownerDocument, cache);
-  } else {
-    caches = tagCaches;
-    var maybeCache = caches.get(ownerDocument);
-
-    if (!maybeCache) {
-      cache = new Map();
-      caches.set(ownerDocument, cache);
-    } else {
-      cache = maybeCache;
-    }
-  }
-
-  if (cache.has(type)) {
-    // We use type as a special key that signals that this cache has been seeded for this type
-    return cache;
-  } // Mark this cache as seeded for this type
-
-  cache.set(type, null);
-  var nodes = ownerDocument.getElementsByTagName(type);
-
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-
-    if (
-      !isOwnedInstance(node) &&
-      (type !== "link" || node.getAttribute("rel") !== "stylesheet") &&
-      node.namespaceURI !== SVG_NAMESPACE
-    ) {
-      var nodeKey = node.getAttribute(keyAttribute) || "";
-      var key = type + nodeKey;
-      var existing = cache.get(key);
-
-      if (existing) {
-        existing.push(node);
-      } else {
-        cache.set(key, [node]);
-      }
-    }
-  }
-
-  return cache;
-}
-
-function mountHoistable(hoistableRoot, type, instance) {
-  var ownerDocument = getDocumentFromRoot(hoistableRoot);
-  ownerDocument.head.insertBefore(
-    instance,
-    type === "title" ? ownerDocument.querySelector("head > title") : null
-  );
-}
-function unmountHoistable(instance) {
-  instance.parentNode.removeChild(instance);
-} // When passing user input into querySelector(All) the embedded string must not alter
-// the semantics of the query. This escape function is safe to use when we know the
-// provided value is going to be wrapped in double quotes as part of an attribute selector
-// Do not use it anywhere else
-// we escape double quotes and backslashes
-
-var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
-
-function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
-  return value.replace(
-    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    function (ch) {
-      return "\\" + ch.charCodeAt(0).toString(16);
-    }
-  );
-}
 
 var SUPPRESS_HYDRATION_WARNING = "suppressHydrationWarning";
 var SUSPENSE_START_DATA = "$";
@@ -43194,14 +42305,1204 @@ function requestPostPaintCallback(callback) {
       return callback(time);
     });
   });
-}
-function preloadInstance(type, props) {
-  // Return true to indicate it's already loaded
-  return true;
-}
-function waitForCommitToBeReady() {
-  return null;
 } // -------------------
+function isHostSingletonType(type) {
+  return type === "html" || type === "head" || type === "body";
+}
+function resolveSingletonInstance(
+  type,
+  props,
+  rootContainerInstance,
+  hostContext,
+  validateDOMNestingDev
+) {
+  {
+    var hostContextDev = hostContext;
+
+    if (validateDOMNestingDev) {
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
+    }
+  }
+
+  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
+
+  switch (type) {
+    case "html": {
+      var documentElement = ownerDocument.documentElement;
+
+      if (!documentElement) {
+        throw new Error(
+          "React expected an <html> element (document.documentElement) to exist in the Document but one was" +
+            " not found. React never removes the documentElement for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return documentElement;
+    }
+
+    case "head": {
+      var head = ownerDocument.head;
+
+      if (!head) {
+        throw new Error(
+          "React expected a <head> element (document.head) to exist in the Document but one was" +
+            " not found. React never removes the head for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return head;
+    }
+
+    case "body": {
+      var body = ownerDocument.body;
+
+      if (!body) {
+        throw new Error(
+          "React expected a <body> element (document.body) to exist in the Document but one was" +
+            " not found. React never removes the body for any Document it renders into so" +
+            " the cause is likely in some other script running on this page."
+        );
+      }
+
+      return body;
+    }
+
+    default: {
+      throw new Error(
+        "resolveSingletonInstance was called with an element type that is not supported. This is a bug in React."
+      );
+    }
+  }
+}
+function acquireSingletonInstance(
+  type,
+  props,
+  instance,
+  internalInstanceHandle
+) {
+  {
+    var currentInstanceHandle = getInstanceFromNode$1(instance);
+
+    if (currentInstanceHandle) {
+      var tagName = instance.tagName.toLowerCase();
+
+      error(
+        "You are mounting a new %s component when a previous one has not first unmounted. It is an" +
+          " error to render more than one %s component at a time and attributes and children of these" +
+          " components will likely fail in unpredictable ways. Please only render a single instance of" +
+          " <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
+        tagName,
+        tagName,
+        tagName
+      );
+    }
+
+    switch (type) {
+      case "html":
+      case "head":
+      case "body": {
+        break;
+      }
+
+      default: {
+        error(
+          "acquireSingletonInstance was called with an element type that is not supported. This is a bug in React."
+        );
+      }
+    }
+  }
+
+  var attributes = instance.attributes;
+
+  while (attributes.length) {
+    instance.removeAttributeNode(attributes[0]);
+  }
+
+  setInitialProperties(instance, type, props);
+  precacheFiberNode(internalInstanceHandle, instance);
+  updateFiberProps(instance, props);
+}
+function releaseSingletonInstance(instance) {
+  var attributes = instance.attributes;
+
+  while (attributes.length) {
+    instance.removeAttributeNode(attributes[0]);
+  }
+
+  detachDeletedInstance(instance);
+}
+function clearSingleton(instance) {
+  var element = instance;
+  var node = element.firstChild;
+
+  while (node) {
+    var nextNode = node.nextSibling;
+    var nodeName = node.nodeName;
+
+    if (
+      isMarkedHoistable(node) ||
+      nodeName === "HEAD" ||
+      nodeName === "BODY" ||
+      nodeName === "STYLE" ||
+      (nodeName === "LINK" && node.rel.toLowerCase() === "stylesheet")
+    );
+    else {
+      element.removeChild(node);
+    }
+
+    node = nextNode;
+  }
+
+  return;
+} // -------------------
+// In the future this may need to change, especially when modules / scripts are supported
+
+var NotLoaded =
+  /*       */
+  0;
+var Loaded =
+  /*          */
+  1;
+var Errored =
+  /*         */
+  2;
+var Settled =
+  /*         */
+  3;
+var Inserted =
+  /*        */
+  4;
+function prepareToCommitHoistables() {
+  tagCaches = null;
+} // It is valid to preload even when we aren't actively rendering. For cases where Float functions are
+// called when there is no rendering we track the last used document. It is not safe to insert
+// arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
+// that the resource is meant to apply too (for example stylesheets or scripts). This is only
+// appropriate for resources that don't really have a strict tie to the document itself for example
+// preloads
+
+var lastCurrentDocument = null;
+var previousDispatcher = null;
+function prepareRendererToRender(rootContainer) {
+  {
+    var rootNode = getHoistableRoot(rootContainer);
+    lastCurrentDocument = getDocumentFromRoot(rootNode);
+    previousDispatcher = Dispatcher$1.current;
+    Dispatcher$1.current = ReactDOMClientDispatcher;
+  }
+}
+function resetRendererAfterRender() {
+  {
+    Dispatcher$1.current = previousDispatcher;
+    previousDispatcher = null;
+  }
+} // global collections of Resources
+
+var preloadPropsMap = new Map();
+var preconnectsSet = new Set(); // getRootNode is missing from IE and old jsdom versions
+
+function getHoistableRoot(container) {
+  // $FlowFixMe[method-unbinding]
+  return typeof container.getRootNode === "function"
+    ? /* $FlowFixMe[incompatible-return] Flow types this as returning a `Node`,
+       * but it's either a `Document` or `ShadowRoot`. */
+      container.getRootNode()
+    : container.ownerDocument;
+}
+
+function getCurrentResourceRoot() {
+  var currentContainer = getCurrentRootHostContainer();
+  return currentContainer ? getHoistableRoot(currentContainer) : null;
+} // Preloads are somewhat special. Even if we don't have the Document
+// used by the root that is rendering a component trying to insert a preload
+// we can still seed the file cache by doing the preload on any document we have
+// access to. We prefer the currentDocument if it exists, we also prefer the
+// lastCurrentDocument if that exists. As a fallback we will use the window.document
+// if available.
+
+function getDocumentForPreloads() {
+  var root = getCurrentResourceRoot();
+
+  if (root) {
+    return root.ownerDocument || root;
+  } else {
+    try {
+      return lastCurrentDocument || window.document;
+    } catch (error) {
+      return null;
+    }
+  }
+}
+
+function getDocumentFromRoot(root) {
+  return root.ownerDocument || root;
+} // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
+// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
+// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
+
+var ReactDOMClientDispatcher = {
+  prefetchDNS: prefetchDNS$1,
+  preconnect: preconnect$1,
+  preload: preload$1,
+  preinit: preinit$1
+};
+
+function preconnectAs(rel, crossOrigin, href) {
+  var ownerDocument = getDocumentForPreloads();
+
+  if (typeof href === "string" && href && ownerDocument) {
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    var key = 'link[rel="' + rel + '"][href="' + limitedEscapedHref + '"]';
+
+    if (typeof crossOrigin === "string") {
+      key += '[crossorigin="' + crossOrigin + '"]';
+    }
+
+    if (!preconnectsSet.has(key)) {
+      preconnectsSet.add(key);
+      var preconnectProps = {
+        rel: rel,
+        crossOrigin: crossOrigin,
+        href: href
+      };
+
+      if (null === ownerDocument.querySelector(key)) {
+        var instance = ownerDocument.createElement("link");
+        setInitialProperties(instance, "link", preconnectProps);
+        markNodeAsHoistable(instance);
+        ownerDocument.head.appendChild(instance);
+      }
+    }
+  }
+}
+
+function prefetchDNS$1(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null) {
+      if (
+        typeof options === "object" &&
+        hasOwnProperty.call(options, "crossOrigin")
+      ) {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      } else {
+        error(
+          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
+          getValueDescriptorExpectingEnumForWarning(options)
+        );
+      }
+    }
+  }
+
+  preconnectAs("dns-prefetch", null, href);
+}
+
+function preconnect$1(href, options) {
+  {
+    if (typeof href !== "string" || !href) {
+      error(
+        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
+        getValueDescriptorExpectingObjectForWarning(href)
+      );
+    } else if (options != null && typeof options !== "object") {
+      error(
+        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
+        getValueDescriptorExpectingEnumForWarning(options)
+      );
+    } else if (options != null && typeof options.crossOrigin !== "string") {
+      error(
+        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
+      );
+    }
+  }
+
+  var crossOrigin =
+    options == null || typeof options.crossOrigin !== "string"
+      ? null
+      : options.crossOrigin === "use-credentials"
+      ? "use-credentials"
+      : "";
+  preconnectAs("preconnect", crossOrigin, href);
+}
+
+function preload$1(href, options) {
+  {
+    validatePreloadArguments(href, options);
+  }
+
+  var ownerDocument = getDocumentForPreloads();
+
+  if (
+    typeof href === "string" &&
+    href &&
+    typeof options === "object" &&
+    options !== null &&
+    ownerDocument
+  ) {
+    var as = options.as;
+    var limitedEscapedHref =
+      escapeSelectorAttributeValueInsideDoubleQuotes(href);
+    var preloadKey =
+      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]';
+    var key = preloadKey;
+
+    switch (as) {
+      case "style":
+        key = getStyleKey(href);
+        break;
+
+      case "script":
+        key = getScriptKey(href);
+        break;
+    }
+
+    if (!preloadPropsMap.has(key)) {
+      var preloadProps = preloadPropsFromPreloadOptions(href, as, options);
+      preloadPropsMap.set(key, preloadProps);
+
+      if (null === ownerDocument.querySelector(preloadKey)) {
+        var instance = ownerDocument.createElement("link");
+        setInitialProperties(instance, "link", preloadProps);
+        markNodeAsHoistable(instance);
+        ownerDocument.head.appendChild(instance);
+      }
+    }
+  }
+}
+
+function preloadPropsFromPreloadOptions(href, as, options) {
+  return {
+    href: href,
+    rel: "preload",
+    as: as,
+    crossOrigin: as === "font" ? "" : options.crossOrigin,
+    integrity: options.integrity,
+    type: options.type
+  };
+}
+
+function preinit$1(href, options) {
+  {
+    validatePreinitArguments(href, options);
+  }
+
+  if (
+    typeof href === "string" &&
+    href &&
+    typeof options === "object" &&
+    options !== null
+  ) {
+    var resourceRoot = getCurrentResourceRoot();
+    var as = options.as;
+
+    if (!resourceRoot) {
+      if (as === "style" || as === "script") {
+        // We are going to emit a preload as a best effort fallback since this preinit
+        // was called outside of a render. Given the passive nature of this fallback
+        // we do not warn in dev when props disagree if there happens to already be a
+        // matching preload with this href
+        var preloadDocument = getDocumentForPreloads();
+
+        if (preloadDocument) {
+          var limitedEscapedHref =
+            escapeSelectorAttributeValueInsideDoubleQuotes(href);
+          var preloadKey =
+            'link[rel="preload"][as="' +
+            as +
+            '"][href="' +
+            limitedEscapedHref +
+            '"]';
+          var key = preloadKey;
+
+          switch (as) {
+            case "style":
+              key = getStyleKey(href);
+              break;
+
+            case "script":
+              key = getScriptKey(href);
+              break;
+          }
+
+          if (!preloadPropsMap.has(key)) {
+            var preloadProps = preloadPropsFromPreinitOptions(
+              href,
+              as,
+              options
+            );
+            preloadPropsMap.set(key, preloadProps);
+
+            if (null === preloadDocument.querySelector(preloadKey)) {
+              var instance = preloadDocument.createElement("link");
+              setInitialProperties(instance, "link", preloadProps);
+              markNodeAsHoistable(instance);
+              preloadDocument.head.appendChild(instance);
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    switch (as) {
+      case "style": {
+        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+
+        var _key = getStyleKey(href);
+
+        var precedence = options.precedence || "default"; // Check if this resource already exists
+
+        var resource = styles.get(_key);
+
+        if (resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        }
+
+        var state = {
+          loading: NotLoaded,
+          preload: null
+        }; // Attempt to hydrate instance from DOM
+
+        var _instance = resourceRoot.querySelector(
+          getStylesheetSelectorFromKey(_key)
+        );
+
+        if (_instance) {
+          state.loading = Loaded;
+        } else {
+          // Construct a new instance and insert it
+          var stylesheetProps = stylesheetPropsFromPreinitOptions(
+            href,
+            precedence,
+            options
+          );
+
+          var _preloadProps = preloadPropsMap.get(_key);
+
+          if (_preloadProps) {
+            adoptPreloadPropsForStylesheet(stylesheetProps, _preloadProps);
+          }
+
+          var ownerDocument = getDocumentFromRoot(resourceRoot);
+
+          var link = (_instance = ownerDocument.createElement("link"));
+
+          markNodeAsHoistable(link);
+          setInitialProperties(link, "link", stylesheetProps);
+          link._p = new Promise(function (resolve, reject) {
+            link.onload = resolve;
+            link.onerror = reject;
+          });
+          link.addEventListener("load", function () {
+            state.loading |= Loaded;
+          });
+          link.addEventListener("error", function () {
+            state.loading |= Errored;
+          });
+          insertStylesheet(_instance, precedence, resourceRoot);
+        } // Construct a Resource and cache it
+
+        resource = {
+          type: "stylesheet",
+          instance: _instance,
+          count: 1,
+          state: state
+        };
+        styles.set(_key, resource);
+        return;
+      }
+
+      case "script": {
+        var src = href;
+        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
+
+        var _key2 = getScriptKey(src); // Check if this resource already exists
+
+        var _resource = scripts.get(_key2);
+
+        if (_resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        } // Attempt to hydrate instance from DOM
+
+        var _instance2 = resourceRoot.querySelector(
+          getScriptSelectorFromKey(_key2)
+        );
+
+        if (!_instance2) {
+          // Construct a new instance and insert it
+          var scriptProps = scriptPropsFromPreinitOptions(src, options); // Adopt certain preload props
+
+          var _preloadProps2 = preloadPropsMap.get(_key2);
+
+          if (_preloadProps2) {
+            adoptPreloadPropsForScript(scriptProps, _preloadProps2);
+          }
+
+          var _ownerDocument = getDocumentFromRoot(resourceRoot);
+
+          _instance2 = _ownerDocument.createElement("script");
+          markNodeAsHoistable(_instance2);
+          setInitialProperties(_instance2, "link", scriptProps);
+
+          _ownerDocument.head.appendChild(_instance2);
+        } // Construct a Resource and cache it
+
+        _resource = {
+          type: "script",
+          instance: _instance2,
+          count: 1,
+          state: null
+        };
+        scripts.set(_key2, _resource);
+        return;
+      }
+    }
+  }
+}
+
+function preloadPropsFromPreinitOptions(href, as, options) {
+  return {
+    href: href,
+    rel: "preload",
+    as: as,
+    crossOrigin: as === "font" ? "" : options.crossOrigin,
+    integrity: options.integrity
+  };
+}
+
+function stylesheetPropsFromPreinitOptions(href, precedence, options) {
+  return {
+    rel: "stylesheet",
+    href: href,
+    "data-precedence": precedence,
+    crossOrigin: options.crossOrigin
+  };
+}
+
+function scriptPropsFromPreinitOptions(src, options) {
+  return {
+    src: src,
+    async: true,
+    crossOrigin: options.crossOrigin,
+    integrity: options.integrity
+  };
+} // This function is called in begin work and we should always have a currentDocument set
+
+function getResource(type, currentProps, pendingProps) {
+  var resourceRoot = getCurrentResourceRoot();
+
+  if (!resourceRoot) {
+    throw new Error(
+      '"resourceRoot" was expected to exist. This is a bug in React.'
+    );
+  }
+
+  switch (type) {
+    case "meta":
+    case "title": {
+      return null;
+    }
+
+    case "style": {
+      if (
+        typeof pendingProps.precedence === "string" &&
+        typeof pendingProps.href === "string"
+      ) {
+        var key = getStyleKey(pendingProps.href);
+        var styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+        var resource = styles.get(key);
+
+        if (!resource) {
+          resource = {
+            type: "style",
+            instance: null,
+            count: 0,
+            state: null
+          };
+          styles.set(key, resource);
+        }
+
+        return resource;
+      }
+
+      return {
+        type: "void",
+        instance: null,
+        count: 0,
+        state: null
+      };
+    }
+
+    case "link": {
+      if (
+        pendingProps.rel === "stylesheet" &&
+        typeof pendingProps.href === "string" &&
+        typeof pendingProps.precedence === "string"
+      ) {
+        var qualifiedProps = pendingProps;
+
+        var _key3 = getStyleKey(qualifiedProps.href);
+
+        var _styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+
+        var _resource2 = _styles.get(_key3);
+
+        if (!_resource2) {
+          // We asserted this above but Flow can't figure out that the type satisfies
+          var ownerDocument = getDocumentFromRoot(resourceRoot);
+          _resource2 = {
+            type: "stylesheet",
+            instance: null,
+            count: 0,
+            state: {
+              loading: NotLoaded,
+              preload: null
+            }
+          };
+
+          _styles.set(_key3, _resource2);
+
+          if (!preloadPropsMap.has(_key3)) {
+            preloadStylesheet(
+              ownerDocument,
+              _key3,
+              preloadPropsFromStylesheet(qualifiedProps),
+              _resource2.state
+            );
+          }
+        }
+
+        return _resource2;
+      }
+
+      return null;
+    }
+
+    case "script": {
+      if (typeof pendingProps.src === "string" && pendingProps.async === true) {
+        var scriptProps = pendingProps;
+
+        var _key4 = getScriptKey(scriptProps.src);
+
+        var scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
+
+        var _resource3 = scripts.get(_key4);
+
+        if (!_resource3) {
+          _resource3 = {
+            type: "script",
+            instance: null,
+            count: 0,
+            state: null
+          };
+          scripts.set(_key4, _resource3);
+        }
+
+        return _resource3;
+      }
+
+      return {
+        type: "void",
+        instance: null,
+        count: 0,
+        state: null
+      };
+    }
+
+    default: {
+      throw new Error(
+        'getResource encountered a type it did not expect: "' +
+          type +
+          '". this is a bug in React.'
+      );
+    }
+  }
+}
+
+function styleTagPropsFromRawProps(rawProps) {
+  return assign({}, rawProps, {
+    "data-href": rawProps.href,
+    "data-precedence": rawProps.precedence,
+    href: null,
+    precedence: null
+  });
+}
+
+function getStyleKey(href) {
+  var limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+  return 'href~="' + limitedEscapedHref + '"';
+}
+
+function getStyleTagSelectorFromKey(key) {
+  return "style[data-" + key + "]";
+}
+
+function getStylesheetSelectorFromKey(key) {
+  return 'link[rel="stylesheet"][' + key + "]";
+}
+
+function getPreloadStylesheetSelectorFromKey(key) {
+  return 'link[rel="preload"][as="style"][' + key + "]";
+}
+
+function stylesheetPropsFromRawProps(rawProps) {
+  return assign({}, rawProps, {
+    "data-precedence": rawProps.precedence,
+    precedence: null
+  });
+}
+
+function preloadStylesheet(ownerDocument, key, preloadProps, state) {
+  preloadPropsMap.set(key, preloadProps);
+
+  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
+    // There is no matching stylesheet instance in the Document.
+    // We will insert a preload now to kick off loading because
+    // we expect this stylesheet to commit
+    var preloadEl = ownerDocument.querySelector(
+      getPreloadStylesheetSelectorFromKey(key)
+    );
+
+    if (preloadEl) {
+      // If we find a preload already it was SSR'd and we won't have an actual
+      // loading state to track. For now we will just assume it is loaded
+      state.loading = Loaded;
+    } else {
+      var instance = ownerDocument.createElement("link");
+      state.preload = instance;
+      instance.addEventListener("load", function () {
+        return (state.loading |= Loaded);
+      });
+      instance.addEventListener("error", function () {
+        return (state.loading |= Errored);
+      });
+      setInitialProperties(instance, "link", preloadProps);
+      markNodeAsHoistable(instance);
+      ownerDocument.head.appendChild(instance);
+    }
+  }
+}
+
+function preloadPropsFromStylesheet(props) {
+  return {
+    rel: "preload",
+    as: "style",
+    href: props.href,
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    media: props.media,
+    hrefLang: props.hrefLang,
+    referrerPolicy: props.referrerPolicy
+  };
+}
+
+function getScriptKey(src) {
+  var limitedEscapedSrc = escapeSelectorAttributeValueInsideDoubleQuotes(src);
+  return '[src="' + limitedEscapedSrc + '"]';
+}
+
+function getScriptSelectorFromKey(key) {
+  return "script[async]" + key;
+}
+
+function acquireResource(hoistableRoot, resource, props) {
+  resource.count++;
+
+  if (resource.instance === null) {
+    switch (resource.type) {
+      case "style": {
+        var qualifiedProps = props;
+        var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+        var instance = hoistableRoot.querySelector(
+          getStyleTagSelectorFromKey(key)
+        );
+
+        if (instance) {
+          resource.instance = instance;
+          markNodeAsHoistable(instance);
+          return instance;
+        }
+
+        var styleProps = styleTagPropsFromRawProps(props);
+        var ownerDocument = getDocumentFromRoot(hoistableRoot);
+        instance = ownerDocument.createElement("style");
+        markNodeAsHoistable(instance);
+        setInitialProperties(instance, "style", styleProps);
+        insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
+        resource.instance = instance;
+        return instance;
+      }
+
+      case "stylesheet": {
+        // This typing is enforce by `getResource`. If we change the logic
+        // there for what qualifies as a stylesheet resource we need to ensure
+        // this cast still makes sense;
+        var _qualifiedProps = props;
+
+        var _key5 = getStyleKey(_qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+        var _instance3 = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(_key5)
+        );
+
+        if (_instance3) {
+          resource.instance = _instance3;
+          markNodeAsHoistable(_instance3);
+          return _instance3;
+        }
+
+        var stylesheetProps = stylesheetPropsFromRawProps(props);
+        var preloadProps = preloadPropsMap.get(_key5);
+
+        if (preloadProps) {
+          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+        } // Construct and insert a new instance
+
+        var _ownerDocument2 = getDocumentFromRoot(hoistableRoot);
+
+        _instance3 = _ownerDocument2.createElement("link");
+        markNodeAsHoistable(_instance3);
+        var linkInstance = _instance3;
+        linkInstance._p = new Promise(function (resolve, reject) {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        });
+        setInitialProperties(_instance3, "link", stylesheetProps);
+        insertStylesheet(_instance3, _qualifiedProps.precedence, hoistableRoot);
+        resource.instance = _instance3;
+        return _instance3;
+      }
+
+      case "script": {
+        // This typing is enforce by `getResource`. If we change the logic
+        // there for what qualifies as a stylesheet resource we need to ensure
+        // this cast still makes sense;
+        var borrowedScriptProps = props;
+
+        var _key6 = getScriptKey(borrowedScriptProps.src); // Attempt to hydrate instance from DOM
+
+        var _instance4 = hoistableRoot.querySelector(
+          getScriptSelectorFromKey(_key6)
+        );
+
+        if (_instance4) {
+          resource.instance = _instance4;
+          markNodeAsHoistable(_instance4);
+          return _instance4;
+        }
+
+        var scriptProps = borrowedScriptProps;
+
+        var _preloadProps3 = preloadPropsMap.get(_key6);
+
+        if (_preloadProps3) {
+          scriptProps = assign({}, borrowedScriptProps);
+          adoptPreloadPropsForScript(scriptProps, _preloadProps3);
+        } // Construct and insert a new instance
+
+        var _ownerDocument3 = getDocumentFromRoot(hoistableRoot);
+
+        _instance4 = _ownerDocument3.createElement("script");
+        markNodeAsHoistable(_instance4);
+        setInitialProperties(_instance4, "link", scriptProps);
+
+        _ownerDocument3.head.appendChild(_instance4);
+
+        resource.instance = _instance4;
+        return _instance4;
+      }
+
+      case "void": {
+        return null;
+      }
+
+      default: {
+        throw new Error(
+          'acquireResource encountered a resource type it did not expect: "' +
+            resource.type +
+            '". this is a bug in React.'
+        );
+      }
+    }
+  }
+
+  return resource.instance;
+}
+function releaseResource(resource) {
+  resource.count--;
+}
+
+function insertStylesheet(instance, precedence, root) {
+  var nodes = root.querySelectorAll(
+    'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+  );
+  var last = nodes.length ? nodes[nodes.length - 1] : null;
+  var prior = last;
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    var nodePrecedence = node.dataset.precedence;
+
+    if (nodePrecedence === precedence) {
+      prior = node;
+    } else if (prior !== last) {
+      break;
+    }
+  }
+
+  if (prior) {
+    // We get the prior from the document so we know it is in the tree.
+    // We also know that links can't be the topmost Node so the parentNode
+    // must exist.
+    prior.parentNode.insertBefore(instance, prior.nextSibling);
+  } else {
+    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
+    parent.insertBefore(instance, parent.firstChild);
+  }
+}
+
+function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+  if (stylesheetProps.crossOrigin == null)
+    stylesheetProps.crossOrigin = preloadProps.crossOrigin;
+  if (stylesheetProps.referrerPolicy == null)
+    stylesheetProps.referrerPolicy = preloadProps.referrerPolicy;
+  if (stylesheetProps.title == null) stylesheetProps.title = preloadProps.title;
+}
+
+function adoptPreloadPropsForScript(scriptProps, preloadProps) {
+  if (scriptProps.crossOrigin == null)
+    scriptProps.crossOrigin = preloadProps.crossOrigin;
+  if (scriptProps.referrerPolicy == null)
+    scriptProps.referrerPolicy = preloadProps.referrerPolicy;
+  if (scriptProps.integrity == null)
+    scriptProps.referrerPolicy = preloadProps.integrity;
+}
+
+var tagCaches = null;
+function hydrateHoistable(hoistableRoot, type, props, internalInstanceHandle) {
+  var ownerDocument = getDocumentFromRoot(hoistableRoot);
+  var instance = null;
+
+  getInstance: switch (type) {
+    case "title": {
+      instance = ownerDocument.getElementsByTagName("title")[0];
+
+      if (
+        !instance ||
+        isOwnedInstance(instance) ||
+        instance.namespaceURI === SVG_NAMESPACE ||
+        instance.hasAttribute("itemprop")
+      ) {
+        instance = ownerDocument.createElement(type);
+        ownerDocument.head.insertBefore(
+          instance,
+          ownerDocument.querySelector("head > title")
+        );
+      }
+
+      setInitialProperties(instance, type, props);
+      precacheFiberNode(internalInstanceHandle, instance);
+      markNodeAsHoistable(instance);
+      return instance;
+    }
+
+    case "link": {
+      var cache = getHydratableHoistableCache("link", "href", ownerDocument);
+      var key = type + (props.href || "");
+      var maybeNodes = cache.get(key);
+
+      if (maybeNodes) {
+        var nodes = maybeNodes;
+
+        for (var i = 0; i < nodes.length; i++) {
+          var node = nodes[i];
+
+          if (
+            node.getAttribute("href") !==
+              (props.href == null ? null : props.href) ||
+            node.getAttribute("rel") !==
+              (props.rel == null ? null : props.rel) ||
+            node.getAttribute("title") !==
+              (props.title == null ? null : props.title) ||
+            node.getAttribute("crossorigin") !==
+              (props.crossOrigin == null ? null : props.crossOrigin)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = node;
+          nodes.splice(i, 1);
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    case "meta": {
+      var _cache = getHydratableHoistableCache(
+        "meta",
+        "content",
+        ownerDocument
+      );
+
+      var _key7 = type + (props.content || "");
+
+      var _maybeNodes = _cache.get(_key7);
+
+      if (_maybeNodes) {
+        var _nodes = _maybeNodes;
+
+        for (var _i = 0; _i < _nodes.length; _i++) {
+          var _node = _nodes[_i]; // We coerce content to string because it is the most likely one to
+          // use a `toString` capable value. For the rest we just do identity match
+          // passing non-strings here is not really valid anyway.
+
+          {
+            checkAttributeStringCoercion(props.content, "content");
+          }
+
+          if (
+            _node.getAttribute("content") !==
+              (props.content == null ? null : "" + props.content) ||
+            _node.getAttribute("name") !==
+              (props.name == null ? null : props.name) ||
+            _node.getAttribute("property") !==
+              (props.property == null ? null : props.property) ||
+            _node.getAttribute("http-equiv") !==
+              (props.httpEquiv == null ? null : props.httpEquiv) ||
+            _node.getAttribute("charset") !==
+              (props.charSet == null ? null : props.charSet)
+          ) {
+            // mismatch, try the next node;
+            continue;
+          }
+
+          instance = _node;
+
+          _nodes.splice(_i, 1);
+
+          break getInstance;
+        }
+      }
+
+      instance = ownerDocument.createElement(type);
+      setInitialProperties(instance, type, props);
+      ownerDocument.head.appendChild(instance);
+      break;
+    }
+
+    default:
+      throw new Error(
+        'getNodesForType encountered a type it did not expect: "' +
+          type +
+          '". This is a bug in React.'
+      );
+  } // This node is a match
+
+  precacheFiberNode(internalInstanceHandle, instance);
+  markNodeAsHoistable(instance);
+  return instance;
+}
+
+function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
+  var cache;
+  var caches;
+
+  if (tagCaches === null) {
+    cache = new Map();
+    caches = tagCaches = new Map();
+    caches.set(ownerDocument, cache);
+  } else {
+    caches = tagCaches;
+    var maybeCache = caches.get(ownerDocument);
+
+    if (!maybeCache) {
+      cache = new Map();
+      caches.set(ownerDocument, cache);
+    } else {
+      cache = maybeCache;
+    }
+  }
+
+  if (cache.has(type)) {
+    // We use type as a special key that signals that this cache has been seeded for this type
+    return cache;
+  } // Mark this cache as seeded for this type
+
+  cache.set(type, null);
+  var nodes = ownerDocument.getElementsByTagName(type);
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+
+    if (
+      !isOwnedInstance(node) &&
+      (type !== "link" || node.getAttribute("rel") !== "stylesheet") &&
+      node.namespaceURI !== SVG_NAMESPACE
+    ) {
+      var nodeKey = node.getAttribute(keyAttribute) || "";
+      var key = type + nodeKey;
+      var existing = cache.get(key);
+
+      if (existing) {
+        existing.push(node);
+      } else {
+        cache.set(key, [node]);
+      }
+    }
+  }
+
+  return cache;
+}
+
+function mountHoistable(hoistableRoot, type, instance) {
+  var ownerDocument = getDocumentFromRoot(hoistableRoot);
+  ownerDocument.head.insertBefore(
+    instance,
+    type === "title" ? ownerDocument.querySelector("head > title") : null
+  );
+}
+function unmountHoistable(instance) {
+  instance.parentNode.removeChild(instance);
+} // When passing user input into querySelector(All) the embedded string must not alter
+// the semantics of the query. This escape function is safe to use when we know the
+// provided value is going to be wrapped in double quotes as part of an attribute selector
+// Do not use it anywhere else
+// we escape double quotes and backslashes
+
+var escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
+
+function escapeSelectorAttributeValueInsideDoubleQuotes(value) {
+  return value.replace(
+    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
+    function (ch) {
+      return "\\" + ch.charCodeAt(0).toString(16);
+    }
+  );
+}
+
 function isHostHoistableType(type, props, hostContext) {
   var outsideHostContainerContext;
   var namespace;
@@ -43387,166 +43688,268 @@ function isHostHoistableType(type, props, hostContext) {
 
   return false;
 }
-function prepareRendererToRender(rootContainer) {
-  {
-    prepareToRenderResources(rootContainer);
-  }
+function maySuspendCommit(type, props) {
+  return false;
 }
-function resetRendererAfterRender() {
-  {
-    cleanupAfterRenderResources();
-  }
+function mayResourceSuspendCommit(resource) {
+  return (
+    resource.type === "stylesheet" &&
+    (resource.state.loading & Inserted) === NotLoaded
+  );
 }
-function isHostSingletonType(type) {
-  return type === "html" || type === "head" || type === "body";
+function preloadInstance(type, props) {
+  // Return true to indicate it's already loaded
+  return true;
 }
-function resolveSingletonInstance(
-  type,
-  props,
-  rootContainerInstance,
-  hostContext,
-  validateDOMNestingDev
-) {
-  {
-    var hostContextDev = hostContext;
+var suspendedState = null; // We use a noop function when we begin suspending because if possible we want the
+// waitfor step to finish synchronously. If it doesn't we'll return a function to
+// provide the actual unsuspend function and that will get completed when the count
+// hits zero or it will get cancelled if the root starts new work.
 
-    if (validateDOMNestingDev) {
-      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
-    }
-  }
+function noop() {}
 
-  var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
-
-  switch (type) {
-    case "html": {
-      var documentElement = ownerDocument.documentElement;
-
-      if (!documentElement) {
-        throw new Error(
-          "React expected an <html> element (document.documentElement) to exist in the Document but one was" +
-            " not found. React never removes the documentElement for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return documentElement;
-    }
-
-    case "head": {
-      var head = ownerDocument.head;
-
-      if (!head) {
-        throw new Error(
-          "React expected a <head> element (document.head) to exist in the Document but one was" +
-            " not found. React never removes the head for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return head;
-    }
-
-    case "body": {
-      var body = ownerDocument.body;
-
-      if (!body) {
-        throw new Error(
-          "React expected a <body> element (document.body) to exist in the Document but one was" +
-            " not found. React never removes the body for any Document it renders into so" +
-            " the cause is likely in some other script running on this page."
-        );
-      }
-
-      return body;
-    }
-
-    default: {
-      throw new Error(
-        "resolveSingletonInstance was called with an element type that is not supported. This is a bug in React."
-      );
-    }
-  }
+function startSuspendingCommit() {
+  suspendedState = {
+    stylesheets: null,
+    count: 0,
+    unsuspend: noop
+  };
 }
-function acquireSingletonInstance(
-  type,
-  props,
-  instance,
-  internalInstanceHandle
-) {
-  {
-    var currentInstanceHandle = getInstanceFromNode$1(instance);
-
-    if (currentInstanceHandle) {
-      var tagName = instance.tagName.toLowerCase();
-
-      error(
-        "You are mounting a new %s component when a previous one has not first unmounted. It is an" +
-          " error to render more than one %s component at a time and attributes and children of these" +
-          " components will likely fail in unpredictable ways. Please only render a single instance of" +
-          " <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
-        tagName,
-        tagName,
-        tagName
-      );
-    }
-
-    switch (type) {
-      case "html":
-      case "head":
-      case "body": {
-        break;
-      }
-
-      default: {
-        error(
-          "acquireSingletonInstance was called with an element type that is not supported. This is a bug in React."
-        );
-      }
-    }
-  }
-
-  var attributes = instance.attributes;
-
-  while (attributes.length) {
-    instance.removeAttributeNode(attributes[0]);
-  }
-
-  setInitialProperties(instance, type, props);
-  precacheFiberNode(internalInstanceHandle, instance);
-  updateFiberProps(instance, props);
-}
-function releaseSingletonInstance(instance) {
-  var attributes = instance.attributes;
-
-  while (attributes.length) {
-    instance.removeAttributeNode(attributes[0]);
-  }
-
-  detachDeletedInstance(instance);
-}
-function clearSingleton(instance) {
-  var element = instance;
-  var node = element.firstChild;
-
-  while (node) {
-    var nextNode = node.nextSibling;
-    var nodeName = node.nodeName;
-
-    if (
-      isMarkedHoistable(node) ||
-      nodeName === "HEAD" ||
-      nodeName === "BODY" ||
-      nodeName === "STYLE" ||
-      (nodeName === "LINK" && node.rel.toLowerCase() === "stylesheet")
+function suspendResource(hoistableRoot, resource, props) {
+  if (suspendedState === null) {
+    throw new Error(
+      "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug."
     );
-    else {
-      element.removeChild(node);
-    }
-
-    node = nextNode;
   }
 
-  return;
+  var state = suspendedState;
+
+  if (resource.type === "stylesheet") {
+    if (typeof props.media === "string") {
+      // If we don't currently match media we avoid suspending on this resource
+      // and let it insert on the mutation path
+      if (matchMedia(props.media).matches === false) {
+        return;
+      }
+    }
+
+    if (resource.instance === null) {
+      var qualifiedProps = props;
+      var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
+
+      var instance = hoistableRoot.querySelector(
+        getStylesheetSelectorFromKey(key)
+      );
+
+      if (instance) {
+        // If this instance has a loading state it came from the Fizz runtime.
+        // If there is not loading state it is assumed to have been server rendered
+        // as part of the preamble and therefore synchronously loaded. It could have
+        // errored however which we still do not yet have a means to detect. For now
+        // we assume it is loaded.
+        var maybeLoadingState = instance._p;
+
+        if (
+          maybeLoadingState !== null &&
+          typeof maybeLoadingState === "object" && // $FlowFixMe[method-unbinding]
+          typeof maybeLoadingState.then === "function"
+        ) {
+          var loadingState = maybeLoadingState;
+          state.count++;
+          var ping = onUnsuspend.bind(state);
+          loadingState.then(ping, ping);
+        }
+
+        resource.state.loading |= Inserted;
+        resource.instance = instance;
+        markNodeAsHoistable(instance);
+        return;
+      }
+
+      var ownerDocument = getDocumentFromRoot(hoistableRoot);
+      var stylesheetProps = stylesheetPropsFromRawProps(props);
+      var preloadProps = preloadPropsMap.get(key);
+
+      if (preloadProps) {
+        adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+      } // Construct and insert a new instance
+
+      instance = ownerDocument.createElement("link");
+      markNodeAsHoistable(instance);
+      var linkInstance = instance; // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+      // between this resource being rendered on the client and being rendered with a late completed boundary.
+
+      linkInstance._p = new Promise(function (resolve, reject) {
+        linkInstance.onload = resolve;
+        linkInstance.onerror = reject;
+      });
+      setInitialProperties(instance, "link", stylesheetProps);
+      resource.instance = instance;
+    }
+
+    if (state.stylesheets === null) {
+      state.stylesheets = new Map();
+    }
+
+    state.stylesheets.set(resource, hoistableRoot);
+    var preloadEl = resource.state.preload;
+
+    if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
+      state.count++;
+
+      var _ping = onUnsuspend.bind(state);
+
+      preloadEl.addEventListener("load", _ping);
+      preloadEl.addEventListener("error", _ping);
+    }
+  }
+}
+function waitForCommitToBeReady() {
+  if (suspendedState === null) {
+    throw new Error(
+      "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug."
+    );
+  }
+
+  var state = suspendedState;
+
+  if (state.stylesheets && state.count === 0) {
+    // We are not currently blocked but we have not inserted all stylesheets.
+    // If this insertion happens and loads or errors synchronously then we can
+    // avoid suspending the commit. To do this we check the count again immediately after
+    insertSuspendedStylesheets(state, state.stylesheets);
+  } // We need to check the count again because the inserted stylesheets may have led to new
+  // tasks to wait on.
+
+  if (state.count > 0) {
+    return function (commit) {
+      unsuspendAfterTimeout(state);
+      state.unsuspend = commit;
+      return function () {
+        return (state.unsuspend = null);
+      };
+    };
+  }
+
+  return null;
+}
+
+function unsuspendAfterTimeout(state) {
+  setTimeout(function () {
+    if (state.stylesheets) {
+      insertSuspendedStylesheets(state, state.stylesheets);
+    }
+
+    if (state.unsuspend) {
+      var unsuspend = state.unsuspend;
+      state.unsuspend = null;
+      unsuspend();
+    }
+  }, 500);
+}
+
+function onUnsuspend() {
+  this.count--;
+
+  if (this.count === 0) {
+    if (this.stylesheets) {
+      // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
+      // The reason we do this after everything else has finished is because we want to have all the stylesheets
+      // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
+      // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
+      // wait for them to load before actually continuing. We expect this to increase the count above zero
+      insertSuspendedStylesheets(this, this.stylesheets);
+    } else if (this.unsuspend) {
+      var unsuspend = this.unsuspend;
+      this.unsuspend = null;
+      unsuspend();
+    }
+  }
+} // This is typecast to non-null because it will always be set before read.
+// it is important that this not be used except when the stack guarantees it exists.
+// Currentlyt his is only during insertSuspendedStylesheet.
+
+var precedencesByRoot = null;
+
+function insertSuspendedStylesheets(state, resources) {
+  // We need to clear this out so we don't try to reinsert after the stylesheets have loaded
+  state.stylesheets = null;
+
+  if (state.unsuspend === null) {
+    // The suspended commit was cancelled. We don't need to insert any stylesheets.
+    return;
+  } // Temporarily increment count. we don't want any synchronously loaded stylesheets to try to unsuspend
+  // before we finish inserting all stylesheets.
+
+  state.count++;
+  precedencesByRoot = new Map();
+  resources.forEach(insertStylesheetIntoRoot, state);
+  precedencesByRoot = null; // We can remove our temporary count and if we're still at zero we can unsuspend.
+  // If we are in the synchronous phase before deciding if the commit should suspend and this
+  // ends up hitting the unsuspend path it will just invoke the noop unsuspend.
+
+  onUnsuspend.call(state);
+}
+
+function insertStylesheetIntoRoot(root, resource, map) {
+  if (resource.state.loading & Inserted) {
+    // This resource was inserted by another root committing. we don't need to insert it again
+    return;
+  }
+
+  var last;
+  var precedences = precedencesByRoot.get(root);
+
+  if (!precedences) {
+    precedences = new Map();
+    precedencesByRoot.set(root, precedences);
+    var nodes = root.querySelectorAll(
+      "link[data-precedence],style[data-precedence]"
+    );
+
+    for (var i = 0; i < nodes.length; i++) {
+      var node = nodes[i];
+
+      if (
+        node.nodeName === "link" || // We omit style tags with media="not all" because they are not in the right position
+        // and will be hoisted by the Fizz runtime imminently.
+        node.getAttribute("media") !== "not all"
+      ) {
+        precedences.set("p" + node.dataset.precedence, node);
+        last = node;
+      }
+    }
+
+    if (last) {
+      precedences.set("last", last);
+    }
+  } else {
+    last = precedences.get("last");
+  } // We only call this after we have constructed an instance so we assume it here
+
+  var instance = resource.instance; // We will always have a precedence for stylesheet instances
+
+  var precedence = instance.getAttribute("data-precedence");
+  var prior = precedences.get("p" + precedence) || last;
+
+  if (prior === last) {
+    precedences.set("last", instance);
+  }
+
+  precedences.set(precedence, instance);
+  this.count++;
+  var onComplete = onUnsuspend.bind(this);
+  instance.addEventListener("load", onComplete);
+  instance.addEventListener("error", onComplete);
+
+  if (prior) {
+    prior.parentNode.insertBefore(instance, prior.nextSibling);
+  } else {
+    var parent = root.nodeType === DOCUMENT_NODE ? root.head : root;
+    parent.insertBefore(instance, parent.firstChild);
+  }
+
+  resource.state.loading |= Inserted;
 }
 
 var Dispatcher = Internals.Dispatcher;
