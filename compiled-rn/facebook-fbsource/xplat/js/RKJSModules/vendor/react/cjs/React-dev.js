@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-next-73b6435ca-20230324";
+var ReactVersion = "18.3.0-next-d12bdcda6-20230325";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2071,22 +2071,22 @@ function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   );
 }
 function useCacheRefresh() {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe This is unstable, thus optional
+  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
   return dispatcher.useCacheRefresh();
 }
 function use(usable) {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe This is unstable, thus optional
+  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
   return dispatcher.use(usable);
 }
 function useMemoCache(size) {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe This is unstable, thus optional
+  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
   return dispatcher.useMemoCache(size);
 }
 function useEffectEvent(callback) {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe This is unstable, thus optional
+  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
   return dispatcher.useEffectEvent(callback);
 }
