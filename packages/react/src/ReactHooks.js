@@ -234,7 +234,7 @@ export function useMemoCache(size: number): Array<any> {
   return dispatcher.useMemoCache(size);
 }
 
-export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
+export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   callback: F,
 ): F {
   const dispatcher = resolveDispatcher();
