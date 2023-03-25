@@ -213,15 +213,25 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
-  it('can transport undefined object values', async () => {
-    function ComponentClient(props) {
+  // @gate FIXME
+  it('should transport undefined object values', async () => {
+    function ServerComponent(props) {
       return 'prop' in props
         ? `\`prop\` in props as '${props.prop}'`
         : '`prop` not in props';
     }
-    const Component = clientReference(ComponentClient);
+    const ClientComponent = clientReference(ServerComponent);
 
-    const model = <Component prop={undefined} />;
+    const model = (
+      <>
+        <div>
+          Server: <ServerComponent prop={undefined} />
+        </div>
+        <div>
+          Client: <ClientComponent prop={undefined} />
+        </div>
+      </>
+    );
 
     const transport = ReactNoopFlightServer.render(model);
 
@@ -229,7 +239,12 @@ describe('ReactFlight', () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport));
     });
 
-    expect(ReactNoop).toMatchRenderedOutput("`prop` in props as 'undefined'");
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Server: `prop` in props as 'undefined'</div>
+        <div>Client: `prop` in props as 'undefined'</div>
+      </>,
+    );
   });
 
   it('can render an empty fragment', async () => {
