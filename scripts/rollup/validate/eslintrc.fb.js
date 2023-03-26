@@ -7,6 +7,7 @@ module.exports = {
   },
   globals: {
     // ES6
+    BigInt: 'readonly',
     Map: 'readonly',
     Set: 'readonly',
     Symbol: 'readonly',
