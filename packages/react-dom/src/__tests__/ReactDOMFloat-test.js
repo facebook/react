@@ -2939,7 +2939,6 @@ body {
     );
   });
 
-  // @gate TODO
   it('can interrupt a suspended commit with a new update', async () => {
     function App({children}) {
       return (
@@ -2949,9 +2948,13 @@ body {
       );
     }
     const root = ReactDOMClient.createRoot(document);
+
+    // Do an initial render. This means subsequent insertions will suspend,
+    // unless they are wrapped inside a fresh Suspense boundary.
     root.render(<App />);
     await waitForAll([]);
 
+    // Insert a stylesheet. This will suspend because it's a transition.
     React.startTransition(() => {
       root.render(
         <App>
@@ -2961,6 +2964,7 @@ body {
       );
     });
     await waitForAll([]);
+    // Although the commit suspended, a preload was inserted.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2970,6 +2974,9 @@ body {
       </html>,
     );
 
+    // Before the stylesheet has loaded, do an urgent update. This will insert a
+    // different stylesheet, and cancel the first one. This stylesheet will not
+    // suspend, even though it hasn't loaded, because it's an urgent update.
     root.render(
       <App>
         hello2
@@ -2978,6 +2985,9 @@ body {
       </App>,
     );
     await waitForAll([]);
+
+    // The bar stylesheet was inserted. There's still a "foo" preload, even
+    // though that update was superseded.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2989,9 +2999,10 @@ body {
       </html>,
     );
 
-    // Even though foo was preloaded we don't see the stylesheet insert because the commit was cancelled.
-    // If we do a followup render that tries to recommit that resource it will insert right away because
-    // the preload is already loaded
+    // When "foo" finishes loading, nothing happens, because "foo" was not
+    // included in the last root update. However, if we insert "foo" again
+    // later, it should immediately commit without suspending, because it's
+    // been preloaded.
     loadPreloads(['foo']);
     assertLog(['load preload: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
@@ -3005,6 +3016,7 @@ body {
       </html>,
     );
 
+    // Now insert "foo" again.
     React.startTransition(() => {
       root.render(
         <App>
@@ -3015,6 +3027,7 @@ body {
       );
     });
     await waitForAll([]);
+    // Commits without suspending because "foo" was preloaded.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -3023,7 +3036,7 @@ body {
           <link rel="preload" href="foo" as="style" />
           <link rel="preload" href="bar" as="style" />
         </head>
-        <body>hello2</body>
+        <body>hello3</body>
       </html>,
     );
 
