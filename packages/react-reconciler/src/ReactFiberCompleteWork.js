@@ -17,6 +17,7 @@ import type {
   Props,
   Container,
   ChildSet,
+  Resource,
 } from './ReactFiberHostConfig';
 import type {
   SuspenseState,
@@ -112,6 +113,7 @@ import {
   maySuspendCommit,
   mayResourceSuspendCommit,
   preloadInstance,
+  preloadResource,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -511,6 +513,10 @@ function updateHostComponent(
   }
 }
 
+// This function must be called at the very end of the complete phase, because
+// it might throw to suspend, and if the resource immediately loads, the work
+// loop will resume rendering as if the work-in-progress completed. So it must
+// fully complete.
 // TODO: This should ideally move to begin phase, but currently the instance is
 // not created until the complete phase. For our existing use cases, host nodes
 // that suspend don't have children, so it doesn't matter. But that might not
@@ -521,13 +527,35 @@ function preloadInstanceAndSuspendIfNeeded(
   props: Props,
   renderLanes: Lanes,
 ) {
+  if (!maySuspendCommit(type, props)) {
+    // If this flag was set previously, we can remove it. The flag
+    // represents whether this particular set of props might ever need to
+    // suspend. The safest thing to do is for maySuspendCommit to always
+    // return true, but if the renderer is reasonably confident that the
+    // underlying resource won't be evicted, it can return false as a
+    // performance optimization.
+    workInProgress.flags &= ~SuspenseyCommit;
+    return;
+  }
+
+  // Mark this fiber with a flag. This gets set on all host instances
+  // that might possibly suspend, even if they don't need to suspend
+  // currently. We use this when revealing a prerendered tree, because
+  // even though the tree has "mounted", its resources might not have
+  // loaded yet.
   workInProgress.flags |= SuspenseyCommit;
+
   // Check if we're rendering at a "non-urgent" priority. This is the same
   // check that `useDeferredValue` does to determine whether it needs to
   // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
   // suspending until you opt in with startTransition or Suspense) but it
   // also happens to be the desired behavior for the concrete use cases we've
   // thought of so far, like CSS loading, fonts, images, etc.
+  //
+  // We check the "root" render lanes here rather than the "subtree" render
+  // because during a retry or offscreen prerender, the "subtree" render
+  // lanes may include additional "base" lanes that were deferred during
+  // a previous render.
   // TODO: We may decide to expose a way to force a fallback even during a
   // sync update.
   if (!includesOnlyNonUrgentLanes(renderLanes)) {
@@ -547,6 +575,35 @@ function preloadInstanceAndSuspendIfNeeded(
         // It's OK to suspend. Continue rendering.
       } else {
         // Trigger a fallback rather than block the render.
+        suspendCommit();
+      }
+    }
+  }
+}
+
+function preloadResourceAndSuspendIfNeeded(
+  workInProgress: Fiber,
+  resource: Resource,
+  type: Type,
+  props: Props,
+  renderLanes: Lanes,
+) {
+  // This is a fork of preloadInstanceAndSuspendIfNeeded, but for resources.
+  if (!mayResourceSuspendCommit(resource)) {
+    workInProgress.flags &= ~SuspenseyCommit;
+    return;
+  }
+
+  workInProgress.flags |= SuspenseyCommit;
+
+  if (!includesOnlyNonUrgentLanes(renderLanes)) {
+    // This is an urgent render. Don't suspend or show a fallback.
+  } else {
+    const isReady = preloadResource(resource);
+    if (!isReady) {
+      if (shouldRemainOnPreviousScreen()) {
+        // It's OK to suspend. Continue rendering.
+      } else {
         suspendCommit();
       }
     }
@@ -1015,64 +1072,99 @@ function completeWork(
     }
     case HostHoistable: {
       if (enableFloat && supportsResources) {
-        const currentRef = current ? current.ref : null;
-        if (currentRef !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
+        // The branching here is more complicated than you might expect because
+        // a HostHoistable sometimes corresponds to a Resource and sometimes
+        // corresponds to an Instance. It can also switch during an update.
 
-        let maySuspend = false;
-
-        // @TODO refactor this block to create the instance here in complete phase if we
-        // are not hydrating.
-        if (
+        const type = workInProgress.type;
+        const nextResource: Resource | null = workInProgress.memoizedState;
+        if (current === null) {
           // We are mounting and must Update this Hoistable in this commit
-          current === null ||
-          // We are transitioning to, from, or between Hoistable Resources
-          // and require an update
-          current.memoizedState !== workInProgress.memoizedState
-        ) {
-          if (workInProgress.memoizedState !== null) {
-            maySuspend = mayResourceSuspendCommit(workInProgress.memoizedState);
-          } else {
-            maySuspend = maySuspendCommit(
-              workInProgress.type,
-              workInProgress.pendingProps,
-            );
-          }
+          // @TODO refactor this block to create the instance here in complete
+          // phase if we are not hydrating.
           markUpdate(workInProgress);
-        } else if (workInProgress.memoizedState === null) {
-          maySuspend = maySuspendCommit(
-            workInProgress.type,
-            workInProgress.pendingProps,
-          );
-          // We may have props to update on the Hoistable instance. We use the
-          // updateHostComponent path becuase it produces the update queue
-          // we need for Hoistables
-          updateHostComponent(
-            current,
-            workInProgress,
-            workInProgress.type,
-            workInProgress.pendingProps,
-            renderLanes,
-          );
-        }
-        bubbleProperties(workInProgress);
+          if (workInProgress.ref !== null) {
+            markRef(workInProgress);
+          }
+          if (nextResource !== null) {
+            // This is a Hoistable Resource
 
-        // This must come at the very end of the complete phase, because it might
-        // throw to suspend, and if the resource immediately loads, the work loop
-        // will resume rendering as if the work-in-progress completed. So it must
-        // fully complete.
-        if (maySuspend) {
-          preloadInstanceAndSuspendIfNeeded(
-            workInProgress,
-            workInProgress.type,
-            workInProgress.pendingProps,
-            renderLanes,
-          );
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+            preloadResourceAndSuspendIfNeeded(
+              workInProgress,
+              nextResource,
+              type,
+              newProps,
+              renderLanes,
+            );
+            return null;
+          } else {
+            // This is a Hoistable Instance
+
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+            preloadInstanceAndSuspendIfNeeded(
+              workInProgress,
+              type,
+              newProps,
+              renderLanes,
+            );
+            return null;
+          }
         } else {
-          workInProgress.flags &= ~SuspenseyCommit;
+          // We are updating.
+          const currentResource = current.memoizedState;
+          if (nextResource !== currentResource) {
+            // We are transitioning to, from, or between Hoistable Resources
+            // and require an update
+            markUpdate(workInProgress);
+          }
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
+          }
+          if (nextResource !== null) {
+            // This is a Hoistable Resource
+            // This must come at the very end of the complete phase.
+
+            bubbleProperties(workInProgress);
+            if (nextResource === currentResource) {
+              workInProgress.flags &= ~SuspenseyCommit;
+            } else {
+              preloadResourceAndSuspendIfNeeded(
+                workInProgress,
+                nextResource,
+                type,
+                newProps,
+                renderLanes,
+              );
+            }
+            return null;
+          } else {
+            // This is a Hoistable Instance
+            //
+            // We may have props to update on the Hoistable instance. We use the
+            // updateHostComponent path becuase it produces the update queue
+            // we need for Hoistables.
+            updateHostComponent(
+              current,
+              workInProgress,
+              type,
+              newProps,
+              renderLanes,
+            );
+
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+            preloadInstanceAndSuspendIfNeeded(
+              workInProgress,
+              type,
+              newProps,
+              renderLanes,
+            );
+            return null;
+          }
         }
-        return null;
       }
     }
     // eslint-disable-next-line-no-fallthrough
@@ -1141,7 +1233,6 @@ function completeWork(
     case HostComponent: {
       popHostContext(workInProgress);
       const type = workInProgress.type;
-      const maySuspend = maySuspendCommit(type, newProps);
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
           current,
@@ -1222,16 +1313,12 @@ function completeWork(
       // throw to suspend, and if the resource immediately loads, the work loop
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
-      if (maySuspend) {
-        preloadInstanceAndSuspendIfNeeded(
-          workInProgress,
-          type,
-          newProps,
-          renderLanes,
-        );
-      } else {
-        workInProgress.flags &= ~SuspenseyCommit;
-      }
+      preloadInstanceAndSuspendIfNeeded(
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
+        renderLanes,
+      );
       return null;
     }
     case HostText: {
