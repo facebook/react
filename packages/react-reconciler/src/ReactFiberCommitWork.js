@@ -160,6 +160,7 @@ import {
   unmountHoistable,
   prepareToCommitHoistables,
   suspendInstance,
+  suspendResource,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -4064,23 +4065,64 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
   resetCurrentDebugFiberInDEV();
 }
 
-export function recursivelyAccumulateSuspenseyCommit(parentFiber: Fiber): void {
+export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
+  accumulateSuspenseyCommitOnFiber(finishedWork);
+}
+
+function recursivelyAccumulateSuspenseyCommit(parentFiber: Fiber): void {
   if (parentFiber.subtreeFlags & SuspenseyCommit) {
     let child = parentFiber.child;
     while (child !== null) {
-      recursivelyAccumulateSuspenseyCommit(child);
-      switch (child.tag) {
-        case HostComponent:
-        case HostHoistable: {
-          if (child.flags & SuspenseyCommit) {
-            const type = child.type;
-            const props = child.memoizedProps;
-            suspendInstance(type, props);
-          }
-          break;
+      accumulateSuspenseyCommitOnFiber(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
+  switch (fiber.tag) {
+    case HostHoistable: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      if (fiber.flags & SuspenseyCommit) {
+        if (fiber.memoizedState !== null) {
+          suspendResource(
+            // This should always be set by visiting HostRoot first
+            (currentHoistableRoot: any),
+            fiber.memoizedState,
+            fiber.memoizedProps,
+          );
+        } else {
+          const type = fiber.type;
+          const props = fiber.memoizedProps;
+          suspendInstance(type, props);
         }
       }
-      child = child.sibling;
+      break;
+    }
+    case HostComponent: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      if (fiber.flags & SuspenseyCommit) {
+        const type = fiber.type;
+        const props = fiber.memoizedProps;
+        suspendInstance(type, props);
+      }
+      break;
+    }
+    case HostRoot:
+    case HostPortal: {
+      if (enableFloat && supportsResources) {
+        const previousHoistableRoot = currentHoistableRoot;
+        const container: Container = fiber.stateNode.containerInfo;
+        currentHoistableRoot = getHoistableRoot(container);
+
+        recursivelyAccumulateSuspenseyCommit(fiber);
+        currentHoistableRoot = previousHoistableRoot;
+        break;
+      }
+    }
+    // eslint-disable-next-line-no-fallthrough
+    default: {
+      recursivelyAccumulateSuspenseyCommit(fiber);
     }
   }
 }

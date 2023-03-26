@@ -32,3 +32,6 @@ export const mountHoistable = shim;
 export const unmountHoistable = shim;
 export const createHoistableInstance = shim;
 export const prepareToCommitHoistables = shim;
+export const mayResourceSuspendCommit = shim;
+export const preloadResource = shim;
+export const suspendResource = shim;

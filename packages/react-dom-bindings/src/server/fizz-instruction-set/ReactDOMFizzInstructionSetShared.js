@@ -8,8 +8,6 @@ export const SUSPENSE_START_DATA = '$';
 export const SUSPENSE_END_DATA = '/$';
 export const SUSPENSE_PENDING_START_DATA = '$?';
 export const SUSPENSE_FALLBACK_START_DATA = '$!';
-export const LOADED = 'l';
-export const ERRORED = 'e';
 
 // TODO: Symbols that are referenced outside this module use dynamic accessor
 // notation instead of dot notation to prevent Closure's advanced compilation

@@ -23,6 +23,7 @@ let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let textCache;
+let loadCache;
 let window;
 let document;
 let writable;
@@ -34,6 +35,8 @@ let fatalError = undefined;
 let renderOptions;
 let waitForAll;
 let waitForThrow;
+let assertLog;
+let Scheduler;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -62,12 +65,15 @@ describe('ReactDOMFloat', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    Scheduler = require('scheduler/unstable_mock');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
+    assertLog = InternalTestUtils.assertLog;
 
     textCache = new Map();
+    loadCache = new Set();
 
     resetJSDOM('<!DOCTYPE html><html><head></head><body><div id="container">');
     container = document.getElementById('container');
@@ -257,6 +263,54 @@ describe('ReactDOMFloat', () => {
       jsx,
       mergeOptions(options, renderOptions),
     );
+  }
+
+  function loadPreloads(hrefs) {
+    const event = new window.Event('load');
+    const nodes = document.querySelectorAll('link[rel="preload"]');
+    resolveLoadables(hrefs, nodes, event, href =>
+      Scheduler.log('load preload: ' + href),
+    );
+  }
+
+  function errorPreloads(hrefs) {
+    const event = new window.Event('error');
+    const nodes = document.querySelectorAll('link[rel="preload"]');
+    resolveLoadables(hrefs, nodes, event, href =>
+      Scheduler.log('error preload: ' + href),
+    );
+  }
+
+  function loadStylesheets(hrefs) {
+    const event = new window.Event('load');
+    const nodes = document.querySelectorAll('link[rel="stylesheet"]');
+    resolveLoadables(hrefs, nodes, event, href =>
+      Scheduler.log('load stylesheet: ' + href),
+    );
+  }
+
+  function errorStylesheets(hrefs) {
+    const event = new window.Event('error');
+    const nodes = document.querySelectorAll('link[rel="stylesheet"]');
+    resolveLoadables(hrefs, nodes, event, href => {
+      Scheduler.log('error stylesheet: ' + href);
+    });
+  }
+
+  function resolveLoadables(hrefs, nodes, event, onLoad) {
+    const hrefSet = hrefs ? new Set(hrefs) : null;
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (loadCache.has(node)) {
+        continue;
+      }
+      const href = node.getAttribute('href');
+      if (!hrefSet || hrefSet.has(href)) {
+        loadCache.add(node);
+        onLoad(href);
+        node.dispatchEvent(event);
+      }
+    }
   }
 
   // @gate enableFloat
@@ -1092,14 +1146,10 @@ body {
       </html>,
     );
 
-    await act(() => {
-      const barLink = document.querySelector(
-        'link[rel="stylesheet"][href="bar"]',
-      );
-      const event = document.createEvent('Events');
-      event.initEvent('error', true, true);
-      barLink.dispatchEvent(event);
-    });
+    errorStylesheets(['bar']);
+    assertLog(['error stylesheet: bar']);
+
+    await waitForAll([]);
 
     const boundaryTemplateInstance = document.getElementById('B:0');
     const suspenseInstance = boundaryTemplateInstance.previousSibling;
@@ -1131,6 +1181,13 @@ body {
       },
     });
     await waitForAll([]);
+    // When binding a stylesheet that was SSR'd in a boundary reveal there is a loadingState promise
+    // We need to use that promise to resolve the suspended commit because we don't know if the load or error
+    // events have already fired. This requires the load to be awaited for the commit to have a chance to flush
+    // We could change this by tracking the loadingState's fulfilled status directly on the loadingState similar
+    // to thenables however this slightly increases the fizz runtime code size.
+    await loadStylesheets();
+    assertLog(['load stylesheet: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1667,7 +1724,7 @@ body {
       <html>
         <head />
         <body>
-          <div>Hello</div>
+          <div>Goodbye</div>
           <link rel="stylesheet" href="baz" precedence="one" />
         </body>
       </html>,
@@ -1682,7 +1739,7 @@ body {
           <link rel="preload" as="style" href="baz" />
         </head>
         <body>
-          <div>Hello</div>
+          <div>Goodbye</div>
         </body>
       </html>,
     );
@@ -2672,6 +2729,564 @@ body {
         <body>
           <script src="foo" nomodule="" data-meaningful="" />
         </body>
+      </html>,
+    );
+  });
+
+  it('can delay commit until css resources load', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <div>hello</div>
+        </>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual(
+      <link rel="preload" as="style" href="foo" />,
+    );
+
+    loadPreloads();
+    assertLog(['load preload: foo']);
+
+    // We expect that the stylesheet is inserted now but the commit has not happened yet.
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" data-precedence="default" />,
+      <link rel="preload" as="style" href="foo" />,
+    ]);
+
+    loadStylesheets();
+    assertLog(['load stylesheet: foo']);
+
+    // We expect that the commit finishes synchronously after the stylesheet loads.
+    expect(getMeaningfulChildren(container)).toEqual(<div>hello</div>);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" data-precedence="default" />,
+      <link rel="preload" as="style" href="foo" />,
+    ]);
+  });
+
+  xit('can delay commit until css resources error', async () => {
+    // TODO: This test fails and crashes jest. need to figure out why before unskipping.
+    const root = ReactDOMClient.createRoot(container);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="bar" precedence="default" />
+          <div>hello</div>
+        </>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link rel="preload" as="style" href="foo" />,
+      <link rel="preload" as="style" href="bar" />,
+    ]);
+
+    loadPreloads(['foo']);
+    errorPreloads(['bar']);
+    assertLog(['load preload: foo', 'error preload: bar']);
+
+    // We expect that the stylesheet is inserted now but the commit has not happened yet.
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" data-precedence="default" />,
+      <link rel="stylesheet" href="bar" data-precedence="default" />,
+      <link rel="preload" as="style" href="foo" />,
+      <link rel="preload" as="style" href="bar" />,
+    ]);
+
+    // Try just this and crash all of Jest
+    errorStylesheets(['bar']);
+
+    // // Try this and it fails the test when it shouldn't
+    // await act(() => {
+    //   errorStylesheets(['bar']);
+    // });
+
+    // // Try this there is nothing throwing here which is not really surprising since
+    // // the error is bubbling up through some kind of unhandled promise rejection thingy but
+    // // still I thought it was worth confirming
+    // try {
+    //   await act(() => {
+    //     errorStylesheets(['bar']);
+    //   });
+    // } catch (e) {
+    //   console.log(e);
+    // }
+
+    loadStylesheets(['foo']);
+    assertLog(['load stylesheet: foo', 'error stylesheet: bar']);
+
+    // We expect that the commit finishes synchronously after the stylesheet loads.
+    expect(getMeaningfulChildren(container)).toEqual(<div>hello</div>);
+    expect(getMeaningfulChildren(document.head)).toEqual([
+      <link rel="stylesheet" href="foo" data-precedence="default" />,
+      <link rel="stylesheet" href="bar" data-precedence="default" />,
+      <link rel="preload" as="style" href="foo" />,
+      <link rel="preload" as="style" href="bar" />,
+    ]);
+  });
+
+  it('assumes stylesheets that load in the shell loaded already', async () => {
+    await actIntoEmptyDocument(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            hello
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    let root;
+    React.startTransition(() => {
+      root = ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            hello
+          </body>
+        </html>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    React.startTransition(() => {
+      root.render(
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            hello2
+          </body>
+        </html>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    React.startTransition(() => {
+      root.render(
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            hello3
+            <link rel="stylesheet" href="bar" precedence="default" />
+          </body>
+        </html>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    loadPreloads();
+    assertLog(['load preload: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    loadStylesheets(['bar']);
+    assertLog(['load stylesheet: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello3</body>
+      </html>,
+    );
+  });
+
+  // @gate TODO
+  it('can interrupt a suspended commit with a new update', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+    root.render(<App />);
+    await waitForAll([]);
+
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello
+          <link rel="stylesheet" href="foo" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    root.render(
+      <App>
+        hello2
+        {null}
+        <link rel="stylesheet" href="bar" precedence="default" />
+      </App>,
+    );
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    // Even though foo was preloaded we don't see the stylesheet insert because the commit was cancelled.
+    // If we do a followup render that tries to recommit that resource it will insert right away because
+    // the preload is already loaded
+    loadPreloads(['foo']);
+    assertLog(['load preload: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello3
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="bar" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
+      </html>,
+    );
+
+    loadStylesheets(['foo']);
+    assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello3</body>
+      </html>,
+    );
+  });
+
+  it('can suspend commits on more than one root for the same resource at the same time', async () => {
+    document.body.innerHTML = '';
+    const container1 = document.createElement('div');
+    const container2 = document.createElement('div');
+    document.body.appendChild(container1);
+    document.body.appendChild(container2);
+
+    const root1 = ReactDOMClient.createRoot(container1);
+    const root2 = ReactDOMClient.createRoot(container2);
+
+    React.startTransition(() => {
+      root1.render(
+        <div>
+          one
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="one" precedence="default" />
+        </div>,
+      );
+    });
+    await waitForAll([]);
+    React.startTransition(() => {
+      root2.render(
+        <div>
+          two
+          <link rel="stylesheet" href="foo" precedence="default" />
+          <link rel="stylesheet" href="two" precedence="default" />
+        </div>,
+      );
+    });
+    await waitForAll([]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div />
+        </body>
+      </html>,
+    );
+
+    loadPreloads(['foo', 'two']);
+    assertLog(['load preload: foo', 'load preload: two']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div />
+        </body>
+      </html>,
+    );
+
+    loadStylesheets(['foo', 'two']);
+    assertLog(['load stylesheet: foo', 'load stylesheet: two']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div />
+          <div>
+            <div>two</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    loadPreloads();
+    loadStylesheets();
+    assertLog(['load preload: one', 'load stylesheet: one']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="two" data-precedence="default" />
+          <link rel="stylesheet" href="one" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="one" as="style" />
+          <link rel="preload" href="two" as="style" />
+        </head>
+        <body>
+          <div>
+            <div>one</div>
+          </div>
+          <div>
+            <div>two</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('can unsuspend after a timeout even if some assets never load', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+    root.render(<App />);
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello
+          <link rel="stylesheet" href="foo" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    jest.advanceTimersByTime(1000);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    // We will load these after the commit finishes to ensure nothing errors and nothing new inserts
+    loadPreloads(['foo']);
+    loadStylesheets(['foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
+  it('can start a new suspended commit after a previous one finishes', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+    root.render(<App />);
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello
+          <link rel="stylesheet" href="foo" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    React.startTransition(() => {
+      root.render(
+        <App>
+          hello2
+          {null}
+          <link rel="stylesheet" href="bar" precedence="default" />
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    loadPreloads();
+    loadStylesheets();
+    assertLog(['load preload: foo', 'load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    // The second update should process now
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+    loadPreloads();
+    loadStylesheets();
+    assertLog(['load preload: bar', 'load stylesheet: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
       </html>,
     );
   });

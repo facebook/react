@@ -66,7 +66,7 @@
     "./server.node.unbundled": "./server.node.unbundled.js",
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.production.min.js",
     "./node-register": "./node-register.js",
-    "./src/*": "./src/*",
+    "./src/*": "./src/*.js",
     "./package.json": "./package.json"
   },
   "main": "index.js",
