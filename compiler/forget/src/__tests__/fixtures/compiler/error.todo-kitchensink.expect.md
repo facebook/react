@@ -264,7 +264,7 @@ let moduleLocal = false;
   48 |   switch (i) {
   49 |     case 1 + 1: {
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered
   51 |     case foo(): {
   52 |     }
 > 53 |     case x.y: {
@@ -273,7 +273,7 @@ let moduleLocal = false;
   55 |     default: {
   56 |     }
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered
   49 |     case 1 + 1: {
   50 |     }
 > 51 |     case foo(): {
@@ -282,7 +282,7 @@ let moduleLocal = false;
   53 |     case x.y: {
   54 |     }
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported
+[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered
   47 |
   48 |   switch (i) {
 > 49 |     case 1 + 1: {

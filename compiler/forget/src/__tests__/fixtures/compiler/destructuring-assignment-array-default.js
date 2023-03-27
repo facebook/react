@@ -1,7 +1,7 @@
 function Component(props) {
   let x;
   if (props.cond) {
-    [[x] = [foo()]] = props.y;
+    [[x] = ["default"]] = props.y;
   } else {
     x = props.fallback;
   }

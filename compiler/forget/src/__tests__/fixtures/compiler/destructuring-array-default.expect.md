@@ -3,7 +3,7 @@
 
 ```javascript
 function Component(props) {
-  const [[x] = [foo()]] = props.y;
+  const [[x] = ["default"]] = props.y;
   return x;
 }
 
@@ -18,7 +18,7 @@ function Component(props) {
   const c_0 = $[0] !== t0;
   let t1;
   if (c_0) {
-    t1 = t0 === undefined ? [foo()] : t0;
+    t1 = t0 === undefined ? ["default"] : t0;
     $[0] = t0;
     $[1] = t1;
   } else {

@@ -514,51 +514,7 @@ function lowerStatement(
         });
         let test: Place | null = null;
         if (testExpr.node != null) {
-          switch (testExpr.node.type) {
-            case "Identifier":
-            case "StringLiteral":
-            case "NumericLiteral":
-            case "NullLiteral":
-            case "BooleanLiteral":
-            case "BigIntLiteral": {
-              // ok
-              break;
-            }
-            case "MemberExpression": {
-              // A common pattern is switch statements where the case test values are properties of a global,
-              // eg `case ProductOptions.Option: { ... }`
-              // We therefore allow expressions where the innermost object is a global identifier, and reject
-              // all other member expressions (for now).
-              const test = testExpr as NodePath<t.MemberExpression>;
-              let innerObject: NodePath<t.Expression> = test;
-              while (innerObject.isMemberExpression()) {
-                innerObject = innerObject.get("object");
-              }
-              if (
-                innerObject.isIdentifier() &&
-                builder.resolveIdentifier(innerObject) === null // null means global
-              ) {
-                // This is a property/computed load from a global, that's safe to evaluate as a test expression
-                break;
-              }
-              builder.errors.push({
-                reason:
-                  "(BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported",
-                severity: ErrorSeverity.Todo,
-                nodePath: testExpr,
-              });
-              break;
-            }
-            default: {
-              builder.errors.push({
-                reason:
-                  "(BuildHIR::lowerStatement) Switch case test values must be identifiers or primitives, compound values are not yet supported",
-                severity: ErrorSeverity.Todo,
-                nodePath: testExpr,
-              });
-            }
-          }
-          test = lowerExpressionToTemporary(
+          test = lowerReorderableExpression(
             builder,
             testExpr as NodePath<t.Expression>
           );
@@ -1830,6 +1786,88 @@ function lowerExpression(
   }
 }
 
+/**
+ * There are a few places where we do not preserve original evaluation ordering, such as switch case test values
+ * and default values in destructuring (assignment patterns). In these cases we allow simple expressions whose
+ * evaluation cannot be observed: primitives and arrays/objects whose values are also safely reorderable.
+ */
+function lowerReorderableExpression(
+  builder: HIRBuilder,
+  expr: NodePath<t.Expression>
+): Place {
+  if (isReorderableExpression(builder, expr)) {
+    return lowerExpressionToTemporary(builder, expr);
+  } else {
+    builder.errors.push({
+      reason: `(BuildHIR::node.lowerReorderableExpression) Expression type '${expr.type}' cannot be safely reordered`,
+      severity: ErrorSeverity.Todo,
+      nodePath: expr,
+    });
+    return buildTemporaryPlace(builder, expr.node.loc ?? GeneratedSource);
+  }
+}
+
+function isReorderableExpression(
+  builder: HIRBuilder,
+  expr: NodePath<t.Expression>
+): boolean {
+  switch (expr.node.type) {
+    case "Identifier":
+    case "RegExpLiteral":
+    case "StringLiteral":
+    case "NumericLiteral":
+    case "NullLiteral":
+    case "BooleanLiteral":
+    case "BigIntLiteral": {
+      return true;
+    }
+    case "ArrayExpression": {
+      return (expr as NodePath<t.ArrayExpression>)
+        .get("elements")
+        .every(
+          (element) =>
+            element.isExpression() && isReorderableExpression(builder, element)
+        );
+    }
+    case "ObjectExpression": {
+      return (expr as NodePath<t.ObjectExpression>)
+        .get("properties")
+        .every((property) => {
+          if (!property.isObjectProperty() || property.node.computed) {
+            return false;
+          }
+          const value = property.get("value");
+          return (
+            value.isExpression() && isReorderableExpression(builder, value)
+          );
+        });
+    }
+    case "MemberExpression": {
+      // A common pattern is switch statements where the case test values are properties of a global,
+      // eg `case ProductOptions.Option: { ... }`
+      // We therefore allow expressions where the innermost object is a global identifier, and reject
+      // all other member expressions (for now).
+      const test = expr as NodePath<t.MemberExpression>;
+      let innerObject: NodePath<t.Expression> = test;
+      while (innerObject.isMemberExpression()) {
+        innerObject = innerObject.get("object");
+      }
+      if (
+        innerObject.isIdentifier() &&
+        builder.resolveIdentifier(innerObject) === null // null means global
+      ) {
+        // This is a property/computed load from a global, that's safe to reorder
+        return true;
+      } else {
+        return false;
+      }
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
 function lowerArguments(
   builder: HIRBuilder,
   expr: Array<
@@ -2455,7 +2493,9 @@ function lowerAssignment(
       const continuationBlock = builder.reserve(builder.currentBlockKind());
 
       const consequent = builder.enter("value", () => {
-        const defaultValue = lowerExpressionToTemporary(
+        // Because we reorder evaluation, we restrict the allowed default values to those where
+        // evaluation order is unobservable
+        const defaultValue = lowerReorderableExpression(
           builder,
           lvalue.get("right")
         );

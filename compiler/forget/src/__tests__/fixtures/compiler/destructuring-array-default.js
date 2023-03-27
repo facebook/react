@@ -1,4 +1,4 @@
 function Component(props) {
-  const [[x] = [foo()]] = props.y;
+  const [[x] = ["default"]] = props.y;
   return x;
 }
