@@ -18,16 +18,20 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(2);
   const a = foo();
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = bar(a[props.a] + 1);
+
+  const t0 = a[props.a] + 1;
+  const c_0 = $[0] !== t0;
+  let t1;
+  if (c_0) {
+    t1 = bar(t0);
     $[0] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[1];
   }
-  const b = t0;
+  const b = t1;
   return b;
 }
 

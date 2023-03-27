@@ -45,9 +45,19 @@ class Visitor extends ReactiveFunctionVisitor<State> {
       if (operand.effect === Effect.Store) {
         continue;
       }
-      const resolvedId: IdentifierId =
-        state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
-      if (state.reactivityMap.get(resolvedId)) {
+      const ownId = operand.identifier.id;
+      const resolvedId = state.temporaries.get(ownId);
+      // We need to check reactivity of both the operand and its resolved source (if operand is
+      // produced by a LoadLocal / PropertyLoad / ComputedLoad). Both the operand and its source
+      // can have reactivity. e.g.
+      // ```js
+      //   const o = makeObject(); // source has no reactivity
+      //   const x = o[props.x];   // x is reactive
+      // ```
+      if (
+        state.reactivityMap.get(ownId) ||
+        (resolvedId && state.reactivityMap.get(resolvedId))
+      ) {
         hasReactiveInput = true;
         break;
       }
