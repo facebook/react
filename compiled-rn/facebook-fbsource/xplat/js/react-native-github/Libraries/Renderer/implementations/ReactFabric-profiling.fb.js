@@ -10215,7 +10215,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1106 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-8342a0992-20230327",
+    version: "18.3.0-next-8faf75193-20230327",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10270,7 +10270,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-8342a0992-20230327"
+  reconcilerVersion: "18.3.0-next-8faf75193-20230327"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
