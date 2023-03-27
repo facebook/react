@@ -21,6 +21,7 @@ let useEffect;
 let assertLog;
 let waitFor;
 let waitForAll;
+let unstable_waitForExpired;
 
 describe('ReactExpiration', () => {
   beforeEach(() => {
@@ -38,6 +39,7 @@ describe('ReactExpiration', () => {
     assertLog = InternalTestUtils.assertLog;
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
+    unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
 
     const textCache = new Map();
 
@@ -124,18 +126,17 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
     // Nothing has expired yet because time hasn't advanced.
-    Scheduler.unstable_flushExpired();
+    await unstable_waitForExpired([]);
     expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
     // Advance time a bit, but not enough to expire the low pri update.
     ReactNoop.expire(4500);
-    Scheduler.unstable_flushExpired();
+    await unstable_waitForExpired([]);
     expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
     // Advance by a little bit more. Now the update should expire and flush.
     ReactNoop.expire(500);
-    Scheduler.unstable_flushExpired();
-    assertLog(['Step 2']);
+    await unstable_waitForExpired(['Step 2']);
     expect(ReactNoop).toMatchRenderedOutput('Step 2');
   });
 
@@ -339,8 +340,7 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    Scheduler.unstable_flushExpired();
-    assertLog(['D', 'E']);
+    await unstable_waitForExpired(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -369,8 +369,7 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    Scheduler.unstable_flushExpired();
-    assertLog(['D', 'E']);
+    await unstable_waitForExpired(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -383,6 +382,7 @@ describe('ReactExpiration', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
+    unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
 
     // Before importing the renderer, advance the current time by a number
     // larger than the maximum allowed for bitwise operations.
@@ -401,19 +401,17 @@ describe('ReactExpiration', () => {
     await waitFor(['Step 1']);
 
     // The update should not have expired yet.
-    Scheduler.unstable_flushExpired();
-    assertLog([]);
+    await unstable_waitForExpired([]);
 
     expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
     // Advance the time some more to expire the update.
     Scheduler.unstable_advanceTime(10000);
-    Scheduler.unstable_flushExpired();
-    assertLog(['Step 2']);
+    await unstable_waitForExpired(['Step 2']);
     expect(ReactNoop).toMatchRenderedOutput('Step 2');
   });
 
-  it('should measure callback timeout relative to current time, not start-up time', () => {
+  it('should measure callback timeout relative to current time, not start-up time', async () => {
     // Corresponds to a bugfix: https://github.com/facebook/react/pull/15479
     // The bug wasn't caught by other tests because we use virtual times that
     // default to 0, and most tests don't advance time.
@@ -424,15 +422,13 @@ describe('ReactExpiration', () => {
     React.startTransition(() => {
       ReactNoop.render('Hi');
     });
-    Scheduler.unstable_flushExpired();
-    assertLog([]);
+    await unstable_waitForExpired([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advancing by ~5 seconds should be sufficient to expire the update. (I
     // used a slightly larger number to allow for possible rounding.)
     Scheduler.unstable_advanceTime(6000);
-    Scheduler.unstable_flushExpired();
-    assertLog([]);
+    await unstable_waitForExpired([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
@@ -476,9 +472,9 @@ describe('ReactExpiration', () => {
       // The remaining work hasn't expired, so the render phase is time sliced.
       // In other words, we can flush just the first child without flushing
       // the rest.
-      Scheduler.unstable_flushNumberOfYields(1);
+      //
       // Yield right after first child.
-      assertLog(['Sync pri: 1']);
+      await waitFor(['Sync pri: 1']);
       // Now do the rest.
       await waitForAll(['Normal pri: 1']);
     });
@@ -502,8 +498,9 @@ describe('ReactExpiration', () => {
 
       // The remaining work _has_ expired, so the render phase is _not_ time
       // sliced. Attempting to flush just the first child also flushes the rest.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['Sync pri: 2', 'Normal pri: 2']);
+      await waitFor(['Sync pri: 2'], {
+        additionalLogsAfterAttemptingToYield: ['Normal pri: 2'],
+      });
     });
     expect(root).toMatchRenderedOutput('Sync pri: 2, Normal pri: 2');
   });
@@ -606,18 +603,22 @@ describe('ReactExpiration', () => {
       startTransition(() => {
         setB(1);
       });
+      await waitFor(['B0']);
+
       // Expire both the transitions
       Scheduler.unstable_advanceTime(10000);
       // Both transitions have expired, but since they aren't related
       // (entangled), we should be able to finish the in-progress transition
       // without also including the next one.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['B0', 'C']);
+      await waitFor([], {
+        additionalLogsAfterAttemptingToYield: ['C'],
+      });
       expect(root).toMatchRenderedOutput('A1B0C');
 
       // The next transition also finishes without yielding.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['A1', 'B1', 'C']);
+      await waitFor(['A1'], {
+        additionalLogsAfterAttemptingToYield: ['B1', 'C'],
+      });
       expect(root).toMatchRenderedOutput('A1B1C');
     });
   });
@@ -662,8 +663,9 @@ describe('ReactExpiration', () => {
       Scheduler.unstable_advanceTime(10000);
 
       // The rest of the update finishes without yielding.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['B', 'C']);
+      await waitFor([], {
+        additionalLogsAfterAttemptingToYield: ['B', 'C'],
+      });
     });
   });
 
@@ -705,8 +707,9 @@ describe('ReactExpiration', () => {
 
       // Now flush the original update. Because it expired, it should finish
       // without yielding.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['A1', 'B1']);
+      await waitFor(['A1'], {
+        additionalLogsAfterAttemptingToYield: ['B1'],
+      });
     });
   });
 
@@ -731,16 +734,19 @@ describe('ReactExpiration', () => {
     assertLog(['A0', 'B0', 'C0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('A0B0C0');
 
-    await act(() => {
+    await act(async () => {
       startTransition(() => {
         root.render(<App step={1} />);
       });
+      await waitFor(['A1']);
+
       // Expire the update
       Scheduler.unstable_advanceTime(10000);
 
       // The update finishes without yielding. But it does not flush the effect.
-      Scheduler.unstable_flushNumberOfYields(1);
-      assertLog(['A1', 'B1', 'C1']);
+      await waitFor(['B1'], {
+        additionalLogsAfterAttemptingToYield: ['C1'],
+      });
     });
     // The effect flushes after paint.
     assertLog(['Effect: 1']);
