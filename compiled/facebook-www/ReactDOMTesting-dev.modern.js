@@ -319,11 +319,12 @@ var Visibility =
   8192;
 var StoreConsistency =
   /*             */
-  16384; // It's OK to reuse this bit because these flags are mutually exclusive for
+  16384; // It's OK to reuse these bits because these flags are mutually exclusive for
 // different fiber types. We should really be doing this for as many flags as
 // possible, because we're about to run out of bits.
 
 var ScheduleRetry = StoreConsistency;
+var ShouldSuspendCommit = Visibility;
 var LifecycleEffectMask =
   Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -363,8 +364,8 @@ var LayoutStatic =
 var PassiveStatic =
   /*                */
   8388608;
-var SuspenseyCommit =
-  /*              */
+var MaySuspendCommit =
+  /*             */
   16777216; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 
 var PlacementDEV =
@@ -400,7 +401,7 @@ var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that 
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 
-var StaticMask = LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
+var StaticMask = LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
 
 // This module only exists as an ESM wrapper around the external CommonJS
 var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
@@ -22694,7 +22695,11 @@ function updateHostComponent(
       markUpdate(workInProgress);
     }
   }
-} // TODO: This should ideally move to begin phase, but currently the instance is
+} // This function must be called at the very end of the complete phase, because
+// it might throw to suspend, and if the resource immediately loads, the work
+// loop will resume rendering as if the work-in-progress completed. So it must
+// fully complete.
+// TODO: This should ideally move to begin phase, but currently the instance is
 // not created until the complete phase. For our existing use cases, host nodes
 // that suspend don't have children, so it doesn't matter. But that might not
 // always be true in the future.
@@ -22705,24 +22710,42 @@ function preloadInstanceAndSuspendIfNeeded(
   props,
   renderLanes
 ) {
-  workInProgress.flags |= SuspenseyCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
-  // check that `useDeferredValue` does to determine whether it needs to
-  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
-  // suspending until you opt in with startTransition or Suspense) but it
-  // also happens to be the desired behavior for the concrete use cases we've
-  // thought of so far, like CSS loading, fonts, images, etc.
-  // TODO: We may decide to expose a way to force a fallback even during a
-  // sync update.
+  {
+    // If this flag was set previously, we can remove it. The flag
+    // represents whether this particular set of props might ever need to
+    // suspend. The safest thing to do is for maySuspendCommit to always
+    // return true, but if the renderer is reasonably confident that the
+    // underlying resource won't be evicted, it can return false as a
+    // performance optimization.
+    workInProgress.flags &= ~MaySuspendCommit;
+    return;
+  } // Mark this fiber with a flag. This gets set on all host instances
+}
 
-  if (!includesOnlyNonUrgentLanes(renderLanes));
+function preloadResourceAndSuspendIfNeeded(
+  workInProgress,
+  resource,
+  type,
+  props,
+  renderLanes
+) {
+  // This is a fork of preloadInstanceAndSuspendIfNeeded, but for resources.
+  if (!mayResourceSuspendCommit(resource)) {
+    workInProgress.flags &= ~MaySuspendCommit;
+    return;
+  }
+
+  workInProgress.flags |= MaySuspendCommit;
+  var rootRenderLanes = getWorkInProgressRootRenderLanes();
+
+  if (!includesOnlyNonUrgentLanes(rootRenderLanes));
   else {
-    // Preload the instance
-    var isReady = preloadInstance();
+    var isReady = preloadResource(resource);
 
     if (!isReady) {
-      if (shouldRemainOnPreviousScreen());
-      else {
-        // Trigger a fallback rather than block the render.
+      if (shouldRemainOnPreviousScreen()) {
+        workInProgress.flags |= ShouldSuspendCommit;
+      } else {
         suspendCommit();
       }
     }
@@ -23170,58 +23193,74 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostHoistable: {
       {
-        var currentRef = current ? current.ref : null;
+        // The branching here is more complicated than you might expect because
+        // a HostHoistable sometimes corresponds to a Resource and sometimes
+        // corresponds to an Instance. It can also switch during an update.
+        var type = workInProgress.type;
+        var nextResource = workInProgress.memoizedState;
 
-        if (currentRef !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
-
-        var maySuspend = false; // @TODO refactor this block to create the instance here in complete phase if we
-        // are not hydrating.
-
-        if (
+        if (current === null) {
           // We are mounting and must Update this Hoistable in this commit
-          current === null || // We are transitioning to, from, or between Hoistable Resources
-          // and require an update
-          current.memoizedState !== workInProgress.memoizedState
-        ) {
-          if (workInProgress.memoizedState !== null) {
-            maySuspend = mayResourceSuspendCommit(workInProgress.memoizedState);
-          } else {
-            maySuspend = maySuspendCommit();
+          // @TODO refactor this block to create the instance here in complete
+          // phase if we are not hydrating.
+          markUpdate(workInProgress);
+
+          if (workInProgress.ref !== null) {
+            markRef(workInProgress);
           }
 
-          markUpdate(workInProgress);
-        } else if (workInProgress.memoizedState === null) {
-          maySuspend = maySuspendCommit(); // We may have props to update on the Hoistable instance. We use the
-          // updateHostComponent path becuase it produces the update queue
-          // we need for Hoistables
-
-          updateHostComponent(
-            current,
-            workInProgress,
-            workInProgress.type,
-            workInProgress.pendingProps
-          );
-        }
-
-        bubbleProperties(workInProgress); // This must come at the very end of the complete phase, because it might
-        // throw to suspend, and if the resource immediately loads, the work loop
-        // will resume rendering as if the work-in-progress completed. So it must
-        // fully complete.
-
-        if (maySuspend) {
-          preloadInstanceAndSuspendIfNeeded(
-            workInProgress,
-            workInProgress.type,
-            workInProgress.pendingProps,
-            renderLanes
-          );
+          if (nextResource !== null) {
+            // This is a Hoistable Resource
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+            preloadResourceAndSuspendIfNeeded(workInProgress, nextResource);
+            return null;
+          } else {
+            // This is a Hoistable Instance
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+            preloadInstanceAndSuspendIfNeeded(workInProgress);
+            return null;
+          }
         } else {
-          workInProgress.flags &= ~SuspenseyCommit;
-        }
+          // We are updating.
+          var currentResource = current.memoizedState;
 
-        return null;
+          if (nextResource !== currentResource) {
+            // We are transitioning to, from, or between Hoistable Resources
+            // and require an update
+            markUpdate(workInProgress);
+          }
+
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
+          }
+
+          if (nextResource !== null) {
+            // This is a Hoistable Resource
+            // This must come at the very end of the complete phase.
+            bubbleProperties(workInProgress);
+
+            if (nextResource === currentResource) {
+              workInProgress.flags &= ~MaySuspendCommit;
+            } else {
+              preloadResourceAndSuspendIfNeeded(workInProgress, nextResource);
+            }
+
+            return null;
+          } else {
+            // This is a Hoistable Instance
+            //
+            // We may have props to update on the Hoistable instance. We use the
+            // updateHostComponent path becuase it produces the update queue
+            // we need for Hoistables.
+            updateHostComponent(current, workInProgress, type, newProps); // This must come at the very end of the complete phase.
+
+            bubbleProperties(workInProgress);
+            preloadInstanceAndSuspendIfNeeded(workInProgress);
+            return null;
+          }
+        }
       }
     }
     // eslint-disable-next-line-no-fallthrough
@@ -23230,10 +23269,10 @@ function completeWork(current, workInProgress, renderLanes) {
       {
         popHostContext(workInProgress);
         var rootContainerInstance = getRootHostContainer();
-        var type = workInProgress.type;
+        var _type = workInProgress.type;
 
         if (current !== null && workInProgress.stateNode != null) {
-          updateHostComponent(current, workInProgress, type, newProps);
+          updateHostComponent(current, workInProgress, _type, newProps);
 
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
@@ -23265,7 +23304,7 @@ function completeWork(current, workInProgress, renderLanes) {
             instance = workInProgress.stateNode;
           } else {
             instance = resolveSingletonInstance(
-              type,
+              _type,
               newProps,
               rootContainerInstance,
               currentHostContext,
@@ -23289,12 +23328,10 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostComponent: {
       popHostContext(workInProgress);
-      var _type = workInProgress.type;
-
-      var _maySuspend = maySuspendCommit();
+      var _type2 = workInProgress.type;
 
       if (current !== null && workInProgress.stateNode != null) {
-        updateHostComponent(current, workInProgress, _type, newProps);
+        updateHostComponent(current, workInProgress, _type2, newProps);
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -23333,7 +23370,7 @@ function completeWork(current, workInProgress, renderLanes) {
           var _rootContainerInstance = getRootHostContainer();
 
           var _instance3 = createInstance(
-            _type,
+            _type2,
             newProps,
             _rootContainerInstance,
             _currentHostContext2,
@@ -23345,7 +23382,7 @@ function completeWork(current, workInProgress, renderLanes) {
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
 
-          if (finalizeInitialChildren(_instance3, _type, newProps)) {
+          if (finalizeInitialChildren(_instance3, _type2, newProps)) {
             markUpdate(workInProgress);
           }
         }
@@ -23361,17 +23398,7 @@ function completeWork(current, workInProgress, renderLanes) {
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
 
-      if (_maySuspend) {
-        preloadInstanceAndSuspendIfNeeded(
-          workInProgress,
-          _type,
-          newProps,
-          renderLanes
-        );
-      } else {
-        workInProgress.flags &= ~SuspenseyCommit;
-      }
-
+      preloadInstanceAndSuspendIfNeeded(workInProgress);
       return null;
     }
 
@@ -28089,13 +28116,24 @@ function commitPassiveUnmountEffects(finishedWork) {
   setCurrentFiber(finishedWork);
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentFiber();
-}
+} // If we're inside a brand new tree, or a tree that was already visible, then we
+// should only suspend host components that have a ShouldSuspendCommit flag.
+// Components without it haven't changed since the last commit, so we can skip
+// over those.
+//
+// When we enter a tree that is being revealed (going from hidden -> visible),
+// we need to suspend _any_ component that _may_ suspend. Even if they're
+// already in the "current" tree. Because their visibility has changed, the
+// browser may not have prerendered them yet. So we check the MaySuspendCommit
+// flag instead.
+
+var suspenseyCommitFlag = ShouldSuspendCommit;
 function accumulateSuspenseyCommit(finishedWork) {
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 
 function recursivelyAccumulateSuspenseyCommit(parentFiber) {
-  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+  if (parentFiber.subtreeFlags & suspenseyCommitFlag) {
     var child = parentFiber.child;
 
     while (child !== null) {
@@ -28110,7 +28148,7 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
     case HostHoistable: {
       recursivelyAccumulateSuspenseyCommit(fiber);
 
-      if (fiber.flags & SuspenseyCommit) {
+      if (fiber.flags & suspenseyCommitFlag) {
         if (fiber.memoizedState !== null) {
           suspendResource(
             // This should always be set by visiting HostRoot first
@@ -28138,10 +28176,33 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
         currentHoistableRoot = getHoistableRoot(container);
         recursivelyAccumulateSuspenseyCommit(fiber);
         currentHoistableRoot = previousHoistableRoot;
-        break;
       }
+
+      break;
     }
-    // eslint-disable-next-line-no-fallthrough
+
+    case OffscreenComponent: {
+      var isHidden = fiber.memoizedState !== null;
+
+      if (isHidden);
+      else {
+        var current = fiber.alternate;
+        var wasHidden = current !== null && current.memoizedState !== null;
+
+        if (wasHidden) {
+          // This tree is being revealed. Visit all newly visible suspensey
+          // instances, even if they're in the current tree.
+          var prevFlags = suspenseyCommitFlag;
+          suspenseyCommitFlag = MaySuspendCommit;
+          recursivelyAccumulateSuspenseyCommit(fiber);
+          suspenseyCommitFlag = prevFlags;
+        } else {
+          recursivelyAccumulateSuspenseyCommit(fiber);
+        }
+      }
+
+      break;
+    }
 
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);
@@ -30792,15 +30853,24 @@ function shouldRemainOnPreviousScreen() {
 
   if (handler === null);
   else {
-    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+    if (
+      includesOnlyRetries(workInProgressRootRenderLanes) || // In this context, an OffscreenLane counts as a Retry
+      // TODO: It's become increasingly clear that Retries and Offscreen are
+      // deeply connected. They probably can be unified further.
+      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+    ) {
       // During a retry, we can suspend rendering if the nearest Suspense boundary
       // is the boundary of the "shell", because we're guaranteed not to block
       // any new content from appearing.
+      //
+      // The reason we must check if this is a retry is because it guarantees
+      // that suspending the work loop won't block an actual update, because
+      // retries don't "update" anything; they fill in fallbacks that were left
+      // behind by a previous transition.
       return handler === getShellBoundary();
     }
   } // For all other Lanes besides Transitions and Retries, we should not wait
   // for the data to load.
-  // TODO: We should wait during Offscreen prerendering, too.
 
   return false;
 }
@@ -34258,7 +34328,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-2789db5d";
+var ReactVersion = "18.3.0-www-modern-c961e1cf";
 
 function createPortal$1(
   children,
@@ -43564,6 +43634,7 @@ function preinit$1(href, options) {
           link.addEventListener("error", function () {
             state.loading |= Errored;
           });
+          state.loading |= Inserted;
           insertStylesheet(_instance, precedence, resourceRoot);
         } // Construct a Resource and cache it
 
@@ -43895,7 +43966,11 @@ function acquireResource(hoistableRoot, resource, props) {
         var ownerDocument = getDocumentFromRoot(hoistableRoot);
         instance = ownerDocument.createElement("style");
         markNodeAsHoistable(instance);
-        setInitialProperties(instance, "style", styleProps);
+        setInitialProperties(instance, "style", styleProps); // TODO: `style` does not have loading state for tracking insertions. I
+        // guess because these aren't suspensey? Not sure whether this is a
+        // factoring smell.
+        // resource.state.loading |= Inserted;
+
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
         return instance;
@@ -43936,6 +44011,7 @@ function acquireResource(hoistableRoot, resource, props) {
           linkInstance.onerror = reject;
         });
         setInitialProperties(_instance3, "link", stylesheetProps);
+        resource.state.loading |= Inserted;
         insertStylesheet(_instance3, _qualifiedProps.precedence, hoistableRoot);
         resource.instance = _instance3;
         return _instance3;
@@ -43991,6 +44067,28 @@ function acquireResource(hoistableRoot, resource, props) {
             '". this is a bug in React.'
         );
       }
+    }
+  } else {
+    // In the case of stylesheets, they might have already been assigned an
+    // instance during `suspendResource`. But that doesn't mean they were
+    // inserted, because the commit might have been interrupted. So we need to
+    // check now.
+    //
+    // The other resource types are unaffected because they are not
+    // yet suspensey.
+    //
+    // TODO: This is a bit of a code smell. Consider refactoring how
+    // `suspendResource` and `acquireResource` work together. The idea is that
+    // `suspendResource` does all the same stuff as `acquireResource` except
+    // for the insertion.
+    if (
+      resource.type === "stylesheet" &&
+      (resource.state.loading & Inserted) === NotLoaded
+    ) {
+      var _qualifiedProps2 = props;
+      var _instance5 = resource.instance;
+      resource.state.loading |= Inserted;
+      insertStylesheet(_instance5, _qualifiedProps2.precedence, hoistableRoot);
     }
   }
 
@@ -44439,9 +44537,6 @@ function isHostHoistableType(type, props, hostContext) {
 
   return false;
 }
-function maySuspendCommit(type, props) {
-  return false;
-}
 function mayResourceSuspendCommit(resource) {
   return (
     resource.type === "stylesheet" &&
@@ -44450,6 +44545,17 @@ function mayResourceSuspendCommit(resource) {
 }
 function preloadInstance(type, props) {
   // Return true to indicate it's already loaded
+  return true;
+}
+function preloadResource(resource) {
+  if (
+    resource.type === "stylesheet" &&
+    (resource.state.loading & Settled) === NotLoaded
+  ) {
+    // we have not finished loading the underlying stylesheet yet.
+    return false;
+  } // Return true to indicate it's already loaded
+
   return true;
 }
 var suspendedState = null; // We use a noop function when we begin suspending because if possible we want the
