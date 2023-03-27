@@ -14,7 +14,6 @@
 // -----------------------------------------------------------------------------
 
 export const enableComponentStackLocations = true;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // -----------------------------------------------------------------------------
 // Killswitch
