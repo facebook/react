@@ -94,7 +94,8 @@ import {
   LayoutMask,
   PassiveMask,
   Visibility,
-  SuspenseyCommit,
+  ShouldSuspendCommit,
+  MaySuspendCommit,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -4065,12 +4066,23 @@ export function commitPassiveUnmountEffects(finishedWork: Fiber): void {
   resetCurrentDebugFiberInDEV();
 }
 
+// If we're inside a brand new tree, or a tree that was already visible, then we
+// should only suspend host components that have a ShouldSuspendCommit flag.
+// Components without it haven't changed since the last commit, so we can skip
+// over those.
+//
+// When we enter a tree that is being revealed (going from hidden -> visible),
+// we need to suspend _any_ component that _may_ suspend. Even if they're
+// already in the "current" tree. Because their visibility has changed, the
+// browser may not have prerendered them yet. So we check the MaySuspendCommit
+// flag instead.
+let suspenseyCommitFlag = ShouldSuspendCommit;
 export function accumulateSuspenseyCommit(finishedWork: Fiber): void {
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 
 function recursivelyAccumulateSuspenseyCommit(parentFiber: Fiber): void {
-  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+  if (parentFiber.subtreeFlags & suspenseyCommitFlag) {
     let child = parentFiber.child;
     while (child !== null) {
       accumulateSuspenseyCommitOnFiber(child);
@@ -4083,7 +4095,7 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
   switch (fiber.tag) {
     case HostHoistable: {
       recursivelyAccumulateSuspenseyCommit(fiber);
-      if (fiber.flags & SuspenseyCommit) {
+      if (fiber.flags & suspenseyCommitFlag) {
         if (fiber.memoizedState !== null) {
           suspendResource(
             // This should always be set by visiting HostRoot first
@@ -4101,7 +4113,7 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
     }
     case HostComponent: {
       recursivelyAccumulateSuspenseyCommit(fiber);
-      if (fiber.flags & SuspenseyCommit) {
+      if (fiber.flags & suspenseyCommitFlag) {
         const type = fiber.type;
         const props = fiber.memoizedProps;
         suspendInstance(type, props);
@@ -4117,10 +4129,33 @@ function accumulateSuspenseyCommitOnFiber(fiber: Fiber) {
 
         recursivelyAccumulateSuspenseyCommit(fiber);
         currentHoistableRoot = previousHoistableRoot;
-        break;
+      } else {
+        recursivelyAccumulateSuspenseyCommit(fiber);
       }
+      break;
     }
-    // eslint-disable-next-line-no-fallthrough
+    case OffscreenComponent: {
+      const isHidden = (fiber.memoizedState: OffscreenState | null) !== null;
+      if (isHidden) {
+        // Don't suspend in hidden trees
+      } else {
+        const current = fiber.alternate;
+        const wasHidden =
+          current !== null &&
+          (current.memoizedState: OffscreenState | null) !== null;
+        if (wasHidden) {
+          // This tree is being revealed. Visit all newly visible suspensey
+          // instances, even if they're in the current tree.
+          const prevFlags = suspenseyCommitFlag;
+          suspenseyCommitFlag = MaySuspendCommit;
+          recursivelyAccumulateSuspenseyCommit(fiber);
+          suspenseyCommitFlag = prevFlags;
+        } else {
+          recursivelyAccumulateSuspenseyCommit(fiber);
+        }
+      }
+      break;
+    }
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);
     }

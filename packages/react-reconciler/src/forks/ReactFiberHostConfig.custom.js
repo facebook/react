@@ -208,6 +208,7 @@ export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
 //     (optional)
 // -------------------
 export type HoistableRoot = mixed;
+export type Resource = mixed; // eslint-disable-line no-undef
 export const supportsResources = $$$hostConfig.supportsResources;
 export const isHostHoistableType = $$$hostConfig.isHostHoistableType;
 export const getHoistableRoot = $$$hostConfig.getHoistableRoot;

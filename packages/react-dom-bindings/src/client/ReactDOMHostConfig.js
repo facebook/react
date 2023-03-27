@@ -1788,7 +1788,7 @@ type StyleTagResource = TResource<'style', null>;
 type StyleResource = StyleTagResource | StylesheetResource;
 type ScriptResource = TResource<'script', null>;
 type VoidResource = TResource<'void', null>;
-type Resource = StyleResource | ScriptResource | VoidResource;
+export type Resource = StyleResource | ScriptResource | VoidResource;
 
 type LoadingState = number;
 const NotLoaded = /*       */ 0b000;
@@ -2170,6 +2170,7 @@ function preinit(href: string, options: PreinitOptions) {
             state.loading |= Errored;
           });
 
+          state.loading |= Inserted;
           insertStylesheet(instance, precedence, resourceRoot);
         }
 
@@ -2518,6 +2519,11 @@ export function acquireResource(
 
         markNodeAsHoistable(instance);
         setInitialProperties(instance, 'style', styleProps);
+
+        // TODO: `style` does not have loading state for tracking insertions. I
+        // guess because these aren't suspensey? Not sure whether this is a
+        // factoring smell.
+        // resource.state.loading |= Inserted;
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
 
@@ -2556,6 +2562,7 @@ export function acquireResource(
           linkInstance.onerror = reject;
         });
         setInitialProperties(instance, 'link', stylesheetProps);
+        resource.state.loading |= Inserted;
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
 
@@ -2604,6 +2611,28 @@ export function acquireResource(
         );
       }
     }
+  } else {
+    // In the case of stylesheets, they might have already been assigned an
+    // instance during `suspendResource`. But that doesn't mean they were
+    // inserted, because the commit might have been interrupted. So we need to
+    // check now.
+    //
+    // The other resource types are unaffected because they are not
+    // yet suspensey.
+    //
+    // TODO: This is a bit of a code smell. Consider refactoring how
+    // `suspendResource` and `acquireResource` work together. The idea is that
+    // `suspendResource` does all the same stuff as `acquireResource` except
+    // for the insertion.
+    if (
+      resource.type === 'stylesheet' &&
+      (resource.state.loading & Inserted) === NotLoaded
+    ) {
+      const qualifiedProps: StylesheetQualifyingProps = props;
+      const instance: Instance = resource.instance;
+      resource.state.loading |= Inserted;
+      insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
+    }
   }
   return resource.instance;
 }
@@ -2613,7 +2642,7 @@ export function releaseResource(resource: Resource): void {
 }
 
 function insertStylesheet(
-  instance: HTMLElement,
+  instance: Element,
   precedence: string,
   root: HoistableRoot,
 ): void {
