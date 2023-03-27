@@ -6038,8 +6038,9 @@ function recursivelyTraverseAtomicPassiveEffects(
       parentFiber = parentFiber.sibling;
     }
 }
+var suspenseyCommitFlag = 8192;
 function recursivelyAccumulateSuspenseyCommit(parentFiber) {
-  if (parentFiber.subtreeFlags & 16777216)
+  if (parentFiber.subtreeFlags & suspenseyCommitFlag)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       accumulateSuspenseyCommitOnFiber(parentFiber),
         (parentFiber = parentFiber.sibling);
@@ -6048,13 +6049,28 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
   switch (fiber.tag) {
     case 26:
       recursivelyAccumulateSuspenseyCommit(fiber);
-      if (fiber.flags & 16777216 && null !== fiber.memoizedState)
+      if (fiber.flags & suspenseyCommitFlag && null !== fiber.memoizedState)
         throw Error(
           "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
         );
       break;
     case 5:
       recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    case 3:
+    case 4:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    case 22:
+      if (null === fiber.memoizedState) {
+        var current = fiber.alternate;
+        null !== current && null !== current.memoizedState
+          ? ((current = suspenseyCommitFlag),
+            (suspenseyCommitFlag = 16777216),
+            recursivelyAccumulateSuspenseyCommit(fiber),
+            (suspenseyCommitFlag = current))
+          : recursivelyAccumulateSuspenseyCommit(fiber);
+      }
       break;
     default:
       recursivelyAccumulateSuspenseyCommit(fiber);
@@ -6756,11 +6772,12 @@ function handleThrow(root, thrownValue) {
         ? (root = null === shellBoundary ? !0 : !1)
         : ((root = suspenseHandlerStackCursor.current),
           (root =
-            null !== root &&
-            (workInProgressRootRenderLanes & 125829120) ===
-              workInProgressRootRenderLanes
-              ? root === shellBoundary
-              : !1)),
+            null === root ||
+            ((workInProgressRootRenderLanes & 125829120) !==
+              workInProgressRootRenderLanes &&
+              0 === (workInProgressRootRenderLanes & 1073741824))
+              ? !1
+              : root === shellBoundary)),
       (workInProgressSuspendedReason =
         root &&
         0 === (workInProgressRootSkippedLanes & 268435455) &&
@@ -8618,19 +8635,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1002 = {
+var devToolsConfig$jscomp$inline_1007 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-d12bdcda6-20230325",
+  version: "18.3.0-next-768f965de-20230326",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1193 = {
-  bundleType: devToolsConfig$jscomp$inline_1002.bundleType,
-  version: devToolsConfig$jscomp$inline_1002.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1002.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1002.rendererConfig,
+var internals$jscomp$inline_1198 = {
+  bundleType: devToolsConfig$jscomp$inline_1007.bundleType,
+  version: devToolsConfig$jscomp$inline_1007.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1007.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1007.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -8647,26 +8664,26 @@ var internals$jscomp$inline_1193 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1002.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1007.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-d12bdcda6-20230325"
+  reconcilerVersion: "18.3.0-next-768f965de-20230326"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1194 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1199 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1194.isDisabled &&
-    hook$jscomp$inline_1194.supportsFiber
+    !hook$jscomp$inline_1199.isDisabled &&
+    hook$jscomp$inline_1199.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1194.inject(
-        internals$jscomp$inline_1193
+      (rendererID = hook$jscomp$inline_1199.inject(
+        internals$jscomp$inline_1198
       )),
-        (injectedHook = hook$jscomp$inline_1194);
+        (injectedHook = hook$jscomp$inline_1199);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

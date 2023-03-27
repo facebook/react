@@ -7678,8 +7678,9 @@ function recursivelyTraverseReconnectPassiveEffects(
     parentFiber = parentFiber.sibling;
   }
 }
+var suspenseyCommitFlag = 8192;
 function recursivelyAccumulateSuspenseyCommit(parentFiber) {
-  if (parentFiber.subtreeFlags & 16777216)
+  if (parentFiber.subtreeFlags & suspenseyCommitFlag)
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       accumulateSuspenseyCommitOnFiber(parentFiber),
         (parentFiber = parentFiber.sibling);
@@ -7688,13 +7689,28 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
   switch (fiber.tag) {
     case 26:
       recursivelyAccumulateSuspenseyCommit(fiber);
-      if (fiber.flags & 16777216 && null !== fiber.memoizedState)
+      if (fiber.flags & suspenseyCommitFlag && null !== fiber.memoizedState)
         throw Error(
           "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
         );
       break;
     case 5:
       recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    case 3:
+    case 4:
+      recursivelyAccumulateSuspenseyCommit(fiber);
+      break;
+    case 22:
+      if (null === fiber.memoizedState) {
+        var current = fiber.alternate;
+        null !== current && null !== current.memoizedState
+          ? ((current = suspenseyCommitFlag),
+            (suspenseyCommitFlag = 16777216),
+            recursivelyAccumulateSuspenseyCommit(fiber),
+            (suspenseyCommitFlag = current))
+          : recursivelyAccumulateSuspenseyCommit(fiber);
+      }
       break;
     default:
       recursivelyAccumulateSuspenseyCommit(fiber);
@@ -8381,11 +8397,12 @@ function handleThrow(root, thrownValue) {
         ? (root = null === shellBoundary ? !0 : !1)
         : ((root = suspenseHandlerStackCursor.current),
           (root =
-            null !== root &&
-            (workInProgressRootRenderLanes & 125829120) ===
-              workInProgressRootRenderLanes
-              ? root === shellBoundary
-              : !1)),
+            null === root ||
+            ((workInProgressRootRenderLanes & 125829120) !==
+              workInProgressRootRenderLanes &&
+              0 === (workInProgressRootRenderLanes & 1073741824))
+              ? !1
+              : root === shellBoundary)),
       (workInProgressSuspendedReason =
         root &&
         0 === (workInProgressRootSkippedLanes & 268435455) &&
@@ -10195,10 +10212,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1101 = {
+  devToolsConfig$jscomp$inline_1106 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-d12bdcda6-20230325",
+    version: "18.3.0-next-768f965de-20230326",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10227,10 +10244,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1101.bundleType,
-  version: devToolsConfig$jscomp$inline_1101.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1101.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1101.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1106.bundleType,
+  version: devToolsConfig$jscomp$inline_1106.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1106.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1106.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10246,14 +10263,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1101.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1106.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-d12bdcda6-20230325"
+  reconcilerVersion: "18.3.0-next-768f965de-20230326"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

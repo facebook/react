@@ -3254,11 +3254,12 @@ var Visibility =
   8192;
 var StoreConsistency =
   /*             */
-  16384; // It's OK to reuse this bit because these flags are mutually exclusive for
+  16384; // It's OK to reuse these bits because these flags are mutually exclusive for
 // different fiber types. We should really be doing this for as many flags as
 // possible, because we're about to run out of bits.
 
 var ScheduleRetry = StoreConsistency;
+var ShouldSuspendCommit = Visibility;
 var LifecycleEffectMask =
   Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -3292,8 +3293,8 @@ var LayoutStatic =
 var PassiveStatic =
   /*                */
   8388608;
-var SuspenseyCommit =
-  /*              */
+var MaySuspendCommit =
+  /*             */
   16777216; // Flag used to identify newly inserted fibers. It isn't reset after commit unlike `Placement`.
 
 var PlacementDEV =
@@ -3324,7 +3325,7 @@ var PassiveMask = Passive$1 | Visibility | ChildDeletion; // Union of tags that 
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 
-var StaticMask = LayoutStatic | PassiveStatic | RefStatic | SuspenseyCommit;
+var StaticMask = LayoutStatic | PassiveStatic | RefStatic | MaySuspendCommit;
 
 // This module only exists as an ESM wrapper around the external CommonJS
 var scheduleCallback$1 = Scheduler.unstable_scheduleCallback;
@@ -5087,9 +5088,6 @@ function finalizeContainerChildren(container, newChildren) {
   completeRoot(container, newChildren);
 }
 function replaceContainerChildren(container, newChildren) {}
-function maySuspendCommit(type, props) {
-  return false;
-}
 function preloadInstance(type, props) {
   return true;
 }
@@ -8020,13 +8018,6 @@ function trackUsedThenable(thenableState, thenable, index) {
     }
   }
 }
-function suspendCommit() {
-  // This extra indirection only exists so it can handle passing
-  // noopSuspenseyCommitThenable through to throwException.
-  // TODO: Factor the thenable check out of throwException
-  suspendedThenable = noopSuspenseyCommitThenable;
-  throw SuspenseyCommitException;
-} // This is used to track the actual thenable that suspended so it can be
 // passed to the rest of the Suspense implementation — which, for historical
 // reasons, expects to receive a thenable.
 
@@ -18684,7 +18675,11 @@ function updateHostComponent(
       appendAllChildren(newInstance, workInProgress, false, false);
     }
   }
-} // TODO: This should ideally move to begin phase, but currently the instance is
+} // This function must be called at the very end of the complete phase, because
+// it might throw to suspend, and if the resource immediately loads, the work
+// loop will resume rendering as if the work-in-progress completed. So it must
+// fully complete.
+// TODO: This should ideally move to begin phase, but currently the instance is
 // not created until the complete phase. For our existing use cases, host nodes
 // that suspend don't have children, so it doesn't matter. But that might not
 // always be true in the future.
@@ -18695,28 +18690,16 @@ function preloadInstanceAndSuspendIfNeeded(
   props,
   renderLanes
 ) {
-  workInProgress.flags |= SuspenseyCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
-  // check that `useDeferredValue` does to determine whether it needs to
-  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
-  // suspending until you opt in with startTransition or Suspense) but it
-  // also happens to be the desired behavior for the concrete use cases we've
-  // thought of so far, like CSS loading, fonts, images, etc.
-  // TODO: We may decide to expose a way to force a fallback even during a
-  // sync update.
-
-  if (!includesOnlyNonUrgentLanes(renderLanes));
-  else {
-    // Preload the instance
-    var isReady = preloadInstance();
-
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen());
-      else {
-        // Trigger a fallback rather than block the render.
-        suspendCommit();
-      }
-    }
-  }
+  {
+    // If this flag was set previously, we can remove it. The flag
+    // represents whether this particular set of props might ever need to
+    // suspend. The safest thing to do is for maySuspendCommit to always
+    // return true, but if the renderer is reasonably confident that the
+    // underlying resource won't be evicted, it can return false as a
+    // performance optimization.
+    workInProgress.flags &= ~MaySuspendCommit;
+    return;
+  } // Mark this fiber with a flag. This gets set on all host instances
 }
 
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -19119,12 +19102,10 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostComponent: {
       popHostContext(workInProgress);
-      var _type = workInProgress.type;
-
-      var _maySuspend = maySuspendCommit();
+      var _type2 = workInProgress.type;
 
       if (current !== null && workInProgress.stateNode != null) {
-        updateHostComponent(current, workInProgress, _type, newProps);
+        updateHostComponent(current, workInProgress, _type2, newProps);
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -19161,7 +19142,7 @@ function completeWork(current, workInProgress, renderLanes) {
           var _rootContainerInstance = getRootHostContainer();
 
           var _instance3 = createInstance(
-            _type,
+            _type2,
             newProps,
             _rootContainerInstance,
             _currentHostContext2,
@@ -19183,17 +19164,7 @@ function completeWork(current, workInProgress, renderLanes) {
       // will resume rendering as if the work-in-progress completed. So it must
       // fully complete.
 
-      if (_maySuspend) {
-        preloadInstanceAndSuspendIfNeeded(
-          workInProgress,
-          _type,
-          newProps,
-          renderLanes
-        );
-      } else {
-        workInProgress.flags &= ~SuspenseyCommit;
-      }
-
+      preloadInstanceAndSuspendIfNeeded(workInProgress);
       return null;
     }
 
@@ -22100,13 +22071,24 @@ function commitPassiveUnmountEffects(finishedWork) {
   setCurrentFiber(finishedWork);
   commitPassiveUnmountOnFiber(finishedWork);
   resetCurrentFiber();
-}
+} // If we're inside a brand new tree, or a tree that was already visible, then we
+// should only suspend host components that have a ShouldSuspendCommit flag.
+// Components without it haven't changed since the last commit, so we can skip
+// over those.
+//
+// When we enter a tree that is being revealed (going from hidden -> visible),
+// we need to suspend _any_ component that _may_ suspend. Even if they're
+// already in the "current" tree. Because their visibility has changed, the
+// browser may not have prerendered them yet. So we check the MaySuspendCommit
+// flag instead.
+
+var suspenseyCommitFlag = ShouldSuspendCommit;
 function accumulateSuspenseyCommit(finishedWork) {
   accumulateSuspenseyCommitOnFiber(finishedWork);
 }
 
 function recursivelyAccumulateSuspenseyCommit(parentFiber) {
-  if (parentFiber.subtreeFlags & SuspenseyCommit) {
+  if (parentFiber.subtreeFlags & suspenseyCommitFlag) {
     var child = parentFiber.child;
 
     while (child !== null) {
@@ -22121,7 +22103,7 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
     case HostHoistable: {
       recursivelyAccumulateSuspenseyCommit(fiber);
 
-      if (fiber.flags & SuspenseyCommit) {
+      if (fiber.flags & suspenseyCommitFlag) {
         if (fiber.memoizedState !== null) {
           suspendResource();
         }
@@ -22137,8 +22119,36 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
     }
 
     case HostRoot:
-    case HostPortal:
-    // eslint-disable-next-line-no-fallthrough
+    case HostPortal: {
+      {
+        recursivelyAccumulateSuspenseyCommit(fiber);
+      }
+
+      break;
+    }
+
+    case OffscreenComponent: {
+      var isHidden = fiber.memoizedState !== null;
+
+      if (isHidden);
+      else {
+        var current = fiber.alternate;
+        var wasHidden = current !== null && current.memoizedState !== null;
+
+        if (wasHidden) {
+          // This tree is being revealed. Visit all newly visible suspensey
+          // instances, even if they're in the current tree.
+          var prevFlags = suspenseyCommitFlag;
+          suspenseyCommitFlag = MaySuspendCommit;
+          recursivelyAccumulateSuspenseyCommit(fiber);
+          suspenseyCommitFlag = prevFlags;
+        } else {
+          recursivelyAccumulateSuspenseyCommit(fiber);
+        }
+      }
+
+      break;
+    }
 
     default: {
       recursivelyAccumulateSuspenseyCommit(fiber);
@@ -23883,15 +23893,24 @@ function shouldRemainOnPreviousScreen() {
 
   if (handler === null);
   else {
-    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+    if (
+      includesOnlyRetries(workInProgressRootRenderLanes) || // In this context, an OffscreenLane counts as a Retry
+      // TODO: It's become increasingly clear that Retries and Offscreen are
+      // deeply connected. They probably can be unified further.
+      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+    ) {
       // During a retry, we can suspend rendering if the nearest Suspense boundary
       // is the boundary of the "shell", because we're guaranteed not to block
       // any new content from appearing.
+      //
+      // The reason we must check if this is a retry is because it guarantees
+      // that suspending the work loop won't block an actual update, because
+      // retries don't "update" anything; they fill in fallbacks that were left
+      // behind by a previous transition.
       return handler === getShellBoundary();
     }
   } // For all other Lanes besides Transitions and Retries, we should not wait
   // for the data to load.
-  // TODO: We should wait during Offscreen prerendering, too.
 
   return false;
 }
@@ -27008,7 +27027,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-d12bdcda6-20230325";
+var ReactVersion = "18.3.0-next-768f965de-20230326";
 
 function createPortal$1(
   children,
