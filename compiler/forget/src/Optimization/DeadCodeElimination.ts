@@ -190,6 +190,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       }
       return true;
     }
+    case "Await":
     case "CallExpression":
     case "ComputedDelete":
     case "ComputedStore":

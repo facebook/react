@@ -424,6 +424,7 @@ function computeMemoizationInputs(
         rvalues: [],
       };
     }
+    case "Await":
     case "TypeCastExpression": {
       return {
         // Indirection for the inner value, memoized if the value is

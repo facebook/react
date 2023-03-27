@@ -448,6 +448,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
       break;
     }
+    case "Await": {
+      value = `Await ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

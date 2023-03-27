@@ -907,6 +907,10 @@ function codegenInstructionValue(
       value = t.regExpLiteral(instrValue.pattern, instrValue.flags);
       break;
     }
+    case "Await": {
+      value = t.awaitExpression(codegenPlace(cx, instrValue.value));
+      break;
+    }
     case "DeclareLocal":
     case "Destructure":
     case "StoreLocal": {

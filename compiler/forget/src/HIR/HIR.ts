@@ -632,6 +632,11 @@ export type InstructionValue =
       quasis: Array<{ raw: string; cooked?: string }>;
       loc: SourceLocation;
     }
+  | {
+      kind: "Await";
+      value: Place;
+      loc: SourceLocation;
+    }
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow

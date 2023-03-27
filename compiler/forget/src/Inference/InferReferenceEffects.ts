@@ -788,6 +788,17 @@ function inferBlock(
         state.define(lvalue, instrValue);
         continue;
       }
+      case "Await": {
+        state.initialize(instrValue, state.kind(instrValue.value));
+        // Awaiting a value causes it to change state (go from unresolved to resolved or error)
+        // It also means that any side-effects which would occur as part of the promise evaluation
+        // will occur.
+        state.reference(instrValue.value, Effect.Mutate);
+        const lvalue = instr.lvalue;
+        lvalue.effect = Effect.Mutate;
+        state.alias(lvalue, instrValue.value);
+        continue;
+      }
       case "TypeCastExpression": {
         // A type cast expression has no effect at runtime, so it's equivalent to a raw
         // identifier:

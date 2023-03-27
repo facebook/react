@@ -170,6 +170,10 @@ export function* eachInstructionValueOperand(
       yield* instrValue.subexprs;
       break;
     }
+    case "Await": {
+      yield instrValue.value;
+      break;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
@@ -421,6 +425,10 @@ export function mapInstructionOperands(
     }
     case "TemplateLiteral": {
       instrValue.subexprs = instrValue.subexprs.map(fn);
+      break;
+    }
+    case "Await": {
+      instrValue.value = fn(instrValue.value);
       break;
     }
     case "RegExpLiteral":

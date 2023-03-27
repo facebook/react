@@ -1687,6 +1687,14 @@ function lowerExpression(
         };
       }
     }
+    case "AwaitExpression": {
+      let expr = exprPath as NodePath<t.AwaitExpression>;
+      return {
+        kind: "Await",
+        value: lowerExpressionToTemporary(builder, expr.get("argument")),
+        loc: exprLoc,
+      };
+    }
     case "TypeCastExpression": {
       let expr = exprPath as NodePath<t.TypeCastExpression>;
       return {
