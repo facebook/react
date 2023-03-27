@@ -583,7 +583,6 @@ function lowerStatement(
             value
           );
         } else if (id.isIdentifier()) {
-          const loc = stmt.node.loc ?? GeneratedSource;
           const identifier = builder.resolveIdentifier(id);
           if (identifier == null) {
             builder.errors.push({
@@ -592,23 +591,18 @@ function lowerStatement(
               nodePath: id,
             });
           } else {
-            builder.push({
-              id: makeInstructionId(0),
-              lvalue: buildTemporaryPlace(builder, loc),
-              value: {
-                kind: "DeclareLocal",
-                lvalue: {
-                  kind,
-                  place: {
-                    effect: Effect.Unknown,
-                    identifier,
-                    kind: "Identifier",
-                    loc: id.node.loc ?? GeneratedSource,
-                  },
+            lowerValueToTemporary(builder, {
+              kind: "DeclareLocal",
+              lvalue: {
+                kind,
+                place: {
+                  effect: Effect.Unknown,
+                  identifier,
+                  kind: "Identifier",
+                  loc: id.node.loc ?? GeneratedSource,
                 },
-                loc: id.node.loc ?? GeneratedSource,
               },
-              loc,
+              loc: id.node.loc ?? GeneratedSource,
             });
           }
         } else {
@@ -719,18 +713,10 @@ function lowerStatement(
         severity: ErrorSeverity.Todo,
         nodePath: stmtPath,
       });
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: buildTemporaryPlace(
-          builder,
-          stmtPath.node.loc ?? GeneratedSource
-        ),
+      lowerValueToTemporary(builder, {
+        kind: "UnsupportedNode",
         loc: stmtPath.node.loc ?? GeneratedSource,
-        value: {
-          kind: "UnsupportedNode",
-          loc: stmtPath.node.loc ?? GeneratedSource,
-          node: stmtPath.node,
-        },
+        node: stmtPath.node,
       });
       return;
     }
@@ -914,13 +900,7 @@ function lowerExpression(
         calleePath.isOptionalMemberExpression()
       ) {
         const memberExpr = lowerMemberExpression(builder, calleePath);
-        const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...propertyPlace },
-          value: memberExpr.value,
-          loc: GeneratedSource,
-        });
+        const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
         callee = {
           kind: "MethodCall",
           receiver: memberExpr.object,
@@ -964,15 +944,10 @@ function lowerExpression(
             loc,
           });
         }
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: { ...temp },
-            loc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: { ...temp },
           loc,
         });
         return {
@@ -985,26 +960,15 @@ function lowerExpression(
 
       // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
       const alternate = builder.enter("value", () => {
-        const temp = buildTemporaryPlace(builder, loc);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...temp },
-          value: {
-            kind: "Primitive",
-            value: undefined,
-            loc,
-          },
+        const temp = lowerValueToTemporary(builder, {
+          kind: "Primitive",
+          value: undefined,
           loc,
         });
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: { ...temp },
-            loc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: { ...temp },
           loc,
         });
         return {
@@ -1055,13 +1019,7 @@ function lowerExpression(
       }
       if (calleePath.isMemberExpression()) {
         const memberExpr = lowerMemberExpression(builder, calleePath);
-        const propertyPlace = buildTemporaryPlace(builder, GeneratedSource);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...propertyPlace },
-          value: memberExpr.value,
-          loc: GeneratedSource,
-        });
+        const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
         const args = lowerArguments(builder, expr.get("arguments"));
         return {
           kind: "MethodCall",
@@ -1140,15 +1098,10 @@ function lowerExpression(
           builder,
           expr.get("consequent")
         );
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, exprLoc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: consequent,
-            loc: exprLoc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: consequent,
           loc: exprLoc,
         });
         return {
@@ -1164,15 +1117,10 @@ function lowerExpression(
           builder,
           expr.get("alternate")
         );
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, exprLoc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: alternate,
-            loc: exprLoc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: alternate,
           loc: exprLoc,
         });
         return {
@@ -1217,16 +1165,11 @@ function lowerExpression(
         expr.get("left").node.loc ?? GeneratedSource
       );
       const consequent = builder.enter("value", () => {
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, leftPlace.loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: { ...leftPlace },
-            loc: leftPlace.loc,
-          },
-          loc: exprLoc,
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: { ...leftPlace },
+          loc: leftPlace.loc,
         });
         return {
           kind: "goto",
@@ -1237,16 +1180,11 @@ function lowerExpression(
       });
       const alternate = builder.enter("value", () => {
         const right = lowerExpressionToTemporary(builder, expr.get("right"));
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, right.loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...place } },
-            value: { ...right },
-            loc: right.loc,
-          },
-          loc: exprLoc,
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: { ...right },
+          loc: right.loc,
         });
         return {
           kind: "goto",
@@ -1335,34 +1273,20 @@ function lowerExpression(
           const identifier = lowerIdentifier(builder, leftExpr);
           const leftPlace = lowerExpressionToTemporary(builder, leftExpr);
           const right = lowerExpressionToTemporary(builder, expr.get("right"));
-          const binaryPlace = buildTemporaryPlace(builder, exprLoc);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: {
-              ...binaryPlace,
-            },
-            value: {
-              kind: "BinaryExpression",
-              operator: binaryOperator,
-              left: leftPlace,
-              right,
-              loc: exprLoc,
-            },
+          const binaryPlace = lowerValueToTemporary(builder, {
+            kind: "BinaryExpression",
+            operator: binaryOperator,
+            left: leftPlace,
+            right,
             loc: exprLoc,
           });
-          const result = buildTemporaryPlace(builder, exprLoc);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: { ...result },
-            value: {
-              kind: "StoreLocal",
-              lvalue: {
-                place: { ...identifier },
-                kind: InstructionKind.Reassign,
-              },
-              value: { ...binaryPlace },
-              loc: exprLoc,
+          lowerValueToTemporary(builder, {
+            kind: "StoreLocal",
+            lvalue: {
+              place: { ...identifier },
+              kind: InstructionKind.Reassign,
             },
+            value: { ...binaryPlace },
             loc: exprLoc,
           });
           return { kind: "LoadLocal", place: identifier, loc: exprLoc };
@@ -1376,32 +1300,13 @@ function lowerExpression(
           );
 
           // Store the previous value to a temporary
-          const previousValuePlace: Place = buildTemporaryPlace(
-            builder,
-            exprLoc
-          );
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: {
-              ...previousValuePlace,
-            },
-            value,
-            loc: leftExpr.node.loc ?? GeneratedSource,
-          });
+          const previousValuePlace = lowerValueToTemporary(builder, value);
           // Store the new value to a temporary
-          const newValuePlace: Place = buildTemporaryPlace(builder, exprLoc);
-          builder.push({
-            id: makeInstructionId(0),
-            lvalue: {
-              ...newValuePlace,
-            },
-            value: {
-              kind: "BinaryExpression",
-              operator: binaryOperator,
-              left: { ...previousValuePlace },
-              right: lowerExpressionToTemporary(builder, expr.get("right")),
-              loc: leftExpr.node.loc ?? GeneratedSource,
-            },
+          const newValuePlace = lowerValueToTemporary(builder, {
+            kind: "BinaryExpression",
+            operator: binaryOperator,
+            left: { ...previousValuePlace },
+            right: lowerExpressionToTemporary(builder, expr.get("right")),
             loc: leftExpr.node.loc ?? GeneratedSource,
           });
 
@@ -1440,13 +1345,7 @@ function lowerExpression(
         t.MemberExpression | t.OptionalMemberExpression
       >;
       const { value } = lowerMemberExpression(builder, expr);
-      const place: Place = buildTemporaryPlace(builder, exprLoc);
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...place },
-        value,
-        loc: exprLoc,
-      });
+      const place = lowerValueToTemporary(builder, value);
       return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "JSXElement": {
@@ -1723,18 +1622,9 @@ function lowerExpression(
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
-      const primitiveTemp = buildTemporaryPlace(
-        builder,
-        expr.node.loc ?? GeneratedSource
-      );
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...primitiveTemp },
-        value: {
-          kind: "Primitive",
-          value: 1,
-          loc: expr.node.loc ?? GeneratedSource,
-        },
+      const primitiveTemp = lowerValueToTemporary(builder, {
+        kind: "Primitive",
+        value: 1,
         loc: expr.node.loc ?? GeneratedSource,
       });
       const temp = buildTemporaryPlace(
@@ -1757,15 +1647,10 @@ function lowerExpression(
         },
         loc: exprLoc,
       });
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: buildTemporaryPlace(builder, exprLoc),
-        value: {
-          kind: "StoreLocal",
-          lvalue: { place: { ...identifier }, kind: InstructionKind.Reassign },
-          value: { ...temp },
-          loc: exprLoc,
-        },
+      lowerValueToTemporary(builder, {
+        kind: "StoreLocal",
+        lvalue: { place: { ...identifier }, kind: InstructionKind.Reassign },
+        value: { ...temp },
         loc: exprLoc,
       });
       return {
@@ -1989,16 +1874,10 @@ function lowerJsxElementName(
           nodePath: exprPath,
         });
       }
-      const place: Place = buildTemporaryPlace(builder, exprLoc);
-      builder.push({
-        id: makeInstructionId(0),
-        value: {
-          kind: "Primitive",
-          value: tag,
-          loc: exprLoc,
-        },
+      const place = lowerValueToTemporary(builder, {
+        kind: "Primitive",
+        value: tag,
         loc: exprLoc,
-        lvalue: { ...place },
       });
       return place;
     }
@@ -2015,16 +1894,10 @@ function lowerJsxElementName(
         nodePath: exprPath,
       });
     }
-    const place: Place = buildTemporaryPlace(builder, exprLoc);
-    builder.push({
-      id: makeInstructionId(0),
-      value: {
-        kind: "Primitive",
-        value: tag,
-        loc: exprLoc,
-      },
+    const place = lowerValueToTemporary(builder, {
+      kind: "Primitive",
+      value: tag,
       loc: exprLoc,
-      lvalue: { ...place },
     });
     return place;
   } else {
@@ -2033,18 +1906,11 @@ function lowerJsxElementName(
       severity: ErrorSeverity.Todo,
       nodePath: exprPath,
     });
-    const place: Place = buildTemporaryPlace(builder, exprLoc);
-    builder.push({
-      id: makeInstructionId(0),
-      value: {
-        kind: "UnsupportedNode",
-        node: exprNode,
-        loc: exprLoc,
-      },
+    return lowerValueToTemporary(builder, {
+      kind: "UnsupportedNode",
+      node: exprNode,
       loc: exprLoc,
-      lvalue: { ...place },
     });
-    return { ...place };
   }
 }
 
@@ -2065,21 +1931,14 @@ function lowerJsxMemberExpression(
     );
     objectPlace = lowerIdentifier(builder, object);
   }
-  const place = buildTemporaryPlace(builder, loc);
   const property = exprPath.get("property").node.name;
-  builder.push({
-    id: makeInstructionId(0),
-    lvalue: { ...place },
-    value: {
-      kind: "PropertyLoad",
-      object: objectPlace,
-      property,
-      optional: false,
-      loc,
-    },
+  return lowerValueToTemporary(builder, {
+    kind: "PropertyLoad",
+    object: objectPlace,
+    property,
+    optional: false,
     loc,
   });
-  return place;
 }
 
 function lowerJsxElement(
@@ -2104,31 +1963,19 @@ function lowerJsxElement(
         severity: ErrorSeverity.Todo,
         nodePath: expression,
       });
-      const place: Place = buildTemporaryPlace(builder, exprLoc);
-      builder.push({
-        id: makeInstructionId(0),
-        value: {
-          kind: "UnsupportedNode",
-          node: exprNode,
-          loc: exprLoc,
-        },
+      const place = lowerValueToTemporary(builder, {
+        kind: "UnsupportedNode",
+        node: exprNode,
         loc: exprLoc,
-        lvalue: { ...place },
       });
       return { ...place };
     }
     return lowerExpressionToTemporary(builder, expression);
   } else if (exprPath.isJSXText()) {
-    const place: Place = buildTemporaryPlace(builder, exprLoc);
-    builder.push({
-      id: makeInstructionId(0),
-      value: {
-        kind: "JSXText",
-        value: exprPath.node.value,
-        loc: exprLoc,
-      },
+    const place = lowerValueToTemporary(builder, {
+      kind: "JSXText",
+      value: exprPath.node.value,
       loc: exprLoc,
-      lvalue: { ...place },
     });
     return place;
   } else {
@@ -2139,16 +1986,10 @@ function lowerJsxElement(
         nodePath: exprPath,
       });
     }
-    const place: Place = buildTemporaryPlace(builder, exprLoc);
-    builder.push({
-      id: makeInstructionId(0),
-      value: {
-        kind: "UnsupportedNode",
-        node: exprNode,
-        loc: exprLoc,
-      },
+    const place = lowerValueToTemporary(builder, {
+      kind: "UnsupportedNode",
+      node: exprNode,
       loc: exprLoc,
-      lvalue: { ...place },
     });
     return place;
   }
@@ -2159,15 +2000,21 @@ function lowerExpressionToTemporary(
   exprPath: NodePath<t.Expression>
 ): Place {
   const value = lowerExpression(builder, exprPath);
+  return lowerValueToTemporary(builder, value);
+}
+
+function lowerValueToTemporary(
+  builder: HIRBuilder,
+  value: InstructionValue
+): Place {
   if (value.kind === "LoadLocal" && value.place.identifier.name === null) {
     return value.place;
   }
-  const exprLoc = exprPath.node.loc ?? GeneratedSource;
-  const place: Place = buildTemporaryPlace(builder, exprLoc);
+  const place: Place = buildTemporaryPlace(builder, value.loc);
   builder.push({
     id: makeInstructionId(0),
     value: value,
-    loc: exprLoc,
+    loc: value.loc,
     lvalue: { ...place },
   });
   return place;
@@ -2181,24 +2028,14 @@ function lowerIdentifier(
   const exprLoc = exprNode.loc ?? GeneratedSource;
   const identifier = builder.resolveIdentifier(exprPath);
   if (identifier === null) {
-    const place = buildTemporaryPlace(
-      builder,
-      exprPath.node.loc ?? GeneratedSource
-    );
     const global = builder.resolveGlobal(exprPath);
     let value: InstructionValue;
     if (global !== null) {
-      value = { kind: "LoadGlobal", name: global.name, loc: place.loc };
+      value = { kind: "LoadGlobal", name: global.name, loc: exprLoc };
     } else {
-      value = { kind: "UnsupportedNode", node: exprPath.node, loc: place.loc };
+      value = { kind: "UnsupportedNode", node: exprPath.node, loc: exprLoc };
     }
-    builder.push({
-      id: makeInstructionId(0),
-      value,
-      loc: place.loc,
-      lvalue: { ...place },
-    });
-    return place;
+    return lowerValueToTemporary(builder, value);
   }
   const place: Place = {
     kind: "Identifier",
@@ -2257,22 +2094,16 @@ function lowerAssignment(
         };
       }
 
-      const temporary = buildTemporaryPlace(builder, loc);
       const place: Place = {
         kind: "Identifier",
         identifier: identifier,
         effect: Effect.Unknown,
         loc: lvalue.node.loc ?? GeneratedSource,
       };
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...temporary },
-        value: {
-          kind: "StoreLocal",
-          lvalue: { place: { ...place }, kind },
-          value,
-          loc,
-        },
+      const temporary = lowerValueToTemporary(builder, {
+        kind: "StoreLocal",
+        lvalue: { place: { ...place }, kind },
+        value,
         loc,
       });
       return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
@@ -2295,17 +2126,11 @@ function lowerAssignment(
           });
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
-        const temporary = buildTemporaryPlace(builder, loc);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...temporary },
-          value: {
-            kind: "PropertyStore",
-            object,
-            property: property.node.name,
-            value,
-            loc,
-          },
+        const temporary = lowerValueToTemporary(builder, {
+          kind: "PropertyStore",
+          object,
+          property: property.node.name,
+          value,
           loc,
         });
         return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
@@ -2320,17 +2145,11 @@ function lowerAssignment(
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
         const propertyPlace = lowerExpressionToTemporary(builder, property);
-        const temporary = buildTemporaryPlace(builder, loc);
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: { ...temporary },
-          value: {
-            kind: "ComputedStore",
-            object,
-            property: propertyPlace,
-            value,
-            loc,
-          },
+        const temporary = lowerValueToTemporary(builder, {
+          kind: "ComputedStore",
+          object,
+          property: propertyPlace,
+          value,
           loc,
         });
         return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
@@ -2373,22 +2192,16 @@ function lowerAssignment(
           followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
         }
       }
-      const temporary = buildTemporaryPlace(builder, loc);
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...temporary },
-        value: {
-          kind: "Destructure",
-          lvalue: {
-            kind,
-            pattern: {
-              kind: "ArrayPattern",
-              items,
-            },
+      const temporary = lowerValueToTemporary(builder, {
+        kind: "Destructure",
+        lvalue: {
+          kind,
+          pattern: {
+            kind: "ArrayPattern",
+            items,
           },
-          value,
-          loc,
         },
+        value,
         loc,
       });
       for (const { place, path } of followups) {
@@ -2467,22 +2280,16 @@ function lowerAssignment(
           }
         }
       }
-      const temporary = buildTemporaryPlace(builder, loc);
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...temporary },
-        value: {
-          kind: "Destructure",
-          lvalue: {
-            kind,
-            pattern: {
-              kind: "ObjectPattern",
-              properties,
-            },
+      const temporary = lowerValueToTemporary(builder, {
+        kind: "Destructure",
+        lvalue: {
+          kind,
+          pattern: {
+            kind: "ObjectPattern",
+            properties,
           },
-          value,
-          loc,
         },
+        value,
         loc,
       });
       for (const { place, path } of followups) {
@@ -2505,15 +2312,10 @@ function lowerAssignment(
           builder,
           lvalue.get("right")
         );
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...temp } },
-            value: { ...defaultValue },
-            loc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...temp } },
+          value: { ...defaultValue },
           loc,
         });
         return {
@@ -2526,15 +2328,10 @@ function lowerAssignment(
       });
 
       const alternate = builder.enter("value", () => {
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, loc),
-          value: {
-            kind: "StoreLocal",
-            lvalue: { kind: InstructionKind.Const, place: { ...temp } },
-            value: { ...value },
-            loc,
-          },
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...temp } },
+          value: { ...value },
           loc,
         });
         return {
@@ -2555,28 +2352,16 @@ function lowerAssignment(
         },
         testBlock
       );
-      const undef = buildTemporaryPlace(builder, loc);
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...undef },
-        value: {
-          kind: "Primitive",
-          value: undefined,
-          loc,
-        },
+      const undef = lowerValueToTemporary(builder, {
+        kind: "Primitive",
+        value: undefined,
         loc,
       });
-      const test = buildTemporaryPlace(builder, loc);
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...test },
-        value: {
-          kind: "BinaryExpression",
-          left: { ...value },
-          operator: "===",
-          right: { ...undef },
-          loc,
-        },
+      const test = lowerValueToTemporary(builder, {
+        kind: "BinaryExpression",
+        left: { ...value },
+        operator: "===",
+        right: { ...undef },
         loc,
       });
       builder.terminateWithContinuation(
