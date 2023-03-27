@@ -111,8 +111,6 @@ function convertModelToJSON(request, parent, key, model) {
 
       return jsonArray;
     } else {
-      /* $FlowFixMe the old version of Flow doesn't have a good way to define
-       * an empty exact object. */
       var jsonObj = {};
 
       for (var nextKey in json) {
@@ -134,7 +132,6 @@ function convertModelToJSON(request, parent, key, model) {
 }
 
 function processModelChunk(request, id, model) {
-  // $FlowFixMe no good way to define an empty exact object
   var json = convertModelToJSON(request, {}, "", model);
   return ["O", id, json];
 }
@@ -149,7 +146,7 @@ function scheduleWork(callback) {
   callback();
 }
 function writeChunkAndReturn(destination, chunk) {
-  // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
+  // $FlowFixMe[incompatible-call] `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
   ReactFlightDOMRelayServerIntegration.emitRow(destination, chunk);
   return true;
 }
@@ -650,7 +647,7 @@ function switchContext(newSnapshot) {
 
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);
@@ -1354,7 +1351,7 @@ var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function getOrCreateServerContext(globalName) {
   if (!ContextRegistry[globalName]) {
     ContextRegistry[globalName] = React.createServerContext(
-      globalName, // $FlowFixMe function signature doesn't reflect the symbol value
+      globalName, // $FlowFixMe[incompatible-call] function signature doesn't reflect the symbol value
       REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
     );
   }
@@ -1843,7 +1840,7 @@ var insideContextProps = null;
 var isInsideContextValue = false;
 function resolveModelToJSON(request, parent, key, value) {
   {
-    // $FlowFixMe
+    // $FlowFixMe[incompatible-use]
     var originalValue = parent[key];
 
     if (typeof originalValue === "object" && originalValue !== value) {
@@ -2048,7 +2045,7 @@ function resolveModelToJSON(request, parent, key, value) {
           }
         }
       }
-    } // $FlowFixMe
+    } // $FlowFixMe[incompatible-return]
 
     return value;
   }
@@ -2091,14 +2088,14 @@ function resolveModelToJSON(request, parent, key, value) {
 
     if (existingId !== undefined) {
       return serializeByValueID(existingId);
-    } // $FlowFixMe `description` might be undefined
+    } // $FlowFixMe[incompatible-type] `description` might be undefined
 
     var name = value.description;
 
     if (Symbol.for(name) !== value) {
       throw new Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. " +
-          ("The symbol Symbol.for(" + // $FlowFixMe `description` might be undefined
+          ("The symbol Symbol.for(" + // $FlowFixMe[incompatible-type] `description` might be undefined
             value.description +
             ") cannot be found among global symbols.") +
           describeObjectForErrorMessage(parent, key)

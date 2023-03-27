@@ -132,7 +132,7 @@ var assign = Object.assign;
  * problem. (Instead of a confusing exception thrown inside the implementation
  * of the `value` object).
  */
-// $FlowFixMe only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function typeName(value) {
   {
     // toStringTag is needed for namespaced types like Temporal.Instant
@@ -140,11 +140,11 @@ function typeName(value) {
     var type =
       (hasToStringTag && value[Symbol.toStringTag]) ||
       value.constructor.name ||
-      "Object"; // $FlowFixMe
+      "Object"; // $FlowFixMe[incompatible-return]
 
     return type;
   }
-} // $FlowFixMe only called in DEV, so void return is not possible.
+} // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 
 function willCoercionThrow(value) {
   {
@@ -7550,7 +7550,7 @@ function disableLogs() {
         enumerable: true,
         value: disabledLog,
         writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
+      }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
 
       Object.defineProperties(console, {
         info: props,
@@ -7577,7 +7577,7 @@ function reenableLogs() {
         configurable: true,
         enumerable: true,
         writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
+      }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
 
       Object.defineProperties(console, {
         log: assign({}, props, {
@@ -7658,7 +7658,7 @@ function describeNativeComponentFrame(fn, construct) {
 
   var control;
   reentry = true;
-  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
+  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
   Error.prepareStackTrace = undefined;
   var previousDispatcher;
@@ -7677,7 +7677,7 @@ function describeNativeComponentFrame(fn, construct) {
       // Something should be setting the props in the constructor.
       var Fake = function () {
         throw Error();
-      }; // $FlowFixMe
+      }; // $FlowFixMe[prop-missing]
 
       Object.defineProperty(Fake.prototype, "props", {
         set: function () {
@@ -7947,7 +7947,7 @@ function switchContext(newSnapshot) {
 
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);
@@ -9232,7 +9232,7 @@ function useContext(context) {
 }
 
 function basicStateReducer(state, action) {
-  // $FlowFixMe: Flow doesn't like mixed types
+  // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
   return typeof action === "function" ? action(state) : action;
 }
 
@@ -10591,7 +10591,7 @@ function validateIterable(iterable, iteratorFn) {
     // We don't support rendering Generators because it's a mutation.
     // See https://github.com/facebook/react/issues/12995
     if (
-      typeof Symbol === "function" && // $FlowFixMe Flow doesn't know about toStringTag
+      typeof Symbol === "function" &&
       iterable[Symbol.toStringTag] === "Generator"
     ) {
       if (!didWarnAboutGenerators) {

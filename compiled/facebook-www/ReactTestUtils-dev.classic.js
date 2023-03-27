@@ -435,7 +435,7 @@ function createSyntheticEvent(Interface) {
       }
 
       if (event.preventDefault) {
-        event.preventDefault(); // $FlowFixMe - flow is not aware of `unknown` in IE
+        event.preventDefault(); // $FlowFixMe[illegal-typeof] - flow is not aware of `unknown` in IE
       } else if (typeof event.returnValue !== "unknown") {
         event.returnValue = false;
       }
@@ -451,7 +451,7 @@ function createSyntheticEvent(Interface) {
       }
 
       if (event.stopPropagation) {
-        event.stopPropagation(); // $FlowFixMe - flow is not aware of `unknown` in IE
+        event.stopPropagation(); // $FlowFixMe[illegal-typeof] - flow is not aware of `unknown` in IE
       } else if (typeof event.cancelBubble !== "unknown") {
         // The ChangeEventPlugin registers a "propertychange" event for
         // IE. This event does not support bubbling or cancelling, and
@@ -512,8 +512,8 @@ var lastMouseEvent;
 function updateMouseMovementPolyfillState(event) {
   if (event !== lastMouseEvent) {
     if (lastMouseEvent && event.type === "mousemove") {
-      // $FlowFixMe assuming this is a number
-      lastMovementX = event.screenX - lastMouseEvent.screenX; // $FlowFixMe assuming this is a number
+      // $FlowFixMe[unsafe-arithmetic] assuming this is a number
+      lastMovementX = event.screenX - lastMouseEvent.screenX; // $FlowFixMe[unsafe-arithmetic] assuming this is a number
 
       lastMovementY = event.screenY - lastMouseEvent.screenY;
     } else {
@@ -701,7 +701,7 @@ function getEventKey(nativeEvent) {
     // implementations of a working draft specification.
     // FireFox implements `key` but returns `MozPrintableKey` for all
     // printable characters (normalized to `Unidentified`), ignore it.
-    var key = normalizeKey[nativeEvent.key] || nativeEvent.key; // $FlowFixMe unable to index with a `mixed` value
+    var key = normalizeKey[nativeEvent.key] || nativeEvent.key; // $FlowFixMe[invalid-computed-prop] unable to index with a `mixed` value
 
     if (key !== "Unidentified") {
       return key;
@@ -710,7 +710,7 @@ function getEventKey(nativeEvent) {
 
   if (nativeEvent.type === "keypress") {
     var charCode = getEventCharCode(
-      // $FlowFixMe unable to narrow to `KeyboardEvent`
+      // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
       nativeEvent
     ); // The enter-key is technically both printable and non-printable and can
     // thus be captured by `keypress`, no other non-printable key should.
@@ -721,7 +721,7 @@ function getEventKey(nativeEvent) {
   if (nativeEvent.type === "keydown" || nativeEvent.type === "keyup") {
     // While user keyboard layout determines the actual meaning of each
     // `keyCode` value, almost all function keys have a universal value.
-    // $FlowFixMe unable to index with a `mixed` value
+    // $FlowFixMe[invalid-computed-prop] unable to index with a `mixed` value
     return translateToKey[nativeEvent.keyCode] || "Unidentified";
   }
 
@@ -782,7 +782,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
     // implemented in any major browser. Only KeyPress has charCode.
     if (event.type === "keypress") {
       return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
         event
       );
     }
@@ -807,7 +807,7 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
     // type of the event.
     if (event.type === "keypress") {
       return getEventCharCode(
-        // $FlowFixMe unable to narrow to `KeyboardEvent`
+        // $FlowFixMe[incompatible-call] unable to narrow to `KeyboardEvent`
         event
       );
     }
@@ -879,16 +879,16 @@ var WheelEventInterface = assign({}, MouseEventInterface, {
   deltaX: function (event) {
     return "deltaX" in event
       ? event.deltaX // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-      : "wheelDeltaX" in event // $FlowFixMe assuming this is a number
+      : "wheelDeltaX" in event // $FlowFixMe[unsafe-arithmetic] assuming this is a number
       ? -event.wheelDeltaX
       : 0;
   },
   deltaY: function (event) {
     return "deltaY" in event
       ? event.deltaY // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      : "wheelDeltaY" in event // $FlowFixMe assuming this is a number
+      : "wheelDeltaY" in event // $FlowFixMe[unsafe-arithmetic] assuming this is a number
       ? -event.wheelDeltaY // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      : "wheelDelta" in event // $FlowFixMe assuming this is a number
+      : "wheelDelta" in event // $FlowFixMe[unsafe-arithmetic] assuming this is a number
       ? -event.wheelDelta
       : 0;
   },

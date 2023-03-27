@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-1745b9a1";
+var ReactVersion = "18.3.0-www-classic-d1164e5e";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -408,7 +408,7 @@ function isArray(a) {
  * problem. (Instead of a confusing exception thrown inside the implementation
  * of the `value` object).
  */
-// $FlowFixMe only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function typeName(value) {
   {
     // toStringTag is needed for namespaced types like Temporal.Instant
@@ -416,11 +416,11 @@ function typeName(value) {
     var type =
       (hasToStringTag && value[Symbol.toStringTag]) ||
       value.constructor.name ||
-      "Object"; // $FlowFixMe
+      "Object"; // $FlowFixMe[incompatible-return]
 
     return type;
   }
-} // $FlowFixMe only called in DEV, so void return is not possible.
+} // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 
 function willCoercionThrow(value) {
   {
@@ -1126,7 +1126,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         {
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
-          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
           if (mappedChild.key && (!_child || _child.key !== mappedChild.key)) {
             checkKeyStringCoercion(mappedChild.key);
           }
@@ -1135,7 +1135,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         mappedChild = cloneAndReplaceKey(
           mappedChild, // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
-          escapedPrefix + // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          escapedPrefix + // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!_child || _child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
                   // $FlowFixMe[unsafe-addition]
@@ -1192,7 +1192,7 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
 
       var iterator = iteratorFn.call(iterableChildren);
       var step;
-      var ii = 0; // $FlowFixMe `iteratorFn` might return null according to typing.
+      var ii = 0; // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
 
       while (!(step = iterator.next()).done) {
         child = step.value;
@@ -1363,7 +1363,7 @@ function createContext(defaultValue) {
     var Consumer = {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context
-    }; // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    }; // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
 
     Object.defineProperties(Consumer, {
       Provider: {
@@ -1437,7 +1437,7 @@ function createContext(defaultValue) {
           }
         }
       }
-    }); // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    }); // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
 
     context.Consumer = Consumer;
   }
@@ -1543,7 +1543,7 @@ function lazy(ctor) {
   {
     // In production, this would just set it on the object.
     var defaultProps;
-    var propTypes; // $FlowFixMe
+    var propTypes; // $FlowFixMe[prop-missing]
 
     Object.defineProperties(lazyType, {
       defaultProps: {
@@ -1560,7 +1560,7 @@ function lazy(ctor) {
           );
 
           defaultProps = newDefaultProps; // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
 
           Object.defineProperty(lazyType, "defaultProps", {
             enumerable: true
@@ -1581,7 +1581,7 @@ function lazy(ctor) {
           );
 
           propTypes = newPropTypes; // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
 
           Object.defineProperty(lazyType, "propTypes", {
             enumerable: true
@@ -1779,7 +1779,7 @@ function cache(fn) {
 
     if (!dispatcher) {
       // If there is no dispatcher, then we treat this as not being cached.
-      // $FlowFixMe: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       return fn.apply(null, arguments);
     }
 
@@ -1844,7 +1844,7 @@ function cache(fn) {
     }
 
     try {
-      // $FlowFixMe: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       var result = fn.apply(null, arguments);
       var terminatedNode = cacheNode;
       terminatedNode.s = TERMINATED;
@@ -2064,7 +2064,7 @@ function disableLogs() {
         enumerable: true,
         value: disabledLog,
         writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
+      }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
 
       Object.defineProperties(console, {
         info: props,
@@ -2091,7 +2091,7 @@ function reenableLogs() {
         configurable: true,
         enumerable: true,
         writable: true
-      }; // $FlowFixMe Flow thinks console is immutable.
+      }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
 
       Object.defineProperties(console, {
         log: assign({}, props, {
@@ -2240,7 +2240,7 @@ function describeNativeComponentFrame(fn, construct) {
 
   var control;
   reentry = true;
-  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe It does accept undefined.
+  var previousPrepareStackTrace = Error.prepareStackTrace; // $FlowFixMe[incompatible-type] It does accept undefined.
 
   Error.prepareStackTrace = undefined;
   var previousDispatcher;
@@ -2259,7 +2259,7 @@ function describeNativeComponentFrame(fn, construct) {
       // Something should be setting the props in the constructor.
       var Fake = function () {
         throw Error();
-      }; // $FlowFixMe
+      }; // $FlowFixMe[prop-missing]
 
       Object.defineProperty(Fake.prototype, "props", {
         set: function () {
@@ -2465,7 +2465,7 @@ function setCurrentlyValidatingElement$2(element) {
 
 function checkPropTypes(typeSpecs, values, location, componentName, element) {
   {
-    // $FlowFixMe This is okay but Flow doesn't know it.
+    // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
     var has = Function.call.bind(hasOwnProperty);
 
     for (var typeSpecName in typeSpecs) {

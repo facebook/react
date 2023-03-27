@@ -91,7 +91,7 @@ var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function getOrCreateServerContext(globalName) {
   if (!ContextRegistry[globalName]) {
     ContextRegistry[globalName] = React.createServerContext(
-      globalName, // $FlowFixMe function signature doesn't reflect the symbol value
+      globalName, // $FlowFixMe[incompatible-call] function signature doesn't reflect the symbol value
       REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
     );
   }
@@ -193,17 +193,17 @@ function getRoot(response) {
 }
 
 function createPendingChunk(response) {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, null, response);
 }
 
 function createBlockedChunk(response) {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(BLOCKED, null, null, response);
 }
 
 function createErrorChunk(response, error) {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
 }
 
@@ -252,12 +252,12 @@ function triggerErrorOnChunk(chunk, error) {
 }
 
 function createResolvedModelChunk(response, value) {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, null, response);
 }
 
 function createResolvedModuleChunk(response, value) {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
 }
 
@@ -716,18 +716,22 @@ function close(response) {
 
 function resolveRow(response, chunk) {
   if (chunk[0] === "O") {
-    // $FlowFixMe unable to refine on array indices
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModel(response, chunk[1], chunk[2]);
   } else if (chunk[0] === "I") {
-    // $FlowFixMe unable to refine on array indices
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
   } else {
     {
       resolveErrorDev(
         response,
-        chunk[1], // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-        chunk[2].digest, // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-        chunk[2].message || "", // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        chunk[1], // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-use]
+        chunk[2].digest, // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
+        chunk[2].message || "", // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
         chunk[2].stack || ""
       );
     }
