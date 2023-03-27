@@ -565,6 +565,12 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
+  | {
+      kind: "RegExpLiteral";
+      pattern: string;
+      flags: string;
+      loc: SourceLocation;
+    }
 
   // store `object.property = value`
   | {

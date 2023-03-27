@@ -1810,6 +1810,15 @@ function lowerExpression(
         loc: exprLoc,
       };
     }
+    case "RegExpLiteral": {
+      let expr = exprPath as NodePath<t.RegExpLiteral>;
+      return {
+        kind: "RegExpLiteral",
+        pattern: expr.node.pattern,
+        flags: expr.node.flags,
+        loc: expr.node.loc ?? GeneratedSource,
+      };
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

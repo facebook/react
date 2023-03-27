@@ -444,6 +444,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `OptionalCall ${printInstructionValue(instrValue.call)}`;
       break;
     }
+    case "RegExpLiteral": {
+      value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

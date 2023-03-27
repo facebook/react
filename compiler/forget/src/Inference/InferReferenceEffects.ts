@@ -666,6 +666,12 @@ function inferBlock(
         effectKind = Effect.Read;
         break;
       }
+      case "RegExpLiteral": {
+        // RegExp instances are mutable objects
+        valueKind = ValueKind.Mutable;
+        effectKind = Effect.Mutate;
+        break;
+      }
       case "LoadGlobal":
       case "JSXText":
       case "Primitive": {

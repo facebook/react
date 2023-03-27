@@ -903,6 +903,10 @@ function codegenInstructionValue(
       value = t.identifier(instrValue.name);
       break;
     }
+    case "RegExpLiteral": {
+      value = t.regExpLiteral(instrValue.pattern, instrValue.flags);
+      break;
+    }
     case "DeclareLocal":
     case "Destructure":
     case "StoreLocal": {

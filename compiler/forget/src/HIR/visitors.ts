@@ -170,6 +170,7 @@ export function* eachInstructionValueOperand(
       yield* instrValue.subexprs;
       break;
     }
+    case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":
@@ -422,6 +423,7 @@ export function mapInstructionOperands(
       instrValue.subexprs = instrValue.subexprs.map(fn);
       break;
     }
+    case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":

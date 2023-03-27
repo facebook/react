@@ -509,6 +509,7 @@ function computeMemoizationInputs(
       };
     }
     case "OptionalCall":
+    case "RegExpLiteral":
     case "FunctionExpression":
     case "TaggedTemplateExpression":
     case "CallExpression":
