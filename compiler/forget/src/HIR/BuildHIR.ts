@@ -1352,9 +1352,10 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.JSXElement>;
       const opening = expr.get("openingElement");
       const tag = lowerJsxElementName(builder, opening.get("name"));
-      const children = expr
+      const children: Array<Place> = expr
         .get("children")
-        .map((child) => lowerJsxElement(builder, child));
+        .map((child) => lowerJsxElement(builder, child))
+        .filter(notNull);
       const props: Array<JsxAttribute> = [];
       for (const attribute of opening.get("attributes")) {
         if (attribute.isJSXSpreadAttribute()) {
@@ -1426,9 +1427,10 @@ function lowerExpression(
     }
     case "JSXFragment": {
       const expr = exprPath as NodePath<t.JSXFragment>;
-      const children = expr
+      const children: Array<Place> = expr
         .get("children")
-        .map((child) => lowerJsxElement(builder, child));
+        .map((child) => lowerJsxElement(builder, child))
+        .filter(notNull);
       return {
         kind: "JsxFragment",
         children,
@@ -1950,27 +1952,22 @@ function lowerJsxElement(
     | t.JSXElement
     | t.JSXFragment
   >
-): Place {
+): Place | null {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   if (exprPath.isJSXElement() || exprPath.isJSXFragment()) {
     return lowerExpressionToTemporary(builder, exprPath);
   } else if (exprPath.isJSXExpressionContainer()) {
     const expression = exprPath.get("expression");
-    if (!expression.isExpression()) {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerJsxElement) Handle ${expression.type} expressions`,
-        severity: ErrorSeverity.Todo,
-        nodePath: expression,
-      });
-      const place = lowerValueToTemporary(builder, {
-        kind: "UnsupportedNode",
-        node: exprNode,
-        loc: exprLoc,
-      });
-      return { ...place };
+    if (expression.isJSXEmptyExpression()) {
+      return null;
+    } else {
+      invariant(
+        expression.isExpression(),
+        `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`
+      );
+      return lowerExpressionToTemporary(builder, expression);
     }
-    return lowerExpressionToTemporary(builder, expression);
   } else if (exprPath.isJSXText()) {
     const place = lowerValueToTemporary(builder, {
       kind: "JSXText",
@@ -2464,4 +2461,8 @@ function gatherCapturedDeps(
   });
 
   return { identifiers: [...capturedIds], refs: [...capturedRefs] };
+}
+
+function notNull<T>(value: T | null): value is T {
+  return value !== null;
 }

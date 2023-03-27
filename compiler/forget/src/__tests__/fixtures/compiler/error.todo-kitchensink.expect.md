@@ -120,15 +120,6 @@ let moduleLocal = false;
   14 |
   15 |   <Button haha={1}></Button>;
 
-[ReactForget] TodoError: (BuildHIR::lowerJsxElement) Handle JSXEmptyExpression expressions
-  14 |
-  15 |   <Button haha={1}></Button>;
-> 16 |   <Button>{/** empty */}</Button>;
-     |            ^^^^^^^^^^^^
-  17 |
-  18 |   const j = function bar([quz, qux], ...args) {};
-  19 |
-
 [ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
   16 |   <Button>{/** empty */}</Button>;
   17 |
