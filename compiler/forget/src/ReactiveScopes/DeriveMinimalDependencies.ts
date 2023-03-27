@@ -4,6 +4,25 @@ import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
+ * We need to understand optional member expressions only when determining
+ * dependencies of a ReactiveScope (i.e. in {@link PropagateScopeDependencies}),
+ * hence why this type lives here (not in HIR.ts)
+ *
+ * {@link ReactiveScopePropertyDependency.optionalPath} is populated only if the Property
+ * represents an optional member expression, and it represents the property path
+ * loaded conditionally.
+ * e.g. the member expr a.b.c?.d.e?.f is represented as
+ * {
+ *   identifier: 'a';
+ *   path: ['b', 'c'],
+ *   optionalPath: ['d', 'e', 'f'].
+ * }
+ */
+export type ReactiveScopePropertyDependency = ReactiveScopeDependency & {
+  optionalPath: Array<string>;
+};
+
+/**
  * Finalizes a set of ReactiveScopeDependencies to produce a set of minimal unconditional
  * dependencies, preserving granular accesses when possible.
  *
@@ -42,34 +61,54 @@ export class ReactiveScopeDependencyTree {
     return rootNode;
   }
 
-  add(dep: ReactiveScopeDependency, inConditional: boolean): void {
-    const { path } = dep;
+  add(dep: ReactiveScopePropertyDependency, inConditional: boolean): void {
+    const { path, optionalPath } = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
     const accessType = inConditional
       ? PropertyAccessType.ConditionalAccess
       : PropertyAccessType.UnconditionalAccess;
-    const depType = inConditional
-      ? PropertyAccessType.ConditionalDependency
-      : PropertyAccessType.UnconditionalDependency;
 
     for (const property of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
-      let currChild = currNode.properties.get(property);
-      if (currChild == null) {
-        currChild = {
-          properties: new Map(),
-          accessType,
-        };
-        currNode.properties.set(property, currChild);
-      } else {
-        currChild.accessType = merge(currChild.accessType, accessType);
-      }
+      let currChild = getOrMakeProperty(currNode, property);
+      currChild.accessType = merge(currChild.accessType, accessType);
       currNode = currChild;
     }
 
-    // final property read should be marked as `dependency`
-    currNode.accessType = merge(currNode.accessType, depType);
+    if (optionalPath.length === 0) {
+      // If this property does not have a conditional path (i.e. a.b.c), the
+      // final property node should be marked as an conditional/unconditional
+      // `dependency` as based on control flow.
+      const depType = inConditional
+        ? PropertyAccessType.ConditionalDependency
+        : PropertyAccessType.UnconditionalDependency;
+
+      currNode.accessType = merge(currNode.accessType, depType);
+    } else {
+      // Technically, we only depend on whether unconditional path `dep.path`
+      // is nullish (not its actual value). As long as we preserve the nullthrows
+      // behavior of `dep.path`, we can keep it as an access (and not promote
+      // to a dependency).
+      // See test `reduce-reactive-cond-memberexpr-join` for example.
+
+      // If this property has an optional path (i.e. a?.b.c), all optional
+      // nodes should be marked accordingly.
+      for (const property of optionalPath) {
+        let currChild = getOrMakeProperty(currNode, property);
+        currChild.accessType = merge(
+          currChild.accessType,
+          PropertyAccessType.ConditionalAccess
+        );
+        currNode = currChild;
+      }
+
+      // The final node should be marked as a conditional dependency.
+      currNode.accessType = merge(
+        currNode.accessType,
+        PropertyAccessType.ConditionalDependency
+      );
+    }
   }
 
   deriveMinimalDependencies(): Set<ReactiveScopeDependency> {
@@ -176,6 +215,7 @@ enum PropertyAccessType {
   UnconditionalDependency = "UnconditionalDependency",
 }
 
+const MIN_ACCESS_TYPE = PropertyAccessType.ConditionalAccess;
 function isUnconditional(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.UnconditionalAccess ||
@@ -453,6 +493,21 @@ function printSubtree(
     );
   }
   return results;
+}
+
+function getOrMakeProperty(
+  node: DependencyNode,
+  property: string
+): DependencyNode {
+  let child = node.properties.get(property);
+  if (child == null) {
+    child = {
+      properties: new Map(),
+      accessType: MIN_ACCESS_TYPE,
+    };
+    node.properties.set(property, child);
+  }
+  return child;
 }
 
 function mapNonNull<T extends NonNullable<V>, V, U>(

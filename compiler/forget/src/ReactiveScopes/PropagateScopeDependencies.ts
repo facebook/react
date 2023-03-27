@@ -24,7 +24,10 @@ import {
   eachPatternOperand,
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import { ReactiveScopeDependencyTree } from "./DeriveMinimalDependencies";
+import {
+  ReactiveScopeDependencyTree,
+  ReactiveScopePropertyDependency,
+} from "./DeriveMinimalDependencies";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -68,7 +71,7 @@ class Context {
   //  - a ReactiveScope (A) containing a PropertyLoad may differ from the
   //    ReactiveScope (B) that uses the produced temporary.
   //  - codegen will inline these PropertyLoads back into scope (B)
-  #properties: Map<Identifier, ReactiveScopeDependency> = new Map();
+  #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
   // Reactive dependencies used unconditionally in the current conditional.
@@ -186,21 +189,53 @@ class Context {
     this.#temporaries.set(lvalue.identifier, value);
   }
 
-  declareProperty(lvalue: Place, object: Place, property: string): void {
+  #getProperty(
+    object: Place,
+    property: string,
+    isConditional: boolean
+  ): ReactiveScopePropertyDependency {
     const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
-    const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependency;
-    if (objectDependency === undefined) {
-      nextDependency = {
+    const resolvedDependency = this.#properties.get(resolvedObject.identifier);
+    let objectDependency: ReactiveScopePropertyDependency;
+    // (1) Create the base property dependency as either a LoadLocal (from a temporary)
+    // or a deep copy of an existing property dependency.
+    if (resolvedDependency === undefined) {
+      objectDependency = {
         identifier: resolvedObject.identifier,
-        path: [property],
+        path: [],
+        optionalPath: [],
       };
     } else {
-      nextDependency = {
-        identifier: objectDependency.identifier,
-        path: [...objectDependency.path, property],
+      objectDependency = {
+        identifier: resolvedDependency.identifier,
+        path: [...resolvedDependency.path],
+        optionalPath: [...resolvedDependency.optionalPath],
       };
     }
+
+    // (2) Determine whether property is an optional access
+    if (objectDependency.optionalPath.length > 0) {
+      // If the base property dependency represents a optional member expression,
+      // property is on the optionalPath (regardless of whether this PropertyLoad
+      // itself was conditional)
+      // e.g. for `a.b?.c.d`, `d` should be added to optionalPath
+      objectDependency.optionalPath.push(property);
+    } else if (isConditional) {
+      objectDependency.optionalPath.push(property);
+    } else {
+      objectDependency.path.push(property);
+    }
+
+    return objectDependency;
+  }
+
+  declareProperty(
+    lvalue: Place,
+    object: Place,
+    property: string,
+    isConditional: boolean
+  ): void {
+    const nextDependency = this.#getProperty(object, property, isConditional);
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
@@ -234,9 +269,10 @@ class Context {
     // if this operand is a temporary created for a property load, try to resolve it to
     // the expanded Place. Fall back to using the operand as-is.
 
-    let dependency: ReactiveScopeDependency = {
+    let dependency: ReactiveScopePropertyDependency = {
       identifier: resolved.identifier,
       path: [],
+      optionalPath: [],
     };
     if (resolved.identifier.name === null) {
       const propertyDependency = this.#properties.get(resolved.identifier);
@@ -247,25 +283,12 @@ class Context {
     this.visitDependency(dependency);
   }
 
-  visitProperty(object: Place, property: string): void {
-    const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
-    const objectDependency = this.#properties.get(resolvedObject.identifier);
-    let nextDependency: ReactiveScopeDependency;
-    if (objectDependency === undefined) {
-      nextDependency = {
-        identifier: resolvedObject.identifier,
-        path: [property],
-      };
-    } else {
-      nextDependency = {
-        identifier: objectDependency.identifier,
-        path: [...objectDependency.path, property],
-      };
-    }
+  visitProperty(object: Place, property: string, isConditional: boolean): void {
+    const nextDependency = this.#getProperty(object, property, isConditional);
     this.visitDependency(nextDependency);
   }
 
-  visitDependency(maybeDependency: ReactiveScopeDependency): void {
+  visitDependency(maybeDependency: ReactiveScopePropertyDependency): void {
     // Any value used after its originally defining scope has concluded must be added as an
     // output of its defining scope. Regardless of whether its a const or not,
     // some later code needs access to the value. If the current
@@ -493,9 +516,14 @@ function visitInstructionValue(
     }
   } else if (value.kind === "PropertyLoad") {
     if (lvalue !== null) {
-      context.declareProperty(lvalue, value.object, value.property);
+      context.declareProperty(
+        lvalue,
+        value.object,
+        value.property,
+        value.optional
+      );
     } else {
-      context.visitProperty(value.object, value.property);
+      context.visitProperty(value.object, value.property, value.optional);
     }
   } else if (value.kind === "StoreLocal") {
     context.visitOperand(value.value);
