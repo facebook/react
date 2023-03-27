@@ -48,7 +48,6 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
-export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const deferRenderPhaseUpdateToNextBatch = false;

@@ -230,8 +230,6 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-// Only enabled in RN, related to enableComponentStackLocations
-export const disableNativeComponentFrames = false;
 export const enableServerContext = true;
 
 // Internal only.

@@ -25,7 +25,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableUseRefAccessWarning,
-  disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
