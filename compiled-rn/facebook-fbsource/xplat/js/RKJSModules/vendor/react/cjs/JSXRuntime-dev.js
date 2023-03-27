@@ -393,7 +393,7 @@ function setCurrentlyValidatingElement$1(element) {
 
 function checkPropTypes(typeSpecs, values, location, componentName, element) {
   {
-    // $FlowFixMe This is okay but Flow doesn't know it.
+    // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
     var has = Function.call.bind(hasOwnProperty);
 
     for (var typeSpecName in typeSpecs) {
@@ -487,7 +487,7 @@ function isArray(a) {
  * problem. (Instead of a confusing exception thrown inside the implementation
  * of the `value` object).
  */
-// $FlowFixMe only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function typeName(value) {
   {
     // toStringTag is needed for namespaced types like Temporal.Instant
@@ -495,11 +495,11 @@ function typeName(value) {
     var type =
       (hasToStringTag && value[Symbol.toStringTag]) ||
       value.constructor.name ||
-      "Object"; // $FlowFixMe
+      "Object"; // $FlowFixMe[incompatible-return]
 
     return type;
   }
-} // $FlowFixMe only called in DEV, so void return is not possible.
+} // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 
 function willCoercionThrow(value) {
   {
