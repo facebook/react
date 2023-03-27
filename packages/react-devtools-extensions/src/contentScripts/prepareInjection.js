@@ -3,6 +3,12 @@
 import nullthrows from 'nullthrows';
 import {IS_FIREFOX} from '../utils';
 
+// We run scripts on the page via the service worker (backgroud.js) for
+// Manifest V3 extensions (Chrome & Edge).
+// We need to inject this code for Firefox only because it does not support ExecutionWorld.MAIN
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/scripting/ExecutionWorld
+// In this content script we have access to DOM, but don't have access to the webpage's window,
+// so we inject this inline script tag into the webpage (allowed in Manifest V2).
 function injectScriptSync(src) {
   let code = '';
   const request = new XMLHttpRequest();
@@ -17,13 +23,6 @@ function injectScriptSync(src) {
 
   // This script runs before the <head> element is created,
   // so we add the script to <html> instead.
-  nullthrows(document.documentElement).appendChild(script);
-  nullthrows(script.parentNode).removeChild(script);
-}
-
-function injectScriptAsync(src) {
-  const script = document.createElement('script');
-  script.src = src;
   nullthrows(document.documentElement).appendChild(script);
   nullthrows(script.parentNode).removeChild(script);
 }
@@ -90,9 +89,11 @@ window.addEventListener('message', function onMessage({data, source}) {
       }
       break;
     case 'react-devtools-inject-backend':
-      injectScriptAsync(
-        chrome.runtime.getURL('build/react_devtools_backend.js'),
-      );
+      if (IS_FIREFOX) {
+        injectScriptSync(
+          chrome.runtime.getURL('build/react_devtools_backend.js'),
+        );
+      }
       break;
   }
 });
@@ -108,25 +109,15 @@ window.addEventListener('pageshow', function ({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-// We create a "sync" script tag to page to inject the global hook on Manifest V2 extensions.
-// To comply with the new security policy in V3, we use chrome.scripting.registerContentScripts instead (see background.js).
-// However, the new API only works for Chrome v102+.
-// We insert a "async" script tag as a fallback for older versions.
-// It has known issues if JS on the page is faster than the extension.
-// Users will see a notice in components tab when that happens (see <Tree>).
-// For Firefox, V3 is not ready, so sync injection is still the best approach.
-const injectScript = IS_FIREFOX ? injectScriptSync : injectScriptAsync;
-
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
-// We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
-// to the webpage's window, so in order to access front end settings
-// and communicate with React, we must inject this code into the webpage
-switch (document.contentType) {
-  case 'text/html':
-  case 'application/xhtml+xml': {
-    injectScript(chrome.runtime.getURL('build/installHook.js'));
-    break;
+if (IS_FIREFOX) {
+  switch (document.contentType) {
+    case 'text/html':
+    case 'application/xhtml+xml': {
+      injectScriptSync(chrome.runtime.getURL('build/installHook.js'));
+      break;
+    }
   }
 }
 
