@@ -2446,6 +2446,106 @@ function lowerAssignment(
       }
       return { kind: "LoadLocal", place: temporary, loc: value.loc };
     }
+    case "AssignmentPattern": {
+      const lvalue = lvaluePath as NodePath<t.AssignmentPattern>;
+      const loc = lvalue.node.loc ?? GeneratedSource;
+      const temp = buildTemporaryPlace(builder, loc);
+
+      const testBlock = builder.reserve("value");
+      const continuationBlock = builder.reserve(builder.currentBlockKind());
+
+      const consequent = builder.enter("value", () => {
+        const defaultValue = lowerExpressionToTemporary(
+          builder,
+          lvalue.get("right")
+        );
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: buildTemporaryPlace(builder, loc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...temp } },
+            value: { ...defaultValue },
+            loc,
+          },
+          loc,
+        });
+        return {
+          kind: "goto",
+          variant: GotoVariant.Break,
+          block: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc,
+        };
+      });
+
+      const alternate = builder.enter("value", () => {
+        builder.push({
+          id: makeInstructionId(0),
+          lvalue: buildTemporaryPlace(builder, loc),
+          value: {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...temp } },
+            value: { ...value },
+            loc,
+          },
+          loc,
+        });
+        return {
+          kind: "goto",
+          variant: GotoVariant.Break,
+          block: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc,
+        };
+      });
+      builder.terminateWithContinuation(
+        {
+          kind: "ternary",
+          test: testBlock.id,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc,
+        },
+        testBlock
+      );
+      const undef = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { ...undef },
+        value: {
+          kind: "Primitive",
+          value: undefined,
+          loc,
+        },
+        loc,
+      });
+      const test = buildTemporaryPlace(builder, loc);
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: { ...test },
+        value: {
+          kind: "BinaryExpression",
+          left: { ...value },
+          operator: "===",
+          right: { ...undef },
+          loc,
+        },
+        loc,
+      });
+      builder.terminateWithContinuation(
+        {
+          kind: "branch",
+          test: { ...test },
+          consequent,
+          alternate,
+          id: makeInstructionId(0),
+        },
+        continuationBlock
+      );
+
+      return lowerAssignment(builder, loc, kind, lvalue.get("left"), temp);
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,

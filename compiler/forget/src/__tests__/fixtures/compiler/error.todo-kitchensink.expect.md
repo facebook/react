@@ -79,13 +79,6 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
-> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-    |                              ^^^^^^^
-  2 |   let i = 0;
-  3 |   var x = [];
-  4 |
-
 [ReactForget] TodoError: (BuildHIR::lower) Handle AssignmentPattern params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                                         ^^^^^^^
@@ -126,15 +119,6 @@ let moduleLocal = false;
   13 |   const { z, aa = "aa" } = useCustom();
   14 |
   15 |   <Button haha={1}></Button>;
-
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle AssignmentPattern assignments
-  11 |
-  12 |   const g = { b() {}, c: () => {} };
-> 13 |   const { z, aa = "aa" } = useCustom();
-     |              ^^^^^^^^^
-  14 |
-  15 |   <Button haha={1}></Button>;
-  16 |   <Button>{/** empty */}</Button>;
 
 [ReactForget] TodoError: (BuildHIR::lowerJsxElement) Handle JSXEmptyExpression expressions
   14 |
