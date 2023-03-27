@@ -207,7 +207,7 @@ function markWorkCompleted(
     console.error('Could not find matching measure for type "%s".', type);
   }
 
-  // $FlowFixMe This property should not be writable outside of this function.
+  // $FlowFixMe[cannot-write] This property should not be writable outside of this function.
   measure.duration = stopTime - startTime;
 }
 
@@ -370,7 +370,7 @@ function processScreenshot(
   fetch(snapshot.imageSource)
     .then(response => response.blob())
     .then(blob => {
-      // $FlowFixMe createImageBitmap
+      // $FlowFixMe[cannot-resolve-name] createImageBitmap
       createImageBitmap(blob).then(bitmap => {
         snapshot.height = bitmap.height;
         snapshot.width = bitmap.width;

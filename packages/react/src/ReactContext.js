@@ -54,7 +54,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
     };
-    // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(Consumer, {
       Provider: {
         get() {
@@ -123,7 +123,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         },
       },
     });
-    // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
     context.Consumer = Consumer;
   } else {
     context.Consumer = context;

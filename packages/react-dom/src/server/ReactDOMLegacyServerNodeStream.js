@@ -43,7 +43,6 @@ class ReactMarkupReadableStream extends Readable {
   // $FlowFixMe[missing-local-annot]
   _destroy(err, callback) {
     abort(this.request);
-    // $FlowFixMe: The type definition for the callback should allow undefined and null.
     callback(err);
   }
 

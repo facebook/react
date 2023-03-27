@@ -641,7 +641,7 @@ function dispatchBeforeDetachedBlur(
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
     // can propagate through the React internal tree.
-    // $FlowFixMe: internal field
+    // $FlowFixMe[prop-missing]: internal field
     event._detachedInterceptFiber = internalInstanceHandle;
     target.dispatchEvent(event);
   }
@@ -1324,7 +1324,7 @@ export function didNotHydrateInstanceWithinSuspenseInstance(
   instance: HydratableInstance,
 ) {
   if (__DEV__) {
-    // $FlowFixMe: Only Element or Document can be parent nodes.
+    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
     const parentNode: Element | Document | null = parentInstance.parentNode;
     if (parentNode !== null) {
       if (instance.nodeType === ELEMENT_NODE) {
@@ -1391,7 +1391,7 @@ export function didNotFindHydratableInstanceWithinSuspenseInstance(
   props: Props,
 ) {
   if (__DEV__) {
-    // $FlowFixMe: Only Element or Document can be parent nodes.
+    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
     const parentNode: Element | Document | null = parentInstance.parentNode;
     if (parentNode !== null)
       warnForInsertedHydratedElement(parentNode, type, props);
@@ -1403,7 +1403,7 @@ export function didNotFindHydratableTextInstanceWithinSuspenseInstance(
   text: string,
 ) {
   if (__DEV__) {
-    // $FlowFixMe: Only Element or Document can be parent nodes.
+    // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
     const parentNode: Element | Document | null = parentInstance.parentNode;
     if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
   }

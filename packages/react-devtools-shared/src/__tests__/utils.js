@@ -46,7 +46,6 @@ export async function actAsync(
   const {act: actTestRenderer} = require('react-test-renderer');
   const {act: actDOM} = require('react-dom/test-utils');
 
-  // $FlowFixMe Flow doesn't know about "await act()" yet
   await actDOM(async () => {
     await actTestRenderer(async () => {
       await cb();
@@ -55,7 +54,6 @@ export async function actAsync(
 
   if (recursivelyFlush) {
     while (jest.getTimerCount() > 0) {
-      // $FlowFixMe Flow doesn't know about "await act()" yet
       await actDOM(async () => {
         await actTestRenderer(async () => {
           jest.runAllTimers();
@@ -63,7 +61,6 @@ export async function actAsync(
       });
     }
   } else {
-    // $FlowFixMe Flow doesn't know about "await act()" yet
     await actDOM(async () => {
       await actTestRenderer(async () => {
         jest.runOnlyPendingTimers();

@@ -86,7 +86,7 @@ if (__DEV__) {
       );
     }
 
-    // $FlowFixMe unable to narrow type from mixed to writable object
+    // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
@@ -1022,7 +1022,7 @@ function createChildReconciler(
       // See https://github.com/facebook/react/issues/12995
       if (
         typeof Symbol === 'function' &&
-        // $FlowFixMe Flow doesn't know about toStringTag
+        // $FlowFixMe[prop-missing] Flow doesn't know about toStringTag
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
         if (!didWarnAboutGenerators) {

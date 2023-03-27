@@ -72,7 +72,7 @@ export function copyWithDelete(
       delete updated[key];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[key] = copyWithDelete(obj[key], path, index + 1);
   }
   return updated;
@@ -90,7 +90,7 @@ export function copyWithRename(
   const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === oldPath.length) {
     const newKey = newPath[index];
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[newKey] = updated[oldKey];
     if (isArray(updated)) {
       updated.splice(((oldKey: any): number), 1);
@@ -98,7 +98,7 @@ export function copyWithRename(
       delete updated[oldKey];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[oldKey] = copyWithRename(obj[oldKey], oldPath, newPath, index + 1);
   }
   return updated;
@@ -115,7 +115,7 @@ export function copyWithSet(
   }
   const key = path[index];
   const updated = isArray(obj) ? obj.slice() : {...obj};
-  // $FlowFixMe number or string is fine here
+  // $FlowFixMe[incompatible-use] number or string is fine here
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
 }

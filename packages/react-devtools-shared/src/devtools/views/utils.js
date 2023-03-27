@@ -133,7 +133,7 @@ export function serializeDataForCopy(props: Object): string {
 }
 
 export function serializeHooksForCopy(hooks: HooksTree | null): string {
-  // $FlowFixMe "HooksTree is not an object"
+  // $FlowFixMe[not-an-object] "HooksTree is not an object"
   const cloned = Object.assign(([]: Array<any>), hooks);
 
   const queue = [...cloned];

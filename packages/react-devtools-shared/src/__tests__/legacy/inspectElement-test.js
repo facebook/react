@@ -873,7 +873,6 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
-    // $FlowFixMe
     const bigInt = BigInt(123); // eslint-disable-line no-undef
 
     act(() =>

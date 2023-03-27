@@ -290,7 +290,7 @@ export function updateThemeVariables(
   // but it makes a significant UI improvement in dark mode.
   // https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color
   documentElements.forEach(documentElement => {
-    // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
+    // $FlowFixMe[prop-missing] scrollbarColor is missing in CSSStyleDeclaration
     documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
   });
 }

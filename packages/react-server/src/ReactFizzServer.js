@@ -1292,7 +1292,6 @@ function validateIterable(iterable, iteratorFn: Function): void {
     // See https://github.com/facebook/react/issues/12995
     if (
       typeof Symbol === 'function' &&
-      // $FlowFixMe Flow doesn't know about toStringTag
       iterable[Symbol.toStringTag] === 'Generator'
     ) {
       if (!didWarnAboutGenerators) {

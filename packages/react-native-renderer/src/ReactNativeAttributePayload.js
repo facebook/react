@@ -186,9 +186,7 @@ function diffNestedProperty(
   if (isArray(prevProp)) {
     return diffProperties(
       updatePayload,
-      // $FlowFixMe - We know that this is always an object when the input is.
       flattenStyle(prevProp),
-      // $FlowFixMe - We know that this isn't an array because of above flow.
       nextProp,
       validAttributes,
     );
@@ -197,7 +195,6 @@ function diffNestedProperty(
   return diffProperties(
     updatePayload,
     prevProp,
-    // $FlowFixMe - We know that this is always an object when the input is.
     flattenStyle(nextProp),
     validAttributes,
   );

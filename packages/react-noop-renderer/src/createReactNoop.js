@@ -830,7 +830,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (child.length === 1) {
         return childToJSX(child[0], null);
       }
-      // $FlowFixMe
       const children = child.map(c => childToJSX(c, null));
       if (children.every(c => typeof c === 'string' || typeof c === 'number')) {
         return children.join('');
@@ -1269,9 +1268,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (typeof child.text === 'string') {
             log(indent + '- ' + child.text);
           } else {
-            // $FlowFixMe - The child should've been refined now.
             log(indent + '- ' + child.type + '#' + child.id);
-            // $FlowFixMe - The child should've been refined now.
             logHostInstances(child.children, depth + 1);
           }
         }

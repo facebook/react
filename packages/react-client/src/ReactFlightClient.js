@@ -189,12 +189,12 @@ export function getRoot<T>(response: Response): Thenable<T> {
 }
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, null, response);
 }
 
 function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(BLOCKED, null, null, response);
 }
 
@@ -202,7 +202,7 @@ function createErrorChunk<T>(
   response: Response,
   error: ErrorWithDigest,
 ): ErroredChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
 }
 
@@ -253,7 +253,7 @@ function createResolvedModelChunk<T>(
   response: Response,
   value: UninitializedModel,
 ): ResolvedModelChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, null, response);
 }
 
@@ -261,7 +261,7 @@ function createResolvedModuleChunk<T>(
   response: Response,
   value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
 }
 

@@ -83,7 +83,7 @@ export function describeNativeComponentFrame(
 
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe It does accept undefined.
+  // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
   let previousDispatcher;
   if (__DEV__) {
@@ -100,7 +100,7 @@ export function describeNativeComponentFrame(
       const Fake = function () {
         throw Error();
       };
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       Object.defineProperty(Fake.prototype, 'props', {
         set: function () {
           // We use a throwing setter instead of frozen or non-writable props

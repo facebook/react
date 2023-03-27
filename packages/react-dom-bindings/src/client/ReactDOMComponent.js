@@ -1182,7 +1182,6 @@ function diffHydratedCustomComponent(
         }
         continue;
       case 'style':
-        // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
         diffHydratedStyles(domElement, nextProp);
         continue;
@@ -1195,7 +1194,6 @@ function diffHydratedCustomComponent(
       case 'outerText':
       case 'outerHTML':
         if (enableCustomElementPropertySupport) {
-          // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey.toLowerCase());
           if (__DEV__) {
             console.error(
@@ -1212,10 +1210,8 @@ function diffHydratedCustomComponent(
           ownNamespaceDev = getIntrinsicNamespace(tag);
         }
         if (ownNamespaceDev === HTML_NAMESPACE) {
-          // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey.toLowerCase());
         } else {
-          // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propKey);
         }
         const serverValue = getValueForAttributeOnCustomComponent(
@@ -1280,7 +1276,6 @@ function diffHydratedGenericElement(
         }
         continue;
       case 'style':
-        // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
         diffHydratedStyles(domElement, nextProp);
         continue;
@@ -1299,7 +1294,6 @@ function diffHydratedGenericElement(
         let isMismatchDueToBadCasing = false;
         let serverValue;
         if (propertyInfo !== null) {
-          // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
           serverValue = getValueForProperty(
             domElement,
@@ -1313,7 +1307,6 @@ function diffHydratedGenericElement(
             ownNamespaceDev = getIntrinsicNamespace(tag);
           }
           if (ownNamespaceDev === HTML_NAMESPACE) {
-            // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {
             const standardName = getPossibleStandardName(propKey);
@@ -1324,10 +1317,8 @@ function diffHydratedGenericElement(
               // However, we already warn about bad casing elsewhere.
               // So we'll skip the misleading extra mismatch warning in this case.
               isMismatchDueToBadCasing = true;
-              // $FlowFixMe - Should be inferred as not undefined.
               extraAttributeNames.delete(standardName);
             }
-            // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey);
           }
           serverValue = getValueForAttribute(domElement, propKey, nextProp);
@@ -1484,11 +1475,9 @@ export function diffHydratedProperties(
       );
     }
     if (
-      // $FlowFixMe - Should be inferred as not undefined.
       extraAttributeNames.size > 0 &&
       rawProps.suppressHydrationWarning !== true
     ) {
-      // $FlowFixMe - Should be inferred as not undefined.
       warnForExtraAttributes(extraAttributeNames);
     }
   }
