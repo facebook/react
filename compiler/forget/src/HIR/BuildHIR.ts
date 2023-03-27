@@ -1795,16 +1795,14 @@ function lowerReorderableExpression(
   builder: HIRBuilder,
   expr: NodePath<t.Expression>
 ): Place {
-  if (isReorderableExpression(builder, expr)) {
-    return lowerExpressionToTemporary(builder, expr);
-  } else {
+  if (!isReorderableExpression(builder, expr)) {
     builder.errors.push({
       reason: `(BuildHIR::node.lowerReorderableExpression) Expression type '${expr.type}' cannot be safely reordered`,
       severity: ErrorSeverity.Todo,
       nodePath: expr,
     });
-    return buildTemporaryPlace(builder, expr.node.loc ?? GeneratedSource);
   }
+  return lowerExpressionToTemporary(builder, expr);
 }
 
 function isReorderableExpression(
