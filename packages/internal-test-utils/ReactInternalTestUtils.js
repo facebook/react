@@ -29,7 +29,7 @@ async function waitForMicrotasks() {
   });
 }
 
-export async function waitFor(expectedLog) {
+export async function waitFor(expectedLog, options) {
   assertYieldsWereCleared(SchedulerMock);
 
   // Create the error object before doing any async work, to get a better
@@ -37,16 +37,15 @@ export async function waitFor(expectedLog) {
   const error = new Error();
   Error.captureStackTrace(error, waitFor);
 
+  const stopAfter = expectedLog.length;
   const actualLog = [];
   do {
     // Wait until end of current task/microtask.
     await waitForMicrotasks();
     if (SchedulerMock.unstable_hasPendingWork()) {
-      SchedulerMock.unstable_flushNumberOfYields(
-        expectedLog.length - actualLog.length,
-      );
+      SchedulerMock.unstable_flushNumberOfYields(stopAfter - actualLog.length);
       actualLog.push(...SchedulerMock.unstable_clearLog());
-      if (expectedLog.length > actualLog.length) {
+      if (stopAfter > actualLog.length) {
         // Continue flushing until we've logged the expected number of items.
       } else {
         // Once we've reached the expected sequence, wait one more microtask to
@@ -60,6 +59,12 @@ export async function waitFor(expectedLog) {
       break;
     }
   } while (true);
+
+  if (options && options.additionalLogsAfterAttemptingToYield) {
+    expectedLog = expectedLog.concat(
+      options.additionalLogsAfterAttemptingToYield,
+    );
+  }
 
   if (equals(actualLog, expectedLog)) {
     return;
@@ -149,6 +154,34 @@ ${diff(expectedError, x)}
       throw error;
     }
   } while (true);
+}
+
+// This is prefixed with `unstable_` because you should almost always try to
+// avoid using it in tests. It's really only for testing a particular
+// implementation detail (update starvation prevention).
+export async function unstable_waitForExpired(expectedLog): mixed {
+  assertYieldsWereCleared(SchedulerMock);
+
+  // Create the error object before doing any async work, to get a better
+  // stack trace.
+  const error = new Error();
+  Error.captureStackTrace(error, unstable_waitForExpired);
+
+  // Wait until end of current task/microtask.
+  await waitForMicrotasks();
+  SchedulerMock.unstable_flushExpired();
+
+  const actualLog = SchedulerMock.unstable_clearLog();
+  if (equals(actualLog, expectedLog)) {
+    return;
+  }
+
+  error.message = `
+Expected sequence of events did not occur.
+
+${diff(expectedLog, actualLog)}
+`;
+  throw error;
 }
 
 // TODO: This name is a bit misleading currently because it will stop as soon as
