@@ -12,10 +12,8 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
   const g = { b() {}, c: () => {} };
   const { z, aa = "aa" } = useCustom();
 
-  <Button xlink:href="localhost:3000"></Button>;
   <Button haha={1}></Button>;
   <Button>{/** empty */}</Button>;
-  <DesignSystem.Button />;
 
   const j = function bar([quz, qux], ...args) {};
 

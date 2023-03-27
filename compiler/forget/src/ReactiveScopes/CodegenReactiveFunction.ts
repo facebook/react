@@ -658,9 +658,19 @@ function codegenInstructionValue(
       for (const attribute of instrValue.props) {
         switch (attribute.kind) {
           case "JsxAttribute": {
+            let propName: t.JSXIdentifier | t.JSXNamespacedName;
+            if (attribute.name.indexOf(":") === -1) {
+              propName = t.jsxIdentifier(attribute.name);
+            } else {
+              const [namespace, name] = attribute.name.split(":", 2);
+              propName = t.jsxNamespacedName(
+                t.jsxIdentifier(namespace),
+                t.jsxIdentifier(name)
+              );
+            }
             attributes.push(
               t.jsxAttribute(
-                t.jsxIdentifier(attribute.name),
+                propName,
                 t.jsxExpressionContainer(codegenPlace(cx, attribute.place))
               )
             );
@@ -681,9 +691,17 @@ function codegenInstructionValue(
         }
       }
       let tagValue = codegenPlace(cx, instrValue.tag);
-      let tag: t.JSXIdentifier | t.JSXMemberExpression;
+      let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
       if (tagValue.type === "Identifier") {
-        tag = t.jsxIdentifier(tagValue.name);
+        if (tagValue.name.indexOf(":") >= 0) {
+          const [namespace, name] = tagValue.name.split(":", 2);
+          tag = t.jsxNamespacedName(
+            t.jsxIdentifier(namespace),
+            t.jsxIdentifier(name)
+          );
+        } else {
+          tag = t.jsxIdentifier(tagValue.name);
+        }
       } else if (tagValue.type === "MemberExpression") {
         tag = convertMemberExpressionToJsx(tagValue);
       } else {

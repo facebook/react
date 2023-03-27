@@ -1518,14 +1518,22 @@ function lowerExpression(
           });
           continue;
         }
-        const name = attribute.get("name");
-        if (!name.isJSXIdentifier()) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${name.type} attribute names in JSXElement`,
-            severity: ErrorSeverity.Todo,
-            nodePath: name,
-          });
-          continue;
+        const namePath = attribute.get("name");
+        let propName;
+        if (namePath.isJSXIdentifier()) {
+          propName = namePath.node.name;
+          if (propName.indexOf(":") !== -1) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name '${name}'`,
+              severity: ErrorSeverity.Todo,
+              nodePath: namePath,
+            });
+          }
+        } else {
+          invariant(namePath.isJSXNamespacedName(), "Refinement");
+          const namespace = namePath.node.namespace.name;
+          const name = namePath.node.name.name;
+          propName = `${namespace}:${name}`;
         }
         const valueExpr = attribute.get("value");
         let value;
@@ -1551,8 +1559,7 @@ function lowerExpression(
           }
           value = lowerExpressionToTemporary(builder, expression);
         }
-        const prop: string = name.node.name;
-        props.push({ kind: "JsxAttribute", name: prop, place: value });
+        props.push({ kind: "JsxAttribute", name: propName, place: value });
       }
       return {
         kind: "JsxExpression",
@@ -1922,6 +1929,13 @@ function lowerJsxElementName(
     if (tag.match(/^[A-Z]/)) {
       return lowerIdentifier(builder, exprPath);
     } else {
+      if (tag.indexOf(":") !== -1) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerJsxElementName) JSXIdentifier to have no colons, got '${tag}'`,
+          severity: ErrorSeverity.InvalidInput,
+          nodePath: exprPath,
+        });
+      }
       const place: Place = buildTemporaryPlace(builder, exprLoc);
       builder.push({
         id: makeInstructionId(0),
@@ -1937,6 +1951,29 @@ function lowerJsxElementName(
     }
   } else if (exprPath.isJSXMemberExpression()) {
     return lowerJsxMemberExpression(builder, exprPath);
+  } else if (exprPath.isJSXNamespacedName()) {
+    const namespace = exprPath.node.namespace.name;
+    const name = exprPath.node.name.name;
+    const tag = `${namespace}:${name}`;
+    if (namespace.indexOf(":") !== -1 || name.indexOf(":") !== -1) {
+      builder.errors.push({
+        reason: `(BuildHIR::lowerJsxElementName) Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'`,
+        severity: ErrorSeverity.InvalidInput,
+        nodePath: exprPath,
+      });
+    }
+    const place: Place = buildTemporaryPlace(builder, exprLoc);
+    builder.push({
+      id: makeInstructionId(0),
+      value: {
+        kind: "Primitive",
+        value: tag,
+        loc: exprLoc,
+      },
+      loc: exprLoc,
+      lvalue: { ...place },
+    });
+    return place;
   } else {
     builder.errors.push({
       reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
