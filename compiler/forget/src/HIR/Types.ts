@@ -9,7 +9,7 @@ import { Hook } from "./Hooks";
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
-export type Type = BuiltInType | HookType | PhiType | PolyType | TypeVar;
+export type Type = BuiltInType | HookType | PhiType | TypeVar | PolyType;
 export type PrimitiveType = { kind: "Primitive" };
 export type HookType = {
   kind: "Hook";

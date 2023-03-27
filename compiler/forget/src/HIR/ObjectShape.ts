@@ -6,7 +6,7 @@
  */
 import invariant from "invariant";
 import { Effect } from "./HIR";
-import { BuiltInType, FunctionType, PrimitiveType } from "./Types";
+import { BuiltInType, FunctionType, PolyType, PrimitiveType } from "./Types";
 
 const PRIMITIVE_TYPE: PrimitiveType = {
   kind: "Primitive",
@@ -58,7 +58,7 @@ function addShape(
 export type FunctionSignature = {
   positionalParams: Array<Effect>;
   restParam: Effect | null;
-  returnType: BuiltInType | null;
+  returnType: BuiltInType | PolyType;
   calleeEffect: Effect;
 };
 
@@ -85,7 +85,7 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Read],
       restParam: null,
-      returnType: null,
+      returnType: { kind: "Poly" },
       calleeEffect: Effect.Read,
     }),
   ],
