@@ -9,7 +9,13 @@ import { Hook } from "./Hooks";
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
-export type Type = BuiltInType | HookType | PhiType | TypeVar | PolyType;
+export type Type =
+  | BuiltInType
+  | HookType
+  | PhiType
+  | TypeVar
+  | PolyType
+  | PropType;
 export type PrimitiveType = { kind: "Primitive" };
 export type HookType = {
   kind: "Hook";
@@ -30,6 +36,7 @@ export type HookType = {
 export type FunctionType = {
   kind: "Function";
   shapeId: string | null;
+  return: Type;
 };
 
 export type ObjectType = {
@@ -48,7 +55,11 @@ export type PhiType = {
   kind: "Phi";
   operands: Array<Type>;
 };
-
+export type PropType = {
+  kind: "Property";
+  object: Type;
+  propertyName: string;
+};
 /**
  * Simulated opaque type for TypeId to prevent using normal numbers as ids
  * accidentally.
@@ -109,7 +120,10 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, "Function");
+  if (tA.kind !== "Function" || tB.kind !== "Function") {
+    return false;
+  }
+  return typeEquals(tA.return, tB.return);
 }
 
 function hookTypeEquals(tA: Type, tB: Type): boolean {

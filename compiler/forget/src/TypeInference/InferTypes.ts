@@ -63,25 +63,12 @@ function apply(func: HIRFunction, unifier: Unifier): void {
   }
 }
 
-type FunctionCallType = {
-  kind: "FunctionCall";
-  returnType: TypeVar;
-};
-
-type PolyType =
-  | {
-      kind: "Property";
-      object: Type;
-      propertyName: string;
-    }
-  | FunctionCallType;
-
 type TypeEquation = {
   left: Type;
-  right: Type | PolyType;
+  right: Type;
 };
 
-function equation(left: Type, right: Type | PolyType): TypeEquation {
+function equation(left: Type, right: Type): TypeEquation {
   return {
     left,
     right,
@@ -165,7 +152,7 @@ function* generateInstructionTypes(
       if (hook !== null) {
         type = { kind: "Hook", definition: hook };
       } else {
-        type = { kind: "Function", shapeId: null };
+        type = { kind: "Function", shapeId: null, return: left };
       }
       yield equation(value.callee.identifier.type, type);
       break;
@@ -193,9 +180,11 @@ function* generateInstructionTypes(
     case "MethodCall": {
       const returnType = makeType();
       yield equation(value.property.identifier.type, {
-        kind: "FunctionCall",
-        returnType,
+        kind: "Function",
+        return: returnType,
+        shapeId: null,
       });
+
       yield equation(left, returnType);
     }
   }
@@ -210,18 +199,7 @@ class Unifier {
     this.env = env;
   }
 
-  unifyFunctionCall(tA: Type, tB: FunctionCallType): void {
-    const propertyType = this.get(tA);
-    if (propertyType.kind === "Function") {
-      const fn = this.env.getFunctionSignature(propertyType);
-      const returnType = fn?.returnType ?? null;
-      if (returnType !== null) {
-        this.unify(tB.returnType, returnType);
-      }
-    }
-  }
-
-  unify(tA: Type, tB: Type | PolyType): void {
+  unify(tA: Type, tB: Type): void {
     if (tB.kind === "Property") {
       const objectType = this.get(tB.object);
       if (objectType.kind === "Object" || objectType.kind === "Function") {
@@ -236,9 +214,6 @@ class Unifier {
       // We do not error if tB is not a known object or function (even if it
       // is a primitive), since JS implicit conversion to objects
       return;
-    } else if (tB.kind === "FunctionCall") {
-      this.unifyFunctionCall(tA, tB);
-      return;
     }
 
     if (typeEquals(tA, tB)) {
@@ -252,6 +227,11 @@ class Unifier {
 
     if (tB.kind === "Type") {
       this.bindVariableTo(tB, tA);
+      return;
+    }
+
+    if (tB.kind === "Function" && tA.kind === "Function") {
+      this.unify(tA.return, tB.return);
       return;
     }
   }
@@ -296,6 +276,10 @@ class Unifier {
 
     if (type.kind === "Phi") {
       return type.operands.some((o) => this.occursCheck(v, o));
+    }
+
+    if (type.kind === "Function") {
+      return this.occursCheck(v, type.return);
     }
 
     return false;

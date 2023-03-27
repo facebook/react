@@ -28,6 +28,7 @@ function addFunction(
   addShape(registry, shapeId, properties, fn);
   return {
     kind: "Function",
+    return: fn.returnType,
     shapeId,
   };
 }
@@ -63,7 +64,10 @@ export type FunctionSignature = {
 };
 
 export type ObjectShape = {
+  // TODO(gsn): When can the key be null here?
   properties: Map<string, BuiltInType | null>;
+  // TODO(gsn): Why do Objects have a `functionType`? Oh, this the constructor.
+  // Let's rename to constructor?
   functionType: FunctionSignature | null;
 };
 
