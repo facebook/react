@@ -58,7 +58,7 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const skipUnmountedBoundaries = false;
+export const skipUnmountedBoundaries = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 
 export const createRootStrictEffectsByDefault = false;
