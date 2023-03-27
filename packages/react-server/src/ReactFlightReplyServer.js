@@ -141,7 +141,7 @@ export function getRoot<T>(response: Response): Thenable<T> {
 }
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(PENDING, null, null, response);
 }
 
@@ -192,7 +192,7 @@ function createResolvedModelChunk<T>(
   response: Response,
   value: string,
 ): ResolvedModelChunk<T> {
-  // $FlowFixMe Flow doesn't support functions as constructors
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODEL, value, null, response);
 }
 

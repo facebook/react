@@ -288,7 +288,7 @@ export function useFocusWithin<T>(
         // Handle focus visible
         setFocusVisibleListeners(
           focusVisibleHandles,
-          // $FlowFixMe focusWithinTarget is not null here
+          // $FlowFixMe[incompatible-call] focusWithinTarget is not null here
           focusWithinTarget,
           isFocusVisible => {
             if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
@@ -301,7 +301,7 @@ export function useFocusWithin<T>(
         );
 
         // Handle focus
-        // $FlowFixMe focusWithinTarget is not null here
+        // $FlowFixMe[incompatible-call] focusWithinTarget is not null here
         focusHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;
@@ -328,7 +328,7 @@ export function useFocusWithin<T>(
         });
 
         // Handle blur
-        // $FlowFixMe focusWithinTarget is not null here
+        // $FlowFixMe[incompatible-call] focusWithinTarget is not null here
         blurHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;
@@ -354,7 +354,7 @@ export function useFocusWithin<T>(
 
         // Handle before blur. This is a special
         // React provided event.
-        // $FlowFixMe focusWithinTarget is not null here
+        // $FlowFixMe[incompatible-call] focusWithinTarget is not null here
         beforeBlurHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;

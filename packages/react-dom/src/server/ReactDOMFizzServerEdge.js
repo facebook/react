@@ -65,7 +65,7 @@ function renderToReadableStream(
             abort(request);
           },
         },
-        // $FlowFixMe size() methods are not allowed on byte streams.
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
         {highWaterMark: 0},
       ): any);
       // TODO: Move to sub-classing ReadableStream.

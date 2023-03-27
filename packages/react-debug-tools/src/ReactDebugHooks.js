@@ -123,7 +123,7 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-      ? // $FlowFixMe: Flow doesn't like mixed types
+      ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
         initialState()
       : initialState;
   hookLog.push({primitive: 'State', stackError: new Error(), value: state});
@@ -674,7 +674,7 @@ function handleRenderFunctionError(error: any): void {
   // that the error is caused by user's code in renderFunction.
   // In this case, we should wrap the original error inside a custom error
   // so that devtools can give a clear message about it.
-  // $FlowFixMe: Flow doesn't know about 2nd argument of Error constructor
+  // $FlowFixMe[extra-arg]: Flow doesn't know about 2nd argument of Error constructor
   const wrapperError = new Error('Error rendering inspected component', {
     cause: error,
   });
@@ -682,7 +682,7 @@ function handleRenderFunctionError(error: any): void {
   // TODO: refactor this if we ever combine the devtools and debug tools packages
   wrapperError.name = 'ReactDebugToolsRenderError';
   // this stage-4 proposal is not supported by all environments yet.
-  // $FlowFixMe Flow doesn't have this type yet.
+  // $FlowFixMe[prop-missing] Flow doesn't have this type yet.
   wrapperError.cause = error;
   throw wrapperError;
 }

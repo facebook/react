@@ -21,7 +21,7 @@ export function getOrCreateServerContext(
   if (!ContextRegistry[globalName]) {
     ContextRegistry[globalName] = createServerContext(
       globalName,
-      // $FlowFixMe function signature doesn't reflect the symbol value
+      // $FlowFixMe[incompatible-call] function signature doesn't reflect the symbol value
       REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
     );
   }

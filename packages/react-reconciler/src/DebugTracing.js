@@ -84,7 +84,7 @@ export function logCommitStopped(): void {
 }
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+// $FlowFixMe[incompatible-type]: Flow cannot handle polymorphic WeakMaps
 const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
 let wakeableID: number = 0;
 function getWakeableID(wakeable: Wakeable): number {

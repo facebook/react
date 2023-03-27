@@ -420,7 +420,7 @@ export function unmountComponentAtNode(container: Container): boolean {
     // Unmount should not be batched.
     flushSync(() => {
       legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-        // $FlowFixMe This should probably use `delete container._reactRootContainer`
+        // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
         container._reactRootContainer = null;
         unmarkContainerAsRoot(container);
       });

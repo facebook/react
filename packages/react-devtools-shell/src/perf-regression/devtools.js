@@ -8,7 +8,6 @@ import {initialize as createDevTools} from 'react-devtools-inline/frontend';
 
 // This is a pretty gross hack to make the runtime loaded named-hooks-code work.
 // TODO (Webpack 5) Hoepfully we can remove this once we upgrade to Webpack 5.
-// $FlowFixMe
 __webpack_public_path__ = '/dist/'; // eslint-disable-line no-undef
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.

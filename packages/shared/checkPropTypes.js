@@ -40,7 +40,7 @@ export default function checkPropTypes(
   element?: any,
 ): void {
   if (__DEV__) {
-    // $FlowFixMe This is okay but Flow doesn't know it.
+    // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
     const has = Function.call.bind(hasOwnProperty);
     for (const typeSpecName in typeSpecs) {
       if (has(typeSpecs, typeSpecName)) {

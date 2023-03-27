@@ -910,7 +910,7 @@ function completeDehydratedSuspenseBoundary(
             // Don't count time spent in a timed out Suspense subtree as part of the base duration.
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
               workInProgress.treeBaseDuration -=
                 ((primaryChildFragment.treeBaseDuration: any): number);
             }
@@ -940,7 +940,7 @@ function completeDehydratedSuspenseBoundary(
             // Don't count time spent in a timed out Suspense subtree as part of the base duration.
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
               workInProgress.treeBaseDuration -=
                 ((primaryChildFragment.treeBaseDuration: any): number);
             }
@@ -1484,7 +1484,7 @@ function completeWork(
             // Don't count time spent in a timed out Suspense subtree as part of the base duration.
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              // $FlowFixMe[unsafe-arithmetic] Flow doesn't support type casting in combination with the -= operator
               workInProgress.treeBaseDuration -=
                 ((primaryChildFragment.treeBaseDuration: any): number);
             }

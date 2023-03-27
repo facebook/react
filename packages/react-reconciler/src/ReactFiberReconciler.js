@@ -563,7 +563,7 @@ if (__DEV__) {
       }
       return updated;
     }
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[key] = copyWithDeleteImpl(obj[key], path, index + 1);
     return updated;
   };
@@ -585,7 +585,7 @@ if (__DEV__) {
     const updated = isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === oldPath.length) {
       const newKey = newPath[index];
-      // $FlowFixMe number or string is fine here
+      // $FlowFixMe[incompatible-use] number or string is fine here
       updated[newKey] = updated[oldKey];
       if (isArray(updated)) {
         updated.splice(((oldKey: any): number), 1);
@@ -593,9 +593,9 @@ if (__DEV__) {
         delete updated[oldKey];
       }
     } else {
-      // $FlowFixMe number or string is fine here
+      // $FlowFixMe[incompatible-use] number or string is fine here
       updated[oldKey] = copyWithRenameImpl(
-        // $FlowFixMe number or string is fine here
+        // $FlowFixMe[incompatible-use] number or string is fine here
         obj[oldKey],
         oldPath,
         newPath,
@@ -637,7 +637,7 @@ if (__DEV__) {
     }
     const key = path[index];
     const updated = isArray(obj) ? obj.slice() : {...obj};
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[key] = copyWithSetImpl(obj[key], path, index + 1, value);
     return updated;
   };

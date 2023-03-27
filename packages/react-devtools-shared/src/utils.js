@@ -93,7 +93,7 @@ export function getAllEnumerableKeys(
     ];
     const descriptors = Object.getOwnPropertyDescriptors(current);
     currentKeys.forEach(key => {
-      // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      // $FlowFixMe[incompatible-type]: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
       if (descriptors[key].enumerable) {
         keys.add(key);
       }

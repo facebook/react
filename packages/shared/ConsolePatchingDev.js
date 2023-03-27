@@ -42,7 +42,7 @@ export function disableLogs(): void {
         value: disabledLog,
         writable: true,
       };
-      // $FlowFixMe Flow thinks console is immutable.
+      // $FlowFixMe[cannot-write] Flow thinks console is immutable.
       Object.defineProperties(console, {
         info: props,
         log: props,
@@ -68,7 +68,7 @@ export function reenableLogs(): void {
         enumerable: true,
         writable: true,
       };
-      // $FlowFixMe Flow thinks console is immutable.
+      // $FlowFixMe[cannot-write] Flow thinks console is immutable.
       Object.defineProperties(console, {
         log: {...props, value: prevLog},
         info: {...props, value: prevInfo},

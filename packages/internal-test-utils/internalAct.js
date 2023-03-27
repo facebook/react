@@ -35,7 +35,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
     );
   }
 
-  // $FlowFixMe: Flow doesn't know about global Jest object
+  // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
   if (!jest.isMockFunction(setTimeout)) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +
@@ -70,7 +70,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       // Wait until end of current task/microtask.
       await waitForMicrotasks();
 
-      // $FlowFixMe: Flow doesn't know about global Jest object
+      // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
       if (jest.isEnvironmentTornDown()) {
         error.message =
           'The Jest environment was torn down before `act` completed. This ' +
@@ -79,7 +79,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       }
 
       if (!Scheduler.unstable_hasPendingWork()) {
-        // $FlowFixMe: Flow doesn't know about global Jest object
+        // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
         jest.runOnlyPendingTimers();
         if (Scheduler.unstable_hasPendingWork()) {
           // Committing a fallback scheduled additional work. Continue flushing.

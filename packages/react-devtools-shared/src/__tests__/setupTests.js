@@ -80,7 +80,6 @@ beforeEach(() => {
   }
 
   const originalConsoleError = console.error;
-  // $FlowFixMe
   console.error = (...args) => {
     const firstArg = args[0];
     if (
@@ -111,7 +110,6 @@ beforeEach(() => {
     originalConsoleError.apply(console, args);
   };
   const originalConsoleWarn = console.warn;
-  // $FlowFixMe
   console.warn = (...args) => {
     if (shouldIgnoreConsoleErrorOrWarn(args)) {
       // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.

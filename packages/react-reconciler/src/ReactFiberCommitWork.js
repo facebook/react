@@ -347,7 +347,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         }
       }
     } else {
-      // $FlowFixMe unable to narrow type to RefObject
+      // $FlowFixMe[incompatible-use] unable to narrow type to RefObject
       ref.current = null;
     }
   }
@@ -1633,7 +1633,7 @@ function commitAttachRef(finishedWork: Fiber) {
         }
       }
 
-      // $FlowFixMe unable to narrow type to the non-function case
+      // $FlowFixMe[incompatible-use] unable to narrow type to the non-function case
       ref.current = instanceToUse;
     }
   }
