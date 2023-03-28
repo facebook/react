@@ -16,6 +16,7 @@ let ReactFeatureFlags;
 let Scheduler;
 let act;
 let waitForAll;
+let waitForDiscrete;
 let assertLog;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
@@ -65,6 +66,7 @@ describe('ChangeEventPlugin', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitForDiscrete = InternalTestUtils.waitForDiscrete;
     assertLog = InternalTestUtils.assertLog;
 
     container = document.createElement('div');
@@ -730,8 +732,7 @@ describe('ChangeEventPlugin', () => {
       );
 
       // Flush microtask queue.
-      await null;
-      assertLog(['render: ']);
+      await waitForDiscrete(['render: ']);
       expect(input.value).toBe('');
     });
 

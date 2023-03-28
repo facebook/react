@@ -218,6 +218,30 @@ ${diff(expectedLog, actualLog)}
   throw error;
 }
 
+export async function waitForDiscrete(expectedLog) {
+  assertYieldsWereCleared(SchedulerMock);
+
+  // Create the error object before doing any async work, to get a better
+  // stack trace.
+  const error = new Error();
+  Error.captureStackTrace(error, waitForDiscrete);
+
+  // Wait until end of current task/microtask.
+  await waitForMicrotasks();
+
+  const actualLog = SchedulerMock.unstable_clearLog();
+  if (equals(actualLog, expectedLog)) {
+    return;
+  }
+
+  error.message = `
+Expected sequence of events did not occur.
+
+${diff(expectedLog, actualLog)}
+`;
+  throw error;
+}
+
 export function assertLog(expectedLog) {
   const actualLog = SchedulerMock.unstable_clearLog();
   if (equals(actualLog, expectedLog)) {
