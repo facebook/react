@@ -194,7 +194,7 @@ function createPanelIfReactLoaded() {
             },
           });
         } else {
-          // Firefox does not support executing script in MAIN wolrd from content script.
+          // Firefox does not support executing script in ExecutionWorld.MAIN from content script.
           // see prepareInjection.js
           chrome.devtools.inspectedWindow.eval(
             `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
