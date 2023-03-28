@@ -185,7 +185,7 @@ function createPanelIfReactLoaded() {
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
-        if (IS_CHROME | IS_EDGE) {
+        if (IS_CHROME || IS_EDGE) {
           chrome.runtime.sendMessage({
             source: 'react-devtools-main',
             payload: {
