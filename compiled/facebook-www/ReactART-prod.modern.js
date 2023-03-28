@@ -70,8 +70,6 @@ var ReactSharedInternals =
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
@@ -7691,7 +7689,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   var exitStatus =
     includesBlockingLane(root, lanes) ||
     0 !== (lanes & root.expiredLanes) ||
-    (!disableSchedulerTimeoutInWorkLoop && didTimeout)
+    didTimeout
       ? renderRootSync(root, lanes)
       : renderRootConcurrent(root, lanes);
   if (0 !== exitStatus) {
@@ -9701,7 +9699,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-0186ab1a",
+    version: "18.3.0-www-modern-c4381c45",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1304 = {
@@ -9732,7 +9730,7 @@ var internals$jscomp$inline_1304 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-0186ab1a"
+  reconcilerVersion: "18.3.0-www-modern-c4381c45"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1305 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

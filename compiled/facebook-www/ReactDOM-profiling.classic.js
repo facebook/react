@@ -42,8 +42,6 @@ var Scheduler = require("scheduler"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
@@ -11965,7 +11963,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   var exitStatus =
     includesBlockingLane(root, lanes) ||
     0 !== (lanes & root.expiredLanes) ||
-    (!disableSchedulerTimeoutInWorkLoop && didTimeout)
+    didTimeout
       ? renderRootSync(root, lanes)
       : renderRootConcurrent(root, lanes);
   if (0 !== exitStatus) {
@@ -16920,7 +16918,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1851 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-75953cf5",
+  version: "18.3.0-www-classic-846a6f78",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16964,7 +16962,7 @@ var devToolsConfig$jscomp$inline_1851 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-75953cf5"
+  reconcilerVersion: "18.3.0-www-classic-846a6f78"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17191,7 +17189,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-75953cf5";
+exports.version = "18.3.0-www-classic-846a6f78";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
