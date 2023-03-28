@@ -1627,7 +1627,6 @@ describe('ReactUpdates', () => {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
           setStep(x => x + 1);
-          Scheduler.log(step);
         });
         return step;
       }
@@ -1642,23 +1641,19 @@ describe('ReactUpdates', () => {
       console.error = (e, s) => {
         error = e;
         stack = s;
+        Scheduler.log('stop');
       };
       try {
         const container = document.createElement('div');
-        expect(() => {
-          const root = ReactDOMClient.createRoot(container);
-          root.render(<App />);
-          while (error === null) {
-            Scheduler.unstable_flushNumberOfYields(1);
-            Scheduler.unstable_clearLog();
-          }
-          expect(stack).toContain(' NonTerminating');
-          // rethrow error to prevent going into an infinite loop when act() exits
-          throw error;
-        }).toThrow('Maximum update depth exceeded.');
+        const root = ReactDOMClient.createRoot(container);
+        root.render(<App />);
+        await waitFor(['stop']);
       } finally {
         console.error = originalConsoleError;
       }
+
+      expect(error).toContain('Maximum update depth exceeded');
+      expect(stack).toContain('at NonTerminating');
     });
 
     it('can have nested updates if they do not cross the limit', async () => {
