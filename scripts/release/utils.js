@@ -59,18 +59,8 @@ const extractCommitFromVersionNumber = version => {
 };
 
 const getArtifactsList = async buildID => {
-  const {CIRCLE_CI_API_TOKEN} = process.env;
-  if (CIRCLE_CI_API_TOKEN == null) {
-    throw new Error(
-      `Expected a CircleCI token to download artifacts, got ${CIRCLE_CI_API_TOKEN}`
-    );
-  }
   const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}/artifacts`;
-  const jobArtifacts = await fetch(jobArtifactsURL, {
-    headers: {
-      'Circle-Token': CIRCLE_CI_API_TOKEN,
-    },
-  });
+  const jobArtifacts = await fetch(jobArtifactsURL);
   return jobArtifacts.json();
 };
 
