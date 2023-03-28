@@ -79,13 +79,6 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] TodoError: (BuildHIR::lower) Handle AssignmentPattern params
-> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-    |                                         ^^^^^^^
-  2 |   let i = 0;
-  3 |   var x = [];
-  4 |
-
 [ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
 > 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     |                                                  ^^^^^^^

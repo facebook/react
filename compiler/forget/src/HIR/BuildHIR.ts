@@ -102,7 +102,11 @@ export function lower(
         loc: param.node.loc ?? GeneratedSource,
       };
       params.push(place);
-    } else if (param.isObjectPattern() || param.isArrayPattern()) {
+    } else if (
+      param.isObjectPattern() ||
+      param.isArrayPattern() ||
+      param.isAssignmentPattern()
+    ) {
       const place: Place = {
         kind: "Identifier",
         identifier: builder.makeTemporary(),
