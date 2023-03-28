@@ -39,8 +39,6 @@ var disableInputAttributeSyncing =
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
@@ -2973,7 +2971,7 @@ var componentFrameCache;
 
 function describeNativeComponentFrame(fn, construct) {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
+  if (!fn || reentry) {
     return "";
   }
 
@@ -30521,7 +30519,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-a0e770ce";
+var ReactVersion = "18.3.0-www-classic-d2a9189a";
 
 function createPortal$1(
   children,

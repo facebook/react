@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-7d72b1b2";
+var ReactVersion = "18.3.0-www-modern-88f49f74";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -174,8 +174,6 @@ var revertRemovalOfSiblingPrerendering =
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
@@ -2967,7 +2965,7 @@ var componentFrameCache;
 
 function describeNativeComponentFrame(fn, construct) {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
+  if (!fn || reentry) {
     return "";
   }
 

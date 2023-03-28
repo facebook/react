@@ -106,8 +106,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
@@ -998,7 +996,7 @@ function describeBuiltInComponentFrame(name) {
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
-  if (disableNativeComponentFrames || !fn || reentry) return "";
+  if (!fn || reentry) return "";
   reentry = !0;
   var previousPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = void 0;
@@ -16056,7 +16054,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1769 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-38a72ab9",
+  version: "18.3.0-www-modern-e85ff880",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2166 = {
@@ -16087,7 +16085,7 @@ var internals$jscomp$inline_2166 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-38a72ab9"
+  reconcilerVersion: "18.3.0-www-modern-e85ff880"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2167 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16407,4 +16405,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-38a72ab9";
+exports.version = "18.3.0-www-modern-e85ff880";

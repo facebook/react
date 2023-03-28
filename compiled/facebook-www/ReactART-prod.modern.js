@@ -70,8 +70,6 @@ var ReactSharedInternals =
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
@@ -707,7 +705,7 @@ function describeBuiltInComponentFrame(name) {
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
-  if (disableNativeComponentFrames || !fn || reentry) return "";
+  if (!fn || reentry) return "";
   reentry = !0;
   var previousPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = void 0;
@@ -9703,7 +9701,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-d49a25e1",
+    version: "18.3.0-www-modern-0186ab1a",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1304 = {
@@ -9734,7 +9732,7 @@ var internals$jscomp$inline_1304 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-d49a25e1"
+  reconcilerVersion: "18.3.0-www-modern-0186ab1a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1305 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

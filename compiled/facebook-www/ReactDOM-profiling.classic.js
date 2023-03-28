@@ -42,8 +42,6 @@ var Scheduler = require("scheduler"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation =
@@ -1213,7 +1211,7 @@ function describeBuiltInComponentFrame(name) {
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
-  if (disableNativeComponentFrames || !fn || reentry) return "";
+  if (!fn || reentry) return "";
   reentry = !0;
   var previousPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = void 0;
@@ -16922,7 +16920,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1851 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-d28aa28d",
+  version: "18.3.0-www-classic-75953cf5",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16966,7 +16964,7 @@ var devToolsConfig$jscomp$inline_1851 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-d28aa28d"
+  reconcilerVersion: "18.3.0-www-classic-75953cf5"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17193,7 +17191,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-d28aa28d";
+exports.version = "18.3.0-www-classic-75953cf5";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

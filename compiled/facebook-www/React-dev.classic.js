@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-d1164e5e";
+var ReactVersion = "18.3.0-www-classic-d31cfc1b";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -477,8 +477,6 @@ function checkKeyStringCoercion(value) {
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
 // On WWW, false is used for a new modern build.
 
@@ -2226,7 +2224,7 @@ var componentFrameCache;
 
 function describeNativeComponentFrame(fn, construct) {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
+  if (!fn || reentry) {
     return "";
   }
 

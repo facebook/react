@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-b296abaa";
+var ReactVersion = "18.3.0-www-classic-64e4f129";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -232,9 +232,7 @@ function checkHtmlStringCoercion(value) {
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require("ReactFeatureFlags");
 
-var disableNativeComponentFrames =
-    dynamicFeatureFlags.disableNativeComponentFrames,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
 var enableFloat = true;
@@ -7752,7 +7750,7 @@ var componentFrameCache;
 
 function describeNativeComponentFrame(fn, construct) {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
+  if (!fn || reentry) {
     return "";
   }
 
