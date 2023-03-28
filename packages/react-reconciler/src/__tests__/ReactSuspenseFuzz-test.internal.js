@@ -32,6 +32,8 @@ describe('ReactSuspenseFuzz', () => {
     Random = require('random-seed');
   });
 
+  jest.setTimeout(20000);
+
   function createFuzzer() {
     const {useState, useContext, useLayoutEffect} = React;
 
@@ -57,7 +59,6 @@ describe('ReactSuspenseFuzz', () => {
             };
             const timeoutID = setTimeout(() => {
               pendingTasks.delete(task);
-              Scheduler.log(task.label);
               setStep(i + 1);
             }, remountAfter);
             pendingTasks.add(task);
@@ -87,7 +88,6 @@ describe('ReactSuspenseFuzz', () => {
             };
             const timeoutID = setTimeout(() => {
               pendingTasks.delete(task);
-              Scheduler.log(task.label);
               setStep([i + 1, suspendFor]);
             }, beginAfter);
             pendingTasks.add(task);
@@ -138,43 +138,50 @@ describe('ReactSuspenseFuzz', () => {
       return resolvedText;
     }
 
-    async function resolveAllTasks() {
-      Scheduler.unstable_flushAllWithoutAsserting();
-      let elapsedTime = 0;
-      while (pendingTasks && pendingTasks.size > 0) {
-        if ((elapsedTime += 1000) > 1000000) {
-          throw new Error('Something did not resolve properly.');
-        }
-        await act(() => {
-          ReactNoop.batchedUpdates(() => {
-            jest.advanceTimersByTime(1000);
-          });
-        });
-        Scheduler.unstable_flushAllWithoutAsserting();
-      }
-    }
-
     async function testResolvedOutput(unwrappedChildren) {
       const children = (
         <Suspense fallback="Loading...">{unwrappedChildren}</Suspense>
       );
 
+      // Render the app multiple times: once without suspending (as if all the
+      // data was already preloaded), and then again with suspensey data.
       resetCache();
       const expectedRoot = ReactNoop.createRoot();
-      expectedRoot.render(
-        <ShouldSuspendContext.Provider value={false}>
-          {children}
-        </ShouldSuspendContext.Provider>,
-      );
-      await resolveAllTasks();
+      await act(() => {
+        expectedRoot.render(
+          <ShouldSuspendContext.Provider value={false}>
+            {children}
+          </ShouldSuspendContext.Provider>,
+        );
+      });
+
       const expectedOutput = expectedRoot.getChildrenAsJSX();
 
       resetCache();
-      ReactNoop.renderLegacySyncRoot(children);
-      await resolveAllTasks();
-      const legacyOutput = ReactNoop.getChildrenAsJSX();
-      expect(legacyOutput).toEqual(expectedOutput);
-      ReactNoop.renderLegacySyncRoot(null);
+
+      const concurrentRootThatSuspends = ReactNoop.createRoot();
+      await act(() => {
+        concurrentRootThatSuspends.render(children);
+      });
+
+      resetCache();
+
+      // Do it again in legacy mode.
+      const legacyRootThatSuspends = ReactNoop.createLegacyRoot();
+      await act(() => {
+        legacyRootThatSuspends.render(children);
+      });
+
+      // Now compare the final output. It should be the same.
+      expect(concurrentRootThatSuspends.getChildrenAsJSX()).toEqual(
+        expectedOutput,
+      );
+      expect(legacyRootThatSuspends.getChildrenAsJSX()).toEqual(expectedOutput);
+
+      // TODO: There are Scheduler logs in this test file but they were only
+      // added for debugging purposes; we don't make any assertions on them.
+      // Should probably just delete.
+      Scheduler.unstable_clearLog();
     }
 
     function pickRandomWeighted(rand, options) {
