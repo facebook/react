@@ -404,7 +404,7 @@ function parseModelString(
       }
       case 'n': {
         // BigInt
-        return BigInt('0x' + value.substring(2));
+        return BigInt(value.substring(2));
       }
       default: {
         // We assume that anything else is a reference ID.

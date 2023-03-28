@@ -76,7 +76,7 @@ function serializeUndefined(): string {
 }
 
 function serializeBigInt(n: bigint): string {
-  return '$n' + n.toString(16);
+  return '$n' + n.toString(10);
 }
 
 function escapeStringValue(value: string): string {
