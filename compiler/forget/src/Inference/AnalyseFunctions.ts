@@ -62,6 +62,12 @@ export default function analyseFunctions(func: HIRFunction): void {
           );
           break;
         }
+        case "ComputedLoad": {
+          // The path is set to an empty string as the path doesn't really
+          // matter for a computed load.
+          state.declareProperty(instr.lvalue, instr.value.object, "");
+          break;
+        }
         case "LoadLocal": {
           if (instr.lvalue.identifier.name === null) {
             state.declareTemporary(instr.lvalue, instr.value.place);
