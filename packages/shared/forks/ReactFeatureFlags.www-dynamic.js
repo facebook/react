@@ -59,6 +59,5 @@ export const revertRemovalOfSiblingPrerendering = false;
 // Update the tests so that they pass in either mode, then set these
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
-export const disableNativeComponentFrames = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.
