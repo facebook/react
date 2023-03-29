@@ -30,9 +30,10 @@ function sanitizeURL<T>(url: T): T | string {
   const stringifiedURL = '' + (url: any);
   if (disableJavaScriptURLs) {
     if (isJavaScriptProtocol.test(stringifiedURL)) {
-      throw new Error(
-        'React has blocked a javascript: URL as a security precaution.',
-      );
+      // Return a different javascript: url that doesn't cause any side-effects and just
+      // throws if ever visited.
+      // eslint-disable-next-line no-script-url
+      return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
     }
   } else if (__DEV__) {
     if (!didWarn && isJavaScriptProtocol.test(stringifiedURL)) {

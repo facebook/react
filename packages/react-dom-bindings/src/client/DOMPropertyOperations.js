@@ -17,7 +17,6 @@ import {
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import {
-  disableJavaScriptURLs,
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
   enableFilterEmptyStringAttributesDOM,
@@ -42,15 +41,6 @@ export function getValueForProperty(
     if (propertyInfo.mustUseProperty) {
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
-    }
-    if (!disableJavaScriptURLs && propertyInfo.sanitizeURL) {
-      // If we haven't fully disabled javascript: URLs, and if
-      // the hydration is successful of a javascript: URL, we
-      // still want to warn on the client.
-      if (__DEV__) {
-        checkAttributeStringCoercion(expected, name);
-      }
-      sanitizeURL(expected);
     }
 
     const attributeName = propertyInfo.attributeName;
@@ -134,6 +124,11 @@ export function getValueForProperty(
     }
 
     // shouldRemoveAttribute
+    switch (typeof expected) {
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        return value;
+    }
     switch (propertyInfo.type) {
       case BOOLEAN: {
         if (expected) {
@@ -175,6 +170,16 @@ export function getValueForProperty(
     if (__DEV__) {
       checkAttributeStringCoercion(expected, name);
     }
+    if (propertyInfo.sanitizeURL) {
+      // We have already verified this above.
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      if (value === '' + (sanitizeURL(expected): any)) {
+        return expected;
+      }
+      return value;
+    }
+    // We have already verified this above.
+    // eslint-disable-next-line react-internal/safe-string-coercion
     if (value === '' + (expected: any)) {
       return expected;
     }
