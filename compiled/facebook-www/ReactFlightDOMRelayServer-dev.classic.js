@@ -1771,6 +1771,10 @@ function serializeUndefined() {
   return "$undefined";
 }
 
+function serializeBigInt(n) {
+  return "$n" + n.toString(10);
+}
+
 function serializeClientReference(request, parent, key, clientReference) {
   var clientReferenceKey = getClientReferenceKey(clientReference);
   var writtenClientReferences = request.writtenClientReferences;
@@ -2110,12 +2114,7 @@ function resolveModelToJSON(request, parent, key, value) {
   }
 
   if (typeof value === "bigint") {
-    throw new Error(
-      "BigInt (" +
-        value +
-        ") is not yet supported in Client Component props." +
-        describeObjectForErrorMessage(parent, key)
-    );
+    return serializeBigInt(value);
   }
 
   throw new Error(

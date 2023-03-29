@@ -287,6 +287,8 @@ function parseModelString(response, parentObject, key, value) {
         }
       case "u":
         return;
+      case "n":
+        return BigInt(value.substring(2));
       default:
         value = parseInt(value.substring(1), 16);
         response = getChunk(response, value);

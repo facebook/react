@@ -909,13 +909,7 @@ function resolveModelToJSON(request, parent, key, value) {
     element.set(value, key);
     return "$" + key.toString(16);
   }
-  if ("bigint" === typeof value)
-    throw Error(
-      "BigInt (" +
-        value +
-        ") is not yet supported in Client Component props." +
-        describeObjectForErrorMessage(parent, key)
-    );
+  if ("bigint" === typeof value) return "$n" + value.toString(10);
   throw Error(
     "Type " +
       typeof value +
