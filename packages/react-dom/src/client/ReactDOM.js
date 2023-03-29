@@ -203,9 +203,9 @@ if (__DEV__) {
   if (!foundDevTools && canUseDOM && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
-      (navigator.userAgent.indexOf('Chrome') > -1 &&
-        navigator.userAgent.indexOf('Edge') === -1) ||
-      navigator.userAgent.indexOf('Firefox') > -1
+      (navigator.userAgent.includes('Chrome') &&
+        !navigator.userAgent.includes('Edge')) ||
+      navigator.userAgent.includes('Firefox')
     ) {
       const protocol = window.location.protocol;
       // Don't warn in exotic cases like chrome-extension://.
