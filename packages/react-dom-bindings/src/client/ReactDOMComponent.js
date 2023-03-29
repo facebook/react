@@ -292,7 +292,7 @@ function setProp(
   key: string,
   value: mixed,
   isCustomComponentTag: boolean,
-  rawProps: any,
+  props: any,
 ): void {
   switch (key) {
     case 'style': {
@@ -325,7 +325,7 @@ function setProp(
         }
         const nextHtml: any = value.__html;
         if (nextHtml != null) {
-          if (rawProps.children != null) {
+          if (props.children != null) {
             throw new Error(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
             );
@@ -1093,15 +1093,15 @@ function diffHydratedStyles(domElement: Element, value: mixed) {
 function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
-  rawProps: Object,
+  props: Object,
   parentNamespaceDev: string,
   extraAttributeNames: Set<string>,
 ) {
-  for (const propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
+  for (const propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    const nextProp = rawProps[propKey];
+    const nextProp = props[propKey];
     if (nextProp == null) {
       continue;
     }
@@ -1111,7 +1111,7 @@ function diffHydratedCustomComponent(
       }
       continue;
     }
-    if (rawProps.suppressHydrationWarning === true) {
+    if (props.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     }
@@ -1184,15 +1184,15 @@ function diffHydratedCustomComponent(
 function diffHydratedGenericElement(
   domElement: Element,
   tag: string,
-  rawProps: Object,
+  props: Object,
   parentNamespaceDev: string,
   extraAttributeNames: Set<string>,
 ) {
-  for (const propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
+  for (const propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    const nextProp = rawProps[propKey];
+    const nextProp = props[propKey];
     if (nextProp == null) {
       continue;
     }
@@ -1202,7 +1202,7 @@ function diffHydratedGenericElement(
       }
       continue;
     }
-    if (rawProps.suppressHydrationWarning === true) {
+    if (props.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     }
@@ -1288,13 +1288,13 @@ function diffHydratedGenericElement(
 export function diffHydratedProperties(
   domElement: Element,
   tag: string,
-  rawProps: Object,
+  props: Object,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
   parentNamespaceDev: string,
 ): null | Array<mixed> {
   if (__DEV__) {
-    validatePropertiesInDevelopment(tag, rawProps);
+    validatePropertiesInDevelopment(tag, props);
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.
@@ -1337,35 +1337,44 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('toggle', domElement);
       break;
     case 'input':
-      ReactDOMInputInitWrapperState(domElement, rawProps);
+      ReactDOMInputInitWrapperState(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track((domElement: any));
+      // For input and textarea we current always set the value property at
+      // post mount to force it to diverge from attributes. However, for
+      // option and select we don't quite do the same thing and select
+      // is not resilient to the DOM state changing so we don't do that here.
+      // TODO: Consider not doing this for input and textarea.
+      ReactDOMInputPostMountWrapper(domElement, props, true);
       break;
     case 'option':
-      ReactDOMOptionValidateProps(domElement, rawProps);
+      ReactDOMOptionValidateProps(domElement, props);
       break;
     case 'select':
-      ReactDOMSelectInitWrapperState(domElement, rawProps);
+      ReactDOMSelectInitWrapperState(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'textarea':
-      ReactDOMTextareaInitWrapperState(domElement, rawProps);
+      ReactDOMTextareaInitWrapperState(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+      track((domElement: any));
+      ReactDOMTextareaPostMountWrapper(domElement, props);
       break;
-  }
-
-  if (rawProps.hasOwnProperty('onScroll')) {
-    listenToNonDelegatedEvent('scroll', domElement);
   }
 
   let updatePayload = null;
 
-  const children = rawProps.children;
+  const children = props.children;
   // For text content children we compare against textContent. This
   // might match additional HTML that is hidden when we read it using
   // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
@@ -1377,7 +1386,7 @@ export function diffHydratedProperties(
   // TODO: Should we use domElement.firstChild.nodeValue to compare?
   if (typeof children === 'string' || typeof children === 'number') {
     if (domElement.textContent !== '' + children) {
-      if (rawProps.suppressHydrationWarning !== true) {
+      if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(
           domElement.textContent,
           children,
@@ -1389,6 +1398,15 @@ export function diffHydratedProperties(
         updatePayload = ['children', children];
       }
     }
+  }
+
+  if (props.onScroll != null) {
+    listenToNonDelegatedEvent('scroll', domElement);
+  }
+
+  if (props.onClick != null) {
+    // TODO: This cast may not be sound for SVG, MathML or custom elements.
+    trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
   }
 
   if (__DEV__ && shouldWarnDev) {
@@ -1411,11 +1429,11 @@ export function diffHydratedProperties(
           extraAttributeNames.add(attributes[i].name);
       }
     }
-    if (isCustomComponent(tag, rawProps)) {
+    if (isCustomComponent(tag, props)) {
       diffHydratedCustomComponent(
         domElement,
         tag,
-        rawProps,
+        props,
         parentNamespaceDev,
         extraAttributeNames,
       );
@@ -1423,46 +1441,17 @@ export function diffHydratedProperties(
       diffHydratedGenericElement(
         domElement,
         tag,
-        rawProps,
+        props,
         parentNamespaceDev,
         extraAttributeNames,
       );
     }
     if (
       extraAttributeNames.size > 0 &&
-      rawProps.suppressHydrationWarning !== true
+      props.suppressHydrationWarning !== true
     ) {
       warnForExtraAttributes(extraAttributeNames);
     }
-  }
-
-  switch (tag) {
-    case 'input':
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track((domElement: any));
-      ReactDOMInputPostMountWrapper(domElement, rawProps, true);
-      break;
-    case 'textarea':
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track((domElement: any));
-      ReactDOMTextareaPostMountWrapper(domElement, rawProps);
-      break;
-    case 'select':
-    case 'option':
-      // For input and textarea we current always set the value property at
-      // post mount to force it to diverge from attributes. However, for
-      // option and select we don't quite do the same thing and select
-      // is not resilient to the DOM state changing so we don't do that here.
-      // TODO: Consider not doing this for input and textarea.
-      break;
-    default:
-      if (typeof rawProps.onClick === 'function') {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
-      }
-      break;
   }
 
   return updatePayload;
