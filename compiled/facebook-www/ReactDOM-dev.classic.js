@@ -4569,17 +4569,6 @@ function isControlled(props) {
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-function getHostProps$2(element, props) {
-  var node = element;
-  var checked = props.checked;
-  var hostProps = assign({}, props, {
-    defaultChecked: undefined,
-    defaultValue: undefined,
-    value: undefined,
-    checked: checked != null ? checked : node._wrapperState.initialChecked
-  });
-  return hostProps;
-}
 function initWrapperState$2(element, props) {
   {
     checkControlledValueProps("input", props);
@@ -4625,9 +4614,13 @@ function initWrapperState$2(element, props) {
 
   var node = element;
   var defaultValue = props.defaultValue == null ? "" : props.defaultValue;
+  var initialChecked =
+    props.checked != null ? props.checked : props.defaultChecked;
   node._wrapperState = {
     initialChecked:
-      props.checked != null ? props.checked : props.defaultChecked,
+      typeof initialChecked !== "function" &&
+      typeof initialChecked !== "symbol" &&
+      !!initialChecked,
     initialValue: getToStringValue(
       props.value != null ? props.value : defaultValue
     ),
@@ -4813,19 +4806,20 @@ function postMountWrapper$3(element, props, isHydrating) {
 
   if (name !== "") {
     node.name = "";
+  } // The checked property never gets assigned. It must be manually set.
+  // We don't want to do this when hydrating so that existing user input isn't
+  // modified
+  // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
+  // correct for the hydration case then.
+
+  if (!isHydrating) {
+    node.checked = !!node._wrapperState.initialChecked;
   }
 
   if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the checked property
-    // never gets assigned. It must be manually set. We don't want
-    // to do this when hydrating so that existing user input isn't
-    // modified
-    if (!isHydrating) {
-      updateChecked(element, props);
-    } // Only assign the checked attribute if it is defined. This saves
+    // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-
     if (props.hasOwnProperty("defaultChecked")) {
       node.defaultChecked = !node.defaultChecked;
       node.defaultChecked = !!props.defaultChecked;
@@ -5110,11 +5104,6 @@ function updateOptions(node, multiple, propValue, setDefaultSelected) {
  * selected.
  */
 
-function getHostProps$1(element, props) {
-  return assign({}, props, {
-    value: undefined
-  });
-}
 function initWrapperState$1(element, props) {
   var node = element;
 
@@ -5199,28 +5188,6 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
-function getHostProps(element, props) {
-  var node = element;
-
-  if (props.dangerouslySetInnerHTML != null) {
-    throw new Error(
-      "`dangerouslySetInnerHTML` does not make sense on <textarea>."
-    );
-  } // Always set children to the same thing. In IE9, the selection range will
-  // get reset if `textContent` is mutated.  We could add a check in setTextContent
-  // to only set the value if/when the value differs from the node value (which would
-  // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
-  // solution. The value can be a boolean or object so that's why it's forced
-  // to be a string.
-
-  var hostProps = assign({}, props, {
-    value: undefined,
-    defaultValue: undefined,
-    children: toString(node._wrapperState.initialValue)
-  });
-
-  return hostProps;
-}
 function initWrapperState(element, props) {
   var node = element;
 
@@ -5286,8 +5253,11 @@ function initWrapperState(element, props) {
     initialValue = defaultValue;
   }
 
+  var stringValue = getToStringValue(initialValue);
+  node.defaultValue = stringValue; // This will be toString:ed.
+
   node._wrapperState = {
-    initialValue: getToStringValue(initialValue)
+    initialValue: stringValue
   };
 }
 function updateWrapper(element, props) {
@@ -7277,189 +7247,146 @@ function trapClickOnNonInteractiveElement(node) {
   node.onclick = noop$2;
 }
 
-function setInitialDOMProperties(
-  tag,
-  domElement,
-  nextProps,
-  isCustomComponentTag
-) {
-  for (var propKey in nextProps) {
-    if (!nextProps.hasOwnProperty(propKey)) {
-      continue;
+function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
+  switch (key) {
+    case "style": {
+      if (value != null && typeof value !== "object") {
+        throw new Error(
+          "The `style` prop expects a mapping from style properties to values, " +
+            "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+            "using JSX."
+        );
+      }
+
+      {
+        if (value) {
+          // Freeze the next style object so that we can assume it won't be
+          // mutated. We have already warned for this in the past.
+          Object.freeze(value);
+        }
+      } // Relies on `updateStylesByID` not mutating `styleUpdates`.
+
+      setValueForStyles(domElement, value);
+      break;
     }
 
-    var nextProp = nextProps[propKey];
-
-    switch (propKey) {
-      case "style": {
-        if (nextProp != null && typeof nextProp !== "object") {
+    case "dangerouslySetInnerHTML": {
+      if (value != null) {
+        if (typeof value !== "object" || !("__html" in value)) {
           throw new Error(
-            "The `style` prop expects a mapping from style properties to values, " +
-              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-              "using JSX."
+            "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
+              "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+              "for more information."
           );
         }
 
-        {
-          if (nextProp) {
-            // Freeze the next style object so that we can assume it won't be
-            // mutated. We have already warned for this in the past.
-            Object.freeze(nextProp);
-          }
-        } // Relies on `updateStylesByID` not mutating `styleUpdates`.
+        var nextHtml = value.__html;
 
-        setValueForStyles(domElement, nextProp);
-        break;
-      }
-
-      case "dangerouslySetInnerHTML": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
+        if (nextHtml != null) {
+          if (props.children != null) {
             throw new Error(
-              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
-                "for more information."
+              "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
             );
           }
 
-          var nextHtml = nextProp.__html;
-
-          if (nextHtml != null) {
-            if (nextProps.children != null) {
-              throw new Error(
-                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
-              );
-            }
-
-            if (disableIEWorkarounds) {
-              domElement.innerHTML = nextHtml;
-            } else {
-              setInnerHTML$1(domElement, nextHtml);
-            }
-          }
-        }
-
-        break;
-      }
-
-      case "children": {
-        if (typeof nextProp === "string") {
-          // Avoid setting initial textContent when the text is empty. In IE11 setting
-          // textContent on a <textarea> will cause the placeholder to not
-          // show within the <textarea> until it has been focused and blurred again.
-          // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-          var canSetTextContent =
-            tag !== "body" && (tag !== "textarea" || nextProp !== "");
-
-          if (canSetTextContent) {
-            setTextContent(domElement, nextProp);
-          }
-        } else if (typeof nextProp === "number") {
-          var _canSetTextContent = tag !== "body";
-
-          if (_canSetTextContent) {
-            setTextContent(domElement, "" + nextProp);
-          }
-        }
-
-        break;
-      }
-
-      case "onScroll": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "function") {
-            warnForInvalidEventListener(propKey, nextProp);
-          }
-
-          listenToNonDelegatedEvent("scroll", domElement);
-        }
-
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // We polyfill it separately on the client during commit.
-        // We could have excluded it in the property list instead of
-        // adding a special case here, but then it wouldn't be emitted
-        // on server rendering (but we *do* want to emit it in SSR).
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          break;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          if (nextProp != null) {
-            if (typeof nextProp !== "function") {
-              warnForInvalidEventListener(propKey, nextProp);
-            }
-          }
-        } else if (nextProp != null) {
-          if (isCustomComponentTag) {
-            setValueForPropertyOnCustomComponent(domElement, propKey, nextProp);
+          if (disableIEWorkarounds) {
+            domElement.innerHTML = nextHtml;
           } else {
-            setValueForProperty(domElement, propKey, nextProp);
+            setInnerHTML$1(domElement, nextHtml);
           }
         }
       }
+
+      break;
     }
-  }
-}
 
-function updateDOMProperties(
-  domElement,
-  updatePayload,
-  wasCustomComponentTag,
-  isCustomComponentTag
-) {
-  // TODO: Handle wasCustomComponentTag
-  for (var i = 0; i < updatePayload.length; i += 2) {
-    var propKey = updatePayload[i];
-    var propValue = updatePayload[i + 1];
+    case "children": {
+      if (typeof value === "string") {
+        // Avoid setting initial textContent when the text is empty. In IE11 setting
+        // textContent on a <textarea> will cause the placeholder to not
+        // show within the <textarea> until it has been focused and blurred again.
+        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+        var canSetTextContent =
+          tag !== "body" && (tag !== "textarea" || value !== "");
 
-    switch (propKey) {
-      case "style":
-        setValueForStyles(domElement, propValue);
-        break;
+        if (canSetTextContent) {
+          setTextContent(domElement, value);
+        }
+      } else if (typeof value === "number") {
+        var _canSetTextContent = tag !== "body";
 
-      case "dangerouslySetInnerHTML":
-        if (disableIEWorkarounds) {
-          domElement.innerHTML = propValue;
-        } else {
-          setInnerHTML$1(domElement, propValue);
+        if (_canSetTextContent) {
+          setTextContent(domElement, "" + value);
+        }
+      }
+
+      break;
+    }
+
+    case "onScroll": {
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
         }
 
-        break;
+        listenToNonDelegatedEvent("scroll", domElement);
+      }
 
-      case "children":
-        setTextContent(domElement, propValue);
-        break;
+      break;
+    }
 
-      default:
+    case "onClick": {
+      // TODO: This cast may not be sound for SVG, MathML or custom elements.
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+
+        trapClickOnNonInteractiveElement(domElement);
+      }
+
+      break;
+    }
+
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "defaultValue": // Reserved
+
+    case "defaultChecked":
+    case "innerHTML": {
+      // Noop
+      break;
+    }
+
+    case "autoFocus": {
+      // We polyfill it separately on the client during commit.
+      // We could have excluded it in the property list instead of
+      // adding a special case here, but then it wouldn't be emitted
+      // on server rendering (but we *do* want to emit it in SSR).
+      break;
+    }
+
+    case "innerText": // Properties
+
+    case "textContent":
+      if (enableCustomElementPropertySupport) {
+        break;
+      }
+
+    // eslint-disable-next-line no-fallthrough
+
+    default: {
+      if (registrationNameDependencies.hasOwnProperty(key)) {
+        if (value != null && typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+      } else {
         if (isCustomComponentTag) {
-          setValueForPropertyOnCustomComponent(domElement, propKey, propValue);
+          setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          setValueForProperty(domElement, propKey, propValue);
+          setValueForProperty(domElement, key, value);
         }
-
-        break;
+      }
     }
   }
 } // creates a script element that won't execute
@@ -7590,143 +7517,228 @@ function createTextNode(text, rootContainerElement) {
     text
   );
 }
-function setInitialProperties(domElement, tag, rawProps) {
-  var isCustomComponentTag = isCustomComponent(tag, rawProps);
-
+function setInitialProperties(domElement, tag, props) {
   {
-    validatePropertiesInDevelopment(tag, rawProps);
+    validatePropertiesInDevelopment(tag, props);
   } // TODO: Make sure that we check isMounted before firing any of these events.
 
-  var props;
-
   switch (tag) {
-    case "dialog":
-      listenToNonDelegatedEvent("cancel", domElement);
-      listenToNonDelegatedEvent("close", domElement);
-      props = rawProps;
-      break;
+    case "input": {
+      initWrapperState$2(domElement, props); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
 
-    case "embed":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
+      listenToNonDelegatedEvent("invalid", domElement);
+
+      for (var propKey in props) {
+        if (!props.hasOwnProperty(propKey)) {
+          continue;
+        }
+
+        var propValue = props[propKey];
+
+        if (propValue == null) {
+          continue;
+        }
+
+        switch (propKey) {
+          case "checked": {
+            var node = domElement;
+            var checked =
+              propValue != null ? propValue : node._wrapperState.initialChecked;
+            node.checked =
+              !!checked &&
+              typeof checked !== "function" &&
+              checked !== "symbol";
+            break;
+          }
+
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+
+          case "children":
+          case "dangerouslySetInnerHTML": {
+            if (propValue != null) {
+              throw new Error(
+                tag +
+                  " is a void element tag and must neither have `children` nor " +
+                  "use `dangerouslySetInnerHTML`."
+              );
+            }
+
+            break;
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+
+          default: {
+            setProp(domElement, tag, propKey, propValue, false, props);
+          }
+        }
+      } // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+
+      track(domElement);
+      postMountWrapper$3(domElement, props, false);
+      return;
+    }
+
+    case "select": {
+      initWrapperState$1(domElement, props); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+
+      for (var _propKey in props) {
+        if (!props.hasOwnProperty(_propKey)) {
+          continue;
+        }
+
+        var _propValue = props[_propKey];
+
+        if (_propValue == null) {
+          continue;
+        }
+
+        switch (_propKey) {
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+          // defaultValue are ignored by setProp
+
+          default: {
+            setProp(domElement, tag, _propKey, _propValue, false, props);
+          }
+        }
       }
 
-    // eslint-disable-next-line no-fallthrough
+      postMountWrapper$1(domElement, props);
+      return;
+    }
+
+    case "textarea": {
+      initWrapperState(domElement, props); // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+
+      for (var _propKey2 in props) {
+        if (!props.hasOwnProperty(_propKey2)) {
+          continue;
+        }
+
+        var _propValue2 = props[_propKey2];
+
+        if (_propValue2 == null) {
+          continue;
+        }
+
+        switch (_propKey2) {
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+
+          case "children": {
+            // TODO: Handled by initWrapperState above.
+            break;
+          }
+
+          case "dangerouslySetInnerHTML": {
+            if (_propValue2 != null) {
+              // TODO: Do we really need a special error message for this. It's also pretty blunt.
+              throw new Error(
+                "`dangerouslySetInnerHTML` does not make sense on <textarea>."
+              );
+            }
+
+            break;
+          }
+          // defaultValue is ignored by setProp
+
+          default: {
+            setProp(domElement, tag, _propKey2, _propValue2, false, props);
+          }
+        }
+      } // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+
+      track(domElement);
+      postMountWrapper(domElement);
+      return;
+    }
+
+    case "option": {
+      validateProps(domElement, props);
+
+      for (var _propKey3 in props) {
+        if (!props.hasOwnProperty(_propKey3)) {
+          continue;
+        }
+
+        var _propValue3 = props[_propKey3];
+
+        if (_propValue3 == null) {
+          continue;
+        }
+
+        setProp(domElement, tag, _propKey3, _propValue3, false, props);
+      }
+
+      postMountWrapper$2(domElement, props);
+      return;
+    }
+
+    case "dialog": {
+      listenToNonDelegatedEvent("cancel", domElement);
+      listenToNonDelegatedEvent("close", domElement);
+      break;
+    }
 
     case "iframe":
-    case "object":
+    case "object": {
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
       listenToNonDelegatedEvent("load", domElement);
-      props = rawProps;
       break;
+    }
 
     case "video":
-    case "audio":
+    case "audio": {
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
       for (var i = 0; i < mediaEventTypes.length; i++) {
         listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
 
-      props = rawProps;
       break;
+    }
 
-    case "source":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      } // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the error event.
-
-      listenToNonDelegatedEvent("error", domElement);
-      props = rawProps;
-      break;
-
-    case "img":
-    case "link":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-    // eslint-disable-next-line no-fallthrough
-
-    case "image":
+    case "image": {
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for error and load events.
       listenToNonDelegatedEvent("error", domElement);
       listenToNonDelegatedEvent("load", domElement);
-      props = rawProps;
       break;
+    }
 
-    case "details":
+    case "details": {
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the toggle event.
       listenToNonDelegatedEvent("toggle", domElement);
-      props = rawProps;
       break;
+    }
 
-    case "input":
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-      initWrapperState$2(domElement, rawProps);
-      props = getHostProps$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "option":
-      validateProps(domElement, rawProps);
-      props = rawProps;
-      break;
-
-    case "select":
-      initWrapperState$1(domElement, rawProps);
-      props = getHostProps$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "textarea":
-      initWrapperState(domElement, rawProps);
-      props = getHostProps(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
+    case "embed":
+    case "source":
+    case "img":
+    case "link": {
+      // These are void elements that also need delegated events.
+      listenToNonDelegatedEvent("error", domElement);
+      listenToNonDelegatedEvent("load", domElement); // We fallthrough to the return of the void elements
+    }
+    // eslint-disable-next-line no-fallthrough
 
     case "area":
     case "base":
@@ -7739,142 +7751,71 @@ function setInitialProperties(domElement, tag, rawProps) {
     case "track":
     case "wbr":
     case "menuitem": {
-      if (
-        rawProps.children != null ||
-        rawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-    }
-    // eslint-disable-next-line no-fallthrough
+      // Void elements
+      for (var _propKey4 in props) {
+        if (!props.hasOwnProperty(_propKey4)) {
+          continue;
+        }
 
-    default:
-      props = rawProps;
+        var _propValue4 = props[_propKey4];
+
+        if (_propValue4 == null) {
+          continue;
+        }
+
+        switch (_propKey4) {
+          case "children":
+          case "dangerouslySetInnerHTML": {
+            // TODO: Can we make this a DEV warning to avoid this deny list?
+            throw new Error(
+              tag +
+                " is a void element tag and must neither have `children` nor " +
+                "use `dangerouslySetInnerHTML`."
+            );
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+
+          default: {
+            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
+            setProp(domElement, tag, _propKey4, _propValue4, false, props);
+          }
+        }
+      }
+
+      return;
+    }
   }
 
-  setInitialDOMProperties(tag, domElement, props, isCustomComponentTag);
+  var isCustomComponentTag = isCustomComponent(tag, props);
 
-  switch (tag) {
-    case "input":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper$3(domElement, rawProps, false);
-      break;
+  for (var _propKey5 in props) {
+    if (!props.hasOwnProperty(_propKey5)) {
+      continue;
+    }
 
-    case "textarea":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper(domElement);
-      break;
+    var _propValue5 = props[_propKey5];
 
-    case "option":
-      postMountWrapper$2(domElement, rawProps);
-      break;
+    if (_propValue5 == null) {
+      continue;
+    }
 
-    case "select":
-      postMountWrapper$1(domElement, rawProps);
-      break;
-
-    default:
-      if (typeof props.onClick === "function") {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
+    setProp(
+      domElement,
+      tag,
+      _propKey5,
+      _propValue5,
+      isCustomComponentTag,
+      props
+    );
   }
 } // Calculate the diff between the two objects.
 
-function diffProperties(domElement, tag, lastRawProps, nextRawProps) {
+function diffProperties(domElement, tag, lastProps, nextProps) {
   {
-    validatePropertiesInDevelopment(tag, nextRawProps);
+    validatePropertiesInDevelopment(tag, nextProps);
   }
 
   var updatePayload = null;
-  var lastProps;
-  var nextProps;
-
-  switch (tag) {
-    case "input":
-      if (
-        nextRawProps.children != null ||
-        nextRawProps.dangerouslySetInnerHTML != null
-      ) {
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-
-      lastProps = getHostProps$2(domElement, lastRawProps);
-      nextProps = getHostProps$2(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "select":
-      lastProps = getHostProps$1(domElement, lastRawProps);
-      nextProps = getHostProps$1(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "textarea":
-      lastProps = getHostProps(domElement, lastRawProps);
-      nextProps = getHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-
-    case "img":
-    case "link":
-    case "area":
-    case "base":
-    case "br":
-    case "col":
-    case "embed":
-    case "hr":
-    case "keygen":
-    case "meta":
-    case "param":
-    case "source":
-    case "track":
-    case "wbr":
-    case "menuitem": {
-      if (
-        nextRawProps.children != null ||
-        nextRawProps.dangerouslySetInnerHTML != null
-      ) {
-        // TODO: Can we make this a DEV warning to avoid this deny list?
-        throw new Error(
-          tag +
-            " is a void element tag and must neither have `children` nor " +
-            "use `dangerouslySetInnerHTML`."
-        );
-      }
-    }
-    // eslint-disable-next-line no-fallthrough
-
-    default:
-      lastProps = lastRawProps;
-      nextProps = nextRawProps;
-
-      if (
-        typeof lastProps.onClick !== "function" &&
-        typeof nextProps.onClick === "function"
-      ) {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
-  }
-
   var propKey;
   var styleName;
   var styleUpdates = null;
@@ -7905,49 +7846,10 @@ function diffProperties(domElement, tag, lastRawProps, nextRawProps) {
         break;
       }
 
-      case "dangerouslySetInnerHTML":
-      case "children": {
-        // Noop. This is handled by the clear text mechanism.
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // Noop. It doesn't work on updates anyway.
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
-          break;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-
       default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          // This is a special case. If any listener updates we need to ensure
-          // that the "current" fiber pointer gets updated so we need a commit
-          // to update this element.
-          if (!updatePayload) {
-            updatePayload = [];
-          }
-        } else {
-          // For all other deleted properties we add it to the queue. We use
-          // the allowed property list in the commit phase instead.
-          (updatePayload = updatePayload || []).push(propKey, null);
-        }
+        // For all other deleted properties we add it to the queue. We use
+        // the allowed property list in the commit phase instead.
+        (updatePayload = updatePayload || []).push(propKey, null);
       }
     }
   }
@@ -7957,174 +7859,56 @@ function diffProperties(domElement, tag, lastRawProps, nextRawProps) {
     var lastProp = lastProps != null ? lastProps[propKey] : undefined;
 
     if (
-      !nextProps.hasOwnProperty(propKey) ||
-      nextProp === lastProp ||
-      (nextProp == null && lastProp == null)
+      nextProps.hasOwnProperty(propKey) &&
+      nextProp !== lastProp &&
+      (nextProp != null || lastProp != null)
     ) {
-      continue;
-    }
+      switch (propKey) {
+        case "style": {
+          if (lastProp) {
+            // Unset styles on `lastProp` but not on `nextProp`.
+            for (styleName in lastProp) {
+              if (
+                lastProp.hasOwnProperty(styleName) &&
+                (!nextProp || !nextProp.hasOwnProperty(styleName))
+              ) {
+                if (!styleUpdates) {
+                  styleUpdates = {};
+                }
 
-    switch (propKey) {
-      case "style": {
-        if (nextProp != null && typeof nextProp !== "object") {
-          throw new Error(
-            "The `style` prop expects a mapping from style properties to values, " +
-              "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-              "using JSX."
-          );
-        }
+                styleUpdates[styleName] = "";
+              }
+            } // Update styles that changed since `lastProp`.
 
-        {
-          if (nextProp) {
-            // Freeze the next style object so that we can assume it won't be
-            // mutated. We have already warned for this in the past.
-            Object.freeze(nextProp);
-          }
-        }
+            for (styleName in nextProp) {
+              if (
+                nextProp.hasOwnProperty(styleName) &&
+                lastProp[styleName] !== nextProp[styleName]
+              ) {
+                if (!styleUpdates) {
+                  styleUpdates = {};
+                }
 
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (
-              lastProp.hasOwnProperty(styleName) &&
-              (!nextProp || !nextProp.hasOwnProperty(styleName))
-            ) {
-              if (!styleUpdates) {
-                styleUpdates = {};
+                styleUpdates[styleName] = nextProp[styleName];
+              }
+            }
+          } else {
+            // Relies on `updateStylesByID` not mutating `styleUpdates`.
+            if (!styleUpdates) {
+              if (!updatePayload) {
+                updatePayload = [];
               }
 
-              styleUpdates[styleName] = "";
-            }
-          } // Update styles that changed since `lastProp`.
-
-          for (styleName in nextProp) {
-            if (
-              nextProp.hasOwnProperty(styleName) &&
-              lastProp[styleName] !== nextProp[styleName]
-            ) {
-              if (!styleUpdates) {
-                styleUpdates = {};
-              }
-
-              styleUpdates[styleName] = nextProp[styleName];
-            }
-          }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          if (!styleUpdates) {
-            if (!updatePayload) {
-              updatePayload = [];
+              updatePayload.push(propKey, styleUpdates);
             }
 
-            updatePayload.push(propKey, styleUpdates);
+            styleUpdates = nextProp;
           }
 
-          styleUpdates = nextProp;
-        }
-
-        break;
-      }
-
-      case "dangerouslySetInnerHTML": {
-        if (nextProp != null) {
-          if (typeof nextProp !== "object" || !("__html" in nextProp)) {
-            throw new Error(
-              "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
-                "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
-                "for more information."
-            );
-          }
-
-          var nextHtml = nextProp.__html;
-
-          if (nextHtml != null) {
-            if (nextProps.children != null) {
-              throw new Error(
-                "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
-              );
-            }
-
-            var lastHtml = lastProp ? lastProp.__html : undefined;
-
-            if (lastHtml !== nextHtml) {
-              (updatePayload = updatePayload || []).push(propKey, nextHtml);
-            }
-          }
-        }
-
-        break;
-      }
-
-      case "children": {
-        if (typeof nextProp === "string" || typeof nextProp === "number") {
-          (updatePayload = updatePayload || []).push(propKey, "" + nextProp);
-        }
-
-        break;
-      }
-
-      case "onScroll": {
-        if (nextProp != null) {
-          // We eagerly listen to this even though we haven't committed yet.
-          if (typeof nextProp !== "function") {
-            warnForInvalidEventListener(propKey, nextProp);
-          }
-
-          listenToNonDelegatedEvent("scroll", domElement);
-        }
-
-        if (!updatePayload && lastProp !== nextProp) {
-          // This is a special case. If any listener updates we need to ensure
-          // that the "current" props pointer gets updated so we need a commit
-          // to update this element.
-          updatePayload = [];
-        }
-
-        break;
-      }
-
-      case "suppressContentEditableWarning":
-      case "suppressHydrationWarning":
-      case "defaultValue": // Reserved
-
-      case "defaultChecked":
-      case "innerHTML": {
-        // Noop
-        break;
-      }
-
-      case "autoFocus": {
-        // Noop on updates
-        break;
-      }
-
-      case "innerText": // Properties
-
-      case "textContent":
-        if (enableCustomElementPropertySupport) {
           break;
         }
 
-      // eslint-disable-next-line no-fallthrough
-
-      default: {
-        if (registrationNameDependencies.hasOwnProperty(propKey)) {
-          if (nextProp != null) {
-            // We eagerly listen to this even though we haven't committed yet.
-            if (typeof nextProp !== "function") {
-              warnForInvalidEventListener(propKey, nextProp);
-            }
-          }
-
-          if (!updatePayload && lastProp !== nextProp) {
-            // This is a special case. If any listener updates we need to ensure
-            // that the "current" props pointer gets updated so we need a commit
-            // to update this element.
-            updatePayload = [];
-          }
-        } else {
-          // For any other property we always add it to the queue and then we
-          // filter it out using the allowed property list during the commit.
+        default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
         }
       }
@@ -8146,48 +7930,187 @@ function updateProperties(
   domElement,
   updatePayload,
   tag,
-  lastRawProps,
-  nextRawProps
+  lastProps,
+  nextProps
 ) {
-  // Update checked *before* name.
-  // In the middle of an update, it is possible to have multiple checked.
-  // When a checked radio tries to change name, browser makes another radio's checked false.
-  if (
-    tag === "input" &&
-    nextRawProps.type === "radio" &&
-    nextRawProps.name != null
-  ) {
-    updateChecked(domElement, nextRawProps);
-  }
-
-  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
-  var isCustomComponentTag = isCustomComponent(tag, nextRawProps); // Apply the diff.
-
-  updateDOMProperties(
-    domElement,
-    updatePayload,
-    wasCustomComponentTag,
-    isCustomComponentTag
-  ); // TODO: Ensure that an update gets scheduled if any of the special props
-  // changed.
-
   switch (tag) {
-    case "input":
-      // Update the wrapper around inputs *after* updating props. This has to
-      // happen after `updateDOMProperties`. Otherwise HTML5 input validations
+    case "input": {
+      // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+      if (nextProps.type === "radio" && nextProps.name != null) {
+        updateChecked(domElement, nextProps);
+      }
+
+      for (var i = 0; i < updatePayload.length; i += 2) {
+        var propKey = updatePayload[i];
+        var propValue = updatePayload[i + 1];
+
+        switch (propKey) {
+          case "checked": {
+            var node = domElement;
+            var checked =
+              propValue != null ? propValue : node._wrapperState.initialChecked;
+            node.checked =
+              !!checked &&
+              typeof checked !== "function" &&
+              checked !== "symbol";
+            break;
+          }
+
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+
+          case "children":
+          case "dangerouslySetInnerHTML": {
+            if (propValue != null) {
+              throw new Error(
+                tag +
+                  " is a void element tag and must neither have `children` nor " +
+                  "use `dangerouslySetInnerHTML`."
+              );
+            }
+
+            break;
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+
+          default: {
+            setProp(domElement, tag, propKey, propValue, false, nextProps);
+          }
+        }
+      } // Update the wrapper around inputs *after* updating props. This has to
+      // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
-      updateWrapper$1(domElement, nextRawProps);
-      break;
 
-    case "textarea":
-      updateWrapper(domElement, nextRawProps);
-      break;
+      updateWrapper$1(domElement, nextProps);
+      return;
+    }
 
-    case "select":
-      // <select> value update needs to occur after <option> children
+    case "select": {
+      for (var _i = 0; _i < updatePayload.length; _i += 2) {
+        var _propKey6 = updatePayload[_i];
+        var _propValue6 = updatePayload[_i + 1];
+
+        switch (_propKey6) {
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+          // defaultValue are ignored by setProp
+
+          default: {
+            setProp(domElement, tag, _propKey6, _propValue6, false, nextProps);
+          }
+        }
+      } // <select> value update needs to occur after <option> children
       // reconciliation
-      postUpdateWrapper(domElement, nextRawProps);
-      break;
+
+      postUpdateWrapper(domElement, nextProps);
+      return;
+    }
+
+    case "textarea": {
+      for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
+        var _propKey7 = updatePayload[_i2];
+        var _propValue7 = updatePayload[_i2 + 1];
+
+        switch (_propKey7) {
+          case "value": {
+            // This is handled by updateWrapper below.
+            break;
+          }
+
+          case "children": {
+            // TODO: This doesn't actually do anything if it updates.
+            break;
+          }
+
+          case "dangerouslySetInnerHTML": {
+            if (_propValue7 != null) {
+              // TODO: Do we really need a special error message for this. It's also pretty blunt.
+              throw new Error(
+                "`dangerouslySetInnerHTML` does not make sense on <textarea>."
+              );
+            }
+
+            break;
+          }
+          // defaultValue is ignored by setProp
+
+          default: {
+            setProp(domElement, tag, _propKey7, _propValue7, false, nextProps);
+          }
+        }
+      }
+
+      updateWrapper(domElement, nextProps);
+      return;
+    }
+
+    case "img":
+    case "link":
+    case "area":
+    case "base":
+    case "br":
+    case "col":
+    case "embed":
+    case "hr":
+    case "keygen":
+    case "meta":
+    case "param":
+    case "source":
+    case "track":
+    case "wbr":
+    case "menuitem": {
+      // Void elements
+      for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
+        var _propKey8 = updatePayload[_i3];
+        var _propValue8 = updatePayload[_i3 + 1];
+
+        switch (_propKey8) {
+          case "children":
+          case "dangerouslySetInnerHTML": {
+            if (_propValue8 != null) {
+              // TODO: Can we make this a DEV warning to avoid this deny list?
+              throw new Error(
+                tag +
+                  " is a void element tag and must neither have `children` nor " +
+                  "use `dangerouslySetInnerHTML`."
+              );
+            }
+
+            break;
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+
+          default: {
+            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
+            setProp(domElement, tag, _propKey8, _propValue8, false, nextProps);
+          }
+        }
+      }
+
+      return;
+    }
+  } // TODO: Handle wasCustomComponentTag. Changing "is" isn't valid.
+  // const wasCustomComponentTag = isCustomComponent(tag, lastProps);
+
+  var isCustomComponentTag = isCustomComponent(tag, nextProps); // Apply the diff.
+
+  for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
+    var _propKey9 = updatePayload[_i4];
+    var _propValue9 = updatePayload[_i4 + 1];
+    setProp(
+      domElement,
+      tag,
+      _propKey9,
+      _propValue9,
+      isCustomComponentTag,
+      nextProps
+    );
   }
 }
 
@@ -8225,16 +8148,16 @@ function diffHydratedStyles(domElement, value) {
 function diffHydratedCustomComponent(
   domElement,
   tag,
-  rawProps,
+  props,
   parentNamespaceDev,
   extraAttributeNames
 ) {
-  for (var propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
+  for (var propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
       continue;
     }
 
-    var nextProp = rawProps[propKey];
+    var nextProp = props[propKey];
 
     if (nextProp == null) {
       continue;
@@ -8248,7 +8171,7 @@ function diffHydratedCustomComponent(
       continue;
     }
 
-    if (rawProps.suppressHydrationWarning === true) {
+    if (props.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     } // Validate that the properties correspond to their expected values.
@@ -8336,16 +8259,16 @@ function diffHydratedCustomComponent(
 function diffHydratedGenericElement(
   domElement,
   tag,
-  rawProps,
+  props,
   parentNamespaceDev,
   extraAttributeNames
 ) {
-  for (var propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
+  for (var propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
       continue;
     }
 
-    var nextProp = rawProps[propKey];
+    var nextProp = props[propKey];
 
     if (nextProp == null) {
       continue;
@@ -8359,7 +8282,7 @@ function diffHydratedGenericElement(
       continue;
     }
 
-    if (rawProps.suppressHydrationWarning === true) {
+    if (props.suppressHydrationWarning === true) {
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     } // Validate that the properties correspond to their expected values.
@@ -8461,13 +8384,13 @@ function diffHydratedGenericElement(
 function diffHydratedProperties(
   domElement,
   tag,
-  rawProps,
+  props,
   isConcurrentMode,
   shouldWarnDev,
   parentNamespaceDev
 ) {
   {
-    validatePropertiesInDevelopment(tag, rawProps);
+    validatePropertiesInDevelopment(tag, props);
   } // TODO: Make sure that we check isMounted before firing any of these events.
 
   switch (tag) {
@@ -8516,37 +8439,46 @@ function diffHydratedProperties(
       break;
 
     case "input":
-      initWrapperState$2(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      initWrapperState$2(domElement, props); // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
-      listenToNonDelegatedEvent("invalid", domElement);
+      listenToNonDelegatedEvent("invalid", domElement); // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+
+      track(domElement); // For input and textarea we current always set the value property at
+      // post mount to force it to diverge from attributes. However, for
+      // option and select we don't quite do the same thing and select
+      // is not resilient to the DOM state changing so we don't do that here.
+      // TODO: Consider not doing this for input and textarea.
+
+      postMountWrapper$3(domElement, props, true);
       break;
 
     case "option":
-      validateProps(domElement, rawProps);
+      validateProps(domElement, props);
       break;
 
     case "select":
-      initWrapperState$1(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      initWrapperState$1(domElement, props); // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
       break;
 
     case "textarea":
-      initWrapperState(domElement, rawProps); // We listen to this event in case to ensure emulated bubble
+      initWrapperState(domElement, props); // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
-      listenToNonDelegatedEvent("invalid", domElement);
+      listenToNonDelegatedEvent("invalid", domElement); // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+
+      track(domElement);
+      postMountWrapper(domElement);
       break;
   }
 
-  if (rawProps.hasOwnProperty("onScroll")) {
-    listenToNonDelegatedEvent("scroll", domElement);
-  }
-
   var updatePayload = null;
-  var children = rawProps.children; // For text content children we compare against textContent. This
+  var children = props.children; // For text content children we compare against textContent. This
   // might match additional HTML that is hidden when we read it using
   // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
   // satisfies our requirement. Our requirement is not to produce perfect
@@ -8558,7 +8490,7 @@ function diffHydratedProperties(
 
   if (typeof children === "string" || typeof children === "number") {
     if (domElement.textContent !== "" + children) {
-      if (rawProps.suppressHydrationWarning !== true) {
+      if (props.suppressHydrationWarning !== true) {
         checkForUnmatchedText(
           domElement.textContent,
           children,
@@ -8573,12 +8505,21 @@ function diffHydratedProperties(
     }
   }
 
+  if (props.onScroll != null) {
+    listenToNonDelegatedEvent("scroll", domElement);
+  }
+
+  if (props.onClick != null) {
+    // TODO: This cast may not be sound for SVG, MathML or custom elements.
+    trapClickOnNonInteractiveElement(domElement);
+  }
+
   if (shouldWarnDev) {
     var extraAttributeNames = new Set();
     var attributes = domElement.attributes;
 
-    for (var _i = 0; _i < attributes.length; _i++) {
-      var name = attributes[_i].name.toLowerCase();
+    for (var _i5 = 0; _i5 < attributes.length; _i5++) {
+      var name = attributes[_i5].name.toLowerCase();
 
       switch (name) {
         // Controlled attributes are not validated
@@ -8595,15 +8536,15 @@ function diffHydratedProperties(
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributeNames.add(attributes[_i].name);
+          extraAttributeNames.add(attributes[_i5].name);
       }
     }
 
-    if (isCustomComponent(tag, rawProps)) {
+    if (isCustomComponent(tag, props)) {
       diffHydratedCustomComponent(
         domElement,
         tag,
-        rawProps,
+        props,
         parentNamespaceDev,
         extraAttributeNames
       );
@@ -8611,7 +8552,7 @@ function diffHydratedProperties(
       diffHydratedGenericElement(
         domElement,
         tag,
-        rawProps,
+        props,
         parentNamespaceDev,
         extraAttributeNames
       );
@@ -8619,43 +8560,10 @@ function diffHydratedProperties(
 
     if (
       extraAttributeNames.size > 0 &&
-      rawProps.suppressHydrationWarning !== true
+      props.suppressHydrationWarning !== true
     ) {
       warnForExtraAttributes(extraAttributeNames);
     }
-  }
-
-  switch (tag) {
-    case "input":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper$3(domElement, rawProps, true);
-      break;
-
-    case "textarea":
-      // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-      track(domElement);
-      postMountWrapper(domElement);
-      break;
-
-    case "select":
-    case "option":
-      // For input and textarea we current always set the value property at
-      // post mount to force it to diverge from attributes. However, for
-      // option and select we don't quite do the same thing and select
-      // is not resilient to the DOM state changing so we don't do that here.
-      // TODO: Consider not doing this for input and textarea.
-      break;
-
-    default:
-      if (typeof rawProps.onClick === "function") {
-        // TODO: This cast may not be sound for SVG, MathML or custom elements.
-        trapClickOnNonInteractiveElement(domElement);
-      }
-
-      break;
   }
 
   return updatePayload;
@@ -39656,7 +39564,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-9a48e518";
+var ReactVersion = "18.3.0-www-classic-373670d7";
 
 function createPortal$1(
   children,
