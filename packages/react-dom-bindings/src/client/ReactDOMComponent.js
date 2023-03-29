@@ -802,17 +802,6 @@ export function diffProperties(
 
   let updatePayload: null | Array<any> = null;
 
-  switch (tag) {
-    case 'input':
-    case 'select':
-    case 'textarea':
-      // Schedule to ensure the commit phase happens
-      // TODO: Figure out if this is actually really necessary or if all scenarios
-      // will have changed props.
-      updatePayload = [];
-      break;
-  }
-
   let propKey;
   let styleName;
   let styleUpdates = null;
