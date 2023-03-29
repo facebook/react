@@ -33,7 +33,7 @@ function CaptureNotMutate(props) {
 //  - all other context refs are left as Unknown. InferReferenceEffects currently demotes
 //    them to reads
 function CaptureNotMutate(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = React.unstable_useMemoCache(5);
   const c_0 = $[0] !== props.x;
   let t0;
   if (c_0) {
@@ -45,30 +45,22 @@ function CaptureNotMutate(props) {
   }
   const idx = t0;
   const c_2 = $[2] !== props.el;
-  let t1;
-  if (c_2) {
-    t1 = bar(props.el);
-    $[2] = props.el;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const element = t1;
-  const c_4 = $[4] !== element;
-  const c_5 = $[5] !== idx;
+  const c_3 = $[3] !== idx;
   let aliasedElement;
-  if (c_4 || c_5) {
+  if (c_2 || c_3) {
+    const element = bar(props.el);
+
     const fn = function () {
       const arr = { element };
       return arr[idx];
     };
     aliasedElement = fn();
     mutate(aliasedElement);
-    $[4] = element;
-    $[5] = idx;
-    $[6] = aliasedElement;
+    $[2] = props.el;
+    $[3] = idx;
+    $[4] = aliasedElement;
   } else {
-    aliasedElement = $[6];
+    aliasedElement = $[4];
   }
   return aliasedElement;
 }

@@ -893,11 +893,20 @@ function inferBlock(
     instr.lvalue.effect = lvalueEffect;
   }
 
-  const effect =
-    block.terminal.kind === "return" || block.terminal.kind === "throw"
-      ? Effect.Freeze
-      : Effect.Read;
   for (const operand of eachTerminalOperand(block.terminal)) {
+    let effect;
+    if (block.terminal.kind === "return" || block.terminal.kind === "throw") {
+      if (
+        state.isDefined(operand) &&
+        state.kind(operand) === ValueKind.Context
+      ) {
+        effect = Effect.Mutate;
+      } else {
+        effect = Effect.Freeze;
+      }
+    } else {
+      effect = Effect.Read;
+    }
     state.reference(operand, effect);
   }
 }
