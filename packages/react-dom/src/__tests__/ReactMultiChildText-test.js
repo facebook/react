@@ -10,11 +10,12 @@
 'use strict';
 
 const React = require('react');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
 const ReactTestUtils = require('react-dom/test-utils');
+const act = require('internal-test-utils').act;
 
 // Helpers
-const testAllPermutations = function (testCases) {
+const testAllPermutations = async function (testCases) {
   for (let i = 0; i < testCases.length; i += 2) {
     const renderWithChildren = testCases[i];
     const expectedResultAfterRender = testCases[i + 1];
@@ -24,10 +25,11 @@ const testAllPermutations = function (testCases) {
       const expectedResultAfterUpdate = testCases[j + 1];
 
       const container = document.createElement('div');
-      ReactDOM.render(<div>{renderWithChildren}</div>, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<div>{renderWithChildren}</div>));
       expectChildren(container, expectedResultAfterRender);
 
-      ReactDOM.render(<div>{updateWithChildren}</div>, container);
+      await act(() => root.render(<div>{updateWithChildren}</div>));
       expectChildren(container, expectedResultAfterUpdate);
     }
   }
@@ -75,10 +77,12 @@ const expectChildren = function (container, children) {
  * faster to render and update.
  */
 describe('ReactMultiChildText', () => {
-  it('should correctly handle all possible children for render and update', () => {
-    expect(() => {
+  jest.setTimeout(20000);
+
+  it('should correctly handle all possible children for render and update', async () => {
+    await expect(async () => {
       // prettier-ignore
-      testAllPermutations([
+      await testAllPermutations([
         // basic values
         undefined, [],
         null, [],
