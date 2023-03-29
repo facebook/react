@@ -24,6 +24,7 @@ import {
   getValueForProperty,
   setValueForProperty,
   setValueForPropertyOnCustomComponent,
+  setValueForAttribute,
 } from './DOMPropertyOperations';
 import {
   initWrapperState as ReactDOMInputInitWrapperState,
@@ -408,7 +409,22 @@ function setProp(
         if (isCustomComponentTag) {
           setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          setValueForProperty(domElement, key, value);
+          if (
+            // shouldIgnoreAttribute
+            // We have already filtered out reserved words.
+            key.length > 2 &&
+            (key[0] === 'o' || key[0] === 'O') &&
+            (key[1] === 'n' || key[1] === 'N')
+          ) {
+            return;
+          }
+
+          const propertyInfo = getPropertyInfo(key);
+          if (propertyInfo !== null) {
+            setValueForProperty(domElement, propertyInfo, value);
+          } else {
+            setValueForAttribute(domElement, key, value);
+          }
         }
       }
     }
