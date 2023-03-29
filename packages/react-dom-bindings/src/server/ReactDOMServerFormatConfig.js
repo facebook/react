@@ -736,12 +736,13 @@ function pushAttribute(
         }
         break;
       default:
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         if (propertyInfo.sanitizeURL) {
-          if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-          value = '' + (value: any);
-          sanitizeURL(value);
+          // We've already checked above.
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          value = sanitizeURL('' + (value: any));
         }
         target.push(
           attributeSeparator,
@@ -3844,15 +3845,12 @@ function writeStyleResourceDependencyHrefOnlyInJS(
 
 function writeStyleResourceDependencyInJS(
   destination: Destination,
-  href: string,
-  precedence: string,
+  href: mixed,
+  precedence: mixed,
   props: Object,
 ) {
-  if (__DEV__) {
-    checkAttributeStringCoercion(href, 'href');
-  }
-  const coercedHref = '' + (href: any);
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const coercedHref = sanitizeURL('' + (href: any));
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
@@ -3939,8 +3937,7 @@ function writeStyleResourceAttributeInJS(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
     default: {
@@ -4041,15 +4038,12 @@ function writeStyleResourceDependencyHrefOnlyInAttr(
 
 function writeStyleResourceDependencyInAttr(
   destination: Destination,
-  href: string,
-  precedence: string,
+  href: mixed,
+  precedence: mixed,
   props: Object,
 ) {
-  if (__DEV__) {
-    checkAttributeStringCoercion(href, 'href');
-  }
-  const coercedHref = '' + (href: any);
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const coercedHref = sanitizeURL('' + (href: any));
   writeChunk(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
@@ -4136,8 +4130,7 @@ function writeStyleResourceAttributeInAttr(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
     default: {
