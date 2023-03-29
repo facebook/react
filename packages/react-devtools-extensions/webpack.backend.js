@@ -37,9 +37,9 @@ const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  // include source maps for production to enable ignore listing
+  // include empty source maps for production to enable ignore listing
   // so that Chrome DevTools doesn't show our code in error stack traces
-  devtool: __DEV__ ? 'cheap-module-source-map' : 'cheap-source-map',
+  devtool: __DEV__ ? 'cheap-module-source-map' : 'nosources-cheap-source-map',
   entry: {
     backend: './src/backend.js',
   },
