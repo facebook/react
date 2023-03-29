@@ -1,5 +1,6 @@
 const {resolve} = require('path');
-const {DefinePlugin} = require('webpack');
+const Webpack = require('webpack');
+const WebpackDevServer = require('webpack-dev-server');
 const fs = require('fs');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
@@ -61,11 +62,13 @@ const makeConfig = (entry, alias) => {
   const config = {
     mode: __DEV__ ? 'development' : 'production',
     devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
+    stats: TARGET === 'local' ? 'errors-only' : 'normal',
     entry,
+    output: {
+      publicPath: '/dist/',
+    },
     node: {
-      // source-maps package has a dependency on 'fs'
-      // but this build won't trigger that code path
-      fs: 'empty',
+      global: false,
     },
     resolve: {
       alias,
@@ -74,7 +77,7 @@ const makeConfig = (entry, alias) => {
       minimize: false,
     },
     plugins: [
-      new DefinePlugin({
+      new Webpack.DefinePlugin({
         __DEV__,
         __EXPERIMENTAL__: true,
         __EXTENSION__: false,
@@ -127,22 +130,6 @@ const makeConfig = (entry, alias) => {
     },
   };
 
-  if (TARGET === 'local') {
-    // Local dev server build.
-    config.devServer = {
-      hot: true,
-      port: 8080,
-      clientLogLevel: 'warning',
-      publicPath: '/dist/',
-      stats: 'errors-only',
-    };
-  } else {
-    // Static build to deploy somewhere else.
-    config.output = {
-      path: resolve(__dirname, 'dist'),
-      filename: '[name].js',
-    };
-  }
   return config;
 };
 
@@ -200,4 +187,46 @@ const e2eRegressionApp = semver.lt(REACT_VERSION, '18.0.0')
       },
     );
 
-module.exports = [app, e2eRegressionApp];
+const appCompiler = Webpack(app);
+const appServer = new WebpackDevServer(
+  {
+    hot: true,
+    open: true,
+    port: 8080,
+    client: {
+      logging: 'warn',
+    },
+    static: {
+      directory: __dirname,
+      publicPath: '/',
+    },
+  },
+  appCompiler,
+);
+
+const regAppCompiler = Webpack(e2eRegressionApp);
+const regAppServer = new WebpackDevServer(
+  {
+    hot: true,
+    port: 8181,
+    client: {
+      logging: 'warn',
+    },
+    static: [
+      {
+        publicPath: '/dist',
+      },
+    ],
+  },
+  regAppCompiler,
+);
+
+const runServer = async () => {
+  console.log('Starting server...');
+  await regAppServer.start();
+  await appServer.start();
+};
+
+runServer();
+
+// module.exports = [app, e2eRegressionApp];
