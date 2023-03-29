@@ -80,3 +80,7 @@ Object.keys(isUnitlessNumber).forEach(function (prop) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
+
+export default function (prop) {
+  return isUnitlessNumber.hasOwnProperty(prop);
+}

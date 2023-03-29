@@ -46,7 +46,7 @@ import {
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
-import {isUnitlessNumber} from '../shared/CSSProperty';
+import isUnitlessNumber from '../shared/isUnitlessNumber';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -579,10 +579,7 @@ function pushStyleAttribute(
 
       nameChunk = processStyleName(styleName);
       if (typeof styleValue === 'number') {
-        if (
-          styleValue !== 0 &&
-          !hasOwnProperty.call(isUnitlessNumber, styleName)
-        ) {
+        if (styleValue !== 0 && !isUnitlessNumber(styleName)) {
           valueChunk = stringToChunk(styleValue + 'px'); // Presumes implicit 'px' suffix for unitless numbers
         } else {
           valueChunk = stringToChunk('' + styleValue);
