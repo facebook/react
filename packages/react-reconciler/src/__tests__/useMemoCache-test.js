@@ -212,8 +212,7 @@ describe('useMemoCache()', () => {
       const cache = useMemoCache(5);
 
       // x is used to produce a `data` object passed to the child
-      const [x, _setX] = useState(0);
-      setX = _setX;
+      const [x] = useState(0);
 
       const c_0 = x !== cache[0];
       let data;
