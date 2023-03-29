@@ -21,7 +21,6 @@ export const {
   revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableUseRefAccessWarning,

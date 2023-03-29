@@ -387,11 +387,7 @@ describe('ReactIncrementalUpdates', () => {
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
-    if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
-      assertLog(['componentWillReceiveProps', 'render', 'render']);
-    } else {
-      assertLog(['componentWillReceiveProps', 'render']);
-    }
+    assertLog(['componentWillReceiveProps', 'render']);
   });
 
   it('updates triggered from inside a class setState updater', async () => {
@@ -419,26 +415,12 @@ describe('ReactIncrementalUpdates', () => {
 
     await expect(
       async () =>
-        await waitForAll(
-          gate(flags =>
-            flags.deferRenderPhaseUpdateToNextBatch
-              ? [
-                  'setState updater',
-                  // In the new reconciler, updates inside the render phase are
-                  // treated as if they came from an event, so the update gets
-                  // shifted to a subsequent render.
-                  'render',
-                  'render',
-                ]
-              : [
-                  'setState updater',
-                  // In the old reconciler, updates in the render phase receive
-                  // the currently rendering expiration time, so the update
-                  // flushes immediately in the same render.
-                  'render',
-                ],
-          ),
-        ),
+        await waitForAll([
+          'setState updater',
+          // Updates in the render phase receive the currently rendering
+          // lane, so the update flushes immediately in the same render.
+          'render',
+        ]),
     ).toErrorDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
@@ -454,15 +436,9 @@ describe('ReactIncrementalUpdates', () => {
     });
     await waitForAll(
       gate(flags =>
-        flags.deferRenderPhaseUpdateToNextBatch
-          ? // In the new reconciler, updates inside the render phase are
-            // treated as if they came from an event, so the update gets shifted
-            // to a subsequent render.
-            ['render', 'render']
-          : // In the old reconciler, updates in the render phase receive
-            // the currently rendering expiration time, so the update flushes
-            // immediately in the same render.
-            ['render'],
+        // Updates in the render phase receive the currently rendering
+        // lane, so the update flushes immediately in the same render.
+        ['render'],
       ),
     );
   });
