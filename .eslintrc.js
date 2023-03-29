@@ -449,6 +449,9 @@ module.exports = {
     $ReadOnlyArray: 'readonly',
     $Shape: 'readonly',
     AnimationFrameID: 'readonly',
+    // For Flow type annotation. Only `BigInt` is valid at runtime.
+    bigint: 'readonly',
+    BigInt: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',

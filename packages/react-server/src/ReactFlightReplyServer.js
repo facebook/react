@@ -402,6 +402,10 @@ function parseModelString(
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
+      case 'n': {
+        // BigInt
+        return BigInt(value.substring(2));
+      }
       default: {
         // We assume that anything else is a reference ID.
         const id = parseInt(value.substring(1), 16);
