@@ -9,12 +9,16 @@ import invariant from "invariant";
 import {
   Effect,
   HIRFunction,
-  Instruction,
+  InstructionId,
   makeInstructionId,
   Place,
 } from "../HIR/HIR";
-import { printInstruction, printPlace } from "../HIR/PrintHIR";
-import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
+import { printPlace } from "../HIR/PrintHIR";
+import {
+  eachInstructionLValue,
+  eachInstructionOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -60,22 +64,18 @@ import { assertExhaustive } from "../Utils/utils";
  * ```
  */
 
-function infer(place: Place, instr: Instruction): void {
-  place.identifier.mutableRange.end = makeInstructionId(instr.id + 1);
+function infer(place: Place, instrId: InstructionId): void {
+  place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
 }
 
 function inferPlace(
   place: Place,
-  instr: Instruction,
+  instrId: InstructionId,
   inferMutableRangeForStores: boolean
 ): void {
   switch (place.effect) {
     case Effect.Unknown: {
-      throw new Error(
-        `Found an unknown place ${printPlace(place)} at ${printInstruction(
-          instr
-        )}!`
-      );
+      throw new Error(`Found an unknown place ${printPlace(place)}}!`);
     }
     case Effect.Capture:
     case Effect.Read:
@@ -83,11 +83,11 @@ function inferPlace(
       return;
     case Effect.Store:
       if (inferMutableRangeForStores) {
-        infer(place, instr);
+        infer(place, instrId);
       }
       return;
     case Effect.Mutate: {
-      infer(place, instr);
+      infer(place, instrId);
       return;
     }
     default:
@@ -130,8 +130,11 @@ export function inferMutableLifetimes(
         lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
       }
       for (const operand of eachInstructionOperand(instr)) {
-        inferPlace(operand, instr, inferMutableRangeForStores);
+        inferPlace(operand, instr.id, inferMutableRangeForStores);
       }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      inferPlace(operand, block.terminal.id, inferMutableRangeForStores);
     }
   }
 }
