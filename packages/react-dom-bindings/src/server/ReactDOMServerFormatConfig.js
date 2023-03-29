@@ -611,6 +611,16 @@ const attributeAssign = stringToPrecomputedChunk('="');
 const attributeEnd = stringToPrecomputedChunk('"');
 const attributeEmptyString = stringToPrecomputedChunk('=""');
 
+function pushBooleanAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+    target.push(attributeSeparator, stringToChunk(name), attributeEmptyString);
+  }
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -627,6 +637,10 @@ function pushAttribute(
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
       // Ignored. These are built-in to React on the client.
+      return;
+    case 'multiple':
+    case 'muted':
+      pushBooleanAttribute(target, name, value);
       return;
   }
   if (
@@ -1112,9 +1126,9 @@ function pushInput(
   }
 
   if (checked !== null) {
-    pushAttribute(target, 'checked', checked);
+    pushBooleanAttribute(target, 'checked', checked);
   } else if (defaultChecked !== null) {
-    pushAttribute(target, 'checked', defaultChecked);
+    pushBooleanAttribute(target, 'checked', defaultChecked);
   }
   if (value !== null) {
     pushAttribute(target, 'value', value);

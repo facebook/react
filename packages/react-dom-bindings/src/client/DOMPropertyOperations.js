@@ -38,11 +38,6 @@ export function getValueForProperty(
   propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
-    if (propertyInfo.mustUseProperty) {
-      const {propertyName} = propertyInfo;
-      return (node: any)[propertyName];
-    }
-
     const attributeName = propertyInfo.attributeName;
 
     if (!node.hasAttribute(attributeName)) {
@@ -292,16 +287,6 @@ export function setValueForProperty(
   propertyInfo: PropertyInfo,
   value: mixed,
 ) {
-  if (propertyInfo.mustUseProperty) {
-    // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
-    // right now.
-    (node: any)[propertyInfo.propertyName] =
-      value && typeof value !== 'function' && typeof value !== 'symbol';
-    return;
-  }
-
-  // The rest are treated as attributes with special cases.
-
   const attributeName = propertyInfo.attributeName;
 
   if (value === null) {

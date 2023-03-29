@@ -183,56 +183,76 @@ function validateProperty(tagName, name, value, eventRegistry) {
 
     switch (typeof value) {
       case 'boolean': {
-        const prefix = name.toLowerCase().slice(0, 5);
-        const acceptsBooleans =
-          propertyInfo !== null
-            ? propertyInfo.acceptsBooleans
-            : prefix === 'data-' || prefix === 'aria-';
-        if (!acceptsBooleans) {
-          if (value) {
-            console.error(
-              'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-                'If you want to write it to the DOM, pass a string instead: ' +
-                '%s="%s" or %s={value.toString()}.',
-              value,
-              name,
-              name,
-              value,
-              name,
-            );
-          } else {
-            console.error(
-              'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-                'If you want to write it to the DOM, pass a string instead: ' +
-                '%s="%s" or %s={value.toString()}.\n\n' +
-                'If you used to conditionally omit it with %s={condition && value}, ' +
-                'pass %s={condition ? value : undefined} instead.',
-              value,
-              name,
-              name,
-              value,
-              name,
-              name,
-              name,
-            );
+        switch (name) {
+          case 'checked':
+          case 'selected':
+          case 'multiple':
+          case 'muted': {
+            // Boolean properties can accept boolean values
+            return true;
           }
-          warnedProperties[name] = true;
-          return true;
+          default: {
+            if (propertyInfo === null) {
+              const prefix = name.toLowerCase().slice(0, 5);
+              if (prefix === 'data-' || prefix === 'aria-') {
+                return true;
+              }
+            } else if (propertyInfo.acceptsBooleans) {
+              return true;
+            }
+            if (value) {
+              console.error(
+                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+                  'If you want to write it to the DOM, pass a string instead: ' +
+                  '%s="%s" or %s={value.toString()}.',
+                value,
+                name,
+                name,
+                value,
+                name,
+              );
+            } else {
+              console.error(
+                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+                  'If you want to write it to the DOM, pass a string instead: ' +
+                  '%s="%s" or %s={value.toString()}.\n\n' +
+                  'If you used to conditionally omit it with %s={condition && value}, ' +
+                  'pass %s={condition ? value : undefined} instead.',
+                value,
+                name,
+                name,
+                value,
+                name,
+                name,
+                name,
+              );
+            }
+            warnedProperties[name] = true;
+            return true;
+          }
         }
-        return true;
       }
       case 'function':
       case 'symbol': // eslint-disable-line
         // Warn when a known attribute is a bad type
         warnedProperties[name] = true;
         return false;
-      case 'string':
+      case 'string': {
         // Warn when passing the strings 'false' or 'true' into a boolean prop
-        if (
-          (value === 'false' || value === 'true') &&
-          propertyInfo !== null &&
-          propertyInfo.type === BOOLEAN
-        ) {
+        if (value === 'false' || value === 'true') {
+          switch (name) {
+            case 'checked':
+            case 'selected':
+            case 'multiple':
+            case 'muted': {
+              break;
+            }
+            default: {
+              if (propertyInfo === null || propertyInfo.type !== BOOLEAN) {
+                return true;
+              }
+            }
+          }
           console.error(
             'Received the string `%s` for the boolean attribute `%s`. ' +
               '%s ' +
@@ -248,6 +268,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           warnedProperties[name] = true;
           return true;
         }
+      }
     }
     return true;
   }
