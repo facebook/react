@@ -18,7 +18,6 @@ export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
   revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
@@ -26,8 +25,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableUseRefAccessWarning,
-  disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
@@ -49,6 +46,8 @@ export const enableUpdaterTracking = __PROFILE__;
 export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
+
+export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseHook = true;

@@ -77,7 +77,7 @@ if (enableCache && enableFetchInstrumentation) {
         const request = new Request(resource, options);
         if (
           (request.method !== 'GET' && request.method !== 'HEAD') ||
-          // $FlowFixMe: keepalive is real
+          // $FlowFixMe[prop-missing]: keepalive is real
           request.keepalive
         ) {
           // We currently don't dedupe requests that might have side-effects. Those

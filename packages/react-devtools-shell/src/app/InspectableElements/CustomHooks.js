@@ -107,7 +107,7 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
   function Hoc() {
     return <Component />;
   }
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   const displayName = Component.displayName || Component.name;
   // $FlowFixMe[incompatible-type] found when upgrading Flow
   Hoc.displayName = `withHoc(${displayName})`;

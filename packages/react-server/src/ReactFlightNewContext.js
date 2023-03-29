@@ -165,7 +165,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   const next = newSnapshot;
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);

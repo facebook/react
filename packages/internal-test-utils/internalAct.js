@@ -35,7 +35,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
     );
   }
 
-  // $FlowFixMe: Flow doesn't know about global Jest object
+  // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
   if (!jest.isMockFunction(setTimeout)) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +
@@ -70,7 +70,7 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       // Wait until end of current task/microtask.
       await waitForMicrotasks();
 
-      // $FlowFixMe: Flow doesn't know about global Jest object
+      // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
       if (jest.isEnvironmentTornDown()) {
         error.message =
           'The Jest environment was torn down before `act` completed. This ' +
@@ -79,8 +79,20 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       }
 
       if (!Scheduler.unstable_hasPendingWork()) {
-        // $FlowFixMe: Flow doesn't know about global Jest object
-        jest.runOnlyPendingTimers();
+        // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
+        const j = jest;
+        if (j.getTimerCount() > 0) {
+          // There's a pending timer. Flush it now. We only do this in order to
+          // force Suspense fallbacks to display; the fact that it's a timer
+          // is an implementation detail. If there are other timers scheduled,
+          // those will also fire now, too, which is not ideal. (The public
+          // version of `act` doesn't do this.) For this reason, we should try
+          // to avoid using timers in our internal tests.
+          j.runOnlyPendingTimers();
+          // If a committing a fallback triggers another update, it might not
+          // get scheduled until a microtask. So wait one more time.
+          await waitForMicrotasks();
+        }
         if (Scheduler.unstable_hasPendingWork()) {
           // Committing a fallback scheduled additional work. Continue flushing.
         } else {

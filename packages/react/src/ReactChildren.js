@@ -125,7 +125,7 @@ function mapIntoArray(
         if (__DEV__) {
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
-          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
           if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
             checkKeyStringCoercion(mappedChild.key);
           }
@@ -135,7 +135,7 @@ function mapIntoArray(
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
-            // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+            // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
                   // $FlowFixMe[unsafe-addition]
@@ -191,7 +191,7 @@ function mapIntoArray(
       const iterator = iteratorFn.call(iterableChildren);
       let step;
       let ii = 0;
-      // $FlowFixMe `iteratorFn` might return null according to typing.
+      // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getElementKey(child, ii++);

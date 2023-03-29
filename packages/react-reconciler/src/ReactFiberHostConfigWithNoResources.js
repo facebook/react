@@ -19,6 +19,7 @@ function shim(...args: any): empty {
 }
 
 export type HoistableRoot = mixed;
+export type Resource = mixed;
 
 // Resources (when unsupported)
 export const supportsResources = false;

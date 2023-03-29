@@ -72,7 +72,7 @@ export class SuspenseEventsView extends View {
       if (!this._depthToSuspenseEvent.has(depth)) {
         this._depthToSuspenseEvent.set(depth, [event]);
       } else {
-        // $FlowFixMe This is unnecessary.
+        // $FlowFixMe[incompatible-use] This is unnecessary.
         this._depthToSuspenseEvent.get(depth).push(event);
       }
     });

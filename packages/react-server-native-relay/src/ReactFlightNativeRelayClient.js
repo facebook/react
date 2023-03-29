@@ -25,25 +25,31 @@ export {createResponse, close, getRoot};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
   if (chunk[0] === 'O') {
-    // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
+    // $FlowFixMe[incompatible-call] `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
     resolveModel(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'I') {
-    // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
+    // $FlowFixMe[incompatible-call] `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
     resolveModule(response, chunk[1], chunk[2]);
   } else {
     if (__DEV__) {
       resolveErrorDev(
         response,
         chunk[1],
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
+        // $FlowFixMe[prop-missing]
         chunk[2].digest,
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
         chunk[2].message || '',
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
         chunk[2].stack || '',
       );
     } else {
-      // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+      // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+      // $FlowFixMe[incompatible-use]
+      // $FlowFixMe[prop-missing]
       resolveErrorProd(response, chunk[1], chunk[2].digest);
     }
   }

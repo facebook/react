@@ -148,8 +148,6 @@ function convertModelToJSON(
       }
       return jsonArray;
     } else {
-      /* $FlowFixMe the old version of Flow doesn't have a good way to define
-       * an empty exact object. */
       const jsonObj: {[key: string]: JSONValue} = {};
       for (const nextKey in json) {
         if (hasOwnProperty.call(json, nextKey)) {
@@ -172,7 +170,6 @@ export function processModelChunk(
   id: number,
   model: ReactClientValue,
 ): Chunk {
-  // $FlowFixMe no good way to define an empty exact object
   const json = convertModelToJSON(request, {}, '', model);
   return ['O', id, json];
 }
@@ -207,7 +204,7 @@ export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): void {
-  // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
+  // $FlowFixMe[incompatible-call] `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
   emitRow(destination, chunk);
 }
 
@@ -215,7 +212,7 @@ export function writeChunkAndReturn(
   destination: Destination,
   chunk: Chunk,
 ): boolean {
-  // $FlowFixMe `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
+  // $FlowFixMe[incompatible-call] `Chunk` doesn't flow into `JSONValue` because of the `E` row type.
   emitRow(destination, chunk);
   return true;
 }

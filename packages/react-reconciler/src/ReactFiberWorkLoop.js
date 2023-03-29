@@ -169,6 +169,8 @@ import {
   addTransitionToLanesMap,
   getTransitionsForLanes,
   includesOnlyNonUrgentLanes,
+  includesSomeLane,
+  OffscreenLane,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -1795,7 +1797,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
     // The root previous suspended and scheduled a timeout to commit a fallback
     // state. Now that we have additional work, cancel the timeout.
     root.timeoutHandle = noTimeout;
-    // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
+    // $FlowFixMe[incompatible-call] Complains noTimeout is not a TimeoutID, despite the check above
     cancelTimeout(timeoutHandle);
   }
   const cancelPendingCommit = root.cancelPendingCommit;
@@ -1997,17 +1999,27 @@ export function shouldRemainOnPreviousScreen(): boolean {
     // parent Suspense boundary, even outside a transition. Somehow. Otherwise,
     // an uncached promise can fall into an infinite loop.
   } else {
-    if (includesOnlyRetries(workInProgressRootRenderLanes)) {
+    if (
+      includesOnlyRetries(workInProgressRootRenderLanes) ||
+      // In this context, an OffscreenLane counts as a Retry
+      // TODO: It's become increasingly clear that Retries and Offscreen are
+      // deeply connected. They probably can be unified further.
+      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+    ) {
       // During a retry, we can suspend rendering if the nearest Suspense boundary
       // is the boundary of the "shell", because we're guaranteed not to block
       // any new content from appearing.
+      //
+      // The reason we must check if this is a retry is because it guarantees
+      // that suspending the work loop won't block an actual update, because
+      // retries don't "update" anything; they fill in fallbacks that were left
+      // behind by a previous transition.
       return handler === getShellBoundary();
     }
   }
 
   // For all other Lanes besides Transitions and Retries, we should not wait
   // for the data to load.
-  // TODO: We should wait during Offscreen prerendering, too.
   return false;
 }
 

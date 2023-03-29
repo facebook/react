@@ -4,7 +4,9 @@ let ReactNoop;
 let resolveSuspenseyThing;
 let getSuspenseyThingStatus;
 let Suspense;
+let Offscreen;
 let SuspenseList;
+let useMemo;
 let Scheduler;
 let act;
 let assertLog;
@@ -18,10 +20,11 @@ describe('ReactSuspenseyCommitPhase', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
     }
+    Offscreen = React.unstable_Offscreen;
+    useMemo = React.useMemo;
     startTransition = React.startTransition;
     resolveSuspenseyThing = ReactNoop.resolveSuspenseyThing;
     getSuspenseyThingStatus = ReactNoop.getSuspenseyThingStatus;
@@ -276,6 +279,69 @@ describe('ReactSuspenseyCommitPhase', () => {
           <suspensey-thing src="B" />
         </suspensey-thing>
         <suspensey-thing src="C" />
+      </>,
+    );
+  });
+
+  // @gate enableOffscreen
+  test("host instances don't suspend during prerendering, but do suspend when they are revealed", async () => {
+    function More() {
+      Scheduler.log('More');
+      return <SuspenseyImage src="More" />;
+    }
+
+    function Details({showMore}) {
+      Scheduler.log('Details');
+      const more = useMemo(() => <More />, []);
+      return (
+        <>
+          <div>Main Content</div>
+          <Offscreen mode={showMore ? 'visible' : 'hidden'}>{more}</Offscreen>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<Details showMore={false} />);
+      // First render the outer component, without the hidden content
+      await waitForPaint(['Details']);
+      expect(root).toMatchRenderedOutput(<div>Main Content</div>);
+    });
+    // Then prerender the hidden content.
+    assertLog(['More', 'Image requested [More]']);
+    // The prerender should commit even though the image is still loading,
+    // because it's hidden.
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Main Content</div>
+        <suspensey-thing hidden={true} src="More" />
+      </>,
+    );
+
+    // Reveal the prerendered content. This update should suspend, because the
+    // image that is being revealed still hasn't loaded.
+    await act(() => {
+      startTransition(() => {
+        root.render(<Details showMore={true} />);
+      });
+    });
+    // The More component should not render again, because it was memoized,
+    // and it already prerendered.
+    assertLog(['Details']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Main Content</div>
+        <suspensey-thing hidden={true} src="More" />
+      </>,
+    );
+
+    // Now resolve the image. The transition should complete.
+    resolveSuspenseyThing('More');
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Main Content</div>
+        <suspensey-thing src="More" />
       </>,
     );
   });

@@ -137,7 +137,7 @@ export function lazy<T>(
     // In production, this would just set it on the object.
     let defaultProps;
     let propTypes;
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     Object.defineProperties(lazyType, {
       defaultProps: {
         configurable: true,
@@ -153,7 +153,7 @@ export function lazy<T>(
           );
           defaultProps = newDefaultProps;
           // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
           Object.defineProperty(lazyType, 'defaultProps', {
             enumerable: true,
           });
@@ -173,7 +173,7 @@ export function lazy<T>(
           );
           propTypes = newPropTypes;
           // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
           Object.defineProperty(lazyType, 'propTypes', {
             enumerable: true,
           });
