@@ -133,6 +133,42 @@ describe('ChangeEventPlugin', () => {
     }
   });
 
+  it('should not invoke a change event for textarea same value', () => {
+    let called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    const node = ReactDOM.render(
+      <textarea onChange={cb} defaultValue="initial" />,
+      container,
+    );
+    node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
+  });
+
+  it('should not invoke a change event for textarea same value (capture)', () => {
+    let called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    const node = ReactDOM.render(
+      <textarea onChangeCapture={cb} defaultValue="initial" />,
+      container,
+    );
+    node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
+  });
+
   it('should consider initial checkbox checked=true to be current', () => {
     let called = 0;
 

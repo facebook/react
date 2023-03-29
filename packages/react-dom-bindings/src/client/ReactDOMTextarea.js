@@ -17,7 +17,7 @@ import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
 let didWarnValDefaultVal = false;
 
-type TextAreaWithWrapperState = HTMLTextAreaElement & {
+export type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {initialValue: ToStringValue},
 };
 
@@ -36,31 +36,6 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
  * The rendered element will be initialized with an empty value, the prop
  * `defaultValue` if specified, or the children content (deprecated).
  */
-
-export function getHostProps(element: Element, props: Object): Object {
-  const node = ((element: any): TextAreaWithWrapperState);
-
-  if (props.dangerouslySetInnerHTML != null) {
-    throw new Error(
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
-    );
-  }
-
-  // Always set children to the same thing. In IE9, the selection range will
-  // get reset if `textContent` is mutated.  We could add a check in setTextContent
-  // to only set the value if/when the value differs from the node value (which would
-  // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
-  // solution. The value can be a boolean or object so that's why it's forced
-  // to be a string.
-  const hostProps = {
-    ...props,
-    value: undefined,
-    defaultValue: undefined,
-    children: toString(node._wrapperState.initialValue),
-  };
-
-  return hostProps;
-}
 
 export function initWrapperState(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
@@ -120,8 +95,10 @@ export function initWrapperState(element: Element, props: Object) {
     initialValue = defaultValue;
   }
 
+  const stringValue = getToStringValue(initialValue);
+  node.defaultValue = (stringValue: any); // This will be toString:ed.
   node._wrapperState = {
-    initialValue: getToStringValue(initialValue),
+    initialValue: stringValue,
   };
 }
 
