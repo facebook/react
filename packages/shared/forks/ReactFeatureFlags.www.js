@@ -27,6 +27,7 @@ export const {
   enableUnifiedSyncLane,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
