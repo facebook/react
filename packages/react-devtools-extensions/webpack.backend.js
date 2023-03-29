@@ -2,6 +2,7 @@
 
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
+const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin')
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -36,7 +37,9 @@ const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  // include source maps for production to enable ignore listing
+  // so that Chrome DevTools doesn't show our code in error stack traces
+  devtool: __DEV__ ? 'cheap-module-source-map' : 'cheap-source-map',
   entry: {
     backend: './src/backend.js',
   },
@@ -45,12 +48,7 @@ module.exports = {
     filename: 'react_devtools_backend.js',
   },
   node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
+    global: false,
   },
   resolve: {
     alias: {
@@ -79,6 +77,15 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+    }),
+    new DevToolsIgnorePlugin({
+      shouldIgnorePath: function(path) {
+        // ignore everything for production
+        if (!__DEV__) {
+          return true;
+        }
+        return path.includes("/node_modules/") || path.includes("/webpack/");
+      }
     }),
   ],
   module: {
