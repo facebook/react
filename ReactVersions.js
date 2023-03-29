@@ -18,7 +18,11 @@
 //
 //   0.0.0-experimental-241c4467e-20200129
 
+<<<<<<< HEAD
 const ReactVersion = '18.3.0';
+=======
+const ReactVersion = '19.0.0';
+>>>>>>> 6d987bc69 (New react version)
 
 // The label used by the @next channel. Represents the upcoming release's
 // stability. Could be "alpha", "beta", "rc", etc.
