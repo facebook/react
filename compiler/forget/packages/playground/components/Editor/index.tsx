@@ -57,6 +57,7 @@ function parseFunctions(
       FunctionDeclaration: {
         enter(nodePath) {
           items.push(nodePath);
+          nodePath.skip();
         },
       },
     });
