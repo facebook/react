@@ -38,9 +38,9 @@ import {
   clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   getPropertyInfo,
-  isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,

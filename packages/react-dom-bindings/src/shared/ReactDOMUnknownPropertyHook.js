@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {ATTRIBUTE_NAME_CHAR, BOOLEAN, getPropertyInfo} from './DOMProperty';
+import {BOOLEAN, getPropertyInfo} from './DOMProperty';
+import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';

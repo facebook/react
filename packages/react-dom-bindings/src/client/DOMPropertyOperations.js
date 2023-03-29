@@ -8,12 +8,13 @@
  */
 
 import {
-  isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
+
+import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableTrustedTypesIntegration,
