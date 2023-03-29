@@ -12,25 +12,25 @@ import enqueueTask from './enqueueTask';
 
 export {act} from './internalAct';
 
-function assertYieldsWereCleared(Scheduler) {
-  const actualYields = Scheduler.unstable_clearLog();
+function assertYieldsWereCleared(caller) {
+  const actualYields = SchedulerMock.unstable_clearLog();
   if (actualYields.length !== 0) {
     const error = Error(
       'The event log is not empty. Call assertLog(...) first.',
     );
-    Error.captureStackTrace(error, assertYieldsWereCleared);
+    Error.captureStackTrace(error, caller);
     throw error;
   }
 }
 
-async function waitForMicrotasks() {
+export async function waitForMicrotasks() {
   return new Promise(resolve => {
     enqueueTask(() => resolve());
   });
 }
 
 export async function waitFor(expectedLog, options) {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(waitFor);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.
@@ -79,7 +79,7 @@ ${diff(expectedLog, actualLog)}
 }
 
 export async function waitForAll(expectedLog) {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(waitForAll);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.
@@ -110,7 +110,7 @@ ${diff(expectedLog, actualLog)}
 }
 
 export async function waitForThrow(expectedError: mixed): mixed {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(waitForThrow);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.
@@ -160,7 +160,7 @@ ${diff(expectedError, x)}
 // avoid using it in tests. It's really only for testing a particular
 // implementation detail (update starvation prevention).
 export async function unstable_waitForExpired(expectedLog): mixed {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(unstable_waitForExpired);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.
@@ -189,7 +189,7 @@ ${diff(expectedLog, actualLog)}
 // now because that's how untable_flushUntilNextPaint already worked, but maybe
 // we should split these use cases into separate APIs.
 export async function waitForPaint(expectedLog) {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(waitForPaint);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.
@@ -219,7 +219,7 @@ ${diff(expectedLog, actualLog)}
 }
 
 export async function waitForDiscrete(expectedLog) {
-  assertYieldsWereCleared(SchedulerMock);
+  assertYieldsWereCleared(waitForDiscrete);
 
   // Create the error object before doing any async work, to get a better
   // stack trace.

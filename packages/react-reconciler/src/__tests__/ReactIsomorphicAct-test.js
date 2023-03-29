@@ -16,6 +16,7 @@ let use;
 let Suspense;
 let DiscreteEventPriority;
 let startTransition;
+let waitForMicrotasks;
 
 describe('isomorphic act()', () => {
   beforeEach(() => {
@@ -28,6 +29,8 @@ describe('isomorphic act()', () => {
     use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+
+    waitForMicrotasks = require('internal-test-utils').waitForMicrotasks;
   });
 
   beforeEach(() => {
@@ -51,7 +54,7 @@ describe('isomorphic act()', () => {
     // Nothing has rendered yet
     expect(root).toMatchRenderedOutput(null);
     // Flush the microtasks by awaiting
-    await null;
+    await waitForMicrotasks();
     expect(root).toMatchRenderedOutput('A');
 
     // Now do the same thing but wrap the update with `act`. No
@@ -229,9 +232,7 @@ describe('isomorphic act()', () => {
     //
     // The exact number of microtasks is an implementation detail; just needs
     // to happen when the microtask queue is flushed.
-    await null;
-    await null;
-    await null;
+    await waitForMicrotasks();
 
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.mock.calls[0][0]).toContain(
@@ -282,9 +283,7 @@ describe('isomorphic act()', () => {
     //
     // The exact number of microtasks is an implementation detail; just needs
     // to happen when the microtask queue is flushed.
-    await null;
-    await null;
-    await null;
+    await waitForMicrotasks();
 
     expect(console.error).toHaveBeenCalledTimes(0);
 
