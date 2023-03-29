@@ -103,9 +103,13 @@ export function initWrapperState(element: Element, props: Object) {
 
   const node = ((element: any): InputWithWrapperState);
   const defaultValue = props.defaultValue == null ? '' : props.defaultValue;
+  const initialChecked =
+    props.checked != null ? props.checked : props.defaultChecked;
   node._wrapperState = {
     initialChecked:
-      props.checked != null ? props.checked : props.defaultChecked,
+      typeof initialChecked !== 'function' &&
+      typeof initialChecked !== 'symbol' &&
+      !!initialChecked,
     initialValue: getToStringValue(
       props.value != null ? props.value : defaultValue,
     ),
