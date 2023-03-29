@@ -2,7 +2,7 @@
 
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
-const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin')
+const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -79,13 +79,13 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
     new DevToolsIgnorePlugin({
-      shouldIgnorePath: function(path) {
+      shouldIgnorePath: function (path) {
         // ignore everything for production
         if (!__DEV__) {
           return true;
         }
-        return path.includes("/node_modules/") || path.includes("/webpack/");
-      }
+        return path.includes('/node_modules/') || path.includes('/webpack/');
+      },
     }),
   ],
   module: {
