@@ -552,19 +552,8 @@ describe('ReactIncrementalUpdates', () => {
     // The transition should not have expired, so we should be able to
     // partially render it.
     await waitFor(['A']);
-
-    // FIXME:  We should be able to partially render B, too, but currently it
-    // expires. This is an existing bug that I discovered, which will be fixed
-    // in a PR that I'm currently working on.
-    //
-    // Correct behavior:
-    //   await waitFor(['B']);
-    //   await waitForAll(['C', 'D']);
-    //
-    // Current behavior:
-    await waitFor(['B'], {
-      additionalLogsAfterAttemptingToYield: ['C', 'D'],
-    });
+    await waitFor(['B']);
+    await waitForAll(['C', 'D']);
   });
 
   it('regression: does not expire soon due to previous expired work', async () => {

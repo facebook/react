@@ -258,13 +258,7 @@ describe(`onRender`, () => {
 
     // TODO: unstable_now is called by more places than just the profiler.
     // Rewrite this test so it's less fragile.
-    assertLog([
-      'read current time',
-      'read current time',
-      'read current time',
-      'read current time',
-      'read current time',
-    ]);
+    assertLog(['read current time', 'read current time', 'read current time']);
 
     // Restore original mock
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));

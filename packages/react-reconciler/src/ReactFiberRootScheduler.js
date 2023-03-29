@@ -11,10 +11,10 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
 
-import {enableDeferRootSchedulingToMicrotask} from 'shared/ReactFeatureFlags';
 import {
   NoLane,
   NoLanes,
+  SyncLane,
   getHighestPriorityLane,
   getNextLanes,
   includesOnlyNonUrgentLanes,
@@ -111,27 +111,15 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
       scheduleImmediateTask(processRootScheduleInMicrotask);
     }
   }
-
-  if (!enableDeferRootSchedulingToMicrotask) {
-    // While this flag is disabled, we schedule the task immediately instead
-    // of waiting for the microtask to fire.
-    // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
-    // unblock additional features we have planned.
-    scheduleTaskForRootDuringMicrotask(root, now());
-  }
 }
 
-// TODO: Rename to something else. This isn't a generic callback queue anymore.
-// I only kept the existing name to reduce noise in the initial PR diff.
-export function flushSyncCallbacks() {
+export function flushSyncWorkOnAllRoots() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
   flushSyncWorkAcrossRoots_impl(false);
 }
 
-// TODO: Rename to something else. This isn't a generic callback queue anymore.
-// I only kept the existing name to reduce noise in the initial PR diff.
-export function flushSyncCallbacksOnlyInLegacyMode() {
+export function flushSyncWorkOnLegacyRootsOnly() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
   flushSyncWorkAcrossRoots_impl(true);
@@ -255,7 +243,7 @@ function processRootScheduleInMicrotask() {
     } else {
       // This root still has work. Keep it in the list.
       prev = root;
-      if (includesSyncLane) {
+      if (includesSyncLane(nextLanes)) {
         mightHavePendingSyncWork = true;
       }
     }
@@ -264,7 +252,7 @@ function processRootScheduleInMicrotask() {
 
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
-  flushSyncCallbacks();
+  flushSyncWorkOnAllRoots();
 }
 
 function scheduleTaskForRootDuringMicrotask(
@@ -274,9 +262,6 @@ function scheduleTaskForRootDuringMicrotask(
   // This function is always called inside a microtask, or at the very end of a
   // rendering task right before we yield to the main thread. It should never be
   // called synchronously.
-  //
-  // TODO: Unless enableDeferRootSchedulingToMicrotask is off. We need to land
-  // that ASAP to unblock additional features we have planned.
   //
   // This function also never performs React work synchronously; it should
   // only schedule work to be performed later, in a separate task or microtask.
@@ -306,30 +291,28 @@ function scheduleTaskForRootDuringMicrotask(
   ) {
     // Fast path: There's nothing to work on.
     if (existingCallbackNode !== null) {
-      if (__DEV__ && existingCallbackNode === fakeActCallbackNode) {
-        // Special `act` case: check if this is the fake callback node used by
-        // the `act` implementation.
-      } else {
-        Scheduler_cancelCallback(existingCallbackNode);
-      }
+      cancelCallback(existingCallbackNode);
     }
     root.callbackNode = null;
     root.callbackPriority = NoLane;
     return NoLane;
   }
 
-  // We use the highest priority lane to represent the priority of the callback.
-  const existingCallbackPriority = root.callbackPriority;
-  const newCallbackPriority = getHighestPriorityLane(nextLanes);
-
   // Schedule a new callback in the host environment.
-  if (includesSyncLane(newCallbackPriority)) {
-    // Synchronous work will be flushed at the end of the microtask; we don't
-    // need to schedule anything extra.
-    mightHavePendingSyncWork = true;
-    root.callbackPriority = newCallbackPriority;
+  if (includesSyncLane(nextLanes)) {
+    // Synchronous work is always flushed at the end of the microtask, so we
+    // don't need to schedule an additional task.
+    if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+    }
+    root.callbackPriority = SyncLane;
     root.callbackNode = null;
+    return SyncLane;
   } else {
+    // We use the highest priority lane to represent the priority of the callback.
+    const existingCallbackPriority = root.callbackPriority;
+    const newCallbackPriority = getHighestPriorityLane(nextLanes);
+
     if (
       newCallbackPriority === existingCallbackPriority &&
       // Special case related to `act`. If the currently scheduled task is a
@@ -374,9 +357,8 @@ function scheduleTaskForRootDuringMicrotask(
 
     root.callbackPriority = newCallbackPriority;
     root.callbackNode = newCallbackNode;
+    return newCallbackPriority;
   }
-
-  return newCallbackPriority;
 }
 
 export type RenderTaskFn = (didTimeout: boolean) => RenderTaskFn | null;
