@@ -3,84 +3,78 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-export const isUnitlessNumber = {
-  animationIterationCount: true,
-  aspectRatio: true,
-  borderImageOutset: true,
-  borderImageSlice: true,
-  borderImageWidth: true,
-  boxFlex: true,
-  boxFlexGroup: true,
-  boxOrdinalGroup: true,
-  columnCount: true,
-  columns: true,
-  flex: true,
-  flexGrow: true,
-  flexPositive: true,
-  flexShrink: true,
-  flexNegative: true,
-  flexOrder: true,
-  gridArea: true,
-  gridRow: true,
-  gridRowEnd: true,
-  gridRowSpan: true,
-  gridRowStart: true,
-  gridColumn: true,
-  gridColumnEnd: true,
-  gridColumnSpan: true,
-  gridColumnStart: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  scale: true,
-  tabSize: true,
-  widows: true,
-  zIndex: true,
-  zoom: true,
-
-  // SVG-related properties
-  fillOpacity: true,
-  floodOpacity: true,
-  stopOpacity: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  strokeMiterlimit: true,
-  strokeOpacity: true,
-  strokeWidth: true,
-};
-
-/**
- * @param {string} prefix vendor-specific prefix, eg: Webkit
- * @param {string} key style name, eg: transitionDuration
- * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
- * WebkitTransitionDuration
- */
-function prefixKey(prefix, key) {
-  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
-}
-
-/**
- * Support style names that may come passed in prefixed by adding permutations
- * of vendor prefixes.
- */
-const prefixes = ['Webkit', 'ms', 'Moz', 'O'];
-
-// Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
-// infinite loop, because it iterates over the newly added props too.
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
-  });
-});
-
-export default function (prop) {
-  return isUnitlessNumber.hasOwnProperty(prop);
+export default function (name: string): boolean {
+  switch (name) {
+    case 'animationIterationCount':
+    case 'aspectRatio':
+    case 'borderImageOutset':
+    case 'borderImageSlice':
+    case 'borderImageWidth':
+    case 'boxFlex':
+    case 'boxFlexGroup':
+    case 'boxOrdinalGroup':
+    case 'columnCount':
+    case 'columns':
+    case 'flex':
+    case 'flexGrow':
+    case 'flexPositive':
+    case 'flexShrink':
+    case 'flexNegative':
+    case 'flexOrder':
+    case 'gridArea':
+    case 'gridRow':
+    case 'gridRowEnd':
+    case 'gridRowSpan':
+    case 'gridRowStart':
+    case 'gridColumn':
+    case 'gridColumnEnd':
+    case 'gridColumnSpan':
+    case 'gridColumnStart':
+    case 'fontWeight':
+    case 'lineClamp':
+    case 'lineHeight':
+    case 'opacity':
+    case 'order':
+    case 'orphans':
+    case 'scale':
+    case 'tabSize':
+    case 'widows':
+    case 'zIndex':
+    case 'zoom':
+    case 'fillOpacity': // SVG-related properties
+    case 'floodOpacity':
+    case 'stopOpacity':
+    case 'strokeDasharray':
+    case 'strokeDashoffset':
+    case 'strokeMiterlimit':
+    case 'strokeOpacity':
+    case 'strokeWidth':
+    case 'MozAnimationIterationCount': // Known Prefixed Properties
+    case 'MozBoxFlex': // TODO: Remove these since they shouldn't be used in modern code
+    case 'MozBoxFlexGroup':
+    case 'MozLineClamp':
+    case 'msFlexGrow':
+    case 'msLineClamp':
+    case 'WebkitAnimationIterationCount':
+    case 'WebkitBoxFlex':
+    case 'WebKitBoxFlexGroup':
+    case 'WebkitBoxOrdinalGroup':
+    case 'WebkitColumnCount':
+    case 'WebkitColumns':
+    case 'WebkitFlex':
+    case 'WebkitFlexGrow':
+    case 'WebkitFlexPositive':
+    case 'WebkitFlexShrink':
+    case 'WebkitLineClamp':
+      return true;
+    default:
+      return false;
+  }
 }
