@@ -175,6 +175,14 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       }
       break;
     }
+    case "do-while": {
+      writer.writeLine(`[${terminal.id}] do-while {`);
+      printReactiveInstructions(writer, terminal.loop);
+      writer.writeLine("} (");
+      printReactiveValue(writer, terminal.test);
+      writer.writeLine(")");
+      break;
+    }
     case "while": {
       writer.writeLine(`[${terminal.id}] while (`);
       printReactiveValue(writer, terminal.test);
@@ -240,6 +248,8 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       }
       break;
     }
+    default:
+      assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
   }
 }
 
