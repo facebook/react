@@ -1446,46 +1446,7 @@ function lowerExpression(
       const expr = exprPath as NodePath<
         t.FunctionExpression | t.ArrowFunctionExpression
       >;
-      let name: string | null = null;
-      if (expr.isFunctionExpression()) {
-        name = expr.get("id")?.node?.name ?? null;
-      }
-      const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
-      const captured = gatherCapturedDeps(builder, expr, componentScope);
-
-      // TODO(gsn): In the future, we could only pass in the context identifiers
-      // that are actually used by this function and it's nested functions, rather
-      // than all context identifiers.
-      //
-      // This isn't a problem in practice because use Babel's scope analysis to
-      // identify the correct references.
-      const lowering = lower(
-        expr,
-        builder.environment.options,
-        [...builder.context, ...captured.identifiers],
-        builder.parentFunction,
-        builder.environment
-      );
-      let loweredFunc: HIRFunction;
-      if (lowering.isErr()) {
-        lowering
-          .unwrapErr()
-          .details.forEach((detail) => builder.errors.pushErrorDetail(detail));
-        return {
-          kind: "UnsupportedNode",
-          node: exprNode,
-          loc: exprLoc,
-        };
-      }
-      loweredFunc = lowering.unwrap();
-      return {
-        kind: "FunctionExpression",
-        name,
-        loweredFunc,
-        dependencies: captured.refs,
-        expr: expr.node,
-        loc: exprLoc,
-      };
+      return lowerFunctionExpression(builder, expr);
     }
     case "TaggedTemplateExpression": {
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
@@ -1994,6 +1955,54 @@ function lowerJsxElement(
     });
     return place;
   }
+}
+
+function lowerFunctionExpression(
+  builder: HIRBuilder,
+  expr: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>
+): InstructionValue {
+  const exprNode = expr.node;
+  const exprLoc = exprNode.loc ?? GeneratedSource;
+  let name: string | null = null;
+  if (expr.isFunctionExpression()) {
+    name = expr.get("id")?.node?.name ?? null;
+  }
+  const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
+  const captured = gatherCapturedDeps(builder, expr, componentScope);
+
+  // TODO(gsn): In the future, we could only pass in the context identifiers
+  // that are actually used by this function and it's nested functions, rather
+  // than all context identifiers.
+  //
+  // This isn't a problem in practice because use Babel's scope analysis to
+  // identify the correct references.
+  const lowering = lower(
+    expr,
+    builder.environment.options,
+    [...builder.context, ...captured.identifiers],
+    builder.parentFunction,
+    builder.environment
+  );
+  let loweredFunc: HIRFunction;
+  if (lowering.isErr()) {
+    lowering
+      .unwrapErr()
+      .details.forEach((detail) => builder.errors.pushErrorDetail(detail));
+    return {
+      kind: "UnsupportedNode",
+      node: exprNode,
+      loc: exprLoc,
+    };
+  }
+  loweredFunc = lowering.unwrap();
+  return {
+    kind: "FunctionExpression",
+    name,
+    loweredFunc,
+    dependencies: captured.refs,
+    expr: expr.node,
+    loc: exprLoc,
+  };
 }
 
 function lowerExpressionToTemporary(
