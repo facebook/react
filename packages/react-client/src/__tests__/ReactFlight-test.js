@@ -213,6 +213,40 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
+  // @gate FIXME
+  it('should transport undefined object values', async () => {
+    function ServerComponent(props) {
+      return 'prop' in props
+        ? `\`prop\` in props as '${props.prop}'`
+        : '`prop` not in props';
+    }
+    const ClientComponent = clientReference(ServerComponent);
+
+    const model = (
+      <>
+        <div>
+          Server: <ServerComponent prop={undefined} />
+        </div>
+        <div>
+          Client: <ClientComponent prop={undefined} />
+        </div>
+      </>
+    );
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Server: `prop` in props as 'undefined'</div>
+        <div>Client: `prop` in props as 'undefined'</div>
+      </>,
+    );
+  });
+
   it('can render an empty fragment', async () => {
     function Empty() {
       return <React.Fragment />;
@@ -227,6 +261,25 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(null);
+  });
+
+  it('can transport BigInt', async () => {
+    function ComponentClient({prop}) {
+      return `prop: ${prop} (${typeof prop})`;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const model = <Component prop={90071992547409910000n} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      'prop: 90071992547409910000 (bigint)',
+    );
   });
 
   it('can render a lazy component as a shared component on the server', async () => {

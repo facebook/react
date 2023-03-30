@@ -75,6 +75,10 @@ function serializeUndefined(): string {
   return '$undefined';
 }
 
+function serializeBigInt(n: bigint): string {
+  return '$n' + n.toString(10);
+}
+
 function escapeStringValue(value: string): string {
   if (value[0] === '$') {
     // We need to escape $ prefixed strings since we use those to encode
@@ -264,9 +268,7 @@ export function processReply(
     }
 
     if (typeof value === 'bigint') {
-      throw new Error(
-        `BigInt (${value}) is not yet supported as an argument to a Server Function.`,
-      );
+      return serializeBigInt(value);
     }
 
     throw new Error(

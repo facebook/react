@@ -75,4 +75,11 @@ describe('ReactFlightDOMReply', () => {
     }
     expect(items).toEqual(['A', 'B', 'C']);
   });
+
+  it('can pass a BigInt as a reply', async () => {
+    const body = await ReactServerDOMClient.encodeReply(90071992547409910000n);
+    const n = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(n).toEqual(90071992547409910000n);
+  });
 });
