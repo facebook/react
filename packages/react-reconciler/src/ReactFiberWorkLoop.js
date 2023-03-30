@@ -30,7 +30,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableProfilerNestedUpdateScheduledHook,
-  deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
@@ -636,7 +635,6 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   if ((mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   } else if (
-    !deferRenderPhaseUpdateToNextBatch &&
     (executionContext & RenderContext) !== NoContext &&
     workInProgressRootRenderLanes !== NoLanes
   ) {
@@ -804,14 +802,8 @@ export function scheduleUpdateOnFiber(
 
     if (root === workInProgressRoot) {
       // Received an update to a tree that's in the middle of rendering. Mark
-      // that there was an interleaved update work on this root. Unless the
-      // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
-      // phase update. In that case, we don't treat render phase updates as if
-      // they were interleaved, for backwards compat reasons.
-      if (
-        deferRenderPhaseUpdateToNextBatch ||
-        (executionContext & RenderContext) === NoContext
-      ) {
+      // that there was an interleaved update work on this root.
+      if ((executionContext & RenderContext) === NoContext) {
         workInProgressRootInterleavedUpdatedLanes = mergeLanes(
           workInProgressRootInterleavedUpdatedLanes,
           lane,
@@ -870,13 +862,7 @@ export function scheduleInitialHydrationOnRoot(
 export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   // Check if this is a render phase update. Only called by class components,
   // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
-  return (
-    // TODO: Remove outdated deferRenderPhaseUpdateToNextBatch experiment. We
-    // decided not to enable it.
-    (!deferRenderPhaseUpdateToNextBatch ||
-      (fiber.mode & ConcurrentMode) === NoMode) &&
-    (executionContext & RenderContext) !== NoContext
-  );
+  return (executionContext & RenderContext) !== NoContext;
 }
 
 // Use this function to schedule a task for a root. There's only one task per

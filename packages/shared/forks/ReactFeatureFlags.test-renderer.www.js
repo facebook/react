@@ -50,7 +50,6 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const skipUnmountedBoundaries = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
