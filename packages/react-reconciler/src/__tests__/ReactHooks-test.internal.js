@@ -1703,17 +1703,14 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    await act(() => {
-      ReactTestRenderer.unstable_batchedUpdates(() => {
-        ReactTestRenderer.create(
-          <>
-            <A />
-            <B />
-          </>,
-        );
-        expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
-      });
-    });
+    expect(() => {
+      ReactTestRenderer.create(
+        <>
+          <A />
+          <B />
+        </>,
+      );
+    }).toThrow('Hello');
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);

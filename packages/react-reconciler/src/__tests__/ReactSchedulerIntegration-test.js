@@ -102,6 +102,7 @@ describe('ReactSchedulerIntegration', () => {
     const root = ReactNoop.createRoot();
     root.render('Initial');
     await waitForAll([]);
+    expect(root).toMatchRenderedOutput('Initial');
 
     scheduleCallback(NormalPriority, () => Scheduler.log('A'));
     scheduleCallback(NormalPriority, () => Scheduler.log('B'));
@@ -112,16 +113,22 @@ describe('ReactSchedulerIntegration', () => {
       root.render('Update');
     });
 
-    // Advance time just to be sure the next tasks have lower priority
-    Scheduler.unstable_advanceTime(2000);
+    // Perform just a little bit of work. By now, the React task will have
+    // already been scheduled, behind A, B, and C.
+    await waitFor(['A']);
 
+    // Schedule some additional tasks. These won't fire until after the React
+    // update has finished.
     scheduleCallback(NormalPriority, () => Scheduler.log('D'));
     scheduleCallback(NormalPriority, () => Scheduler.log('E'));
 
     // Flush everything up to the next paint. Should yield after the
     // React commit.
-    Scheduler.unstable_flushUntilNextPaint();
-    assertLog(['A', 'B', 'C']);
+    await waitForPaint(['B', 'C']);
+    expect(root).toMatchRenderedOutput('Update');
+
+    // Now flush the rest of the work.
+    await waitForAll(['D', 'E']);
   });
 
   // @gate www
@@ -213,6 +220,7 @@ describe(
       waitForPaint = InternalTestUtils.waitForPaint;
       assertLog = InternalTestUtils.assertLog;
       waitFor = InternalTestUtils.waitFor;
+      act = InternalTestUtils.act;
     });
 
     afterEach(() => {
@@ -293,8 +301,7 @@ describe(
         // Start logging whenever shouldYield is called
         logDuringShouldYield = true;
         // Let's call it once to confirm the mock actually works
-        Scheduler.unstable_shouldYield();
-        assertLog(['shouldYield']);
+        await waitFor(['shouldYield']);
 
         // Expire the task
         Scheduler.unstable_advanceTime(10000);
@@ -307,11 +314,9 @@ describe(
         startTransition(() => {
           ReactNoop.render(<App />);
         });
-
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
-        Scheduler.unstable_flushNumberOfYields(1);
-        assertLog(['B', 'C']);
+        await waitFor(['B', 'C']);
       });
     });
   },
