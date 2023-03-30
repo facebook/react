@@ -7,12 +7,7 @@
  * @flow
  */
 
-export {
-  preinit,
-  preload,
-  preconnect,
-  prefetchDNS,
-} from 'react-dom-bindings/src/shared/ReactDOMFloat';
+export {preinit, preload, preconnect, prefetchDNS} from '../ReactDOMFloat';
 
 export function createPortal() {
   throw new Error(
