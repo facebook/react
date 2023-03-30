@@ -58,7 +58,7 @@ import {
 } from './CSSPropertyOperations';
 import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
 import {getPropertyInfo} from '../shared/DOMProperty';
-import isCustomComponent from '../shared/isCustomComponent';
+import isCustomElement from '../shared/isCustomElement';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
@@ -264,7 +264,7 @@ function setProp(
   tag: string,
   key: string,
   value: mixed,
-  isCustomComponentTag: boolean,
+  isCustomElementTag: boolean,
   props: any,
 ): void {
   switch (key) {
@@ -390,7 +390,7 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (isCustomComponentTag) {
+        if (isCustomElementTag) {
           if (enableCustomElementPropertySupport) {
             setValueForPropertyOnCustomComponent(domElement, key, value);
           } else {
@@ -657,7 +657,7 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
+            // TODO: If the `is` prop is specified, this should go through the isCustomElementTag flow.
             setProp(domElement, tag, propKey, propValue, false, props);
           }
         }
@@ -666,7 +666,7 @@ export function setInitialProperties(
     }
   }
 
-  const isCustomComponentTag = isCustomComponent(tag, props);
+  const isCustomElementTag = isCustomElement(tag, props);
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
@@ -675,7 +675,7 @@ export function setInitialProperties(
     if (propValue == null) {
       continue;
     }
-    setProp(domElement, tag, propKey, propValue, isCustomComponentTag, props);
+    setProp(domElement, tag, propKey, propValue, isCustomElementTag, props);
   }
 }
 
@@ -952,7 +952,7 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
+            // TODO: If the `is` prop is specified, this should go through the isCustomElementTag flow.
             setProp(domElement, tag, propKey, propValue, false, nextProps);
           }
         }
@@ -961,19 +961,12 @@ export function updateProperties(
     }
   }
 
-  const isCustomComponentTag = isCustomComponent(tag, nextProps);
+  const isCustomElementTag = isCustomElement(tag, nextProps);
   // Apply the diff.
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    setProp(
-      domElement,
-      tag,
-      propKey,
-      propValue,
-      isCustomComponentTag,
-      nextProps,
-    );
+    setProp(domElement, tag, propKey, propValue, isCustomElementTag, nextProps);
   }
 }
 
@@ -1359,7 +1352,7 @@ export function diffHydratedProperties(
           extraAttributeNames.add(attributes[i].name);
       }
     }
-    if (isCustomComponent(tag, props)) {
+    if (isCustomElement(tag, props)) {
       diffHydratedCustomComponent(
         domElement,
         tag,

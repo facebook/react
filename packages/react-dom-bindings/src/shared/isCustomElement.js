@@ -7,7 +7,7 @@
  * @flow
  */
 
-function isCustomComponent(tagName: string, props: Object): boolean {
+function isCustomElement(tagName: string, props: Object): boolean {
   if (tagName.indexOf('-') === -1) {
     return typeof props.is === 'string';
   }
@@ -30,4 +30,4 @@ function isCustomComponent(tagName: string, props: Object): boolean {
   }
 }
 
-export default isCustomComponent;
+export default isCustomElement;
