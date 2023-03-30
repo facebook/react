@@ -16,7 +16,6 @@
 export const disableInputAttributeSyncing = __VARIANT__;
 export const disableIEWorkarounds = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
-export const skipUnmountedBoundaries = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;

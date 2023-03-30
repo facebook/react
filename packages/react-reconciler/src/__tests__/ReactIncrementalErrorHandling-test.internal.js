@@ -962,7 +962,6 @@ describe('ReactIncrementalErrorHandling', () => {
     await waitForAll(['Foo']);
   });
 
-  // @gate skipUnmountedBoundaries
   it('should not attempt to recover an unmounting error boundary', async () => {
     class Parent extends React.Component {
       componentWillUnmount() {

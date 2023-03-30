@@ -22,7 +22,6 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
