@@ -12,7 +12,7 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
 } from "./HIR";
-import { EnvironmentOptions, mergeOptions } from "./HIR/Environment";
+import { EnvironmentConfig, Environment } from "./HIR/Environment";
 import { validateConsistentIdentifiers } from "./HIR/ValidateConsistentIdentifiers";
 import {
   analyseFunctions,
@@ -51,9 +51,9 @@ export type CompilerPipelineValue =
 
 export function* run(
   func: NodePath<t.FunctionDeclaration>,
-  options?: Partial<EnvironmentOptions> | null
+  config?: EnvironmentConfig | null
 ): Generator<CompilerPipelineValue, t.FunctionDeclaration> {
-  const hir = lower(func, mergeOptions(options ?? null)).unwrap();
+  const hir = lower(func, new Environment(config ?? null)).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   mergeConsecutiveBlocks(hir);
@@ -147,7 +147,7 @@ export function* run(
   });
 
   pruneNonEscapingScopes(reactiveFunction, {
-    memoizeJsxElements: options?.memoizeJsxElements ?? true,
+    memoizeJsxElements: config?.memoizeJsxElements ?? true,
   });
   yield log({
     kind: "reactive",
@@ -205,7 +205,7 @@ export function* run(
 
 export function compile(
   func: NodePath<t.FunctionDeclaration>,
-  options?: Partial<EnvironmentOptions> | null
+  options?: Partial<EnvironmentConfig> | null
 ): t.FunctionDeclaration {
   let generator = run(func, options);
   while (true) {

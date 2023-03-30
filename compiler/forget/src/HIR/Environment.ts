@@ -11,41 +11,29 @@ import {
   ValueKind,
 } from "./HIR";
 import { BUILTIN_HOOKS, Hook } from "./Hooks";
-import { BUILTIN_SHAPES, FunctionSignature } from "./ObjectShape";
+import {
+  BUILTIN_SHAPES,
+  FunctionSignature,
+  ShapeRegistry,
+} from "./ObjectShape";
 
 const HOOK_PATTERN = /^_?use/;
 
-export type EnvironmentOptions = {
+export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
-  globals: Set<string>;
   memoizeJsxElements: boolean;
-};
-
-const DEFAULT_OPTIONS: EnvironmentOptions = {
-  customHooks: new Map(),
-  globals: DEFAULT_GLOBALS,
-  memoizeJsxElements: true,
-};
-
-export function mergeOptions(
-  options: Partial<EnvironmentOptions> | null
-): EnvironmentOptions {
-  return {
-    ...DEFAULT_OPTIONS,
-    ...(options ?? {}),
-  };
-}
+}>;
 
 export class Environment {
-  #options: EnvironmentOptions;
+  #customHooks: Map<string, Hook>;
+  #globals: Set<string>;
+  #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
 
-  constructor(options: EnvironmentOptions | null) {
-    this.#options = options ?? DEFAULT_OPTIONS;
-  }
-
-  get options(): EnvironmentOptions {
-    return this.#options;
+  constructor(config: EnvironmentConfig | null) {
+    this.#customHooks = config?.customHooks ?? new Map();
+    this.#shapes = BUILTIN_SHAPES;
+    this.#globals = DEFAULT_GLOBALS;
   }
 
   get nextIdentifierId(): IdentifierId {
@@ -53,7 +41,7 @@ export class Environment {
   }
 
   getGlobalDeclaration(name: string): Global | null {
-    if (!this.#options.globals.has(name)) {
+    if (!this.#globals.has(name)) {
       log(() => `Undefined global '${name}'`);
     }
     return { name };
@@ -63,7 +51,7 @@ export class Environment {
     if (!name.match(HOOK_PATTERN)) {
       return null;
     }
-    const hook = BUILTIN_HOOKS.get(name) ?? this.#options.customHooks.get(name);
+    const hook = BUILTIN_HOOKS.get(name) ?? this.#customHooks.get(name);
     if (hook !== undefined) {
       return hook;
     }
@@ -83,7 +71,7 @@ export class Environment {
     if (shapeId !== null) {
       // If an object or function has a shapeId, it must have been assigned
       // by Forget (and be present in a builtin or user-defined registry)
-      const shape = BUILTIN_SHAPES.get(shapeId);
+      const shape = this.#shapes.get(shapeId);
       invariant(
         shape !== undefined,
         `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
@@ -97,7 +85,7 @@ export class Environment {
   getFunctionSignature(type: FunctionType): FunctionSignature | null {
     const { shapeId } = type;
     if (shapeId !== null) {
-      const shape = BUILTIN_SHAPES.get(shapeId);
+      const shape = this.#shapes.get(shapeId);
       invariant(
         shape !== undefined,
         `[HIR] Forget internal error: cannot resolve shape ${shapeId}`

@@ -7,19 +7,19 @@
 
 "use strict";
 
-import * as t from "@babel/types";
 import { parse } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
+import * as t from "@babel/types";
 import path from "path";
 
+import invariant from "invariant";
 import * as CompilerPipeline from "../CompilerPipeline";
 import { Effect, ValueKind } from "../HIR";
+import { EnvironmentConfig } from "../HIR/Environment";
 import { printFunction } from "../HIR/PrintHIR";
-import { EnvironmentOptions } from "../HIR/Environment";
-import { Result, Ok, Err } from "../Utils/Result";
 import { toggleLogging } from "../Utils/logger";
+import { Err, Ok, Result } from "../Utils/Result";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
-import invariant from "invariant";
 
 // TODO: make pipeline names an enum
 // Currently, this is the last pass that operates on hir
@@ -81,7 +81,7 @@ type CompileResult = {
 function compile(
   source: string,
   language: "flow" | "typescript",
-  compilerEnv: Partial<EnvironmentOptions>
+  compilerEnv: Partial<EnvironmentConfig>
 ): Result<Array<CompileResult>, Error> {
   const transformedFns = new Array<CompileResult>();
   const babelAsts = parseFunctions(source, language);

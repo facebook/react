@@ -12,7 +12,7 @@ import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
-import { Environment, EnvironmentOptions } from "./Environment";
+import { Environment } from "./Environment";
 import {
   ArrayPattern,
   BlockId,
@@ -57,13 +57,11 @@ import HIRBuilder from "./HIRBuilder";
  */
 export function lower(
   func: NodePath<t.Function>,
-  options: EnvironmentOptions | null,
+  env: Environment,
   capturedRefs: t.Identifier[] = [],
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null,
-  environment: Environment | null = null
+  parent: NodePath<t.Function> | null = null
 ): Result<HIRFunction, CompilerError> {
-  const env = environment ?? new Environment(options);
   const builder = new HIRBuilder(env, parent ?? func, capturedRefs);
   const context: Place[] = [];
 
@@ -2013,10 +2011,9 @@ function lowerFunctionExpression(
   // identify the correct references.
   const lowering = lower(
     expr,
-    builder.environment.options,
+    builder.environment,
     [...builder.context, ...captured.identifiers],
-    builder.parentFunction,
-    builder.environment
+    builder.parentFunction
   );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {

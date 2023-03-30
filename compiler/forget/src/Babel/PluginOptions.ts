@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { EnvironmentOptions } from "../HIR/Environment";
+import { EnvironmentConfig } from "../HIR/Environment";
 
 export type PluginOptions = {
   /**
@@ -13,7 +13,7 @@ export type PluginOptions = {
    */
   enableOnlyOnUseForgetDirective: boolean;
 
-  environment: Partial<EnvironmentOptions> | null;
+  environment: EnvironmentConfig | null;
 
   logger: Logger | null;
 
