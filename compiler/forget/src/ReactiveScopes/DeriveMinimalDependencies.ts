@@ -360,7 +360,10 @@ function demoteSubtreeToConditional(subtree: DependencyNode): void {
   let node;
   while ((node = stack.pop()) !== undefined) {
     const { accessType, properties } = node;
-    invariant(isUnconditional(accessType), "");
+    if (!isUnconditional(accessType)) {
+      // A conditionally accessed node should not have unconditional children
+      continue;
+    }
     node.accessType = isDependency(accessType)
       ? PropertyAccessType.ConditionalDependency
       : PropertyAccessType.ConditionalAccess;
@@ -385,6 +388,10 @@ function demoteSubtreeToConditional(subtree: DependencyNode): void {
  * @param otherNode (move) {@link addSubtree} takes ownership of the subtree
  * represented by otherNode, which may be mutated or moved to currNode. It is
  * invalid to use otherNode after this call.
+ *
+ * Note that @param otherNode may contain both conditional and unconditional nodes,
+ * due to inner control flow and conditional member expressions
+ *
  * @param demoteOtherNode
  */
 function addSubtree(
