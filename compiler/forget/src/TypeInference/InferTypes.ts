@@ -144,17 +144,14 @@ function* generateInstructionTypes(
     }
 
     case "CallExpression": {
-      const hook =
-        value.callee.identifier.name !== null
-          ? env.getHookDeclaration(value.callee.identifier.name)
-          : null;
-      let type: Type;
-      if (hook !== null) {
-        type = { kind: "Hook", definition: hook };
-      } else {
-        type = { kind: "Function", shapeId: null, return: left };
-      }
-      yield equation(value.callee.identifier.type, type);
+      // TODO: callee could be a hook or a function, so this type equation isn't correct.
+      // We should change Hook to a subtype of Function or change unifier logic.
+      // (see https://github.com/facebook/react-forget/pull/1427)
+      yield equation(value.callee.identifier.type, {
+        kind: "Function",
+        shapeId: null,
+        return: left,
+      });
       break;
     }
 
