@@ -6,7 +6,7 @@
 // We should codegen the correct member expressions
 function Component(props) {
   let x = props?.b.c;
-  let y = (props?.x).y;
+  let y = props?.b.c.d?.e.f.g?.h;
   return { x, y };
 }
 
@@ -19,8 +19,8 @@ function Component(props) {
 // We should codegen the correct member expressions
 function Component(props) {
   const $ = React.unstable_useMemoCache(3);
-  const x = (props?.b).c;
-  const y = (props?.x).y;
+  const x = props?.b.c;
+  const y = props?.b.c.d?.e.f.g?.h;
   const c_0 = $[0] !== x;
   const c_1 = $[1] !== y;
   let t0;

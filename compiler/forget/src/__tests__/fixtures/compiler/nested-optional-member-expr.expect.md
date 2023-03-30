@@ -21,7 +21,7 @@ function Component(props) {
   const c_0 = $[0] !== props.a;
   let t0;
   if (c_0) {
-    t0 = foo((props.a?.b).c.d);
+    t0 = foo(props.a?.b.c.d);
     $[0] = props.a;
     $[1] = t0;
   } else {

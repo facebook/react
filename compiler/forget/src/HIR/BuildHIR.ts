@@ -1796,39 +1796,67 @@ function lowerMemberExpression(
 ): { object: Place; property: Place | string; value: InstructionValue } {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  const object = lowerExpressionToTemporary(builder, expr.get("object"));
-  const property = expr.get("property");
+  const objectNode = expr.get("object");
+  const propertyNode = expr.get("property");
+  const object = lowerExpressionToTemporary(builder, objectNode);
+
+  if (
+    objectNode.isOptionalMemberExpression() &&
+    !expr.isOptionalMemberExpression()
+  ) {
+    // Babel's `isOptionalMemberExpression` indicates whether this property load itself
+    // is conditional (i.e. within an "optional chain"). This is different from the
+    // `optional` property, which is only true for property loads at the start of an
+    // optional chain. e.g. `a.b?.c.d` decomposes into
+    //   [0] MemberExpr          a.b;   // not in an optional chain
+    //   [1] OptionalMemberExpr [0]?.c
+    //   [2] OptionalMemberExpr [1].c
+    //   [3] OptionalMemberExpr [2].d
+    // We currently do not handle non-conditional loads from an optional memberexpr
+    // e.g. `(a?.b).c`
+    // See error.nonoptional-load-from-optional-memberexpr test fixture for details
+    builder.errors.push({
+      reason: `(BuildHIR::lowerMemberExpression) Handle optional chaining for non-optional member expr.`,
+      severity: ErrorSeverity.Todo,
+      nodePath: propertyNode,
+    });
+    return {
+      object,
+      property: propertyNode.toString(),
+      value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc },
+    };
+  }
   if (!expr.node.computed) {
-    if (!property.isIdentifier()) {
+    if (!propertyNode.isIdentifier()) {
       builder.errors.push({
-        reason: `(BuildHIR::lowerMemberExpression) Handle ${property.type} property`,
+        reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
         severity: ErrorSeverity.Todo,
-        nodePath: property,
+        nodePath: propertyNode,
       });
       return {
         object,
-        property: property.toString(),
+        property: propertyNode.toString(),
         value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc },
       };
     }
     const value: InstructionValue = {
       kind: "PropertyLoad",
       object: { ...object },
-      property: property.node.name,
+      property: propertyNode.node.name,
       loc: exprLoc,
       optional: expr.node.optional ?? false,
     };
-    return { object, property: property.node.name, value };
+    return { object, property: propertyNode.node.name, value };
   } else {
-    if (!property.isExpression()) {
+    if (!propertyNode.isExpression()) {
       builder.errors.push({
-        reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${property.type} property`,
+        reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
         severity: ErrorSeverity.InvalidInput,
-        nodePath: property,
+        nodePath: propertyNode,
       });
       return {
         object,
-        property: property.toString(),
+        property: propertyNode.toString(),
         value: {
           kind: "UnsupportedNode",
           node: exprNode,
@@ -1843,7 +1871,7 @@ function lowerMemberExpression(
         nodePath: expr,
       });
     }
-    const propertyPlace = lowerExpressionToTemporary(builder, property);
+    const propertyPlace = lowerExpressionToTemporary(builder, propertyNode);
     const value: InstructionValue = {
       kind: "ComputedLoad",
       object: { ...object },

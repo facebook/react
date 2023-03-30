@@ -752,17 +752,22 @@ function codegenInstructionValue(
       break;
     }
     case "PropertyLoad": {
-      if (instrValue.optional) {
+      const object = codegenPlace(cx, instrValue.object);
+      // We currently only lower single chains of optional memberexpr.
+      // (See BuildHIR.ts for more detail.)
+      if (t.isOptionalMemberExpression(object) || instrValue.optional) {
         value = t.optionalMemberExpression(
-          codegenPlace(cx, instrValue.object),
+          object,
           t.identifier(instrValue.property),
           undefined,
-          true
+          instrValue.optional
         );
       } else {
         value = t.memberExpression(
-          codegenPlace(cx, instrValue.object),
-          t.identifier(instrValue.property)
+          object,
+          t.identifier(instrValue.property),
+          undefined,
+          instrValue.optional
         );
       }
       break;

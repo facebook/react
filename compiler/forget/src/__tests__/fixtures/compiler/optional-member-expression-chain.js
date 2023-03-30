@@ -2,6 +2,6 @@
 // We should codegen the correct member expressions
 function Component(props) {
   let x = props?.b.c;
-  let y = (props?.x).y;
+  let y = props?.b.c.d?.e.f.g?.h;
   return { x, y };
 }
