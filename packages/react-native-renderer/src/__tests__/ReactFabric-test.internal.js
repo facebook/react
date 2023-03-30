@@ -932,7 +932,9 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
-    expect(match).toBe(ReactNativePrivateInterface.getNativeTagFromPublicInstance(child));
+    expect(match).toBe(
+      ReactNativePrivateInterface.getNativeTagFromPublicInstance(child),
+    );
   });
 
   it('findNodeHandle should warn if passed a component that is inside StrictMode', async () => {
@@ -969,7 +971,9 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
-    expect(match).toBe(ReactNativePrivateInterface.getNativeTagFromPublicInstance(child));
+    expect(match).toBe(
+      ReactNativePrivateInterface.getNativeTagFromPublicInstance(child),
+    );
   });
 
   it('should no-op if calling sendAccessibilityEvent on unmounted refs', async () => {
@@ -1010,27 +1014,21 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let viewRef;
     await act(() => {
-      ReactFabric.render(
-        <View
-          foo="test"
-          ref={ref => {
-            viewRef = ref;
-          }}
-        />,
-        1,
-      );
+      ReactFabric.render(<View foo="test" />, 1);
     });
 
-    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    const internalInstanceHandle =
+      nativeFabricUIManager.createNode.mock.calls[0][4];
     expect(internalInstanceHandle).toEqual(expect.any(Object));
 
     const expectedShadowNode =
       nativeFabricUIManager.createNode.mock.results[0].value;
     expect(expectedShadowNode).toEqual(expect.any(Object));
 
-    const node = ReactFabric.getNodeFromInternalInstanceHandle(internalInstanceHandle);
+    const node = ReactFabric.getNodeFromInternalInstanceHandle(
+      internalInstanceHandle,
+    );
     expect(node).toBe(expectedShadowNode);
   });
 
@@ -1053,10 +1051,14 @@ describe('ReactFabric', () => {
       );
     });
 
-    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    const internalInstanceHandle =
+      nativeFabricUIManager.createNode.mock.calls[0][4];
     expect(internalInstanceHandle).toEqual(expect.any(Object));
 
-    const publicInstance = ReactFabric.getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle);
+    const publicInstance =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
     expect(publicInstance).toBe(viewRef);
   });
 
@@ -1069,26 +1071,35 @@ describe('ReactFabric', () => {
     }));
 
     await act(() => {
-      ReactFabric.render(
-        <RCTText>Text content</RCTText>,
-        1,
-      );
+      ReactFabric.render(<RCTText>Text content</RCTText>, 1);
     });
 
     // Access the internal instance handle used to create the text node.
-    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    const internalInstanceHandle =
+      nativeFabricUIManager.createNode.mock.calls[0][4];
     expect(internalInstanceHandle).toEqual(expect.any(Object));
 
     // Text public instances should be created lazily.
-    expect(ReactNativePrivateInterface.createPublicTextInstance).not.toHaveBeenCalled();
+    expect(
+      ReactNativePrivateInterface.createPublicTextInstance,
+    ).not.toHaveBeenCalled();
 
-    const publicInstance = ReactFabric.getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle);
+    const publicInstance =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
 
     // We just requested the text public instance, so it should have been created at this point.
-    expect(ReactNativePrivateInterface.createPublicTextInstance).toHaveBeenCalledTimes(1);
-    expect(ReactNativePrivateInterface.createPublicTextInstance).toHaveBeenCalledWith(internalInstanceHandle);
+    expect(
+      ReactNativePrivateInterface.createPublicTextInstance,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      ReactNativePrivateInterface.createPublicTextInstance,
+    ).toHaveBeenCalledWith(internalInstanceHandle);
 
-    const expectedPublicInstance = ReactNativePrivateInterface.createPublicTextInstance.mock.results[0].value;
+    const expectedPublicInstance =
+      ReactNativePrivateInterface.createPublicTextInstance.mock.results[0]
+        .value;
     expect(publicInstance).toBe(expectedPublicInstance);
   });
 });
