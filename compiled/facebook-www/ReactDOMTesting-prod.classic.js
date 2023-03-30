@@ -11994,6 +11994,11 @@ properties.formAction = new PropertyInfoRecord(
 });
 var isJavaScriptProtocol =
   /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+function sanitizeURL(url) {
+  return isJavaScriptProtocol.test("" + url)
+    ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
+    : url;
+}
 function getToStringValue(value) {
   switch (typeof value) {
     case "boolean":
@@ -12553,17 +12558,16 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
                         : domElement.removeAttribute(key);
                       break;
                     default:
-                      value = enableTrustedTypesIntegration
-                        ? value
-                        : "" + value;
-                      if (
-                        styleName.sanitizeURL &&
-                        isJavaScriptProtocol.test(value.toString())
-                      )
-                        throw Error(formatProdErrorMessage(323));
-                      (styleName = styleName.attributeNamespace)
-                        ? domElement.setAttributeNS(styleName, key, value)
-                        : domElement.setAttribute(key, value);
+                      enableTrustedTypesIntegration
+                        ? (value = styleName.sanitizeURL
+                            ? sanitizeURL(value)
+                            : value)
+                        : ((value = "" + value),
+                          styleName.sanitizeURL &&
+                            (value = sanitizeURL(value))),
+                        (styleName = styleName.attributeNamespace)
+                          ? domElement.setAttributeNS(styleName, key, value)
+                          : domElement.setAttribute(key, value);
                   }
               }
             else if (isAttributeNameSafe(key))
@@ -12942,17 +12946,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1629 = {
+var devToolsConfig$jscomp$inline_1627 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-aa994cf1",
+  version: "18.3.0-www-classic-7abd5856",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2189 = {
-  bundleType: devToolsConfig$jscomp$inline_1629.bundleType,
-  version: devToolsConfig$jscomp$inline_1629.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1629.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1629.rendererConfig,
+var internals$jscomp$inline_2187 = {
+  bundleType: devToolsConfig$jscomp$inline_1627.bundleType,
+  version: devToolsConfig$jscomp$inline_1627.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1627.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1627.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -12968,26 +12972,26 @@ var internals$jscomp$inline_2189 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1629.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1627.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-aa994cf1"
+  reconcilerVersion: "18.3.0-www-classic-7abd5856"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2190 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2188 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2190.isDisabled &&
-    hook$jscomp$inline_2190.supportsFiber
+    !hook$jscomp$inline_2188.isDisabled &&
+    hook$jscomp$inline_2188.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2190.inject(
-        internals$jscomp$inline_2189
+      (rendererID = hook$jscomp$inline_2188.inject(
+        internals$jscomp$inline_2187
       )),
-        (injectedHook = hook$jscomp$inline_2190);
+        (injectedHook = hook$jscomp$inline_2188);
     } catch (err) {}
 }
 var tagToRoleMappings = {
@@ -14809,14 +14813,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$347;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1728 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1728) {
-      var element$jscomp$inline_1729 = document.createElement("div");
-      element$jscomp$inline_1729.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1728 =
-        "function" === typeof element$jscomp$inline_1729.oninput;
+    var isSupported$jscomp$inline_1726 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1726) {
+      var element$jscomp$inline_1727 = document.createElement("div");
+      element$jscomp$inline_1727.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1726 =
+        "function" === typeof element$jscomp$inline_1727.oninput;
     }
-    JSCompiler_inline_result$jscomp$347 = isSupported$jscomp$inline_1728;
+    JSCompiler_inline_result$jscomp$347 = isSupported$jscomp$inline_1726;
   } else JSCompiler_inline_result$jscomp$347 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$347 &&
@@ -14957,20 +14961,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1741 = 0;
-  i$jscomp$inline_1741 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1741++
+  var i$jscomp$inline_1739 = 0;
+  i$jscomp$inline_1739 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1739++
 ) {
-  var eventName$jscomp$inline_1742 =
-      simpleEventPluginEvents[i$jscomp$inline_1741],
-    domEventName$jscomp$inline_1743 =
-      eventName$jscomp$inline_1742.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1744 =
-      eventName$jscomp$inline_1742[0].toUpperCase() +
-      eventName$jscomp$inline_1742.slice(1);
+  var eventName$jscomp$inline_1740 =
+      simpleEventPluginEvents[i$jscomp$inline_1739],
+    domEventName$jscomp$inline_1741 =
+      eventName$jscomp$inline_1740.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1742 =
+      eventName$jscomp$inline_1740[0].toUpperCase() +
+      eventName$jscomp$inline_1740.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1743,
-    "on" + capitalizedEvent$jscomp$inline_1744
+    domEventName$jscomp$inline_1741,
+    "on" + capitalizedEvent$jscomp$inline_1742
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16847,4 +16851,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-aa994cf1";
+exports.version = "18.3.0-www-classic-7abd5856";

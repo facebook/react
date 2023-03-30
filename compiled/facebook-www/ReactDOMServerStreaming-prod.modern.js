@@ -299,10 +299,9 @@ var uppercasePattern = /([A-Z])/g,
   isJavaScriptProtocol =
     /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
 function sanitizeURL(url) {
-  if (isJavaScriptProtocol.test(url))
-    throw Error(
-      "React has blocked a javascript: URL as a security precaution."
-    );
+  return isJavaScriptProtocol.test("" + url)
+    ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
+    : url;
 }
 var isArrayImpl = Array.isArray,
   ReactDOMCurrentDispatcher =
@@ -466,7 +465,7 @@ function pushAttribute(target, name, value) {
             break;
           default:
             JSCompiler_inline_result.sanitizeURL &&
-              ((value = "" + value), sanitizeURL(value)),
+              (value = sanitizeURL("" + value)),
               target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
     } else if (isAttributeNameSafe(name)) {
@@ -1638,8 +1637,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
         destination.buffer += nextArrayOpenBrackChunk;
         var precedence = resource.props["data-precedence"],
           props = resource.props,
-          coercedHref = "" + resource.props.href;
-        sanitizeURL(coercedHref);
+          coercedHref = sanitizeURL("" + resource.props.href);
         writeChunk(
           destination,
           escapeJSObjectForInstructionScripts(coercedHref)
@@ -1653,7 +1651,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
         for (var propKey in props)
           if (
             hasOwnProperty.call(props, propKey) &&
-            ((coercedHref = props[propKey]), null != coercedHref)
+            ((precedence = props[propKey]), null != precedence)
           )
             switch (propKey) {
               case "href":
@@ -1667,49 +1665,11 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
                   "link is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
                 );
               default:
-                a: {
-                  precedence = destination;
-                  var attributeName = propKey.toLowerCase();
-                  switch (typeof coercedHref) {
-                    case "function":
-                    case "symbol":
-                      break a;
-                  }
-                  switch (propKey) {
-                    case "innerHTML":
-                    case "dangerouslySetInnerHTML":
-                    case "suppressContentEditableWarning":
-                    case "suppressHydrationWarning":
-                    case "style":
-                      break a;
-                    case "className":
-                      attributeName = "class";
-                      break;
-                    case "hidden":
-                      if (!1 === coercedHref) break a;
-                      break;
-                    case "src":
-                    case "href":
-                      sanitizeURL("" + coercedHref);
-                      break;
-                    default:
-                      if (!isAttributeNameSafe(propKey)) break a;
-                  }
-                  if (
-                    !(2 < propKey.length) ||
-                    ("o" !== propKey[0] && "O" !== propKey[0]) ||
-                    ("n" !== propKey[1] && "N" !== propKey[1])
-                  )
-                    (coercedHref = "" + coercedHref),
-                      (precedence.buffer += ","),
-                      (attributeName =
-                        escapeJSObjectForInstructionScripts(attributeName)),
-                      (precedence.buffer += attributeName),
-                      (precedence.buffer += ","),
-                      (coercedHref =
-                        escapeJSObjectForInstructionScripts(coercedHref)),
-                      (precedence.buffer += coercedHref);
-                }
+                writeStyleResourceAttributeInJS(
+                  destination,
+                  propKey,
+                  precedence
+                );
             }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
@@ -1717,6 +1677,46 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
       }
   });
   destination.buffer += "]";
+}
+function writeStyleResourceAttributeInJS(destination, name, value) {
+  var attributeName = name.toLowerCase();
+  switch (typeof value) {
+    case "function":
+    case "symbol":
+      return;
+  }
+  switch (name) {
+    case "innerHTML":
+    case "dangerouslySetInnerHTML":
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "style":
+      return;
+    case "className":
+      attributeName = "class";
+      break;
+    case "hidden":
+      if (!1 === value) return;
+      break;
+    case "src":
+    case "href":
+      value = sanitizeURL(value);
+      break;
+    default:
+      if (!isAttributeNameSafe(name)) return;
+  }
+  if (
+    !(2 < name.length) ||
+    ("o" !== name[0] && "O" !== name[0]) ||
+    ("n" !== name[1] && "N" !== name[1])
+  )
+    (name = "" + value),
+      (destination.buffer += ","),
+      (attributeName = escapeJSObjectForInstructionScripts(attributeName)),
+      (destination.buffer += attributeName),
+      (destination.buffer += ","),
+      (attributeName = escapeJSObjectForInstructionScripts(name)),
+      (destination.buffer += attributeName);
 }
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
@@ -1735,8 +1735,7 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
         destination.buffer += nextArrayOpenBrackChunk;
         var precedence = resource.props["data-precedence"],
           props = resource.props,
-          coercedHref = "" + resource.props.href;
-        sanitizeURL(coercedHref);
+          coercedHref = sanitizeURL("" + resource.props.href);
         writeChunk(
           destination,
           escapeTextForBrowser(JSON.stringify(coercedHref))
@@ -1750,7 +1749,7 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
         for (var propKey in props)
           if (
             hasOwnProperty.call(props, propKey) &&
-            ((coercedHref = props[propKey]), null != coercedHref)
+            ((precedence = props[propKey]), null != precedence)
           )
             switch (propKey) {
               case "href":
@@ -1764,51 +1763,11 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
                   "link is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
                 );
               default:
-                a: {
-                  precedence = destination;
-                  var attributeName = propKey.toLowerCase();
-                  switch (typeof coercedHref) {
-                    case "function":
-                    case "symbol":
-                      break a;
-                  }
-                  switch (propKey) {
-                    case "innerHTML":
-                    case "dangerouslySetInnerHTML":
-                    case "suppressContentEditableWarning":
-                    case "suppressHydrationWarning":
-                    case "style":
-                      break a;
-                    case "className":
-                      attributeName = "class";
-                      break;
-                    case "hidden":
-                      if (!1 === coercedHref) break a;
-                      break;
-                    case "src":
-                    case "href":
-                      sanitizeURL("" + coercedHref);
-                      break;
-                    default:
-                      if (!isAttributeNameSafe(propKey)) break a;
-                  }
-                  if (
-                    !(2 < propKey.length) ||
-                    ("o" !== propKey[0] && "O" !== propKey[0]) ||
-                    ("n" !== propKey[1] && "N" !== propKey[1])
-                  )
-                    (coercedHref = "" + coercedHref),
-                      (precedence.buffer += ","),
-                      (attributeName = escapeTextForBrowser(
-                        JSON.stringify(attributeName)
-                      )),
-                      (precedence.buffer += attributeName),
-                      (precedence.buffer += ","),
-                      (coercedHref = escapeTextForBrowser(
-                        JSON.stringify(coercedHref)
-                      )),
-                      (precedence.buffer += coercedHref);
-                }
+                writeStyleResourceAttributeInAttr(
+                  destination,
+                  propKey,
+                  precedence
+                );
             }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
@@ -1816,6 +1775,46 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
       }
   });
   destination.buffer += "]";
+}
+function writeStyleResourceAttributeInAttr(destination, name, value) {
+  var attributeName = name.toLowerCase();
+  switch (typeof value) {
+    case "function":
+    case "symbol":
+      return;
+  }
+  switch (name) {
+    case "innerHTML":
+    case "dangerouslySetInnerHTML":
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "style":
+      return;
+    case "className":
+      attributeName = "class";
+      break;
+    case "hidden":
+      if (!1 === value) return;
+      break;
+    case "src":
+    case "href":
+      value = sanitizeURL(value);
+      break;
+    default:
+      if (!isAttributeNameSafe(name)) return;
+  }
+  if (
+    !(2 < name.length) ||
+    ("o" !== name[0] && "O" !== name[0]) ||
+    ("n" !== name[1] && "N" !== name[1])
+  )
+    (name = "" + value),
+      (destination.buffer += ","),
+      (attributeName = escapeTextForBrowser(JSON.stringify(attributeName))),
+      (destination.buffer += attributeName),
+      (destination.buffer += ","),
+      (attributeName = escapeTextForBrowser(JSON.stringify(name))),
+      (destination.buffer += attributeName);
 }
 function prefetchDNS(href) {
   if (currentResources) {

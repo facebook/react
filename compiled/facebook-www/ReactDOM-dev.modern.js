@@ -2937,13 +2937,20 @@ var isJavaScriptProtocol =
   /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
 function sanitizeURL(url) {
+  // We should never have symbols here because they get filtered out elsewhere.
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  var stringifiedURL = "" + url;
+
   {
-    if (isJavaScriptProtocol.test(url)) {
-      throw new Error(
-        "React has blocked a javascript: URL as a security precaution."
-      );
+    if (isJavaScriptProtocol.test(stringifiedURL)) {
+      // Return a different javascript: url that doesn't cause any side-effects and just
+      // throws if ever visited.
+      // eslint-disable-next-line no-script-url
+      return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
     }
   }
+
+  return url;
 }
 
 /**
@@ -3051,6 +3058,13 @@ function getValueForProperty(node, name, expected, propertyInfo) {
       return value;
     } // shouldRemoveAttribute
 
+    switch (typeof expected) {
+      case "function":
+      case "symbol":
+        // eslint-disable-line
+        return value;
+    }
+
     switch (propertyInfo.type) {
       case BOOLEAN: {
         if (expected) {
@@ -3101,6 +3115,17 @@ function getValueForProperty(node, name, expected, propertyInfo) {
     {
       checkAttributeStringCoercion(expected, name);
     }
+
+    if (propertyInfo.sanitizeURL) {
+      // We have already verified this above.
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      if (value === "" + sanitizeURL(expected)) {
+        return expected;
+      }
+
+      return value;
+    } // We have already verified this above.
+    // eslint-disable-next-line react-internal/safe-string-coercion
 
     if (value === "" + expected) {
       return expected;
@@ -3345,21 +3370,27 @@ function setValueForProperty(node, name, value) {
         break;
 
       default: {
+        {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+
         var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
 
         if (enableTrustedTypesIntegration) {
-          attributeValue = value;
-        } else {
-          {
-            checkAttributeStringCoercion(value, attributeName);
+          if (propertyInfo.sanitizeURL) {
+            attributeValue = sanitizeURL(value);
+          } else {
+            attributeValue = value;
           }
-
+        } else {
+          // We have already verified this above.
+          // eslint-disable-next-line react-internal/safe-string-coercion
           attributeValue = "" + value;
-        }
 
-        if (propertyInfo.sanitizeURL) {
-          sanitizeURL(attributeValue.toString());
+          if (propertyInfo.sanitizeURL) {
+            attributeValue = sanitizeURL(attributeValue);
+          }
         }
 
         var attributeNamespace = propertyInfo.attributeNamespace;
@@ -33675,7 +33706,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0ad65545";
+var ReactVersion = "18.3.0-www-modern-7fe55e49";
 
 function createPortal$1(
   children,

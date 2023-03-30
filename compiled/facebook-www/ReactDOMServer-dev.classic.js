@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-64e4f129";
+var ReactVersion = "18.3.0-www-classic-a62b645d";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2077,13 +2077,20 @@ var isJavaScriptProtocol =
   /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
 function sanitizeURL(url) {
+  // We should never have symbols here because they get filtered out elsewhere.
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  var stringifiedURL = "" + url;
+
   {
-    if (isJavaScriptProtocol.test(url)) {
-      throw new Error(
-        "React has blocked a javascript: URL as a security precaution."
-      );
+    if (isJavaScriptProtocol.test(stringifiedURL)) {
+      // Return a different javascript: url that doesn't cause any side-effects and just
+      // throws if ever visited.
+      // eslint-disable-next-line no-script-url
+      return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
     }
   }
+
+  return url;
 }
 
 var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
@@ -3181,13 +3188,14 @@ function pushAttribute(target, name, value) {
         break;
 
       default:
-        if (propertyInfo.sanitizeURL) {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
+        {
+          checkAttributeStringCoercion(value, attributeName);
+        }
 
-          value = "" + value;
-          sanitizeURL(value);
+        if (propertyInfo.sanitizeURL) {
+          // We've already checked above.
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          value = sanitizeURL("" + value);
         }
 
         target.push(
@@ -6242,12 +6250,8 @@ function writeStyleResourceDependencyInJS(
   precedence,
   props
 ) {
-  {
-    checkAttributeStringCoercion(href, "href");
-  }
-
-  var coercedHref = "" + href;
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  var coercedHref = sanitizeURL("" + href);
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(coercedHref))
@@ -6341,8 +6345,7 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
         checkAttributeStringCoercion(value, attributeName);
       }
 
-      attributeValue = "" + value;
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
 
@@ -6438,12 +6441,8 @@ function writeStyleResourceDependencyInAttr(
   precedence,
   props
 ) {
-  {
-    checkAttributeStringCoercion(href, "href");
-  }
-
-  var coercedHref = "" + href;
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  var coercedHref = sanitizeURL("" + href);
   writeChunk(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref)))
@@ -6537,8 +6536,7 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
         checkAttributeStringCoercion(value, attributeName);
       }
 
-      attributeValue = "" + value;
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
 

@@ -722,8 +722,13 @@ properties.formAction = new PropertyInfoRecord(
   );
 });
 var isJavaScriptProtocol =
-    /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+function sanitizeURL(url) {
+  return isJavaScriptProtocol.test("" + url)
+    ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
+    : url;
+}
+var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -13004,14 +13009,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$320;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1547 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1547) {
-      var element$jscomp$inline_1548 = document.createElement("div");
-      element$jscomp$inline_1548.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1547 =
-        "function" === typeof element$jscomp$inline_1548.oninput;
+    var isSupported$jscomp$inline_1545 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1545) {
+      var element$jscomp$inline_1546 = document.createElement("div");
+      element$jscomp$inline_1546.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1545 =
+        "function" === typeof element$jscomp$inline_1546.oninput;
     }
-    JSCompiler_inline_result$jscomp$320 = isSupported$jscomp$inline_1547;
+    JSCompiler_inline_result$jscomp$320 = isSupported$jscomp$inline_1545;
   } else JSCompiler_inline_result$jscomp$320 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$320 &&
@@ -13323,20 +13328,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1588 = 0;
-  i$jscomp$inline_1588 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1588++
+  var i$jscomp$inline_1586 = 0;
+  i$jscomp$inline_1586 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1586++
 ) {
-  var eventName$jscomp$inline_1589 =
-      simpleEventPluginEvents[i$jscomp$inline_1588],
-    domEventName$jscomp$inline_1590 =
-      eventName$jscomp$inline_1589.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1591 =
-      eventName$jscomp$inline_1589[0].toUpperCase() +
-      eventName$jscomp$inline_1589.slice(1);
+  var eventName$jscomp$inline_1587 =
+      simpleEventPluginEvents[i$jscomp$inline_1586],
+    domEventName$jscomp$inline_1588 =
+      eventName$jscomp$inline_1587.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1589 =
+      eventName$jscomp$inline_1587[0].toUpperCase() +
+      eventName$jscomp$inline_1587.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1590,
-    "on" + capitalizedEvent$jscomp$inline_1591
+    domEventName$jscomp$inline_1588,
+    "on" + capitalizedEvent$jscomp$inline_1589
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14353,17 +14358,16 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
                         : domElement.removeAttribute(key);
                       break;
                     default:
-                      value = enableTrustedTypesIntegration
-                        ? value
-                        : "" + value;
-                      if (
-                        styleName.sanitizeURL &&
-                        isJavaScriptProtocol.test(value.toString())
-                      )
-                        throw Error(formatProdErrorMessage(323));
-                      (styleName = styleName.attributeNamespace)
-                        ? domElement.setAttributeNS(styleName, key, value)
-                        : domElement.setAttribute(key, value);
+                      enableTrustedTypesIntegration
+                        ? (value = styleName.sanitizeURL
+                            ? sanitizeURL(value)
+                            : value)
+                        : ((value = "" + value),
+                          styleName.sanitizeURL &&
+                            (value = sanitizeURL(value))),
+                        (styleName = styleName.attributeNamespace)
+                          ? domElement.setAttributeNS(styleName, key, value)
+                          : domElement.setAttribute(key, value);
                   }
               }
             else if (isAttributeNameSafe(key))
@@ -15621,17 +15625,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1758 = {
+var devToolsConfig$jscomp$inline_1756 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7d28a9fd",
+  version: "18.3.0-www-modern-3242137e",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2167 = {
-  bundleType: devToolsConfig$jscomp$inline_1758.bundleType,
-  version: devToolsConfig$jscomp$inline_1758.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1758.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1758.rendererConfig,
+var internals$jscomp$inline_2165 = {
+  bundleType: devToolsConfig$jscomp$inline_1756.bundleType,
+  version: devToolsConfig$jscomp$inline_1756.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1756.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1756.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15648,26 +15652,26 @@ var internals$jscomp$inline_2167 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1758.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1756.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7d28a9fd"
+  reconcilerVersion: "18.3.0-www-modern-3242137e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2168 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2166 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2168.isDisabled &&
-    hook$jscomp$inline_2168.supportsFiber
+    !hook$jscomp$inline_2166.isDisabled &&
+    hook$jscomp$inline_2166.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2168.inject(
-        internals$jscomp$inline_2167
+      (rendererID = hook$jscomp$inline_2166.inject(
+        internals$jscomp$inline_2165
       )),
-        (injectedHook = hook$jscomp$inline_2168);
+        (injectedHook = hook$jscomp$inline_2166);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -15824,4 +15828,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-7d28a9fd";
+exports.version = "18.3.0-www-modern-3242137e";
