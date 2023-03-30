@@ -101,7 +101,6 @@ import {
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
-import isCustomComponent from '../shared/isCustomComponent';
 
 export type Type = string;
 export type Props = {
@@ -407,22 +406,6 @@ export function createInstance(
           break;
         }
         default: {
-          let isCustomComponentTag;
-
-          if (__DEV__) {
-            isCustomComponentTag = isCustomComponent(type, props);
-            // Should this check be gated by parent namespace? Not sure we want to
-            // allow <SVG> or <mATH>.
-            if (!isCustomComponentTag && type !== type.toLowerCase()) {
-              console.error(
-                '<%s /> is using incorrect casing. ' +
-                  'Use PascalCase for React components, ' +
-                  'or lowercase for HTML elements.',
-                type,
-              );
-            }
-          }
-
           if (typeof props.is === 'string') {
             domElement = ownerDocument.createElement(type, {is: props.is});
           } else {
@@ -433,20 +416,31 @@ export function createInstance(
           }
 
           if (__DEV__) {
-            if (
-              !isCustomComponentTag &&
-              // $FlowFixMe[method-unbinding]
-              Object.prototype.toString.call(domElement) ===
-                '[object HTMLUnknownElement]' &&
-              !hasOwnProperty.call(warnedUnknownTags, type)
-            ) {
-              warnedUnknownTags[type] = true;
-              console.error(
-                'The tag <%s> is unrecognized in this browser. ' +
-                  'If you meant to render a React component, start its name with ' +
-                  'an uppercase letter.',
-                type,
-              );
+            if (type.indexOf('-') === -1) {
+              // We're not SVG/MathML and we don't have a dash, so we're not a custom element
+              // Even if you use `is`, these should be of known type and lower case.
+              if (type !== type.toLowerCase()) {
+                console.error(
+                  '<%s /> is using incorrect casing. ' +
+                    'Use PascalCase for React components, ' +
+                    'or lowercase for HTML elements.',
+                  type,
+                );
+              }
+              if (
+                // $FlowFixMe[method-unbinding]
+                Object.prototype.toString.call(domElement) ===
+                  '[object HTMLUnknownElement]' &&
+                !hasOwnProperty.call(warnedUnknownTags, type)
+              ) {
+                warnedUnknownTags[type] = true;
+                console.error(
+                  'The tag <%s> is unrecognized in this browser. ' +
+                    'If you meant to render a React component, start its name with ' +
+                    'an uppercase letter.',
+                  type,
+                );
+              }
             }
           }
         }
