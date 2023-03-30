@@ -15,7 +15,6 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
@@ -59,15 +58,13 @@ import {
 } from './CSSPropertyOperations';
 import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
 import {getPropertyInfo} from '../shared/DOMProperty';
-import {DOCUMENT_NODE} from './HTMLNodeType';
-import isCustomComponent from '../shared/isCustomComponent';
+import isCustomElement from '../shared/isCustomElement';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
 import {
-  enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableHostSingletons,
@@ -79,25 +76,8 @@ import {
 } from '../events/DOMPluginEventSystem';
 
 let didWarnInvalidHydration = false;
-let didWarnScriptTags = false;
-
-let warnedUnknownTags: {
-  [key: string]: boolean,
-};
 let canDiffStyleForHydrationWarning;
-
 if (__DEV__) {
-  warnedUnknownTags = {
-    // There are working polyfills for <dialog>. Let people use it.
-    dialog: true,
-    // Electron ships a custom <webview> tag to display external web content in
-    // an isolated frame and process.
-    // This tag is not present in non Electron environments such as JSDom which
-    // is often used for testing purposes.
-    // @see https://electronjs.org/docs/api/webview-tag
-    webview: true,
-  };
-
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -264,14 +244,6 @@ export function checkForUnmatchedText(
   }
 }
 
-export function getOwnerDocumentFromRootContainer(
-  rootContainerElement: Element | Document | DocumentFragment,
-): Document {
-  return rootContainerElement.nodeType === DOCUMENT_NODE
-    ? (rootContainerElement: any)
-    : rootContainerElement.ownerDocument;
-}
-
 function noop() {}
 
 export function trapClickOnNonInteractiveElement(node: HTMLElement) {
@@ -292,7 +264,7 @@ function setProp(
   tag: string,
   key: string,
   value: mixed,
-  isCustomComponentTag: boolean,
+  isCustomElementTag: boolean,
   props: any,
 ): void {
   switch (key) {
@@ -418,8 +390,16 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (isCustomComponentTag) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
+        if (isCustomElementTag) {
+          if (enableCustomElementPropertySupport) {
+            setValueForPropertyOnCustomComponent(domElement, key, value);
+          } else {
+            if (typeof value === 'boolean') {
+              // Special case before the new flag is on
+              value = '' + (value: any);
+            }
+            setValueForAttribute(domElement, key, value);
+          }
         } else {
           if (
             // shouldIgnoreAttribute
@@ -441,136 +421,6 @@ function setProp(
       }
     }
   }
-}
-
-// creates a script element that won't execute
-export function createPotentiallyInlineScriptElement(
-  ownerDocument: Document,
-): Element {
-  // Create the script via .innerHTML so its "parser-inserted" flag is
-  // set to true and it does not execute
-  const div = ownerDocument.createElement('div');
-  if (__DEV__) {
-    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-      console.error(
-        'Encountered a script tag while rendering React component. ' +
-          'Scripts inside React components are never executed when rendering ' +
-          'on the client. Consider using template tag instead ' +
-          '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
-      );
-      didWarnScriptTags = true;
-    }
-  }
-  div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
-  // This is guaranteed to yield a script element.
-  const firstChild = ((div.firstChild: any): HTMLScriptElement);
-  const element = div.removeChild(firstChild);
-  return element;
-}
-
-export function createSelectElement(
-  props: Object,
-  ownerDocument: Document,
-): Element {
-  let element;
-  if (typeof props.is === 'string') {
-    element = ownerDocument.createElement('select', {is: props.is});
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement('select');
-  }
-  if (props.multiple) {
-    element.multiple = true;
-  } else if (props.size) {
-    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-    // it is possible that no option is selected.
-    //
-    // This is only necessary when a select in "single selection mode".
-    element.size = props.size;
-  }
-  return element;
-}
-
-// Creates elements in the HTML namesapce
-export function createHTMLElement(
-  type: string,
-  props: Object,
-  ownerDocument: Document,
-): Element {
-  if (__DEV__) {
-    switch (type) {
-      case 'script':
-      case 'select':
-        console.error(
-          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
-          type,
-        );
-        break;
-      case 'svg':
-      case 'math':
-        console.error(
-          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
-          type,
-        );
-    }
-  }
-
-  let isCustomComponentTag;
-
-  let element: Element;
-  if (__DEV__) {
-    isCustomComponentTag = isCustomComponent(type, props);
-    // Should this check be gated by parent namespace? Not sure we want to
-    // allow <SVG> or <mATH>.
-    if (!isCustomComponentTag && type !== type.toLowerCase()) {
-      console.error(
-        '<%s /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-        type,
-      );
-    }
-  }
-
-  if (typeof props.is === 'string') {
-    element = ownerDocument.createElement(type, {is: props.is});
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement(type);
-  }
-
-  if (__DEV__) {
-    if (
-      !isCustomComponentTag &&
-      // $FlowFixMe[method-unbinding]
-      Object.prototype.toString.call(element) ===
-        '[object HTMLUnknownElement]' &&
-      !hasOwnProperty.call(warnedUnknownTags, type)
-    ) {
-      warnedUnknownTags[type] = true;
-      console.error(
-        'The tag <%s> is unrecognized in this browser. ' +
-          'If you meant to render a React component, start its name with ' +
-          'an uppercase letter.',
-        type,
-      );
-    }
-  }
-
-  return element;
-}
-
-export function createTextNode(
-  text: string,
-  rootContainerElement: Element | Document | DocumentFragment,
-): Text {
-  return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
-    text,
-  );
 }
 
 export function setInitialProperties(
@@ -807,7 +657,6 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
             setProp(domElement, tag, propKey, propValue, false, props);
           }
         }
@@ -816,7 +665,7 @@ export function setInitialProperties(
     }
   }
 
-  const isCustomComponentTag = isCustomComponent(tag, props);
+  const isCustomElementTag = isCustomElement(tag, props);
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
@@ -825,7 +674,7 @@ export function setInitialProperties(
     if (propValue == null) {
       continue;
     }
-    setProp(domElement, tag, propKey, propValue, isCustomComponentTag, props);
+    setProp(domElement, tag, propKey, propValue, isCustomElementTag, props);
   }
 }
 
@@ -920,6 +769,13 @@ export function diffProperties(
           }
           break;
         }
+        case 'is':
+          if (__DEV__) {
+            console.error(
+              'Cannot update the "is" prop after it has been initialized.',
+            );
+          }
+        // eslint-disable-next-line no-fallthrough
         default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
         }
@@ -1095,7 +951,6 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
             setProp(domElement, tag, propKey, propValue, false, nextProps);
           }
         }
@@ -1104,21 +959,12 @@ export function updateProperties(
     }
   }
 
-  // TODO: Handle wasCustomComponentTag. Changing "is" isn't valid.
-  // const wasCustomComponentTag = isCustomComponent(tag, lastProps);
-  const isCustomComponentTag = isCustomComponent(tag, nextProps);
+  const isCustomElementTag = isCustomElement(tag, nextProps);
   // Apply the diff.
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    setProp(
-      domElement,
-      tag,
-      propKey,
-      propValue,
-      isCustomComponentTag,
-      nextProps,
-    );
+    setProp(domElement, tag, propKey, propValue, isCustomElementTag, nextProps);
   }
 }
 
@@ -1214,6 +1060,21 @@ function diffHydratedCustomComponent(
               'Assignment to read-only property will result in a no-op: `%s`',
               propKey,
             );
+          }
+          continue;
+        }
+      // eslint-disable-next-line no-fallthrough
+      case 'className':
+        if (enableCustomElementPropertySupport) {
+          // className is a special cased property on the server to render as an attribute.
+          extraAttributeNames.delete('class');
+          const serverValue = getValueForAttributeOnCustomComponent(
+            domElement,
+            'class',
+            nextProp,
+          );
+          if (nextProp !== serverValue) {
+            warnForPropDifference('className', serverValue, nextProp);
           }
           continue;
         }
@@ -1504,7 +1365,7 @@ export function diffHydratedProperties(
           extraAttributeNames.add(attributes[i].name);
       }
     }
-    if (isCustomComponent(tag, props)) {
+    if (isCustomElement(tag, props)) {
       diffHydratedCustomComponent(
         domElement,
         tag,

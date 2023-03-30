@@ -7,7 +7,7 @@
 
 import {BOOLEAN, getPropertyInfo} from './DOMProperty';
 import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
-import isCustomComponent from './isCustomComponent';
+import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
@@ -308,7 +308,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
 }
 
 export function validateProperties(type, props, eventRegistry) {
-  if (isCustomComponent(type, props)) {
+  if (isCustomElement(type, props) || typeof props.is === 'string') {
     return;
   }
   warnUnknownProperties(type, props, eventRegistry);

@@ -35,7 +35,7 @@ import {
   processDispatchQueue,
   accumulateTwoPhaseListeners,
 } from '../DOMPluginEventSystem';
-import isCustomComponent from '../../shared/isCustomComponent';
+import isCustomElement from '../../shared/isCustomElement';
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
@@ -312,7 +312,7 @@ function extractEvents(
   } else if (
     enableCustomElementPropertySupport &&
     targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+    isCustomElement(targetInst.elementType, targetInst.memoizedProps)
   ) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   }

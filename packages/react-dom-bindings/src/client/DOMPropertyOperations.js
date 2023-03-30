@@ -253,10 +253,6 @@ export function getValueForAttributeOnCustomComponent(
       }
       return expected === undefined ? undefined : null;
     }
-    if (enableCustomElementPropertySupport && name === 'className') {
-      // className is a special cased property on the server to render as an attribute.
-      name = 'class';
-    }
     const value = node.getAttribute(name);
 
     if (enableCustomElementPropertySupport) {
@@ -448,11 +444,7 @@ export function setValueForPropertyOnCustomComponent(
   name: string,
   value: mixed,
 ) {
-  if (
-    enableCustomElementPropertySupport &&
-    name[0] === 'o' &&
-    name[1] === 'n'
-  ) {
+  if (name[0] === 'o' && name[1] === 'n') {
     const useCapture = name.endsWith('Capture');
     const eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
 
@@ -477,40 +469,16 @@ export function setValueForPropertyOnCustomComponent(
     }
   }
 
-  if (enableCustomElementPropertySupport && name in (node: any)) {
+  if (name in (node: any)) {
     (node: any)[name] = value;
     return;
   }
 
-  if (isAttributeNameSafe(name)) {
-    // shouldRemoveAttribute
-    if (value === null) {
-      node.removeAttribute(name);
-      return;
-    }
-    switch (typeof value) {
-      case 'undefined':
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        node.removeAttribute(name);
-        return;
-      case 'boolean': {
-        if (enableCustomElementPropertySupport) {
-          if (value === true) {
-            node.setAttribute(name, '');
-            return;
-          }
-          node.removeAttribute(name);
-          return;
-        }
-      }
-    }
-    if (__DEV__) {
-      checkAttributeStringCoercion(value, name);
-    }
-    node.setAttribute(
-      name,
-      enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-    );
+  if (value === true) {
+    node.setAttribute(name, '');
+    return;
   }
+
+  // From here, it's the same as any attribute
+  setValueForAttribute(node, name, value);
 }
