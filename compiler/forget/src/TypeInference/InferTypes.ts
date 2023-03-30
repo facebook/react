@@ -10,7 +10,7 @@ import {
   TypeId,
   TypeVar,
 } from "../HIR/HIR";
-import { ArrayShapeId, ObjectShapeId } from "../HIR/ObjectShape";
+import { BuiltInArrayId, BuiltInObjectId } from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
@@ -158,12 +158,12 @@ function* generateInstructionTypes(
     }
 
     case "ObjectExpression": {
-      yield equation(left, { kind: "Object", shapeId: ObjectShapeId });
+      yield equation(left, { kind: "Object", shapeId: BuiltInObjectId });
       break;
     }
 
     case "ArrayExpression": {
-      yield equation(left, { kind: "Object", shapeId: ArrayShapeId });
+      yield equation(left, { kind: "Object", shapeId: BuiltInArrayId });
       break;
     }
 

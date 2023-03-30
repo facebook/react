@@ -6,20 +6,37 @@
  */
 import invariant from "invariant";
 import { Effect } from "./HIR";
-import { BuiltInType, FunctionType, PolyType, PrimitiveType } from "./Types";
+import {
+  BuiltInType,
+  FunctionType,
+  ObjectType,
+  PolyType,
+  PrimitiveType,
+} from "./Types";
+
+/**
+ * This file exports types and defaults for JavaScript object shapes. These are
+ * stored and used by a Forget `Environment`. See comments in `Types.ts`,
+ * `Globals.ts`, and `Environment.ts` for more details.
+ */
 
 const PRIMITIVE_TYPE: PrimitiveType = {
   kind: "Primitive",
 };
 
 let nextAnonId = 0;
-// use strings since they are easily debuggable, even though `Symbol()`
-// might be more performant
+// We currently use strings for anonymous ShapeIds since they are easily
+// debuggable, even though `Symbol()` might be more performant
 function createAnonId(): string {
   return `<generated_${nextAnonId++}>`;
 }
 
-function addFunction(
+/**
+ * Add a function to an existing ShapeRegistry.
+ *
+ * @returns a {@link FunctionType} representing the added function.
+ */
+export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | null]>,
   fn: FunctionSignature
@@ -33,15 +50,33 @@ function addFunction(
   };
 }
 
+/**
+ * Add an object to an existing ShapeRegistry.
+ *
+ * @returns an {@link ObjectType} representing the added object.
+ */
+export function addObject(
+  registry: ShapeRegistry,
+  id: string | null,
+  properties: Iterable<[string, BuiltInType | null]>
+): ObjectType {
+  const shapeId = id ?? createAnonId();
+  addShape(registry, shapeId, properties, null);
+  return {
+    kind: "Object",
+    shapeId,
+  };
+}
+
 function addShape(
   registry: ShapeRegistry,
   id: string,
   properties: Iterable<[string, BuiltInType | null]>,
-  functionType?: FunctionSignature
+  functionType: FunctionSignature | null
 ): ObjectShape {
   const shape: ObjectShape = {
     properties: new Map(properties),
-    functionType: functionType ?? null,
+    functionType,
   };
 
   invariant(
@@ -52,10 +87,14 @@ function addShape(
   return shape;
 }
 
-// Param type not recorded since it currently does not affect inference.
-// Specifically, we currently do not:
-//  - infer types based on their usage in argument position
-//  - handle inference for overloaded / generic functions
+/**
+ * Call signature of a function, used for type and effect inference.
+ *
+ * Note: Param type is not recorded since it currently does not affect inference.
+ * Specifically, we currently do not:
+ *  - infer types based on their usage in argument position
+ *  - handle inference for overloaded / generic functions
+ */
 export type FunctionSignature = {
   positionalParams: Array<Effect>;
   restParam: Effect | null;
@@ -63,27 +102,34 @@ export type FunctionSignature = {
   calleeEffect: Effect;
 };
 
+/**
+ * Shape of an {@link FunctionType} if {@link ObjectShape.functionType} is present,
+ * or {@link ObjectType} otherwise.
+ *
+ * Constructors (e.g. the global `Array` object) and other functions (e.g. `Math.min`)
+ * are both represented by {@link ObjectShape.functionType}.
+ */
 export type ObjectShape = {
-  // TODO(gsn): When can the key be null here?
   properties: Map<string, BuiltInType | null>;
-  // TODO(gsn): Why do Objects have a `functionType`? Oh, this the constructor.
-  // Let's rename to constructor?
   functionType: FunctionSignature | null;
 };
 
+/**
+ * Every valid ShapeRegistry must contain ObjectShape definitions for
+ * {@link BuiltInArrayId} and {@link BuiltInObjectId}, since these are the
+ * the inferred types for [] and {}.
+ */
 export type ShapeRegistry = Map<string, ObjectShape>;
+export const BuiltInArrayId = "BuiltInArray";
+export const BuiltInObjectId = "BuiltInObject";
 
 /**
- * Shapes of built-in types
+ * ShapeRegistry with default definitions for built-ins.
  */
-
-// The only "entrypoints" should be Globals and recursive lookups from properties / functions
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
-export const ArrayShapeId = "Array";
-export const ObjectShapeId = "Object";
 
 /* Built-in array shape */
-addShape(BUILTIN_SHAPES, ArrayShapeId, [
+addObject(BUILTIN_SHAPES, BuiltInArrayId, [
   [
     "at",
     addFunction(BUILTIN_SHAPES, [], {
@@ -100,7 +146,7 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
       restParam: Effect.Capture,
       returnType: {
         kind: "Object",
-        shapeId: ArrayShapeId,
+        shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Read,
     }),
@@ -119,7 +165,7 @@ addShape(BUILTIN_SHAPES, ArrayShapeId, [
 ]);
 
 /* Built-in Object shape */
-addShape(BUILTIN_SHAPES, ObjectShapeId, [
+addObject(BUILTIN_SHAPES, BuiltInObjectId, [
   [
     "toString",
     addFunction(BUILTIN_SHAPES, [], {

@@ -9,6 +9,14 @@ import { Effect, ValueKind } from "./HIR";
 import { Hook } from "./Hooks";
 import { BuiltInType, HookType, PolyType } from "./Types";
 
+/**
+ * This file exports types and defaults for JavaScript global objects.
+ * A Forget `Environment` stores the GlobalRegistry and ShapeRegistry
+ * used for the current project. These ultimately help Forget refine
+ * its inference of types (i.e. Object vs Primitive) and effects
+ * (i.e. read vs mutate) in source programs.
+ */
+
 // Hack until we add ObjectShapes for all globals
 const UNTYPED_GLOBALS: Set<string> = new Set([
   "String",

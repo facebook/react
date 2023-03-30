@@ -28,9 +28,13 @@ export type HookType = {
  * subtly different from JS language semantics - `shape` represents both
  * OwnPropertyDescriptors and properties present in the prototype chain.
  *
- * In addition, a {@link FunctionType} may be associated with an inferred signature,
+ * {@link ObjectShape.functionType} is always present on the shape of a {@link FunctionType},
+ * and it represents the call signature of the function. Note that Forget thinks of a
+ * {@link FunctionType} as any "callable object" (not to be confused with objects that
+ *  extend the global `Function`.)
  *
- * If `shapeId` is present, it is a key into the global ShapeRegistry.
+ * If `shapeId` is present, it is a key into the ShapeRegistry used to infer this
+ * FunctionType or ObjectType instance (i.e. from an Environment).
  */
 
 export type FunctionType = {
