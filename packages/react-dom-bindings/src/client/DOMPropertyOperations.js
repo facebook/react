@@ -8,13 +8,13 @@
  */
 
 import {
-  getPropertyInfo,
-  isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
+
+import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableTrustedTypesIntegration,
@@ -38,11 +38,6 @@ export function getValueForProperty(
   propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
-    if (propertyInfo.mustUseProperty) {
-      const {propertyName} = propertyInfo;
-      return (node: any)[propertyName];
-    }
-
     const attributeName = propertyInfo.attributeName;
 
     if (!node.hasAttribute(attributeName)) {
@@ -287,152 +282,137 @@ export function getValueForAttributeOnCustomComponent(
  * @param {string} name
  * @param {*} value
  */
-export function setValueForProperty(node: Element, name: string, value: mixed) {
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out reserved words.
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
+export function setValueForProperty(
+  node: Element,
+  propertyInfo: PropertyInfo,
+  value: mixed,
+) {
+  const attributeName = propertyInfo.attributeName;
+
+  if (value === null) {
+    node.removeAttribute(attributeName);
     return;
   }
 
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo !== null) {
-    if (propertyInfo.mustUseProperty) {
-      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
-      // right now.
-      (node: any)[propertyInfo.propertyName] =
-        value && typeof value !== 'function' && typeof value !== 'symbol';
+  // shouldRemoveAttribute
+  switch (typeof value) {
+    case 'undefined':
+    case 'function':
+    case 'symbol': // eslint-disable-line
+      node.removeAttribute(attributeName);
       return;
+    case 'boolean': {
+      if (!propertyInfo.acceptsBooleans) {
+        node.removeAttribute(attributeName);
+        return;
+      }
     }
-
-    // The rest are treated as attributes with special cases.
-
-    const attributeName = propertyInfo.attributeName;
-
-    if (value === null) {
+  }
+  if (enableFilterEmptyStringAttributesDOM) {
+    if (propertyInfo.removeEmptyString && value === '') {
+      if (__DEV__) {
+        if (attributeName === 'src') {
+          console.error(
+            'An empty string ("") was passed to the %s attribute. ' +
+              'This may cause the browser to download the whole page again over the network. ' +
+              'To fix this, either do not render the element at all ' +
+              'or pass null to %s instead of an empty string.',
+            attributeName,
+            attributeName,
+          );
+        } else {
+          console.error(
+            'An empty string ("") was passed to the %s attribute. ' +
+              'To fix this, either do not render the element at all ' +
+              'or pass null to %s instead of an empty string.',
+            attributeName,
+            attributeName,
+          );
+        }
+      }
       node.removeAttribute(attributeName);
       return;
     }
+  }
 
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case 'undefined':
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        node.removeAttribute(attributeName);
-        return;
-      case 'boolean': {
-        if (!propertyInfo.acceptsBooleans) {
-          node.removeAttribute(attributeName);
-          return;
-        }
-      }
-    }
-    if (enableFilterEmptyStringAttributesDOM) {
-      if (propertyInfo.removeEmptyString && value === '') {
-        if (__DEV__) {
-          if (name === 'src') {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'This may cause the browser to download the whole page again over the network. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          } else {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          }
-        }
+  switch (propertyInfo.type) {
+    case BOOLEAN:
+      if (value) {
+        node.setAttribute(attributeName, '');
+      } else {
         node.removeAttribute(attributeName);
         return;
       }
-    }
-
-    switch (propertyInfo.type) {
-      case BOOLEAN:
-        if (value) {
-          node.setAttribute(attributeName, '');
-        } else {
-          node.removeAttribute(attributeName);
-          return;
-        }
-        break;
-      case OVERLOADED_BOOLEAN:
-        if (value === true) {
-          node.setAttribute(attributeName, '');
-        } else if (value === false) {
-          node.removeAttribute(attributeName);
-        } else {
-          if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-          node.setAttribute(attributeName, (value: any));
-        }
-        return;
-      case NUMERIC:
-        if (!isNaN(value)) {
-          if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-          node.setAttribute(attributeName, (value: any));
-        } else {
-          node.removeAttribute(attributeName);
-        }
-        break;
-      case POSITIVE_NUMERIC:
-        if (!isNaN(value) && (value: any) >= 1) {
-          if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-          node.setAttribute(attributeName, (value: any));
-        } else {
-          node.removeAttribute(attributeName);
-        }
-        break;
-      default: {
+      break;
+    case OVERLOADED_BOOLEAN:
+      if (value === true) {
+        node.setAttribute(attributeName, '');
+      } else if (value === false) {
+        node.removeAttribute(attributeName);
+      } else {
         if (__DEV__) {
           checkAttributeStringCoercion(value, attributeName);
         }
-        let attributeValue;
-        // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-        if (enableTrustedTypesIntegration) {
-          if (propertyInfo.sanitizeURL) {
-            attributeValue = (sanitizeURL(value): any);
-          } else {
-            attributeValue = (value: any);
-          }
-        } else {
-          // We have already verified this above.
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          attributeValue = '' + (value: any);
-          if (propertyInfo.sanitizeURL) {
-            attributeValue = sanitizeURL(attributeValue);
-          }
+        node.setAttribute(attributeName, (value: any));
+      }
+      return;
+    case NUMERIC:
+      if (!isNaN(value)) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
         }
-        const attributeNamespace = propertyInfo.attributeNamespace;
-        if (attributeNamespace) {
-          node.setAttributeNS(
-            attributeNamespace,
-            attributeName,
-            attributeValue,
-          );
+        node.setAttribute(attributeName, (value: any));
+      } else {
+        node.removeAttribute(attributeName);
+      }
+      break;
+    case POSITIVE_NUMERIC:
+      if (!isNaN(value) && (value: any) >= 1) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+        node.setAttribute(attributeName, (value: any));
+      } else {
+        node.removeAttribute(attributeName);
+      }
+      break;
+    default: {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      let attributeValue;
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (enableTrustedTypesIntegration) {
+        if (propertyInfo.sanitizeURL) {
+          attributeValue = (sanitizeURL(value): any);
         } else {
-          node.setAttribute(attributeName, attributeValue);
+          attributeValue = (value: any);
+        }
+      } else {
+        // We have already verified this above.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        attributeValue = '' + (value: any);
+        if (propertyInfo.sanitizeURL) {
+          attributeValue = sanitizeURL(attributeValue);
         }
       }
+      const attributeNamespace = propertyInfo.attributeNamespace;
+      if (attributeNamespace) {
+        node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
+      } else {
+        node.setAttribute(attributeName, attributeValue);
+      }
     }
-  } else if (isAttributeNameSafe(name)) {
+  }
+}
+
+export function setValueForAttribute(
+  node: Element,
+  name: string,
+  value: mixed,
+) {
+  if (isAttributeNameSafe(name)) {
     // If the prop isn't in the special list, treat it as a simple attribute.
     // shouldRemoveAttribute
     if (value === null) {

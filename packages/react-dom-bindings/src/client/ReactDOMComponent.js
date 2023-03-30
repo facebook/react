@@ -24,6 +24,7 @@ import {
   getValueForProperty,
   setValueForProperty,
   setValueForPropertyOnCustomComponent,
+  setValueForAttribute,
 } from './DOMPropertyOperations';
 import {
   initWrapperState as ReactDOMInputInitWrapperState,
@@ -378,6 +379,18 @@ function setProp(
       }
       break;
     }
+    // Note: `option.selected` is not updated if `select.multiple` is
+    // disabled with `removeAttribute`. We have special logic for handling this.
+    case 'multiple': {
+      (domElement: any).multiple =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
+      break;
+    }
+    case 'muted': {
+      (domElement: any).muted =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
+      break;
+    }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
@@ -408,7 +421,22 @@ function setProp(
         if (isCustomComponentTag) {
           setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          setValueForProperty(domElement, key, value);
+          if (
+            // shouldIgnoreAttribute
+            // We have already filtered out reserved words.
+            key.length > 2 &&
+            (key[0] === 'o' || key[0] === 'O') &&
+            (key[1] === 'n' || key[1] === 'N')
+          ) {
+            return;
+          }
+
+          const propertyInfo = getPropertyInfo(key);
+          if (propertyInfo !== null) {
+            setValueForProperty(domElement, propertyInfo, value);
+          } else {
+            setValueForAttribute(domElement, key, value);
+          }
         }
       }
     }
@@ -687,7 +715,19 @@ export function setInitialProperties(
         if (propValue == null) {
           continue;
         }
-        setProp(domElement, tag, propKey, propValue, false, props);
+        switch (propKey) {
+          case 'selected': {
+            // TODO: Remove support for selected on option.
+            (domElement: any).selected =
+              propValue &&
+              typeof propValue !== 'function' &&
+              typeof propValue !== 'symbol';
+            break;
+          }
+          default: {
+            setProp(domElement, tag, propKey, propValue, false, props);
+          }
+        }
       }
       ReactDOMOptionPostMountWrapper(domElement, props);
       return;
@@ -1002,6 +1042,26 @@ export function updateProperties(
       ReactDOMTextareaUpdateWrapper(domElement, nextProps);
       return;
     }
+    case 'option': {
+      for (let i = 0; i < updatePayload.length; i += 2) {
+        const propKey = updatePayload[i];
+        const propValue = updatePayload[i + 1];
+        switch (propKey) {
+          case 'selected': {
+            // TODO: Remove support for selected on option.
+            (domElement: any).selected =
+              propValue &&
+              typeof propValue !== 'function' &&
+              typeof propValue !== 'symbol';
+            break;
+          }
+          default: {
+            setProp(domElement, tag, propKey, propValue, false, nextProps);
+          }
+        }
+      }
+      return;
+    }
     case 'img':
     case 'link':
     case 'area':
@@ -1233,7 +1293,22 @@ function diffHydratedGenericElement(
         extraAttributeNames.delete(propKey);
         diffHydratedStyles(domElement, nextProp);
         continue;
-      // eslint-disable-next-line no-fallthrough
+      case 'multiple': {
+        extraAttributeNames.delete(propKey);
+        const serverValue = (domElement: any).multiple;
+        if (nextProp !== serverValue) {
+          warnForPropDifference('multiple', serverValue, nextProp);
+        }
+        continue;
+      }
+      case 'muted': {
+        extraAttributeNames.delete(propKey);
+        const serverValue = (domElement: any).muted;
+        if (nextProp !== serverValue) {
+          warnForPropDifference('muted', serverValue, nextProp);
+        }
+        continue;
+      }
       default:
         if (
           // shouldIgnoreAttribute

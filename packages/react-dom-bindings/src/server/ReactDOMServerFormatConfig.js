@@ -38,15 +38,15 @@ import {
   clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   getPropertyInfo,
-  isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
-import {isUnitlessNumber} from '../shared/CSSProperty';
+import isUnitlessNumber from '../shared/isUnitlessNumber';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -579,10 +579,7 @@ function pushStyleAttribute(
 
       nameChunk = processStyleName(styleName);
       if (typeof styleValue === 'number') {
-        if (
-          styleValue !== 0 &&
-          !hasOwnProperty.call(isUnitlessNumber, styleName)
-        ) {
+        if (styleValue !== 0 && !isUnitlessNumber(styleName)) {
           valueChunk = stringToChunk(styleValue + 'px'); // Presumes implicit 'px' suffix for unitless numbers
         } else {
           valueChunk = stringToChunk('' + styleValue);
@@ -614,6 +611,16 @@ const attributeAssign = stringToPrecomputedChunk('="');
 const attributeEnd = stringToPrecomputedChunk('"');
 const attributeEmptyString = stringToPrecomputedChunk('=""');
 
+function pushBooleanAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+    target.push(attributeSeparator, stringToChunk(name), attributeEmptyString);
+  }
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -630,6 +637,10 @@ function pushAttribute(
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
       // Ignored. These are built-in to React on the client.
+      return;
+    case 'multiple':
+    case 'muted':
+      pushBooleanAttribute(target, name, value);
       return;
   }
   if (
@@ -1115,9 +1126,9 @@ function pushInput(
   }
 
   if (checked !== null) {
-    pushAttribute(target, 'checked', checked);
+    pushBooleanAttribute(target, 'checked', checked);
   } else if (defaultChecked !== null) {
-    pushAttribute(target, 'checked', defaultChecked);
+    pushBooleanAttribute(target, 'checked', defaultChecked);
   }
   if (value !== null) {
     pushAttribute(target, 'value', value);

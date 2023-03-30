@@ -1045,7 +1045,13 @@ describe('ReactDOMComponent', () => {
 
     it('should not incur unnecessary DOM mutations for boolean properties', () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div checked={true} />, container);
+      function onChange() {
+        // noop
+      }
+      ReactDOM.render(
+        <input type="checkbox" onChange={onChange} checked={true} />,
+        container,
+      );
 
       const node = container.firstChild;
       let nodeValue = true;
@@ -1059,17 +1065,37 @@ describe('ReactDOMComponent', () => {
         }),
       });
 
-      ReactDOM.render(<div checked={true} />, container);
+      ReactDOM.render(
+        <input type="checkbox" onChange={onChange} checked={true} />,
+        container,
+      );
       expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
-      ReactDOM.render(<div />, container);
+      expect(() => {
+        ReactDOM.render(
+          <input type="checkbox" onChange={onChange} />,
+          container,
+        );
+      }).toErrorDev(
+        'A component is changing a controlled input to be uncontrolled. This is likely caused by ' +
+          'the value changing from a defined to undefined, which should not happen. Decide between ' +
+          'using a controlled or uncontrolled input element for the lifetime of the component.',
+      );
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div checked={false} />, container);
-      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
-
-      ReactDOM.render(<div checked={true} />, container);
+      ReactDOM.render(
+        <input type="checkbox" onChange={onChange} checked={false} />,
+        container,
+      );
+      // TODO: Non-null values are updated twice on inputs. This is should ideally be fixed.
       expect(nodeValueSetter).toHaveBeenCalledTimes(3);
+
+      ReactDOM.render(
+        <input type="checkbox" onChange={onChange} checked={true} />,
+        container,
+      );
+      // TODO: Non-null values are updated twice on inputs. This is should ideally be fixed.
+      expect(nodeValueSetter).toHaveBeenCalledTimes(5);
     });
 
     it('should ignore attribute list for elements with the "is" attribute', () => {

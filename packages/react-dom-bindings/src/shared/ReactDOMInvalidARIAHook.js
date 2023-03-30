@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
+import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomComponent from './isCustomComponent';
 import validAriaProperties from './validAriaProperties';
 import hasOwnProperty from 'shared/hasOwnProperty';
