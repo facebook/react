@@ -12,6 +12,7 @@ import {
 } from "../HIR/HIR";
 import { BuiltInArrayId, BuiltInObjectId } from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
+import { assertExhaustive } from "../Utils/utils";
 
 function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
   switch (op) {
@@ -182,7 +183,29 @@ function* generateInstructionTypes(
       });
 
       yield equation(left, returnType);
+      break;
     }
+
+    case "DeclareLocal":
+    case "Destructure":
+    case "NewExpression":
+    case "TypeCastExpression":
+    case "JsxExpression":
+    case "JsxFragment":
+    case "RegExpLiteral":
+    case "PropertyStore":
+    case "PropertyDelete":
+    case "ComputedStore":
+    case "ComputedLoad":
+    case "ComputedDelete":
+    case "FunctionExpression":
+    case "TaggedTemplateExpression":
+    case "TemplateLiteral":
+    case "Await":
+    case "UnsupportedNode":
+      break;
+    default:
+      assertExhaustive(value, `Unhandled instruction value kind: ${value}`);
   }
 }
 
