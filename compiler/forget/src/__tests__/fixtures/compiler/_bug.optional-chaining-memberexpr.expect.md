@@ -1,0 +1,39 @@
+
+## Input
+
+```javascript
+// Note that `a?.b.c` is semantically different from `(a?.b).c`
+// We should codegen the correct member expressions
+function Component(props) {
+  let x = props?.b.c;
+  let y = (props?.x).y;
+  return { x, y };
+}
+
+```
+
+## Code
+
+```javascript
+// Note that `a?.b.c` is semantically different from `(a?.b).c`
+// We should codegen the correct member expressions
+function Component(props) {
+  const $ = React.unstable_useMemoCache(3);
+  const x = (props?.b).c;
+  const y = (props?.x).y;
+  const c_0 = $[0] !== x;
+  const c_1 = $[1] !== y;
+  let t0;
+  if (c_0 || c_1) {
+    t0 = { x, y };
+    $[0] = x;
+    $[1] = y;
+    $[2] = t0;
+  } else {
+    t0 = $[2];
+  }
+  return t0;
+}
+
+```
+      
