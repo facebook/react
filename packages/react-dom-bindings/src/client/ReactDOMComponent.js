@@ -419,7 +419,15 @@ function setProp(
         }
       } else {
         if (isCustomComponentTag) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
+          if (enableCustomElementPropertySupport) {
+            setValueForPropertyOnCustomComponent(domElement, key, value);
+          } else {
+            if (typeof value === 'boolean') {
+              // Special case before the new flag is on
+              value = '' + (value: any);
+            }
+            setValueForAttribute(domElement, key, value);
+          }
         } else {
           if (
             // shouldIgnoreAttribute
