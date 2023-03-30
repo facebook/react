@@ -60,8 +60,18 @@ export default function (name: string): boolean {
     case 'MozBoxFlex': // TODO: Remove these since they shouldn't be used in modern code
     case 'MozBoxFlexGroup':
     case 'MozLineClamp':
+    case 'msAnimationIterationCount':
+    case 'msFlex':
+    case 'msZoom':
     case 'msFlexGrow':
-    case 'msLineClamp':
+    case 'msFlexNegative':
+    case 'msFlexOrder':
+    case 'msFlexPositive':
+    case 'msFlexShrink':
+    case 'msGridColumn':
+    case 'msGridColumnSpan':
+    case 'msGridRow':
+    case 'msGridRowSpan':
     case 'WebkitAnimationIterationCount':
     case 'WebkitBoxFlex':
     case 'WebKitBoxFlexGroup':
