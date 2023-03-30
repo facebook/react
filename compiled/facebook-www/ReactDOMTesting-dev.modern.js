@@ -6542,7 +6542,7 @@ function validateProperty$1(tagName, name) {
   return true;
 }
 
-function warnInvalidARIAProps(type, props) {
+function validateProperties$2(type, props) {
   {
     var invalidProps = [];
 
@@ -6576,14 +6576,6 @@ function warnInvalidARIAProps(type, props) {
       );
     }
   }
-}
-
-function validateProperties$2(type, props) {
-  if (isCustomComponent(type, props)) {
-    return;
-  }
-
-  warnInvalidARIAProps(type, props);
 }
 
 var didWarnValueNull = false;
@@ -34264,7 +34256,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-180be3ae";
+var ReactVersion = "18.3.0-www-modern-e4debc03";
 
 function createPortal$1(
   children,

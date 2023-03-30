@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-cbdf727f";
+var ReactVersion = "18.3.0-www-modern-609fee14";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -773,31 +773,6 @@ function checkControlledValueProps(tagName, props) {
   }
 }
 
-function isCustomComponent(tagName, props) {
-  if (tagName.indexOf("-") === -1) {
-    return typeof props.is === "string";
-  }
-
-  switch (tagName) {
-    // These are reserved SVG and MathML elements.
-    // We don't mind this list too much because we expect it to never grow.
-    // The alternative is to track the namespace in a few places which is convoluted.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
-    case "annotation-xml":
-    case "color-profile":
-    case "font-face":
-    case "font-face-src":
-    case "font-face-uri":
-    case "font-face-format":
-    case "font-face-name":
-    case "missing-glyph":
-      return false;
-
-    default:
-      return true;
-  }
-}
-
 var ariaProperties = {
   "aria-current": 0,
   // state
@@ -928,7 +903,7 @@ function validateProperty$1(tagName, name) {
   return true;
 }
 
-function warnInvalidARIAProps(type, props) {
+function validateProperties$2(type, props) {
   {
     var invalidProps = [];
 
@@ -964,14 +939,6 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties$2(type, props) {
-  if (isCustomComponent(type, props)) {
-    return;
-  }
-
-  warnInvalidARIAProps(type, props);
-}
-
 var didWarnValueNull = false;
 function validateProperties$1(type, props) {
   {
@@ -998,6 +965,31 @@ function validateProperties$1(type, props) {
         );
       }
     }
+  }
+}
+
+function isCustomComponent(tagName, props) {
+  if (tagName.indexOf("-") === -1) {
+    return typeof props.is === "string";
+  }
+
+  switch (tagName) {
+    // These are reserved SVG and MathML elements.
+    // We don't mind this list too much because we expect it to never grow.
+    // The alternative is to track the namespace in a few places which is convoluted.
+    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    case "annotation-xml":
+    case "color-profile":
+    case "font-face":
+    case "font-face-src":
+    case "font-face-uri":
+    case "font-face-format":
+    case "font-face-name":
+    case "missing-glyph":
+      return false;
+
+    default:
+      return true;
   }
 }
 

@@ -30502,7 +30502,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-7f70d0aa";
+var ReactVersion = "18.3.0-www-classic-bfbf2ef3";
 
 function createPortal$1(
   children,
@@ -35304,7 +35304,7 @@ function validateProperty$1(tagName, name) {
   return true;
 }
 
-function warnInvalidARIAProps(type, props) {
+function validateProperties$2(type, props) {
   {
     var invalidProps = [];
 
@@ -35338,14 +35338,6 @@ function warnInvalidARIAProps(type, props) {
       );
     }
   }
-}
-
-function validateProperties$2(type, props) {
-  if (isCustomComponent(type, props)) {
-    return;
-  }
-
-  warnInvalidARIAProps(type, props);
 }
 
 var didWarnValueNull = false;
