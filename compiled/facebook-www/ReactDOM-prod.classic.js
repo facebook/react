@@ -26,8 +26,6 @@ var Scheduler = require("scheduler"),
   revertRemovalOfSiblingPrerendering =
     dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch =
-    dynamicFeatureFlags.deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
@@ -3648,22 +3646,18 @@ function enqueueUpdate(fiber, update, lane) {
   var updateQueue = fiber.updateQueue;
   if (null === updateQueue) return null;
   updateQueue = updateQueue.shared;
-  if (
-    (deferRenderPhaseUpdateToNextBatch && 0 !== (fiber.mode & 1)) ||
-    0 === (executionContext & 2)
-  )
-    return (
-      enqueueUpdate$1(fiber, updateQueue, update, lane),
-      getRootForUpdatedFiber(fiber)
-    );
-  var pending = updateQueue.pending;
-  null === pending
-    ? (update.next = update)
-    : ((update.next = pending.next), (pending.next = update));
-  updateQueue.pending = update;
-  update = getRootForUpdatedFiber(fiber);
-  markUpdateLaneFromFiberToRoot(fiber, null, lane);
-  return update;
+  if (0 !== (executionContext & 2)) {
+    var pending = updateQueue.pending;
+    null === pending
+      ? (update.next = update)
+      : ((update.next = pending.next), (pending.next = update));
+    updateQueue.pending = update;
+    update = getRootForUpdatedFiber(fiber);
+    markUpdateLaneFromFiberToRoot(fiber, null, lane);
+    return update;
+  }
+  enqueueUpdate$1(fiber, updateQueue, update, lane);
+  return getRootForUpdatedFiber(fiber);
 }
 function entangleTransitions(root, fiber, lane) {
   fiber = fiber.updateQueue;
@@ -11193,11 +11187,7 @@ function requestEventTime() {
 }
 function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
-  if (
-    !deferRenderPhaseUpdateToNextBatch &&
-    0 !== (executionContext & 2) &&
-    0 !== workInProgressRootRenderLanes
-  )
+  if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
   if (null !== ReactCurrentBatchConfig$2.transition)
     return (
@@ -11234,12 +11224,11 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
         transitionLanesMap[index$7] = transitions;
       }
     }
-    if (root === workInProgressRoot) {
-      if (deferRenderPhaseUpdateToNextBatch || 0 === (executionContext & 2))
-        workInProgressRootInterleavedUpdatedLanes |= lane;
+    root === workInProgressRoot &&
+      (0 === (executionContext & 2) &&
+        (workInProgressRootInterleavedUpdatedLanes |= lane),
       4 === workInProgressRootExitStatus &&
-        markRootSuspended(root, workInProgressRootRenderLanes);
-    }
+        markRootSuspended(root, workInProgressRootRenderLanes));
     ensureRootIsScheduled(root, eventTime);
     2 === lane &&
       0 === executionContext &&
@@ -16105,7 +16094,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1787 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-658b94fb",
+  version: "18.3.0-www-classic-58ad6736",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2178 = {
@@ -16135,7 +16124,7 @@ var internals$jscomp$inline_2178 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-658b94fb"
+  reconcilerVersion: "18.3.0-www-classic-58ad6736"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2179 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16375,4 +16364,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-658b94fb";
+exports.version = "18.3.0-www-classic-58ad6736";
