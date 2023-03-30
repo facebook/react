@@ -10,6 +10,7 @@
 import {
   getDisplayName,
   getDisplayNameForReactElement,
+  isPlainObject,
 } from 'react-devtools-shared/src/utils';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {
@@ -268,6 +269,32 @@ describe('utils', () => {
       expect(gt('1.2.1', '1.2.1')).toBe(false);
       expect(gt('1.2.1', '1.2.2')).toBe(false);
       expect(gte('10.0.0', '9.0.0')).toBe(true);
+    });
+  });
+
+  describe('isPlainObject', () => {
+    it('should return true for plain objects', () => {
+      expect(isPlainObject({})).toBe(true);
+      expect(isPlainObject({a: 1})).toBe(true);
+      expect(isPlainObject({a: {b: {c: 123}}})).toBe(true);
+    });
+
+    it('should return false if object is a class instance', () => {
+      expect(isPlainObject(new (class C {})())).toBe(false);
+    });
+
+    it('should retun false for objects, which have not only Object in its prototype chain', () => {
+      expect(isPlainObject([])).toBe(false);
+      expect(isPlainObject(Symbol())).toBe(false);
+    });
+
+    it('should retun false for primitives', () => {
+      expect(isPlainObject(5)).toBe(false);
+      expect(isPlainObject(true)).toBe(false);
+    });
+
+    it('should return true for objects with no prototype', () => {
+      expect(isPlainObject(Object.create(null))).toBe(true);
     });
   });
 });
