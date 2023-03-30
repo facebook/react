@@ -34,7 +34,7 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders, clientCleanRender, clientRenderOnServerString} =
+const {resetModules, itRenders, clientCleanRender} =
   ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
@@ -662,16 +662,13 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('className for custom elements', async render => {
+      const e = await render(<custom-element className="test" />, 0);
       if (ReactFeatureFlags.enableCustomElementPropertySupport) {
-        const e = await render(
-          <custom-element className="test" />,
-          render === clientRenderOnServerString ? 1 : 0,
-        );
         expect(e.getAttribute('className')).toBe(null);
         expect(e.getAttribute('class')).toBe('test');
       } else {
-        const e = await render(<custom-element className="test" />, 0);
         expect(e.getAttribute('className')).toBe('test');
+        expect(e.getAttribute('class')).toBe(null);
       }
     });
 

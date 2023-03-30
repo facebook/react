@@ -253,10 +253,6 @@ export function getValueForAttributeOnCustomComponent(
       }
       return expected === undefined ? undefined : null;
     }
-    if (enableCustomElementPropertySupport && name === 'className') {
-      // className is a special cased property on the server to render as an attribute.
-      name = 'class';
-    }
     const value = node.getAttribute(name);
 
     if (enableCustomElementPropertySupport) {

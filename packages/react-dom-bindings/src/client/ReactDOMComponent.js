@@ -1064,6 +1064,21 @@ function diffHydratedCustomComponent(
           continue;
         }
       // eslint-disable-next-line no-fallthrough
+      case 'className':
+        if (enableCustomElementPropertySupport) {
+          // className is a special cased property on the server to render as an attribute.
+          extraAttributeNames.delete('class');
+          const serverValue = getValueForAttributeOnCustomComponent(
+            domElement,
+            'class',
+            nextProp,
+          );
+          if (nextProp !== serverValue) {
+            warnForPropDifference('className', serverValue, nextProp);
+          }
+          continue;
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         let ownNamespaceDev = parentNamespaceDev;
         if (ownNamespaceDev === HTML_NAMESPACE) {
