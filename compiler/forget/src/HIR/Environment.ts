@@ -1,6 +1,6 @@
 import invariant from "invariant";
 import { log } from "../Utils/logger";
-import { DEFAULT_GLOBALS, Global } from "./Globals";
+import { DEFAULT_GLOBALS, Global, GlobalRegistry } from "./Globals";
 import {
   BuiltInType,
   Effect,
@@ -10,7 +10,7 @@ import {
   ObjectType,
   ValueKind,
 } from "./HIR";
-import { BUILTIN_HOOKS, Hook } from "./Hooks";
+import { Hook } from "./Hooks";
 import {
   BUILTIN_SHAPES,
   FunctionSignature,
@@ -19,21 +19,41 @@ import {
 
 const HOOK_PATTERN = /^_?use/;
 
+// TODO(mofeiZ): User defined global types (with corresponding shapes).
+// User defined global types should have inline ObjectShapes instead of directly
+// using ObjectShapes.ShapeRegistry, as a user-provided ShapeRegistry may be
+// accidentally be not well formed.
+// i.e.
+//   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
+//   missing some recursive Object / Function shapeIds
 export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
   memoizeJsxElements: boolean;
 }>;
 
 export class Environment {
-  #customHooks: Map<string, Hook>;
-  #globals: Set<string>;
+  #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
 
   constructor(config: EnvironmentConfig | null) {
-    this.#customHooks = config?.customHooks ?? new Map();
     this.#shapes = BUILTIN_SHAPES;
-    this.#globals = DEFAULT_GLOBALS;
+
+    if (config?.customHooks) {
+      this.#globals = new Map(DEFAULT_GLOBALS);
+      for (const [hookName, hook] of config.customHooks) {
+        invariant(
+          !this.#globals.has(hookName),
+          `[Globals] Found existing definition in global registry for custom hook ${hookName}`
+        );
+        this.#globals.set(hookName, {
+          kind: "Hook",
+          definition: hook,
+        });
+      }
+    } else {
+      this.#globals = DEFAULT_GLOBALS;
+    }
   }
 
   get nextIdentifierId(): IdentifierId {
@@ -41,26 +61,24 @@ export class Environment {
   }
 
   getGlobalDeclaration(name: string): Global | null {
-    if (!this.#globals.has(name)) {
-      log(() => `Undefined global '${name}'`);
+    let resolvedGlobal: Global | null = this.#globals.get(name) ?? null;
+    if (resolvedGlobal === null) {
+      // Hack, since we don't track module level declarations and imports
+      if (name.match(HOOK_PATTERN)) {
+        return {
+          kind: "Hook",
+          definition: {
+            kind: "Custom",
+            name,
+            effectKind: Effect.Mutate,
+            valueKind: ValueKind.Mutable,
+          },
+        };
+      } else {
+        log(() => `Undefined global '${name}'`);
+      }
     }
-    return { name };
-  }
-
-  getHookDeclaration(name: string): Hook | null {
-    if (!name.match(HOOK_PATTERN)) {
-      return null;
-    }
-    const hook = BUILTIN_HOOKS.get(name) ?? this.#customHooks.get(name);
-    if (hook !== undefined) {
-      return hook;
-    }
-    return {
-      kind: "Custom",
-      name,
-      effectKind: Effect.Mutate,
-      valueKind: ValueKind.Mutable,
-    };
+    return resolvedGlobal;
   }
 
   getPropertyType(

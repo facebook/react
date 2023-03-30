@@ -7,45 +7,6 @@
 
 import { Effect, ValueKind } from "./HIR";
 
-export const BUILTIN_HOOKS: Map<string, Hook> = new Map([
-  [
-    "useState",
-    {
-      kind: "State",
-      name: "useState",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
-  ],
-  [
-    "useRef",
-    {
-      kind: "Ref",
-      name: "useRef",
-      effectKind: Effect.Capture,
-      valueKind: ValueKind.Mutable,
-    },
-  ],
-  [
-    "useMemo",
-    {
-      kind: "Memo",
-      name: "useMemo",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
-  ],
-  [
-    "useCallback",
-    {
-      kind: "Memo",
-      name: "useCallback",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
-  ],
-]);
-
 export type HookKind = "State" | "Ref" | "Custom" | "Memo";
 export type Hook = {
   kind: HookKind;

@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export const DEFAULT_GLOBALS: Set<string> = new Set([
+import { Effect, ValueKind } from "./HIR";
+import { Hook } from "./Hooks";
+import { BuiltInType, HookType, PolyType } from "./Types";
+
+// Hack until we add ObjectShapes for all globals
+const UNTYPED_GLOBALS: Set<string> = new Set([
   "String",
   "Object",
   "Function",
@@ -50,6 +55,62 @@ export const DEFAULT_GLOBALS: Set<string> = new Set([
   "decodeURIComponent",
 ]);
 
-export type Global = {
-  name: string;
-};
+const BUILTIN_HOOKS: Array<[string, Hook]> = [
+  [
+    "useState",
+    {
+      kind: "State",
+      name: "useState",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
+  [
+    "useRef",
+    {
+      kind: "Ref",
+      name: "useRef",
+      effectKind: Effect.Capture,
+      valueKind: ValueKind.Mutable,
+    },
+  ],
+  [
+    "useMemo",
+    {
+      kind: "Memo",
+      name: "useMemo",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
+  [
+    "useCallback",
+    {
+      kind: "Memo",
+      name: "useCallback",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
+];
+
+export type Global = BuiltInType | HookType | PolyType;
+export type GlobalRegistry = Map<string, Global>;
+export const DEFAULT_GLOBALS: GlobalRegistry = new Map(
+  BUILTIN_HOOKS.map(([hookName, hook]) => {
+    return [
+      hookName,
+      {
+        kind: "Hook",
+        definition: hook,
+      },
+    ];
+  })
+);
+
+// Hack until we add ObjectShapes for all globals
+for (const name of UNTYPED_GLOBALS) {
+  DEFAULT_GLOBALS.set(name, {
+    kind: "Poly",
+  });
+}

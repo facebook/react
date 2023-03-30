@@ -143,8 +143,23 @@ export default class HIRBuilder {
     };
   }
 
-  resolveGlobal(path: NodePath<t.Identifier | t.JSXIdentifier>): Global | null {
-    return this.#env.getGlobalDeclaration(path.node.name);
+  resolveGlobal(
+    path: NodePath<t.Identifier | t.JSXIdentifier>
+  ): (Global & { name: string }) | null {
+    const name = path.node.name;
+    const resolvedGlobal = this.#env.getGlobalDeclaration(name);
+    if (resolvedGlobal) {
+      return {
+        ...resolvedGlobal,
+        name,
+      };
+    } else {
+      // if env records no global with the given name, load it as an unknown type
+      return {
+        kind: "Poly",
+        name,
+      };
+    }
   }
 
   /**
