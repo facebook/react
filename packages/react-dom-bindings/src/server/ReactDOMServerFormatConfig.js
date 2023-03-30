@@ -2604,7 +2604,7 @@ export function pushStartInstance(
       );
     }
     default: {
-      if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
+      if (type.indexOf('-') === -1) {
         // Generic element
         return pushStartGenericElement(target, props, type);
       } else {

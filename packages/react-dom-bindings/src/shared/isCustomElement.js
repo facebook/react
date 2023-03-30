@@ -9,7 +9,7 @@
 
 function isCustomElement(tagName: string, props: Object): boolean {
   if (tagName.indexOf('-') === -1) {
-    return typeof props.is === 'string';
+    return false;
   }
   switch (tagName) {
     // These are reserved SVG and MathML elements.

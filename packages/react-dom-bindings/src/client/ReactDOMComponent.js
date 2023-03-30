@@ -657,7 +657,6 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomElementTag flow.
             setProp(domElement, tag, propKey, propValue, false, props);
           }
         }
@@ -952,7 +951,6 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomElementTag flow.
             setProp(domElement, tag, propKey, propValue, false, nextProps);
           }
         }

@@ -308,7 +308,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
 }
 
 export function validateProperties(type, props, eventRegistry) {
-  if (isCustomElement(type, props)) {
+  if (isCustomElement(type, props) || typeof props.is === 'string') {
     return;
   }
   warnUnknownProperties(type, props, eventRegistry);
