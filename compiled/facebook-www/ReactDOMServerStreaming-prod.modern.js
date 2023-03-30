@@ -1181,7 +1181,7 @@ function pushStartInstance(
         target
       );
     default:
-      if (-1 === type.indexOf("-") && "string" !== typeof props.is)
+      if (-1 === type.indexOf("-"))
         return pushStartGenericElement(target, props, type);
       target.push(startChunkForTag(type));
       resources = textEmbedded = null;

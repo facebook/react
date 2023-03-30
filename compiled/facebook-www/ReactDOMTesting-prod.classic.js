@@ -5958,11 +5958,12 @@ function completeWork(current, workInProgress, renderLanes) {
                     : newProps.size && (current.size = newProps.size);
                   break;
                 default:
-                  current = createHTMLElement(
-                    renderLanes,
-                    newProps,
-                    nextResource
-                  );
+                  current =
+                    "string" === typeof newProps.is
+                      ? nextResource.createElement(renderLanes, {
+                          is: newProps.is
+                        })
+                      : nextResource.createElement(renderLanes);
               }
           }
           current[internalInstanceKey] = workInProgress;
@@ -10676,8 +10677,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           (current = workInProgress.pendingProps),
           (Component = getOwnerDocumentFromRootContainer(
             rootInstanceStackCursor.current
-          )),
-          (Component = createHTMLElement(renderLanes, current, Component)),
+          ).createElement(renderLanes)),
           (Component[internalInstanceKey] = workInProgress),
           (Component[internalPropsKey] = current),
           setInitialProperties(Component, renderLanes, current),
@@ -11948,6 +11948,29 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
+function setValueForAttribute(node, name, value) {
+  if (isAttributeNameSafe(name))
+    if (null === value) node.removeAttribute(name);
+    else {
+      switch (typeof value) {
+        case "undefined":
+        case "function":
+        case "symbol":
+          node.removeAttribute(name);
+          return;
+        case "boolean":
+          var prefix$184 = name.toLowerCase().slice(0, 5);
+          if ("data-" !== prefix$184 && "aria-" !== prefix$184) {
+            node.removeAttribute(name);
+            return;
+          }
+      }
+      node.setAttribute(
+        name,
+        enableTrustedTypesIntegration ? value : "" + value
+      );
+    }
+}
 function getToStringValue(value) {
   switch (typeof value) {
     case "boolean":
@@ -12248,8 +12271,8 @@ function setTextContent(node, text) {
   }
   node.textContent = text;
 }
-function isCustomComponent(tagName, props) {
-  if (-1 === tagName.indexOf("-")) return "string" === typeof props.is;
+function isCustomElement(tagName) {
+  if (-1 === tagName.indexOf("-")) return !1;
   switch (tagName) {
     case "annotation-xml":
     case "color-profile":
@@ -12271,33 +12294,29 @@ function normalizeMarkupForTextOrAttribute(markup) {
     .replace(NORMALIZE_NEWLINES_REGEX, "\n")
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
 }
-function getOwnerDocumentFromRootContainer(rootContainerElement) {
-  return 9 === rootContainerElement.nodeType
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-}
 function noop$1() {}
-function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
+function setProp(domElement, tag, key, value, isCustomElementTag, props) {
   switch (key) {
     case "style":
       if (null != value && "object" !== typeof value)
         throw Error(formatProdErrorMessage(62));
+      key = value;
       domElement = domElement.style;
-      for (var styleName in value)
-        if (value.hasOwnProperty(styleName))
+      for (var styleName in key)
+        if (key.hasOwnProperty(styleName))
           if (
-            ((key = value[styleName]),
+            ((value = key[styleName]),
             (props = 0 === styleName.indexOf("--")),
-            null == key || "boolean" === typeof key || "" === key)
+            null == value || "boolean" === typeof value || "" === value)
           )
             props
               ? domElement.setProperty(styleName, "")
               : "float" === styleName
               ? (domElement.cssFloat = "")
               : (domElement[styleName] = "");
-          else if (props) domElement.setProperty(styleName, key);
+          else if (props) domElement.setProperty(styleName, value);
           else {
-            if (!(props = "number" !== typeof key || 0 === key))
+            if (!(props = "number" !== typeof value || 0 === value))
               a: switch (styleName) {
                 case "animationIterationCount":
                 case "aspectRatio":
@@ -12377,21 +12396,21 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
               }
             props
               ? "float" === styleName
-                ? (domElement.cssFloat = key)
-                : (domElement[styleName] = ("" + key).trim())
-              : (domElement[styleName] = key + "px");
+                ? (domElement.cssFloat = value)
+                : (domElement[styleName] = ("" + value).trim())
+              : (domElement[styleName] = value + "px");
           }
       break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
         if ("object" !== typeof value || !("__html" in value))
           throw Error(formatProdErrorMessage(61));
-        value = value.__html;
-        if (null != value) {
+        key = value.__html;
+        if (null != key) {
           if (null != props.children) throw Error(formatProdErrorMessage(60));
           disableIEWorkarounds
-            ? (domElement.innerHTML = value)
-            : setInnerHTML$1(domElement, value);
+            ? (domElement.innerHTML = key)
+            : setInnerHTML$1(domElement, key);
         }
       }
       break;
@@ -12431,56 +12450,39 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
       if (enableCustomElementPropertySupport) break;
     default:
       if (!registrationNameDependencies.hasOwnProperty(key))
-        if (isCustomComponentTag)
-          a: {
-            if (
-              enableCustomElementPropertySupport &&
-              "o" === key[0] &&
-              "n" === key[1] &&
-              ((styleName = key.endsWith("Capture")),
-              (props = key.substr(2, styleName ? key.length - 9 : void 0)),
-              (tag = getFiberCurrentPropsFromNode(domElement)),
-              (tag = null != tag ? tag[key] : null),
-              "function" === typeof tag &&
-                domElement.removeEventListener(props, tag, styleName),
-              "function" === typeof value)
-            ) {
-              "function" !== typeof tag &&
-                null !== tag &&
-                (key in domElement
-                  ? (domElement[key] = null)
-                  : domElement.hasAttribute(key) &&
-                    domElement.removeAttribute(key));
-              domElement.addEventListener(props, value, styleName);
-              break a;
-            }
-            if (enableCustomElementPropertySupport && key in domElement)
-              domElement[key] = value;
-            else if (isAttributeNameSafe(key))
-              if (null === value) domElement.removeAttribute(key);
-              else {
-                switch (typeof value) {
-                  case "undefined":
-                  case "function":
-                  case "symbol":
-                    domElement.removeAttribute(key);
-                    break a;
-                  case "boolean":
-                    if (enableCustomElementPropertySupport) {
-                      if (!0 === value) {
-                        domElement.setAttribute(key, "");
-                        break a;
-                      }
-                      domElement.removeAttribute(key);
-                      break a;
-                    }
-                }
-                domElement.setAttribute(
-                  key,
-                  enableTrustedTypesIntegration ? value : "" + value
-                );
+        if (isCustomElementTag)
+          if (enableCustomElementPropertySupport)
+            a: {
+              styleName = value;
+              if (
+                "o" === key[0] &&
+                "n" === key[1] &&
+                ((value = key.endsWith("Capture")),
+                (props = key.substr(2, value ? key.length - 9 : void 0)),
+                (tag = getFiberCurrentPropsFromNode(domElement)),
+                (tag = null != tag ? tag[key] : null),
+                "function" === typeof tag &&
+                  domElement.removeEventListener(props, tag, value),
+                "function" === typeof styleName)
+              ) {
+                "function" !== typeof tag &&
+                  null !== tag &&
+                  (key in domElement
+                    ? (domElement[key] = null)
+                    : domElement.hasAttribute(key) &&
+                      domElement.removeAttribute(key));
+                domElement.addEventListener(props, styleName, value);
+                break a;
               }
-          }
+              key in domElement
+                ? (domElement[key] = styleName)
+                : !0 === styleName
+                ? domElement.setAttribute(key, "")
+                : setValueForAttribute(domElement, key, styleName);
+            }
+          else
+            "boolean" === typeof value && (value = "" + value),
+              setValueForAttribute(domElement, key, value);
         else if (
           !(2 < key.length) ||
           ("o" !== key[0] && "O" !== key[0]) ||
@@ -12545,36 +12547,8 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
                         : domElement.setAttribute(key, value);
                 }
             }
-          else
-            a: if (isAttributeNameSafe(key))
-              if (null === value) domElement.removeAttribute(key);
-              else {
-                switch (typeof value) {
-                  case "undefined":
-                  case "function":
-                  case "symbol":
-                    domElement.removeAttribute(key);
-                    break a;
-                  case "boolean":
-                    if (
-                      ((styleName = key.toLowerCase().slice(0, 5)),
-                      "data-" !== styleName && "aria-" !== styleName)
-                    ) {
-                      domElement.removeAttribute(key);
-                      break a;
-                    }
-                }
-                domElement.setAttribute(
-                  key,
-                  enableTrustedTypesIntegration ? value : "" + value
-                );
-              }
+          else setValueForAttribute(domElement, key, value);
   }
-}
-function createHTMLElement(type, props, ownerDocument) {
-  return "string" === typeof props.is
-    ? ownerDocument.createElement(type, { is: props.is })
-    : ownerDocument.createElement(type);
 }
 function setInitialProperties(domElement, tag, props) {
   switch (tag) {
@@ -12724,7 +12698,7 @@ function setInitialProperties(domElement, tag, props) {
           }
       return;
   }
-  propKey = isCustomComponent(tag, props);
+  propKey = isCustomElement(tag);
   for (node in props)
     props.hasOwnProperty(node) &&
       ((propValue = props[node]),
@@ -12870,7 +12844,7 @@ function updateProperties(
         }
       return;
   }
-  lastProps = isCustomComponent(tag, nextProps);
+  lastProps = isCustomElement(tag);
   for (propValue = 0; propValue < updatePayload.length; propValue += 2)
     setProp(
       domElement,
@@ -12949,17 +12923,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1631 = {
+var devToolsConfig$jscomp$inline_1636 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-26d7a5d5",
+  version: "18.3.0-www-classic-8643ce3a",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2192 = {
-  bundleType: devToolsConfig$jscomp$inline_1631.bundleType,
-  version: devToolsConfig$jscomp$inline_1631.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1631.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1631.rendererConfig,
+var internals$jscomp$inline_2182 = {
+  bundleType: devToolsConfig$jscomp$inline_1636.bundleType,
+  version: devToolsConfig$jscomp$inline_1636.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1636.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1636.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -12975,26 +12949,26 @@ var internals$jscomp$inline_2192 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1631.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1636.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-26d7a5d5"
+  reconcilerVersion: "18.3.0-www-classic-8643ce3a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2193 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2183 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2193.isDisabled &&
-    hook$jscomp$inline_2193.supportsFiber
+    !hook$jscomp$inline_2183.isDisabled &&
+    hook$jscomp$inline_2183.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2193.inject(
-        internals$jscomp$inline_2192
+      (rendererID = hook$jscomp$inline_2183.inject(
+        internals$jscomp$inline_2182
       )),
-        (injectedHook = hook$jscomp$inline_2193);
+        (injectedHook = hook$jscomp$inline_2183);
     } catch (err) {}
 }
 var tagToRoleMappings = {
@@ -13257,6 +13231,11 @@ function restoreSelection(priorSelectionInformation) {
 var Dispatcher = Internals.Dispatcher,
   eventsEnabled = null,
   selectionInformation = null;
+function getOwnerDocumentFromRootContainer(rootContainerElement) {
+  return 9 === rootContainerElement.nodeType
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+}
 function beforeActiveInstanceBlur(internalInstanceHandle) {
   _enabled = !0;
   var target = selectionInformation.focusedElem,
@@ -14816,14 +14795,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$349;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1730 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1730) {
-      var element$jscomp$inline_1731 = document.createElement("div");
-      element$jscomp$inline_1731.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1730 =
-        "function" === typeof element$jscomp$inline_1731.oninput;
+    var isSupported$jscomp$inline_1735 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1735) {
+      var element$jscomp$inline_1736 = document.createElement("div");
+      element$jscomp$inline_1736.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1735 =
+        "function" === typeof element$jscomp$inline_1736.oninput;
     }
-    JSCompiler_inline_result$jscomp$349 = isSupported$jscomp$inline_1730;
+    JSCompiler_inline_result$jscomp$349 = isSupported$jscomp$inline_1735;
   } else JSCompiler_inline_result$jscomp$349 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$349 &&
@@ -14964,20 +14943,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1743 = 0;
-  i$jscomp$inline_1743 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1743++
+  var i$jscomp$inline_1748 = 0;
+  i$jscomp$inline_1748 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1748++
 ) {
-  var eventName$jscomp$inline_1744 =
-      simpleEventPluginEvents[i$jscomp$inline_1743],
-    domEventName$jscomp$inline_1745 =
-      eventName$jscomp$inline_1744.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1746 =
-      eventName$jscomp$inline_1744[0].toUpperCase() +
-      eventName$jscomp$inline_1744.slice(1);
+  var eventName$jscomp$inline_1749 =
+      simpleEventPluginEvents[i$jscomp$inline_1748],
+    domEventName$jscomp$inline_1750 =
+      eventName$jscomp$inline_1749.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1751 =
+      eventName$jscomp$inline_1749[0].toUpperCase() +
+      eventName$jscomp$inline_1749.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1745,
-    "on" + capitalizedEvent$jscomp$inline_1746
+    domEventName$jscomp$inline_1750,
+    "on" + capitalizedEvent$jscomp$inline_1751
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15517,10 +15496,7 @@ function dispatchEventForPluginEventSystem(
             ("checkbox" !== reactName.type && "radio" !== reactName.type)
               ? enableCustomElementPropertySupport &&
                 targetInst &&
-                isCustomComponent(
-                  targetInst.elementType,
-                  targetInst.memoizedProps
-                ) &&
+                isCustomElement(targetInst.elementType) &&
                 (getTargetInstFunc = getTargetInstForChangeEvent)
               : (getTargetInstFunc = getTargetInstForClickEvent);
         if (
@@ -16854,4 +16830,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-26d7a5d5";
+exports.version = "18.3.0-www-classic-8643ce3a";

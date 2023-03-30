@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-609488e0";
+var ReactVersion = "18.3.0-www-classic-c522cd08";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -968,9 +968,9 @@ function validateProperties$1(type, props) {
   }
 }
 
-function isCustomComponent(tagName, props) {
+function isCustomElement(tagName, props) {
   if (tagName.indexOf("-") === -1) {
-    return typeof props.is === "string";
+    return false;
   }
 
   switch (tagName) {
@@ -1810,7 +1810,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
 }
 
 function validateProperties(type, props, eventRegistry) {
-  if (isCustomComponent(type, props)) {
+  if (isCustomElement(type) || typeof props.is === "string") {
     return;
   }
 
@@ -4927,11 +4927,7 @@ function pushStartInstance(
       formatContext.insertionMode !== SVG_MODE &&
       formatContext.insertionMode !== MATHML_MODE
     ) {
-      if (
-        type.indexOf("-") === -1 &&
-        typeof props.is !== "string" &&
-        type.toLowerCase() !== type
-      ) {
+      if (type.indexOf("-") === -1 && type.toLowerCase() !== type) {
         error(
           "<%s /> is using incorrect casing. " +
             "Use PascalCase for React components, " +
@@ -5063,7 +5059,7 @@ function pushStartInstance(
     }
 
     default: {
-      if (type.indexOf("-") === -1 && typeof props.is !== "string") {
+      if (type.indexOf("-") === -1) {
         // Generic element
         return pushStartGenericElement(target, props, type);
       } else {

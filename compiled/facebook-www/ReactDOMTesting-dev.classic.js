@@ -30502,7 +30502,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-bfbf2ef3";
+var ReactVersion = "18.3.0-www-classic-5229fb0f";
 
 function createPortal$1(
   children,
@@ -32676,11 +32676,6 @@ function getValueForAttributeOnCustomComponent(node, name, expected) {
       return expected === undefined ? undefined : null;
     }
 
-    if (enableCustomElementPropertySupport && name === "className") {
-      // className is a special cased property on the server to render as an attribute.
-      name = "class";
-    }
-
     var value = node.getAttribute(name);
 
     if (enableCustomElementPropertySupport) {
@@ -32881,11 +32876,7 @@ function setValueForAttribute(node, name, value) {
   }
 }
 function setValueForPropertyOnCustomComponent(node, name, value) {
-  if (
-    enableCustomElementPropertySupport &&
-    name[0] === "o" &&
-    name[1] === "n"
-  ) {
+  if (name[0] === "o" && name[1] === "n") {
     var useCapture = name.endsWith("Capture");
     var eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
     var prevProps = getFiberCurrentPropsFromNode(node);
@@ -32911,45 +32902,17 @@ function setValueForPropertyOnCustomComponent(node, name, value) {
     }
   }
 
-  if (enableCustomElementPropertySupport && name in node) {
+  if (name in node) {
     node[name] = value;
     return;
   }
 
-  if (isAttributeNameSafe(name)) {
-    // shouldRemoveAttribute
-    if (value === null) {
-      node.removeAttribute(name);
-      return;
-    }
+  if (value === true) {
+    node.setAttribute(name, "");
+    return;
+  } // From here, it's the same as any attribute
 
-    switch (typeof value) {
-      case "undefined":
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        node.removeAttribute(name);
-        return;
-
-      case "boolean": {
-        if (enableCustomElementPropertySupport) {
-          if (value === true) {
-            node.setAttribute(name, "");
-            return;
-          }
-
-          node.removeAttribute(name);
-          return;
-        }
-      }
-    }
-
-    {
-      checkAttributeStringCoercion(value, name);
-    }
-
-    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
-  }
+  setValueForAttribute(node, name, value);
 }
 
 // around this limitation, we use an opaque type that can only be obtained by
@@ -34653,9 +34616,9 @@ function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
   }
 }
 
-function isCustomComponent(tagName, props) {
+function isCustomElement(tagName, props) {
   if (tagName.indexOf("-") === -1) {
-    return typeof props.is === "string";
+    return false;
   }
 
   switch (tagName) {
@@ -35690,7 +35653,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
 }
 
 function validateProperties(type, props, eventRegistry) {
-  if (isCustomComponent(type, props)) {
+  if (isCustomElement(type) || typeof props.is === "string") {
     return;
   }
 
@@ -35698,21 +35661,10 @@ function validateProperties(type, props, eventRegistry) {
 }
 
 var didWarnInvalidHydration = false;
-var didWarnScriptTags = false;
-var warnedUnknownTags;
 var canDiffStyleForHydrationWarning;
 
 {
-  warnedUnknownTags = {
-    // There are working polyfills for <dialog>. Let people use it.
-    dialog: true,
-    // Electron ships a custom <webview> tag to display external web content in
-    // an isolated frame and process.
-    // This tag is not present in non Electron environments such as JSDom which
-    // is often used for testing purposes.
-    // @see https://electronjs.org/docs/api/webview-tag
-    webview: true
-  }; // IE 11 parses & normalizes the style attribute as opposed to other
+  // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
   // properties in the client & server versions or applying
@@ -35720,7 +35672,6 @@ var canDiffStyleForHydrationWarning;
   // normalized. Since it only affects IE, we're skipping style warnings
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
-
   canDiffStyleForHydrationWarning =
     disableIEWorkarounds || (canUseDOM && !document.documentMode);
 }
@@ -35880,11 +35831,6 @@ function checkForUnmatchedText(
     throw new Error("Text content does not match server-rendered HTML.");
   }
 }
-function getOwnerDocumentFromRootContainer(rootContainerElement) {
-  return rootContainerElement.nodeType === DOCUMENT_NODE
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-}
 
 function noop$1() {}
 
@@ -35901,7 +35847,7 @@ function trapClickOnNonInteractiveElement(node) {
   node.onclick = noop$1;
 }
 
-function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
+function setProp(domElement, tag, key, value, isCustomElementTag, props) {
   switch (key) {
     case "style": {
       if (value != null && typeof value !== "object") {
@@ -36049,8 +35995,17 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (isCustomComponentTag) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
+        if (isCustomElementTag) {
+          if (enableCustomElementPropertySupport) {
+            setValueForPropertyOnCustomComponent(domElement, key, value);
+          } else {
+            if (typeof value === "boolean") {
+              // Special case before the new flag is on
+              value = "" + value;
+            }
+
+            setValueForAttribute(domElement, key, value);
+          }
         } else {
           if (
             // shouldIgnoreAttribute
@@ -36073,134 +36028,8 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
       }
     }
   }
-} // creates a script element that won't execute
-
-function createPotentiallyInlineScriptElement(ownerDocument) {
-  // Create the script via .innerHTML so its "parser-inserted" flag is
-  // set to true and it does not execute
-  var div = ownerDocument.createElement("div");
-
-  {
-    if (enableTrustedTypesIntegration && !didWarnScriptTags) {
-      error(
-        "Encountered a script tag while rendering React component. " +
-          "Scripts inside React components are never executed when rendering " +
-          "on the client. Consider using template tag instead " +
-          "(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
-      );
-
-      didWarnScriptTags = true;
-    }
-  }
-
-  div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
-  // This is guaranteed to yield a script element.
-
-  var firstChild = div.firstChild;
-  var element = div.removeChild(firstChild);
-  return element;
 }
-function createSelectElement(props, ownerDocument) {
-  var element;
 
-  if (typeof props.is === "string") {
-    element = ownerDocument.createElement("select", {
-      is: props.is
-    });
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement("select");
-  }
-
-  if (props.multiple) {
-    element.multiple = true;
-  } else if (props.size) {
-    // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
-    // it is possible that no option is selected.
-    //
-    // This is only necessary when a select in "single selection mode".
-    element.size = props.size;
-  }
-
-  return element;
-} // Creates elements in the HTML namesapce
-
-function createHTMLElement(type, props, ownerDocument) {
-  {
-    switch (type) {
-      case "script":
-      case "select":
-        error(
-          'createHTMLElement was called with a "%s" type. This type has special creation logic in React and should use the create function implemented specifically for it. This is a bug in React.',
-          type
-        );
-
-        break;
-
-      case "svg":
-      case "math":
-        error(
-          'createHTMLElement was called with a "%s" type. This type must be created with Document.createElementNS which this method does not implement. This is a bug in React.',
-          type
-        );
-    }
-  }
-
-  var isCustomComponentTag;
-  var element;
-
-  {
-    isCustomComponentTag = isCustomComponent(type, props); // Should this check be gated by parent namespace? Not sure we want to
-    // allow <SVG> or <mATH>.
-
-    if (!isCustomComponentTag && type !== type.toLowerCase()) {
-      error(
-        "<%s /> is using incorrect casing. " +
-          "Use PascalCase for React components, " +
-          "or lowercase for HTML elements.",
-        type
-      );
-    }
-  }
-
-  if (typeof props.is === "string") {
-    element = ownerDocument.createElement(type, {
-      is: props.is
-    });
-  } else {
-    // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-    // See discussion in https://github.com/facebook/react/pull/6896
-    // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-    element = ownerDocument.createElement(type);
-  }
-
-  {
-    if (
-      !isCustomComponentTag && // $FlowFixMe[method-unbinding]
-      Object.prototype.toString.call(element) ===
-        "[object HTMLUnknownElement]" &&
-      !hasOwnProperty.call(warnedUnknownTags, type)
-    ) {
-      warnedUnknownTags[type] = true;
-
-      error(
-        "The tag <%s> is unrecognized in this browser. " +
-          "If you meant to render a React component, start its name with " +
-          "an uppercase letter.",
-        type
-      );
-    }
-  }
-
-  return element;
-}
-function createTextNode(text, rootContainerElement) {
-  return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
-    text
-  );
-}
 function setInitialProperties(domElement, tag, props) {
   {
     validatePropertiesInDevelopment(tag, props);
@@ -36473,7 +36302,6 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
             setProp(domElement, tag, _propKey4, _propValue4, false, props);
           }
         }
@@ -36483,7 +36311,7 @@ function setInitialProperties(domElement, tag, props) {
     }
   }
 
-  var isCustomComponentTag = isCustomComponent(tag, props);
+  var isCustomElementTag = isCustomElement(tag);
 
   for (var _propKey5 in props) {
     if (!props.hasOwnProperty(_propKey5)) {
@@ -36496,14 +36324,7 @@ function setInitialProperties(domElement, tag, props) {
       continue;
     }
 
-    setProp(
-      domElement,
-      tag,
-      _propKey5,
-      _propValue5,
-      isCustomComponentTag,
-      props
-    );
+    setProp(domElement, tag, _propKey5, _propValue5, isCustomElementTag, props);
   }
 } // Calculate the diff between the two objects.
 
@@ -36604,6 +36425,12 @@ function diffProperties(domElement, tag, lastProps, nextProps) {
 
           break;
         }
+
+        case "is": {
+          error('Cannot update the "is" prop after it has been initialized.');
+        }
+
+        // eslint-disable-next-line no-fallthrough
 
         default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
@@ -36808,7 +36635,6 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
             setProp(domElement, tag, _propKey9, _propValue9, false, nextProps);
           }
         }
@@ -36816,10 +36642,9 @@ function updateProperties(
 
       return;
     }
-  } // TODO: Handle wasCustomComponentTag. Changing "is" isn't valid.
-  // const wasCustomComponentTag = isCustomComponent(tag, lastProps);
+  }
 
-  var isCustomComponentTag = isCustomComponent(tag, nextProps); // Apply the diff.
+  var isCustomElementTag = isCustomElement(tag); // Apply the diff.
 
   for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
     var _propKey10 = updatePayload[_i5];
@@ -36829,7 +36654,7 @@ function updateProperties(
       tag,
       _propKey10,
       _propValue10,
-      isCustomComponentTag,
+      isCustomElementTag,
       nextProps
     );
   }
@@ -36950,6 +36775,25 @@ function diffHydratedCustomComponent(
 
       // eslint-disable-next-line no-fallthrough
 
+      case "className":
+        if (enableCustomElementPropertySupport) {
+          // className is a special cased property on the server to render as an attribute.
+          extraAttributeNames.delete("class");
+          var serverValue = getValueForAttributeOnCustomComponent(
+            domElement,
+            "class",
+            nextProp
+          );
+
+          if (nextProp !== serverValue) {
+            warnForPropDifference("className", serverValue, nextProp);
+          }
+
+          continue;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+
       default: {
         var ownNamespaceDev = parentNamespaceDev;
 
@@ -36963,14 +36807,14 @@ function diffHydratedCustomComponent(
           extraAttributeNames.delete(propKey);
         }
 
-        var serverValue = getValueForAttributeOnCustomComponent(
+        var _serverValue = getValueForAttributeOnCustomComponent(
           domElement,
           propKey,
           nextProp
         );
 
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (nextProp !== _serverValue) {
+          warnForPropDifference(propKey, _serverValue, nextProp);
         }
       }
     }
@@ -37045,10 +36889,10 @@ function diffHydratedGenericElement(
 
       case "multiple": {
         extraAttributeNames.delete(propKey);
-        var _serverValue = domElement.multiple;
+        var _serverValue2 = domElement.multiple;
 
-        if (nextProp !== _serverValue) {
-          warnForPropDifference("multiple", _serverValue, nextProp);
+        if (nextProp !== _serverValue2) {
+          warnForPropDifference("multiple", _serverValue2, nextProp);
         }
 
         continue;
@@ -37056,10 +36900,10 @@ function diffHydratedGenericElement(
 
       case "muted": {
         extraAttributeNames.delete(propKey);
-        var _serverValue2 = domElement.muted;
+        var _serverValue3 = domElement.muted;
 
-        if (nextProp !== _serverValue2) {
-          warnForPropDifference("muted", _serverValue2, nextProp);
+        if (nextProp !== _serverValue3) {
+          warnForPropDifference("muted", _serverValue3, nextProp);
         }
 
         continue;
@@ -37282,7 +37126,7 @@ function diffHydratedProperties(
       }
     }
 
-    if (isCustomComponent(tag, props)) {
+    if (isCustomElement(tag)) {
       diffHydratedCustomComponent(
         domElement,
         tag,
@@ -38895,6 +38739,13 @@ var SUSPENSE_FALLBACK_START_DATA = "$!";
 var STYLE = "style";
 var eventsEnabled = null;
 var selectionInformation = null;
+
+function getOwnerDocumentFromRootContainer(rootContainerElement) {
+  return rootContainerElement.nodeType === DOCUMENT_NODE
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+}
+
 function getRootHostContext(rootContainerInstance) {
   var type;
   var namespace;
@@ -38993,13 +38844,24 @@ function createHoistableInstance(
   internalInstanceHandle
 ) {
   var ownerDocument = getOwnerDocumentFromRootContainer(rootContainerInstance);
-  var domElement = createHTMLElement(type, props, ownerDocument);
+  var domElement = ownerDocument.createElement(type);
   precacheFiberNode(internalInstanceHandle, domElement);
   updateFiberProps(domElement, props);
   setInitialProperties(domElement, type, props);
   markNodeAsHoistable(domElement);
   return domElement;
 }
+var didWarnScriptTags = false;
+var warnedUnknownTags = {
+  // There are working polyfills for <dialog>. Let people use it.
+  dialog: true,
+  // Electron ships a custom <webview> tag to display external web content in
+  // an isolated frame and process.
+  // This tag is not present in non Electron environments such as JSDom which
+  // is often used for testing purposes.
+  // @see https://electronjs.org/docs/api/webview-tag
+  webview: true
+};
 function createInstance(
   type,
   props,
@@ -39040,24 +38902,110 @@ function createInstance(
 
     default:
       switch (type) {
-        case "svg":
+        case "svg": {
           domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
           break;
+        }
 
-        case "math":
+        case "math": {
           domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
           break;
+        }
 
-        case "script":
-          domElement = createPotentiallyInlineScriptElement(ownerDocument);
+        case "script": {
+          // Create the script via .innerHTML so its "parser-inserted" flag is
+          // set to true and it does not execute
+          var div = ownerDocument.createElement("div");
+
+          {
+            if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+              error(
+                "Encountered a script tag while rendering React component. " +
+                  "Scripts inside React components are never executed when rendering " +
+                  "on the client. Consider using template tag instead " +
+                  "(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)."
+              );
+
+              didWarnScriptTags = true;
+            }
+          }
+
+          div.innerHTML = "<script><" + "/script>"; // eslint-disable-line
+          // This is guaranteed to yield a script element.
+
+          var firstChild = div.firstChild;
+          domElement = div.removeChild(firstChild);
           break;
+        }
 
-        case "select":
-          domElement = createSelectElement(props, ownerDocument);
+        case "select": {
+          if (typeof props.is === "string") {
+            domElement = ownerDocument.createElement("select", {
+              is: props.is
+            });
+          } else {
+            // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+            // See discussion in https://github.com/facebook/react/pull/6896
+            // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+            domElement = ownerDocument.createElement("select");
+          }
+
+          if (props.multiple) {
+            domElement.multiple = true;
+          } else if (props.size) {
+            // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+            // it is possible that no option is selected.
+            //
+            // This is only necessary when a select in "single selection mode".
+            domElement.size = props.size;
+          }
+
           break;
+        }
 
-        default:
-          domElement = createHTMLElement(type, props, ownerDocument);
+        default: {
+          if (typeof props.is === "string") {
+            domElement = ownerDocument.createElement(type, {
+              is: props.is
+            });
+          } else {
+            // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+            // See discussion in https://github.com/facebook/react/pull/6896
+            // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
+            domElement = ownerDocument.createElement(type);
+          }
+
+          {
+            if (type.indexOf("-") === -1) {
+              // We're not SVG/MathML and we don't have a dash, so we're not a custom element
+              // Even if you use `is`, these should be of known type and lower case.
+              if (type !== type.toLowerCase()) {
+                error(
+                  "<%s /> is using incorrect casing. " +
+                    "Use PascalCase for React components, " +
+                    "or lowercase for HTML elements.",
+                  type
+                );
+              }
+
+              if (
+                // $FlowFixMe[method-unbinding]
+                Object.prototype.toString.call(domElement) ===
+                  "[object HTMLUnknownElement]" &&
+                !hasOwnProperty.call(warnedUnknownTags, type)
+              ) {
+                warnedUnknownTags[type] = true;
+
+                error(
+                  "The tag <%s> is unrecognized in this browser. " +
+                    "If you meant to render a React component, start its name with " +
+                    "an uppercase letter.",
+                  type
+                );
+              }
+            }
+          }
+        }
       }
   }
 
@@ -39127,7 +39075,9 @@ function createTextInstance(
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
   }
 
-  var textNode = createTextNode(text, rootContainerInstance);
+  var textNode = getOwnerDocumentFromRootContainer(
+    rootContainerInstance
+  ).createTextNode(text);
   precacheFiberNode(internalInstanceHandle, textNode);
   return textNode;
 }
@@ -43594,7 +43544,7 @@ function extractEvents$4(
   } else if (
     enableCustomElementPropertySupport &&
     targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+    isCustomElement(targetInst.elementType)
   ) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   }

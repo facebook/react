@@ -830,6 +830,29 @@ function sanitizeURL(url) {
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
     : url;
 }
+function setValueForAttribute(node, name, value) {
+  if (isAttributeNameSafe(name))
+    if (null === value) node.removeAttribute(name);
+    else {
+      switch (typeof value) {
+        case "undefined":
+        case "function":
+        case "symbol":
+          node.removeAttribute(name);
+          return;
+        case "boolean":
+          var prefix$12 = name.toLowerCase().slice(0, 5);
+          if ("data-" !== prefix$12 && "aria-" !== prefix$12) {
+            node.removeAttribute(name);
+            return;
+          }
+      }
+      node.setAttribute(
+        name,
+        enableTrustedTypesIntegration ? value : "" + value
+      );
+    }
+}
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1264,8 +1287,8 @@ function setTextContent(node, text) {
   }
   node.textContent = text;
 }
-function isCustomComponent(tagName, props) {
-  if (-1 === tagName.indexOf("-")) return "string" === typeof props.is;
+function isCustomElement(tagName) {
+  if (-1 === tagName.indexOf("-")) return !1;
   switch (tagName) {
     case "annotation-xml":
     case "color-profile":
@@ -6589,11 +6612,12 @@ function completeWork(current, workInProgress, renderLanes) {
                     : newProps.size && (current.size = newProps.size);
                   break;
                 default:
-                  current = createHTMLElement(
-                    renderLanes,
-                    newProps,
-                    nextResource
-                  );
+                  current =
+                    "string" === typeof newProps.is
+                      ? nextResource.createElement(renderLanes, {
+                          is: newProps.is
+                        })
+                      : nextResource.createElement(renderLanes);
               }
           }
           current[internalInstanceKey] = workInProgress;
@@ -11573,8 +11597,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           (current = workInProgress.pendingProps),
           (Component = getOwnerDocumentFromRootContainer(
             rootInstanceStackCursor.current
-          )),
-          (Component = createHTMLElement(renderLanes, current, Component)),
+          ).createElement(renderLanes)),
           (Component[internalInstanceKey] = workInProgress),
           (Component[internalPropsKey] = current),
           setInitialProperties(Component, renderLanes, current),
@@ -13672,14 +13695,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$343;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1622 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1622) {
-      var element$jscomp$inline_1623 = document.createElement("div");
-      element$jscomp$inline_1623.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1622 =
-        "function" === typeof element$jscomp$inline_1623.oninput;
+    var isSupported$jscomp$inline_1624 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1624) {
+      var element$jscomp$inline_1625 = document.createElement("div");
+      element$jscomp$inline_1625.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1624 =
+        "function" === typeof element$jscomp$inline_1625.oninput;
     }
-    JSCompiler_inline_result$jscomp$343 = isSupported$jscomp$inline_1622;
+    JSCompiler_inline_result$jscomp$343 = isSupported$jscomp$inline_1624;
   } else JSCompiler_inline_result$jscomp$343 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$343 &&
@@ -13991,20 +14014,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1663 = 0;
-  i$jscomp$inline_1663 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1663++
+  var i$jscomp$inline_1665 = 0;
+  i$jscomp$inline_1665 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1665++
 ) {
-  var eventName$jscomp$inline_1664 =
-      simpleEventPluginEvents[i$jscomp$inline_1663],
-    domEventName$jscomp$inline_1665 =
-      eventName$jscomp$inline_1664.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1666 =
-      eventName$jscomp$inline_1664[0].toUpperCase() +
-      eventName$jscomp$inline_1664.slice(1);
+  var eventName$jscomp$inline_1666 =
+      simpleEventPluginEvents[i$jscomp$inline_1665],
+    domEventName$jscomp$inline_1667 =
+      eventName$jscomp$inline_1666.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1668 =
+      eventName$jscomp$inline_1666[0].toUpperCase() +
+      eventName$jscomp$inline_1666.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1665,
-    "on" + capitalizedEvent$jscomp$inline_1666
+    domEventName$jscomp$inline_1667,
+    "on" + capitalizedEvent$jscomp$inline_1668
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14544,10 +14567,7 @@ function dispatchEventForPluginEventSystem(
             ("checkbox" !== reactName.type && "radio" !== reactName.type)
               ? enableCustomElementPropertySupport &&
                 targetInst &&
-                isCustomComponent(
-                  targetInst.elementType,
-                  targetInst.memoizedProps
-                ) &&
+                isCustomElement(targetInst.elementType) &&
                 (getTargetInstFunc = getTargetInstForChangeEvent)
               : (getTargetInstFunc = getTargetInstForClickEvent);
         if (
@@ -14838,33 +14858,29 @@ function normalizeMarkupForTextOrAttribute(markup) {
     .replace(NORMALIZE_NEWLINES_REGEX, "\n")
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
 }
-function getOwnerDocumentFromRootContainer(rootContainerElement) {
-  return 9 === rootContainerElement.nodeType
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-}
 function noop$1() {}
-function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
+function setProp(domElement, tag, key, value, isCustomElementTag, props) {
   switch (key) {
     case "style":
       if (null != value && "object" !== typeof value)
         throw Error(formatProdErrorMessage(62));
+      key = value;
       domElement = domElement.style;
-      for (var styleName in value)
-        if (value.hasOwnProperty(styleName))
+      for (var styleName in key)
+        if (key.hasOwnProperty(styleName))
           if (
-            ((key = value[styleName]),
+            ((value = key[styleName]),
             (props = 0 === styleName.indexOf("--")),
-            null == key || "boolean" === typeof key || "" === key)
+            null == value || "boolean" === typeof value || "" === value)
           )
             props
               ? domElement.setProperty(styleName, "")
               : "float" === styleName
               ? (domElement.cssFloat = "")
               : (domElement[styleName] = "");
-          else if (props) domElement.setProperty(styleName, key);
+          else if (props) domElement.setProperty(styleName, value);
           else {
-            if (!(props = "number" !== typeof key || 0 === key))
+            if (!(props = "number" !== typeof value || 0 === value))
               a: switch (styleName) {
                 case "animationIterationCount":
                 case "aspectRatio":
@@ -14944,21 +14960,21 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
               }
             props
               ? "float" === styleName
-                ? (domElement.cssFloat = key)
-                : (domElement[styleName] = ("" + key).trim())
-              : (domElement[styleName] = key + "px");
+                ? (domElement.cssFloat = value)
+                : (domElement[styleName] = ("" + value).trim())
+              : (domElement[styleName] = value + "px");
           }
       break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
         if ("object" !== typeof value || !("__html" in value))
           throw Error(formatProdErrorMessage(61));
-        value = value.__html;
-        if (null != value) {
+        key = value.__html;
+        if (null != key) {
           if (null != props.children) throw Error(formatProdErrorMessage(60));
           disableIEWorkarounds
-            ? (domElement.innerHTML = value)
-            : setInnerHTML$1(domElement, value);
+            ? (domElement.innerHTML = key)
+            : setInnerHTML$1(domElement, key);
         }
       }
       break;
@@ -14998,56 +15014,39 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
       if (enableCustomElementPropertySupport) break;
     default:
       if (!registrationNameDependencies.hasOwnProperty(key))
-        if (isCustomComponentTag)
-          a: {
-            if (
-              enableCustomElementPropertySupport &&
-              "o" === key[0] &&
-              "n" === key[1] &&
-              ((styleName = key.endsWith("Capture")),
-              (props = key.substr(2, styleName ? key.length - 9 : void 0)),
-              (tag = getFiberCurrentPropsFromNode(domElement)),
-              (tag = null != tag ? tag[key] : null),
-              "function" === typeof tag &&
-                domElement.removeEventListener(props, tag, styleName),
-              "function" === typeof value)
-            ) {
-              "function" !== typeof tag &&
-                null !== tag &&
-                (key in domElement
-                  ? (domElement[key] = null)
-                  : domElement.hasAttribute(key) &&
-                    domElement.removeAttribute(key));
-              domElement.addEventListener(props, value, styleName);
-              break a;
-            }
-            if (enableCustomElementPropertySupport && key in domElement)
-              domElement[key] = value;
-            else if (isAttributeNameSafe(key))
-              if (null === value) domElement.removeAttribute(key);
-              else {
-                switch (typeof value) {
-                  case "undefined":
-                  case "function":
-                  case "symbol":
-                    domElement.removeAttribute(key);
-                    break a;
-                  case "boolean":
-                    if (enableCustomElementPropertySupport) {
-                      if (!0 === value) {
-                        domElement.setAttribute(key, "");
-                        break a;
-                      }
-                      domElement.removeAttribute(key);
-                      break a;
-                    }
-                }
-                domElement.setAttribute(
-                  key,
-                  enableTrustedTypesIntegration ? value : "" + value
-                );
+        if (isCustomElementTag)
+          if (enableCustomElementPropertySupport)
+            a: {
+              styleName = value;
+              if (
+                "o" === key[0] &&
+                "n" === key[1] &&
+                ((value = key.endsWith("Capture")),
+                (props = key.substr(2, value ? key.length - 9 : void 0)),
+                (tag = getFiberCurrentPropsFromNode(domElement)),
+                (tag = null != tag ? tag[key] : null),
+                "function" === typeof tag &&
+                  domElement.removeEventListener(props, tag, value),
+                "function" === typeof styleName)
+              ) {
+                "function" !== typeof tag &&
+                  null !== tag &&
+                  (key in domElement
+                    ? (domElement[key] = null)
+                    : domElement.hasAttribute(key) &&
+                      domElement.removeAttribute(key));
+                domElement.addEventListener(props, styleName, value);
+                break a;
               }
-          }
+              key in domElement
+                ? (domElement[key] = styleName)
+                : !0 === styleName
+                ? domElement.setAttribute(key, "")
+                : setValueForAttribute(domElement, key, styleName);
+            }
+          else
+            "boolean" === typeof value && (value = "" + value),
+              setValueForAttribute(domElement, key, value);
         else if (
           !(2 < key.length) ||
           ("o" !== key[0] && "O" !== key[0]) ||
@@ -15112,36 +15111,8 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
                         : domElement.setAttribute(key, value);
                 }
             }
-          else
-            a: if (isAttributeNameSafe(key))
-              if (null === value) domElement.removeAttribute(key);
-              else {
-                switch (typeof value) {
-                  case "undefined":
-                  case "function":
-                  case "symbol":
-                    domElement.removeAttribute(key);
-                    break a;
-                  case "boolean":
-                    if (
-                      ((styleName = key.toLowerCase().slice(0, 5)),
-                      "data-" !== styleName && "aria-" !== styleName)
-                    ) {
-                      domElement.removeAttribute(key);
-                      break a;
-                    }
-                }
-                domElement.setAttribute(
-                  key,
-                  enableTrustedTypesIntegration ? value : "" + value
-                );
-              }
+          else setValueForAttribute(domElement, key, value);
   }
-}
-function createHTMLElement(type, props, ownerDocument) {
-  return "string" === typeof props.is
-    ? ownerDocument.createElement(type, { is: props.is })
-    : ownerDocument.createElement(type);
 }
 function setInitialProperties(domElement, tag, props) {
   switch (tag) {
@@ -15291,7 +15262,7 @@ function setInitialProperties(domElement, tag, props) {
           }
       return;
   }
-  propKey = isCustomComponent(tag, props);
+  propKey = isCustomElement(tag);
   for (node in props)
     props.hasOwnProperty(node) &&
       ((propValue = props[node]),
@@ -15437,7 +15408,7 @@ function updateProperties(
         }
       return;
   }
-  lastProps = isCustomComponent(tag, nextProps);
+  lastProps = isCustomElement(tag);
   for (propValue = 0; propValue < updatePayload.length; propValue += 2)
     setProp(
       domElement,
@@ -15451,6 +15422,11 @@ function updateProperties(
 var Dispatcher$1 = Internals.Dispatcher,
   eventsEnabled = null,
   selectionInformation = null;
+function getOwnerDocumentFromRootContainer(rootContainerElement) {
+  return 9 === rootContainerElement.nodeType
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+}
 function beforeActiveInstanceBlur(internalInstanceHandle) {
   _enabled = !0;
   var target = selectionInformation.focusedElem,
@@ -16395,10 +16371,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1840 = {
+var devToolsConfig$jscomp$inline_1845 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-a924400c",
+  version: "18.3.0-www-modern-93a4e0bc",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16416,10 +16392,10 @@ var devToolsConfig$jscomp$inline_1840 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1840.bundleType,
-  version: devToolsConfig$jscomp$inline_1840.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1840.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1840.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1845.bundleType,
+  version: devToolsConfig$jscomp$inline_1845.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1845.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1845.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16436,14 +16412,14 @@ var devToolsConfig$jscomp$inline_1840 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1840.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1845.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-a924400c"
+  reconcilerVersion: "18.3.0-www-modern-93a4e0bc"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16599,7 +16575,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-a924400c";
+exports.version = "18.3.0-www-modern-93a4e0bc";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
