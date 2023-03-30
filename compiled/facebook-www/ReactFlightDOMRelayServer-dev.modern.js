@@ -192,8 +192,8 @@ function getIteratorFn(maybeIterable) {
 // Re-export dynamic flags from the www version.
 require("ReactFeatureFlags");
 
+// A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
-
 var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
 // "enumerated" attributes with "true" and "false" as possible values.
 // When true, it should be set to a "true" string.
@@ -214,9 +214,7 @@ var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a n
 var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
 
 function PropertyInfoRecord(
-  name,
   type,
-  mustUseProperty,
   attributeName,
   attributeNamespace,
   sanitizeURL,
@@ -228,8 +226,6 @@ function PropertyInfoRecord(
     type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -242,9 +238,7 @@ function PropertyInfoRecord(
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(
-    name,
     BOOLEANISH_STRING,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -280,22 +274,18 @@ function PropertyInfoRecord(
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(
-    name,
     BOOLEAN,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
     false
   );
-}); // These are the few React props that we set as DOM properties
+}); // These are HTML attributes that are "overloaded booleans": they behave like
 
 ["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(
-    name,
     NUMERIC,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -421,9 +411,7 @@ var capitalize = function (token) {
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -433,88 +421,12 @@ var capitalize = function (token) {
 ["src", "href", "action"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     true, // sanitizeURL
     true
   );
-});
-
-/**
- * CSS properties which accept numbers but are not in units of "px".
- */
-var isUnitlessNumber = {
-  animationIterationCount: true,
-  aspectRatio: true,
-  borderImageOutset: true,
-  borderImageSlice: true,
-  borderImageWidth: true,
-  boxFlex: true,
-  boxFlexGroup: true,
-  boxOrdinalGroup: true,
-  columnCount: true,
-  columns: true,
-  flex: true,
-  flexGrow: true,
-  flexPositive: true,
-  flexShrink: true,
-  flexNegative: true,
-  flexOrder: true,
-  gridArea: true,
-  gridRow: true,
-  gridRowEnd: true,
-  gridRowSpan: true,
-  gridRowStart: true,
-  gridColumn: true,
-  gridColumnEnd: true,
-  gridColumnSpan: true,
-  gridColumnStart: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  scale: true,
-  tabSize: true,
-  widows: true,
-  zIndex: true,
-  zoom: true,
-  // SVG-related properties
-  fillOpacity: true,
-  floodOpacity: true,
-  stopOpacity: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  strokeMiterlimit: true,
-  strokeOpacity: true,
-  strokeWidth: true
-};
-/**
- * @param {string} prefix vendor-specific prefix, eg: Webkit
- * @param {string} key style name, eg: transitionDuration
- * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
- * WebkitTransitionDuration
- */
-
-function prefixKey(prefix, key) {
-  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
-}
-/**
- * Support style names that may come passed in prefixed by adding permutations
- * of vendor prefixes.
- */
-
-var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
-// infinite loop, because it iterates over the newly added props too.
-
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
-  });
 });
 
 var rendererSigil;

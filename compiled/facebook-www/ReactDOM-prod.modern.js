@@ -535,28 +535,12 @@ function registerDirectEvent(registrationName, dependencies) {
     allNativeEvents.add(dependencies[registrationName]);
 }
 var canUseDOM = !(
-    "undefined" === typeof window ||
-    "undefined" === typeof window.document ||
-    "undefined" === typeof window.document.createElement
-  ),
-  VALID_ATTRIBUTE_NAME_REGEX = RegExp(
-    "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
-  ),
-  illegalAttributeNameCache = {},
-  validatedAttributeNameCache = {};
-function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName))
-    return !0;
-  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) return !1;
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
-    return (validatedAttributeNameCache[attributeName] = !0);
-  illegalAttributeNameCache[attributeName] = !0;
-  return !1;
-}
+  "undefined" === typeof window ||
+  "undefined" === typeof window.document ||
+  "undefined" === typeof window.document.createElement
+);
 function PropertyInfoRecord(
-  name,
   type,
-  mustUseProperty,
   attributeName,
   attributeNamespace,
   sanitizeURL,
@@ -565,8 +549,6 @@ function PropertyInfoRecord(
   this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -578,16 +560,13 @@ var properties = {};
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
 ].forEach(function (_ref) {
-  var name = _ref[0];
-  properties[name] = new PropertyInfoRecord(name, 1, !1, _ref[1], null, !1, !1);
+  properties[_ref[0]] = new PropertyInfoRecord(1, _ref[1], null, !1, !1);
 });
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
   name
 ) {
   properties[name] = new PropertyInfoRecord(
-    name,
     2,
-    !1,
     name.toLowerCase(),
     null,
     !1,
@@ -600,35 +579,28 @@ var properties = {};
   "focusable",
   "preserveAlpha"
 ].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 2, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(2, name, null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
   .forEach(function (name) {
     properties[name] = new PropertyInfoRecord(
-      name,
       3,
-      !1,
       name.toLowerCase(),
       null,
       !1,
       !1
     );
   });
-["checked", "multiple", "muted", "selected"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 3, !0, name, null, !1, !1);
-});
 ["capture", "download"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 4, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(4, name, null, !1, !1);
 });
 ["cols", "rows", "size", "span"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 6, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(6, name, null, !1, !1);
 });
 ["rowSpan", "start"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(
-    name,
     5,
-    !1,
     name.toLowerCase(),
     null,
     !1,
@@ -643,24 +615,14 @@ function capitalize(token) {
   .split(" ")
   .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(
-      name,
-      1,
-      !1,
-      attributeName,
-      null,
-      !1,
-      !1
-    );
+    properties[name] = new PropertyInfoRecord(1, attributeName, null, !1, !1);
   });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
   .split(" ")
   .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     properties[name] = new PropertyInfoRecord(
-      name,
       1,
-      !1,
       attributeName,
       "http://www.w3.org/1999/xlink",
       !1,
@@ -670,9 +632,7 @@ function capitalize(token) {
 ["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
-    name,
     1,
-    !1,
     attributeName,
     "http://www.w3.org/XML/1998/namespace",
     !1,
@@ -681,9 +641,7 @@ function capitalize(token) {
 });
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     1,
-    !1,
     attributeName.toLowerCase(),
     null,
     !1,
@@ -691,34 +649,36 @@ function capitalize(token) {
   );
 });
 properties.xlinkHref = new PropertyInfoRecord(
-  "xlinkHref",
   1,
-  !1,
   "xlink:href",
   "http://www.w3.org/1999/xlink",
   !0,
   !1
 );
-properties.formAction = new PropertyInfoRecord(
-  "formAction",
-  1,
-  !1,
-  "formaction",
-  null,
-  !0,
-  !1
-);
+properties.formAction = new PropertyInfoRecord(1, "formaction", null, !0, !1);
 ["src", "href", "action"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     1,
-    !1,
     attributeName.toLowerCase(),
     null,
     !0,
     !0
   );
 });
+var VALID_ATTRIBUTE_NAME_REGEX = RegExp(
+    "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
+  ),
+  illegalAttributeNameCache = {},
+  validatedAttributeNameCache = {};
+function isAttributeNameSafe(attributeName) {
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName))
+    return !0;
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) return !1;
+  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
+    return (validatedAttributeNameCache[attributeName] = !0);
+  illegalAttributeNameCache[attributeName] = !0;
+  return !1;
+}
 var isJavaScriptProtocol =
   /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
 function sanitizeURL(url) {
@@ -1160,59 +1120,6 @@ function setTextContent(node, text) {
   }
   node.textContent = text;
 }
-var isUnitlessNumber = {
-    animationIterationCount: !0,
-    aspectRatio: !0,
-    borderImageOutset: !0,
-    borderImageSlice: !0,
-    borderImageWidth: !0,
-    boxFlex: !0,
-    boxFlexGroup: !0,
-    boxOrdinalGroup: !0,
-    columnCount: !0,
-    columns: !0,
-    flex: !0,
-    flexGrow: !0,
-    flexPositive: !0,
-    flexShrink: !0,
-    flexNegative: !0,
-    flexOrder: !0,
-    gridArea: !0,
-    gridRow: !0,
-    gridRowEnd: !0,
-    gridRowSpan: !0,
-    gridRowStart: !0,
-    gridColumn: !0,
-    gridColumnEnd: !0,
-    gridColumnSpan: !0,
-    gridColumnStart: !0,
-    fontWeight: !0,
-    lineClamp: !0,
-    lineHeight: !0,
-    opacity: !0,
-    order: !0,
-    orphans: !0,
-    scale: !0,
-    tabSize: !0,
-    widows: !0,
-    zIndex: !0,
-    zoom: !0,
-    fillOpacity: !0,
-    floodOpacity: !0,
-    stopOpacity: !0,
-    strokeDasharray: !0,
-    strokeDashoffset: !0,
-    strokeMiterlimit: !0,
-    strokeOpacity: !0,
-    strokeWidth: !0
-  },
-  prefixes = ["Webkit", "ms", "Moz", "O"];
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
-    isUnitlessNumber[prefix] = isUnitlessNumber[prop];
-  });
-});
 function isCustomComponent(tagName, props) {
   if (-1 === tagName.indexOf("-")) return "string" === typeof props.is;
   switch (tagName) {
@@ -12996,19 +12903,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$320;
+  var JSCompiler_inline_result$jscomp$322;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1545 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1545) {
-      var element$jscomp$inline_1546 = document.createElement("div");
-      element$jscomp$inline_1546.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1545 =
-        "function" === typeof element$jscomp$inline_1546.oninput;
+    var isSupported$jscomp$inline_1542 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1542) {
+      var element$jscomp$inline_1543 = document.createElement("div");
+      element$jscomp$inline_1543.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1542 =
+        "function" === typeof element$jscomp$inline_1543.oninput;
     }
-    JSCompiler_inline_result$jscomp$320 = isSupported$jscomp$inline_1545;
-  } else JSCompiler_inline_result$jscomp$320 = !1;
+    JSCompiler_inline_result$jscomp$322 = isSupported$jscomp$inline_1542;
+  } else JSCompiler_inline_result$jscomp$322 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$320 &&
+    JSCompiler_inline_result$jscomp$322 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13317,20 +13224,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1586 = 0;
-  i$jscomp$inline_1586 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1586++
+  var i$jscomp$inline_1583 = 0;
+  i$jscomp$inline_1583 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1583++
 ) {
-  var eventName$jscomp$inline_1587 =
-      simpleEventPluginEvents[i$jscomp$inline_1586],
-    domEventName$jscomp$inline_1588 =
-      eventName$jscomp$inline_1587.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1589 =
-      eventName$jscomp$inline_1587[0].toUpperCase() +
-      eventName$jscomp$inline_1587.slice(1);
+  var eventName$jscomp$inline_1584 =
+      simpleEventPluginEvents[i$jscomp$inline_1583],
+    domEventName$jscomp$inline_1585 =
+      eventName$jscomp$inline_1584.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1586 =
+      eventName$jscomp$inline_1584[0].toUpperCase() +
+      eventName$jscomp$inline_1584.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1588,
-    "on" + capitalizedEvent$jscomp$inline_1589
+    domEventName$jscomp$inline_1585,
+    "on" + capitalizedEvent$jscomp$inline_1586
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14177,25 +14084,103 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
         throw Error(formatProdErrorMessage(62));
       domElement = domElement.style;
       for (var styleName in value)
-        value.hasOwnProperty(styleName) &&
-          ((key = value[styleName]),
-          (props = 0 === styleName.indexOf("--")),
-          null == key || "boolean" === typeof key || "" === key
-            ? props
+        if (value.hasOwnProperty(styleName))
+          if (
+            ((key = value[styleName]),
+            (props = 0 === styleName.indexOf("--")),
+            null == key || "boolean" === typeof key || "" === key)
+          )
+            props
               ? domElement.setProperty(styleName, "")
               : "float" === styleName
               ? (domElement.cssFloat = "")
-              : (domElement[styleName] = "")
-            : props
-            ? domElement.setProperty(styleName, key)
-            : "number" !== typeof key ||
-              0 === key ||
-              (isUnitlessNumber.hasOwnProperty(styleName) &&
-                isUnitlessNumber[styleName])
-            ? "float" === styleName
-              ? (domElement.cssFloat = key)
-              : (domElement[styleName] = ("" + key).trim())
-            : (domElement[styleName] = key + "px"));
+              : (domElement[styleName] = "");
+          else if (props) domElement.setProperty(styleName, key);
+          else {
+            if (!(props = "number" !== typeof key || 0 === key))
+              a: switch (styleName) {
+                case "animationIterationCount":
+                case "aspectRatio":
+                case "borderImageOutset":
+                case "borderImageSlice":
+                case "borderImageWidth":
+                case "boxFlex":
+                case "boxFlexGroup":
+                case "boxOrdinalGroup":
+                case "columnCount":
+                case "columns":
+                case "flex":
+                case "flexGrow":
+                case "flexPositive":
+                case "flexShrink":
+                case "flexNegative":
+                case "flexOrder":
+                case "gridArea":
+                case "gridRow":
+                case "gridRowEnd":
+                case "gridRowSpan":
+                case "gridRowStart":
+                case "gridColumn":
+                case "gridColumnEnd":
+                case "gridColumnSpan":
+                case "gridColumnStart":
+                case "fontWeight":
+                case "lineClamp":
+                case "lineHeight":
+                case "opacity":
+                case "order":
+                case "orphans":
+                case "scale":
+                case "tabSize":
+                case "widows":
+                case "zIndex":
+                case "zoom":
+                case "fillOpacity":
+                case "floodOpacity":
+                case "stopOpacity":
+                case "strokeDasharray":
+                case "strokeDashoffset":
+                case "strokeMiterlimit":
+                case "strokeOpacity":
+                case "strokeWidth":
+                case "MozAnimationIterationCount":
+                case "MozBoxFlex":
+                case "MozBoxFlexGroup":
+                case "MozLineClamp":
+                case "msAnimationIterationCount":
+                case "msFlex":
+                case "msZoom":
+                case "msFlexGrow":
+                case "msFlexNegative":
+                case "msFlexOrder":
+                case "msFlexPositive":
+                case "msFlexShrink":
+                case "msGridColumn":
+                case "msGridColumnSpan":
+                case "msGridRow":
+                case "msGridRowSpan":
+                case "WebkitAnimationIterationCount":
+                case "WebkitBoxFlex":
+                case "WebKitBoxFlexGroup":
+                case "WebkitBoxOrdinalGroup":
+                case "WebkitColumnCount":
+                case "WebkitColumns":
+                case "WebkitFlex":
+                case "WebkitFlexGrow":
+                case "WebkitFlexPositive":
+                case "WebkitFlexShrink":
+                case "WebkitLineClamp":
+                  props = !0;
+                  break a;
+                default:
+                  props = !1;
+              }
+            props
+              ? "float" === styleName
+                ? (domElement.cssFloat = key)
+                : (domElement[styleName] = ("" + key).trim())
+              : (domElement[styleName] = key + "px");
+          }
       break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
@@ -14224,6 +14209,14 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
       break;
     case "onClick":
       null != value && (domElement.onclick = noop$1);
+      break;
+    case "multiple":
+      domElement.multiple =
+        value && "function" !== typeof value && "symbol" !== typeof value;
+      break;
+    case "muted":
+      domElement.muted =
+        value && "function" !== typeof value && "symbol" !== typeof value;
       break;
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
@@ -14288,78 +14281,72 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
                 );
               }
           }
-        else
-          a: if (
-            !(2 < key.length) ||
-            ("o" !== key[0] && "O" !== key[0]) ||
-            ("n" !== key[1] && "N" !== key[1])
+        else if (
+          !(2 < key.length) ||
+          ("o" !== key[0] && "O" !== key[0]) ||
+          ("n" !== key[1] && "N" !== key[1])
+        )
+          if (
+            ((styleName = properties.hasOwnProperty(key)
+              ? properties[key]
+              : null),
+            null !== styleName)
           )
-            if (
-              ((styleName = properties.hasOwnProperty(key)
-                ? properties[key]
-                : null),
-              null !== styleName)
-            )
-              if (styleName.mustUseProperty)
-                domElement[styleName.propertyName] =
-                  value &&
-                  "function" !== typeof value &&
-                  "symbol" !== typeof value;
-              else if (((key = styleName.attributeName), null === value))
-                domElement.removeAttribute(key);
-              else {
-                switch (typeof value) {
-                  case "undefined":
-                  case "function":
-                  case "symbol":
+            a: if (((key = styleName.attributeName), null === value))
+              domElement.removeAttribute(key);
+            else {
+              switch (typeof value) {
+                case "undefined":
+                case "function":
+                case "symbol":
+                  domElement.removeAttribute(key);
+                  break a;
+                case "boolean":
+                  if (!styleName.acceptsBooleans) {
                     domElement.removeAttribute(key);
                     break a;
-                  case "boolean":
-                    if (!styleName.acceptsBooleans) {
-                      domElement.removeAttribute(key);
-                      break a;
-                    }
-                }
-                if (styleName.removeEmptyString && "" === value)
-                  domElement.removeAttribute(key);
-                else
-                  switch (styleName.type) {
-                    case 3:
-                      value
-                        ? domElement.setAttribute(key, "")
-                        : domElement.removeAttribute(key);
-                      break;
-                    case 4:
-                      !0 === value
-                        ? domElement.setAttribute(key, "")
-                        : !1 === value
-                        ? domElement.removeAttribute(key)
-                        : domElement.setAttribute(key, value);
-                      break;
-                    case 5:
-                      isNaN(value)
-                        ? domElement.removeAttribute(key)
-                        : domElement.setAttribute(key, value);
-                      break;
-                    case 6:
-                      !isNaN(value) && 1 <= value
-                        ? domElement.setAttribute(key, value)
-                        : domElement.removeAttribute(key);
-                      break;
-                    default:
-                      enableTrustedTypesIntegration
-                        ? (value = styleName.sanitizeURL
-                            ? sanitizeURL(value)
-                            : value)
-                        : ((value = "" + value),
-                          styleName.sanitizeURL &&
-                            (value = sanitizeURL(value))),
-                        (styleName = styleName.attributeNamespace)
-                          ? domElement.setAttributeNS(styleName, key, value)
-                          : domElement.setAttribute(key, value);
                   }
               }
-            else if (isAttributeNameSafe(key))
+              if (styleName.removeEmptyString && "" === value)
+                domElement.removeAttribute(key);
+              else
+                switch (styleName.type) {
+                  case 3:
+                    value
+                      ? domElement.setAttribute(key, "")
+                      : domElement.removeAttribute(key);
+                    break;
+                  case 4:
+                    !0 === value
+                      ? domElement.setAttribute(key, "")
+                      : !1 === value
+                      ? domElement.removeAttribute(key)
+                      : domElement.setAttribute(key, value);
+                    break;
+                  case 5:
+                    isNaN(value)
+                      ? domElement.removeAttribute(key)
+                      : domElement.setAttribute(key, value);
+                    break;
+                  case 6:
+                    !isNaN(value) && 1 <= value
+                      ? domElement.setAttribute(key, value)
+                      : domElement.removeAttribute(key);
+                    break;
+                  default:
+                    enableTrustedTypesIntegration
+                      ? (value = styleName.sanitizeURL
+                          ? sanitizeURL(value)
+                          : value)
+                      : ((value = "" + value),
+                        styleName.sanitizeURL && (value = sanitizeURL(value))),
+                      (styleName = styleName.attributeNamespace)
+                        ? domElement.setAttributeNS(styleName, key, value)
+                        : domElement.setAttribute(key, value);
+                }
+            }
+          else
+            a: if (isAttributeNameSafe(key))
               if (null === value) domElement.removeAttribute(key);
               else {
                 switch (typeof value) {
@@ -14469,10 +14456,20 @@ function setInitialProperties(domElement, tag, props) {
       return;
     case "option":
       for (var propKey$202 in props)
-        props.hasOwnProperty(propKey$202) &&
-          ((propKey = props[propKey$202]),
-          null != propKey &&
-            setProp(domElement, tag, propKey$202, propKey, !1, props));
+        if (
+          props.hasOwnProperty(propKey$202) &&
+          ((propKey = props[propKey$202]), null != propKey)
+        )
+          switch (propKey$202) {
+            case "selected":
+              domElement.selected =
+                propKey &&
+                "function" !== typeof propKey &&
+                "symbol" !== typeof propKey;
+              break;
+            default:
+              setProp(domElement, tag, propKey$202, propKey, !1, props);
+          }
       null != props.value &&
         domElement.setAttribute("value", "" + getToStringValue(props.value));
       return;
@@ -14625,6 +14622,23 @@ function updateProperties(
             setProp(domElement, tag, propValue, propKey, !1, nextProps);
         }
       updateWrapper(domElement, nextProps);
+      return;
+    case "option":
+      for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
+        switch (
+          ((propValue = updatePayload[lastProps]),
+          (propKey = updatePayload[lastProps + 1]),
+          propValue)
+        ) {
+          case "selected":
+            domElement.selected =
+              propKey &&
+              "function" !== typeof propKey &&
+              "symbol" !== typeof propKey;
+            break;
+          default:
+            setProp(domElement, tag, propValue, propKey, !1, nextProps);
+        }
       return;
     case "img":
     case "link":
@@ -14976,14 +14990,14 @@ function preinit$1(href, options) {
       switch (as) {
         case "style":
           as = getResourcesFromRoot(resourceRoot).hoistableStyles;
-          var key$221 = getStyleKey(href),
+          var key$224 = getStyleKey(href),
             precedence = options.precedence || "default",
-            resource = as.get(key$221);
+            resource = as.get(key$224);
           if (resource) break;
           var state = { loading: 0, preload: null };
           if (
             (resource = resourceRoot.querySelector(
-              getStylesheetSelectorFromKey(key$221)
+              getStylesheetSelectorFromKey(key$224)
             ))
           )
             state.loading = 1;
@@ -14994,7 +15008,7 @@ function preinit$1(href, options) {
               "data-precedence": precedence,
               crossOrigin: options.crossOrigin
             };
-            (options = preloadPropsMap.get(key$221)) &&
+            (options = preloadPropsMap.get(key$224)) &&
               adoptPreloadPropsForStylesheet(href, options);
             var link = (resource = (
               resourceRoot.ownerDocument || resourceRoot
@@ -15020,15 +15034,15 @@ function preinit$1(href, options) {
             count: 1,
             state: state
           };
-          as.set(key$221, resource);
+          as.set(key$224, resource);
           break;
         case "script":
           (as = getResourcesFromRoot(resourceRoot).hoistableScripts),
-            (key$221 = getScriptKey(href)),
-            (precedence = as.get(key$221)),
+            (key$224 = getScriptKey(href)),
+            (precedence = as.get(key$224)),
             precedence ||
               ((precedence = resourceRoot.querySelector(
-                "script[async]" + key$221
+                "script[async]" + key$224
               )),
               precedence ||
                 ((href = {
@@ -15037,7 +15051,7 @@ function preinit$1(href, options) {
                   crossOrigin: options.crossOrigin,
                   integrity: options.integrity
                 }),
-                (options = preloadPropsMap.get(key$221)) &&
+                (options = preloadPropsMap.get(key$224)) &&
                   adoptPreloadPropsForScript(href, options),
                 (options = resourceRoot.ownerDocument || resourceRoot),
                 (precedence = options.createElement("script")),
@@ -15050,13 +15064,13 @@ function preinit$1(href, options) {
                 count: 1,
                 state: null
               }),
-              as.set(key$221, precedence));
+              as.set(key$224, precedence));
       }
     else if ("style" === as || "script" === as)
       if ((resourceRoot = getDocumentForPreloads())) {
-        key$221 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-        precedence = key$221 =
-          'link[rel="preload"][as="' + as + '"][href="' + key$221 + '"]';
+        key$224 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+        precedence = key$224 =
+          'link[rel="preload"][as="' + as + '"][href="' + key$224 + '"]';
         switch (as) {
           case "style":
             precedence = getStyleKey(href);
@@ -15073,7 +15087,7 @@ function preinit$1(href, options) {
             integrity: options.integrity
           }),
           preloadPropsMap.set(precedence, href),
-          null === resourceRoot.querySelector(key$221) &&
+          null === resourceRoot.querySelector(key$224) &&
             ((options = resourceRoot.createElement("link")),
             setInitialProperties(options, "link", href),
             markNodeAsHoistable(options),
@@ -15106,17 +15120,17 @@ function getResource(type, currentProps, pendingProps) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$230 = getResourcesFromRoot(currentProps).hoistableStyles,
-          resource$231 = styles$230.get(type);
-        resource$231 ||
+        var styles$233 = getResourcesFromRoot(currentProps).hoistableStyles,
+          resource$234 = styles$233.get(type);
+        resource$234 ||
           ((currentProps = currentProps.ownerDocument || currentProps),
-          (resource$231 = {
+          (resource$234 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$230.set(type, resource$231),
+          styles$233.set(type, resource$234),
           preloadPropsMap.has(type) ||
             preloadStylesheet(
               currentProps,
@@ -15131,9 +15145,9 @@ function getResource(type, currentProps, pendingProps) {
                 hrefLang: pendingProps.hrefLang,
                 referrerPolicy: pendingProps.referrerPolicy
               },
-              resource$231.state
+              resource$234.state
             ));
-        return resource$231;
+        return resource$234;
       }
       return null;
     case "script":
@@ -15205,36 +15219,36 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = key);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$236 = hoistableRoot.querySelector(
+        var instance$239 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$236)
+        if (instance$239)
           return (
-            (resource.instance = instance$236),
-            markNodeAsHoistable(instance$236),
-            instance$236
+            (resource.instance = instance$239),
+            markNodeAsHoistable(instance$239),
+            instance$239
           );
         key = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(key, styleProps);
-        instance$236 = (
+        instance$239 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$236);
-        var linkInstance = instance$236;
+        markNodeAsHoistable(instance$239);
+        var linkInstance = instance$239;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$236, "link", key);
+        setInitialProperties(instance$239, "link", key);
         resource.state.loading |= 4;
-        insertStylesheet(instance$236, props.precedence, hoistableRoot);
-        return (resource.instance = instance$236);
+        insertStylesheet(instance$239, props.precedence, hoistableRoot);
+        return (resource.instance = instance$239);
       case "script":
-        instance$236 = getScriptKey(props.src);
+        instance$239 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            "script[async]" + instance$236
+            "script[async]" + instance$239
           ))
         )
           return (
@@ -15243,7 +15257,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         key = props;
-        if ((styleProps = preloadPropsMap.get(instance$236)))
+        if ((styleProps = preloadPropsMap.get(instance$239)))
           (key = assign({}, props)),
             adoptPreloadPropsForScript(key, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -15614,17 +15628,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1756 = {
+var devToolsConfig$jscomp$inline_1760 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-ab9c87f3",
+  version: "18.3.0-www-modern-c1afc44d",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2165 = {
-  bundleType: devToolsConfig$jscomp$inline_1756.bundleType,
-  version: devToolsConfig$jscomp$inline_1756.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1756.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1756.rendererConfig,
+var internals$jscomp$inline_2170 = {
+  bundleType: devToolsConfig$jscomp$inline_1760.bundleType,
+  version: devToolsConfig$jscomp$inline_1760.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1760.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1760.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15641,26 +15655,26 @@ var internals$jscomp$inline_2165 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1756.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1760.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ab9c87f3"
+  reconcilerVersion: "18.3.0-www-modern-c1afc44d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2166 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2171 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2166.isDisabled &&
-    hook$jscomp$inline_2166.supportsFiber
+    !hook$jscomp$inline_2171.isDisabled &&
+    hook$jscomp$inline_2171.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2166.inject(
-        internals$jscomp$inline_2165
+      (rendererID = hook$jscomp$inline_2171.inject(
+        internals$jscomp$inline_2170
       )),
-        (injectedHook = hook$jscomp$inline_2166);
+        (injectedHook = hook$jscomp$inline_2171);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -15817,4 +15831,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-ab9c87f3";
+exports.version = "18.3.0-www-modern-c1afc44d";

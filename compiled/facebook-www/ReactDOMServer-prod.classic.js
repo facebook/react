@@ -53,9 +53,7 @@ function isAttributeNameSafe(attributeName) {
   return !1;
 }
 function PropertyInfoRecord(
-  name,
   type,
-  mustUseProperty,
   attributeName,
   attributeNamespace,
   sanitizeURL,
@@ -64,8 +62,6 @@ function PropertyInfoRecord(
   this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -77,16 +73,13 @@ var properties = {};
   ["htmlFor", "for"],
   ["httpEquiv", "http-equiv"]
 ].forEach(function (_ref) {
-  var name = _ref[0];
-  properties[name] = new PropertyInfoRecord(name, 1, !1, _ref[1], null, !1, !1);
+  properties[_ref[0]] = new PropertyInfoRecord(1, _ref[1], null, !1, !1);
 });
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
   name
 ) {
   properties[name] = new PropertyInfoRecord(
-    name,
     2,
-    !1,
     name.toLowerCase(),
     null,
     !1,
@@ -99,35 +92,28 @@ var properties = {};
   "focusable",
   "preserveAlpha"
 ].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 2, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(2, name, null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
   .forEach(function (name) {
     properties[name] = new PropertyInfoRecord(
-      name,
       3,
-      !1,
       name.toLowerCase(),
       null,
       !1,
       !1
     );
   });
-["checked", "multiple", "muted", "selected"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 3, !0, name, null, !1, !1);
-});
 ["capture", "download"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 4, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(4, name, null, !1, !1);
 });
 ["cols", "rows", "size", "span"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(name, 6, !1, name, null, !1, !1);
+  properties[name] = new PropertyInfoRecord(6, name, null, !1, !1);
 });
 ["rowSpan", "start"].forEach(function (name) {
   properties[name] = new PropertyInfoRecord(
-    name,
     5,
-    !1,
     name.toLowerCase(),
     null,
     !1,
@@ -142,24 +128,14 @@ function capitalize(token) {
   .split(" ")
   .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(
-      name,
-      1,
-      !1,
-      attributeName,
-      null,
-      !1,
-      !1
-    );
+    properties[name] = new PropertyInfoRecord(1, attributeName, null, !1, !1);
   });
 "xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
   .split(" ")
   .forEach(function (attributeName) {
     var name = attributeName.replace(CAMELIZE, capitalize);
     properties[name] = new PropertyInfoRecord(
-      name,
       1,
-      !1,
       attributeName,
       "http://www.w3.org/1999/xlink",
       !1,
@@ -169,9 +145,7 @@ function capitalize(token) {
 ["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
   var name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
-    name,
     1,
-    !1,
     attributeName,
     "http://www.w3.org/XML/1998/namespace",
     !1,
@@ -180,9 +154,7 @@ function capitalize(token) {
 });
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     1,
-    !1,
     attributeName.toLowerCase(),
     null,
     !1,
@@ -190,86 +162,21 @@ function capitalize(token) {
   );
 });
 properties.xlinkHref = new PropertyInfoRecord(
-  "xlinkHref",
   1,
-  !1,
   "xlink:href",
   "http://www.w3.org/1999/xlink",
   !0,
   !1
 );
-properties.formAction = new PropertyInfoRecord(
-  "formAction",
-  1,
-  !1,
-  "formaction",
-  null,
-  !0,
-  !1
-);
+properties.formAction = new PropertyInfoRecord(1, "formaction", null, !0, !1);
 ["src", "href", "action"].forEach(function (attributeName) {
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     1,
-    !1,
     attributeName.toLowerCase(),
     null,
     !0,
     !0
   );
-});
-var isUnitlessNumber = {
-    animationIterationCount: !0,
-    aspectRatio: !0,
-    borderImageOutset: !0,
-    borderImageSlice: !0,
-    borderImageWidth: !0,
-    boxFlex: !0,
-    boxFlexGroup: !0,
-    boxOrdinalGroup: !0,
-    columnCount: !0,
-    columns: !0,
-    flex: !0,
-    flexGrow: !0,
-    flexPositive: !0,
-    flexShrink: !0,
-    flexNegative: !0,
-    flexOrder: !0,
-    gridArea: !0,
-    gridRow: !0,
-    gridRowEnd: !0,
-    gridRowSpan: !0,
-    gridRowStart: !0,
-    gridColumn: !0,
-    gridColumnEnd: !0,
-    gridColumnSpan: !0,
-    gridColumnStart: !0,
-    fontWeight: !0,
-    lineClamp: !0,
-    lineHeight: !0,
-    opacity: !0,
-    order: !0,
-    orphans: !0,
-    scale: !0,
-    tabSize: !0,
-    widows: !0,
-    zIndex: !0,
-    zoom: !0,
-    fillOpacity: !0,
-    floodOpacity: !0,
-    stopOpacity: !0,
-    strokeDasharray: !0,
-    strokeDashoffset: !0,
-    strokeMiterlimit: !0,
-    strokeOpacity: !0,
-    strokeWidth: !0
-  },
-  prefixes = ["Webkit", "ms", "Moz", "O"];
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
-    isUnitlessNumber[prefix] = isUnitlessNumber[prop];
-  });
 });
 var matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
@@ -388,23 +295,101 @@ function pushStyleAttribute(target, style) {
         if (0 === styleName.indexOf("--")) {
           var nameChunk = escapeTextForBrowser(styleName);
           styleValue = escapeTextForBrowser(("" + styleValue).trim());
-        } else
-          (nameChunk = styleNameCache.get(styleName)),
-            void 0 === nameChunk &&
-              ((nameChunk = escapeTextForBrowser(
-                styleName
-                  .replace(uppercasePattern, "-$1")
-                  .toLowerCase()
-                  .replace(msPattern, "-ms-")
-              )),
-              styleNameCache.set(styleName, nameChunk)),
-            (styleValue =
-              "number" === typeof styleValue
-                ? 0 === styleValue ||
-                  hasOwnProperty.call(isUnitlessNumber, styleName)
-                  ? "" + styleValue
-                  : styleValue + "px"
-                : escapeTextForBrowser(("" + styleValue).trim()));
+        } else if (
+          ((nameChunk = styleNameCache.get(styleName)),
+          void 0 === nameChunk &&
+            ((nameChunk = escapeTextForBrowser(
+              styleName
+                .replace(uppercasePattern, "-$1")
+                .toLowerCase()
+                .replace(msPattern, "-ms-")
+            )),
+            styleNameCache.set(styleName, nameChunk)),
+          "number" === typeof styleValue)
+        ) {
+          var JSCompiler_temp;
+          if ((JSCompiler_temp = 0 !== styleValue)) {
+            a: switch (styleName) {
+              case "animationIterationCount":
+              case "aspectRatio":
+              case "borderImageOutset":
+              case "borderImageSlice":
+              case "borderImageWidth":
+              case "boxFlex":
+              case "boxFlexGroup":
+              case "boxOrdinalGroup":
+              case "columnCount":
+              case "columns":
+              case "flex":
+              case "flexGrow":
+              case "flexPositive":
+              case "flexShrink":
+              case "flexNegative":
+              case "flexOrder":
+              case "gridArea":
+              case "gridRow":
+              case "gridRowEnd":
+              case "gridRowSpan":
+              case "gridRowStart":
+              case "gridColumn":
+              case "gridColumnEnd":
+              case "gridColumnSpan":
+              case "gridColumnStart":
+              case "fontWeight":
+              case "lineClamp":
+              case "lineHeight":
+              case "opacity":
+              case "order":
+              case "orphans":
+              case "scale":
+              case "tabSize":
+              case "widows":
+              case "zIndex":
+              case "zoom":
+              case "fillOpacity":
+              case "floodOpacity":
+              case "stopOpacity":
+              case "strokeDasharray":
+              case "strokeDashoffset":
+              case "strokeMiterlimit":
+              case "strokeOpacity":
+              case "strokeWidth":
+              case "MozAnimationIterationCount":
+              case "MozBoxFlex":
+              case "MozBoxFlexGroup":
+              case "MozLineClamp":
+              case "msAnimationIterationCount":
+              case "msFlex":
+              case "msZoom":
+              case "msFlexGrow":
+              case "msFlexNegative":
+              case "msFlexOrder":
+              case "msFlexPositive":
+              case "msFlexShrink":
+              case "msGridColumn":
+              case "msGridColumnSpan":
+              case "msGridRow":
+              case "msGridRowSpan":
+              case "WebkitAnimationIterationCount":
+              case "WebkitBoxFlex":
+              case "WebKitBoxFlexGroup":
+              case "WebkitBoxOrdinalGroup":
+              case "WebkitColumnCount":
+              case "WebkitColumns":
+              case "WebkitFlex":
+              case "WebkitFlexGrow":
+              case "WebkitFlexPositive":
+              case "WebkitFlexShrink":
+              case "WebkitLineClamp":
+                JSCompiler_temp = !0;
+                break a;
+              default:
+                JSCompiler_temp = !1;
+            }
+            JSCompiler_temp = !JSCompiler_temp;
+          }
+          styleValue = JSCompiler_temp ? styleValue + "px" : "" + styleValue;
+        } else styleValue = escapeTextForBrowser(("" + styleValue).trim());
         isFirst
           ? ((isFirst = !1),
             target.push(' style="', nameChunk, ":", styleValue))
@@ -412,6 +397,12 @@ function pushStyleAttribute(target, style) {
       }
     }
   isFirst || target.push('"');
+}
+function pushBooleanAttribute(target, name, value) {
+  value &&
+    "function" !== typeof value &&
+    "symbol" !== typeof value &&
+    target.push(" ", name, '=""');
 }
 function pushAttribute(target, name, value) {
   switch (name) {
@@ -423,6 +414,10 @@ function pushAttribute(target, name, value) {
     case "innerHTML":
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
+      return;
+    case "multiple":
+    case "muted":
+      pushBooleanAttribute(target, name, value);
       return;
   }
   if (
@@ -867,9 +862,9 @@ function pushStartInstance(
               pushAttribute(target, value, selected);
           }
       null !== propValue
-        ? pushAttribute(target, "checked", propValue)
+        ? pushBooleanAttribute(target, "checked", propValue)
         : null !== propKey$jscomp$0 &&
-          pushAttribute(target, "checked", propKey$jscomp$0);
+          pushBooleanAttribute(target, "checked", propKey$jscomp$0);
       null !== textEmbedded
         ? pushAttribute(target, "value", textEmbedded)
         : null !== resources && pushAttribute(target, "value", resources);
@@ -3793,4 +3788,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-7dfc6a99";
+exports.version = "18.3.0-www-classic-69d167ef";

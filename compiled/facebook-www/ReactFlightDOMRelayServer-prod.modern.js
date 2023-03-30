@@ -63,9 +63,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 require("ReactFeatureFlags");
 function PropertyInfoRecord(
-  name,
   type,
-  mustUseProperty,
   attributeName,
   attributeNamespace,
   sanitizeURL,
@@ -74,8 +72,6 @@ function PropertyInfoRecord(
   this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -83,15 +79,15 @@ function PropertyInfoRecord(
 ["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
   name
 ) {
-  new PropertyInfoRecord(name, 2, !1, name.toLowerCase(), null, !1, !1);
+  new PropertyInfoRecord(2, name.toLowerCase(), null, !1, !1);
 });
 "allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
   .split(" ")
   .forEach(function (name) {
-    new PropertyInfoRecord(name, 3, !1, name.toLowerCase(), null, !1, !1);
+    new PropertyInfoRecord(3, name.toLowerCase(), null, !1, !1);
   });
 ["rowSpan", "start"].forEach(function (name) {
-  new PropertyInfoRecord(name, 5, !1, name.toLowerCase(), null, !1, !1);
+  new PropertyInfoRecord(5, name.toLowerCase(), null, !1, !1);
 });
 var CAMELIZE = /[\-:]([a-z])/g;
 function capitalize(token) {
@@ -111,79 +107,10 @@ function capitalize(token) {
   attributeName.replace(CAMELIZE, capitalize);
 });
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  new PropertyInfoRecord(
-    attributeName,
-    1,
-    !1,
-    attributeName.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
+  new PropertyInfoRecord(1, attributeName.toLowerCase(), null, !1, !1);
 });
 ["src", "href", "action"].forEach(function (attributeName) {
-  new PropertyInfoRecord(
-    attributeName,
-    1,
-    !1,
-    attributeName.toLowerCase(),
-    null,
-    !0,
-    !0
-  );
-});
-var isUnitlessNumber = {
-    animationIterationCount: !0,
-    aspectRatio: !0,
-    borderImageOutset: !0,
-    borderImageSlice: !0,
-    borderImageWidth: !0,
-    boxFlex: !0,
-    boxFlexGroup: !0,
-    boxOrdinalGroup: !0,
-    columnCount: !0,
-    columns: !0,
-    flex: !0,
-    flexGrow: !0,
-    flexPositive: !0,
-    flexShrink: !0,
-    flexNegative: !0,
-    flexOrder: !0,
-    gridArea: !0,
-    gridRow: !0,
-    gridRowEnd: !0,
-    gridRowSpan: !0,
-    gridRowStart: !0,
-    gridColumn: !0,
-    gridColumnEnd: !0,
-    gridColumnSpan: !0,
-    gridColumnStart: !0,
-    fontWeight: !0,
-    lineClamp: !0,
-    lineHeight: !0,
-    opacity: !0,
-    order: !0,
-    orphans: !0,
-    scale: !0,
-    tabSize: !0,
-    widows: !0,
-    zIndex: !0,
-    zoom: !0,
-    fillOpacity: !0,
-    floodOpacity: !0,
-    stopOpacity: !0,
-    strokeDasharray: !0,
-    strokeDashoffset: !0,
-    strokeMiterlimit: !0,
-    strokeOpacity: !0,
-    strokeWidth: !0
-  },
-  prefixes = ["Webkit", "ms", "Moz", "O"];
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    prefix = prefix + prop.charAt(0).toUpperCase() + prop.substring(1);
-    isUnitlessNumber[prefix] = isUnitlessNumber[prop];
-  });
+  new PropertyInfoRecord(1, attributeName.toLowerCase(), null, !0, !0);
 });
 var currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {

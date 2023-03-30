@@ -2604,8 +2604,8 @@ var canUseDOM = !!(
   typeof window.document.createElement !== "undefined"
 );
 
+// A simple string attribute.
 // Attributes that aren't in the filter are presumed to have this type.
-
 var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
 // "enumerated" attributes with "true" and "false" as possible values.
 // When true, it should be set to a "true" string.
@@ -2627,49 +2627,12 @@ var NUMERIC = 5; // An attribute that must be positive numeric or parse as a pos
 // When falsy, it should be removed.
 
 var POSITIVE_NUMERIC = 6;
-/* eslint-disable max-len */
-
-var ATTRIBUTE_NAME_START_CHAR =
-  ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
-/* eslint-enable max-len */
-
-var ATTRIBUTE_NAME_CHAR =
-  ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
-var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
-);
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
-function isAttributeNameSafe(attributeName) {
-  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
-    return true;
-  }
-
-  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
-    return false;
-  }
-
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
-    return true;
-  }
-
-  illegalAttributeNameCache[attributeName] = true;
-
-  {
-    error("Invalid attribute name: `%s`", attributeName);
-  }
-
-  return false;
-}
 function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 } // $FlowFixMe[missing-this-annot]
 
 function PropertyInfoRecord(
-  name,
   type,
-  mustUseProperty,
   attributeName,
   attributeNamespace,
   sanitizeURL,
@@ -2681,8 +2644,6 @@ function PropertyInfoRecord(
     type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -2703,9 +2664,7 @@ var properties = {}; // A few React string attributes have a different name.
     attributeName = _ref[1];
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2720,9 +2679,7 @@ var properties = {}; // A few React string attributes have a different name.
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEANISH_STRING,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2741,9 +2698,7 @@ var properties = {}; // A few React string attributes have a different name.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEANISH_STRING,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2779,32 +2734,8 @@ var properties = {}; // A few React string attributes have a different name.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEAN,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are the few React props that we set as DOM properties
-// rather than attributes. These are all booleans.
-
-[
-  "checked", // Note: `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`. We have special logic for handling this.
-  "multiple",
-  "muted",
-  "selected" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    true, // mustUseProperty
-    name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
     false
@@ -2820,9 +2751,7 @@ var properties = {}; // A few React string attributes have a different name.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     OVERLOADED_BOOLEAN,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2840,9 +2769,7 @@ var properties = {}; // A few React string attributes have a different name.
 ].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     POSITIVE_NUMERIC,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2853,9 +2780,7 @@ var properties = {}; // A few React string attributes have a different name.
 ["rowSpan", "start"].forEach(function (name) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     NUMERIC,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2953,9 +2878,7 @@ var capitalize = function (token) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     null, // attributeNamespace
     false, // sanitizeURL
@@ -2976,9 +2899,7 @@ var capitalize = function (token) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     "http://www.w3.org/1999/xlink",
     false, // sanitizeURL
@@ -2996,9 +2917,7 @@ var capitalize = function (token) {
   var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     "http://www.w3.org/XML/1998/namespace",
     false, // sanitizeURL
@@ -3011,9 +2930,7 @@ var capitalize = function (token) {
 ["tabIndex", "crossOrigin"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -3025,9 +2942,7 @@ var capitalize = function (token) {
 var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
 properties[xlinkHref] = new PropertyInfoRecord(
-  "xlinkHref",
   STRING,
-  false, // mustUseProperty
   "xlink:href",
   "http://www.w3.org/1999/xlink",
   true, // sanitizeURL
@@ -3036,9 +2951,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
 var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
 properties[formAction] = new PropertyInfoRecord(
-  "formAction",
   STRING,
-  false, // mustUseProperty
   "formaction", // attributeName
   null, // attributeNamespace
   true, // sanitizeURL
@@ -3047,15 +2960,49 @@ properties[formAction] = new PropertyInfoRecord(
 ["src", "href", "action"].forEach(function (attributeName) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     true, // sanitizeURL
     true
   );
 });
+
+/* eslint-disable max-len */
+
+var ATTRIBUTE_NAME_START_CHAR =
+  ":A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD";
+/* eslint-enable max-len */
+
+var ATTRIBUTE_NAME_CHAR =
+  ATTRIBUTE_NAME_START_CHAR + "\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040";
+var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
+  "^[" + ATTRIBUTE_NAME_START_CHAR + "][" + ATTRIBUTE_NAME_CHAR + "]*$"
+);
+var illegalAttributeNameCache = {};
+var validatedAttributeNameCache = {};
+function isAttributeNameSafe(attributeName) {
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
+    return true;
+  }
+
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
+    return false;
+  }
+
+  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
+    validatedAttributeNameCache[attributeName] = true;
+    return true;
+  }
+
+  illegalAttributeNameCache[attributeName] = true;
+
+  {
+    error("Invalid attribute name: `%s`", attributeName);
+  }
+
+  return false;
+}
 
 // and any newline or tab are filtered out as if they're not part of the URL.
 // https://url.spec.whatwg.org/#url-parsing
@@ -3095,11 +3042,6 @@ function sanitizeURL(url) {
 
 function getValueForProperty(node, name, expected, propertyInfo) {
   {
-    if (propertyInfo.mustUseProperty) {
-      var propertyName = propertyInfo.propertyName;
-      return node[propertyName];
-    }
-
     var attributeName = propertyInfo.attributeName;
 
     if (!node.hasAttribute(attributeName)) {
@@ -3378,169 +3320,146 @@ function getValueForAttributeOnCustomComponent(node, name, expected) {
  * @param {*} value
  */
 
-function setValueForProperty(node, name, value) {
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out reserved words.
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
+function setValueForProperty(node, propertyInfo, value) {
+  var attributeName = propertyInfo.attributeName;
+
+  if (value === null) {
+    node.removeAttribute(attributeName);
     return;
-  }
+  } // shouldRemoveAttribute
 
-  var propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo !== null) {
-    if (propertyInfo.mustUseProperty) {
-      // We assume mustUseProperty are of BOOLEAN type because that's the only way we use it
-      // right now.
-      node[propertyInfo.propertyName] =
-        value && typeof value !== "function" && typeof value !== "symbol";
-      return;
-    } // The rest are treated as attributes with special cases.
-
-    var attributeName = propertyInfo.attributeName;
-
-    if (value === null) {
+  switch (typeof value) {
+    case "undefined":
+    case "function":
+    case "symbol":
+      // eslint-disable-line
       node.removeAttribute(attributeName);
       return;
-    } // shouldRemoveAttribute
 
-    switch (typeof value) {
-      case "undefined":
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        node.removeAttribute(attributeName);
-        return;
-
-      case "boolean": {
-        if (!propertyInfo.acceptsBooleans) {
-          node.removeAttribute(attributeName);
-          return;
-        }
-      }
-    }
-
-    {
-      if (propertyInfo.removeEmptyString && value === "") {
-        {
-          if (name === "src") {
-            error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                "This may cause the browser to download the whole page again over the network. " +
-                "To fix this, either do not render the element at all " +
-                "or pass null to %s instead of an empty string.",
-              name,
-              name
-            );
-          } else {
-            error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                "To fix this, either do not render the element at all " +
-                "or pass null to %s instead of an empty string.",
-              name,
-              name
-            );
-          }
-        }
-
+    case "boolean": {
+      if (!propertyInfo.acceptsBooleans) {
         node.removeAttribute(attributeName);
         return;
       }
     }
+  }
 
-    switch (propertyInfo.type) {
-      case BOOLEAN:
-        if (value) {
-          node.setAttribute(attributeName, "");
+  {
+    if (propertyInfo.removeEmptyString && value === "") {
+      {
+        if (attributeName === "src") {
+          error(
+            'An empty string ("") was passed to the %s attribute. ' +
+              "This may cause the browser to download the whole page again over the network. " +
+              "To fix this, either do not render the element at all " +
+              "or pass null to %s instead of an empty string.",
+            attributeName,
+            attributeName
+          );
         } else {
-          node.removeAttribute(attributeName);
-          return;
+          error(
+            'An empty string ("") was passed to the %s attribute. ' +
+              "To fix this, either do not render the element at all " +
+              "or pass null to %s instead of an empty string.",
+            attributeName,
+            attributeName
+          );
         }
+      }
 
-        break;
+      node.removeAttribute(attributeName);
+      return;
+    }
+  }
 
-      case OVERLOADED_BOOLEAN:
-        if (value === true) {
-          node.setAttribute(attributeName, "");
-        } else if (value === false) {
-          node.removeAttribute(attributeName);
-        } else {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          node.setAttribute(attributeName, value);
-        }
-
+  switch (propertyInfo.type) {
+    case BOOLEAN:
+      if (value) {
+        node.setAttribute(attributeName, "");
+      } else {
+        node.removeAttribute(attributeName);
         return;
+      }
 
-      case NUMERIC:
-        if (!isNaN(value)) {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
+      break;
 
-          node.setAttribute(attributeName, value);
-        } else {
-          node.removeAttribute(attributeName);
-        }
-
-        break;
-
-      case POSITIVE_NUMERIC:
-        if (!isNaN(value) && value >= 1) {
-          {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-
-          node.setAttribute(attributeName, value);
-        } else {
-          node.removeAttribute(attributeName);
-        }
-
-        break;
-
-      default: {
+    case OVERLOADED_BOOLEAN:
+      if (value === true) {
+        node.setAttribute(attributeName, "");
+      } else if (value === false) {
+        node.removeAttribute(attributeName);
+      } else {
         {
           checkAttributeStringCoercion(value, attributeName);
         }
 
-        var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
+        node.setAttribute(attributeName, value);
+      }
 
-        if (enableTrustedTypesIntegration) {
-          if (propertyInfo.sanitizeURL) {
-            attributeValue = sanitizeURL(value);
-          } else {
-            attributeValue = value;
-          }
-        } else {
-          // We have already verified this above.
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          attributeValue = "" + value;
+      return;
 
-          if (propertyInfo.sanitizeURL) {
-            attributeValue = sanitizeURL(attributeValue);
-          }
+    case NUMERIC:
+      if (!isNaN(value)) {
+        {
+          checkAttributeStringCoercion(value, attributeName);
         }
 
-        var attributeNamespace = propertyInfo.attributeNamespace;
+        node.setAttribute(attributeName, value);
+      } else {
+        node.removeAttribute(attributeName);
+      }
 
-        if (attributeNamespace) {
-          node.setAttributeNS(
-            attributeNamespace,
-            attributeName,
-            attributeValue
-          );
+      break;
+
+    case POSITIVE_NUMERIC:
+      if (!isNaN(value) && value >= 1) {
+        {
+          checkAttributeStringCoercion(value, attributeName);
+        }
+
+        node.setAttribute(attributeName, value);
+      } else {
+        node.removeAttribute(attributeName);
+      }
+
+      break;
+
+    default: {
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+
+      if (enableTrustedTypesIntegration) {
+        if (propertyInfo.sanitizeURL) {
+          attributeValue = sanitizeURL(value);
         } else {
-          node.setAttribute(attributeName, attributeValue);
+          attributeValue = value;
+        }
+      } else {
+        // We have already verified this above.
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        attributeValue = "" + value;
+
+        if (propertyInfo.sanitizeURL) {
+          attributeValue = sanitizeURL(attributeValue);
         }
       }
+
+      var attributeNamespace = propertyInfo.attributeNamespace;
+
+      if (attributeNamespace) {
+        node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
+      } else {
+        node.setAttribute(attributeName, attributeValue);
+      }
     }
-  } else if (isAttributeNameSafe(name)) {
+  }
+}
+function setValueForAttribute(node, name, value) {
+  if (isAttributeNameSafe(name)) {
     // If the prop isn't in the special list, treat it as a simple attribute.
     // shouldRemoveAttribute
     if (value === null) {
@@ -5696,76 +5615,88 @@ function warnValidStyle(name, value) {
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-var isUnitlessNumber = {
-  animationIterationCount: true,
-  aspectRatio: true,
-  borderImageOutset: true,
-  borderImageSlice: true,
-  borderImageWidth: true,
-  boxFlex: true,
-  boxFlexGroup: true,
-  boxOrdinalGroup: true,
-  columnCount: true,
-  columns: true,
-  flex: true,
-  flexGrow: true,
-  flexPositive: true,
-  flexShrink: true,
-  flexNegative: true,
-  flexOrder: true,
-  gridArea: true,
-  gridRow: true,
-  gridRowEnd: true,
-  gridRowSpan: true,
-  gridRowStart: true,
-  gridColumn: true,
-  gridColumnEnd: true,
-  gridColumnSpan: true,
-  gridColumnStart: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  scale: true,
-  tabSize: true,
-  widows: true,
-  zIndex: true,
-  zoom: true,
-  // SVG-related properties
-  fillOpacity: true,
-  floodOpacity: true,
-  stopOpacity: true,
-  strokeDasharray: true,
-  strokeDashoffset: true,
-  strokeMiterlimit: true,
-  strokeOpacity: true,
-  strokeWidth: true
-};
-/**
- * @param {string} prefix vendor-specific prefix, eg: Webkit
- * @param {string} key style name, eg: transitionDuration
- * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
- * WebkitTransitionDuration
- */
+function isUnitlessNumber(name) {
+  switch (name) {
+    case "animationIterationCount":
+    case "aspectRatio":
+    case "borderImageOutset":
+    case "borderImageSlice":
+    case "borderImageWidth":
+    case "boxFlex":
+    case "boxFlexGroup":
+    case "boxOrdinalGroup":
+    case "columnCount":
+    case "columns":
+    case "flex":
+    case "flexGrow":
+    case "flexPositive":
+    case "flexShrink":
+    case "flexNegative":
+    case "flexOrder":
+    case "gridArea":
+    case "gridRow":
+    case "gridRowEnd":
+    case "gridRowSpan":
+    case "gridRowStart":
+    case "gridColumn":
+    case "gridColumnEnd":
+    case "gridColumnSpan":
+    case "gridColumnStart":
+    case "fontWeight":
+    case "lineClamp":
+    case "lineHeight":
+    case "opacity":
+    case "order":
+    case "orphans":
+    case "scale":
+    case "tabSize":
+    case "widows":
+    case "zIndex":
+    case "zoom":
+    case "fillOpacity": // SVG-related properties
 
-function prefixKey(prefix, key) {
-  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
+    case "floodOpacity":
+    case "stopOpacity":
+    case "strokeDasharray":
+    case "strokeDashoffset":
+    case "strokeMiterlimit":
+    case "strokeOpacity":
+    case "strokeWidth":
+    case "MozAnimationIterationCount": // Known Prefixed Properties
+
+    case "MozBoxFlex": // TODO: Remove these since they shouldn't be used in modern code
+
+    case "MozBoxFlexGroup":
+    case "MozLineClamp":
+    case "msAnimationIterationCount":
+    case "msFlex":
+    case "msZoom":
+    case "msFlexGrow":
+    case "msFlexNegative":
+    case "msFlexOrder":
+    case "msFlexPositive":
+    case "msFlexShrink":
+    case "msGridColumn":
+    case "msGridColumnSpan":
+    case "msGridRow":
+    case "msGridRowSpan":
+    case "WebkitAnimationIterationCount":
+    case "WebkitBoxFlex":
+    case "WebKitBoxFlexGroup":
+    case "WebkitBoxOrdinalGroup":
+    case "WebkitColumnCount":
+    case "WebkitColumns":
+    case "WebkitFlex":
+    case "WebkitFlexGrow":
+    case "WebkitFlexPositive":
+    case "WebkitFlexShrink":
+    case "WebkitLineClamp":
+      return true;
+
+    default:
+      return false;
+  }
 }
-/**
- * Support style names that may come passed in prefixed by adding permutations
- * of vendor prefixes.
- */
-
-var prefixes = ["Webkit", "ms", "Moz", "O"]; // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
-// infinite loop, because it iterates over the newly added props too.
-
-Object.keys(isUnitlessNumber).forEach(function (prop) {
-  prefixes.forEach(function (prefix) {
-    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
-  });
-});
 
 /**
  * Operations for dealing with CSS properties.
@@ -5803,10 +5734,7 @@ function createDangerousStringForStyles(styles) {
           if (
             typeof value === "number" &&
             value !== 0 &&
-            !(
-              isUnitlessNumber.hasOwnProperty(styleName) &&
-              isUnitlessNumber[styleName]
-            )
+            !isUnitlessNumber(styleName)
           ) {
             serialized +=
               delimiter + hyphenateStyleName(styleName) + ":" + value + "px";
@@ -5868,10 +5796,7 @@ function setValueForStyles(node, styles) {
     } else if (
       typeof value === "number" &&
       value !== 0 &&
-      !(
-        isUnitlessNumber.hasOwnProperty(styleName) &&
-        isUnitlessNumber[styleName]
-      )
+      !isUnitlessNumber(styleName)
     ) {
       style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
     } else {
@@ -6868,75 +6793,104 @@ function validateProperty(tagName, name, value, eventRegistry) {
         }
     }
 
-    if (typeof value === "boolean") {
-      var prefix = name.toLowerCase().slice(0, 5);
-      var acceptsBooleans =
-        propertyInfo !== null
-          ? propertyInfo.acceptsBooleans
-          : prefix === "data-" || prefix === "aria-";
+    switch (typeof value) {
+      case "boolean": {
+        switch (name) {
+          case "checked":
+          case "selected":
+          case "multiple":
+          case "muted": {
+            // Boolean properties can accept boolean values
+            return true;
+          }
 
-      if (!acceptsBooleans) {
-        if (value) {
-          error(
-            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-              "If you want to write it to the DOM, pass a string instead: " +
-              '%s="%s" or %s={value.toString()}.',
-            value,
-            name,
-            name,
-            value,
-            name
-          );
-        } else {
-          error(
-            "Received `%s` for a non-boolean attribute `%s`.\n\n" +
-              "If you want to write it to the DOM, pass a string instead: " +
-              '%s="%s" or %s={value.toString()}.\n\n' +
-              "If you used to conditionally omit it with %s={condition && value}, " +
-              "pass %s={condition ? value : undefined} instead.",
-            value,
-            name,
-            name,
-            value,
-            name,
-            name,
-            name
-          );
+          default: {
+            if (propertyInfo === null) {
+              var prefix = name.toLowerCase().slice(0, 5);
+
+              if (prefix === "data-" || prefix === "aria-") {
+                return true;
+              }
+            } else if (propertyInfo.acceptsBooleans) {
+              return true;
+            }
+
+            if (value) {
+              error(
+                "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+                  "If you want to write it to the DOM, pass a string instead: " +
+                  '%s="%s" or %s={value.toString()}.',
+                value,
+                name,
+                name,
+                value,
+                name
+              );
+            } else {
+              error(
+                "Received `%s` for a non-boolean attribute `%s`.\n\n" +
+                  "If you want to write it to the DOM, pass a string instead: " +
+                  '%s="%s" or %s={value.toString()}.\n\n' +
+                  "If you used to conditionally omit it with %s={condition && value}, " +
+                  "pass %s={condition ? value : undefined} instead.",
+                value,
+                name,
+                name,
+                value,
+                name,
+                name,
+                name
+              );
+            }
+
+            warnedProperties[name] = true;
+            return true;
+          }
         }
       }
 
-      warnedProperties[name] = true;
-      return true;
-    } // Warn when a known attribute is a bad type
-
-    switch (typeof value) {
       case "function":
       case "symbol":
         // eslint-disable-line
+        // Warn when a known attribute is a bad type
         warnedProperties[name] = true;
         return false;
-    } // Warn when passing the strings 'false' or 'true' into a boolean prop
 
-    if (
-      (value === "false" || value === "true") &&
-      propertyInfo !== null &&
-      propertyInfo.type === BOOLEAN
-    ) {
-      error(
-        "Received the string `%s` for the boolean attribute `%s`. " +
-          "%s " +
-          "Did you mean %s={%s}?",
-        value,
-        name,
-        value === "false"
-          ? "The browser will interpret it as a truthy value."
-          : 'Although this works, it will not work as expected if you pass the string "false".',
-        name,
-        value
-      );
+      case "string": {
+        // Warn when passing the strings 'false' or 'true' into a boolean prop
+        if (value === "false" || value === "true") {
+          switch (name) {
+            case "checked":
+            case "selected":
+            case "multiple":
+            case "muted": {
+              break;
+            }
 
-      warnedProperties[name] = true;
-      return true;
+            default: {
+              if (propertyInfo === null || propertyInfo.type !== BOOLEAN) {
+                return true;
+              }
+            }
+          }
+
+          error(
+            "Received the string `%s` for the boolean attribute `%s`. " +
+              "%s " +
+              "Did you mean %s={%s}?",
+            value,
+            name,
+            value === "false"
+              ? "The browser will interpret it as a truthy value."
+              : 'Although this works, it will not work as expected if you pass the string "false".',
+            name,
+            value
+          );
+
+          warnedProperties[name] = true;
+          return true;
+        }
+      }
     }
 
     return true;
@@ -34310,7 +34264,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-525beb63";
+var ReactVersion = "18.3.0-www-modern-180be3ae";
 
 function createPortal$1(
   children,
@@ -39852,6 +39806,20 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
 
       break;
     }
+    // Note: `option.selected` is not updated if `select.multiple` is
+    // disabled with `removeAttribute`. We have special logic for handling this.
+
+    case "multiple": {
+      domElement.multiple =
+        value && typeof value !== "function" && typeof value !== "symbol";
+      break;
+    }
+
+    case "muted": {
+      domElement.muted =
+        value && typeof value !== "function" && typeof value !== "symbol";
+      break;
+    }
 
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
@@ -39889,7 +39857,23 @@ function setProp(domElement, tag, key, value, isCustomComponentTag, props) {
         if (isCustomComponentTag) {
           setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          setValueForProperty(domElement, key, value);
+          if (
+            // shouldIgnoreAttribute
+            // We have already filtered out reserved words.
+            key.length > 2 &&
+            (key[0] === "o" || key[0] === "O") &&
+            (key[1] === "n" || key[1] === "N")
+          ) {
+            return;
+          }
+
+          var propertyInfo = getPropertyInfo(key);
+
+          if (propertyInfo !== null) {
+            setValueForProperty(domElement, propertyInfo, value);
+          } else {
+            setValueForAttribute(domElement, key, value);
+          }
         }
       }
     }
@@ -40188,7 +40172,20 @@ function setInitialProperties(domElement, tag, props) {
           continue;
         }
 
-        setProp(domElement, tag, _propKey3, _propValue3, false, props);
+        switch (_propKey3) {
+          case "selected": {
+            // TODO: Remove support for selected on option.
+            domElement.selected =
+              _propValue3 &&
+              typeof _propValue3 !== "function" &&
+              typeof _propValue3 !== "symbol";
+            break;
+          }
+
+          default: {
+            setProp(domElement, tag, _propKey3, _propValue3, false, props);
+          }
+        }
       }
 
       postMountWrapper$2(domElement, props);
@@ -40555,6 +40552,30 @@ function updateProperties(
       return;
     }
 
+    case "option": {
+      for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
+        var _propKey8 = updatePayload[_i3];
+        var _propValue8 = updatePayload[_i3 + 1];
+
+        switch (_propKey8) {
+          case "selected": {
+            // TODO: Remove support for selected on option.
+            domElement.selected =
+              _propValue8 &&
+              typeof _propValue8 !== "function" &&
+              typeof _propValue8 !== "symbol";
+            break;
+          }
+
+          default: {
+            setProp(domElement, tag, _propKey8, _propValue8, false, nextProps);
+          }
+        }
+      }
+
+      return;
+    }
+
     case "img":
     case "link":
     case "area":
@@ -40571,14 +40592,14 @@ function updateProperties(
     case "wbr":
     case "menuitem": {
       // Void elements
-      for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
-        var _propKey8 = updatePayload[_i3];
-        var _propValue8 = updatePayload[_i3 + 1];
+      for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
+        var _propKey9 = updatePayload[_i4];
+        var _propValue9 = updatePayload[_i4 + 1];
 
-        switch (_propKey8) {
+        switch (_propKey9) {
           case "children":
           case "dangerouslySetInnerHTML": {
-            if (_propValue8 != null) {
+            if (_propValue9 != null) {
               // TODO: Can we make this a DEV warning to avoid this deny list?
               throw new Error(
                 tag +
@@ -40593,7 +40614,7 @@ function updateProperties(
 
           default: {
             // TODO: If the `is` prop is specified, this should go through the isCustomComponentTag flow.
-            setProp(domElement, tag, _propKey8, _propValue8, false, nextProps);
+            setProp(domElement, tag, _propKey9, _propValue9, false, nextProps);
           }
         }
       }
@@ -40605,14 +40626,14 @@ function updateProperties(
 
   var isCustomComponentTag = isCustomComponent(tag, nextProps); // Apply the diff.
 
-  for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
-    var _propKey9 = updatePayload[_i4];
-    var _propValue9 = updatePayload[_i4 + 1];
+  for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
+    var _propKey10 = updatePayload[_i5];
+    var _propValue10 = updatePayload[_i5 + 1];
     setProp(
       domElement,
       tag,
-      _propKey9,
-      _propValue9,
+      _propKey10,
+      _propValue10,
       isCustomComponentTag,
       nextProps
     );
@@ -40826,7 +40847,28 @@ function diffHydratedGenericElement(
         extraAttributeNames.delete(propKey);
         diffHydratedStyles(domElement, nextProp);
         continue;
-      // eslint-disable-next-line no-fallthrough
+
+      case "multiple": {
+        extraAttributeNames.delete(propKey);
+        var _serverValue = domElement.multiple;
+
+        if (nextProp !== _serverValue) {
+          warnForPropDifference("multiple", _serverValue, nextProp);
+        }
+
+        continue;
+      }
+
+      case "muted": {
+        extraAttributeNames.delete(propKey);
+        var _serverValue2 = domElement.muted;
+
+        if (nextProp !== _serverValue2) {
+          warnForPropDifference("muted", _serverValue2, nextProp);
+        }
+
+        continue;
+      }
 
       default:
         if (
@@ -41023,8 +41065,8 @@ function diffHydratedProperties(
     var extraAttributeNames = new Set();
     var attributes = domElement.attributes;
 
-    for (var _i5 = 0; _i5 < attributes.length; _i5++) {
-      var name = attributes[_i5].name.toLowerCase();
+    for (var _i6 = 0; _i6 < attributes.length; _i6++) {
+      var name = attributes[_i6].name.toLowerCase();
 
       switch (name) {
         // Controlled attributes are not validated
@@ -41041,7 +41083,7 @@ function diffHydratedProperties(
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributeNames.add(attributes[_i5].name);
+          extraAttributeNames.add(attributes[_i6].name);
       }
     }
 
