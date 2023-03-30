@@ -38,7 +38,7 @@ function createAnonId(): string {
  */
 export function addFunction(
   registry: ShapeRegistry,
-  properties: Iterable<[string, BuiltInType | null]>,
+  properties: Iterable<[string, BuiltInType | PolyType]>,
   fn: FunctionSignature
 ): FunctionType {
   const shapeId = createAnonId();
@@ -58,7 +58,7 @@ export function addFunction(
 export function addObject(
   registry: ShapeRegistry,
   id: string | null,
-  properties: Iterable<[string, BuiltInType | null]>
+  properties: Iterable<[string, BuiltInType | PolyType]>
 ): ObjectType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, null);
@@ -71,7 +71,7 @@ export function addObject(
 function addShape(
   registry: ShapeRegistry,
   id: string,
-  properties: Iterable<[string, BuiltInType | null]>,
+  properties: Iterable<[string, BuiltInType | PolyType]>,
   functionType: FunctionSignature | null
 ): ObjectShape {
   const shape: ObjectShape = {
@@ -110,7 +110,7 @@ export type FunctionSignature = {
  * are both represented by {@link ObjectShape.functionType}.
  */
 export type ObjectShape = {
-  properties: Map<string, BuiltInType | null>;
+  properties: Map<string, BuiltInType | PolyType>;
   functionType: FunctionSignature | null;
 };
 

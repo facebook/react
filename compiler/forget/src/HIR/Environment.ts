@@ -8,6 +8,7 @@ import {
   IdentifierId,
   makeIdentifierId,
   ObjectType,
+  PolyType,
   ValueKind,
 } from "./HIR";
 import { Hook } from "./Hooks";
@@ -84,7 +85,7 @@ export class Environment {
   getPropertyType(
     receiver: ObjectType | FunctionType,
     property: string
-  ): BuiltInType | null {
+  ): BuiltInType | PolyType | null {
     const { shapeId } = receiver;
     if (shapeId !== null) {
       // If an object or function has a shapeId, it must have been assigned

@@ -236,6 +236,11 @@ class Unifier {
   }
 
   bindVariableTo(v: TypeVar, type: Type): void {
+    if (type.kind === "Poly") {
+      //  Ignore PolyType, since we don't support polymorphic types correctly.
+      return;
+    }
+
     if (this.substitutions.has(v.id)) {
       this.unify(this.substitutions.get(v.id)!, type);
       return;
