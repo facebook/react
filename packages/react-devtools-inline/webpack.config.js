@@ -45,8 +45,9 @@ module.exports = {
     path: __dirname + '/dist',
     filename: '[name].js',
     chunkFilename: '[name].chunk.js',
-    library: '[name]',
-    libraryTarget: 'commonjs2',
+    library: {
+      type: 'commonjs2',
+    }
   },
   externals: {
     react: 'react',
@@ -56,9 +57,7 @@ module.exports = {
     scheduler: 'scheduler',
   },
   node: {
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
+    global: false,
   },
   resolve: {
     alias: {
@@ -75,6 +74,7 @@ module.exports = {
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      'process.env.BABEL_TYPES_8_BREAKING': false,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-inline"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,

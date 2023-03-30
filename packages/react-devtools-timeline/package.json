@@ -23,9 +23,9 @@
     "style-loader": "^1.2.1",
     "url-loader": "^4.1.0",
     "vercel": "^20.1.0",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0",
-    "worker-loader": "^3.0.2"
+    "webpack": "^5.76.3",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.13.1",
+    "workerize-loader": "^2.0.2"
   }
 }
