@@ -770,6 +770,13 @@ export function diffProperties(
           }
           break;
         }
+        case 'is':
+          if (__DEV__) {
+            console.error(
+              'Cannot update the "is" prop after it has been initialized.',
+            );
+          }
+        // eslint-disable-next-line no-fallthrough
         default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
         }
@@ -954,8 +961,6 @@ export function updateProperties(
     }
   }
 
-  // TODO: Handle wasCustomComponentTag. Changing "is" isn't valid.
-  // const wasCustomComponentTag = isCustomComponent(tag, lastProps);
   const isCustomComponentTag = isCustomComponent(tag, nextProps);
   // Apply the diff.
   for (let i = 0; i < updatePayload.length; i += 2) {
