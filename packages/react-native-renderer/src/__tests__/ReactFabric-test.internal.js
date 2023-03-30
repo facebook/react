@@ -12,6 +12,7 @@
 
 let React;
 let ReactFabric;
+let ReactNativePrivateInterface;
 let createReactNativeComponentClass;
 let StrictMode;
 let act;
@@ -39,6 +40,7 @@ describe('ReactFabric', () => {
     React = require('react');
     StrictMode = React.StrictMode;
     ReactFabric = require('react-native-renderer/fabric');
+    ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
     createReactNativeComponentClass =
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
@@ -1034,5 +1036,63 @@ describe('ReactFabric', () => {
 
     const node = getNodeFromPublicInstance(viewRef);
     expect(node).toBe(expectedShadowNode);
+  });
+
+  it('getPublicInstanceFromInternalInstanceHandle should provide public instances for HostComponent', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let viewRef;
+    await act(() => {
+      ReactFabric.render(
+        <View
+          foo="test"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        1,
+      );
+    });
+
+    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    expect(internalInstanceHandle).toEqual(expect.any(Object));
+
+    const publicInstance = ReactFabric.getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle);
+    expect(publicInstance).toBe(viewRef);
+  });
+
+  it('getPublicInstanceFromInternalInstanceHandle should provide public instances for HostText', async () => {
+    jest.spyOn(ReactNativePrivateInterface, 'createPublicTextInstance');
+
+    const RCTText = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    await act(() => {
+      ReactFabric.render(
+        <RCTText>Text content</RCTText>,
+        1,
+      );
+    });
+
+    // Access the internal instance handle used to create the text node.
+    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    expect(internalInstanceHandle).toEqual(expect.any(Object));
+
+    // Text public instances should be created lazily.
+    expect(ReactNativePrivateInterface.createPublicTextInstance).not.toHaveBeenCalled();
+
+    const publicInstance = ReactFabric.getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle);
+
+    // We just requested the text public instance, so it should have been created at this point.
+    expect(ReactNativePrivateInterface.createPublicTextInstance).toHaveBeenCalledTimes(1);
+    expect(ReactNativePrivateInterface.createPublicTextInstance).toHaveBeenCalledWith(internalInstanceHandle);
+
+    const expectedPublicInstance = ReactNativePrivateInterface.createPublicTextInstance.mock.results[0].value;
+    expect(publicInstance).toBe(expectedPublicInstance);
   });
 });
