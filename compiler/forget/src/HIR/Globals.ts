@@ -7,6 +7,13 @@
 
 import { Effect, ValueKind } from "./HIR";
 import { Hook } from "./Hooks";
+import {
+  addFunction,
+  addObject,
+  BuiltInArrayId,
+  BUILTIN_SHAPES,
+  ShapeRegistry,
+} from "./ObjectShape";
 import { BuiltInType, HookType, PolyType } from "./Types";
 
 /**
@@ -17,16 +24,19 @@ import { BuiltInType, HookType, PolyType } from "./Types";
  * (i.e. read vs mutate) in source programs.
  */
 
+/**
+ * ShapeRegistry with default definitions for builtins and global objects.
+ */
+export const DEFAULT_SHAPES: ShapeRegistry = new Map(BUILTIN_SHAPES);
+
 // Hack until we add ObjectShapes for all globals
 const UNTYPED_GLOBALS: Set<string> = new Set([
   "String",
   "Object",
   "Function",
-  "Array",
   "Number",
   "RegExp",
   "Date",
-  "Math",
   "Error",
   "Function",
   "TypeError",
@@ -62,6 +72,65 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
   "encodeURIComponent",
   "decodeURIComponent",
 ]);
+
+const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
+  [
+    "Array",
+    addObject(DEFAULT_SHAPES, "Array", [
+      [
+        "isArray",
+        // Array.isArray(value)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Read],
+          restParam: null,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "from",
+        // Array.from(arrayLike, optionalFn, optionalThis)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [Effect.Mutate],
+          restParam: Effect.Read,
+          returnType: { kind: "Object", shapeId: BuiltInArrayId },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "of",
+        // Array.of(element0, ..., elementN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Object", shapeId: BuiltInArrayId },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+    ]),
+  ],
+  [
+    "Math",
+    addObject(DEFAULT_SHAPES, "Math", [
+      // Static properties (TODO)
+      ["PI", { kind: "Primitive" }],
+      // Static methods (TODO)
+      [
+        "max",
+        // Math.max(value0, ..., valueN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+    ]),
+  ],
+  ["Infinity", { kind: "Primitive" }],
+  ["NaN", { kind: "Primitive" }],
+  // TODO: rest of Global objects
+];
 
 const BUILTIN_HOOKS: Array<[string, Hook]> = [
   [
@@ -122,3 +191,13 @@ for (const name of UNTYPED_GLOBALS) {
     kind: "Poly",
   });
 }
+
+for (const [name, type_] of TYPED_GLOBALS) {
+  DEFAULT_GLOBALS.set(name, type_);
+}
+
+// Recursive global type
+DEFAULT_GLOBALS.set(
+  "globalThis",
+  addObject(DEFAULT_SHAPES, "globalThis", TYPED_GLOBALS)
+);

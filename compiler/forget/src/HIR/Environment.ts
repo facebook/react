@@ -1,6 +1,11 @@
 import invariant from "invariant";
 import { log } from "../Utils/logger";
-import { DEFAULT_GLOBALS, Global, GlobalRegistry } from "./Globals";
+import {
+  DEFAULT_GLOBALS,
+  DEFAULT_SHAPES,
+  Global,
+  GlobalRegistry,
+} from "./Globals";
 import {
   BuiltInType,
   Effect,
@@ -12,11 +17,7 @@ import {
   ValueKind,
 } from "./HIR";
 import { Hook } from "./Hooks";
-import {
-  BUILTIN_SHAPES,
-  FunctionSignature,
-  ShapeRegistry,
-} from "./ObjectShape";
+import { FunctionSignature, ShapeRegistry } from "./ObjectShape";
 
 const HOOK_PATTERN = /^_?use/;
 
@@ -38,7 +39,7 @@ export class Environment {
   #nextIdentifer: number = 0;
 
   constructor(config: EnvironmentConfig | null) {
-    this.#shapes = BUILTIN_SHAPES;
+    this.#shapes = DEFAULT_SHAPES;
 
     if (config?.customHooks) {
       this.#globals = new Map(DEFAULT_GLOBALS);

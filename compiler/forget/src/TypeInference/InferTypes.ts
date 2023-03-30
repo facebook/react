@@ -137,10 +137,7 @@ function* generateInstructionTypes(
     case "LoadGlobal": {
       const globalType = env.getGlobalDeclaration(value.name);
       if (globalType) {
-        if (globalType.kind === "Hook") {
-          yield equation(left, globalType);
-        }
-        // TODO(mofeiZ): add type inference for other globals
+        yield equation(left, globalType);
       }
       break;
     }
