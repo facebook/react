@@ -666,18 +666,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // We're now full hydrated.
-
-          if (
-            gate(
-              flags =>
-                flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-            )
-          ) {
-            expect(clicks).toBe(0);
-          } else {
-            expect(clicks).toBe(1);
-          }
-
+          expect(clicks).toBe(0);
           document.body.removeChild(parentContainer);
         });
 
