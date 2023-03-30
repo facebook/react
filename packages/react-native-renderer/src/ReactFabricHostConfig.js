@@ -14,13 +14,16 @@ import {
   DefaultEventPriority,
   DiscreteEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import {HostText} from 'react-reconciler/src/ReactWorkTags';
 
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
   deepFreezeAndThrowOnMutationInDev,
   createPublicInstance,
+  createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
+  type PublicTextInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -67,7 +70,13 @@ export type Instance = {
     publicInstance: PublicInstance,
   },
 };
-export type TextInstance = {node: Node, ...};
+export type TextInstance = {
+  // Reference to the shadow node.
+  node: Node,
+  // Text instances are never cloned, so we don't need to keep a "canonical"
+  // reference to make sure all clones of the instance point to the same values.
+  publicInstance?: PublicTextInstance,
+};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
@@ -243,9 +252,26 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
   return null;
 }
 
+function getPublicTextInstance(
+  textInstance: TextInstance,
+  internalInstanceHandle: InternalInstanceHandle,
+): PublicTextInstance {
+  if (textInstance.publicInstance == null) {
+    textInstance.publicInstance = createPublicTextInstance(
+      internalInstanceHandle,
+    );
+  }
+  return textInstance.publicInstance;
+}
+
 export function getPublicInstanceFromInternalInstanceHandle(
   internalInstanceHandle: InternalInstanceHandle,
-): null | PublicInstance {
+): null | PublicInstance | PublicTextInstance {
+  if (internalInstanceHandle.tag === HostText) {
+    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    return getPublicTextInstance(textInstance, internalInstanceHandle);
+  }
+
   const instance: Instance = internalInstanceHandle.stateNode;
   return getPublicInstance(instance);
 }
