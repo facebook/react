@@ -292,15 +292,6 @@ let moduleLocal = false;
   62 |
   63 |   function component(a) {
   64 |     // Add support for function declarations once we support `var` hoisting.
-
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle FunctionDeclaration statements
-  61 |   moduleLocal = true;
-  62 |
-> 63 |   function component(a) {
-     |   ^
-  64 |     // Add support for function declarations once we support `var` hoisting.
-  65 |     function t() {}
-  66 |     t();
 ```
           
       

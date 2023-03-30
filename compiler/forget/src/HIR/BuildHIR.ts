@@ -678,6 +678,42 @@ function lowerStatement(
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
     }
+    case "FunctionDeclaration": {
+      const stmt = stmtPath as NodePath<t.FunctionDeclaration>;
+      stmt.skip();
+      invariant(
+        stmt.get("id").type === "Identifier",
+        "function declarations must have a name"
+      );
+      const id = stmt.get("id") as NodePath<t.Identifier>;
+
+      // Desugar FunctionDeclaration to FunctionExpression.
+      //
+      // For example:
+      //   function foo() {};
+      // becomes
+      //   let foo = function foo() {};
+      const desugared = stmt.replaceWith(
+        t.variableDeclaration("let", [
+          t.variableDeclarator(
+            id.node,
+            t.functionExpression(
+              id.node,
+              stmt.node.params,
+              stmt.node.body,
+              stmt.node.generator,
+              stmt.node.async
+            )
+          ),
+        ])
+      );
+      invariant(
+        desugared.length === 1,
+        "only one declaration is created from desugaring function declaration"
+      );
+      lowerStatement(builder, desugared.at(0)!);
+      return;
+    }
     case "ForOfStatement":
     case "ForInStatement":
     case "ClassDeclaration":
@@ -697,7 +733,6 @@ function lowerStatement(
     case "ExportAllDeclaration":
     case "ExportDefaultDeclaration":
     case "ExportNamedDeclaration":
-    case "FunctionDeclaration":
     case "ImportDeclaration":
     case "InterfaceDeclaration":
     case "OpaqueType":
