@@ -16,8 +16,6 @@ let ReactNativePrivateInterface;
 let createReactNativeComponentClass;
 let StrictMode;
 let act;
-let getNativeTagFromPublicInstance;
-let getNodeFromPublicInstance;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -44,11 +42,6 @@ describe('ReactFabric', () => {
     createReactNativeComponentClass =
       require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
         .ReactNativeViewConfigRegistry.register;
-    getNativeTagFromPublicInstance =
-      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNativeTagFromPublicInstance;
-    getNodeFromPublicInstance =
-      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').getNodeFromPublicInstance;
-
     act = require('internal-test-utils').act;
   });
 
@@ -939,7 +932,7 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
-    expect(match).toBe(getNativeTagFromPublicInstance(child));
+    expect(match).toBe(ReactNativePrivateInterface.getNativeTagFromPublicInstance(child));
   });
 
   it('findNodeHandle should warn if passed a component that is inside StrictMode', async () => {
@@ -976,7 +969,7 @@ describe('ReactFabric', () => {
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
-    expect(match).toBe(getNativeTagFromPublicInstance(child));
+    expect(match).toBe(ReactNativePrivateInterface.getNativeTagFromPublicInstance(child));
   });
 
   it('should no-op if calling sendAccessibilityEvent on unmounted refs', async () => {
@@ -1030,11 +1023,14 @@ describe('ReactFabric', () => {
       );
     });
 
+    const internalInstanceHandle = nativeFabricUIManager.createNode.mock.calls[0][4];
+    expect(internalInstanceHandle).toEqual(expect.any(Object));
+
     const expectedShadowNode =
       nativeFabricUIManager.createNode.mock.results[0].value;
     expect(expectedShadowNode).toEqual(expect.any(Object));
 
-    const node = getNodeFromPublicInstance(viewRef);
+    const node = ReactFabric.getNodeFromInternalInstanceHandle(internalInstanceHandle);
     expect(node).toBe(expectedShadowNode);
   });
 
