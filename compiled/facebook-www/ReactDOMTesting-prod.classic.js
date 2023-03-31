@@ -27,7 +27,6 @@ var Scheduler = require("scheduler"),
     dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
@@ -10318,13 +10317,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
     captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error);
   else
-    for (
-      nearestMountedAncestor = skipUnmountedBoundaries
-        ? nearestMountedAncestor
-        : sourceFiber.return;
-      null !== nearestMountedAncestor;
-
-    ) {
+    for (; null !== nearestMountedAncestor; ) {
       if (3 === nearestMountedAncestor.tag) {
         captureCommitPhaseErrorOnRoot(
           nearestMountedAncestor,
@@ -12926,7 +12919,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1636 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-8643ce3a",
+  version: "18.3.0-www-classic-3566099f",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2182 = {
@@ -12956,7 +12949,7 @@ var internals$jscomp$inline_2182 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-8643ce3a"
+  reconcilerVersion: "18.3.0-www-classic-3566099f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2183 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16830,4 +16823,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-8643ce3a";
+exports.version = "18.3.0-www-classic-3566099f";

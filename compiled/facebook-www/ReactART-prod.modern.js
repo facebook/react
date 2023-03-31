@@ -66,7 +66,6 @@ var ReactSharedInternals =
   revertRemovalOfSiblingPrerendering =
     dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
@@ -8694,13 +8693,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
     captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error);
   else
-    for (
-      nearestMountedAncestor = skipUnmountedBoundaries
-        ? nearestMountedAncestor
-        : sourceFiber.return;
-      null !== nearestMountedAncestor;
-
-    ) {
+    for (; null !== nearestMountedAncestor; ) {
       if (3 === nearestMountedAncestor.tag) {
         captureCommitPhaseErrorOnRoot(
           nearestMountedAncestor,
@@ -9688,7 +9681,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-b8a2f36f",
+    version: "18.3.0-www-modern-5592667d",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1304 = {
@@ -9719,7 +9712,7 @@ var internals$jscomp$inline_1304 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b8a2f36f"
+  reconcilerVersion: "18.3.0-www-modern-5592667d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1305 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

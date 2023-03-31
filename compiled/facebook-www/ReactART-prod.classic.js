@@ -66,7 +66,6 @@ var ReactSharedInternals =
   revertRemovalOfSiblingPrerendering =
     dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
@@ -8962,13 +8961,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
     captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error);
   else
-    for (
-      nearestMountedAncestor = skipUnmountedBoundaries
-        ? nearestMountedAncestor
-        : sourceFiber.return;
-      null !== nearestMountedAncestor;
-
-    ) {
+    for (; null !== nearestMountedAncestor; ) {
       if (3 === nearestMountedAncestor.tag) {
         captureCommitPhaseErrorOnRoot(
           nearestMountedAncestor,
@@ -10023,7 +10016,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-942a9e22",
+    version: "18.3.0-www-classic-0c778728",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1324 = {
@@ -10054,7 +10047,7 @@ var internals$jscomp$inline_1324 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-942a9e22"
+  reconcilerVersion: "18.3.0-www-classic-0c778728"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1325 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

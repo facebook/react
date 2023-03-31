@@ -252,7 +252,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  skipUnmountedBoundaries = dynamicFeatureFlags.skipUnmountedBoundaries,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
@@ -31627,13 +31626,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error$1) {
     return;
   }
 
-  var fiber = null;
-
-  if (skipUnmountedBoundaries) {
-    fiber = nearestMountedAncestor;
-  } else {
-    fiber = sourceFiber.return;
-  }
+  var fiber = nearestMountedAncestor;
 
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
@@ -31666,14 +31659,9 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error$1) {
   }
 
   {
-    // TODO: Until we re-land skipUnmountedBoundaries (see #20147), this warning
-    // will fire for errors that are thrown by destroy functions inside deleted
-    // trees. What it should instead do is propagate the error to the parent of
-    // the deleted tree. In the meantime, do not add this warning to the
-    // allowlist; this is only for our internal use.
     error(
       "Internal React error: Attempted to capture a commit phase error " +
-        "inside a detached tree. This indicates a bug in React. Likely " +
+        "inside a detached tree. This indicates a bug in React. Potential " +
         "causes include deleting the same fiber more than once, committing an " +
         "already-finished tree, or an inconsistent return pointer.\n\n" +
         "Error message:\n\n%s",
@@ -33600,7 +33588,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-b8a2f36f";
+var ReactVersion = "18.3.0-www-modern-5592667d";
 
 function createPortal$1(
   children,
