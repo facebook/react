@@ -7543,8 +7543,8 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (2 === workInProgressSuspendedReason && root === currentTime) ||
-    (null !== root.cancelPendingCommit && 0 === (suspendedLanes & 42))
+    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
   )
     return (
       null !== pingedLanes &&
@@ -7707,10 +7707,12 @@ function requestUpdateLane(fiber) {
   return 0 !== fiber ? fiber : 32;
 }
 function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
-  2 === workInProgressSuspendedReason &&
-    root === workInProgressRoot &&
-    (prepareFreshStack(root, 0),
-    markRootSuspended(root, workInProgressRootRenderLanes));
+  if (
+    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
+  )
+    prepareFreshStack(root, 0),
+      markRootSuspended(root, workInProgressRootRenderLanes);
   markRootUpdated(root, lane, eventTime);
   if (0 === (executionContext & 2) || root !== workInProgressRoot) {
     if (
@@ -9721,7 +9723,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-53d54e9c",
+    version: "18.3.0-www-modern-15f5d624",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1322 = {
@@ -9752,7 +9754,7 @@ var internals$jscomp$inline_1322 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-53d54e9c"
+  reconcilerVersion: "18.3.0-www-modern-15f5d624"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1323 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

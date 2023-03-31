@@ -9840,8 +9840,8 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (2 === workInProgressSuspendedReason && root === currentTime) ||
-    (null !== root.cancelPendingCommit && 0 === (suspendedLanes & 42))
+    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
   )
     return (
       null !== pingedLanes &&
@@ -10016,10 +10016,12 @@ function requestUpdateLane(fiber) {
   return fiber;
 }
 function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
-  2 === workInProgressSuspendedReason &&
-    root === workInProgressRoot &&
-    (prepareFreshStack(root, 0),
-    markRootSuspended(root, workInProgressRootRenderLanes));
+  if (
+    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
+  )
+    prepareFreshStack(root, 0),
+      markRootSuspended(root, workInProgressRootRenderLanes);
   markRootUpdated(root, lane, eventTime);
   if (0 === (executionContext & 2) || root !== workInProgressRoot) {
     isDevToolsPresent && addFiberToLanesMap(root, fiber, lane);
@@ -16251,7 +16253,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1847 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7959f3f4",
+  version: "18.3.0-www-modern-ee95a7ff",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16296,7 +16298,7 @@ var devToolsConfig$jscomp$inline_1847 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7959f3f4"
+  reconcilerVersion: "18.3.0-www-modern-ee95a7ff"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16452,7 +16454,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-7959f3f4";
+exports.version = "18.3.0-www-modern-ee95a7ff";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
