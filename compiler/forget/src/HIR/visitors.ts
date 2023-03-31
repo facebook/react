@@ -174,6 +174,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "NextIterableOf": {
+      yield instrValue.value;
+      break;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
@@ -431,6 +435,10 @@ export function mapInstructionOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
+    case "NextIterableOf": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
@@ -638,6 +646,19 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "for-of": {
+      const init = fn(terminal.init);
+      const loop = fn(terminal.loop);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "for-of",
+        loc: terminal.loc,
+        init,
+        loop,
+        fallthrough,
+        id: makeInstructionId(0),
+      };
+    }
     case "unsupported": {
       return terminal;
     }
@@ -701,6 +722,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.init;
       break;
     }
+    case "for-of": {
+      yield terminal.init;
+      break;
+    }
     case "unsupported":
       break;
     default: {
@@ -748,6 +773,7 @@ export function mapTerminalOperands(
     case "do-while":
     case "while":
     case "for":
+    case "for-of":
     case "goto":
     case "unsupported": {
       // no-op
@@ -795,6 +821,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "do-while":
     case "while":
     case "for":
+    case "for-of":
     case "goto":
     case "unsupported": {
       // no-op

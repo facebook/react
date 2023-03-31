@@ -234,6 +234,14 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       writer.writeLine("}");
       break;
     }
+    case "for-of": {
+      writer.writeLine(`[${terminal.id}] for-of (`);
+      printReactiveValue(writer, terminal.init);
+      writer.writeLine(") {");
+      printReactiveInstructions(writer, terminal.loop);
+      writer.writeLine("}");
+      break;
+    }
     case "throw": {
       writer.writeLine(`[${terminal.id}] throw ${printPlace(terminal.value)}`);
       break;

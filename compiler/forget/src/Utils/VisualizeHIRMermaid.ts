@@ -121,6 +121,9 @@ function printTerminalLabel(terminal: Terminal): string {
     case "for":
       buffer.push("For");
       break;
+    case "for-of":
+      buffer.push("ForOf");
+      break;
     case "unsupported": {
       break;
     }
@@ -205,6 +208,11 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
       buffer.push(printJumpArrow(blockId, terminal.update, "update"));
       buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
       buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
+      break;
+    }
+    case "for-of": {
+      buffer.push(printJumpArrow(blockId, terminal.init, "init"));
+      buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
       break;
     }
     case "throw":

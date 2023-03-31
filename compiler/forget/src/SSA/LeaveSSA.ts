@@ -190,7 +190,7 @@ export function leaveSSA(fn: HIRFunction): void {
               originalLVal === undefined ||
               originalLVal.lvalue === value.lvalue
             ) {
-              if (originalLVal === undefined && block.kind !== "block") {
+              if (originalLVal === undefined && block.kind === "value") {
                 CompilerError.invariant(
                   `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
                   place.loc
@@ -294,7 +294,8 @@ export function leaveSSA(fn: HIRFunction): void {
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
         terminal.kind === "while" ||
-        terminal.kind === "for") &&
+        terminal.kind === "for" ||
+        terminal.kind === "for-of") &&
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
@@ -307,7 +308,7 @@ export function leaveSSA(fn: HIRFunction): void {
       const loop = fn.body.blocks.get(terminal.loop)!;
       pushPhis(loop);
     }
-    if (terminal.kind === "for") {
+    if (terminal.kind === "for" || terminal.kind === "for-of") {
       const init = fn.body.blocks.get(terminal.init)!;
       pushPhis(init);
 
@@ -333,8 +334,10 @@ export function leaveSSA(fn: HIRFunction): void {
         }
       }
 
-      const update = fn.body.blocks.get(terminal.update)!;
-      pushPhis(update);
+      if (terminal.kind === "for") {
+        const update = fn.body.blocks.get(terminal.update)!;
+        pushPhis(update);
+      }
     }
     if (
       terminal.kind === "logical" ||

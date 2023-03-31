@@ -37,7 +37,11 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 
   graphql`\\t\n`;
 
-  for (const c of [1, 2]) {
+  for (c of [1, 2]) {
+  }
+  for ([v] of [[1], [2]]) {
+  }
+  for ({ v } of [{ v: 1 }, { v: 2 }]) {
   }
 
   for (let x in { a: 1 }) {
@@ -191,107 +195,125 @@ let moduleLocal = false;
 > 34 |   graphql`\\t\n`;
      |   ^^^^^^^^^^^^^^
   35 |
-  36 |   for (const c of [1, 2]) {
+  36 |   for (c of [1, 2]) {
   37 |   }
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForOfStatement statements
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement
   34 |   graphql`\\t\n`;
   35 |
-> 36 |   for (const c of [1, 2]) {
-     |   ^
+> 36 |   for (c of [1, 2]) {
+     |        ^
   37 |   }
-  38 |
-  39 |   for (let x in { a: 1 }) {
+  38 |   for ([v] of [[1], [2]]) {
+  39 |   }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement
+  36 |   for (c of [1, 2]) {
+  37 |   }
+> 38 |   for ([v] of [[1], [2]]) {
+     |        ^^^
+  39 |   }
+  40 |   for ({ v } of [{ v: 1 }, { v: 2 }]) {
+  41 |   }
+
+[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement
+  38 |   for ([v] of [[1], [2]]) {
+  39 |   }
+> 40 |   for ({ v } of [{ v: 1 }, { v: 2 }]) {
+     |        ^^^^^
+  41 |   }
+  42 |
+  43 |   for (let x in { a: 1 }) {
 
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForInStatement statements
-  37 |   }
-  38 |
-> 39 |   for (let x in { a: 1 }) {
+  41 |   }
+  42 |
+> 43 |   for (let x in { a: 1 }) {
      |   ^
-  40 |   }
-  41 |
-  42 |   let updateIdentifier = 0;
+  44 |   }
+  45 |
+  46 |   let updateIdentifier = 0;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  41 |
-  42 |   let updateIdentifier = 0;
-> 43 |   --updateIdentifier;
+  45 |
+  46 |   let updateIdentifier = 0;
+> 47 |   --updateIdentifier;
      |   ^^^^^^^^^^^^^^^^^^
-  44 |   ++updateIdentifier;
-  45 |   updateIdentifier.y++;
-  46 |   updateIdentifier.y--;
+  48 |   ++updateIdentifier;
+  49 |   updateIdentifier.y++;
+  50 |   updateIdentifier.y--;
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  42 |   let updateIdentifier = 0;
-  43 |   --updateIdentifier;
-> 44 |   ++updateIdentifier;
+  46 |   let updateIdentifier = 0;
+  47 |   --updateIdentifier;
+> 48 |   ++updateIdentifier;
      |   ^^^^^^^^^^^^^^^^^^
-  45 |   updateIdentifier.y++;
-  46 |   updateIdentifier.y--;
-  47 |
+  49 |   updateIdentifier.y++;
+  50 |   updateIdentifier.y--;
+  51 |
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  43 |   --updateIdentifier;
-  44 |   ++updateIdentifier;
-> 45 |   updateIdentifier.y++;
+  47 |   --updateIdentifier;
+  48 |   ++updateIdentifier;
+> 49 |   updateIdentifier.y++;
      |   ^^^^^^^^^^^^^^^^^^^^
-  46 |   updateIdentifier.y--;
-  47 |
-  48 |   switch (i) {
+  50 |   updateIdentifier.y--;
+  51 |
+  52 |   switch (i) {
 
 [ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  44 |   ++updateIdentifier;
-  45 |   updateIdentifier.y++;
-> 46 |   updateIdentifier.y--;
+  48 |   ++updateIdentifier;
+  49 |   updateIdentifier.y++;
+> 50 |   updateIdentifier.y--;
      |   ^^^^^^^^^^^^^^^^^^^^
-  47 |
-  48 |   switch (i) {
-  49 |     case 1 + 1: {
+  51 |
+  52 |   switch (i) {
+  53 |     case 1 + 1: {
 
 [ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered
-  51 |     case foo(): {
-  52 |     }
-> 53 |     case x.y: {
-     |          ^^^
-  54 |     }
-  55 |     default: {
+  55 |     case foo(): {
   56 |     }
+> 57 |     case x.y: {
+     |          ^^^
+  58 |     }
+  59 |     default: {
+  60 |     }
 
 [ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered
-  49 |     case 1 + 1: {
-  50 |     }
-> 51 |     case foo(): {
-     |          ^^^^^
-  52 |     }
-  53 |     case x.y: {
+  53 |     case 1 + 1: {
   54 |     }
+> 55 |     case foo(): {
+     |          ^^^^^
+  56 |     }
+  57 |     case x.y: {
+  58 |     }
 
 [ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered
-  47 |
-  48 |   switch (i) {
-> 49 |     case 1 + 1: {
+  51 |
+  52 |   switch (i) {
+> 53 |     case 1 + 1: {
      |          ^^^^^
-  50 |     }
-  51 |     case foo(): {
-  52 |     }
+  54 |     }
+  55 |     case foo(): {
+  56 |     }
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  58 |
-  59 |   // Cannot assign to globals
-> 60 |   someUnknownGlobal = true;
+  62 |
+  63 |   // Cannot assign to globals
+> 64 |   someUnknownGlobal = true;
      |   ^^^^^^^^^^^^^^^^^
-  61 |   moduleLocal = true;
-  62 |
-  63 |   function component(a) {
+  65 |   moduleLocal = true;
+  66 |
+  67 |   function component(a) {
 
 [ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  59 |   // Cannot assign to globals
-  60 |   someUnknownGlobal = true;
-> 61 |   moduleLocal = true;
+  63 |   // Cannot assign to globals
+  64 |   someUnknownGlobal = true;
+> 65 |   moduleLocal = true;
      |   ^^^^^^^^^^^
-  62 |
-  63 |   function component(a) {
-  64 |     // Add support for function declarations once we support `var` hoisting.
+  66 |
+  67 |   function component(a) {
+  68 |     // Add support for function declarations once we support `var` hoisting.
 ```
           
       

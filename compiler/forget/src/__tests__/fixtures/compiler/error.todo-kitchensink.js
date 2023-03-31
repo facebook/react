@@ -33,7 +33,11 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
 
   graphql`\\t\n`;
 
-  for (const c of [1, 2]) {
+  for (c of [1, 2]) {
+  }
+  for ([v] of [[1], [2]]) {
+  }
+  for ({ v } of [{ v: 1 }, { v: 2 }]) {
   }
 
   for (let x in { a: 1 }) {

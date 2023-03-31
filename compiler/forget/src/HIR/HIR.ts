@@ -134,6 +134,7 @@ export type ReactiveTerminal =
   | ReactiveDoWhileTerminal
   | ReactiveWhileTerminal
   | ReactiveForTerminal
+  | ReactiveForOfTerminal
   | ReactiveIfTerminal;
 
 export type ReactiveBreakTerminal = {
@@ -184,6 +185,12 @@ export type ReactiveForTerminal = {
   init: ReactiveValue;
   test: ReactiveValue;
   update: ReactiveValue;
+  loop: ReactiveBlock;
+  id: InstructionId;
+};
+export type ReactiveForOfTerminal = {
+  kind: "for-of";
+  init: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
 };
@@ -257,6 +264,7 @@ export type Terminal =
   | BranchTerminal
   | SwitchTerminal
   | ForTerminal
+  | ForOfTerminal
   | DoWhileTerminal
   | WhileTerminal
   | LogicalTerminal
@@ -340,6 +348,15 @@ export type ForTerminal = {
   init: BlockId;
   test: BlockId;
   update: BlockId;
+  loop: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+};
+
+export type ForOfTerminal = {
+  kind: "for-of";
+  loc: SourceLocation;
+  init: BlockId;
   loop: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -636,6 +653,11 @@ export type InstructionValue =
   | {
       kind: "Await";
       value: Place;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "NextIterableOf";
+      value: Place; // the collection
       loc: SourceLocation;
     }
   /**

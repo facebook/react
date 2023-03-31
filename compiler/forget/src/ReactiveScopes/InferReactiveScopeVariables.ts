@@ -233,7 +233,8 @@ function mayAllocate(value: InstructionValue): boolean {
     case "JSXText":
     case "UnaryExpression":
     case "TemplateLiteral":
-    case "Primitive": {
+    case "Primitive":
+    case "NextIterableOf": {
       return false;
     }
     case "RegExpLiteral":

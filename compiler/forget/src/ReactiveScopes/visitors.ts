@@ -112,6 +112,11 @@ export class ReactiveFunctionVisitor<TState = void> {
         this.visitBlock(terminal.loop, state);
         break;
       }
+      case "for-of": {
+        this.visitValue(terminal.id, terminal.init, state);
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
       case "do-while": {
         this.visitBlock(terminal.loop, state);
         this.visitValue(terminal.id, terminal.test, state);
@@ -321,6 +326,10 @@ export function mapTerminalBlocks(
       break;
     }
     case "for": {
+      terminal.loop = fn(terminal.loop);
+      break;
+    }
+    case "for-of": {
       terminal.loop = fn(terminal.loop);
       break;
     }

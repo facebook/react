@@ -310,6 +310,66 @@ function codegenTerminal(
         codegenBlock(cx, terminal.loop)
       );
     }
+    case "for-of": {
+      if (terminal.init.kind !== "SequenceExpression") {
+        CompilerError.invariant(
+          `Expected a sequence expression init for ForOf, got: ${terminal.init.kind}`,
+          terminal.init.loc
+        );
+      }
+      if (terminal.init.instructions.length !== 2) {
+        CompilerError.todo(
+          "Support non-trivial ForOf inits",
+          terminal.init.loc
+        );
+      }
+      const iterableCollection = terminal.init.instructions[0];
+      const iterableItem = terminal.init.instructions[1];
+      let lval: t.LVal;
+      switch (iterableItem.value.kind) {
+        case "StoreLocal": {
+          lval = codegenLValue(iterableItem.value.lvalue.place);
+          break;
+        }
+        case "Destructure": {
+          lval = codegenLValue(iterableItem.value.lvalue.pattern);
+          break;
+        }
+        default:
+          CompilerError.invariant(
+            `Expected a StoreLocal or Destructure to be assigned to the collection, got: ${iterableItem.value.kind}`,
+            iterableItem.value.loc
+          );
+      }
+      let varDeclKind: "const" | "let";
+      switch (iterableItem.value.lvalue.kind) {
+        case InstructionKind.Const:
+          varDeclKind = "const" as const;
+          break;
+        case InstructionKind.Let:
+          varDeclKind = "let" as const;
+          break;
+        case InstructionKind.Reassign:
+          CompilerError.invariant(
+            "Destructure should never be Reassign as it would be an Object/ArrayPattern",
+            iterableItem.loc
+          );
+        default:
+          assertExhaustive(
+            iterableItem.value.lvalue.kind,
+            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
+          );
+      }
+      return t.forOfStatement(
+        // Special handling here since we only want the VariableDeclarators without any inits
+        // This needs to be updated when we handle non-trivial ForOf inits
+        createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+          t.variableDeclarator(lval, null),
+        ]),
+        codegenInstructionValue(cx, iterableCollection.value),
+        codegenBlock(cx, terminal.loop)
+      );
+    }
     case "if": {
       return t.ifStatement(
         codegenPlace(cx, terminal.test),
@@ -921,6 +981,10 @@ function codegenInstructionValue(
     }
     case "Await": {
       value = t.awaitExpression(codegenPlace(cx, instrValue.value));
+      break;
+    }
+    case "NextIterableOf": {
+      value = codegenPlace(cx, instrValue.value);
       break;
     }
     case "DeclareLocal":

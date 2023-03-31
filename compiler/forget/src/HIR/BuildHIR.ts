@@ -712,7 +712,83 @@ function lowerStatement(
       lowerStatement(builder, desugared.at(0)!);
       return;
     }
-    case "ForOfStatement":
+    case "ForOfStatement": {
+      const stmt = stmtPath as NodePath<t.ForOfStatement>;
+      const continuationBlock = builder.reserve("block");
+      const initBlock = builder.reserve("loop");
+
+      const loopBlock = builder.enter("block", (_blockId) => {
+        return builder.loop(label, initBlock.id, continuationBlock.id, () => {
+          lowerStatement(builder, stmt.get("body"));
+          return {
+            kind: "goto",
+            block: initBlock.id,
+            variant: GotoVariant.Continue,
+            id: makeInstructionId(0),
+          };
+        });
+      });
+
+      const loc = stmt.node.loc ?? GeneratedSource;
+      const value = lowerExpressionToTemporary(builder, stmt.get("right"));
+      builder.terminateWithContinuation(
+        {
+          kind: "for-of",
+          loc,
+          init: initBlock.id,
+          loop: loopBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+        },
+        initBlock
+      );
+
+      // The init of a ForOf statement is compound over a left (VariableDeclaration | LVal) and
+      // right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
+      // instructions when we handle other syntax like Patterns)
+      const left = stmt.get("left");
+      const leftLoc = left.node.loc ?? GeneratedSource;
+      let test: Place;
+      if (left.isVariableDeclaration()) {
+        const declarations = left.get("declarations");
+        invariant(
+          declarations.length === 1,
+          `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`
+        );
+        const id = declarations[0].get("id");
+        const nextIterableOf = lowerValueToTemporary(builder, {
+          kind: "NextIterableOf",
+          loc: leftLoc,
+          value,
+        });
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Let,
+          id,
+          nextIterableOf
+        );
+        test = lowerValueToTemporary(builder, assign);
+      } else {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
+          severity: ErrorSeverity.Todo,
+          nodePath: left,
+        });
+        return;
+      }
+      builder.terminateWithContinuation(
+        {
+          id: makeInstructionId(0),
+          kind: "branch",
+          test,
+          consequent: loopBlock,
+          alternate: continuationBlock.id,
+        },
+        continuationBlock
+      );
+      return;
+    }
     case "ForInStatement":
     case "ClassDeclaration":
     case "DebuggerStatement":

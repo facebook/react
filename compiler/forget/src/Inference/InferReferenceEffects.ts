@@ -874,6 +874,12 @@ function inferBlock(
         }
         continue;
       }
+      case "NextIterableOf": {
+        effectKind = Effect.Capture;
+        lvalueEffect = Effect.Store;
+        valueKind = ValueKind.Mutable;
+        break;
+      }
       default: {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }

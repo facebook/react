@@ -91,7 +91,8 @@ export function printMixedHIR(
     case "for":
     case "unsupported":
     case "goto":
-    case "do-while": {
+    case "do-while":
+    case "for-of": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -206,6 +207,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "for": {
       value = `[${terminal.id}] For init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} update=bb${terminal.update} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "for-of": {
+      value = `[${terminal.id}] ForOf init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "unsupported": {
@@ -450,6 +455,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "Await": {
       value = `Await ${printPlace(instrValue.value)}`;
+      break;
+    }
+    case "NextIterableOf": {
+      value = `NextIterableOf ${printPlace(instrValue.value)}`;
       break;
     }
     default: {

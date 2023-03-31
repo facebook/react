@@ -379,6 +379,13 @@ function visit(context: Context, block: ReactiveBlock): void {
             });
             break;
           }
+          case "for-of": {
+            visitReactiveValue(context, terminal.id, terminal.init);
+            context.enterConditional(() => {
+              visit(context, terminal.loop);
+            });
+            break;
+          }
           case "do-while": {
             visit(context, terminal.loop);
             context.enterConditional(() => {

@@ -202,6 +202,7 @@ function* generateInstructionTypes(
     case "TaggedTemplateExpression":
     case "TemplateLiteral":
     case "Await":
+    case "NextIterableOf":
     case "UnsupportedNode":
       break;
     default:
