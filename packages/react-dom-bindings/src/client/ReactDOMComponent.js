@@ -264,25 +264,10 @@ function setProp(
   tag: string,
   key: string,
   value: mixed,
-  isCustomElementTag: boolean,
   props: any,
 ): void {
   switch (key) {
     case 'style': {
-      if (value != null && typeof value !== 'object') {
-        throw new Error(
-          'The `style` prop expects a mapping from style properties to values, ' +
-            "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-            'using JSX.',
-        );
-      }
-      if (__DEV__) {
-        if (value) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(value);
-        }
-      }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
       setValueForStyles(domElement, value);
       break;
@@ -385,38 +370,122 @@ function setProp(
       }
     // eslint-disable-next-line no-fallthrough
     default: {
+      if (
+        key.length > 2 &&
+        (key[0] === 'o' || key[0] === 'O') &&
+        (key[1] === 'n' || key[1] === 'N')
+      ) {
+        if (
+          __DEV__ &&
+          registrationNameDependencies.hasOwnProperty(key) &&
+          value != null &&
+          typeof value !== 'function'
+        ) {
+          warnForInvalidEventListener(key, value);
+        }
+      } else {
+        const propertyInfo = getPropertyInfo(key);
+        if (propertyInfo !== null) {
+          setValueForProperty(domElement, propertyInfo, value);
+        } else {
+          setValueForAttribute(domElement, key, value);
+        }
+      }
+    }
+  }
+}
+
+function setPropOnCustomElement(
+  domElement: Element,
+  tag: string,
+  key: string,
+  value: mixed,
+  props: any,
+): void {
+  switch (key) {
+    case 'style': {
+      // Relies on `updateStylesByID` not mutating `styleUpdates`.
+      setValueForStyles(domElement, value);
+      break;
+    }
+    case 'dangerouslySetInnerHTML': {
+      if (value != null) {
+        if (typeof value !== 'object' || !('__html' in value)) {
+          throw new Error(
+            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'for more information.',
+          );
+        }
+        const nextHtml: any = value.__html;
+        if (nextHtml != null) {
+          if (props.children != null) {
+            throw new Error(
+              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+            );
+          }
+          if (disableIEWorkarounds) {
+            domElement.innerHTML = nextHtml;
+          } else {
+            setInnerHTML(domElement, nextHtml);
+          }
+        }
+      }
+      break;
+    }
+    case 'children': {
+      if (typeof value === 'string') {
+        setTextContent(domElement, value);
+      } else if (typeof value === 'number') {
+        setTextContent(domElement, '' + value);
+      }
+      break;
+    }
+    case 'onScroll': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scroll', domElement);
+      }
+      break;
+    }
+    case 'onClick': {
+      // TODO: This cast may not be sound for SVG, MathML or custom elements.
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
+      }
+      break;
+    }
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'innerHTML': {
+      // Noop
+      break;
+    }
+    case 'innerText': // Properties
+    case 'textContent':
+      if (enableCustomElementPropertySupport) {
+        break;
+      }
+    // eslint-disable-next-line no-fallthrough
+    default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
         if (__DEV__ && value != null && typeof value !== 'function') {
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (isCustomElementTag) {
-          if (enableCustomElementPropertySupport) {
-            setValueForPropertyOnCustomComponent(domElement, key, value);
-          } else {
-            if (typeof value === 'boolean') {
-              // Special case before the new flag is on
-              value = '' + (value: any);
-            }
-            setValueForAttribute(domElement, key, value);
-          }
+        if (enableCustomElementPropertySupport) {
+          setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          if (
-            // shouldIgnoreAttribute
-            // We have already filtered out reserved words.
-            key.length > 2 &&
-            (key[0] === 'o' || key[0] === 'O') &&
-            (key[1] === 'n' || key[1] === 'N')
-          ) {
-            return;
+          if (typeof value === 'boolean') {
+            // Special case before the new flag is on
+            value = '' + (value: any);
           }
-
-          const propertyInfo = getPropertyInfo(key);
-          if (propertyInfo !== null) {
-            setValueForProperty(domElement, propertyInfo, value);
-          } else {
-            setValueForAttribute(domElement, key, value);
-          }
+          setValueForAttribute(domElement, key, value);
         }
       }
     }
@@ -475,7 +544,7 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       }
@@ -505,7 +574,7 @@ export function setInitialProperties(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       }
@@ -545,7 +614,7 @@ export function setInitialProperties(
           }
           // defaultValue is ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       }
@@ -575,7 +644,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       }
@@ -657,7 +726,7 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       }
@@ -665,16 +734,28 @@ export function setInitialProperties(
     }
   }
 
-  const isCustomElementTag = isCustomElement(tag, props);
-  for (const propKey in props) {
-    if (!props.hasOwnProperty(propKey)) {
-      continue;
+  if (isCustomElement(tag, props)) {
+    for (const propKey in props) {
+      if (!props.hasOwnProperty(propKey)) {
+        continue;
+      }
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      setPropOnCustomElement(domElement, tag, propKey, propValue, props);
     }
-    const propValue = props[propKey];
-    if (propValue == null) {
-      continue;
+  } else {
+    for (const propKey in props) {
+      if (!props.hasOwnProperty(propKey)) {
+        continue;
+      }
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      setProp(domElement, tag, propKey, propValue, props);
     }
-    setProp(domElement, tag, propKey, propValue, isCustomElementTag, props);
   }
 }
 
@@ -837,7 +918,7 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       }
@@ -858,7 +939,7 @@ export function updateProperties(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       }
@@ -891,7 +972,7 @@ export function updateProperties(
           }
           // defaultValue is ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       }
@@ -912,7 +993,7 @@ export function updateProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       }
@@ -951,7 +1032,7 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       }
@@ -959,12 +1040,19 @@ export function updateProperties(
     }
   }
 
-  const isCustomElementTag = isCustomElement(tag, nextProps);
   // Apply the diff.
-  for (let i = 0; i < updatePayload.length; i += 2) {
-    const propKey = updatePayload[i];
-    const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, isCustomElementTag, nextProps);
+  if (isCustomElement(tag, nextProps)) {
+    for (let i = 0; i < updatePayload.length; i += 2) {
+      const propKey = updatePayload[i];
+      const propValue = updatePayload[i + 1];
+      setPropOnCustomElement(domElement, tag, propKey, propValue, nextProps);
+    }
+  } else {
+    for (let i = 0; i < updatePayload.length; i += 2) {
+      const propKey = updatePayload[i];
+      const propValue = updatePayload[i + 1];
+      setProp(domElement, tag, propKey, propValue, nextProps);
+    }
   }
 }
 

@@ -72,6 +72,21 @@ export function createDangerousStringForStyles(styles) {
  * @param {object} styles
  */
 export function setValueForStyles(node, styles) {
+  if (styles != null && typeof styles !== 'object') {
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
+  }
+  if (__DEV__) {
+    if (styles) {
+      // Freeze the next style object so that we can assume it won't be
+      // mutated. We have already warned for this in the past.
+      Object.freeze(styles);
+    }
+  }
+
   const style = node.style;
   for (const styleName in styles) {
     if (!styles.hasOwnProperty(styleName)) {
