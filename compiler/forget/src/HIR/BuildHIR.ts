@@ -1680,9 +1680,11 @@ function lowerExpression(
 }
 
 /**
- * There are a few places where we do not preserve original evaluation ordering, such as switch case test values
- * and default values in destructuring (assignment patterns). In these cases we allow simple expressions whose
- * evaluation cannot be observed: primitives and arrays/objects whose values are also safely reorderable.
+ * There are a few places where we do not preserve original evaluation ordering and/or control flow, such as
+ * switch case test values and default values in destructuring (assignment patterns). In these cases we allow
+ * simple expressions whose evaluation cannot be observed:
+ *  - primitives
+ *  - arrays/objects whose values are also safely reorderable.
  */
 function lowerReorderableExpression(
   builder: HIRBuilder,
@@ -1864,21 +1866,28 @@ function lowerMemberExpression(
         },
       };
     }
-    if (t.isOptionalMemberExpression(expr)) {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerMemberExpression) Handle computed OptionalMemberExpression`,
-        severity: ErrorSeverity.Todo,
-        nodePath: expr,
-      });
+    let optional;
+    let property: Place;
+
+    // See "PropertyLoad" for the difference between optionalMemberExpr()
+    // and node.optional here
+    if (expr.isOptionalMemberExpression()) {
+      // if expr is in an optional chain, evaluation of `property` is
+      // conditional on whether expr is nullish
+      property = lowerReorderableExpression(builder, propertyNode);
+      optional = expr.node.optional ?? false;
+    } else {
+      property = lowerExpressionToTemporary(builder, propertyNode);
+      optional = false;
     }
-    const propertyPlace = lowerExpressionToTemporary(builder, propertyNode);
     const value: InstructionValue = {
       kind: "ComputedLoad",
       object: { ...object },
-      property: { ...propertyPlace },
+      property: { ...property },
       loc: exprLoc,
+      optional,
     };
-    return { object, property: propertyPlace, value };
+    return { object, property, value };
   }
 }
 

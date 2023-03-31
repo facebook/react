@@ -795,11 +795,18 @@ function codegenInstructionValue(
       break;
     }
     case "ComputedLoad": {
-      value = t.memberExpression(
-        codegenPlace(cx, instrValue.object),
-        codegenPlace(cx, instrValue.property),
-        true
-      );
+      const object = codegenPlace(cx, instrValue.object);
+      const property = codegenPlace(cx, instrValue.property);
+      if (t.isOptionalMemberExpression(object) || instrValue.optional) {
+        value = t.optionalMemberExpression(
+          object,
+          property,
+          true,
+          instrValue.optional
+        );
+      } else {
+        value = t.memberExpression(object, property, true, instrValue.optional);
+      }
       break;
     }
     case "ComputedDelete": {

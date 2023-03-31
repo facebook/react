@@ -160,7 +160,7 @@ function evaluateInstruction(
           loc: value.loc,
           property: property.value,
           object: value.object,
-          optional: false,
+          optional: value.optional,
         };
         // Future-proofing: when we add support for optional computed properties,
         // we'll need to copy the value here

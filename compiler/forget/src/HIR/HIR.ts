@@ -609,6 +609,7 @@ export type InstructionValue =
       kind: "ComputedLoad";
       object: Place;
       property: Place;
+      optional: boolean;
       loc: SourceLocation;
     }
   // `delete object[property]`

@@ -367,9 +367,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "ComputedLoad": {
-      value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
-      )}]`;
+      value = `ComputedLoad ${printPlace(instrValue.object)}${
+        instrValue.optional ? "?" : ""
+      }[${printPlace(instrValue.property)}]`;
       break;
     }
     case "ComputedStore": {
