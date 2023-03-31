@@ -23,6 +23,7 @@ export const enableLazyContextPropagation = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const enableCustomElementPropertySupport = __VARIANT__;
+export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
