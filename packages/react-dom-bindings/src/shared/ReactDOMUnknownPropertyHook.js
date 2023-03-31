@@ -184,10 +184,11 @@ function validateProperty(tagName, name, value, eventRegistry) {
     switch (typeof value) {
       case 'boolean': {
         switch (name) {
+          case 'autoFocus':
           case 'checked':
-          case 'selected':
           case 'multiple':
-          case 'muted': {
+          case 'muted':
+          case 'selected': {
             // Boolean properties can accept boolean values
             return true;
           }

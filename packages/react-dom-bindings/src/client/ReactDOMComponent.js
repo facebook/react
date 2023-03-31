@@ -1258,6 +1258,14 @@ function diffHydratedGenericElement(
         }
         continue;
       }
+      case 'autoFocus': {
+        extraAttributeNames.delete('autofocus');
+        const serverValue = (domElement: any).autofocus;
+        if (nextProp !== serverValue) {
+          warnForPropDifference('autoFocus', serverValue, nextProp);
+        }
+        continue;
+      }
       default:
         if (
           // shouldIgnoreAttribute

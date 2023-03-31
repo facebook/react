@@ -131,9 +131,6 @@ const properties: {[string]: $FlowFixMe} = {};
 [
   'allowFullScreen',
   'async',
-  // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  'autoFocus',
   'autoPlay',
   'controls',
   'default',

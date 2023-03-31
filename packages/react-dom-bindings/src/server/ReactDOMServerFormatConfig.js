@@ -638,9 +638,10 @@ function pushAttribute(
     case 'suppressHydrationWarning':
       // Ignored. These are built-in to React on the client.
       return;
+    case 'autoFocus':
     case 'multiple':
     case 'muted':
-      pushBooleanAttribute(target, name, value);
+      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
   }
   if (
