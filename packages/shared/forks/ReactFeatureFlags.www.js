@@ -25,7 +25,6 @@ export const {
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
 } = dynamicFeatureFlags;

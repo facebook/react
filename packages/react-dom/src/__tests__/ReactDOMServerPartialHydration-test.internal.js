@@ -2392,18 +2392,9 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(clicks).toBe(0);
-      expect(container.textContent).toBe('Click meHello');
-    } else {
-      expect(clicks).toBe(1);
-      expect(container.textContent).toBe('Hello');
-    }
+    expect(clicks).toBe(0);
+    expect(container.textContent).toBe('Click meHello');
+
     document.body.removeChild(container);
   });
 
@@ -2484,16 +2475,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(onEvent).toHaveBeenCalledTimes(0);
-    } else {
-      expect(onEvent).toHaveBeenCalledTimes(2);
-    }
+    expect(onEvent).toHaveBeenCalledTimes(0);
 
     document.body.removeChild(container);
   });
@@ -2573,16 +2555,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(clicks).toBe(0);
-    } else {
-      expect(clicks).toBe(2);
-    }
+    expect(clicks).toBe(0);
 
     document.body.removeChild(container);
   });
@@ -2666,16 +2639,8 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(onEvent).toHaveBeenCalledTimes(0);
-    } else {
-      expect(onEvent).toHaveBeenCalledTimes(2);
-    }
+
+    expect(onEvent).toHaveBeenCalledTimes(0);
 
     document.body.removeChild(container);
   });
@@ -2746,19 +2711,8 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(clicksOnChild).toBe(0);
-      expect(clicksOnParent).toBe(0);
-    } else {
-      expect(clicksOnChild).toBe(1);
-      // This will be zero due to the stopPropagation.
-      expect(clicksOnParent).toBe(0);
-    }
+    expect(clicksOnChild).toBe(0);
+    expect(clicksOnParent).toBe(0);
 
     document.body.removeChild(container);
   });
@@ -2830,17 +2784,7 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // We're now full hydrated.
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      expect(clicks).toBe(0);
-    } else {
-      expect(clicks).toBe(1);
-    }
+    expect(clicks).toBe(0);
 
     document.body.removeChild(parentContainer);
   });
@@ -3105,19 +3049,9 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      // discrete event not replayed
-      expect(submits).toBe(0);
-      expect(container.textContent).toBe('Click meHello');
-    } else {
-      expect(submits).toBe(1);
-      expect(container.textContent).toBe('Hello');
-    }
+    // discrete event not replayed
+    expect(submits).toBe(0);
+    expect(container.textContent).toBe('Click meHello');
 
     document.body.removeChild(container);
   });
