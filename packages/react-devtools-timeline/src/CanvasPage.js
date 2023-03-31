@@ -26,7 +26,6 @@ import {
   useCallback,
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import {
@@ -60,6 +59,7 @@ import {RegistryContext} from 'react-devtools-shared/src/devtools/ContextMenu/Co
 import ContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenu';
 import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuItem';
 import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 import {getBatchRange} from './utils/getBatchRange';
 import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 import {TimelineSearchContext} from './TimelineSearchContext';
@@ -98,7 +98,7 @@ const copySummary = (data: TimelineData, measure: ReactMeasure) => {
 
   const [startTime, stopTime] = getBatchRange(batchUID, data);
 
-  copy(
+  copyToClipboard(
     JSON.stringify({
       type,
       timestamp: prettyMilliseconds(timestamp),
@@ -741,28 +741,30 @@ function AutoSizedCanvas({
             <Fragment>
               {componentMeasure !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(componentMeasure.componentName)}
+                  onClick={() =>
+                    copyToClipboard(componentMeasure.componentName)
+                  }
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
               {networkMeasure !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(networkMeasure.url)}
+                  onClick={() => copyToClipboard(networkMeasure.url)}
                   title="Copy URL">
                   Copy URL
                 </ContextMenuItem>
               )}
               {schedulingEvent !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(schedulingEvent.componentName)}
+                  onClick={() => copyToClipboard(schedulingEvent.componentName)}
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
               {suspenseEvent !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(suspenseEvent.componentName)}
+                  onClick={() => copyToClipboard(suspenseEvent.componentName)}
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
@@ -785,7 +787,9 @@ function AutoSizedCanvas({
               )}
               {flamechartStackFrame !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(flamechartStackFrame.scriptUrl)}
+                  onClick={() =>
+                    copyToClipboard(flamechartStackFrame.scriptUrl)
+                  }
                   title="Copy file path">
                   Copy file path
                 </ContextMenuItem>
@@ -793,7 +797,7 @@ function AutoSizedCanvas({
               {flamechartStackFrame !== null && (
                 <ContextMenuItem
                   onClick={() =>
-                    copy(
+                    copyToClipboard(
                       `line ${
                         flamechartStackFrame.locationLine ?? ''
                       }, column ${flamechartStackFrame.locationColumn ?? ''}`,

@@ -8,7 +8,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
@@ -38,23 +37,6 @@ export function cleanForBridge(
     };
   } else {
     return null;
-  }
-}
-
-export function copyToClipboard(value: any): void {
-  const safeToCopy = serializeToString(value);
-  const text = safeToCopy === undefined ? 'undefined' : safeToCopy;
-  const {clipboardCopyText} = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-
-  // On Firefox navigator.clipboard.writeText has to be called from
-  // the content script js code (because it requires the clipboardWrite
-  // permission to be allowed out of a "user handling" callback),
-  // clipboardCopyText is an helper injected into the page from.
-  // injectGlobalHook.
-  if (typeof clipboardCopyText === 'function') {
-    clipboardCopyText(text).catch(err => {});
-  } else {
-    copy(text);
   }
 }
 
@@ -141,23 +123,6 @@ export function getEffectDurations(root: Object): {
     }
   }
   return {effectDuration, passiveEffectDuration};
-}
-
-export function serializeToString(data: any): string {
-  const cache = new Set<mixed>();
-  // Use a custom replacer function to protect against circular references.
-  return JSON.stringify(data, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (cache.has(value)) {
-        return;
-      }
-      cache.add(value);
-    }
-    if (typeof value === 'bigint') {
-      return value.toString() + 'n';
-    }
-    return value;
-  });
 }
 
 // Formats an array of args with a style for console methods, using

@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {useCallback, useContext, useRef, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
@@ -28,6 +27,7 @@ import {
 } from 'react-devtools-feature-flags';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import isArray from 'react-devtools-shared/src/isArray';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -79,7 +79,7 @@ export function InspectedElementHooksTree({
     toggleTitle = 'Parse hook names (may be slow)';
   }
 
-  const handleCopy = () => copy(serializeHooksForCopy(hooks));
+  const handleCopy = () => copyToClipboard(serializeHooksForCopy(hooks));
 
   if (hooks === null) {
     return null;

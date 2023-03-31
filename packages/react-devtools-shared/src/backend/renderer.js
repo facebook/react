@@ -34,19 +34,20 @@ import {
   getInObject,
   getUID,
   renamePathInObject,
+  serializeAndCopyToClipboard,
   setInObject,
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {gt, gte} from 'react-devtools-shared/src/backend/utils';
 import {
   cleanForBridge,
-  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
+  gt,
+  gte,
   getEffectDurations,
-} from './utils';
+} from 'react-devtools-shared/src/backend/utils';
 import {
   __DEBUG__,
   PROFILING_FLAG_BASIC_SUPPORT,
@@ -3546,7 +3547,7 @@ export function attach(
 
   function copyElementPath(id: number, path: Array<string | number>): void {
     if (isMostRecentlyInspectedElement(id)) {
-      copyToClipboard(
+      serializeAndCopyToClipboard(
         getInObject(
           ((mostRecentlyInspectedElement: any): InspectedElement),
           path,

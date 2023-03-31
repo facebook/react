@@ -14,20 +14,22 @@ import {
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
 } from 'react-devtools-shared/src/types';
-import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
-  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
-} from '../utils';
+} from 'react-devtools-shared/src/backend/utils';
 import {
   deletePathInObject,
   getDisplayName,
   getInObject,
-  renamePathInObject,
+  serializeAndCopyToClipboard,
   setInObject,
+  renamePathInObject,
+  getUID,
+  utfEncodeString,
+  printOperationsArray,
 } from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
@@ -704,7 +706,7 @@ export function attach(
   function copyElementPath(id: number, path: Array<string | number>): void {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      copyToClipboard(getInObject(inspectedElement, path));
+      serializeAndCopyToClipboard(getInObject(inspectedElement, path));
     }
   }
 

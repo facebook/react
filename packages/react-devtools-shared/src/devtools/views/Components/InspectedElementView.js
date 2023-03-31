@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext} from './TreeContext';
@@ -34,6 +33,7 @@ import {
 } from 'react-devtools-shared/src/backendAPI';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {logEvent} from 'react-devtools-shared/src/Logger';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import styles from './InspectedElementView.css';
 
@@ -260,7 +260,7 @@ type SourceProps = {
 };
 
 function Source({fileName, lineNumber}: SourceProps) {
-  const handleCopy = () => copy(`${fileName}:${lineNumber}`);
+  const handleCopy = () => copyToClipboard(`${fileName}:${lineNumber}`);
   return (
     <div className={styles.Source} data-testname="InspectedElementView-Source">
       <div className={styles.SourceHeaderRow}>

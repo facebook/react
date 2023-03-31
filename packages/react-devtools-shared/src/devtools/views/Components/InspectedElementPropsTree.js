@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {OptionsContext} from '../context';
 import Button from '../Button';
@@ -18,6 +17,7 @@ import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 import {ElementTypeClass} from 'react-devtools-shared/src/types';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -59,8 +59,7 @@ export default function InspectedElementPropsTree({
   }
 
   const isEmpty = entries === null || entries.length === 0;
-
-  const handleCopy = () => copy(serializeDataForCopy(((props: any): Object)));
+  const handleCopy = () => copyToClipboard(serializeDataForCopy(props));
 
   return (
     <div

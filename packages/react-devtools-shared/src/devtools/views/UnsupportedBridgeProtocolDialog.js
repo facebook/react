@@ -14,8 +14,8 @@ import {StoreContext} from './context';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 import Button from './Button';
 import ButtonIcon from './ButtonIcon';
-import {copy} from 'clipboard-js';
 import styles from './UnsupportedBridgeProtocolDialog.css';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import type {BridgeProtocol} from 'react-devtools-shared/src/bridge';
 
@@ -82,7 +82,7 @@ function DialogContent({
         <pre className={styles.NpmCommand}>
           {upgradeInstructions}
           <Button
-            onClick={() => copy(upgradeInstructions)}
+            onClick={() => copyToClipboard(upgradeInstructions)}
             title="Copy upgrade command to clipboard">
             <ButtonIcon type="copy" />
           </Button>
@@ -99,7 +99,7 @@ function DialogContent({
         <pre className={styles.NpmCommand}>
           {downgradeInstructions}
           <Button
-            onClick={() => copy(downgradeInstructions)}
+            onClick={() => copyToClipboard(downgradeInstructions)}
             title="Copy downgrade command to clipboard">
             <ButtonIcon type="copy" />
           </Button>

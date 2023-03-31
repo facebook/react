@@ -10,11 +10,11 @@
 import * as React from 'react';
 import {useContext, useMemo, useRef, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
-import {copy} from 'clipboard-js';
 import {
   BridgeContext,
   StoreContext,
 } from 'react-devtools-shared/src/devtools/views/context';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 import Button from '../../Button';
 import ButtonIcon from '../../ButtonIcon';
 import {serializeDataForCopy} from '../../utils';
@@ -63,7 +63,7 @@ export default function StyleEditor({id, style}: Props): React.Node {
 
   const keys = useMemo(() => Array.from(Object.keys(style)), [style]);
 
-  const handleCopy = () => copy(serializeDataForCopy(style));
+  const handleCopy = () => copyToClipboard(serializeDataForCopy(style));
 
   return (
     <div className={styles.StyleEditor}>

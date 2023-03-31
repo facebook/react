@@ -890,3 +890,41 @@ export const isPlainObject = (object: Object): boolean => {
   const objectParentPrototype = Object.getPrototypeOf(objectPrototype);
   return !objectParentPrototype;
 };
+
+export function serializeToString(data: any): string {
+  const cache = new Set<mixed>();
+  // Use a custom replacer function to protect against circular references.
+  return JSON.stringify(data, (key, value) => {
+    if (typeof value === 'object' && value !== null) {
+      if (cache.has(value)) {
+        return;
+      }
+      cache.add(value);
+    }
+    if (typeof value === 'bigint') {
+      return value.toString() + 'n';
+    }
+    return value;
+  });
+}
+
+export function copyToClipboard(text: string): void {
+  const {clipboardCopyText} = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  // On Firefox navigator.clipboard.writeText has to be called from
+  // the content script js code (because it requires the clipboardWrite
+  // permission to be allowed out of a "user handling" callback),
+  // clipboardCopyText is a helper injected into the page from injectGlobalHook.
+  if (typeof clipboardCopyText === 'function') {
+    clipboardCopyText(text).catch(err => {});
+  } else {
+    navigator.clipboard.writeText(text);
+  }
+}
+
+export function serializeAndCopyToClipboard(value: any): void {
+  const serializedValue = serializeToString(value);
+  const text = serializedValue === undefined ? 'undefined' : serializedValue;
+
+  copyToClipboard(text);
+}

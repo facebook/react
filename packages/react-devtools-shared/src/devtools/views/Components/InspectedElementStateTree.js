@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {ElementTypeHostComponent} from 'react-devtools-shared/src/types';
 import Button from '../Button';
@@ -16,6 +15,7 @@ import KeyValue from './KeyValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -50,7 +50,7 @@ export default function InspectedElementStateTree({
     entries.sort(alphaSortEntries);
   }
 
-  const handleCopy = () => copy(serializeDataForCopy(((state: any): Object)));
+  const handleCopy = () => copyToClipboard(serializeDataForCopy(state));
 
   return (
     <div className={styles.InspectedElementTree}>

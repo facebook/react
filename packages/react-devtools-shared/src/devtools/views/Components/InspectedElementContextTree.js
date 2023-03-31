@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -19,6 +18,7 @@ import {
   ElementTypeClass,
   ElementTypeFunction,
 } from 'react-devtools-shared/src/types';
+import {copyToClipboard} from 'react-devtools-shared/src/utils';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -48,7 +48,7 @@ export default function InspectedElementContextTree({
 
   const isEmpty = entries === null || entries.length === 0;
 
-  const handleCopy = () => copy(serializeDataForCopy(((context: any): Object)));
+  const handleCopy = () => copyToClipboard(serializeDataForCopy(context));
 
   // We add an object with a "value" key as a wrapper around Context data
   // so that we can use the shared <KeyValue> component to display it.

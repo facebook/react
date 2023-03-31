@@ -33,12 +33,10 @@ if (compactConsole) {
 }
 
 beforeEach(() => {
+  // Storing this mock, so it can be accessed to reset its state
+  // Used inside inspectElement-test
   global.mockClipboardCopy = jest.fn();
-
-  // Test environment doesn't support document methods like execCommand()
-  // Also once the backend components below have been required,
-  // it's too late for a test to mock the clipboard-js modules.
-  jest.mock('clipboard-js', () => ({copy: global.mockClipboardCopy}));
+  global.navigator.clipboard = {writeText: global.mockClipboardCopy};
 
   // These files should be required (and re-required) before each test,
   // rather than imported at the head of the module.

@@ -5,7 +5,6 @@
   "license": "MIT",
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",
-    "clipboard-js": "^0.3.6",
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
