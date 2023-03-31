@@ -8233,8 +8233,8 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (2 === workInProgressSuspendedReason && root === currentTime) ||
-    (null !== root.cancelPendingCommit && 0 === (suspendedLanes & 42))
+    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
   )
     return (
       null !== pingedLanes &&
@@ -8332,10 +8332,12 @@ function requestUpdateLane(fiber) {
   return 0 !== fiber ? fiber : 32;
 }
 function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
-  2 === workInProgressSuspendedReason &&
-    root === workInProgressRoot &&
-    (prepareFreshStack(root, 0),
-    markRootSuspended(root, workInProgressRootRenderLanes));
+  if (
+    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
+  )
+    prepareFreshStack(root, 0),
+      markRootSuspended(root, workInProgressRootRenderLanes);
   markRootUpdated(root, lane, eventTime);
   if (0 === (executionContext & 2) || root !== workInProgressRoot)
     isDevToolsPresent && addFiberToLanesMap(root, fiber, lane),
@@ -10507,7 +10509,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1183 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-09c8d2563-20230331",
+    version: "18.3.0-next-888874673-20230331",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10562,7 +10564,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-09c8d2563-20230331"
+  reconcilerVersion: "18.3.0-next-888874673-20230331"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
