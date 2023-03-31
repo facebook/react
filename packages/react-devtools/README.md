@@ -105,7 +105,7 @@ Or you could develop with a local HTTP server like [`serve`](https://www.npmjs.c
 
 **If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/main/packages/react-devtools). Chrome apps are currently not inspectable.
 
-**If you are using Firefox**, it is possible that a content security policy (CSP) is blocking the loading of DevTools.  
+**If you are using Firefox**, it is possible that a content security policy (CSP) is [blocking](https://github.com/facebook/react-devtools/issues/460) the loading of DevTools.  
 
 **If your Components tab is empty, refer to "The React tab shows no components" section below**.
 
