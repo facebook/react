@@ -13,12 +13,6 @@ type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 // Attributes that aren't in the filter are presumed to have this type.
 export const STRING = 1;
 
-// A string attribute that accepts booleans in React. In HTML, these are called
-// "enumerated" attributes with "true" and "false" as possible values.
-// When true, it should be set to a "true" string.
-// When false, it should be set to a "false" string.
-export const BOOLEANISH_STRING = 2;
-
 // A real boolean attribute.
 // When true, it should be present (set either to an empty string or its name).
 // When false, it should be omitted.
@@ -59,10 +53,7 @@ function PropertyInfoRecord(
   sanitizeURL: boolean,
   removeEmptyString: boolean,
 ) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
+  this.acceptsBooleans = type === BOOLEAN || type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
   this.type = type;
@@ -87,40 +78,6 @@ const properties: {[string]: $FlowFixMe} = {};
   properties[name] = new PropertyInfoRecord(
     STRING,
     attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
-// These are "enumerated" HTML attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
-// These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-[
-  'autoReverse',
-  'externalResourcesRequired',
-  'focusable',
-  'preserveAlpha',
-].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString

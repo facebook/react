@@ -640,9 +640,46 @@ function pushAttribute(
       return;
     case 'autoFocus':
     case 'multiple':
-    case 'muted':
+    case 'muted': {
       pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
+    }
+    case 'contentEditable':
+    case 'spellCheck': {
+      // Lower-case Booleanish String
+      // These are "enumerated" HTML attributes that accept "true" and "false".
+      // In React, we let users pass `true` and `false` even though technically
+      // these aren't boolean attributes (they are coerced to strings).
+      name = name.toLowerCase();
+      // Fall-through to the case-sensitive cases
+    }
+    // eslint-disable-next-line no-fallthrough
+    case 'draggable':
+    case 'value':
+    case 'autoReverse':
+    case 'externalResourcesRequired':
+    case 'focusable':
+    case 'preserveAlpha': {
+      // Case-sensitive Booleanish String
+      // These are "enumerated" SVG attributes that accept "true" and "false".
+      // In React, we let users pass `true` and `false` even though technically
+      // these aren't boolean attributes (they are coerced to strings).
+      // Since these are SVG attributes, their attribute names are case-sensitive.
+      if (
+        value != null &&
+        typeof value !== 'function' &&
+        typeof value !== 'symbol'
+      ) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
+      return;
+    }
   }
   if (
     // shouldIgnoreAttribute

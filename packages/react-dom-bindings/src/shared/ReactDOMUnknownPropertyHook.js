@@ -188,7 +188,15 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'checked':
           case 'multiple':
           case 'muted':
-          case 'selected': {
+          case 'selected':
+          case 'contentEditable':
+          case 'spellCheck':
+          case 'draggable':
+          case 'value':
+          case 'autoReverse':
+          case 'externalResourcesRequired':
+          case 'focusable':
+          case 'preserveAlpha': {
             // Boolean properties can accept boolean values
             return true;
           }
