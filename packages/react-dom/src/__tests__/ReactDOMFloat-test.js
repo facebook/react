@@ -3163,7 +3163,7 @@ body {
     );
   });
 
-  it('can unsuspend after a timeout even if some assets never load', async () => {
+  it('stylesheets block render, with a really long timeout', async () => {
     function App({children}) {
       return (
         <html>
@@ -3191,7 +3191,22 @@ body {
       </html>,
     );
 
-    jest.advanceTimersByTime(1000);
+    // Advance time by 50 seconds. Even still, the transition is suspended.
+    jest.advanceTimersByTime(50000);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    // Advance time by 10 seconds more. A full minute total has elapsed. At this
+    // point, something must have really gone wrong, so we time out and allow
+    // unstyled content to be displayed.
+    jest.advanceTimersByTime(10000);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
