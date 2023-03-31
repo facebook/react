@@ -219,7 +219,11 @@ export default class HIRBuilder {
       }
     }
 
-    return this.resolveBinding(binding.identifier);
+    const resolvedBinding = this.resolveBinding(binding.identifier);
+    if (resolvedBinding.name && resolvedBinding.name !== originalName) {
+      binding.scope.rename(originalName, resolvedBinding.name);
+    }
+    return resolvedBinding;
   }
 
   resolveBinding(node: t.Identifier): Identifier {

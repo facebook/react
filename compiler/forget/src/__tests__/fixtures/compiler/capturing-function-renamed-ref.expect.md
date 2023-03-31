@@ -33,7 +33,7 @@ function component(a, b) {
 
   const z_0 = { b };
   (function () {
-    mutate(z);
+    mutate(z_0);
   })();
   return z;
 }

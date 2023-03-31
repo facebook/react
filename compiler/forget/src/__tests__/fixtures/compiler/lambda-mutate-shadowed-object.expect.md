@@ -32,7 +32,7 @@ function Component() {
 
   const x_0 = [];
   const fn = function () {
-    mutate(x);
+    mutate(x_0);
   };
   fn();
   return x;

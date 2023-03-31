@@ -31,7 +31,7 @@ function Component() {
   const x = t0;
 
   const fn = function () {
-    x = 42;
+    x_0 = 42;
   };
   fn();
   return x;
