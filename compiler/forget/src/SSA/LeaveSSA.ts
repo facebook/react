@@ -294,6 +294,7 @@ export function leaveSSA(fn: HIRFunction): void {
       (terminal.kind === "if" ||
         terminal.kind === "switch" ||
         terminal.kind === "while" ||
+        terminal.kind === "do-while" ||
         terminal.kind === "for" ||
         terminal.kind === "for-of") &&
       terminal.fallthrough !== null
