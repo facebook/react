@@ -2608,11 +2608,18 @@ function gatherCapturedDeps(
         path = path.get("object");
       }
 
+      // Skip the computed part of the member expression.
+      while (path.isMemberExpression() && path.node.computed) {
+        path = path.get("object");
+      }
+
       path.skip();
     }
 
-    capturedIds.add(binding.identifier);
-    capturedRefs.add(lowerExpressionToTemporary(builder, path));
+    if (!capturedIds.has(binding.identifier)) {
+      capturedIds.add(binding.identifier);
+      capturedRefs.add(lowerExpressionToTemporary(builder, path));
+    }
   }
 
   fn.get("body").traverse({
