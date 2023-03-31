@@ -34,10 +34,6 @@ export const revertRemovalOfSiblingPrerendering = false;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// This rolled out to 10% public in www, so we should be able to land, but some
-// internal tests need to be updated. The open source behavior is correct.
-export const skipUnmountedBoundaries = true;
-
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
 
