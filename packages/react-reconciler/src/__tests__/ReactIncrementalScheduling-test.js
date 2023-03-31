@@ -115,10 +115,15 @@ describe('ReactIncrementalScheduling', () => {
 
     // Schedule deferred work in the reverse order
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
+          ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
+        });
+      } else {
         ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
         ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
-      });
+      }
       // Ensure it starts in the order it was scheduled
       await waitFor(['c:2']);
 
@@ -127,9 +132,13 @@ describe('ReactIncrementalScheduling', () => {
       expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
       // Schedule last bit of work, it will get processed the last
 
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
+        });
+      } else {
         ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
-      });
+      }
 
       // Keep performing work in the order it was scheduled
       await waitFor(['b:2']);
@@ -180,9 +189,13 @@ describe('ReactIncrementalScheduling', () => {
       }
     }
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
       ReactNoop.render(<Foo />);
-    });
+    }
     // Render without committing
     await waitFor(['render: 0']);
 
@@ -196,9 +209,13 @@ describe('ReactIncrementalScheduling', () => {
       'componentDidUpdate: 1',
     ]);
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        instance.setState({tick: 2});
+      });
+    } else {
       instance.setState({tick: 2});
-    });
+    }
     await waitFor(['render: 2']);
     expect(ReactNoop.flushNextYield()).toEqual([
       'componentDidUpdate: 2',
@@ -299,9 +316,13 @@ describe('ReactIncrementalScheduling', () => {
         return <span prop={this.state.step} />;
       }
     }
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
       ReactNoop.render(<Foo />);
-    });
+    }
 
     // This should be just enough to complete all the work, but not enough to
     // commit it.

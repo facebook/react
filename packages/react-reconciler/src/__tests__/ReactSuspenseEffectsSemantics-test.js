@@ -576,7 +576,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -711,7 +711,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated for class components', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -860,7 +860,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -979,7 +979,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated even if there is a bailout because of memoization', async () => {
       const MemoizedText = React.memo(Text, () => true);
 
@@ -1448,7 +1448,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be cleaned up inside of a fallback that suspends', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1724,7 +1724,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be cleaned up deeper inside of a subtree that suspends', async () => {
       function ConditionalSuspense({shouldSuspend}) {
         if (shouldSuspend) {
@@ -2305,7 +2305,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be only destroy layout effects once if a tree suspends in multiple places', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2448,7 +2448,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be only destroy layout effects once if a component suspends multiple times', async () => {
       class ClassText extends React.Component {
         componentDidMount() {

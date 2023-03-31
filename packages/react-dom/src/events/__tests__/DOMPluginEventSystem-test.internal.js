@@ -1984,9 +1984,13 @@ describe('DOMPluginEventSystem', () => {
             log.length = 0;
 
             // Increase counter
-            React.startTransition(() => {
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.startTransition(() => {
+                root.render(<Test counter={1} />);
+              });
+            } else {
               root.render(<Test counter={1} />);
-            });
+            }
             // Yield before committing
             await waitFor(['Test']);
 

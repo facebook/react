@@ -95,11 +95,17 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        renderer = ReactTestRenderer.create(<Parent step={1} />, {
+          unstable_isConcurrent: true,
+        });
+      });
+    } else {
       renderer = ReactTestRenderer.create(<Parent step={1} />, {
         unstable_isConcurrent: true,
       });
-    });
+    }
 
     // Flush the first two siblings
     await waitFor(['A:1', 'B:1']);
@@ -135,11 +141,17 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        renderer = ReactTestRenderer.create(<Example step={1} />, {
+          unstable_isConcurrent: true,
+        });
+      });
+    } else {
       renderer = ReactTestRenderer.create(<Example step={1} />, {
         unstable_isConcurrent: true,
       });
-    });
+    }
 
     // Flush the some of the changes, but don't commit
     await waitFor(['A:1']);

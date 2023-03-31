@@ -115,29 +115,54 @@ describe('ReactExpiration', () => {
     }
   }
 
+  function flushNextRenderIfExpired() {
+    // This will start rendering the next level of work. If the work hasn't
+    // expired yet, React will exit without doing anything. If it has expired,
+    // it will schedule a sync task.
+    Scheduler.unstable_flushExpired();
+    // Flush the sync task.
+    ReactNoop.flushSync();
+  }
+
   it('increases priority of updates as time progresses', async () => {
-    ReactNoop.render(<Text text="Step 1" />);
-    React.startTransition(() => {
-      ReactNoop.render(<Text text="Step 2" />);
-    });
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      ReactNoop.render(<Text text="Step 1" />);
+      React.startTransition(() => {
+        ReactNoop.render(<Text text="Step 2" />);
+      });
+      await waitFor(['Step 1']);
 
-    await waitFor(['Step 1']);
+      expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
-    expect(ReactNoop).toMatchRenderedOutput('Step 1');
+      // Nothing has expired yet because time hasn't advanced.
+      await unstable_waitForExpired([]);
+      expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
-    // Nothing has expired yet because time hasn't advanced.
-    await unstable_waitForExpired([]);
-    expect(ReactNoop).toMatchRenderedOutput('Step 1');
+      // Advance time a bit, but not enough to expire the low pri update.
+      ReactNoop.expire(4500);
+      await unstable_waitForExpired([]);
+      expect(ReactNoop).toMatchRenderedOutput('Step 1');
 
-    // Advance time a bit, but not enough to expire the low pri update.
-    ReactNoop.expire(4500);
-    await unstable_waitForExpired([]);
-    expect(ReactNoop).toMatchRenderedOutput('Step 1');
+      // Advance by a little bit more. Now the update should expire and flush.
+      ReactNoop.expire(500);
+      await unstable_waitForExpired(['Step 2']);
+      expect(ReactNoop).toMatchRenderedOutput('Step 2');
+    } else {
+      ReactNoop.render(<span prop="done" />);
+      expect(ReactNoop).toMatchRenderedOutput(null);
 
-    // Advance by a little bit more. Now the update should expire and flush.
-    ReactNoop.expire(500);
-    await unstable_waitForExpired(['Step 2']);
-    expect(ReactNoop).toMatchRenderedOutput('Step 2');
+      // Nothing has expired yet because time hasn't advanced.
+      flushNextRenderIfExpired();
+      expect(ReactNoop).toMatchRenderedOutput(null);
+      // Advance time a bit, but not enough to expire the low pri update.
+      ReactNoop.expire(4500);
+      flushNextRenderIfExpired();
+      expect(ReactNoop).toMatchRenderedOutput(null);
+      // Advance by another second. Now the update should expire and flush.
+      ReactNoop.expire(500);
+      flushNextRenderIfExpired();
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="done" />);
+    }
   });
 
   it('two updates of like priority in the same event always flush within the same batch', async () => {
@@ -162,9 +187,13 @@ describe('ReactExpiration', () => {
 
     // First, show what happens for updates in two separate events.
     // Schedule an update.
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<TextClass text="A" />);
+      });
+    } else {
       ReactNoop.render(<TextClass text="A" />);
-    });
+    }
     // Advance the timer.
     Scheduler.unstable_advanceTime(2000);
     // Partially flush the first update, then interrupt it.
@@ -219,9 +248,13 @@ describe('ReactExpiration', () => {
 
       // First, show what happens for updates in two separate events.
       // Schedule an update.
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<TextClass text="A" />);
+        });
+      } else {
         ReactNoop.render(<TextClass text="A" />);
-      });
+      }
       // Advance the timer.
       Scheduler.unstable_advanceTime(2000);
       // Partially flush the first update, then interrupt it.
@@ -287,9 +320,13 @@ describe('ReactExpiration', () => {
     }
 
     // Initial mount
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
       ReactNoop.render(<App />);
-    });
+    }
     await waitForAll([
       'initial [A] [render]',
       'initial [B] [render]',
@@ -302,9 +339,13 @@ describe('ReactExpiration', () => {
     ]);
 
     // Partial update
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        subscribers.forEach(s => s.setState({text: '1'}));
+      });
+    } else {
       subscribers.forEach(s => s.setState({text: '1'}));
-    });
+    }
     await waitFor(['1 [A] [render]', '1 [B] [render]']);
 
     // Before the update can finish, update again. Even though no time has
@@ -330,9 +371,13 @@ describe('ReactExpiration', () => {
       );
     }
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.render(<App />);
+      });
+    } else {
       root.render(<App />);
-    });
+    }
 
     await waitFor(['A']);
     await waitFor(['B']);
@@ -359,9 +404,13 @@ describe('ReactExpiration', () => {
         </>
       );
     }
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.render(<App />);
+      });
+    } else {
       root.render(<App />);
-    });
+    }
 
     await waitFor(['A']);
     await waitFor(['B']);
@@ -379,36 +428,62 @@ describe('ReactExpiration', () => {
 
     jest.resetModules();
     Scheduler = require('scheduler');
-    const InternalTestUtils = require('internal-test-utils');
-    waitFor = InternalTestUtils.waitFor;
-    assertLog = InternalTestUtils.assertLog;
-    unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
 
-    // Before importing the renderer, advance the current time by a number
-    // larger than the maximum allowed for bitwise operations.
-    const maxSigned31BitInt = 1073741823;
-    Scheduler.unstable_advanceTime(maxSigned31BitInt * 100);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      const InternalTestUtils = require('internal-test-utils');
+      waitFor = InternalTestUtils.waitFor;
+      assertLog = InternalTestUtils.assertLog;
+      unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
 
-    // Now import the renderer. On module initialization, it will read the
-    // current time.
-    ReactNoop = require('react-noop-renderer');
-    React = require('react');
+      // Before importing the renderer, advance the current time by a number
+      // larger than the maximum allowed for bitwise operations.
+      const maxSigned31BitInt = 1073741823;
+      Scheduler.unstable_advanceTime(maxSigned31BitInt * 100);
 
-    ReactNoop.render(<Text text="Step 1" />);
-    React.startTransition(() => {
-      ReactNoop.render(<Text text="Step 2" />);
-    });
-    await waitFor(['Step 1']);
+      // Now import the renderer. On module initialization, it will read the
+      // current time.
+      ReactNoop = require('react-noop-renderer');
+      React = require('react');
 
-    // The update should not have expired yet.
-    await unstable_waitForExpired([]);
+      ReactNoop.render(<Text text="Step 1" />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<Text text="Step 2" />);
+        });
+        await waitFor(['Step 1']);
+      } else {
+        ReactNoop.render('Hi');
+      }
 
-    expect(ReactNoop).toMatchRenderedOutput('Step 1');
+      // The update should not have expired yet.
+      await unstable_waitForExpired([]);
 
-    // Advance the time some more to expire the update.
-    Scheduler.unstable_advanceTime(10000);
-    await unstable_waitForExpired(['Step 2']);
-    expect(ReactNoop).toMatchRenderedOutput('Step 2');
+      expect(ReactNoop).toMatchRenderedOutput('Step 1');
+
+      // Advance the time some more to expire the update.
+      Scheduler.unstable_advanceTime(10000);
+      await unstable_waitForExpired(['Step 2']);
+      expect(ReactNoop).toMatchRenderedOutput('Step 2');
+    } else {
+      // Before importing the renderer, advance the current time by a number
+      // larger than the maximum allowed for bitwise operations.
+      const maxSigned31BitInt = 1073741823;
+      Scheduler.unstable_advanceTime(maxSigned31BitInt * 100);
+      // Now import the renderer. On module initialization, it will read the
+      // current time.
+      ReactNoop = require('react-noop-renderer');
+      ReactNoop.render('Hi');
+
+      // The update should not have expired yet.
+      flushNextRenderIfExpired();
+      await waitFor([]);
+      expect(ReactNoop).toMatchRenderedOutput(null);
+      // Advance the time some more to expire the update.
+      Scheduler.unstable_advanceTime(10000);
+      flushNextRenderIfExpired();
+      await waitFor([]);
+      expect(ReactNoop).toMatchRenderedOutput('Hi');
+    }
   });
 
   it('should measure callback timeout relative to current time, not start-up time', async () => {
@@ -419,9 +494,13 @@ describe('ReactExpiration', () => {
     // Before scheduling an update, advance the current time.
     Scheduler.unstable_advanceTime(10000);
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render('Hi');
+      });
+    } else {
       ReactNoop.render('Hi');
-    });
+    }
     await unstable_waitForExpired([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -462,9 +541,13 @@ describe('ReactExpiration', () => {
 
     // First demonstrate what happens when there's no starvation
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateNormalPri();
+        });
+      } else {
         updateNormalPri();
-      });
+      }
       await waitFor(['Sync pri: 0']);
       updateSyncPri();
       assertLog(['Sync pri: 1', 'Normal pri: 0']);
@@ -482,9 +565,13 @@ describe('ReactExpiration', () => {
 
     // Do the same thing, but starve the first update
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateNormalPri();
+        });
+      } else {
         updateNormalPri();
-      });
+      }
       await waitFor(['Sync pri: 1']);
 
       // This time, a lot of time has elapsed since the normal pri update
@@ -645,9 +732,13 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('A0BC');
 
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<App step={1} />);
+        });
+      } else {
         root.render(<App step={1} />);
-      });
+      }
       await waitForAll(['Suspend! [A1]', 'Loading...']);
 
       // Lots of time elapses before the promise resolves
