@@ -40,7 +40,7 @@ function Bar_forget(props) {
   }
   return t0;
 }
-export const Bar = isForgetEnabled ? Bar_forget : Bar_uncompiled;
+export const Bar = isForgetEnabled() ? Bar_forget : Bar_uncompiled;
 
 export function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
@@ -63,7 +63,7 @@ function Foo_forget(props) {
   }
   return t0;
 }
-export const Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
+export const Foo = isForgetEnabled() ? Foo_forget : Foo_uncompiled;
 
 ```
       

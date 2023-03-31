@@ -237,7 +237,11 @@ function buildTest(ids: {
   return t.variableDeclaration("const", [
     t.variableDeclarator(
       ids.original,
-      t.conditionalExpression(testId, ids.compiled, ids.uncompiled)
+      t.conditionalExpression(
+        t.callExpression(testId, []),
+        ids.compiled,
+        ids.uncompiled
+      )
     ),
   ]);
 }

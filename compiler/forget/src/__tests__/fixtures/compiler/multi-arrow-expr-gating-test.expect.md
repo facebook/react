@@ -36,7 +36,7 @@ function ErrorView_forget(error, _retry) {
   }
   return t0;
 }
-const ErrorView = isForgetEnabled ? ErrorView_forget : ErrorView_uncompiled;
+const ErrorView = isForgetEnabled() ? ErrorView_forget : ErrorView_uncompiled;
 function Renderer_uncompiled(props) {
   return (
     <Foo>
@@ -75,7 +75,7 @@ function Renderer_forget(props) {
   }
   return t2;
 }
-const Renderer = isForgetEnabled ? Renderer_forget : Renderer_uncompiled;
+const Renderer = isForgetEnabled() ? Renderer_forget : Renderer_uncompiled;
 export default Renderer;
 
 ```

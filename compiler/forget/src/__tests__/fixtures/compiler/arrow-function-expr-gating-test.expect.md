@@ -29,7 +29,7 @@ function ErrorView_forget(error, _retry) {
   }
   return t0;
 }
-const ErrorView = isForgetEnabled ? ErrorView_forget : ErrorView_uncompiled;
+const ErrorView = isForgetEnabled() ? ErrorView_forget : ErrorView_uncompiled;
 
 export default ErrorView;
 
