@@ -106,8 +106,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
@@ -11764,48 +11762,6 @@ var hasScheduledReplayAttempt = !1,
     "mousedown mouseup touchcancel touchend touchstart auxclick dblclick pointercancel pointerdown pointerup dragend dragstart drop compositionend compositionstart keydown keypress keyup input textInput copy cut paste click change contextmenu reset submit".split(
       " "
     );
-function createQueuedReplayableEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  return {
-    blockedOn: blockedOn,
-    domEventName: domEventName,
-    eventSystemFlags: eventSystemFlags,
-    nativeEvent: nativeEvent,
-    targetContainers: [targetContainer]
-  };
-}
-function queueDiscreteEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  if (
-    !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-    ((blockedOn = createQueuedReplayableEvent(
-      blockedOn,
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    )),
-    queuedDiscreteEvents.push(blockedOn),
-    1 === queuedDiscreteEvents.length)
-  )
-    for (; null !== blockedOn.blockedOn; ) {
-      domEventName = getInstanceFromNode$1(blockedOn.blockedOn);
-      if (null === domEventName) break;
-      attemptSynchronousHydration(domEventName);
-      if (null === blockedOn.blockedOn) replayUnblockedEvents();
-      else break;
-    }
-}
 function clearIfContinuousEvent(domEventName, nativeEvent) {
   switch (domEventName) {
     case "focusin":
@@ -11842,13 +11798,13 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
     existingQueuedEvent.nativeEvent !== nativeEvent
   )
     return (
-      (existingQueuedEvent = createQueuedReplayableEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      )),
+      (existingQueuedEvent = {
+        blockedOn: blockedOn,
+        domEventName: domEventName,
+        eventSystemFlags: eventSystemFlags,
+        nativeEvent: nativeEvent,
+        targetContainers: [targetContainer]
+      }),
       null !== blockedOn &&
         ((blockedOn = getInstanceFromNode$1(blockedOn)),
         null !== blockedOn && attemptContinuousHydration(blockedOn)),
@@ -11982,29 +11938,22 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
     0 < targetContainers.length;
 
   ) {
-    var targetContainer = targetContainers[0],
-      nextBlockedOn = findInstanceBlockingEvent(
-        queuedEvent.domEventName,
-        queuedEvent.eventSystemFlags,
-        targetContainer,
-        queuedEvent.nativeEvent
+    var nextBlockedOn = findInstanceBlockingEvent(
+      queuedEvent.domEventName,
+      queuedEvent.eventSystemFlags,
+      targetContainers[0],
+      queuedEvent.nativeEvent
+    );
+    if (null === nextBlockedOn) {
+      nextBlockedOn = queuedEvent.nativeEvent;
+      var nativeEventClone = new nextBlockedOn.constructor(
+        nextBlockedOn.type,
+        nextBlockedOn
       );
-    if (null === nextBlockedOn)
-      enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-        ? ((nextBlockedOn = queuedEvent.nativeEvent),
-          (currentReplayingEvent = targetContainer =
-            new nextBlockedOn.constructor(nextBlockedOn.type, nextBlockedOn)),
-          nextBlockedOn.target.dispatchEvent(targetContainer))
-        : ((currentReplayingEvent = queuedEvent.nativeEvent),
-          dispatchEventForPluginEventSystem(
-            queuedEvent.domEventName,
-            queuedEvent.eventSystemFlags,
-            queuedEvent.nativeEvent,
-            return_targetInst,
-            targetContainer
-          )),
-        (currentReplayingEvent = null);
-    else
+      currentReplayingEvent = nativeEventClone;
+      nextBlockedOn.target.dispatchEvent(nativeEventClone);
+      currentReplayingEvent = null;
+    } else
       return (
         (targetContainers = getInstanceFromNode$1(nextBlockedOn)),
         null !== targetContainers &&
@@ -12021,47 +11970,6 @@ function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
 }
 function replayUnblockedEvents() {
   hasScheduledReplayAttempt = !1;
-  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay)
-    for (; 0 < queuedDiscreteEvents.length; ) {
-      var nextDiscreteEvent = queuedDiscreteEvents[0];
-      if (null !== nextDiscreteEvent.blockedOn) {
-        nextDiscreteEvent = getInstanceFromNode$1(nextDiscreteEvent.blockedOn);
-        if (null !== nextDiscreteEvent && 13 === nextDiscreteEvent.tag) {
-          var root = enqueueConcurrentRenderForLane(nextDiscreteEvent, 2);
-          if (null !== root) {
-            var eventTime = requestEventTime();
-            scheduleUpdateOnFiber(root, nextDiscreteEvent, 2, eventTime);
-          }
-          markRetryLaneIfNotHydrated(nextDiscreteEvent, 2);
-        }
-        break;
-      }
-      for (root = nextDiscreteEvent.targetContainers; 0 < root.length; ) {
-        eventTime = root[0];
-        var nextBlockedOn = findInstanceBlockingEvent(
-          nextDiscreteEvent.domEventName,
-          nextDiscreteEvent.eventSystemFlags,
-          eventTime,
-          nextDiscreteEvent.nativeEvent
-        );
-        if (null === nextBlockedOn)
-          (currentReplayingEvent = nextDiscreteEvent.nativeEvent),
-            dispatchEventForPluginEventSystem(
-              nextDiscreteEvent.domEventName,
-              nextDiscreteEvent.eventSystemFlags,
-              nextDiscreteEvent.nativeEvent,
-              return_targetInst,
-              eventTime
-            ),
-            (currentReplayingEvent = null);
-        else {
-          nextDiscreteEvent.blockedOn = nextBlockedOn;
-          break;
-        }
-        root.shift();
-      }
-      null === nextDiscreteEvent.blockedOn && queuedDiscreteEvents.shift();
-    }
   null !== queuedFocus &&
     attemptReplayContinuousQueuedEvent(queuedFocus) &&
     (queuedFocus = null);
@@ -12178,129 +12086,67 @@ function dispatchEvent(
   targetContainer,
   nativeEvent
 ) {
-  if (_enabled)
-    if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-      var blockedOn = findInstanceBlockingEvent(
+  if (_enabled) {
+    var blockedOn = findInstanceBlockingEvent(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent
+    );
+    if (null === blockedOn)
+      dispatchEventForPluginEventSystem(
+        domEventName,
+        eventSystemFlags,
+        nativeEvent,
+        return_targetInst,
+        targetContainer
+      ),
+        clearIfContinuousEvent(domEventName, nativeEvent);
+    else if (
+      queueIfContinuousEvent(
+        blockedOn,
         domEventName,
         eventSystemFlags,
         targetContainer,
         nativeEvent
-      );
-      if (null === blockedOn)
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          return_targetInst,
-          targetContainer
-        ),
-          clearIfContinuousEvent(domEventName, nativeEvent);
-      else if (
-        queueIfContinuousEvent(
-          blockedOn,
+      )
+    )
+      nativeEvent.stopPropagation();
+    else if (
+      (clearIfContinuousEvent(domEventName, nativeEvent),
+      eventSystemFlags & 4 &&
+        -1 < discreteReplayableEvents.indexOf(domEventName))
+    ) {
+      for (; null !== blockedOn; ) {
+        var fiber = getInstanceFromNode$1(blockedOn);
+        null !== fiber && attemptSynchronousHydration(fiber);
+        fiber = findInstanceBlockingEvent(
           domEventName,
           eventSystemFlags,
           targetContainer,
           nativeEvent
-        )
-      )
-        nativeEvent.stopPropagation();
-      else if (
-        (clearIfContinuousEvent(domEventName, nativeEvent),
-        eventSystemFlags & 4 &&
-          -1 < discreteReplayableEvents.indexOf(domEventName))
-      ) {
-        for (; null !== blockedOn; ) {
-          var fiber = getInstanceFromNode$1(blockedOn);
-          null !== fiber && attemptSynchronousHydration(fiber);
-          fiber = findInstanceBlockingEvent(
+        );
+        null === fiber &&
+          dispatchEventForPluginEventSystem(
             domEventName,
             eventSystemFlags,
-            targetContainer,
-            nativeEvent
+            nativeEvent,
+            return_targetInst,
+            targetContainer
           );
-          null === fiber &&
-            dispatchEventForPluginEventSystem(
-              domEventName,
-              eventSystemFlags,
-              nativeEvent,
-              return_targetInst,
-              targetContainer
-            );
-          if (fiber === blockedOn) break;
-          blockedOn = fiber;
-        }
-        null !== blockedOn && nativeEvent.stopPropagation();
-      } else
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-          targetContainer
-        );
-    } else
-      a: if (
-        (blockedOn = 0 === (eventSystemFlags & 4)) &&
-        0 < queuedDiscreteEvents.length &&
-        -1 < discreteReplayableEvents.indexOf(domEventName)
-      )
-        queueDiscreteEvent(
-          null,
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          nativeEvent
-        );
-      else if (
-        ((fiber = findInstanceBlockingEvent(
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          nativeEvent
-        )),
-        null === fiber)
-      )
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          return_targetInst,
-          targetContainer
-        ),
-          blockedOn && clearIfContinuousEvent(domEventName, nativeEvent);
-      else {
-        if (blockedOn) {
-          if (-1 < discreteReplayableEvents.indexOf(domEventName)) {
-            queueDiscreteEvent(
-              fiber,
-              domEventName,
-              eventSystemFlags,
-              targetContainer,
-              nativeEvent
-            );
-            break a;
-          }
-          if (
-            queueIfContinuousEvent(
-              fiber,
-              domEventName,
-              eventSystemFlags,
-              targetContainer,
-              nativeEvent
-            )
-          )
-            break a;
-          clearIfContinuousEvent(domEventName, nativeEvent);
-        }
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-          targetContainer
-        );
+        if (fiber === blockedOn) break;
+        blockedOn = fiber;
       }
+      null !== blockedOn && nativeEvent.stopPropagation();
+    } else
+      dispatchEventForPluginEventSystem(
+        domEventName,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+        targetContainer
+      );
+  }
 }
 var return_targetInst = null;
 function findInstanceBlockingEvent(
@@ -12921,14 +12767,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$322;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1544 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1544) {
-      var element$jscomp$inline_1545 = document.createElement("div");
-      element$jscomp$inline_1545.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1544 =
-        "function" === typeof element$jscomp$inline_1545.oninput;
+    var isSupported$jscomp$inline_1518 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1518) {
+      var element$jscomp$inline_1519 = document.createElement("div");
+      element$jscomp$inline_1519.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1518 =
+        "function" === typeof element$jscomp$inline_1519.oninput;
     }
-    JSCompiler_inline_result$jscomp$322 = isSupported$jscomp$inline_1544;
+    JSCompiler_inline_result$jscomp$322 = isSupported$jscomp$inline_1518;
   } else JSCompiler_inline_result$jscomp$322 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$322 &&
@@ -13240,20 +13086,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1585 = 0;
-  i$jscomp$inline_1585 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1585++
+  var i$jscomp$inline_1559 = 0;
+  i$jscomp$inline_1559 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1559++
 ) {
-  var eventName$jscomp$inline_1586 =
-      simpleEventPluginEvents[i$jscomp$inline_1585],
-    domEventName$jscomp$inline_1587 =
-      eventName$jscomp$inline_1586.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1588 =
-      eventName$jscomp$inline_1586[0].toUpperCase() +
-      eventName$jscomp$inline_1586.slice(1);
+  var eventName$jscomp$inline_1560 =
+      simpleEventPluginEvents[i$jscomp$inline_1559],
+    domEventName$jscomp$inline_1561 =
+      eventName$jscomp$inline_1560.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1562 =
+      eventName$jscomp$inline_1560[0].toUpperCase() +
+      eventName$jscomp$inline_1560.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1587,
-    "on" + capitalizedEvent$jscomp$inline_1588
+    domEventName$jscomp$inline_1561,
+    "on" + capitalizedEvent$jscomp$inline_1562
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15597,17 +15443,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1765 = {
+var devToolsConfig$jscomp$inline_1739 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-fadda158",
+  version: "18.3.0-www-modern-9671399e",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2160 = {
-  bundleType: devToolsConfig$jscomp$inline_1765.bundleType,
-  version: devToolsConfig$jscomp$inline_1765.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1765.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1765.rendererConfig,
+var internals$jscomp$inline_2134 = {
+  bundleType: devToolsConfig$jscomp$inline_1739.bundleType,
+  version: devToolsConfig$jscomp$inline_1739.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1739.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1739.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15624,26 +15470,26 @@ var internals$jscomp$inline_2160 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1765.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1739.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-fadda158"
+  reconcilerVersion: "18.3.0-www-modern-9671399e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2135 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2161.isDisabled &&
-    hook$jscomp$inline_2161.supportsFiber
+    !hook$jscomp$inline_2135.isDisabled &&
+    hook$jscomp$inline_2135.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2161.inject(
-        internals$jscomp$inline_2160
+      (rendererID = hook$jscomp$inline_2135.inject(
+        internals$jscomp$inline_2134
       )),
-        (injectedHook = hook$jscomp$inline_2161);
+        (injectedHook = hook$jscomp$inline_2135);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -15800,4 +15646,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-fadda158";
+exports.version = "18.3.0-www-modern-9671399e";

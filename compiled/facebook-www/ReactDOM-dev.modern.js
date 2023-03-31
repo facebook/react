@@ -256,8 +256,6 @@ var disableInputAttributeSyncing =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-    dynamicFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
@@ -33588,7 +33586,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-5592667d";
+var ReactVersion = "18.3.0-www-modern-1f93a1ad";
 
 function createPortal$1(
   children,
@@ -33826,25 +33824,6 @@ function markRetryLaneIfNotHydrated(fiber, retryLane) {
   }
 }
 
-function attemptDiscreteHydration(fiber) {
-  if (fiber.tag !== SuspenseComponent) {
-    // We ignore HostRoots here because we can't increase
-    // their priority and they should not suspend on I/O,
-    // since you have to wrap anything that might suspend in
-    // Suspense.
-    return;
-  }
-
-  var lane = SyncLane;
-  var root = enqueueConcurrentRenderForLane(fiber, lane);
-
-  if (root !== null) {
-    var eventTime = requestEventTime();
-    scheduleUpdateOnFiber(root, fiber, lane, eventTime);
-  }
-
-  markRetryLaneIfNotHydrated(fiber, lane);
-}
 function attemptContinuousHydration(fiber) {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
@@ -34324,9 +34303,6 @@ var queuedPointers = new Map();
 var queuedPointerCaptures = new Map(); // We could consider replaying selectionchange and touchmoves too.
 
 var queuedExplicitHydrationTargets = [];
-function hasQueuedDiscreteEvents() {
-  return queuedDiscreteEvents.length > 0;
-}
 var discreteReplayableEvents = [
   "mousedown",
   "mouseup",
@@ -34375,53 +34351,6 @@ function createQueuedReplayableEvent(
     nativeEvent: nativeEvent,
     targetContainers: [targetContainer]
   };
-}
-
-function queueDiscreteEvent(
-  blockedOn,
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    return;
-  }
-
-  var queuedEvent = createQueuedReplayableEvent(
-    blockedOn,
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
-  queuedDiscreteEvents.push(queuedEvent);
-
-  if (queuedDiscreteEvents.length === 1) {
-    // If this was the first discrete event, we might be able to
-    // synchronously unblock it so that preventDefault still works.
-    while (queuedEvent.blockedOn !== null) {
-      var fiber = getInstanceFromNode$1(queuedEvent.blockedOn);
-
-      if (fiber === null) {
-        break;
-      }
-
-      attemptSynchronousHydration(fiber);
-
-      if (queuedEvent.blockedOn === null) {
-        // We got unblocked by hydration. Let's try again.
-        replayUnblockedEvents(); // If we're reblocked, on an inner boundary, we might need
-        // to attempt hydrating that one.
-
-        continue;
-      } else {
-        // We're still blocked from hydration, we have to give up
-        // and replay later.
-        break;
-      }
-    }
-  }
 } // Resets the replaying for this type of continuous event to no event.
 
 function clearIfContinuousEvent(domEventName, nativeEvent) {
@@ -34681,26 +34610,14 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
     );
 
     if (nextBlockedOn === null) {
-      if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-        var nativeEvent = queuedEvent.nativeEvent;
-        var nativeEventClone = new nativeEvent.constructor(
-          nativeEvent.type,
-          nativeEvent
-        );
-        setReplayingEvent(nativeEventClone);
-        nativeEvent.target.dispatchEvent(nativeEventClone);
-        resetReplayingEvent();
-      } else {
-        setReplayingEvent(queuedEvent.nativeEvent);
-        dispatchEventForPluginEventSystem(
-          queuedEvent.domEventName,
-          queuedEvent.eventSystemFlags,
-          queuedEvent.nativeEvent,
-          return_targetInst,
-          targetContainer
-        );
-        resetReplayingEvent();
-      }
+      var nativeEvent = queuedEvent.nativeEvent;
+      var nativeEventClone = new nativeEvent.constructor(
+        nativeEvent.type,
+        nativeEvent
+      );
+      setReplayingEvent(nativeEventClone);
+      nativeEvent.target.dispatchEvent(nativeEventClone);
+      resetReplayingEvent();
     } else {
       // We're still blocked. Try again later.
       var fiber = getInstanceFromNode$1(nextBlockedOn);
@@ -34726,64 +34643,7 @@ function attemptReplayContinuousQueuedEventInMap(queuedEvent, key, map) {
 }
 
 function replayUnblockedEvents() {
-  hasScheduledReplayAttempt = false;
-
-  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    // First replay discrete events.
-    while (queuedDiscreteEvents.length > 0) {
-      var nextDiscreteEvent = queuedDiscreteEvents[0];
-
-      if (nextDiscreteEvent.blockedOn !== null) {
-        // We're still blocked.
-        // Increase the priority of this boundary to unblock
-        // the next discrete event.
-        var fiber = getInstanceFromNode$1(nextDiscreteEvent.blockedOn);
-
-        if (fiber !== null) {
-          attemptDiscreteHydration(fiber);
-        }
-
-        break;
-      }
-
-      var targetContainers = nextDiscreteEvent.targetContainers;
-
-      while (targetContainers.length > 0) {
-        var targetContainer = targetContainers[0];
-        var nextBlockedOn = findInstanceBlockingEvent(
-          nextDiscreteEvent.domEventName,
-          nextDiscreteEvent.eventSystemFlags,
-          targetContainer,
-          nextDiscreteEvent.nativeEvent
-        );
-
-        if (nextBlockedOn === null) {
-          // This whole function is in !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-          // so we don't need the new replay behavior code branch.
-          setReplayingEvent(nextDiscreteEvent.nativeEvent);
-          dispatchEventForPluginEventSystem(
-            nextDiscreteEvent.domEventName,
-            nextDiscreteEvent.eventSystemFlags,
-            nextDiscreteEvent.nativeEvent,
-            return_targetInst,
-            targetContainer
-          );
-          resetReplayingEvent();
-        } else {
-          // We're still blocked. Try again later.
-          nextDiscreteEvent.blockedOn = nextBlockedOn;
-          break;
-        } // This target container was successfully dispatched. Try the next.
-
-        targetContainers.shift();
-      }
-
-      if (nextDiscreteEvent.blockedOn === null) {
-        // We've successfully replayed the first event. Let's try the next one.
-        queuedDiscreteEvents.shift();
-      }
-    }
-  } // Next replay any continuous events.
+  hasScheduledReplayAttempt = false; // Replay any continuous events.
 
   if (queuedFocus !== null && attemptReplayContinuousQueuedEvent(queuedFocus)) {
     queuedFocus = null;
@@ -34969,122 +34829,6 @@ function dispatchEvent(
     return;
   }
 
-  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-  } else {
-    dispatchEventOriginal(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-  }
-}
-
-function dispatchEventOriginal(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
-  // TODO: replaying capture phase events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // In eager mode, we attach capture listeners early, so we need
-  // to filter them out until we fix the logic to handle them correctly.
-  var allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
-
-  if (
-    allowReplay &&
-    hasQueuedDiscreteEvents() &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    // If we already have a queue of discrete events, and this is another discrete
-    // event, then we can't dispatch it regardless of its target, since they
-    // need to dispatch in order.
-    queueDiscreteEvent(
-      null, // Flags that we're not actually blocked on anything as far as we know.
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
-    return;
-  }
-
-  var blockedOn = findInstanceBlockingEvent(
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
-
-  if (blockedOn === null) {
-    dispatchEventForPluginEventSystem(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      return_targetInst,
-      targetContainer
-    );
-
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
-
-    return;
-  }
-
-  if (allowReplay) {
-    if (isDiscreteEventThatRequiresHydration(domEventName)) {
-      // This to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      );
-      return;
-    }
-
-    if (
-      queueIfContinuousEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      )
-    ) {
-      return;
-    } // We need to clear only if we didn't queue because
-    // queueing is accumulative.
-
-    clearIfContinuousEvent(domEventName, nativeEvent);
-  } // This is not replayable so we'll invoke it but without a target,
-  // in case the event system needs to trace it.
-
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    null,
-    targetContainer
-  );
-}
-
-function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
   var blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
@@ -35171,7 +34915,6 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
     targetContainer
   );
 }
-
 var return_targetInst = null; // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
 
