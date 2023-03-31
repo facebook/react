@@ -2488,7 +2488,10 @@ function gatherCapturedDeps(
     if (path.isMemberExpression()) {
       // For CallExpression, we need to depend on the receiver, not the
       // function itself.
-      if (path.parent.type === "CallExpression") {
+      if (
+        path.parent.type === "CallExpression" &&
+        path.parent.callee === path.node
+      ) {
         path = path.get("object");
       }
 
