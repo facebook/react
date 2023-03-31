@@ -955,6 +955,10 @@ function codegenJsxElement(
     case "StringLiteral": {
       return t.jsxText(value.value);
     }
+    case "JSXElement":
+    case "JSXFragment": {
+      return value;
+    }
     default: {
       return t.jsxExpressionContainer(value);
     }

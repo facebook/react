@@ -31,7 +31,7 @@ function Component(props) {
     }
     t1 = (
       <fbt desc={"Dialog to show to user"}>
-        Hello {<fbt:param name={"user name"}>{t0}</fbt:param>}
+        Hello <fbt:param name={"user name"}>{t0}</fbt:param>
       </fbt>
     );
     $[0] = props.name;

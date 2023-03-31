@@ -22,7 +22,7 @@ function Component(props) {
   if (c_0) {
     t0 = (
       <fbt desc={"Dialog to show to user"}>
-        Hello {<fbt:param name={"user name"}>{props.name}</fbt:param>}
+        Hello <fbt:param name={"user name"}>{props.name}</fbt:param>
       </fbt>
     );
     $[0] = props.name;
