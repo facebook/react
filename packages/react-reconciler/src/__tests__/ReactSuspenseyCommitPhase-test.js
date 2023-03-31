@@ -137,7 +137,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     // Nothing showing yet.
     expect(root).toMatchRenderedOutput(null);
 
-    // If there's an urgent update, it should interrupt the suspended commit.
+    // If there's an update, it should interrupt the suspended commit.
     await act(() => {
       root.render(<Text text="Something else" />);
     });
@@ -145,7 +145,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     expect(root).toMatchRenderedOutput('Something else');
   });
 
-  test('a non-urgent update does not interrupt a suspended commit', async () => {
+  test('a transition update interrupts a suspended commit', async () => {
     const root = ReactNoop.createRoot();
 
     // Mount an image. This transition will suspend because it's not inside a
@@ -159,26 +159,12 @@ describe('ReactSuspenseyCommitPhase', () => {
     // Nothing showing yet.
     expect(root).toMatchRenderedOutput(null);
 
-    // If there's another transition update, it should not interrupt the
-    // suspended commit.
+    // If there's an update, it should interrupt the suspended commit.
     await act(() => {
       startTransition(() => {
         root.render(<Text text="Something else" />);
       });
     });
-    // Still suspended.
-    expect(root).toMatchRenderedOutput(null);
-
-    await act(() => {
-      // Resolving the image should result in an immediate, synchronous commit.
-      resolveSuspenseyThing('A');
-      expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
-    });
-    // Then the second transition is unblocked.
-    // TODO: Right now the only way to unsuspend a commit early is to proceed
-    // with the commit even if everything isn't ready. Maybe there should also
-    // be a way to abort a commit so that it can be interrupted by
-    // another transition.
     assertLog(['Something else']);
     expect(root).toMatchRenderedOutput('Something else');
   });

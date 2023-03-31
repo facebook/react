@@ -725,8 +725,11 @@ export function scheduleUpdateOnFiber(
   // Check if the work loop is currently suspended and waiting for data to
   // finish loading.
   if (
-    workInProgressSuspendedReason === SuspendedOnData &&
-    root === workInProgressRoot
+    // Suspended render phase
+    (root === workInProgressRoot &&
+      workInProgressSuspendedReason === SuspendedOnData) ||
+    // Suspended commit phase
+    root.cancelPendingCommit !== null
   ) {
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
