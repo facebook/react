@@ -15844,23 +15844,22 @@ function waitForCommitToBeReady() {
     insertSuspendedStylesheets(state, state.stylesheets);
   return 0 < state.count
     ? function (commit) {
-        unsuspendAfterTimeout(state);
+        var stylesheetTimer = setTimeout(function () {
+          state.stylesheets &&
+            insertSuspendedStylesheets(state, state.stylesheets);
+          if (state.unsuspend) {
+            var unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }, 6e4);
         state.unsuspend = commit;
         return function () {
-          return (state.unsuspend = null);
+          state.unsuspend = null;
+          clearTimeout(stylesheetTimer);
         };
       }
     : null;
-}
-function unsuspendAfterTimeout(state) {
-  setTimeout(function () {
-    state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
-    if (state.unsuspend) {
-      var unsuspend = state.unsuspend;
-      state.unsuspend = null;
-      unsuspend();
-    }
-  }, 500);
 }
 function onUnsuspend() {
   this.count--;
@@ -16732,7 +16731,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1889 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-68d19c91",
+  version: "18.3.0-www-classic-cf74bdbb",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16776,7 +16775,7 @@ var devToolsConfig$jscomp$inline_1889 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-68d19c91"
+  reconcilerVersion: "18.3.0-www-classic-cf74bdbb"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17003,7 +17002,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-68d19c91";
+exports.version = "18.3.0-www-classic-cf74bdbb";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
