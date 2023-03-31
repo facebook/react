@@ -7409,11 +7409,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
     captureCommitPhaseErrorOnRoot(sourceFiber, sourceFiber, error);
   else
-    for (
-      nearestMountedAncestor = sourceFiber.return;
-      null !== nearestMountedAncestor;
-
-    ) {
+    for (; null !== nearestMountedAncestor; ) {
       if (3 === nearestMountedAncestor.tag) {
         captureCommitPhaseErrorOnRoot(
           nearestMountedAncestor,
@@ -8640,7 +8636,7 @@ var devToolsConfig$jscomp$inline_1007 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-43a70a610-20230330",
+  version: "18.3.0-next-ca01f359b-20230330",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1198 = {
@@ -8671,7 +8667,7 @@ var internals$jscomp$inline_1198 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-43a70a610-20230330"
+  reconcilerVersion: "18.3.0-next-ca01f359b-20230330"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1199 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
