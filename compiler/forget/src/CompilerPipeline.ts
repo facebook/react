@@ -12,7 +12,7 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
 } from "./HIR";
-import { EnvironmentConfig, Environment } from "./HIR/Environment";
+import { Environment, EnvironmentConfig } from "./HIR/Environment";
 import { validateConsistentIdentifiers } from "./HIR/ValidateConsistentIdentifiers";
 import {
   analyseFunctions,
@@ -29,6 +29,7 @@ import {
   flattenReactiveLoops,
   flattenScopesWithHooks,
   inferReactiveScopeVariables,
+  memoizeFbtOperandsInSameScope,
   mergeOverlappingReactiveScopes,
   promoteUsedTemporaries,
   propagateScopeDependencies,
@@ -101,6 +102,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "BuildReactiveFunction",
+    value: reactiveFunction,
+  });
+
+  memoizeFbtOperandsInSameScope(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "MemoizeFbtOperandsInSameScope",
     value: reactiveFunction,
   });
 

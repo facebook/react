@@ -18,5 +18,7 @@ declare global {
   let __DEV__: boolean | null | undefined;
 }
 
+console.log("loading Forget!!!");
+
 import ReactForgetBabelPlugin from "./Babel/BabelPlugin";
 export default ReactForgetBabelPlugin;
