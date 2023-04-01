@@ -1169,15 +1169,15 @@ export function replayFunctionComponent(
   nextProps: any,
   Component: any,
   renderLanes: Lanes,
+  secondArg: any
 ): Fiber | null {
   // This function is used to replay a component that previously suspended,
   // after its data resolves. It's a simplified version of
   // updateFunctionComponent that reuses the hooks from the previous attempt.
 
-  let context;
-  if (!disableLegacyContext) {
+  if (!disableLegacyContext && secondArg === undefined) {
     const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-    context = getMaskedContext(workInProgress, unmaskedContext);
+    secondArg = getMaskedContext(workInProgress, unmaskedContext);
   }
 
   prepareToReadContext(workInProgress, renderLanes);
@@ -1189,7 +1189,7 @@ export function replayFunctionComponent(
     workInProgress,
     Component,
     nextProps,
-    context,
+    secondArg,
   );
   const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {

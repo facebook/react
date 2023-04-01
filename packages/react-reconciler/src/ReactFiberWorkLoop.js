@@ -2387,6 +2387,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       // could maybe use this as an opportunity to say `use` doesn't work with
       // `defaultProps` :)
       const Component = unitOfWork.tag === FunctionComponent ? unitOfWork.type : unitOfWork.type.render;
+      const secondArg = unitOfWork.tag === FunctionComponent ? undefined : unitOfWork.ref;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
         unitOfWork.elementType === Component
@@ -2398,18 +2399,21 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         resolvedProps,
         Component,
         workInProgressRootRenderLanes,
+        secondArg
       );
       break;
     }
     case SimpleMemoComponent: {
       const Component = unitOfWork.type;
       const nextProps = unitOfWork.pendingProps;
+      const secondArg = undefined;
       next = replayFunctionComponent(
         current,
         unitOfWork,
         nextProps,
         Component,
         workInProgressRootRenderLanes,
+        secondArg
       );
       break;
     }
