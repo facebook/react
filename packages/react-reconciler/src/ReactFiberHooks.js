@@ -1863,6 +1863,9 @@ function pushEffect(
   destroy: (() => void) | void,
   deps: Array<mixed> | void | null,
 ): Effect {
+  if (destroy && destroy.CALLED) {
+    throw new Error('CALLED ' + destroy.NAME);
+  }
   const effect: Effect = {
     tag,
     create,

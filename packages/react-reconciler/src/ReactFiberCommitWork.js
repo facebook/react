@@ -358,6 +358,11 @@ function safelyCallDestroy(
   nearestMountedAncestor: Fiber | null,
   destroy: () => void,
 ) {
+  if (destroy.CALLED) {
+    throw new Error('CALLED');
+  }
+  destroy.CALLED = true;
+
   try {
     destroy();
   } catch (error) {

@@ -445,5 +445,57 @@ Random seed is ${SEED}
         </React.Suspense>,
       );
     });
+
+    it('6', async () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      try {
+        await testResolvedOutput(
+          <React.Fragment>
+            <Text
+              initialDelay={0}
+              text="A"
+              updates={[
+                {
+                  beginAfter: 0,
+                  suspendFor: 1,
+                },
+              ]}
+            />
+            <Container
+              name="X"
+              updates={[
+                {
+                  remountAfter: 0,
+                },
+                {
+                  remountAfter: 0,
+                },
+              ]}>
+              <Container
+                name="Y"
+                updates={[
+                  {
+                    remountAfter: 0,
+                  },
+                ]}>
+                <Text
+                  initialDelay={0}
+                  text="B"
+                  updates={[
+                    {
+                      beginAfter: 0,
+                      suspendFor: 1,
+                    },
+                  ]}
+                />
+              </Container>
+            </Container>
+          </React.Fragment>,
+        );
+      } catch (e) {
+        console.log(Scheduler.unstable_clearLog());
+        throw e;
+      }
+    });
   });
 });
