@@ -1478,8 +1478,10 @@ describe('ReactUse', () => {
     const promiseB = Promise.resolve('B');
     const promiseC = Promise.resolve('C');
 
+    const refSymbol = {};
+
     const Async = React.forwardRef((props, ref) => {
-      React.useImperativeHandle(ref, () => ({}));
+      React.useImperativeHandle(ref, () => refSymbol);
       const text = use(promiseA) + use(promiseB) + use(promiseC);
       return <Text text={text} />;
     });
@@ -1505,6 +1507,6 @@ describe('ReactUse', () => {
     });
     assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
-    expect(_ref).toBeDefined();
+    expect(_ref).toBe(refSymbol);
   });
 });
