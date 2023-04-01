@@ -9,7 +9,7 @@ import {shorthandToLonghand} from './CSSShorthandProperty';
 
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
-import {isUnitlessNumber} from '../shared/CSSProperty';
+import isUnitlessNumber from '../shared/isUnitlessNumber';
 import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
 
 /**
@@ -42,10 +42,7 @@ export function createDangerousStringForStyles(styles) {
           if (
             typeof value === 'number' &&
             value !== 0 &&
-            !(
-              isUnitlessNumber.hasOwnProperty(styleName) &&
-              isUnitlessNumber[styleName]
-            )
+            !isUnitlessNumber(styleName)
           ) {
             serialized +=
               delimiter + hyphenateStyleName(styleName) + ':' + value + 'px';
@@ -101,10 +98,7 @@ export function setValueForStyles(node, styles) {
     } else if (
       typeof value === 'number' &&
       value !== 0 &&
-      !(
-        isUnitlessNumber.hasOwnProperty(styleName) &&
-        isUnitlessNumber[styleName]
-      )
+      !isUnitlessNumber(styleName)
     ) {
       style[styleName] = value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
     } else {

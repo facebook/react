@@ -38,15 +38,15 @@ import {
   clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   getPropertyInfo,
-  isAttributeNameSafe,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
-import {isUnitlessNumber} from '../shared/CSSProperty';
+import isUnitlessNumber from '../shared/isUnitlessNumber';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -579,10 +579,7 @@ function pushStyleAttribute(
 
       nameChunk = processStyleName(styleName);
       if (typeof styleValue === 'number') {
-        if (
-          styleValue !== 0 &&
-          !hasOwnProperty.call(isUnitlessNumber, styleName)
-        ) {
+        if (styleValue !== 0 && !isUnitlessNumber(styleName)) {
           valueChunk = stringToChunk(styleValue + 'px'); // Presumes implicit 'px' suffix for unitless numbers
         } else {
           valueChunk = stringToChunk('' + styleValue);
@@ -614,6 +611,16 @@ const attributeAssign = stringToPrecomputedChunk('="');
 const attributeEnd = stringToPrecomputedChunk('"');
 const attributeEmptyString = stringToPrecomputedChunk('=""');
 
+function pushBooleanAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+    target.push(attributeSeparator, stringToChunk(name), attributeEmptyString);
+  }
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -630,6 +637,10 @@ function pushAttribute(
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
       // Ignored. These are built-in to React on the client.
+      return;
+    case 'multiple':
+    case 'muted':
+      pushBooleanAttribute(target, name, value);
       return;
   }
   if (
@@ -736,12 +747,13 @@ function pushAttribute(
         }
         break;
       default:
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         if (propertyInfo.sanitizeURL) {
-          if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
-          }
-          value = '' + (value: any);
-          sanitizeURL(value);
+          // We've already checked above.
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          value = sanitizeURL('' + (value: any));
         }
         target.push(
           attributeSeparator,
@@ -1114,9 +1126,9 @@ function pushInput(
   }
 
   if (checked !== null) {
-    pushAttribute(target, 'checked', checked);
+    pushBooleanAttribute(target, 'checked', checked);
   } else if (defaultChecked !== null) {
-    pushAttribute(target, 'checked', defaultChecked);
+    pushBooleanAttribute(target, 'checked', defaultChecked);
   }
   if (value !== null) {
     pushAttribute(target, 'value', value);
@@ -2471,11 +2483,7 @@ export function pushStartInstance(
       formatContext.insertionMode !== SVG_MODE &&
       formatContext.insertionMode !== MATHML_MODE
     ) {
-      if (
-        type.indexOf('-') === -1 &&
-        typeof props.is !== 'string' &&
-        type.toLowerCase() !== type
-      ) {
+      if (type.indexOf('-') === -1 && type.toLowerCase() !== type) {
         console.error(
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
@@ -2596,7 +2604,7 @@ export function pushStartInstance(
       );
     }
     default: {
-      if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
+      if (type.indexOf('-') === -1) {
         // Generic element
         return pushStartGenericElement(target, props, type);
       } else {
@@ -3844,15 +3852,12 @@ function writeStyleResourceDependencyHrefOnlyInJS(
 
 function writeStyleResourceDependencyInJS(
   destination: Destination,
-  href: string,
-  precedence: string,
+  href: mixed,
+  precedence: mixed,
   props: Object,
 ) {
-  if (__DEV__) {
-    checkAttributeStringCoercion(href, 'href');
-  }
-  const coercedHref = '' + (href: any);
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const coercedHref = sanitizeURL('' + (href: any));
   writeChunk(
     destination,
     stringToChunk(escapeJSObjectForInstructionScripts(coercedHref)),
@@ -3939,8 +3944,7 @@ function writeStyleResourceAttributeInJS(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
     default: {
@@ -4041,15 +4045,12 @@ function writeStyleResourceDependencyHrefOnlyInAttr(
 
 function writeStyleResourceDependencyInAttr(
   destination: Destination,
-  href: string,
-  precedence: string,
+  href: mixed,
+  precedence: mixed,
   props: Object,
 ) {
-  if (__DEV__) {
-    checkAttributeStringCoercion(href, 'href');
-  }
-  const coercedHref = '' + (href: any);
-  sanitizeURL(coercedHref);
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  const coercedHref = sanitizeURL('' + (href: any));
   writeChunk(
     destination,
     stringToChunk(escapeTextForBrowser(JSON.stringify(coercedHref))),
@@ -4136,8 +4137,7 @@ function writeStyleResourceAttributeInAttr(
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      attributeValue = '' + (value: any);
-      sanitizeURL(attributeValue);
+      value = sanitizeURL(value);
       break;
     }
     default: {

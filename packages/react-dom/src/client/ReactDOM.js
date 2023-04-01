@@ -55,12 +55,7 @@ import {
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
-export {
-  prefetchDNS,
-  preconnect,
-  preload,
-  preinit,
-} from 'react-dom-bindings/src/shared/ReactDOMFloat';
+export {prefetchDNS, preconnect, preload, preinit} from '../ReactDOMFloat';
 
 if (__DEV__) {
   if (

@@ -17,7 +17,8 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
-export const {enableUseRefAccessWarning} = dynamicFlags;
+export const {enableUseRefAccessWarning, enableDeferRootSchedulingToMicrotask} =
+  dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
@@ -52,15 +53,11 @@ export const enableCPUSuspense = true;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-  true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const skipUnmountedBoundaries = false;
 export const enableGetInspectorDataForInstanceInProduction = true;
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const createRootStrictEffectsByDefault = false;
 

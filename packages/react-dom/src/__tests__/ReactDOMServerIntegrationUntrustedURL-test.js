@@ -19,134 +19,8 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
 
-function runTests(itRenders, itRejectsRendering, expectToReject) {
-  itRenders('a http link with the word javascript in it', async render => {
-    const e = await render(
-      <a href="http://javascript:0/thisisfine">Click me</a>,
-    );
-    expect(e.tagName).toBe('A');
-    expect(e.href).toBe('http://javascript:0/thisisfine');
-  });
-
-  itRejectsRendering('a javascript protocol href', async render => {
-    // Only the first one warns. The second warning is deduped.
-    const e = await render(
-      <div>
-        <a href="javascript:notfine">p0wned</a>
-        <a href="javascript:notfineagain">p0wned again</a>
-      </div>,
-      1,
-    );
-    expect(e.firstChild.href).toBe('javascript:notfine');
-    expect(e.lastChild.href).toBe('javascript:notfineagain');
-  });
-
-  itRejectsRendering(
-    'a javascript protocol with leading spaces',
-    async render => {
-      const e = await render(
-        <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
-        1,
-      );
-      // We use an approximate comparison here because JSDOM might not parse
-      // \u0000 in HTML properly.
-      expect(e.href).toContain('notfine');
-    },
-  );
-
-  itRejectsRendering(
-    'a javascript protocol with intermediate new lines and mixed casing',
-    async render => {
-      const e = await render(
-        <a href={'\t\r\n Jav\rasCr\r\niP\t\n\rt\n:notfine'}>p0wned</a>,
-        1,
-      );
-      expect(e.href).toBe('javascript:notfine');
-    },
-  );
-
-  itRejectsRendering('a javascript protocol area href', async render => {
-    const e = await render(
-      <map>
-        <area href="javascript:notfine" />
-      </map>,
-      1,
-    );
-    expect(e.firstChild.href).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering('a javascript protocol form action', async render => {
-    const e = await render(<form action="javascript:notfine">p0wned</form>, 1);
-    expect(e.action).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering(
-    'a javascript protocol button formAction',
-    async render => {
-      const e = await render(<input formAction="javascript:notfine" />, 1);
-      expect(e.getAttribute('formAction')).toBe('javascript:notfine');
-    },
-  );
-
-  itRejectsRendering('a javascript protocol input formAction', async render => {
-    const e = await render(
-      <button formAction="javascript:notfine">p0wned</button>,
-      1,
-    );
-    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering('a javascript protocol iframe src', async render => {
-    const e = await render(<iframe src="javascript:notfine" />, 1);
-    expect(e.src).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering('a javascript protocol frame src', async render => {
-    const e = await render(
-      <html>
-        <head />
-        <frameset>
-          <frame src="javascript:notfine" />
-        </frameset>
-      </html>,
-      1,
-    );
-    expect(e.lastChild.firstChild.src).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering('a javascript protocol in an SVG link', async render => {
-    const e = await render(
-      <svg>
-        <a href="javascript:notfine" />
-      </svg>,
-      1,
-    );
-    expect(e.firstChild.getAttribute('href')).toBe('javascript:notfine');
-  });
-
-  itRejectsRendering(
-    'a javascript protocol in an SVG link with a namespace',
-    async render => {
-      const e = await render(
-        <svg>
-          <a xlinkHref="javascript:notfine" />
-        </svg>,
-        1,
-      );
-      expect(
-        e.firstChild.getAttributeNS('http://www.w3.org/1999/xlink', 'href'),
-      ).toBe('javascript:notfine');
-    },
-  );
-
-  it('rejects a javascript protocol href if it is added during an update', () => {
-    const container = document.createElement('div');
-    ReactDOM.render(<a href="thisisfine">click me</a>, container);
-    expectToReject(() => {
-      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
-    });
-  });
-}
+const EXPECTED_SAFE_URL =
+  "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
 
 describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   // The `itRenders` helpers don't work with the gate pragma, so we have to do
@@ -177,14 +51,131 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     resetModules();
   });
 
-  runTests(itRenders, itRenders, fn =>
-    expect(fn).toErrorDev(
+  itRenders('a http link with the word javascript in it', async render => {
+    const e = await render(
+      <a href="http://javascript:0/thisisfine">Click me</a>,
+    );
+    expect(e.tagName).toBe('A');
+    expect(e.href).toBe('http://javascript:0/thisisfine');
+  });
+
+  itRenders('a javascript protocol href', async render => {
+    // Only the first one warns. The second warning is deduped.
+    const e = await render(
+      <div>
+        <a href="javascript:notfine">p0wned</a>
+        <a href="javascript:notfineagain">p0wned again</a>
+      </div>,
+      1,
+    );
+    expect(e.firstChild.href).toBe('javascript:notfine');
+    expect(e.lastChild.href).toBe('javascript:notfineagain');
+  });
+
+  itRenders('a javascript protocol with leading spaces', async render => {
+    const e = await render(
+      <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
+      1,
+    );
+    // We use an approximate comparison here because JSDOM might not parse
+    // \u0000 in HTML properly.
+    expect(e.href).toContain('notfine');
+  });
+
+  itRenders(
+    'a javascript protocol with intermediate new lines and mixed casing',
+    async render => {
+      const e = await render(
+        <a href={'\t\r\n Jav\rasCr\r\niP\t\n\rt\n:notfine'}>p0wned</a>,
+        1,
+      );
+      expect(e.href).toBe('javascript:notfine');
+    },
+  );
+
+  itRenders('a javascript protocol area href', async render => {
+    const e = await render(
+      <map>
+        <area href="javascript:notfine" />
+      </map>,
+      1,
+    );
+    expect(e.firstChild.href).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol form action', async render => {
+    const e = await render(<form action="javascript:notfine">p0wned</form>, 1);
+    expect(e.action).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol button formAction', async render => {
+    const e = await render(<input formAction="javascript:notfine" />, 1);
+    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol input formAction', async render => {
+    const e = await render(
+      <button formAction="javascript:notfine">p0wned</button>,
+      1,
+    );
+    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol iframe src', async render => {
+    const e = await render(<iframe src="javascript:notfine" />, 1);
+    expect(e.src).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol frame src', async render => {
+    const e = await render(
+      <html>
+        <head />
+        <frameset>
+          <frame src="javascript:notfine" />
+        </frameset>
+      </html>,
+      1,
+    );
+    expect(e.lastChild.firstChild.src).toBe('javascript:notfine');
+  });
+
+  itRenders('a javascript protocol in an SVG link', async render => {
+    const e = await render(
+      <svg>
+        <a href="javascript:notfine" />
+      </svg>,
+      1,
+    );
+    expect(e.firstChild.getAttribute('href')).toBe('javascript:notfine');
+  });
+
+  itRenders(
+    'a javascript protocol in an SVG link with a namespace',
+    async render => {
+      const e = await render(
+        <svg>
+          <a xlinkHref="javascript:notfine" />
+        </svg>,
+        1,
+      );
+      expect(
+        e.firstChild.getAttributeNS('http://www.w3.org/1999/xlink', 'href'),
+      ).toBe('javascript:notfine');
+    },
+  );
+
+  it('rejects a javascript protocol href if it is added during an update', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<a href="thisisfine">click me</a>, container);
+    expect(() => {
+      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    }).toErrorDev(
       'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
         'dangerouslySetInnerHTML instead. React was passed "javascript:notfine".\n' +
         '    in a (at **)',
-    ),
-  );
+    );
+  });
 });
 
 describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', () => {
@@ -216,33 +207,126 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
   const {
     resetModules,
     itRenders,
-    itThrowsWhenRendering,
     clientRenderOnBadMarkup,
     clientRenderOnServerString,
   } = ReactDOMServerIntegrationUtils(initModules);
-
-  const expectToReject = fn => {
-    let msg;
-    try {
-      fn();
-    } catch (x) {
-      msg = x.message;
-    }
-    expect(msg).toContain(
-      'React has blocked a javascript: URL as a security precaution.',
-    );
-  };
 
   beforeEach(() => {
     resetModules();
   });
 
-  runTests(
-    itRenders,
-    (message, test) =>
-      itThrowsWhenRendering(message, test, 'blocked a javascript: URL'),
-    expectToReject,
+  itRenders('a http link with the word javascript in it', async render => {
+    const e = await render(
+      <a href="http://javascript:0/thisisfine">Click me</a>,
+    );
+    expect(e.tagName).toBe('A');
+    expect(e.href).toBe('http://javascript:0/thisisfine');
+  });
+
+  itRenders('a javascript protocol href', async render => {
+    // Only the first one warns. The second warning is deduped.
+    const e = await render(
+      <div>
+        <a href="javascript:notfine">p0wned</a>
+        <a href="javascript:notfineagain">p0wned again</a>
+      </div>,
+    );
+    expect(e.firstChild.href).toBe(EXPECTED_SAFE_URL);
+    expect(e.lastChild.href).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol with leading spaces', async render => {
+    const e = await render(
+      <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
+    );
+    // We use an approximate comparison here because JSDOM might not parse
+    // \u0000 in HTML properly.
+    expect(e.href).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders(
+    'a javascript protocol with intermediate new lines and mixed casing',
+    async render => {
+      const e = await render(
+        <a href={'\t\r\n Jav\rasCr\r\niP\t\n\rt\n:notfine'}>p0wned</a>,
+      );
+      expect(e.href).toBe(EXPECTED_SAFE_URL);
+    },
   );
+
+  itRenders('a javascript protocol area href', async render => {
+    const e = await render(
+      <map>
+        <area href="javascript:notfine" />
+      </map>,
+    );
+    expect(e.firstChild.href).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol form action', async render => {
+    const e = await render(<form action="javascript:notfine">p0wned</form>);
+    expect(e.action).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol button formAction', async render => {
+    const e = await render(<input formAction="javascript:notfine" />);
+    expect(e.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol input formAction', async render => {
+    const e = await render(
+      <button formAction="javascript:notfine">p0wned</button>,
+    );
+    expect(e.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol iframe src', async render => {
+    const e = await render(<iframe src="javascript:notfine" />);
+    expect(e.src).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol frame src', async render => {
+    const e = await render(
+      <html>
+        <head />
+        <frameset>
+          <frame src="javascript:notfine" />
+        </frameset>
+      </html>,
+    );
+    expect(e.lastChild.firstChild.src).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders('a javascript protocol in an SVG link', async render => {
+    const e = await render(
+      <svg>
+        <a href="javascript:notfine" />
+      </svg>,
+    );
+    expect(e.firstChild.getAttribute('href')).toBe(EXPECTED_SAFE_URL);
+  });
+
+  itRenders(
+    'a javascript protocol in an SVG link with a namespace',
+    async render => {
+      const e = await render(
+        <svg>
+          <a xlinkHref="javascript:notfine" />
+        </svg>,
+      );
+      expect(
+        e.firstChild.getAttributeNS('http://www.w3.org/1999/xlink', 'href'),
+      ).toBe(EXPECTED_SAFE_URL);
+    },
+  );
+
+  it('rejects a javascript protocol href if it is added during an update', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
+    expect(container.firstChild.href).toBe('http://thisisfine/');
+    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
+  });
 
   itRenders('only the first invocation of toString', async render => {
     let expectedToStringCalls = 1;
@@ -255,9 +339,8 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
       // The hydration validation calls it one extra time.
       // TODO: It would be good if we only called toString once for
       // consistency but the code structure makes that hard right now.
-      expectedToStringCalls = 2;
-    }
-    if (__DEV__) {
+      expectedToStringCalls = 5;
+    } else if (__DEV__) {
       // Checking for string coercion problems results in double the
       // toString calls in DEV
       expectedToStringCalls *= 2;
@@ -283,14 +366,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
   it('rejects a javascript protocol href if it is added during an update twice', () => {
     const container = document.createElement('div');
-    ReactDOM.render(<a href="thisisfine">click me</a>, container);
-    expectToReject(() => {
-      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
-    });
+    ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
+    expect(container.firstChild.href).toBe('http://thisisfine/');
+    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
     // The second update ensures that a global flag hasn't been added to the regex
     // which would fail to match the second time it is called.
-    expectToReject(() => {
-      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
-    });
+    ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
   });
 });

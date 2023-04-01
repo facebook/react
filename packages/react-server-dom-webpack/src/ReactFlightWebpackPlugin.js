@@ -9,8 +9,8 @@
 
 import {join} from 'path';
 import {pathToFileURL} from 'url';
-
 import asyncLib from 'neo-async';
+import * as acorn from 'acorn-loose';
 
 import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
 import NullDependency from 'webpack/lib/dependencies/NullDependency';
@@ -117,10 +117,12 @@ export default class ReactFlightWebpackPlugin {
       PLUGIN_NAME,
       ({contextModuleFactory}, callback) => {
         const contextResolver = compiler.resolverFactory.get('context', {});
+        const normalResolver = compiler.resolverFactory.get('normal');
 
         _this.resolveAllClientFiles(
           compiler.context,
           contextResolver,
+          normalResolver,
           compiler.inputFileSystem,
           contextModuleFactory,
           function (err, resolvedClientRefs) {
@@ -219,6 +221,10 @@ export default class ReactFlightWebpackPlugin {
             return;
           }
 
+          const resolvedClientFiles = new Set(
+            (resolvedClientReferences || []).map(ref => ref.request),
+          );
+
           const clientManifest: {
             [string]: {chunks: $FlowFixMe, id: string, name: string},
           } = {};
@@ -237,8 +243,7 @@ export default class ReactFlightWebpackPlugin {
               // TODO: Hook into deps instead of the target module.
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.
-
-              if (!/\.(js|ts)x?$/.test(module.resource)) {
+              if (!resolvedClientFiles.has(module.resource)) {
                 return;
               }
 
@@ -328,6 +333,7 @@ export default class ReactFlightWebpackPlugin {
   resolveAllClientFiles(
     context: string,
     contextResolver: any,
+    normalResolver: any,
     fs: any,
     contextModuleFactory: any,
     callback: (
@@ -335,6 +341,31 @@ export default class ReactFlightWebpackPlugin {
       result?: $ReadOnlyArray<ClientReferenceDependency>,
     ) => void,
   ) {
+    function hasUseClientDirective(source: string): boolean {
+      if (source.indexOf('use client') === -1) {
+        return false;
+      }
+      let body;
+      try {
+        body = acorn.parse(source, {
+          ecmaVersion: '2024',
+          sourceType: 'module',
+        }).body;
+      } catch (x) {
+        return false;
+      }
+      for (let i = 0; i < body.length; i++) {
+        const node = body[i];
+        if (node.type !== 'ExpressionStatement' || !node.directive) {
+          break;
+        }
+        if (node.directive === 'use client') {
+          return true;
+        }
+      }
+      return false;
+    }
+
     asyncLib.map(
       this.clientReferences,
       (
@@ -373,6 +404,7 @@ export default class ReactFlightWebpackPlugin {
               options,
               (err2: null | Error, deps: Array<any /*ModuleDependency*/>) => {
                 if (err2) return cb(err2);
+
                 const clientRefDeps = deps.map(dep => {
                   // use userRequest instead of request. request always end with undefined which is wrong
                   const request = join(resolvedDirectory, dep.userRequest);
@@ -380,7 +412,38 @@ export default class ReactFlightWebpackPlugin {
                   clientRefDep.userRequest = dep.userRequest;
                   return clientRefDep;
                 });
-                cb(null, clientRefDeps);
+
+                asyncLib.filter(
+                  clientRefDeps,
+                  (
+                    clientRefDep: ClientReferenceDependency,
+                    filterCb: (err: null | Error, truthValue: boolean) => void,
+                  ) => {
+                    normalResolver.resolve(
+                      {},
+                      context,
+                      clientRefDep.request,
+                      {},
+                      (err3: null | Error, resolvedPath: mixed) => {
+                        if (err3 || typeof resolvedPath !== 'string') {
+                          return filterCb(null, false);
+                        }
+                        fs.readFile(
+                          resolvedPath,
+                          'utf-8',
+                          (err4: null | Error, content: string) => {
+                            if (err4 || typeof content !== 'string') {
+                              return filterCb(null, false);
+                            }
+                            const useClient = hasUseClientDirective(content);
+                            filterCb(null, useClient);
+                          },
+                        );
+                      },
+                    );
+                  },
+                  cb,
+                );
               },
             );
           },

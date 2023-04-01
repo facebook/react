@@ -7,7 +7,7 @@
  * @flow
  */
 
-const acorn = require('acorn');
+const acorn = require('acorn-loose');
 
 const url = require('url');
 

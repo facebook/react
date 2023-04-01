@@ -293,18 +293,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       await promise;
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      assertLog(['D', 'A']);
-    } else {
-      // After the click, we should prioritize D and the Click first,
-      // and only after that render A and C.
-      assertLog(['D', 'Clicked D', 'A']);
-    }
+    assertLog(['D', 'A']);
 
     document.body.removeChild(container);
   });
@@ -378,16 +367,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     dispatchClickEvent(spanC);
     dispatchClickEvent(spanD);
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      assertLog(['App', 'C', 'Clicked C']);
-    } else {
-      assertLog(['App']);
-    }
+    assertLog(['App', 'C', 'Clicked C']);
 
     await act(async () => {
       suspend = false;
@@ -395,29 +375,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       await promise;
     });
 
-    if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-    ) {
-      assertLog([
-        'A',
-        'D',
-        // B should render last since it wasn't clicked.
-        'B',
-      ]);
-    } else {
-      // We should prioritize hydrating A, C and D first since we clicked in
-      // them. Only after they're done will we hydrate B.
-      assertLog([
-        'A',
-        'Clicked A',
-        'C',
-        'Clicked C',
-        'D',
-        'Clicked D',
-        // B should render last since it wasn't clicked.
-        'B',
-      ]);
-    }
+    assertLog([
+      'A',
+      'D',
+      // B should render last since it wasn't clicked.
+      'B',
+    ]);
 
     document.body.removeChild(container);
   });
@@ -571,17 +534,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
       resolve();
       await promise;
     });
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      // no replay
-      assertLog(['D', 'A']);
-    } else {
-      assertLog(['D', 'Clicked D', 'A']);
-    }
+
+    // no replay
+    assertLog(['D', 'A']);
 
     document.body.removeChild(container);
   });
@@ -660,42 +615,20 @@ describe('ReactDOMServerSelectiveHydration', () => {
     createEventTarget(spanC).virtualclick();
     createEventTarget(spanD).virtualclick();
 
-    if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-    ) {
-      assertLog(['App', 'C', 'Clicked C']);
-    } else {
-      assertLog(['App']);
-    }
+    assertLog(['App', 'C', 'Clicked C']);
+
     await act(async () => {
       suspend = false;
       resolve();
       await promise;
     });
 
-    if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-    ) {
-      assertLog([
-        'A',
-        'D',
-        // B should render last since it wasn't clicked.
-        'B',
-      ]);
-    } else {
-      // We should prioritize hydrating A, C and D first since we clicked in
-      // them. Only after they're done will we hydrate B.
-      assertLog([
-        'A',
-        'Clicked A',
-        'C',
-        'Clicked C',
-        'D',
-        'Clicked D',
-        // B should render last since it wasn't clicked.
-        'B',
-      ]);
-    }
+    assertLog([
+      'A',
+      'D',
+      // B should render last since it wasn't clicked.
+      'B',
+    ]);
 
     document.body.removeChild(container);
   });
@@ -779,37 +712,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
       resolve();
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      // We should prioritize hydrating D first because we clicked it.
-      // but event isnt replayed
-      assertLog([
-        'D',
-        'B', // Ideally this should be later.
-        'C',
-        'Hover C',
-        'A',
-      ]);
-    } else {
-      // We should prioritize hydrating D first because we clicked it.
-      // Next we should hydrate C since that's the current hover target.
-      // To simplify implementation details we hydrate both B and C at
-      // the same time since B was already scheduled.
-      // This is ok because it will at least not continue for nested
-      // boundary. See the next test below.
-      assertLog([
-        'D',
-        'Clicked D',
-        'B', // Ideally this should be later.
-        'C',
-        'Hover C',
-        'A',
-      ]);
-    }
+    // We should prioritize hydrating D first because we clicked it.
+    // but event isnt replayed
+    assertLog([
+      'D',
+      'B', // Ideally this should be later.
+      'C',
+      'Hover C',
+      'A',
+    ]);
 
     document.body.removeChild(container);
   });
@@ -932,47 +843,22 @@ describe('ReactDOMServerSelectiveHydration', () => {
       resolve();
     });
 
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      // We should prioritize hydrating D first because we clicked it.
-      // but event isnt replayed
-      assertLog([
-        'D',
-        'B', // Ideally this should be later.
-        'C',
-        // Mouse out events aren't replayed
-        // 'Mouse Out Capture B',
-        // 'Mouse Out B',
-        'Mouse Over Capture Parent',
-        'Mouse Over Capture C',
-        // Stop propagation stops these
-        // 'Mouse Over Capture Inner C',
-        // 'Mouse Over C',
-        'A',
-      ]);
-    } else {
-      // We should prioritize hydrating D first because we clicked it.
-      // Next we should hydrate C since that's the current hover target.
-      // To simplify implementation details we hydrate both B and C at
-      // the same time since B was already scheduled.
-      // This is ok because it will at least not continue for nested
-      // boundary. See the next test below.
-      assertLog([
-        'D',
-        'Clicked D',
-        'B', // Ideally this should be later.
-        'C',
-        // Capture phase isn't replayed
-        // Mouseout isn't replayed
-        'Mouse Over C',
-        'Mouse Enter C',
-        'A',
-      ]);
-    }
+    // We should prioritize hydrating D first because we clicked it.
+    // but event isnt replayed
+    assertLog([
+      'D',
+      'B', // Ideally this should be later.
+      'C',
+      // Mouse out events aren't replayed
+      // 'Mouse Out Capture B',
+      // 'Mouse Out B',
+      'Mouse Over Capture Parent',
+      'Mouse Over Capture C',
+      // Stop propagation stops these
+      // 'Mouse Over Capture Inner C',
+      // 'Mouse Over C',
+      'A',
+    ]);
 
     // This test shows existing quirk where stopPropagation on mouseout
     // prevents mouseEnter from firing
@@ -1129,19 +1015,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       OuterTestUtils.assertLog(['Suspend Outer']);
-      if (
-        gate(
-          flags =>
-            flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-        )
-      ) {
-        // InnerApp doesn't see the event because OuterApp calls stopPropagation in
-        // capture phase since the event is blocked on suspended component
-        InnerTestUtils.assertLog([]);
-      } else {
-        // no stopPropagation
-        InnerTestUtils.assertLog(['Suspend Inner']);
-      }
+
+      // InnerApp doesn't see the event because OuterApp calls stopPropagation in
+      // capture phase since the event is blocked on suspended component
+      InnerTestUtils.assertLog([]);
 
       assertLog([]);
     });
@@ -1149,7 +1026,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
       document.body.innerHTML = '';
     });
 
-    // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
     it('Inner hydrates first then Outer', async () => {
       dispatchMouseHoverEvent(innerDiv);
 
@@ -1191,7 +1067,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
       assertLog(['Inner Mouse Enter', 'Outer Mouse Enter']);
     });
 
-    // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
     it('Outer hydrates first then Inner', async () => {
       dispatchMouseHoverEvent(innerDiv);
 
@@ -1250,7 +1125,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
   });
 
-  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('replays event with null target when tree is dismounted', async () => {
     let suspend = false;
     let resolve;
@@ -1565,7 +1439,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('fires capture event handlers and native events if content is hydratable during discrete event', async () => {
     spyOnDev(console, 'error');
     function Child({text}) {
@@ -1637,7 +1510,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
     let triggeredParent = false;
     let triggeredChild = false;
@@ -1763,16 +1635,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
 
     // The app should have successfully hydrated and rendered
-    if (
-      gate(
-        flags =>
-          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-      )
-    ) {
-      assertLog(['App', 'A']);
-    } else {
-      assertLog(['App', 'A', 'Clicked A']);
-    }
+    assertLog(['App', 'A']);
 
     document.body.removeChild(container);
   });

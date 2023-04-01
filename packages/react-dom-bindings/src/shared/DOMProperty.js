@@ -7,8 +7,6 @@
  * @flow
  */
 
-import hasOwnProperty from 'shared/hasOwnProperty';
-
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 // A simple string attribute.
@@ -44,44 +42,10 @@ export type PropertyInfo = {
   +acceptsBooleans: boolean,
   +attributeName: string,
   +attributeNamespace: string | null,
-  +mustUseProperty: boolean,
-  +propertyName: string,
   +type: PropertyType,
   +sanitizeURL: boolean,
   +removeEmptyString: boolean,
 };
-
-/* eslint-disable max-len */
-export const ATTRIBUTE_NAME_START_CHAR =
-  ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
-/* eslint-enable max-len */
-export const ATTRIBUTE_NAME_CHAR: string =
-  ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
-
-export const VALID_ATTRIBUTE_NAME_REGEX: RegExp = new RegExp(
-  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
-);
-
-const illegalAttributeNameCache: {[string]: boolean} = {};
-const validatedAttributeNameCache: {[string]: boolean} = {};
-
-export function isAttributeNameSafe(attributeName: string): boolean {
-  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
-    return true;
-  }
-  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
-    return false;
-  }
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
-    return true;
-  }
-  illegalAttributeNameCache[attributeName] = true;
-  if (__DEV__) {
-    console.error('Invalid attribute name: `%s`', attributeName);
-  }
-  return false;
-}
 
 export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
@@ -89,9 +53,7 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
 
 // $FlowFixMe[missing-this-annot]
 function PropertyInfoRecord(
-  name: string,
   type: PropertyType,
-  mustUseProperty: boolean,
   attributeName: string,
   attributeNamespace: string | null,
   sanitizeURL: boolean,
@@ -103,8 +65,6 @@ function PropertyInfoRecord(
     type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
-  this.mustUseProperty = mustUseProperty;
-  this.propertyName = name;
   this.type = type;
   this.sanitizeURL = sanitizeURL;
   this.removeEmptyString = removeEmptyString;
@@ -125,9 +85,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ].forEach(([name, attributeName]) => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -141,9 +99,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEANISH_STRING,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -163,9 +119,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEANISH_STRING,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -204,36 +158,8 @@ const properties: {[string]: $FlowFixMe} = {};
 ].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     BOOLEAN,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
-// These are the few React props that we set as DOM properties
-// rather than attributes. These are all booleans.
-[
-  'checked',
-  // Note: `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`. We have special logic for handling this.
-  'multiple',
-  'muted',
-  'selected',
-
-  // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEAN,
-    true, // mustUseProperty
-    name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
@@ -252,9 +178,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     OVERLOADED_BOOLEAN,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -275,9 +199,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     POSITIVE_NUMERIC,
-    false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -289,9 +211,7 @@ const properties: {[string]: $FlowFixMe} = {};
 ['rowSpan', 'start'].forEach(name => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     NUMERIC,
-    false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -390,9 +310,7 @@ const capitalize = (token: string) => token[1].toUpperCase();
   const name = attributeName.replace(CAMELIZE, capitalize);
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     null, // attributeNamespace
     false, // sanitizeURL
@@ -416,9 +334,7 @@ const capitalize = (token: string) => token[1].toUpperCase();
   const name = attributeName.replace(CAMELIZE, capitalize);
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     'http://www.w3.org/1999/xlink',
     false, // sanitizeURL
@@ -439,9 +355,7 @@ const capitalize = (token: string) => token[1].toUpperCase();
   const name = attributeName.replace(CAMELIZE, capitalize);
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[name] = new PropertyInfoRecord(
-    name,
     STRING,
-    false, // mustUseProperty
     attributeName,
     'http://www.w3.org/XML/1998/namespace',
     false, // sanitizeURL
@@ -455,9 +369,7 @@ const capitalize = (token: string) => token[1].toUpperCase();
 ['tabIndex', 'crossOrigin'].forEach(attributeName => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     false, // sanitizeURL
@@ -470,9 +382,7 @@ const capitalize = (token: string) => token[1].toUpperCase();
 const xlinkHref = 'xlinkHref';
 // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 properties[xlinkHref] = new PropertyInfoRecord(
-  'xlinkHref',
   STRING,
-  false, // mustUseProperty
   'xlink:href',
   'http://www.w3.org/1999/xlink',
   true, // sanitizeURL
@@ -482,9 +392,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
 const formAction = 'formAction';
 // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 properties[formAction] = new PropertyInfoRecord(
-  'formAction',
   STRING,
-  false, // mustUseProperty
   'formaction', // attributeName
   null, // attributeNamespace
   true, // sanitizeURL
@@ -494,9 +402,7 @@ properties[formAction] = new PropertyInfoRecord(
 ['src', 'href', 'action'].forEach(attributeName => {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   properties[attributeName] = new PropertyInfoRecord(
-    attributeName,
     STRING,
-    false, // mustUseProperty
     attributeName.toLowerCase(), // attributeName
     null, // attributeNamespace
     true, // sanitizeURL

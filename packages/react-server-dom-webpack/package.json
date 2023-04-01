@@ -84,7 +84,7 @@
     "webpack": "^5.59.0"
   },
   "dependencies": {
-    "acorn": "^6.2.1",
+    "acorn-loose": "^8.3.0",
     "neo-async": "^2.6.1",
     "loose-envify": "^1.1.0"
   },
