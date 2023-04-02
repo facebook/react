@@ -621,6 +621,26 @@ function pushBooleanAttribute(
   }
 }
 
+function pushStringAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  if (
+    typeof value !== 'function' &&
+    typeof value !== 'symbol' &&
+    typeof value !== 'boolean'
+  ) {
+    target.push(
+      attributeSeparator,
+      stringToChunk(name),
+      attributeAssign,
+      stringToChunk(escapeTextForBrowser(value)),
+      attributeEnd,
+    );
+  }
+}
+
 function pushAttribute(
   target: Array<Chunk | PrecomputedChunk>,
   name: string,
@@ -680,6 +700,230 @@ function pushAttribute(
       }
       return;
     }
+    // This is a list of all SVG attributes that need special casing.
+    // Regular attributes that just accept strings.
+    case 'accentHeight':
+      pushStringAttribute(target, 'accent-height', value);
+      return;
+    case 'alignmentBaseline':
+      pushStringAttribute(target, 'alignment-baseline', value);
+      return;
+    case 'arabicForm':
+      pushStringAttribute(target, 'arabic-form', value);
+      return;
+    case 'baselineShift':
+      pushStringAttribute(target, 'baseline-shift', value);
+      return;
+    case 'capHeight':
+      pushStringAttribute(target, 'cap-height', value);
+      return;
+    case 'clipPath':
+      pushStringAttribute(target, 'clip-path', value);
+      return;
+    case 'clipRule':
+      pushStringAttribute(target, 'clip-rule', value);
+      return;
+    case 'colorInterpolation':
+      pushStringAttribute(target, 'color-interpolation', value);
+      return;
+    case 'colorInterpolationFilters':
+      pushStringAttribute(target, 'color-interpolation-filters', value);
+      return;
+    case 'colorProfile':
+      pushStringAttribute(target, 'color-profile', value);
+      return;
+    case 'colorRendering':
+      pushStringAttribute(target, 'color-rendering', value);
+      return;
+    case 'dominantBaseline':
+      pushStringAttribute(target, 'dominant-baseline', value);
+      return;
+    case 'enableBackground':
+      pushStringAttribute(target, 'enable-background', value);
+      return;
+    case 'fillOpacity':
+      pushStringAttribute(target, 'fill-opacity', value);
+      return;
+    case 'fillRule':
+      pushStringAttribute(target, 'fill-rule', value);
+      return;
+    case 'floodColor':
+      pushStringAttribute(target, 'flood-color', value);
+      return;
+    case 'floodOpacity':
+      pushStringAttribute(target, 'flood-opacity', value);
+      return;
+    case 'fontFamily':
+      pushStringAttribute(target, 'font-family', value);
+      return;
+    case 'fontSize':
+      pushStringAttribute(target, 'font-size', value);
+      return;
+    case 'fontSizeAdjust':
+      pushStringAttribute(target, 'font-size-adjust', value);
+      return;
+    case 'fontStretch':
+      pushStringAttribute(target, 'font-stretch', value);
+      return;
+    case 'fontStyle':
+      pushStringAttribute(target, 'font-style', value);
+      return;
+    case 'fontVariant':
+      pushStringAttribute(target, 'font-variant', value);
+      return;
+    case 'fontWeight':
+      pushStringAttribute(target, 'font-weight', value);
+      return;
+    case 'glyphName':
+      pushStringAttribute(target, 'glyph-name', value);
+      return;
+    case 'glyphOrientationHorizontal':
+      pushStringAttribute(target, 'glyph-orientation-horizontal', value);
+      return;
+    case 'glyphOrientationVertical':
+      pushStringAttribute(target, 'glyph-orientation-vertical', value);
+      return;
+    case 'horizAdvX':
+      pushStringAttribute(target, 'horiz-adv-x', value);
+      return;
+    case 'horizOriginX':
+      pushStringAttribute(target, 'horiz-origin-x', value);
+      return;
+    case 'imageRendering':
+      pushStringAttribute(target, 'image-rendering', value);
+      return;
+    case 'letterSpacing':
+      pushStringAttribute(target, 'letter-spacing', value);
+      return;
+    case 'lightingColor':
+      pushStringAttribute(target, 'lighting-color', value);
+      return;
+    case 'markerEnd':
+      pushStringAttribute(target, 'marker-end', value);
+      return;
+    case 'markerMid':
+      pushStringAttribute(target, 'marker-mid', value);
+      return;
+    case 'markerStart':
+      pushStringAttribute(target, 'marker-start', value);
+      return;
+    case 'overlinePosition':
+      pushStringAttribute(target, 'overline-position', value);
+      return;
+    case 'overlineThickness':
+      pushStringAttribute(target, 'overline-thickness', value);
+      return;
+    case 'paintOrder':
+      pushStringAttribute(target, 'paint-order', value);
+      return;
+    case 'panose-1':
+      pushStringAttribute(target, 'panose-1', value);
+      return;
+    case 'pointerEvents':
+      pushStringAttribute(target, 'pointer-events', value);
+      return;
+    case 'renderingIntent':
+      pushStringAttribute(target, 'rendering-intent', value);
+      return;
+    case 'shapeRendering':
+      pushStringAttribute(target, 'shape-rendering', value);
+      return;
+    case 'stopColor':
+      pushStringAttribute(target, 'stop-color', value);
+      return;
+    case 'stopOpacity':
+      pushStringAttribute(target, 'stop-opacity', value);
+      return;
+    case 'strikethroughPosition':
+      pushStringAttribute(target, 'strikethrough-position', value);
+      return;
+    case 'strikethroughThickness':
+      pushStringAttribute(target, 'strikethrough-thickness', value);
+      return;
+    case 'strokeDasharray':
+      pushStringAttribute(target, 'stroke-dasharray', value);
+      return;
+    case 'strokeDashoffset':
+      pushStringAttribute(target, 'stroke-dashoffset', value);
+      return;
+    case 'strokeLinecap':
+      pushStringAttribute(target, 'stroke-linecap', value);
+      return;
+    case 'strokeLinejoin':
+      pushStringAttribute(target, 'stroke-linejoin', value);
+      return;
+    case 'strokeMiterlimit':
+      pushStringAttribute(target, 'stroke-miterlimit', value);
+      return;
+    case 'strokeOpacity':
+      pushStringAttribute(target, 'stroke-opacity', value);
+      return;
+    case 'strokeWidth':
+      pushStringAttribute(target, 'stroke-width', value);
+      return;
+    case 'textAnchor':
+      pushStringAttribute(target, 'text-anchor', value);
+      return;
+    case 'textDecoration':
+      pushStringAttribute(target, 'text-decoration', value);
+      return;
+    case 'textRendering':
+      pushStringAttribute(target, 'text-rendering', value);
+      return;
+    case 'transformOrigin':
+      pushStringAttribute(target, 'transform-origin', value);
+      return;
+    case 'underlinePosition':
+      pushStringAttribute(target, 'underline-position', value);
+      return;
+    case 'underlineThickness':
+      pushStringAttribute(target, 'underline-thickness', value);
+      return;
+    case 'unicodeBidi':
+      pushStringAttribute(target, 'unicode-bidi', value);
+      return;
+    case 'unicodeRange':
+      pushStringAttribute(target, 'unicode-range', value);
+      return;
+    case 'unitsPerEm':
+      pushStringAttribute(target, 'units-per-em', value);
+      return;
+    case 'vAlphabetic':
+      pushStringAttribute(target, 'v-alphabetic', value);
+      return;
+    case 'vHanging':
+      pushStringAttribute(target, 'v-hanging', value);
+      return;
+    case 'vIdeographic':
+      pushStringAttribute(target, 'v-ideographic', value);
+      return;
+    case 'vMathematical':
+      pushStringAttribute(target, 'v-mathematical', value);
+      return;
+    case 'vectorEffect':
+      pushStringAttribute(target, 'vector-effect', value);
+      return;
+    case 'vertAdvY':
+      pushStringAttribute(target, 'vert-adv-y', value);
+      return;
+    case 'vertOriginX':
+      pushStringAttribute(target, 'vert-origin-x', value);
+      return;
+    case 'vertOriginY':
+      pushStringAttribute(target, 'vert-origin-y', value);
+      return;
+    case 'wordSpacing':
+      pushStringAttribute(target, 'word-spacing', value);
+      return;
+    case 'writingMode':
+      pushStringAttribute(target, 'writing-mode', value);
+      return;
+    case 'xmlnsXlink':
+      pushStringAttribute(target, 'xmlns:xlink', value);
+      return;
+    case 'xHeight':
+      pushStringAttribute(target, 'x-height', value);
+      return;
   }
   if (
     // shouldIgnoreAttribute

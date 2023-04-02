@@ -399,7 +399,232 @@ function setProp(
       }
       break;
     }
-    case 'innerText': // Properties
+    // This is a list of all SVG attributes that need special casing.
+    // Regular attributes that just accept strings.
+    case 'accentHeight':
+      setValueForAttribute(domElement, 'accent-height', value);
+      break;
+    case 'alignmentBaseline':
+      setValueForAttribute(domElement, 'alignment-baseline', value);
+      break;
+    case 'arabicForm':
+      setValueForAttribute(domElement, 'arabic-form', value);
+      break;
+    case 'baselineShift':
+      setValueForAttribute(domElement, 'baseline-shift', value);
+      break;
+    case 'capHeight':
+      setValueForAttribute(domElement, 'cap-height', value);
+      break;
+    case 'clipPath':
+      setValueForAttribute(domElement, 'clip-path', value);
+      break;
+    case 'clipRule':
+      setValueForAttribute(domElement, 'clip-rule', value);
+      break;
+    case 'colorInterpolation':
+      setValueForAttribute(domElement, 'color-interpolation', value);
+      break;
+    case 'colorInterpolationFilters':
+      setValueForAttribute(domElement, 'color-interpolation-filters', value);
+      break;
+    case 'colorProfile':
+      setValueForAttribute(domElement, 'color-profile', value);
+      break;
+    case 'colorRendering':
+      setValueForAttribute(domElement, 'color-rendering', value);
+      break;
+    case 'dominantBaseline':
+      setValueForAttribute(domElement, 'dominant-baseline', value);
+      break;
+    case 'enableBackground':
+      setValueForAttribute(domElement, 'enable-background', value);
+      break;
+    case 'fillOpacity':
+      setValueForAttribute(domElement, 'fill-opacity', value);
+      break;
+    case 'fillRule':
+      setValueForAttribute(domElement, 'fill-rule', value);
+      break;
+    case 'floodColor':
+      setValueForAttribute(domElement, 'flood-color', value);
+      break;
+    case 'floodOpacity':
+      setValueForAttribute(domElement, 'flood-opacity', value);
+      break;
+    case 'fontFamily':
+      setValueForAttribute(domElement, 'font-family', value);
+      break;
+    case 'fontSize':
+      setValueForAttribute(domElement, 'font-size', value);
+      break;
+    case 'fontSizeAdjust':
+      setValueForAttribute(domElement, 'font-size-adjust', value);
+      break;
+    case 'fontStretch':
+      setValueForAttribute(domElement, 'font-stretch', value);
+      break;
+    case 'fontStyle':
+      setValueForAttribute(domElement, 'font-style', value);
+      break;
+    case 'fontVariant':
+      setValueForAttribute(domElement, 'font-variant', value);
+      break;
+    case 'fontWeight':
+      setValueForAttribute(domElement, 'font-weight', value);
+      break;
+    case 'glyphName':
+      setValueForAttribute(domElement, 'glyph-name', value);
+      break;
+    case 'glyphOrientationHorizontal':
+      setValueForAttribute(domElement, 'glyph-orientation-horizontal', value);
+      break;
+    case 'glyphOrientationVertical':
+      setValueForAttribute(domElement, 'glyph-orientation-vertical', value);
+      break;
+    case 'horizAdvX':
+      setValueForAttribute(domElement, 'horiz-adv-x', value);
+      break;
+    case 'horizOriginX':
+      setValueForAttribute(domElement, 'horiz-origin-x', value);
+      break;
+    case 'imageRendering':
+      setValueForAttribute(domElement, 'image-rendering', value);
+      break;
+    case 'letterSpacing':
+      setValueForAttribute(domElement, 'letter-spacing', value);
+      break;
+    case 'lightingColor':
+      setValueForAttribute(domElement, 'lighting-color', value);
+      break;
+    case 'markerEnd':
+      setValueForAttribute(domElement, 'marker-end', value);
+      break;
+    case 'markerMid':
+      setValueForAttribute(domElement, 'marker-mid', value);
+      break;
+    case 'markerStart':
+      setValueForAttribute(domElement, 'marker-start', value);
+      break;
+    case 'overlinePosition':
+      setValueForAttribute(domElement, 'overline-position', value);
+      break;
+    case 'overlineThickness':
+      setValueForAttribute(domElement, 'overline-thickness', value);
+      break;
+    case 'paintOrder':
+      setValueForAttribute(domElement, 'paint-order', value);
+      break;
+    case 'panose-1':
+      setValueForAttribute(domElement, 'panose-1', value);
+      break;
+    case 'pointerEvents':
+      setValueForAttribute(domElement, 'pointer-events', value);
+      break;
+    case 'renderingIntent':
+      setValueForAttribute(domElement, 'rendering-intent', value);
+      break;
+    case 'shapeRendering':
+      setValueForAttribute(domElement, 'shape-rendering', value);
+      break;
+    case 'stopColor':
+      setValueForAttribute(domElement, 'stop-color', value);
+      break;
+    case 'stopOpacity':
+      setValueForAttribute(domElement, 'stop-opacity', value);
+      break;
+    case 'strikethroughPosition':
+      setValueForAttribute(domElement, 'strikethrough-position', value);
+      break;
+    case 'strikethroughThickness':
+      setValueForAttribute(domElement, 'strikethrough-thickness', value);
+      break;
+    case 'strokeDasharray':
+      setValueForAttribute(domElement, 'stroke-dasharray', value);
+      break;
+    case 'strokeDashoffset':
+      setValueForAttribute(domElement, 'stroke-dashoffset', value);
+      break;
+    case 'strokeLinecap':
+      setValueForAttribute(domElement, 'stroke-linecap', value);
+      break;
+    case 'strokeLinejoin':
+      setValueForAttribute(domElement, 'stroke-linejoin', value);
+      break;
+    case 'strokeMiterlimit':
+      setValueForAttribute(domElement, 'stroke-miterlimit', value);
+      break;
+    case 'strokeOpacity':
+      setValueForAttribute(domElement, 'stroke-opacity', value);
+      break;
+    case 'strokeWidth':
+      setValueForAttribute(domElement, 'stroke-width', value);
+      break;
+    case 'textAnchor':
+      setValueForAttribute(domElement, 'text-anchor', value);
+      break;
+    case 'textDecoration':
+      setValueForAttribute(domElement, 'text-decoration', value);
+      break;
+    case 'textRendering':
+      setValueForAttribute(domElement, 'text-rendering', value);
+      break;
+    case 'transformOrigin':
+      setValueForAttribute(domElement, 'transform-origin', value);
+      break;
+    case 'underlinePosition':
+      setValueForAttribute(domElement, 'underline-position', value);
+      break;
+    case 'underlineThickness':
+      setValueForAttribute(domElement, 'underline-thickness', value);
+      break;
+    case 'unicodeBidi':
+      setValueForAttribute(domElement, 'unicode-bidi', value);
+      break;
+    case 'unicodeRange':
+      setValueForAttribute(domElement, 'unicode-range', value);
+      break;
+    case 'unitsPerEm':
+      setValueForAttribute(domElement, 'units-per-em', value);
+      break;
+    case 'vAlphabetic':
+      setValueForAttribute(domElement, 'v-alphabetic', value);
+      break;
+    case 'vHanging':
+      setValueForAttribute(domElement, 'v-hanging', value);
+      break;
+    case 'vIdeographic':
+      setValueForAttribute(domElement, 'v-ideographic', value);
+      break;
+    case 'vMathematical':
+      setValueForAttribute(domElement, 'v-mathematical', value);
+      break;
+    case 'vectorEffect':
+      setValueForAttribute(domElement, 'vector-effect', value);
+      break;
+    case 'vertAdvY':
+      setValueForAttribute(domElement, 'vert-adv-y', value);
+      break;
+    case 'vertOriginX':
+      setValueForAttribute(domElement, 'vert-origin-x', value);
+      break;
+    case 'vertOriginY':
+      setValueForAttribute(domElement, 'vert-origin-y', value);
+      break;
+    case 'wordSpacing':
+      setValueForAttribute(domElement, 'word-spacing', value);
+      break;
+    case 'writingMode':
+      setValueForAttribute(domElement, 'writing-mode', value);
+      break;
+    case 'xmlnsXlink':
+      setValueForAttribute(domElement, 'xmlns:xlink', value);
+      break;
+    case 'xHeight':
+      setValueForAttribute(domElement, 'x-height', value);
+      break;
+    // Properties that should not be allowed on custom elements.
+    case 'innerText':
     case 'textContent':
       if (enableCustomElementPropertySupport) {
         break;
@@ -1120,24 +1345,65 @@ function diffHydratedStyles(domElement: Element, value: mixed) {
   }
 }
 
+function hydrateAttribute(
+  domElement: Element,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  let serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        serverValue = value;
+    }
+    serverValue = value === undefined ? undefined : null;
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol': // eslint-disable-line
+          break;
+        default: {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          if (serverValue === '' + value) {
+            serverValue = value;
+          }
+        }
+      }
+    }
+  }
+  if (serverValue !== value) {
+    warnForPropDifference(attributeName, serverValue, value);
+  }
+}
+
 function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
   props: Object,
   parentNamespaceDev: string,
-  extraAttributeNames: Set<string>,
+  extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    const nextProp = props[propKey];
-    if (nextProp == null) {
+    const value = props[propKey];
+    if (value == null) {
       continue;
     }
     if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== 'function') {
-        warnForInvalidEventListener(propKey, nextProp);
+      if (typeof value !== 'function') {
+        warnForInvalidEventListener(propKey, value);
       }
       continue;
     }
@@ -1157,7 +1423,7 @@ function diffHydratedCustomComponent(
         continue;
       case 'dangerouslySetInnerHTML':
         const serverHTML = domElement.innerHTML;
-        const nextHtml = nextProp ? nextProp.__html : undefined;
+        const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
@@ -1166,8 +1432,8 @@ function diffHydratedCustomComponent(
         }
         continue;
       case 'style':
-        extraAttributeNames.delete(propKey);
-        diffHydratedStyles(domElement, nextProp);
+        extraAttributes.delete(propKey);
+        diffHydratedStyles(domElement, value);
         continue;
       case 'offsetParent':
       case 'offsetTop':
@@ -1178,7 +1444,7 @@ function diffHydratedCustomComponent(
       case 'outerText':
       case 'outerHTML':
         if (enableCustomElementPropertySupport) {
-          extraAttributeNames.delete(propKey.toLowerCase());
+          extraAttributes.delete(propKey.toLowerCase());
           if (__DEV__) {
             console.error(
               'Assignment to read-only property will result in a no-op: `%s`',
@@ -1191,14 +1457,14 @@ function diffHydratedCustomComponent(
       case 'className':
         if (enableCustomElementPropertySupport) {
           // className is a special cased property on the server to render as an attribute.
-          extraAttributeNames.delete('class');
+          extraAttributes.delete('class');
           const serverValue = getValueForAttributeOnCustomComponent(
             domElement,
             'class',
-            nextProp,
+            value,
           );
-          if (nextProp !== serverValue) {
-            warnForPropDifference('className', serverValue, nextProp);
+          if (value !== serverValue) {
+            warnForPropDifference('className', serverValue, value);
           }
           continue;
         }
@@ -1209,17 +1475,17 @@ function diffHydratedCustomComponent(
           ownNamespaceDev = getIntrinsicNamespace(tag);
         }
         if (ownNamespaceDev === HTML_NAMESPACE) {
-          extraAttributeNames.delete(propKey.toLowerCase());
+          extraAttributes.delete(propKey.toLowerCase());
         } else {
-          extraAttributeNames.delete(propKey);
+          extraAttributes.delete(propKey);
         }
         const serverValue = getValueForAttributeOnCustomComponent(
           domElement,
           propKey,
-          nextProp,
+          value,
         );
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (value !== serverValue) {
+          warnForPropDifference(propKey, serverValue, value);
         }
       }
     }
@@ -1231,19 +1497,19 @@ function diffHydratedGenericElement(
   tag: string,
   props: Object,
   parentNamespaceDev: string,
-  extraAttributeNames: Set<string>,
+  extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    const nextProp = props[propKey];
-    if (nextProp == null) {
+    const value = props[propKey];
+    if (value == null) {
       continue;
     }
     if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== 'function') {
-        warnForInvalidEventListener(propKey, nextProp);
+      if (typeof value !== 'function') {
+        warnForInvalidEventListener(propKey, value);
       }
       continue;
     }
@@ -1267,7 +1533,7 @@ function diffHydratedGenericElement(
         continue;
       case 'dangerouslySetInnerHTML':
         const serverHTML = domElement.innerHTML;
-        const nextHtml = nextProp ? nextProp.__html : undefined;
+        const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           if (expectedHTML !== serverHTML) {
@@ -1276,30 +1542,30 @@ function diffHydratedGenericElement(
         }
         continue;
       case 'style':
-        extraAttributeNames.delete(key);
-        diffHydratedStyles(domElement, nextProp);
+        extraAttributes.delete(key);
+        diffHydratedStyles(domElement, value);
         continue;
       case 'multiple': {
-        extraAttributeNames.delete(key);
+        extraAttributes.delete(key);
         const serverValue = (domElement: any).multiple;
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (value !== serverValue) {
+          warnForPropDifference(propKey, serverValue, value);
         }
         continue;
       }
       case 'muted': {
-        extraAttributeNames.delete(key);
+        extraAttributes.delete(key);
         const serverValue = (domElement: any).muted;
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (value !== serverValue) {
+          warnForPropDifference(propKey, serverValue, value);
         }
         continue;
       }
       case 'autoFocus': {
-        extraAttributeNames.delete('autofocus');
+        extraAttributes.delete('autofocus');
         const serverValue = (domElement: any).autofocus;
-        if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (value !== serverValue) {
+          warnForPropDifference(propKey, serverValue, value);
         }
         continue;
       }
@@ -1316,41 +1582,358 @@ function diffHydratedGenericElement(
       case 'focusable':
       case 'preserveAlpha': {
         // Case-sensitive Booleanish String
-        extraAttributeNames.delete(key);
+        extraAttributes.delete(key);
         let serverValue = domElement.getAttribute(key);
         if (serverValue === null) {
           // shouldRemoveAttribute
-          switch (typeof nextProp) {
+          switch (typeof value) {
             case 'function':
             case 'symbol': // eslint-disable-line
-              serverValue = nextProp;
+              serverValue = value;
           }
-          serverValue = nextProp === undefined ? undefined : null;
+          serverValue = value === undefined ? undefined : null;
         } else {
-          if (nextProp == null) {
+          if (value == null) {
             // We had an attribute but shouldn't have had one, so read it
             // for the error message.
           } else {
-            switch (typeof nextProp) {
+            switch (typeof value) {
               case 'function':
               case 'symbol': // eslint-disable-line
                 break;
               default: {
                 if (__DEV__) {
-                  checkAttributeStringCoercion(nextProp, key);
+                  checkAttributeStringCoercion(value, key);
                 }
-                if (serverValue === '' + (nextProp: any)) {
-                  serverValue = nextProp;
+                if (serverValue === '' + (value: any)) {
+                  serverValue = value;
                 }
               }
             }
           }
         }
-        if (serverValue !== nextProp) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (serverValue !== value) {
+          warnForPropDifference(propKey, serverValue, value);
         }
         continue;
       }
+      case 'accentHeight':
+        hydrateAttribute(domElement, 'accent-height', value, extraAttributes);
+        continue;
+      case 'alignmentBaseline':
+        hydrateAttribute(
+          domElement,
+          'alignment-baseline',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'arabicForm':
+        hydrateAttribute(domElement, 'arabic-form', value, extraAttributes);
+        continue;
+      case 'baselineShift':
+        hydrateAttribute(domElement, 'baseline-shift', value, extraAttributes);
+        continue;
+      case 'capHeight':
+        hydrateAttribute(domElement, 'cap-height', value, extraAttributes);
+        continue;
+      case 'clipPath':
+        hydrateAttribute(domElement, 'clip-path', value, extraAttributes);
+        continue;
+      case 'clipRule':
+        hydrateAttribute(domElement, 'clip-rule', value, extraAttributes);
+        continue;
+      case 'colorInterpolation':
+        hydrateAttribute(
+          domElement,
+          'color-interpolation',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'colorInterpolationFilters':
+        hydrateAttribute(
+          domElement,
+          'color-interpolation-filters',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'colorProfile':
+        hydrateAttribute(domElement, 'color-profile', value, extraAttributes);
+        continue;
+      case 'colorRendering':
+        hydrateAttribute(domElement, 'color-rendering', value, extraAttributes);
+        continue;
+      case 'dominantBaseline':
+        hydrateAttribute(
+          domElement,
+          'dominant-baseline',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'enableBackground':
+        hydrateAttribute(
+          domElement,
+          'enable-background',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'fillOpacity':
+        hydrateAttribute(domElement, 'fill-opacity', value, extraAttributes);
+        continue;
+      case 'fillRule':
+        hydrateAttribute(domElement, 'fill-rule', value, extraAttributes);
+        continue;
+      case 'floodColor':
+        hydrateAttribute(domElement, 'flood-color', value, extraAttributes);
+        continue;
+      case 'floodOpacity':
+        hydrateAttribute(domElement, 'flood-opacity', value, extraAttributes);
+        continue;
+      case 'fontFamily':
+        hydrateAttribute(domElement, 'font-family', value, extraAttributes);
+        continue;
+      case 'fontSize':
+        hydrateAttribute(domElement, 'font-size', value, extraAttributes);
+        continue;
+      case 'fontSizeAdjust':
+        hydrateAttribute(
+          domElement,
+          'font-size-adjust',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'fontStretch':
+        hydrateAttribute(domElement, 'font-stretch', value, extraAttributes);
+        continue;
+      case 'fontStyle':
+        hydrateAttribute(domElement, 'font-style', value, extraAttributes);
+        continue;
+      case 'fontVariant':
+        hydrateAttribute(domElement, 'font-variant', value, extraAttributes);
+        continue;
+      case 'fontWeight':
+        hydrateAttribute(domElement, 'font-weight', value, extraAttributes);
+        continue;
+      case 'glyphName':
+        hydrateAttribute(domElement, 'glyph-name', value, extraAttributes);
+        continue;
+      case 'glyphOrientationHorizontal':
+        hydrateAttribute(
+          domElement,
+          'glyph-orientation-horizontal',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'glyphOrientationVertical':
+        hydrateAttribute(
+          domElement,
+          'glyph-orientation-vertical',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'horizAdvX':
+        hydrateAttribute(domElement, 'horiz-adv-x', value, extraAttributes);
+        continue;
+      case 'horizOriginX':
+        hydrateAttribute(domElement, 'horiz-origin-x', value, extraAttributes);
+        continue;
+      case 'imageRendering':
+        hydrateAttribute(domElement, 'image-rendering', value, extraAttributes);
+        continue;
+      case 'letterSpacing':
+        hydrateAttribute(domElement, 'letter-spacing', value, extraAttributes);
+        continue;
+      case 'lightingColor':
+        hydrateAttribute(domElement, 'lighting-color', value, extraAttributes);
+        continue;
+      case 'markerEnd':
+        hydrateAttribute(domElement, 'marker-end', value, extraAttributes);
+        continue;
+      case 'markerMid':
+        hydrateAttribute(domElement, 'marker-mid', value, extraAttributes);
+        continue;
+      case 'markerStart':
+        hydrateAttribute(domElement, 'marker-start', value, extraAttributes);
+        continue;
+      case 'overlinePosition':
+        hydrateAttribute(
+          domElement,
+          'overline-position',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'overlineThickness':
+        hydrateAttribute(
+          domElement,
+          'overline-thickness',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'paintOrder':
+        hydrateAttribute(domElement, 'paint-order', value, extraAttributes);
+        continue;
+      case 'panose-1':
+        hydrateAttribute(domElement, 'panose-1', value, extraAttributes);
+        continue;
+      case 'pointerEvents':
+        hydrateAttribute(domElement, 'pointer-events', value, extraAttributes);
+        continue;
+      case 'renderingIntent':
+        hydrateAttribute(
+          domElement,
+          'rendering-intent',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'shapeRendering':
+        hydrateAttribute(domElement, 'shape-rendering', value, extraAttributes);
+        continue;
+      case 'stopColor':
+        hydrateAttribute(domElement, 'stop-color', value, extraAttributes);
+        continue;
+      case 'stopOpacity':
+        hydrateAttribute(domElement, 'stop-opacity', value, extraAttributes);
+        continue;
+      case 'strikethroughPosition':
+        hydrateAttribute(
+          domElement,
+          'strikethrough-position',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'strikethroughThickness':
+        hydrateAttribute(
+          domElement,
+          'strikethrough-thickness',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'strokeDasharray':
+        hydrateAttribute(
+          domElement,
+          'stroke-dasharray',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'strokeDashoffset':
+        hydrateAttribute(
+          domElement,
+          'stroke-dashoffset',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'strokeLinecap':
+        hydrateAttribute(domElement, 'stroke-linecap', value, extraAttributes);
+        continue;
+      case 'strokeLinejoin':
+        hydrateAttribute(domElement, 'stroke-linejoin', value, extraAttributes);
+        continue;
+      case 'strokeMiterlimit':
+        hydrateAttribute(
+          domElement,
+          'stroke-miterlimit',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'strokeOpacity':
+        hydrateAttribute(domElement, 'stroke-opacity', value, extraAttributes);
+        continue;
+      case 'strokeWidth':
+        hydrateAttribute(domElement, 'stroke-width', value, extraAttributes);
+        continue;
+      case 'textAnchor':
+        hydrateAttribute(domElement, 'text-anchor', value, extraAttributes);
+        continue;
+      case 'textDecoration':
+        hydrateAttribute(domElement, 'text-decoration', value, extraAttributes);
+        continue;
+      case 'textRendering':
+        hydrateAttribute(domElement, 'text-rendering', value, extraAttributes);
+        continue;
+      case 'transformOrigin':
+        hydrateAttribute(
+          domElement,
+          'transform-origin',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'underlinePosition':
+        hydrateAttribute(
+          domElement,
+          'underline-position',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'underlineThickness':
+        hydrateAttribute(
+          domElement,
+          'underline-thickness',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'unicodeBidi':
+        hydrateAttribute(domElement, 'unicode-bidi', value, extraAttributes);
+        continue;
+      case 'unicodeRange':
+        hydrateAttribute(domElement, 'unicode-range', value, extraAttributes);
+        continue;
+      case 'unitsPerEm':
+        hydrateAttribute(domElement, 'units-per-em', value, extraAttributes);
+        continue;
+      case 'vAlphabetic':
+        hydrateAttribute(domElement, 'v-alphabetic', value, extraAttributes);
+        continue;
+      case 'vHanging':
+        hydrateAttribute(domElement, 'v-hanging', value, extraAttributes);
+        continue;
+      case 'vIdeographic':
+        hydrateAttribute(domElement, 'v-ideographic', value, extraAttributes);
+        continue;
+      case 'vMathematical':
+        hydrateAttribute(domElement, 'v-mathematical', value, extraAttributes);
+        continue;
+      case 'vectorEffect':
+        hydrateAttribute(domElement, 'vector-effect', value, extraAttributes);
+        continue;
+      case 'vertAdvY':
+        hydrateAttribute(domElement, 'vert-adv-y', value, extraAttributes);
+        continue;
+      case 'vertOriginX':
+        hydrateAttribute(domElement, 'vert-origin-x', value, extraAttributes);
+        continue;
+      case 'vertOriginY':
+        hydrateAttribute(domElement, 'vert-origin-y', value, extraAttributes);
+        continue;
+      case 'wordSpacing':
+        hydrateAttribute(domElement, 'word-spacing', value, extraAttributes);
+        continue;
+      case 'writingMode':
+        hydrateAttribute(domElement, 'writing-mode', value, extraAttributes);
+        continue;
+      case 'xmlnsXlink':
+        hydrateAttribute(domElement, 'xmlns:xlink', value, extraAttributes);
+        continue;
+      case 'xHeight':
+        hydrateAttribute(domElement, 'x-height', value, extraAttributes);
+        continue;
       default: {
         if (
           // shouldIgnoreAttribute
@@ -1365,11 +1948,11 @@ function diffHydratedGenericElement(
         let isMismatchDueToBadCasing = false;
         let serverValue;
         if (propertyInfo !== null) {
-          extraAttributeNames.delete(propertyInfo.attributeName);
+          extraAttributes.delete(propertyInfo.attributeName);
           serverValue = getValueForProperty(
             domElement,
             propKey,
-            nextProp,
+            value,
             propertyInfo,
           );
         } else {
@@ -1378,7 +1961,7 @@ function diffHydratedGenericElement(
             ownNamespaceDev = getIntrinsicNamespace(tag);
           }
           if (ownNamespaceDev === HTML_NAMESPACE) {
-            extraAttributeNames.delete(key.toLowerCase());
+            extraAttributes.delete(key.toLowerCase());
           } else {
             const standardName = getPossibleStandardName(propKey);
             if (standardName !== null && standardName !== propKey) {
@@ -1388,15 +1971,15 @@ function diffHydratedGenericElement(
               // However, we already warn about bad casing elsewhere.
               // So we'll skip the misleading extra mismatch warning in this case.
               isMismatchDueToBadCasing = true;
-              extraAttributeNames.delete(standardName);
+              extraAttributes.delete(standardName);
             }
-            extraAttributeNames.delete(key);
+            extraAttributes.delete(key);
           }
-          serverValue = getValueForAttribute(domElement, propKey, nextProp);
+          serverValue = getValueForAttribute(domElement, propKey, value);
         }
 
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        if (value !== serverValue && !isMismatchDueToBadCasing) {
+          warnForPropDifference(propKey, serverValue, value);
         }
       }
     }
@@ -1528,7 +2111,7 @@ export function diffHydratedProperties(
   }
 
   if (__DEV__ && shouldWarnDev) {
-    const extraAttributeNames: Set<string> = new Set();
+    const extraAttributes: Set<string> = new Set();
     const attributes = domElement.attributes;
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
@@ -1544,7 +2127,7 @@ export function diffHydratedProperties(
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributeNames.add(attributes[i].name);
+          extraAttributes.add(attributes[i].name);
       }
     }
     if (isCustomElement(tag, props)) {
@@ -1553,7 +2136,7 @@ export function diffHydratedProperties(
         tag,
         props,
         parentNamespaceDev,
-        extraAttributeNames,
+        extraAttributes,
       );
     } else {
       diffHydratedGenericElement(
@@ -1561,14 +2144,11 @@ export function diffHydratedProperties(
         tag,
         props,
         parentNamespaceDev,
-        extraAttributeNames,
+        extraAttributes,
       );
     }
-    if (
-      extraAttributeNames.size > 0 &&
-      props.suppressHydrationWarning !== true
-    ) {
-      warnForExtraAttributes(extraAttributeNames);
+    if (extraAttributes.size > 0 && props.suppressHydrationWarning !== true) {
+      warnForExtraAttributes(extraAttributes);
     }
   }
 
