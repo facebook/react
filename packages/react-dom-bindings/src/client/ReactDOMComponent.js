@@ -1348,6 +1348,7 @@ function diffHydratedStyles(domElement: Element, value: mixed) {
 
 function hydrateAttribute(
   domElement: Element,
+  propKey: string,
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
@@ -1373,7 +1374,7 @@ function hydrateAttribute(
           break;
         default: {
           if (__DEV__) {
-            checkAttributeStringCoercion(value, attributeName);
+            checkAttributeStringCoercion(value, propKey);
           }
           if (serverValue === '' + value) {
             serverValue = value;
@@ -1382,11 +1383,12 @@ function hydrateAttribute(
       }
     }
   }
-  warnForPropDifference(attributeName, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function hydrateBooleanishAttribute(
   domElement: Element,
+  propKey: string,
   attributeName: string,
   value: any,
   extraAttributes: Set<string>,
@@ -1421,7 +1423,7 @@ function hydrateBooleanishAttribute(
       }
     }
   }
-  warnForPropDifference(attributeName, serverValue, value);
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function diffHydratedCustomComponent(
@@ -1596,6 +1598,7 @@ function diffHydratedGenericElement(
         // Lower-case Booleanish String
         hydrateBooleanishAttribute(
           domElement,
+          propKey,
           'contenteditable',
           value,
           extraAttributes,
@@ -1606,6 +1609,7 @@ function diffHydratedGenericElement(
         // Lower-case Booleanish String
         hydrateBooleanishAttribute(
           domElement,
+          propKey,
           'spellcheck',
           value,
           extraAttributes,
@@ -1618,44 +1622,100 @@ function diffHydratedGenericElement(
       case 'focusable':
       case 'preserveAlpha': {
         // Case-sensitive Booleanish String
-        hydrateBooleanishAttribute(domElement, propKey, value, extraAttributes);
+        hydrateBooleanishAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+        );
         continue;
       }
       case 'tabIndex':
-        hydrateAttribute(domElement, 'tabindex', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'tabindex',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'crossOrigin':
-        hydrateAttribute(domElement, 'crossorigin', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'crossorigin',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'accentHeight':
-        hydrateAttribute(domElement, 'accent-height', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'accent-height',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'alignmentBaseline':
         hydrateAttribute(
           domElement,
+          propKey,
           'alignment-baseline',
           value,
           extraAttributes,
         );
         continue;
       case 'arabicForm':
-        hydrateAttribute(domElement, 'arabic-form', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'arabic-form',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'baselineShift':
-        hydrateAttribute(domElement, 'baseline-shift', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'baseline-shift',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'capHeight':
-        hydrateAttribute(domElement, 'cap-height', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'cap-height',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'clipPath':
-        hydrateAttribute(domElement, 'clip-path', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'clip-path',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'clipRule':
-        hydrateAttribute(domElement, 'clip-rule', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'clip-rule',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'colorInterpolation':
         hydrateAttribute(
           domElement,
+          propKey,
           'color-interpolation',
           value,
           extraAttributes,
@@ -1664,20 +1724,34 @@ function diffHydratedGenericElement(
       case 'colorInterpolationFilters':
         hydrateAttribute(
           domElement,
+          propKey,
           'color-interpolation-filters',
           value,
           extraAttributes,
         );
         continue;
       case 'colorProfile':
-        hydrateAttribute(domElement, 'color-profile', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'color-profile',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'colorRendering':
-        hydrateAttribute(domElement, 'color-rendering', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'color-rendering',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'dominantBaseline':
         hydrateAttribute(
           domElement,
+          propKey,
           'dominant-baseline',
           value,
           extraAttributes,
@@ -1686,55 +1760,124 @@ function diffHydratedGenericElement(
       case 'enableBackground':
         hydrateAttribute(
           domElement,
+          propKey,
           'enable-background',
           value,
           extraAttributes,
         );
         continue;
       case 'fillOpacity':
-        hydrateAttribute(domElement, 'fill-opacity', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'fill-opacity',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fillRule':
-        hydrateAttribute(domElement, 'fill-rule', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'fill-rule',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'floodColor':
-        hydrateAttribute(domElement, 'flood-color', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'flood-color',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'floodOpacity':
-        hydrateAttribute(domElement, 'flood-opacity', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'flood-opacity',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontFamily':
-        hydrateAttribute(domElement, 'font-family', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-family',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontSize':
-        hydrateAttribute(domElement, 'font-size', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-size',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontSizeAdjust':
         hydrateAttribute(
           domElement,
+          propKey,
           'font-size-adjust',
           value,
           extraAttributes,
         );
         continue;
       case 'fontStretch':
-        hydrateAttribute(domElement, 'font-stretch', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-stretch',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontStyle':
-        hydrateAttribute(domElement, 'font-style', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-style',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontVariant':
-        hydrateAttribute(domElement, 'font-variant', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-variant',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'fontWeight':
-        hydrateAttribute(domElement, 'font-weight', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'font-weight',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'glyphName':
-        hydrateAttribute(domElement, 'glyph-name', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'glyph-name',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'glyphOrientationHorizontal':
         hydrateAttribute(
           domElement,
+          propKey,
           'glyph-orientation-horizontal',
           value,
           extraAttributes,
@@ -1743,38 +1886,88 @@ function diffHydratedGenericElement(
       case 'glyphOrientationVertical':
         hydrateAttribute(
           domElement,
+          propKey,
           'glyph-orientation-vertical',
           value,
           extraAttributes,
         );
         continue;
       case 'horizAdvX':
-        hydrateAttribute(domElement, 'horiz-adv-x', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'horiz-adv-x',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'horizOriginX':
-        hydrateAttribute(domElement, 'horiz-origin-x', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'horiz-origin-x',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'imageRendering':
-        hydrateAttribute(domElement, 'image-rendering', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'image-rendering',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'letterSpacing':
-        hydrateAttribute(domElement, 'letter-spacing', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'letter-spacing',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'lightingColor':
-        hydrateAttribute(domElement, 'lighting-color', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'lighting-color',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'markerEnd':
-        hydrateAttribute(domElement, 'marker-end', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'marker-end',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'markerMid':
-        hydrateAttribute(domElement, 'marker-mid', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'marker-mid',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'markerStart':
-        hydrateAttribute(domElement, 'marker-start', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'marker-start',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'overlinePosition':
         hydrateAttribute(
           domElement,
+          propKey,
           'overline-position',
           value,
           extraAttributes,
@@ -1783,40 +1976,79 @@ function diffHydratedGenericElement(
       case 'overlineThickness':
         hydrateAttribute(
           domElement,
+          propKey,
           'overline-thickness',
           value,
           extraAttributes,
         );
         continue;
       case 'paintOrder':
-        hydrateAttribute(domElement, 'paint-order', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'paint-order',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'panose-1':
-        hydrateAttribute(domElement, 'panose-1', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'panose-1',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'pointerEvents':
-        hydrateAttribute(domElement, 'pointer-events', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'pointer-events',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'renderingIntent':
         hydrateAttribute(
           domElement,
+          propKey,
           'rendering-intent',
           value,
           extraAttributes,
         );
         continue;
       case 'shapeRendering':
-        hydrateAttribute(domElement, 'shape-rendering', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'shape-rendering',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'stopColor':
-        hydrateAttribute(domElement, 'stop-color', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stop-color',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'stopOpacity':
-        hydrateAttribute(domElement, 'stop-opacity', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stop-opacity',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'strikethroughPosition':
         hydrateAttribute(
           domElement,
+          propKey,
           'strikethrough-position',
           value,
           extraAttributes,
@@ -1825,6 +2057,7 @@ function diffHydratedGenericElement(
       case 'strikethroughThickness':
         hydrateAttribute(
           domElement,
+          propKey,
           'strikethrough-thickness',
           value,
           extraAttributes,
@@ -1833,6 +2066,7 @@ function diffHydratedGenericElement(
       case 'strokeDasharray':
         hydrateAttribute(
           domElement,
+          propKey,
           'stroke-dasharray',
           value,
           extraAttributes,
@@ -1841,43 +2075,88 @@ function diffHydratedGenericElement(
       case 'strokeDashoffset':
         hydrateAttribute(
           domElement,
+          propKey,
           'stroke-dashoffset',
           value,
           extraAttributes,
         );
         continue;
       case 'strokeLinecap':
-        hydrateAttribute(domElement, 'stroke-linecap', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stroke-linecap',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'strokeLinejoin':
-        hydrateAttribute(domElement, 'stroke-linejoin', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stroke-linejoin',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'strokeMiterlimit':
         hydrateAttribute(
           domElement,
+          propKey,
           'stroke-miterlimit',
           value,
           extraAttributes,
         );
         continue;
       case 'strokeOpacity':
-        hydrateAttribute(domElement, 'stroke-opacity', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stroke-opacity',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'strokeWidth':
-        hydrateAttribute(domElement, 'stroke-width', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'stroke-width',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'textAnchor':
-        hydrateAttribute(domElement, 'text-anchor', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'text-anchor',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'textDecoration':
-        hydrateAttribute(domElement, 'text-decoration', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'text-decoration',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'textRendering':
-        hydrateAttribute(domElement, 'text-rendering', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'text-rendering',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'transformOrigin':
         hydrateAttribute(
           domElement,
+          propKey,
           'transform-origin',
           value,
           extraAttributes,
@@ -1886,6 +2165,7 @@ function diffHydratedGenericElement(
       case 'underlinePosition':
         hydrateAttribute(
           domElement,
+          propKey,
           'underline-position',
           value,
           extraAttributes,
@@ -1894,55 +2174,146 @@ function diffHydratedGenericElement(
       case 'underlineThickness':
         hydrateAttribute(
           domElement,
+          propKey,
           'underline-thickness',
           value,
           extraAttributes,
         );
         continue;
       case 'unicodeBidi':
-        hydrateAttribute(domElement, 'unicode-bidi', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'unicode-bidi',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'unicodeRange':
-        hydrateAttribute(domElement, 'unicode-range', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'unicode-range',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'unitsPerEm':
-        hydrateAttribute(domElement, 'units-per-em', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'units-per-em',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vAlphabetic':
-        hydrateAttribute(domElement, 'v-alphabetic', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'v-alphabetic',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vHanging':
-        hydrateAttribute(domElement, 'v-hanging', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'v-hanging',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vIdeographic':
-        hydrateAttribute(domElement, 'v-ideographic', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'v-ideographic',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vMathematical':
-        hydrateAttribute(domElement, 'v-mathematical', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'v-mathematical',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vectorEffect':
-        hydrateAttribute(domElement, 'vector-effect', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'vector-effect',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vertAdvY':
-        hydrateAttribute(domElement, 'vert-adv-y', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'vert-adv-y',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vertOriginX':
-        hydrateAttribute(domElement, 'vert-origin-x', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'vert-origin-x',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'vertOriginY':
-        hydrateAttribute(domElement, 'vert-origin-y', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'vert-origin-y',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'wordSpacing':
-        hydrateAttribute(domElement, 'word-spacing', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'word-spacing',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'writingMode':
-        hydrateAttribute(domElement, 'writing-mode', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'writing-mode',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'xmlnsXlink':
-        hydrateAttribute(domElement, 'xmlns:xlink', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xmlns:xlink',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'xHeight':
-        hydrateAttribute(domElement, 'x-height', value, extraAttributes);
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'x-height',
+          value,
+          extraAttributes,
+        );
         continue;
       default: {
         if (
