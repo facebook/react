@@ -123,6 +123,9 @@ function warnForPropDifference(
     if (didWarnInvalidHydration) {
       return;
     }
+    if (serverValue === clientValue) {
+      return;
+    }
     const normalizedClientValue =
       normalizeMarkupForTextOrAttribute(clientValue);
     const normalizedServerValue =
@@ -1339,9 +1342,7 @@ function diffHydratedStyles(domElement: Element, value: mixed) {
   if (canDiffStyleForHydrationWarning) {
     const expectedStyle = createDangerousStringForStyles(value);
     const serverValue = domElement.getAttribute('style');
-    if (expectedStyle !== serverValue) {
-      warnForPropDifference('style', serverValue, expectedStyle);
-    }
+    warnForPropDifference('style', serverValue, expectedStyle);
   }
 }
 
@@ -1381,9 +1382,7 @@ function hydrateAttribute(
       }
     }
   }
-  if (serverValue !== value) {
-    warnForPropDifference(attributeName, serverValue, value);
-  }
+  warnForPropDifference(attributeName, serverValue, value);
 }
 
 function diffHydratedCustomComponent(
@@ -1426,9 +1425,7 @@ function diffHydratedCustomComponent(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
         continue;
       case 'style':
@@ -1463,9 +1460,7 @@ function diffHydratedCustomComponent(
             'class',
             value,
           );
-          if (value !== serverValue) {
-            warnForPropDifference('className', serverValue, value);
-          }
+          warnForPropDifference('className', serverValue, value);
           continue;
         }
       // eslint-disable-next-line no-fallthrough
@@ -1484,9 +1479,7 @@ function diffHydratedCustomComponent(
           propKey,
           value,
         );
-        if (value !== serverValue) {
-          warnForPropDifference(propKey, serverValue, value);
-        }
+        warnForPropDifference(propKey, serverValue, value);
       }
     }
   }
@@ -1536,9 +1529,7 @@ function diffHydratedGenericElement(
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
           const expectedHTML = normalizeHTML(domElement, nextHtml);
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
         continue;
       case 'style':
@@ -1548,25 +1539,19 @@ function diffHydratedGenericElement(
       case 'multiple': {
         extraAttributes.delete(key);
         const serverValue = (domElement: any).multiple;
-        if (value !== serverValue) {
-          warnForPropDifference(propKey, serverValue, value);
-        }
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'muted': {
         extraAttributes.delete(key);
         const serverValue = (domElement: any).muted;
-        if (value !== serverValue) {
-          warnForPropDifference(propKey, serverValue, value);
-        }
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'autoFocus': {
         extraAttributes.delete('autofocus');
         const serverValue = (domElement: any).autofocus;
-        if (value !== serverValue) {
-          warnForPropDifference(propKey, serverValue, value);
-        }
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'contentEditable':
@@ -1612,9 +1597,7 @@ function diffHydratedGenericElement(
             }
           }
         }
-        if (serverValue !== value) {
-          warnForPropDifference(propKey, serverValue, value);
-        }
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'accentHeight':
@@ -1978,7 +1961,7 @@ function diffHydratedGenericElement(
           serverValue = getValueForAttribute(domElement, propKey, value);
         }
 
-        if (value !== serverValue && !isMismatchDueToBadCasing) {
+        if (!isMismatchDueToBadCasing) {
           warnForPropDifference(propKey, serverValue, value);
         }
       }
