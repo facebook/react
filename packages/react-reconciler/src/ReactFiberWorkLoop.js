@@ -171,6 +171,7 @@ import {
   SelectiveHydrationException,
   beginWork as originalBeginWork,
   replayFunctionComponent,
+  replayForwardRef,
 } from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
@@ -2380,18 +2381,12 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       // Fallthrough to the next branch.
     }
     // eslint-disable-next-line no-fallthrough
-    case FunctionComponent:
-    case ForwardRef: {
+    case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
       // TODO: Consider moving this switch statement into that module. Also,
       // could maybe use this as an opportunity to say `use` doesn't work with
       // `defaultProps` :)
-      const Component =
-        unitOfWork.tag === FunctionComponent
-          ? unitOfWork.type
-          : unitOfWork.type.render;
-      const secondArg =
-        unitOfWork.tag === FunctionComponent ? undefined : unitOfWork.ref;
+      const Component = unitOfWork.type;
       const unresolvedProps = unitOfWork.pendingProps;
       const resolvedProps =
         unitOfWork.elementType === Component
@@ -2403,21 +2398,38 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         resolvedProps,
         Component,
         workInProgressRootRenderLanes,
-        secondArg,
+      );
+      break;
+    }
+    case ForwardRef: {
+      // Resolve `defaultProps`. This logic is copied from `beginWork`.
+      // TODO: Consider moving this switch statement into that module. Also,
+      // could maybe use this as an opportunity to say `use` doesn't work with
+      // `defaultProps` :)
+      const Component = unitOfWork.type.render;
+      const unresolvedProps = unitOfWork.pendingProps;
+      const resolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      next = replayForwardRef(
+        current,
+        unitOfWork,
+        resolvedProps,
+        Component,
+        workInProgressRootRenderLanes,
       );
       break;
     }
     case SimpleMemoComponent: {
       const Component = unitOfWork.type;
       const nextProps = unitOfWork.pendingProps;
-      const secondArg = undefined;
       next = replayFunctionComponent(
         current,
         unitOfWork,
         nextProps,
         Component,
         workInProgressRootRenderLanes,
-        secondArg,
       );
       break;
     }
