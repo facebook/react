@@ -1171,6 +1171,10 @@ export function replayFunctionComponent(
   secondArg: any,
   renderLanes: Lanes,
 ): Fiber | null {
+  // This function is used to replay a component that previously suspended,
+  // after its data resolves. It's a simplified version of
+  // updateFunctionComponent that reuses the hooks from the previous attempt.
+
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
