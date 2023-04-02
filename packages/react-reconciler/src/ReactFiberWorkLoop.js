@@ -2382,6 +2382,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       // Fallthrough to the next branch.
     }
     // eslint-disable-next-line no-fallthrough
+    case SimpleMemoComponent:
     case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
       // TODO: Consider moving this switch statement into that module. Also,
@@ -2426,24 +2427,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         resolvedProps,
         Component,
         unitOfWork.ref,
-        workInProgressRootRenderLanes,
-      );
-      break;
-    }
-    case SimpleMemoComponent: {
-      const Component = unitOfWork.type;
-      const nextProps = unitOfWork.pendingProps;
-      let context: any;
-      if (!disableLegacyContext) {
-        const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
-        context = getMaskedContext(unitOfWork, unmaskedContext);
-      }
-      next = replayFunctionComponent(
-        current,
-        unitOfWork,
-        nextProps,
-        Component,
-        context,
         workInProgressRootRenderLanes,
       );
       break;
