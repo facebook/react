@@ -39,6 +39,7 @@ import {
   enableTransitionTracing,
   useModernStrictMode,
   revertRemovalOfSiblingPrerendering,
+  disableLegacyContext,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -171,7 +172,6 @@ import {
   SelectiveHydrationException,
   beginWork as originalBeginWork,
   replayFunctionComponent,
-  replayForwardRef,
 } from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
@@ -282,6 +282,7 @@ import {
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
 } from './ReactFiberRootScheduler';
+import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 
 const ceil = Math.ceil;
 
@@ -2392,11 +2393,17 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         unitOfWork.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
+      let context: any;
+      if (!disableLegacyContext) {
+        const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
+        context = getMaskedContext(unitOfWork, unmaskedContext);
+      }
       next = replayFunctionComponent(
         current,
         unitOfWork,
         resolvedProps,
         Component,
+        context,
         workInProgressRootRenderLanes,
       );
       break;
@@ -2412,11 +2419,13 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         unitOfWork.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
-      next = replayForwardRef(
+
+      next = replayFunctionComponent(
         current,
         unitOfWork,
         resolvedProps,
         Component,
+        unitOfWork.ref,
         workInProgressRootRenderLanes,
       );
       break;
@@ -2424,11 +2433,17 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     case SimpleMemoComponent: {
       const Component = unitOfWork.type;
       const nextProps = unitOfWork.pendingProps;
+      let context: any;
+      if (!disableLegacyContext) {
+        const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
+        context = getMaskedContext(unitOfWork, unmaskedContext);
+      }
       next = replayFunctionComponent(
         current,
         unitOfWork,
         nextProps,
         Component,
+        context,
         workInProgressRootRenderLanes,
       );
       break;

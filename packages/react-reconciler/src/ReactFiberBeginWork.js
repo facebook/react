@@ -465,52 +465,6 @@ function updateForwardRef(
   return workInProgress.child;
 }
 
-export function replayForwardRef(
-  current: Fiber | null,
-  workInProgress: Fiber,
-  nextProps: any,
-  Component: any,
-  renderLanes: Lanes,
-): Fiber | null {
-  const secondArg = workInProgress.ref;
-
-  // This function is used to replay a component that previously suspended,
-  // after its data resolves. It's a simplified version of
-  // updateFunctionComponent that reuses the hooks from the previous attempt.
-
-  prepareToReadContext(workInProgress, renderLanes);
-  if (enableSchedulingProfiler) {
-    markComponentRenderStarted(workInProgress);
-  }
-  const nextChildren = replaySuspendedComponentWithHooks(
-    current,
-    workInProgress,
-    Component,
-    nextProps,
-    secondArg,
-  );
-
-  // the rest is a fork of updateFunctionComponent
-  const hasId = checkDidRenderIdHook();
-  if (enableSchedulingProfiler) {
-    markComponentRenderStopped();
-  }
-
-  if (current !== null && !didReceiveUpdate) {
-    bailoutHooks(current, workInProgress, renderLanes);
-    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
-  }
-
-  if (getIsHydrating() && hasId) {
-    pushMaterializedTreeId(workInProgress);
-  }
-
-  // React DevTools reads this flag.
-  workInProgress.flags |= PerformedWork;
-  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  return workInProgress.child;
-}
-
 function updateMemoComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1214,18 +1168,9 @@ export function replayFunctionComponent(
   workInProgress: Fiber,
   nextProps: any,
   Component: any,
+  secondArg: any,
   renderLanes: Lanes,
 ): Fiber | null {
-  // This function is used to replay a component that previously suspended,
-  // after its data resolves. It's a simplified version of
-  // updateFunctionComponent that reuses the hooks from the previous attempt.
-
-  let context: any;
-  if (!disableLegacyContext) {
-    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-    context = getMaskedContext(workInProgress, unmaskedContext);
-  }
-
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
@@ -1235,7 +1180,7 @@ export function replayFunctionComponent(
     workInProgress,
     Component,
     nextProps,
-    context,
+    secondArg,
   );
   const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {

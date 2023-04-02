@@ -1473,25 +1473,16 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('basic use(promise) with forwardRefs', async () => {
-    const promiseA = Promise.resolve('A');
-    const promiseB = Promise.resolve('B');
-    const promiseC = Promise.resolve('C');
-
-    const refSymbol = {};
-
+  test('unwrap uncached promises inside forwardRef', async () => {
+    const asyncInstance = {};
     const Async = React.forwardRef((props, ref) => {
-      React.useImperativeHandle(ref, () => refSymbol);
-      const text = use(promiseA) + use(promiseB) + use(promiseC);
+      React.useImperativeHandle(ref, () => asyncInstance);
+      const text = use(Promise.resolve('Async'));
       return <Text text={text} />;
     });
 
-    let _ref;
+    const ref = React.createRef();
     function App() {
-      const ref = arg => {
-        _ref = arg;
-      };
-
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <Async ref={ref} />
@@ -1505,8 +1496,108 @@ describe('ReactUse', () => {
         root.render(<App />);
       });
     });
-    assertLog(['ABC']);
-    expect(root).toMatchRenderedOutput('ABC');
-    expect(_ref).toBe(refSymbol);
+    assertLog(['Async']);
+    expect(root).toMatchRenderedOutput('Async');
+    expect(ref.current).toBe(asyncInstance);
+  });
+
+  test('unwrap uncached promises inside memo', async () => {
+    const Async = React.memo(
+      props => {
+        const text = use(Promise.resolve(props.text));
+        return <Text text={text} />;
+      },
+      (a, b) => a.text === b.text,
+    );
+
+    function App({text}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async text={text} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      startTransition(() => {
+        root.render(<App text="Async" />);
+      });
+    });
+    assertLog(['Async']);
+    expect(root).toMatchRenderedOutput('Async');
+
+    // Update to the same value
+    await act(() => {
+      startTransition(() => {
+        root.render(<App text="Async" />);
+      });
+    });
+    // Should not have re-rendered, because it's memoized
+    assertLog([]);
+    expect(root).toMatchRenderedOutput('Async');
+
+    // Update to a different value
+    await act(() => {
+      startTransition(() => {
+        root.render(<App text="Async!" />);
+      });
+    });
+    assertLog(['Async!']);
+    expect(root).toMatchRenderedOutput('Async!');
+  });
+
+  // @gate !disableLegacyContext
+  test('unwrap uncached promises in component that accesses legacy context', async () => {
+    class ContextProvider extends React.Component {
+      static childContextTypes = {
+        legacyContext() {},
+      };
+      getChildContext() {
+        return {legacyContext: 'Async'};
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function Async({label}, context) {
+      const text = use(Promise.resolve(context.legacyContext + ` (${label})`));
+      return <Text text={text} />;
+    }
+    Async.contextTypes = {
+      legacyContext: () => {},
+    };
+
+    const AsyncMemo = React.memo(Async, (a, b) => a.label === b.label);
+
+    function App() {
+      return (
+        <ContextProvider>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <div>
+              <Async label="function component" />
+            </div>
+            <div>
+              <AsyncMemo label="memo component" />
+            </div>
+          </Suspense>
+        </ContextProvider>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      startTransition(() => {
+        root.render(<App />);
+      });
+    });
+    assertLog(['Async (function component)', 'Async (memo component)']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Async (function component)</div>
+        <div>Async (memo component)</div>
+      </>,
+    );
   });
 });
