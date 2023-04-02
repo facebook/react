@@ -368,26 +368,19 @@ function setProp(
       break;
     }
     case 'contentEditable':
-    case 'spellCheck': {
-      // Lower-case Booleanish String
-      // These are "enumerated" HTML attributes that accept "true" and "false".
-      // In React, we let users pass `true` and `false` even though technically
-      // these aren't boolean attributes (they are coerced to strings).
-      key = key.toLowerCase();
-      // Fall-through to the case-sensitive cases
-    }
-    // eslint-disable-next-line no-fallthrough
+    case 'spellCheck':
     case 'draggable':
     case 'value':
     case 'autoReverse':
     case 'externalResourcesRequired':
     case 'focusable':
     case 'preserveAlpha': {
-      // Case-sensitive Booleanish String
-      // These are "enumerated" SVG attributes that accept "true" and "false".
+      // Booleanish String
+      // These are "enumerated" attributes that accept "true" and "false".
       // In React, we let users pass `true` and `false` even though technically
       // these aren't boolean attributes (they are coerced to strings).
-      // Since these are SVG attributes, their attribute names are case-sensitive.
+      // The SVG attributes are case-sensitive. Since the HTML attributes are
+      // insensitive they also work even though we canonically use lower case.
       if (
         value != null &&
         typeof value !== 'function' &&
@@ -1385,6 +1378,45 @@ function hydrateAttribute(
   warnForPropDifference(attributeName, serverValue, value);
 }
 
+function hydrateBooleanishAttribute(
+  domElement: Element,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  let serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'function':
+      case 'symbol': // eslint-disable-line
+        serverValue = value;
+    }
+    serverValue = value === undefined ? undefined : null;
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol': // eslint-disable-line
+          break;
+        default: {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+          if (serverValue === '' + (value: any)) {
+            serverValue = value;
+          }
+        }
+      }
+    }
+  }
+  warnForPropDifference(attributeName, serverValue, value);
+}
+
 function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
@@ -1510,9 +1542,8 @@ function diffHydratedGenericElement(
       // Don't bother comparing. We're ignoring all these warnings.
       continue;
     }
-    let key = propKey;
     // Validate that the properties correspond to their expected values.
-    switch (key) {
+    switch (propKey) {
       case 'children': // Checked above already
       case 'suppressContentEditableWarning':
       case 'suppressHydrationWarning':
@@ -1533,17 +1564,17 @@ function diffHydratedGenericElement(
         }
         continue;
       case 'style':
-        extraAttributes.delete(key);
+        extraAttributes.delete(propKey);
         diffHydratedStyles(domElement, value);
         continue;
       case 'multiple': {
-        extraAttributes.delete(key);
+        extraAttributes.delete(propKey);
         const serverValue = (domElement: any).multiple;
         warnForPropDifference(propKey, serverValue, value);
         continue;
       }
       case 'muted': {
-        extraAttributes.delete(key);
+        extraAttributes.delete(propKey);
         const serverValue = (domElement: any).muted;
         warnForPropDifference(propKey, serverValue, value);
         continue;
@@ -1554,50 +1585,33 @@ function diffHydratedGenericElement(
         warnForPropDifference(propKey, serverValue, value);
         continue;
       }
-      case 'contentEditable':
+      case 'contentEditable': {
+        // Lower-case Booleanish String
+        hydrateBooleanishAttribute(
+          domElement,
+          'contenteditable',
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
       case 'spellCheck': {
         // Lower-case Booleanish String
-        key = key.toLowerCase();
-        // Fall-through to the case-sensitive cases
+        hydrateBooleanishAttribute(
+          domElement,
+          'spellcheck',
+          value,
+          extraAttributes,
+        );
+        continue;
       }
-      // eslint-disable-next-line no-fallthrough
       case 'draggable':
       case 'autoReverse':
       case 'externalResourcesRequired':
       case 'focusable':
       case 'preserveAlpha': {
         // Case-sensitive Booleanish String
-        extraAttributes.delete(key);
-        let serverValue = domElement.getAttribute(key);
-        if (serverValue === null) {
-          // shouldRemoveAttribute
-          switch (typeof value) {
-            case 'function':
-            case 'symbol': // eslint-disable-line
-              serverValue = value;
-          }
-          serverValue = value === undefined ? undefined : null;
-        } else {
-          if (value == null) {
-            // We had an attribute but shouldn't have had one, so read it
-            // for the error message.
-          } else {
-            switch (typeof value) {
-              case 'function':
-              case 'symbol': // eslint-disable-line
-                break;
-              default: {
-                if (__DEV__) {
-                  checkAttributeStringCoercion(value, key);
-                }
-                if (serverValue === '' + (value: any)) {
-                  serverValue = value;
-                }
-              }
-            }
-          }
-        }
-        warnForPropDifference(propKey, serverValue, value);
+        hydrateBooleanishAttribute(domElement, propKey, value, extraAttributes);
         continue;
       }
       case 'accentHeight':
@@ -1944,7 +1958,7 @@ function diffHydratedGenericElement(
             ownNamespaceDev = getIntrinsicNamespace(tag);
           }
           if (ownNamespaceDev === HTML_NAMESPACE) {
-            extraAttributes.delete(key.toLowerCase());
+            extraAttributes.delete(propKey.toLowerCase());
           } else {
             const standardName = getPossibleStandardName(propKey);
             if (standardName !== null && standardName !== propKey) {
@@ -1956,7 +1970,7 @@ function diffHydratedGenericElement(
               isMismatchDueToBadCasing = true;
               extraAttributes.delete(standardName);
             }
-            extraAttributes.delete(key);
+            extraAttributes.delete(propKey);
           }
           serverValue = getValueForAttribute(domElement, propKey, value);
         }
