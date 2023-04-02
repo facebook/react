@@ -39,6 +39,7 @@ import {
   enableTransitionTracing,
   useModernStrictMode,
   revertRemovalOfSiblingPrerendering,
+  disableLegacyContext,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -281,6 +282,7 @@ import {
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
 } from './ReactFiberRootScheduler';
+import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 
 const ceil = Math.ceil;
 
@@ -2380,8 +2382,8 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       // Fallthrough to the next branch.
     }
     // eslint-disable-next-line no-fallthrough
-    case FunctionComponent:
-    case ForwardRef: {
+    case SimpleMemoComponent:
+    case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
       // TODO: Consider moving this switch statement into that module. Also,
       // could maybe use this as an opportunity to say `use` doesn't work with
@@ -2392,23 +2394,39 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         unitOfWork.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
+      let context: any;
+      if (!disableLegacyContext) {
+        const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
+        context = getMaskedContext(unitOfWork, unmaskedContext);
+      }
       next = replayFunctionComponent(
         current,
         unitOfWork,
         resolvedProps,
         Component,
+        context,
         workInProgressRootRenderLanes,
       );
       break;
     }
-    case SimpleMemoComponent: {
-      const Component = unitOfWork.type;
-      const nextProps = unitOfWork.pendingProps;
+    case ForwardRef: {
+      // Resolve `defaultProps`. This logic is copied from `beginWork`.
+      // TODO: Consider moving this switch statement into that module. Also,
+      // could maybe use this as an opportunity to say `use` doesn't work with
+      // `defaultProps` :)
+      const Component = unitOfWork.type.render;
+      const unresolvedProps = unitOfWork.pendingProps;
+      const resolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+
       next = replayFunctionComponent(
         current,
         unitOfWork,
-        nextProps,
+        resolvedProps,
         Component,
+        unitOfWork.ref,
         workInProgressRootRenderLanes,
       );
       break;
