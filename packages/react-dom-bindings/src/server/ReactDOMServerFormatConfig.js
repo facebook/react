@@ -691,6 +691,13 @@ function pushAttribute(
       }
       return;
     }
+    // HTML and SVG attributes, but the SVG attribute is case sensitive.
+    case 'tabIndex':
+      pushStringAttribute(target, 'tabindex', value);
+      return;
+    case 'crossOrigin':
+      pushStringAttribute(target, 'crossorigin', value);
+      return;
     // This is a list of all SVG attributes that need special casing.
     // Regular attributes that just accept strings.
     case 'accentHeight':

@@ -395,6 +395,13 @@ function setProp(
       }
       break;
     }
+    // HTML and SVG attributes, but the SVG attribute is case sensitive.
+    case 'tabIndex':
+      setValueForAttribute(domElement, 'tabindex', value);
+      break;
+    case 'crossOrigin':
+      setValueForAttribute(domElement, 'crossorigin', value);
+      break;
     // This is a list of all SVG attributes that need special casing.
     // Regular attributes that just accept strings.
     case 'accentHeight':
@@ -1614,6 +1621,12 @@ function diffHydratedGenericElement(
         hydrateBooleanishAttribute(domElement, propKey, value, extraAttributes);
         continue;
       }
+      case 'tabIndex':
+        hydrateAttribute(domElement, 'tabindex', value, extraAttributes);
+        continue;
+      case 'crossOrigin':
+        hydrateAttribute(domElement, 'crossorigin', value, extraAttributes);
+        continue;
       case 'accentHeight':
         hydrateAttribute(domElement, 'accent-height', value, extraAttributes);
         continue;

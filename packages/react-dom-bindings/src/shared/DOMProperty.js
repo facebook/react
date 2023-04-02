@@ -221,20 +221,6 @@ const capitalize = (token: string) => token[1].toUpperCase();
   );
 });
 
-// These attribute exists both in HTML and SVG.
-// The attribute name is case-sensitive in SVG so we can't just use
-// the React name like we do for attributes that exist only in HTML.
-['tabIndex', 'crossOrigin'].forEach(attributeName => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
 // These attributes accept URLs. These must not allow javascript: URLS.
 // These will also need to accept Trusted Types object in the future.
 const xlinkHref = 'xlinkHref';
