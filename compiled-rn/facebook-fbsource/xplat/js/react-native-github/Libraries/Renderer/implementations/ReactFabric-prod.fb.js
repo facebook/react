@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_241 = {
+var injectedNamesToPlugins$jscomp$inline_243 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_241 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_242 = !1,
-  pluginName$jscomp$inline_243;
-for (pluginName$jscomp$inline_243 in injectedNamesToPlugins$jscomp$inline_241)
+  isOrderingDirty$jscomp$inline_244 = !1,
+  pluginName$jscomp$inline_245;
+for (pluginName$jscomp$inline_245 in injectedNamesToPlugins$jscomp$inline_243)
   if (
-    injectedNamesToPlugins$jscomp$inline_241.hasOwnProperty(
-      pluginName$jscomp$inline_243
+    injectedNamesToPlugins$jscomp$inline_243.hasOwnProperty(
+      pluginName$jscomp$inline_245
     )
   ) {
-    var pluginModule$jscomp$inline_244 =
-      injectedNamesToPlugins$jscomp$inline_241[pluginName$jscomp$inline_243];
+    var pluginModule$jscomp$inline_246 =
+      injectedNamesToPlugins$jscomp$inline_243[pluginName$jscomp$inline_245];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_243) ||
-      namesToPlugins[pluginName$jscomp$inline_243] !==
-        pluginModule$jscomp$inline_244
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_245) ||
+      namesToPlugins[pluginName$jscomp$inline_245] !==
+        pluginModule$jscomp$inline_246
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_243])
+      if (namesToPlugins[pluginName$jscomp$inline_245])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_243 + "`.")
+            (pluginName$jscomp$inline_245 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_243] =
-        pluginModule$jscomp$inline_244;
-      isOrderingDirty$jscomp$inline_242 = !0;
+      namesToPlugins[pluginName$jscomp$inline_245] =
+        pluginModule$jscomp$inline_246;
+      isOrderingDirty$jscomp$inline_244 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_242 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_244 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -4729,18 +4729,15 @@ function replayFunctionComponent(
   workInProgress,
   nextProps,
   Component,
+  secondArg,
   renderLanes
 ) {
-  var context = isContextProvider(Component)
-    ? previousContext
-    : contextStackCursor$1.current;
-  context = getMaskedContext(workInProgress, context);
   prepareToReadContext(workInProgress, renderLanes);
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
     nextProps,
-    context
+    secondArg
   );
   finishRenderingHooks();
   if (null !== current && !didReceiveUpdate)
@@ -8107,10 +8104,30 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   switch (unitOfWork.tag) {
     case 2:
       unitOfWork.tag = 0;
+    case 15:
     case 0:
-    case 11:
       var Component = unitOfWork.type,
         unresolvedProps = unitOfWork.pendingProps;
+      unresolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      var context = isContextProvider(Component)
+        ? previousContext
+        : contextStackCursor$1.current;
+      context = getMaskedContext(unitOfWork, context);
+      current = replayFunctionComponent(
+        current,
+        unitOfWork,
+        unresolvedProps,
+        Component,
+        context,
+        workInProgressRootRenderLanes
+      );
+      break;
+    case 11:
+      Component = unitOfWork.type.render;
+      unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
@@ -8120,15 +8137,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         unitOfWork,
         unresolvedProps,
         Component,
-        workInProgressRootRenderLanes
-      );
-      break;
-    case 15:
-      current = replayFunctionComponent(
-        current,
-        unitOfWork,
-        unitOfWork.pendingProps,
-        unitOfWork.type,
+        unitOfWork.ref,
         workInProgressRootRenderLanes
       );
       break;
@@ -9542,10 +9551,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1046 = {
+  devToolsConfig$jscomp$inline_1048 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-0ae348018-20230331",
+    version: "18.3.0-next-7329ea81c-20230402",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9560,11 +9569,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1291 = {
-  bundleType: devToolsConfig$jscomp$inline_1046.bundleType,
-  version: devToolsConfig$jscomp$inline_1046.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1046.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1046.rendererConfig,
+var internals$jscomp$inline_1293 = {
+  bundleType: devToolsConfig$jscomp$inline_1048.bundleType,
+  version: devToolsConfig$jscomp$inline_1048.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1048.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1048.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9580,26 +9589,26 @@ var internals$jscomp$inline_1291 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1046.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1048.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0ae348018-20230331"
+  reconcilerVersion: "18.3.0-next-7329ea81c-20230402"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1292 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1294 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1292.isDisabled &&
-    hook$jscomp$inline_1292.supportsFiber
+    !hook$jscomp$inline_1294.isDisabled &&
+    hook$jscomp$inline_1294.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1292.inject(
-        internals$jscomp$inline_1291
+      (rendererID = hook$jscomp$inline_1294.inject(
+        internals$jscomp$inline_1293
       )),
-        (injectedHook = hook$jscomp$inline_1292);
+        (injectedHook = hook$jscomp$inline_1294);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

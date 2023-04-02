@@ -3249,18 +3249,15 @@ function replayFunctionComponent(
   workInProgress,
   nextProps,
   Component,
+  secondArg,
   renderLanes
 ) {
-  var context = isContextProvider(Component)
-    ? previousContext
-    : contextStackCursor$1.current;
-  context = getMaskedContext(workInProgress, context);
   prepareToReadContext(workInProgress, renderLanes);
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
     nextProps,
-    context
+    secondArg
   );
   finishRenderingHooks();
   if (null !== current && !didReceiveUpdate)
@@ -7017,10 +7014,30 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   switch (unitOfWork.tag) {
     case 2:
       unitOfWork.tag = 0;
+    case 15:
     case 0:
-    case 11:
       var Component = unitOfWork.type,
         unresolvedProps = unitOfWork.pendingProps;
+      unresolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      var context = isContextProvider(Component)
+        ? previousContext
+        : contextStackCursor$1.current;
+      context = getMaskedContext(unitOfWork, context);
+      current = replayFunctionComponent(
+        current,
+        unitOfWork,
+        unresolvedProps,
+        Component,
+        context,
+        workInProgressRootRenderLanes
+      );
+      break;
+    case 11:
+      Component = unitOfWork.type.render;
+      unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
@@ -7030,15 +7047,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         unitOfWork,
         unresolvedProps,
         Component,
-        workInProgressRootRenderLanes
-      );
-      break;
-    case 15:
-      current = replayFunctionComponent(
-        current,
-        unitOfWork,
-        unitOfWork.pendingProps,
-        unitOfWork.type,
+        unitOfWork.ref,
         workInProgressRootRenderLanes
       );
       break;
@@ -8669,19 +8678,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1026 = {
+var devToolsConfig$jscomp$inline_1028 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-0ae348018-20230331",
+  version: "18.3.0-next-7329ea81c-20230402",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1218 = {
-  bundleType: devToolsConfig$jscomp$inline_1026.bundleType,
-  version: devToolsConfig$jscomp$inline_1026.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1026.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1026.rendererConfig,
+var internals$jscomp$inline_1220 = {
+  bundleType: devToolsConfig$jscomp$inline_1028.bundleType,
+  version: devToolsConfig$jscomp$inline_1028.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1028.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1028.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -8698,26 +8707,26 @@ var internals$jscomp$inline_1218 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1026.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1028.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0ae348018-20230331"
+  reconcilerVersion: "18.3.0-next-7329ea81c-20230402"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1219 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1221 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1219.isDisabled &&
-    hook$jscomp$inline_1219.supportsFiber
+    !hook$jscomp$inline_1221.isDisabled &&
+    hook$jscomp$inline_1221.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1219.inject(
-        internals$jscomp$inline_1218
+      (rendererID = hook$jscomp$inline_1221.inject(
+        internals$jscomp$inline_1220
       )),
-        (injectedHook = hook$jscomp$inline_1219);
+        (injectedHook = hook$jscomp$inline_1221);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

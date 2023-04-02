@@ -951,7 +951,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_264 = {
+var injectedNamesToPlugins$jscomp$inline_266 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -997,32 +997,32 @@ var injectedNamesToPlugins$jscomp$inline_264 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_265 = !1,
-  pluginName$jscomp$inline_266;
-for (pluginName$jscomp$inline_266 in injectedNamesToPlugins$jscomp$inline_264)
+  isOrderingDirty$jscomp$inline_267 = !1,
+  pluginName$jscomp$inline_268;
+for (pluginName$jscomp$inline_268 in injectedNamesToPlugins$jscomp$inline_266)
   if (
-    injectedNamesToPlugins$jscomp$inline_264.hasOwnProperty(
-      pluginName$jscomp$inline_266
+    injectedNamesToPlugins$jscomp$inline_266.hasOwnProperty(
+      pluginName$jscomp$inline_268
     )
   ) {
-    var pluginModule$jscomp$inline_267 =
-      injectedNamesToPlugins$jscomp$inline_264[pluginName$jscomp$inline_266];
+    var pluginModule$jscomp$inline_269 =
+      injectedNamesToPlugins$jscomp$inline_266[pluginName$jscomp$inline_268];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_266) ||
-      namesToPlugins[pluginName$jscomp$inline_266] !==
-        pluginModule$jscomp$inline_267
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_268) ||
+      namesToPlugins[pluginName$jscomp$inline_268] !==
+        pluginModule$jscomp$inline_269
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_266])
+      if (namesToPlugins[pluginName$jscomp$inline_268])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_266 + "`.")
+            (pluginName$jscomp$inline_268 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_266] =
-        pluginModule$jscomp$inline_267;
-      isOrderingDirty$jscomp$inline_265 = !0;
+      namesToPlugins[pluginName$jscomp$inline_268] =
+        pluginModule$jscomp$inline_269;
+      isOrderingDirty$jscomp$inline_267 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_265 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_267 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -5010,19 +5010,16 @@ function replayFunctionComponent(
   workInProgress,
   nextProps,
   Component,
+  secondArg,
   renderLanes
 ) {
-  var context = isContextProvider(Component)
-    ? previousContext
-    : contextStackCursor$1.current;
-  context = getMaskedContext(workInProgress, context);
   prepareToReadContext(workInProgress, renderLanes);
   markComponentRenderStarted(workInProgress);
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
     nextProps,
-    context
+    secondArg
   );
   finishRenderingHooks();
   markComponentRenderStopped();
@@ -8952,10 +8949,30 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   switch (unitOfWork.tag) {
     case 2:
       unitOfWork.tag = 0;
+    case 15:
     case 0:
-    case 11:
       var Component = unitOfWork.type,
         unresolvedProps = unitOfWork.pendingProps;
+      unresolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      var context = isContextProvider(Component)
+        ? previousContext
+        : contextStackCursor$1.current;
+      context = getMaskedContext(unitOfWork, context);
+      current = replayFunctionComponent(
+        current,
+        unitOfWork,
+        unresolvedProps,
+        Component,
+        context,
+        workInProgressRootRenderLanes
+      );
+      break;
+    case 11:
+      Component = unitOfWork.type.render;
+      unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
@@ -8965,15 +8982,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         unitOfWork,
         unresolvedProps,
         Component,
-        workInProgressRootRenderLanes
-      );
-      break;
-    case 15:
-      current = replayFunctionComponent(
-        current,
-        unitOfWork,
-        unitOfWork.pendingProps,
-        unitOfWork.type,
+        unitOfWork.ref,
         workInProgressRootRenderLanes
       );
       break;
@@ -10506,10 +10515,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1183 = {
+  devToolsConfig$jscomp$inline_1185 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-0ae348018-20230331",
+    version: "18.3.0-next-7329ea81c-20230402",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10538,10 +10547,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1183.bundleType,
-  version: devToolsConfig$jscomp$inline_1183.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1183.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1183.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1185.bundleType,
+  version: devToolsConfig$jscomp$inline_1185.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1185.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1185.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10557,14 +10566,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1183.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1185.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0ae348018-20230331"
+  reconcilerVersion: "18.3.0-next-7329ea81c-20230402"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
