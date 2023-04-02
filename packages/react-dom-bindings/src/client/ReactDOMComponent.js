@@ -395,6 +395,20 @@ function setProp(
       }
       break;
     }
+    // A few React string attributes have a different name.
+    // This is a mapping from React prop names to the attribute names.
+    case 'acceptCharset':
+      setValueForAttribute(domElement, 'accept-charset', value);
+      break;
+    case 'className':
+      setValueForAttribute(domElement, 'class', value);
+      break;
+    case 'htmlFor':
+      setValueForAttribute(domElement, 'for', value);
+      break;
+    case 'httpEquiv':
+      setValueForAttribute(domElement, 'http-equiv', value);
+      break;
     // HTML and SVG attributes, but the SVG attribute is case sensitive.
     case 'tabIndex':
       setValueForAttribute(domElement, 'tabindex', value);
@@ -1631,6 +1645,32 @@ function diffHydratedGenericElement(
         );
         continue;
       }
+      // A few React string attributes have a different name.
+      // This is a mapping from React prop names to the attribute names.
+      case 'acceptCharset':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'accept-charset',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'className':
+        hydrateAttribute(domElement, propKey, 'class', value, extraAttributes);
+        continue;
+      case 'htmlFor':
+        hydrateAttribute(domElement, propKey, 'for', value, extraAttributes);
+        continue;
+      case 'httpEquiv':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'http-equiv',
+          value,
+          extraAttributes,
+        );
+        continue;
       case 'tabIndex':
         hydrateAttribute(
           domElement,

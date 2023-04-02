@@ -66,24 +66,6 @@ function PropertyInfoRecord(
 // name warnings.
 const properties: {[string]: $FlowFixMe} = {};
 
-// A few React string attributes have a different name.
-// This is a mapping from React prop names to the attribute names.
-[
-  ['acceptCharset', 'accept-charset'],
-  ['className', 'class'],
-  ['htmlFor', 'for'],
-  ['httpEquiv', 'http-equiv'],
-].forEach(([name, attributeName]) => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
 // These are HTML boolean attributes.
 [
   'allowFullScreen',

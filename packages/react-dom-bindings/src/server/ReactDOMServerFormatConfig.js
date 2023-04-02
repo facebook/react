@@ -691,6 +691,20 @@ function pushAttribute(
       }
       return;
     }
+    // A few React string attributes have a different name.
+    // This is a mapping from React prop names to the attribute names.
+    case 'acceptCharset':
+      pushStringAttribute(target, 'accept-charset', value);
+      return;
+    case 'className':
+      pushStringAttribute(target, 'class', value);
+      return;
+    case 'htmlFor':
+      pushStringAttribute(target, 'for', value);
+      return;
+    case 'httpEquiv':
+      pushStringAttribute(target, 'http-equiv', value);
+      return;
     // HTML and SVG attributes, but the SVG attribute is case sensitive.
     case 'tabIndex':
       pushStringAttribute(target, 'tabindex', value);
