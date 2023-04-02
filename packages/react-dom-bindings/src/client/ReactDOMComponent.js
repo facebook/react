@@ -64,12 +64,15 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import sanitizeURL from '../shared/sanitizeURL';
 
 import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableHostSingletons,
   disableIEWorkarounds,
+  enableTrustedTypesIntegration,
+  enableFilterEmptyStringAttributesDOM,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -365,6 +368,84 @@ function setProp(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
+      break;
+    }
+    // These attributes accept URLs. These must not allow javascript: URLS.
+    case 'src':
+    case 'href':
+    case 'action':
+      if (enableFilterEmptyStringAttributesDOM) {
+        if (value === '') {
+          if (__DEV__) {
+            if (key === 'src') {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'This may cause the browser to download the whole page again over the network. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                key,
+                key,
+              );
+            } else {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                key,
+                key,
+              );
+            }
+          }
+          domElement.removeAttribute(key);
+          break;
+        }
+      }
+    // Fall through to the last case which shouldn't remove empty strings.
+    // eslint-disable-next-line no-fallthrough
+    case 'formAction': {
+      if (
+        value == null ||
+        typeof value === 'function' ||
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+      ) {
+        domElement.removeAttribute(key);
+        break;
+      }
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, key);
+      }
+      const sanitizedValue = (sanitizeURL(
+        enableTrustedTypesIntegration ? value : '' + (value: any),
+      ): any);
+      domElement.setAttribute(key, sanitizedValue);
+      break;
+    }
+    case 'xlinkHref': {
+      if (
+        value == null ||
+        typeof value === 'function' ||
+        typeof value === 'boolean' ||
+        typeof value === 'symbol'
+      ) {
+        domElement.removeAttribute('xlink:href');
+        break;
+      }
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, key);
+      }
+      const sanitizedValue = (sanitizeURL(
+        enableTrustedTypesIntegration ? value : '' + (value: any),
+      ): any);
+      domElement.setAttributeNS(
+        'http://www.w3.org/1999/xlink',
+        'xlink:href',
+        sanitizedValue,
+      );
       break;
     }
     case 'contentEditable':
@@ -1373,8 +1454,9 @@ function hydrateAttribute(
     // shouldRemoveAttribute
     switch (typeof value) {
       case 'function':
-      case 'symbol': // eslint-disable-line
-        serverValue = value;
+      case 'symbol':
+      case 'boolean':
+        return;
     }
     serverValue = value === undefined ? undefined : null;
   } else {
@@ -1384,7 +1466,8 @@ function hydrateAttribute(
     } else {
       switch (typeof value) {
         case 'function':
-        case 'symbol': // eslint-disable-line
+        case 'symbol':
+        case 'boolean':
           break;
         default: {
           if (__DEV__) {
@@ -1413,8 +1496,8 @@ function hydrateBooleanishAttribute(
     // shouldRemoveAttribute
     switch (typeof value) {
       case 'function':
-      case 'symbol': // eslint-disable-line
-        serverValue = value;
+      case 'symbol':
+        return;
     }
     serverValue = value === undefined ? undefined : null;
   } else {
@@ -1424,13 +1507,56 @@ function hydrateBooleanishAttribute(
     } else {
       switch (typeof value) {
         case 'function':
-        case 'symbol': // eslint-disable-line
+        case 'symbol':
           break;
         default: {
           if (__DEV__) {
             checkAttributeStringCoercion(value, attributeName);
           }
           if (serverValue === '' + (value: any)) {
+            serverValue = value;
+          }
+        }
+      }
+    }
+  }
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateSanitizedAttribute(
+  domElement: Element,
+  propKey: string,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  let serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'function':
+      case 'symbol':
+      case 'boolean':
+        return;
+    }
+    serverValue = value === undefined ? undefined : null;
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol':
+        case 'boolean':
+          break;
+        default: {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, propKey);
+          }
+          const sanitizedValue = sanitizeURL('' + value);
+          if (serverValue === sanitizedValue) {
             serverValue = value;
           }
         }
@@ -1608,6 +1734,67 @@ function diffHydratedGenericElement(
         warnForPropDifference(propKey, serverValue, value);
         continue;
       }
+      case 'src':
+      case 'href':
+      case 'action':
+        if (enableFilterEmptyStringAttributesDOM) {
+          if (value === '') {
+            if (__DEV__) {
+              if (propKey === 'src') {
+                console.error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    'This may cause the browser to download the whole page again over the network. ' +
+                    'To fix this, either do not render the element at all ' +
+                    'or pass null to %s instead of an empty string.',
+                  propKey,
+                  propKey,
+                );
+              } else {
+                console.error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    'To fix this, either do not render the element at all ' +
+                    'or pass null to %s instead of an empty string.',
+                  propKey,
+                  propKey,
+                );
+              }
+            }
+            hydrateSanitizedAttribute(
+              domElement,
+              propKey,
+              propKey,
+              null,
+              extraAttributes,
+            );
+            continue;
+          }
+        }
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'formAction':
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          'formaction',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkHref':
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          'xlink:href',
+          value,
+          extraAttributes,
+        );
+        continue;
       case 'contentEditable': {
         // Lower-case Booleanish String
         hydrateBooleanishAttribute(

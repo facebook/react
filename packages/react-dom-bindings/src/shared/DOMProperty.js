@@ -37,8 +37,6 @@ export type PropertyInfo = {
   +attributeName: string,
   +attributeNamespace: string | null,
   +type: PropertyType,
-  +sanitizeURL: boolean,
-  +removeEmptyString: boolean,
 };
 
 export function getPropertyInfo(name: string): PropertyInfo | null {
@@ -50,15 +48,11 @@ function PropertyInfoRecord(
   type: PropertyType,
   attributeName: string,
   attributeNamespace: string | null,
-  sanitizeURL: boolean,
-  removeEmptyString: boolean,
 ) {
   this.acceptsBooleans = type === BOOLEAN || type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
   this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -97,8 +91,6 @@ const properties: {[string]: $FlowFixMe} = {};
     BOOLEAN,
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
   );
 });
 
@@ -117,8 +109,6 @@ const properties: {[string]: $FlowFixMe} = {};
     OVERLOADED_BOOLEAN,
     name, // attributeName
     null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
   );
 });
 
@@ -138,8 +128,6 @@ const properties: {[string]: $FlowFixMe} = {};
     POSITIVE_NUMERIC,
     name, // attributeName
     null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
   );
 });
 
@@ -150,8 +138,6 @@ const properties: {[string]: $FlowFixMe} = {};
     NUMERIC,
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
-    false, // sanitizeURL
-    false, // removeEmptyString
   );
 });
 
@@ -177,8 +163,6 @@ const capitalize = (token: string) => token[1].toUpperCase();
     STRING,
     attributeName,
     'http://www.w3.org/1999/xlink',
-    false, // sanitizeURL
-    false, // removeEmptyString
   );
 });
 
@@ -198,40 +182,5 @@ const capitalize = (token: string) => token[1].toUpperCase();
     STRING,
     attributeName,
     'http://www.w3.org/XML/1998/namespace',
-    false, // sanitizeURL
-    false, // removeEmptyString
-  );
-});
-
-// These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
-const xlinkHref = 'xlinkHref';
-// $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-properties[xlinkHref] = new PropertyInfoRecord(
-  STRING,
-  'xlink:href',
-  'http://www.w3.org/1999/xlink',
-  true, // sanitizeURL
-  false, // removeEmptyString
-);
-
-const formAction = 'formAction';
-// $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-properties[formAction] = new PropertyInfoRecord(
-  STRING,
-  'formaction', // attributeName
-  null, // attributeNamespace
-  true, // sanitizeURL
-  false, // removeEmptyString
-);
-
-['src', 'href', 'action'].forEach(attributeName => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    true, // sanitizeURL
-    true, // removeEmptyString
   );
 });

@@ -664,6 +664,80 @@ function pushAttribute(
       pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
+    case 'src':
+    case 'href':
+    case 'action':
+      if (enableFilterEmptyStringAttributesDOM) {
+        if (value === '') {
+          if (__DEV__) {
+            if (name === 'src') {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'This may cause the browser to download the whole page again over the network. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                name,
+                name,
+              );
+            } else {
+              console.error(
+                'An empty string ("") was passed to the %s attribute. ' +
+                  'To fix this, either do not render the element at all ' +
+                  'or pass null to %s instead of an empty string.',
+                name,
+                name,
+              );
+            }
+          }
+          return;
+        }
+      }
+    // Fall through to the last case which shouldn't remove empty strings.
+    // eslint-disable-next-line no-fallthrough
+    case 'formAction': {
+      if (
+        value == null ||
+        typeof value === 'function' ||
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+      ) {
+        return;
+      }
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, name);
+      }
+      const sanitizedValue = sanitizeURL('' + value);
+      target.push(
+        attributeSeparator,
+        stringToChunk(name),
+        attributeAssign,
+        stringToChunk(escapeTextForBrowser(sanitizedValue)),
+        attributeEnd,
+      );
+      return;
+    }
+    case 'xlinkHref': {
+      if (
+        value == null ||
+        typeof value === 'function' ||
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+      ) {
+        return;
+      }
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, name);
+      }
+      const sanitizedValue = sanitizeURL('' + value);
+      target.push(
+        attributeSeparator,
+        stringToChunk('xlink:href'),
+        attributeAssign,
+        stringToChunk(escapeTextForBrowser(sanitizedValue)),
+        attributeEnd,
+      );
+      return;
+    }
     case 'contentEditable':
     case 'spellCheck':
     case 'draggable':
@@ -960,31 +1034,6 @@ function pushAttribute(
         }
       }
     }
-    if (enableFilterEmptyStringAttributesDOM) {
-      if (propertyInfo.removeEmptyString && value === '') {
-        if (__DEV__) {
-          if (name === 'src') {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'This may cause the browser to download the whole page again over the network. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          } else {
-            console.error(
-              'An empty string ("") was passed to the %s attribute. ' +
-                'To fix this, either do not render the element at all ' +
-                'or pass null to %s instead of an empty string.',
-              name,
-              name,
-            );
-          }
-        }
-        return;
-      }
-    }
 
     const attributeName = propertyInfo.attributeName;
     const attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
@@ -1043,11 +1092,6 @@ function pushAttribute(
       default:
         if (__DEV__) {
           checkAttributeStringCoercion(value, attributeName);
-        }
-        if (propertyInfo.sanitizeURL) {
-          // We've already checked above.
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          value = sanitizeURL('' + (value: any));
         }
         target.push(
           attributeSeparator,

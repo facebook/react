@@ -15,11 +15,9 @@ import {
 } from '../shared/DOMProperty';
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
-import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
-  enableFilterEmptyStringAttributesDOM,
 } from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -76,31 +74,6 @@ export function getValueForProperty(
             return expected;
           }
           break;
-        }
-      }
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (propertyInfo.removeEmptyString && expected === '') {
-          if (__DEV__) {
-            if (name === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            }
-          }
-          return expected;
         }
       }
       return expected === undefined ? undefined : null;
@@ -164,14 +137,6 @@ export function getValueForProperty(
     }
     if (__DEV__) {
       checkAttributeStringCoercion(expected, name);
-    }
-    if (propertyInfo.sanitizeURL) {
-      // We have already verified this above.
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      if (value === '' + (sanitizeURL(expected): any)) {
-        return expected;
-      }
-      return value;
     }
     // We have already verified this above.
     // eslint-disable-next-line react-internal/safe-string-coercion
@@ -304,32 +269,6 @@ export function setValueForProperty(
       }
     }
   }
-  if (enableFilterEmptyStringAttributesDOM) {
-    if (propertyInfo.removeEmptyString && value === '') {
-      if (__DEV__) {
-        if (attributeName === 'src') {
-          console.error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              'This may cause the browser to download the whole page again over the network. ' +
-              'To fix this, either do not render the element at all ' +
-              'or pass null to %s instead of an empty string.',
-            attributeName,
-            attributeName,
-          );
-        } else {
-          console.error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              'To fix this, either do not render the element at all ' +
-              'or pass null to %s instead of an empty string.',
-            attributeName,
-            attributeName,
-          );
-        }
-      }
-      node.removeAttribute(attributeName);
-      return;
-    }
-  }
 
   switch (propertyInfo.type) {
     case BOOLEAN:
@@ -380,18 +319,11 @@ export function setValueForProperty(
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
       if (enableTrustedTypesIntegration) {
-        if (propertyInfo.sanitizeURL) {
-          attributeValue = (sanitizeURL(value): any);
-        } else {
-          attributeValue = (value: any);
-        }
+        attributeValue = (value: any);
       } else {
         // We have already verified this above.
         // eslint-disable-next-line react-internal/safe-string-coercion
         attributeValue = '' + (value: any);
-        if (propertyInfo.sanitizeURL) {
-          attributeValue = sanitizeURL(attributeValue);
-        }
       }
       const attributeNamespace = propertyInfo.attributeNamespace;
       if (attributeNamespace) {
