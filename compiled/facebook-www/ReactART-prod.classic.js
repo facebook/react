@@ -3887,18 +3887,15 @@ function replayFunctionComponent(
   workInProgress,
   nextProps,
   Component,
+  secondArg,
   renderLanes
 ) {
-  var context = isContextProvider(Component)
-    ? previousContext
-    : contextStackCursor$1.current;
-  context = getMaskedContext(workInProgress, context);
   prepareToReadContext(workInProgress, renderLanes);
   nextProps = renderWithHooksAgain(
     workInProgress,
     Component,
     nextProps,
-    context
+    secondArg
   );
   finishRenderingHooks(current);
   if (null !== current && !didReceiveUpdate)
@@ -8549,10 +8546,30 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   switch (unitOfWork.tag) {
     case 2:
       unitOfWork.tag = 0;
+    case 15:
     case 0:
-    case 11:
       var Component = unitOfWork.type,
         unresolvedProps = unitOfWork.pendingProps;
+      unresolvedProps =
+        unitOfWork.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      var context = isContextProvider(Component)
+        ? previousContext
+        : contextStackCursor$1.current;
+      context = getMaskedContext(unitOfWork, context);
+      current = replayFunctionComponent(
+        current,
+        unitOfWork,
+        unresolvedProps,
+        Component,
+        context,
+        workInProgressRootRenderLanes
+      );
+      break;
+    case 11:
+      Component = unitOfWork.type.render;
+      unresolvedProps = unitOfWork.pendingProps;
       unresolvedProps =
         unitOfWork.elementType === Component
           ? unresolvedProps
@@ -8562,15 +8579,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         unitOfWork,
         unresolvedProps,
         Component,
-        workInProgressRootRenderLanes
-      );
-      break;
-    case 15:
-      current = replayFunctionComponent(
-        current,
-        unitOfWork,
-        unitOfWork.pendingProps,
-        unitOfWork.type,
+        unitOfWork.ref,
         workInProgressRootRenderLanes
       );
       break;
@@ -10053,19 +10062,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1168 = {
+  devToolsConfig$jscomp$inline_1170 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-d70758c5",
+    version: "18.3.0-www-classic-3b2e6228",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1342 = {
-  bundleType: devToolsConfig$jscomp$inline_1168.bundleType,
-  version: devToolsConfig$jscomp$inline_1168.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1168.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1168.rendererConfig,
+var internals$jscomp$inline_1344 = {
+  bundleType: devToolsConfig$jscomp$inline_1170.bundleType,
+  version: devToolsConfig$jscomp$inline_1170.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1170.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1170.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10082,26 +10091,26 @@ var internals$jscomp$inline_1342 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1168.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1170.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-d70758c5"
+  reconcilerVersion: "18.3.0-www-classic-3b2e6228"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1343 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1345 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1343.isDisabled &&
-    hook$jscomp$inline_1343.supportsFiber
+    !hook$jscomp$inline_1345.isDisabled &&
+    hook$jscomp$inline_1345.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1343.inject(
-        internals$jscomp$inline_1342
+      (rendererID = hook$jscomp$inline_1345.inject(
+        internals$jscomp$inline_1344
       )),
-        (injectedHook = hook$jscomp$inline_1343);
+        (injectedHook = hook$jscomp$inline_1345);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

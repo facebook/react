@@ -18246,13 +18246,12 @@ function replayFunctionComponent(
   workInProgress,
   nextProps,
   Component,
+  secondArg,
   renderLanes
 ) {
   // This function is used to replay a component that previously suspended,
   // after its data resolves. It's a simplified version of
   // updateFunctionComponent that reuses the hooks from the previous attempt.
-  var context;
-
   prepareToReadContext(workInProgress, renderLanes);
 
   if (enableSchedulingProfiler) {
@@ -18264,7 +18263,7 @@ function replayFunctionComponent(
     workInProgress,
     Component,
     nextProps,
-    context
+    secondArg
   );
   var hasId = checkDidRenderIdHook();
 
@@ -30824,8 +30823,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     }
     // eslint-disable-next-line no-fallthrough
 
-    case FunctionComponent:
-    case ForwardRef: {
+    case SimpleMemoComponent:
+    case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
       // TODO: Consider moving this switch statement into that module. Also,
       // could maybe use this as an opportunity to say `use` doesn't work with
@@ -30836,24 +30835,38 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         unitOfWork.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
+      var context;
+
       next = replayFunctionComponent(
         current,
         unitOfWork,
         resolvedProps,
         Component,
+        context,
         workInProgressRootRenderLanes
       );
       break;
     }
 
-    case SimpleMemoComponent: {
-      var _Component = unitOfWork.type;
-      var nextProps = unitOfWork.pendingProps;
+    case ForwardRef: {
+      // Resolve `defaultProps`. This logic is copied from `beginWork`.
+      // TODO: Consider moving this switch statement into that module. Also,
+      // could maybe use this as an opportunity to say `use` doesn't work with
+      // `defaultProps` :)
+      var _Component = unitOfWork.type.render;
+      var _unresolvedProps = unitOfWork.pendingProps;
+
+      var _resolvedProps =
+        unitOfWork.elementType === _Component
+          ? _unresolvedProps
+          : resolveDefaultProps(_Component, _unresolvedProps);
+
       next = replayFunctionComponent(
         current,
         unitOfWork,
-        nextProps,
+        _resolvedProps,
         _Component,
+        unitOfWork.ref,
         workInProgressRootRenderLanes
       );
       break;
@@ -33719,7 +33732,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-944376ad";
+var ReactVersion = "18.3.0-www-modern-d98f8218";
 
 function createPortal$1(
   children,
