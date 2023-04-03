@@ -15,21 +15,27 @@ import { eachInstructionValueOperand } from "../HIR/visitors";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
- * This is a Meta-ism. We special-case the `<fbt>` element for translation purposes,
- * and have a transform that requires the children of this element to be a limited
- * subset of nodes. Notably, any dynamic translation values must appear as
- * `<fbt:param>` children — we disallow identifiers as children of `<fbt>` nodes.
+ * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/).
+ * FBT provides the `<fbt>` JSX element and `fbt()` calls (which take params in the
+ * form of `<fbt:param>` children or `fbt.param()` arguments, respectively). These
+ * tags/functions have restrictions on what types of syntax may appear as props/children/
+ * arguments, notably that variable references may not appear directly — variables
+ * must always be wrapped in a `<fbt:param>` or `fbt.param()`.
  *
- * This PR adds a new pass which finds `<fbt>` nodes and ensures their immediate
- * operands are not independently memoized. Note that this still allows the values
- * of `<fbt:param>` to be independently memoized
+ * To ensure that Forget doesn't rewrite code to violate this restriction, we force
+ * operands to fbt tags/calls have the same scope as the tag/call itself.
+ *
+ * Note that this still allows the props/arguments of `<fbt:param>`/`fbt.param()`
+ * to be independently memoized
  */
 export function memoizeFbtOperandsInSameScope(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Transform(), undefined);
 }
 
 class Transform extends ReactiveFunctionVisitor<void> {
-  fbtTags: Set<IdentifierId> = new Set();
+  // Values that represent *potential* references of `fbt` as a JSX tag name
+  // or as a callee.
+  fbtValues: Set<IdentifierId> = new Set();
 
   override visitInstruction(
     instruction: ReactiveInstruction,
@@ -46,10 +52,15 @@ class Transform extends ReactiveFunctionVisitor<void> {
     ) {
       // We don't distinguish between tag names and strings, so record
       // all `fbt` string literals in case they are used as a jsx tag.
-      this.fbtTags.add(lvalue.identifier.id);
+      this.fbtValues.add(lvalue.identifier.id);
+    } else if (value.kind === "LoadGlobal" && value.name === "fbt") {
+      // Record references to `fbt` as a global
+      this.fbtValues.add(lvalue.identifier.id);
     } else if (
-      value.kind === "JsxExpression" &&
-      this.fbtTags.has(value.tag.identifier.id)
+      (value.kind === "JsxExpression" &&
+        this.fbtValues.has(value.tag.identifier.id)) ||
+      (value.kind === "CallExpression" &&
+        this.fbtValues.has(value.callee.identifier.id))
     ) {
       // if the JSX element's tag was `fbt`, mark all its operands
       // to ensure that they end up in the same scope as the jsx element
