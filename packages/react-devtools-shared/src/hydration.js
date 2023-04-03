@@ -52,7 +52,7 @@ export type Unserializable = {
   size?: number,
   type: string,
   unserializable: boolean,
-  ...
+  [string | number]: any,
 };
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
@@ -248,7 +248,6 @@ export function dehydrate(
         // Other types (e.g. typed arrays, Sets) will not spread correctly.
         Array.from(data).forEach(
           (item, i) =>
-            // $FlowFixMe[prop-missing] Unserializable doesn't have an index signature
             (unserializableValue[i] = dehydrate(
               item,
               cleaned,
@@ -296,6 +295,7 @@ export function dehydrate(
 
     case 'object':
       isPathAllowedCheck = isPathAllowed(path);
+
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
@@ -316,15 +316,46 @@ export function dehydrate(
         return object;
       }
 
+    case 'class_instance':
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      }
+
+      const value: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.constructor.name,
+      };
+
+      getAllEnumerableKeys(data).forEach(key => {
+        const keyAsString = key.toString();
+
+        value[keyAsString] = dehydrate(
+          data[key],
+          cleaned,
+          unserializable,
+          path.concat([keyAsString]),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      });
+
+      unserializable.push(path);
+
+      return value;
+
     case 'infinity':
     case 'nan':
     case 'undefined':
       // Some values are lossy when sent through a WebSocket.
       // We dehydrate+rehydrate them to preserve their type.
       cleaned.push(path);
-      return {
-        type,
-      };
+      return {type};
 
     default:
       return data;
