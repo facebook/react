@@ -1119,8 +1119,7 @@ function finishConcurrentRender(
           globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
-          const nextLanes = getNextLanes(root, NoLanes);
-          if (nextLanes !== NoLanes) {
+          if (doesWorkInProgressRootHaveAdditionalUpdates(root)) {
             // There's additional work on this root.
             break;
           }
@@ -1635,8 +1634,7 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
       // renderDidSuspendDelayIfPossible. We should attempt to unify them somehow.
       // TODO: Consider unwinding immediately, using the
       // SuspendedOnHydration mechanism.
-      !includesNonIdleWork(workInProgressRootSkippedLanes) &&
-      !includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
+      !doesWorkInProgressRootHaveAdditionalUpdates(root)
         ? // Suspend work loop until data resolves
           SuspendedOnData
         : // Don't suspend work loop, except to check if the data has
@@ -1831,6 +1829,17 @@ export function markSkippedUpdateLanes(lane: Lane | Lanes): void {
   );
 }
 
+function doesWorkInProgressRootHaveAdditionalUpdates(
+  // This argument is assumed to be `workInProgressRoot`. It's listed as an
+  // argument so the caller remembers to refine it first.
+  root: FiberRoot,
+) {
+  return (
+    includesNonIdleWork(workInProgressRootSkippedLanes) ||
+    includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)
+  );
+}
+
 export function renderDidSuspend(): void {
   if (workInProgressRootExitStatus === RootInProgress) {
     workInProgressRootExitStatus = RootSuspended;
@@ -1844,8 +1853,7 @@ export function renderDidSuspendDelayIfPossible(): void {
   // this render.
   if (
     workInProgressRoot !== null &&
-    (includesNonIdleWork(workInProgressRootSkippedLanes) ||
-      includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes))
+    doesWorkInProgressRootHaveAdditionalUpdates(workInProgressRoot)
   ) {
     // Mark the current render as suspended so that we switch to working on
     // the updates that were skipped. Usually we only suspend at the end of
