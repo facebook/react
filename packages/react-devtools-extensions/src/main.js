@@ -472,8 +472,8 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
-        '',
+        IS_CHROME ? '⚛️ Components' : 'Components',
+        'icons/production.svg',
         'panel.html',
         extensionPanel => {
           extensionPanel.onShown.addListener(panel => {
@@ -503,8 +503,8 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.panels.create(
-        IS_CHROME || IS_EDGE ? '⚛️ Profiler' : 'Profiler',
-        '',
+        IS_CHROME ? '⚛️ Profiler' : 'Profiler',
+        'icons/production.svg',
         'panel.html',
         extensionPanel => {
           extensionPanel.onShown.addListener(panel => {
