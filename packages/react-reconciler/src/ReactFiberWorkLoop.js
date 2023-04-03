@@ -1090,143 +1090,104 @@ function finishConcurrentRender(
     case RootFatalErrored: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
-    case RootErrored: {
-      // We should have already attempted to retry this tree. If we reached
-      // this point, it errored again. Commit it.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
-      break;
-    }
-    case RootSuspended: {
-      markRootSuspended(root, lanes);
-
-      // We have an acceptable loading state. We need to figure out if we
-      // should immediately commit it or wait a bit.
-
-      if (
-        includesOnlyRetries(lanes) &&
-        // do not delay if we're inside an act() scope
-        !shouldForceFlushFallbacksInDEV()
-      ) {
-        // This render only included retries, no updates. Throttle committing
-        // retries so that we don't show too many loading states too quickly.
-        const msUntilTimeout =
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
-        // Don't bother with a very short suspense time.
-        if (msUntilTimeout > 10) {
-          if (doesWorkInProgressRootHaveAdditionalUpdates(root)) {
-            // There's additional work on this root.
-            break;
-          }
-
-          // The render is suspended, it hasn't timed out, and there's no
-          // lower priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              finishedWork,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes,
-            ),
-            msUntilTimeout,
-          );
-          break;
-        }
-      }
-      // The work expired. Commit immediately.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
-      break;
-    }
     case RootSuspendedWithDelay: {
-      markRootSuspended(root, lanes);
-
       if (includesOnlyTransitions(lanes)) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        break;
+        markRootSuspended(root, lanes);
+        return;
       }
-
       // Commit the placeholder.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
       break;
     }
+    case RootErrored:
+    case RootSuspended:
     case RootCompleted: {
-      // The work completed.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
       break;
     }
     default: {
       throw new Error('Unknown root exit status.');
     }
   }
-}
 
-function commitRootWhenReady(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  recoverableErrors: Array<CapturedValue<mixed>> | null,
-  transitions: Array<Transition> | null,
-  lanes: Lanes,
-) {
-  if (includesOnlyNonUrgentLanes(lanes)) {
-    // Before committing, ask the renderer whether the host tree is ready.
-    // If it's not, we'll wait until it notifies us.
-    startSuspendingCommit();
-    // This will walk the completed fiber tree and attach listeners to all
-    // the suspensey resources. The renderer is responsible for accumulating
-    // all the load events. This all happens in a single synchronous
-    // transaction, so it track state in its own module scope.
-    accumulateSuspenseyCommit(finishedWork);
-    // At the end, ask the renderer if it's ready to commit, or if we should
-    // suspend. If it's not ready, it will return a callback to subscribe to
-    // a ready event.
-    const schedulePendingCommit = waitForCommitToBeReady();
-    if (schedulePendingCommit !== null) {
-      // NOTE: waitForCommitToBeReady returns a subscribe function so that we
-      // only allocate a function if the commit isn't ready yet. The other
-      // pattern would be to always pass a callback to waitForCommitToBeReady.
+  if (shouldForceFlushFallbacksInDEV()) {
+    // We're inside an `act` scope. Commit immediately.
+  } else {
+    if (
+      // TODO: Remove this status check. We should throttle all retries, even
+      // if all the data in the tree has finished loading.
+      workInProgressRootExitStatus === RootSuspended &&
+      includesOnlyRetries(lanes)
+    ) {
+      // This render only included retries, no updates. Throttle committing
+      // retries so that we don't show too many loading states too quickly.
 
-      // Not yet ready to commit. Delay the commit until the renderer notifies
-      // us that it's ready. This will be canceled if we start work on the
-      // root again.
-      root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(
-          null,
-          root,
-          workInProgressRootRecoverableErrors,
-          workInProgressTransitions,
-        ),
-      );
-      return;
+      const msUntilTimeout =
+        globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
+
+      // Don't bother with a very short suspense time.
+      if (msUntilTimeout > 10) {
+        if (doesWorkInProgressRootHaveAdditionalUpdates(root)) {
+          // There's additional work we can do on this root. We might as well
+          // attempt to work on that while we're suspended.
+          markRootSuspended(root, lanes);
+          return;
+        }
+        // The render is suspended, it hasn't timed out, and there's no
+        // lower priority work to do. Instead of committing the fallback
+        // immediately, wait for more data to arrive.
+        root.timeoutHandle = scheduleTimeout(
+          commitRoot.bind(
+            null,
+            root,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+          ),
+          msUntilTimeout,
+        );
+        markRootSuspended(root, lanes);
+        return;
+      }
+    }
+
+    // TODO: Combine retry throttling (above) with Suspensey commits. Right
+    // now they run one after the other.
+    if (includesOnlyNonUrgentLanes(lanes)) {
+      // Before committing, ask the renderer whether the host tree is ready.
+      // If it's not, we'll wait until it notifies us.
+      startSuspendingCommit();
+      // This will walk the completed fiber tree and attach listeners to all
+      // the suspensey resources. The renderer is responsible for accumulating
+      // all the load events. This all happens in a single synchronous
+      // transaction, so it track state in its own module scope.
+      accumulateSuspenseyCommit(finishedWork);
+      // At the end, ask the renderer if it's ready to commit, or if we should
+      // suspend. If it's not ready, it will return a callback to subscribe to
+      // a ready event.
+      const schedulePendingCommit = waitForCommitToBeReady();
+      if (schedulePendingCommit !== null) {
+        // NOTE: waitForCommitToBeReady returns a subscribe function so that we
+        // only allocate a function if the commit isn't ready yet. The other
+        // pattern would be to always pass a callback to waitForCommitToBeReady.
+
+        // Not yet ready to commit. Delay the commit until the renderer notifies
+        // us that it's ready. This will be canceled if we start work on the
+        // root again.
+        root.cancelPendingCommit = schedulePendingCommit(
+          commitRoot.bind(
+            null,
+            root,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+          ),
+        );
+        markRootSuspended(root, lanes);
+        return;
+      }
     }
   }
+
   // Otherwise, commit immediately.
   commitRoot(
     root,
