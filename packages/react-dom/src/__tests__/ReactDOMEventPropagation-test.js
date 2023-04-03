@@ -7,25 +7,25 @@
 
 'use strict';
 
+let React;
+let OuterReactDOM;
+let InnerReactDOM;
+let container;
+
+window.TextEvent = function () {};
+jest.isolateModules(() => {
+  React = require('react');
+  OuterReactDOM = require('react-dom');
+});
+jest.isolateModules(() => {
+  InnerReactDOM = require('react-dom');
+});
+
+test('separate React instances', () => {
+  expect(OuterReactDOM).not.toBe(InnerReactDOM);
+});
+
 describe('ReactDOMEventListener', () => {
-  let React;
-  let OuterReactDOM;
-  let InnerReactDOM;
-  let container;
-
-  beforeEach(() => {
-    window.TextEvent = function () {};
-    jest.resetModules();
-    jest.isolateModules(() => {
-      React = require('react');
-      OuterReactDOM = require('react-dom');
-    });
-    jest.isolateModules(() => {
-      InnerReactDOM = require('react-dom');
-    });
-    expect(OuterReactDOM).not.toBe(InnerReactDOM);
-  });
-
   afterEach(() => {
     cleanup();
   });
