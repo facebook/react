@@ -476,6 +476,36 @@ function setProp(
       }
       break;
     }
+    // Boolean
+    case 'allowFullScreen':
+    case 'async':
+    case 'autoPlay':
+    case 'controls':
+    case 'default':
+    case 'defer':
+    case 'disabled':
+    case 'disablePictureInPicture':
+    case 'disableRemotePlayback':
+    case 'formNoValidate':
+    case 'hidden':
+    case 'loop':
+    case 'noModule':
+    case 'noValidate':
+    case 'open':
+    case 'playsInline':
+    case 'readOnly':
+    case 'required':
+    case 'reversed':
+    case 'scoped':
+    case 'seamless':
+    case 'itemScope': {
+      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+        domElement.setAttribute(key, '');
+      } else {
+        domElement.removeAttribute(key);
+      }
+      break;
+    }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
     case 'acceptCharset':
@@ -1521,16 +1551,15 @@ function hydrateAttribute(
   extraAttributes: Set<string>,
 ): void {
   extraAttributes.delete(attributeName);
-  let serverValue = domElement.getAttribute(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
   if (serverValue === null) {
-    // shouldRemoveAttribute
     switch (typeof value) {
+      case 'undefined':
       case 'function':
       case 'symbol':
       case 'boolean':
         return;
     }
-    serverValue = value === undefined ? undefined : null;
   } else {
     if (value == null) {
       // We had an attribute but shouldn't have had one, so read it
@@ -1546,8 +1575,44 @@ function hydrateAttribute(
             checkAttributeStringCoercion(value, propKey);
           }
           if (serverValue === '' + value) {
-            serverValue = value;
+            return;
           }
+        }
+      }
+    }
+  }
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateBooleanAttribute(
+  domElement: Element,
+  propKey: string,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    switch (typeof value) {
+      case 'function':
+      case 'symbol':
+        return;
+    }
+    if (!value) {
+      return;
+    }
+  } else {
+    switch (typeof value) {
+      case 'function':
+      case 'symbol':
+        break;
+      default: {
+        if (value) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          // As long as it's positive.
+          return;
         }
       }
     }
@@ -1563,15 +1628,14 @@ function hydrateBooleanishAttribute(
   extraAttributes: Set<string>,
 ): void {
   extraAttributes.delete(attributeName);
-  let serverValue = domElement.getAttribute(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
   if (serverValue === null) {
-    // shouldRemoveAttribute
     switch (typeof value) {
+      case 'undefined':
       case 'function':
       case 'symbol':
         return;
     }
-    serverValue = value === undefined ? undefined : null;
   } else {
     if (value == null) {
       // We had an attribute but shouldn't have had one, so read it
@@ -1586,7 +1650,7 @@ function hydrateBooleanishAttribute(
             checkAttributeStringCoercion(value, attributeName);
           }
           if (serverValue === '' + (value: any)) {
-            serverValue = value;
+            return;
           }
         }
       }
@@ -1603,16 +1667,15 @@ function hydrateSanitizedAttribute(
   extraAttributes: Set<string>,
 ): void {
   extraAttributes.delete(attributeName);
-  let serverValue = domElement.getAttribute(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
   if (serverValue === null) {
-    // shouldRemoveAttribute
     switch (typeof value) {
+      case 'undefined':
       case 'function':
       case 'symbol':
       case 'boolean':
         return;
     }
-    serverValue = value === undefined ? undefined : null;
   } else {
     if (value == null) {
       // We had an attribute but shouldn't have had one, so read it
@@ -1629,7 +1692,7 @@ function hydrateSanitizedAttribute(
           }
           const sanitizedValue = sanitizeURL('' + value);
           if (serverValue === sanitizedValue) {
-            serverValue = value;
+            return;
           }
         }
       }
@@ -1899,6 +1962,38 @@ function diffHydratedGenericElement(
           domElement,
           propKey,
           propKey,
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
+      case 'allowFullScreen':
+      case 'async':
+      case 'autoPlay':
+      case 'controls':
+      case 'default':
+      case 'defer':
+      case 'disabled':
+      case 'disablePictureInPicture':
+      case 'disableRemotePlayback':
+      case 'formNoValidate':
+      case 'hidden':
+      case 'loop':
+      case 'noModule':
+      case 'noValidate':
+      case 'open':
+      case 'playsInline':
+      case 'readOnly':
+      case 'required':
+      case 'reversed':
+      case 'scoped':
+      case 'seamless':
+      case 'itemScope': {
+        // Some of these need to be lower case to remove them from the extraAttributes list.
+        hydrateBooleanAttribute(
+          domElement,
+          propKey,
+          propKey.toLowerCase(),
           value,
           extraAttributes,
         );

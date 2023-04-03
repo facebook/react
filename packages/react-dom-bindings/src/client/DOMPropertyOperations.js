@@ -8,7 +8,6 @@
  */
 
 import {
-  BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
@@ -51,12 +50,6 @@ export function getValueForProperty(
         }
       }
       switch (propertyInfo.type) {
-        case BOOLEAN: {
-          if (!expected) {
-            return expected;
-          }
-          break;
-        }
         case OVERLOADED_BOOLEAN: {
           if (expected === false) {
             return expected;
@@ -98,15 +91,6 @@ export function getValueForProperty(
         return value;
     }
     switch (propertyInfo.type) {
-      case BOOLEAN: {
-        if (expected) {
-          // If this was a boolean, it doesn't matter what the value is
-          // the fact that we have it is the same as the expected.
-          // As long as it's positive.
-          return expected;
-        }
-        return value;
-      }
       case OVERLOADED_BOOLEAN: {
         if (value === '') {
           return true;
@@ -271,14 +255,6 @@ export function setValueForProperty(
   }
 
   switch (propertyInfo.type) {
-    case BOOLEAN:
-      if (value) {
-        node.setAttribute(attributeName, '');
-      } else {
-        node.removeAttribute(attributeName);
-        return;
-      }
-      break;
     case OVERLOADED_BOOLEAN:
       if (value === true) {
         node.setAttribute(attributeName, '');

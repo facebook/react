@@ -41,7 +41,6 @@ import {
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   getPropertyInfo,
-  BOOLEAN,
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
@@ -765,6 +764,37 @@ function pushAttribute(
       }
       return;
     }
+    case 'allowFullScreen':
+    case 'async':
+    case 'autoPlay':
+    case 'controls':
+    case 'default':
+    case 'defer':
+    case 'disabled':
+    case 'disablePictureInPicture':
+    case 'disableRemotePlayback':
+    case 'formNoValidate':
+    case 'hidden':
+    case 'loop':
+    case 'noModule':
+    case 'noValidate':
+    case 'open':
+    case 'playsInline':
+    case 'readOnly':
+    case 'required':
+    case 'reversed':
+    case 'scoped':
+    case 'seamless':
+    case 'itemScope': {
+      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeEmptyString,
+        );
+      }
+      return;
+    }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
     case 'acceptCharset':
@@ -1066,15 +1096,6 @@ function pushAttribute(
     const attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
 
     switch (propertyInfo.type) {
-      case BOOLEAN:
-        if (value) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeEmptyString,
-          );
-        }
-        return;
       case OVERLOADED_BOOLEAN:
         if (value === true) {
           target.push(

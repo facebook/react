@@ -9,11 +9,6 @@
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-// A real boolean attribute.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-export const BOOLEAN = 3;
-
 // An attribute that can be used as a flag as well as with a value.
 // When true, it should be present (set either to an empty string or its name).
 // When false, it should be omitted.
@@ -40,7 +35,7 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
 
 // $FlowFixMe[missing-this-annot]
 function PropertyInfoRecord(type: PropertyType, attributeName: string) {
-  this.acceptsBooleans = type === BOOLEAN || type === OVERLOADED_BOOLEAN;
+  this.acceptsBooleans = type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.type = type;
 }
@@ -49,39 +44,6 @@ function PropertyInfoRecord(type: PropertyType, attributeName: string) {
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
 const properties: {[string]: $FlowFixMe} = {};
-
-// These are HTML boolean attributes.
-[
-  'allowFullScreen',
-  'async',
-  'autoPlay',
-  'controls',
-  'default',
-  'defer',
-  'disabled',
-  'disablePictureInPicture',
-  'disableRemotePlayback',
-  'formNoValidate',
-  'hidden',
-  'loop',
-  'noModule',
-  'noValidate',
-  'open',
-  'playsInline',
-  'readOnly',
-  'required',
-  'reversed',
-  'scoped',
-  'seamless',
-  // Microdata
-  'itemScope',
-].forEach(name => {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEAN,
-    name.toLowerCase(), // attributeName
-  );
-});
 
 // These are HTML attributes that are "overloaded booleans": they behave like
 // booleans, but can also accept a string value.
