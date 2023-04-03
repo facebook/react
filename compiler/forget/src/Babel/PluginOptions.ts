@@ -7,6 +7,17 @@
 
 import { EnvironmentConfig } from "../HIR/Environment";
 
+export type GatingOptions = {
+  /**
+   * Source for the imported module that exports the `importSpecifierName` functions
+   */
+  source: string;
+  /**
+   * Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
+   */
+  importSpecifierName: string;
+};
+
 export type PluginOptions = {
   /**
    * Enable to make Forget only compile functions containing the 'use forget' directive.
@@ -18,23 +29,26 @@ export type PluginOptions = {
   logger: Logger | null;
 
   /**
-   * Specifying a `gatingModule`, makes Forget compile and emit a separate
-   * version of the function gated by importing an `isForgetEnabled` from the
-   * specified `gatingModule`.
+   * Specifying a `gating` config, makes Forget compile and emit a separate
+   * version of the function gated by importing the `gating.importSpecifierName` from the
+   * specified `gating.source`.
    *
    * For example:
-   *  gatingModule: 'ReactForgetFeatureFlag'
+   *  gating: {
+   *    source: 'ReactForgetFeatureFlag',
+   *    importSpecifierName: 'isForgetEnabled_Pokes',
+   *  }
    *
    * produces:
-   *  import isForgetEnabled from ReactForgetFeatureFlag
+   *  import {isForgetEnabled_Pokes} from 'ReactForgetFeatureFlag';
    *
    *  Foo_forget()   {}
    *
    *  Foo_uncompiled() {}
    *
-   *  var Foo = isForgetEnabled ? Foo_forget : Foo_uncompiled;
+   *  var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
-  gatingModule: string | null;
+  gating: GatingOptions | null;
 };
 
 export type Logger = {
@@ -45,7 +59,7 @@ export const defaultOptions: PluginOptions = {
   enableOnlyOnUseForgetDirective: false,
   environment: null,
   logger: null,
-  gatingModule: null,
+  gating: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

@@ -11,6 +11,7 @@
 
 import fs from "fs";
 import path from "path";
+import { GatingOptions, PluginOptions } from "../../Babel/PluginOptions";
 
 const EXPECT_SUFFIX = ".expect.md";
 
@@ -40,17 +41,16 @@ expect.extend({
   },
 });
 
+type FixtureTestOptions = {
+  debug: boolean;
+  language: "flow" | "typescript";
+};
 export default function generateTestsFromFixtures(
   fixturesPath: string,
   transform: (
     input: string,
     file: any,
-    options: {
-      debug: boolean;
-      enableOnlyOnUseForgetDirective: boolean;
-      gatingModule: string | null;
-      language: "flow" | "typescript";
-    }
+    options: FixtureTestOptions & PluginOptions
   ) => string
 ) {
   let files: Array<string>;
@@ -90,7 +90,7 @@ export default function generateTestsFromFixtures(
         let input: string | null = null;
         let debug = false;
         let enableOnlyOnUseForgetDirective = false;
-        let gatingModule: string | null = null;
+        let gating: GatingOptions | null = null;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -105,8 +105,11 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@forgetDirective") !== -1) {
             enableOnlyOnUseForgetDirective = true;
           }
-          if (lines[0]!.indexOf("@gatingModule") !== -1) {
-            gatingModule = "ReactForgetFeatureFlag";
+          if (lines[0]!.indexOf("@gating") !== -1) {
+            gating = {
+              source: "ReactForgetFeatureFlag",
+              importSpecifierName: "isForgetEnabled_Fixtures",
+            };
           }
         }
 
@@ -114,9 +117,11 @@ export default function generateTestsFromFixtures(
           let receivedOutput;
           if (input !== null) {
             receivedOutput = transform(input, basename, {
+              environment: null,
+              logger: null,
               debug,
               enableOnlyOnUseForgetDirective,
-              gatingModule,
+              gating,
               language: parseLanguage(input),
             });
           } else {

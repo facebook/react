@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gatingModule
+// @gating
 const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
 
 export const Renderer = (props) => (
@@ -17,7 +17,7 @@ export const Renderer = (props) => (
 ## Code
 
 ```javascript
-import isForgetEnabled from "ReactForgetFeatureFlag"; // @gatingModule
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating
 function ErrorView_uncompiled(error, _retry) {
   return <MessageBox error={error}></MessageBox>;
 }
@@ -34,7 +34,9 @@ function ErrorView_forget(error, _retry) {
   }
   return t0;
 }
-const ErrorView = isForgetEnabled() ? ErrorView_forget : ErrorView_uncompiled;
+const ErrorView = isForgetEnabled_Fixtures()
+  ? ErrorView_forget
+  : ErrorView_uncompiled;
 function Renderer_uncompiled(props) {
   return (
     <Foo>
@@ -73,7 +75,7 @@ function Renderer_forget(props) {
   }
   return t2;
 }
-export const Renderer = isForgetEnabled()
+export const Renderer = isForgetEnabled_Fixtures()
   ? Renderer_forget
   : Renderer_uncompiled;
 

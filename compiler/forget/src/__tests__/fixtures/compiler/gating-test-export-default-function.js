@@ -1,4 +1,4 @@
-// @gatingModule @forgetDirective
+// @gating @forgetDirective
 export default function Bar(props) {
   "use forget";
   return <div>{props.bar}</div>;

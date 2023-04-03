@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gatingModule @forgetDirective
+// @gating @forgetDirective
 export default function Bar(props) {
   "use forget";
   return <div>{props.bar}</div>;
@@ -22,7 +22,7 @@ function Foo(props) {
 ## Code
 
 ```javascript
-import isForgetEnabled from "ReactForgetFeatureFlag"; // @gatingModule @forgetDirective
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @forgetDirective
 function Bar_uncompiled(props) {
   "use forget";
   return <div>{props.bar}</div>;
@@ -40,7 +40,7 @@ function Bar_forget(props) {
   }
   return t0;
 }
-const Bar = isForgetEnabled() ? Bar_forget : Bar_uncompiled;
+const Bar = isForgetEnabled_Fixtures() ? Bar_forget : Bar_uncompiled;
 export default Bar;
 
 function NoForget(props) {
@@ -64,7 +64,7 @@ function Foo_forget(props) {
   }
   return t0;
 }
-const Foo = isForgetEnabled() ? Foo_forget : Foo_uncompiled;
+const Foo = isForgetEnabled_Fixtures() ? Foo_forget : Foo_uncompiled;
 
 ```
       

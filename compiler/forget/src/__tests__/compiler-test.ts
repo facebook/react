@@ -56,7 +56,7 @@ describe("React Forget", () => {
               ]),
             },
             logger: null,
-            gatingModule: options.gatingModule,
+            gating: options.gating,
           }).code,
         });
       } catch (e) {

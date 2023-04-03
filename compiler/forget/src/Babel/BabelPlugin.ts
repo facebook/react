@@ -12,13 +12,15 @@ import jsx from "@babel/plugin-syntax-jsx";
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { compile } from "../CompilerPipeline";
-import { parsePluginOptions, PluginOptions } from "./PluginOptions";
+import {
+  GatingOptions,
+  parsePluginOptions,
+  PluginOptions,
+} from "./PluginOptions";
 
 type BabelPluginPass = {
   opts: PluginOptions;
 };
-
-const testId = t.identifier("isForgetEnabled");
 
 function hasUseForgetDirective(directives: t.Directive[]): boolean {
   for (const directive of directives) {
@@ -46,7 +48,7 @@ export default function ReactForgetBabelPlugin(
     hasForgetCompiledCode = true;
     const compiled = compile(fn, pass.opts.environment);
 
-    if (pass.opts.gatingModule) {
+    if (pass.opts.gating != null) {
       // Rename existing function
       invariant(fn.node.id, "FunctionDeclaration must have a name");
       const original = fn.node.id;
@@ -59,7 +61,14 @@ export default function ReactForgetBabelPlugin(
       compiledFn.skip();
 
       // Build and append gating test
-      compiledFn.insertAfter(buildGatingTest(fn, compiled.id, original));
+      compiledFn.insertAfter(
+        buildGatingTest({
+          originalFnDecl: fn,
+          compiledIdent: compiled.id,
+          originalIdent: original,
+          gating: pass.opts.gating,
+        })
+      );
     } else {
       fn.replaceWith(compiled);
     }
@@ -108,10 +117,10 @@ export default function ReactForgetBabelPlugin(
             opts: { ...pass.opts, ...options },
           });
 
-          if (options.gatingModule && hasForgetCompiledCode) {
+          if (options.gating != null && hasForgetCompiledCode) {
             path.unshiftContainer(
               "body",
-              buildImportForGatingModule(options.gatingModule)
+              buildImportForGatingModule(options.gating)
             );
           }
         } catch (err) {
@@ -194,62 +203,63 @@ function buildBlockStatement(
   return body.node;
 }
 
-function buildGatingTest(
-  uncompiled: BabelCore.NodePath<t.FunctionDeclaration>,
-  compiled: t.Identifier,
-  original: t.Identifier
-): t.Node | t.Node[] {
-  const test = buildTest({
-    uncompiled: uncompiled.node.id!,
-    compiled,
-    original,
-  });
+type GatingTestOptions = {
+  originalFnDecl: BabelCore.NodePath<t.FunctionDeclaration>;
+  compiledIdent: t.Identifier;
+  originalIdent: t.Identifier;
+  gating: GatingOptions;
+};
+function buildGatingTest({
+  originalFnDecl,
+  compiledIdent,
+  originalIdent,
+  gating,
+}: GatingTestOptions): t.Node | t.Node[] {
+  const testVarDecl = t.variableDeclaration("const", [
+    t.variableDeclarator(
+      originalIdent,
+      t.conditionalExpression(
+        t.callExpression(buildSpecifierIdent(gating), []),
+        compiledIdent,
+        originalFnDecl.node.id!
+      )
+    ),
+  ]);
 
   // Re-export new declaration
-  const parent = uncompiled.parentPath;
+  const parent = originalFnDecl.parentPath;
   if (t.isExportDefaultDeclaration(parent)) {
     // Re-add uncompiled function
-    parent.replaceWith(uncompiled)[0].skip();
+    parent.replaceWith(originalFnDecl)[0].skip();
 
     // Add test and synthesize new export
-    return [test, t.exportDefaultDeclaration(original)];
+    return [testVarDecl, t.exportDefaultDeclaration(originalIdent)];
   } else if (t.isExportNamedDeclaration(parent)) {
     // Re-add uncompiled function
-    parent.replaceWith(uncompiled)[0].skip();
+    parent.replaceWith(originalFnDecl)[0].skip();
 
     // Add and export test
-    return t.exportNamedDeclaration(test);
+    return t.exportNamedDeclaration(testVarDecl);
   }
 
   // Just add the test, no need for re-export
-  return test;
+  return testVarDecl;
 }
 
 function addSuffix(id: t.Identifier, suffix: string): t.Identifier {
   return t.identifier(`${id.name}${suffix}`);
 }
 
-function buildTest(ids: {
-  uncompiled: t.Identifier;
-  compiled: t.Identifier;
-  original: t.Identifier;
-}): t.VariableDeclaration {
-  return t.variableDeclaration("const", [
-    t.variableDeclarator(
-      ids.original,
-      t.conditionalExpression(
-        t.callExpression(testId, []),
-        ids.compiled,
-        ids.uncompiled
-      )
-    ),
-  ]);
+function buildImportForGatingModule(
+  gating: GatingOptions
+): t.ImportDeclaration {
+  const specifierIdent = buildSpecifierIdent(gating);
+  return t.importDeclaration(
+    [t.importSpecifier(specifierIdent, specifierIdent)],
+    t.stringLiteral(gating.source)
+  );
 }
 
-function buildImportForGatingModule(gatingModule: string): t.ImportDeclaration {
-  const importDefaultSpecifier = t.importDefaultSpecifier(testId);
-  return t.importDeclaration(
-    [importDefaultSpecifier],
-    t.stringLiteral(gatingModule)
-  );
+function buildSpecifierIdent(gating: GatingOptions): t.Identifier {
+  return t.identifier(gating.importSpecifierName);
 }
