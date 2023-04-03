@@ -311,27 +311,6 @@ export function setValueForProperty(
         node.removeAttribute(attributeName);
       }
       break;
-    default: {
-      if (__DEV__) {
-        checkAttributeStringCoercion(value, attributeName);
-      }
-      let attributeValue;
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
-        attributeValue = (value: any);
-      } else {
-        // We have already verified this above.
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        attributeValue = '' + (value: any);
-      }
-      const attributeNamespace = propertyInfo.attributeNamespace;
-      if (attributeNamespace) {
-        node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
-      } else {
-        node.setAttribute(attributeName, attributeValue);
-      }
-    }
   }
 }
 
@@ -369,6 +348,35 @@ export function setValueForAttribute(
       enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
     );
   }
+}
+
+export function setValueForNamespacedAttribute(
+  node: Element,
+  namespace: string,
+  name: string,
+  value: mixed,
+) {
+  if (value === null) {
+    node.removeAttribute(name);
+    return;
+  }
+  switch (typeof value) {
+    case 'undefined':
+    case 'function':
+    case 'symbol':
+    case 'boolean': {
+      node.removeAttribute(name);
+      return;
+    }
+  }
+  if (__DEV__) {
+    checkAttributeStringCoercion(value, name);
+  }
+  node.setAttributeNS(
+    namespace,
+    name,
+    enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+  );
 }
 
 export function setValueForPropertyOnCustomComponent(

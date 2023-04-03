@@ -9,10 +9,6 @@
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-// A simple string attribute.
-// Attributes that aren't in the filter are presumed to have this type.
-export const STRING = 1;
-
 // A real boolean attribute.
 // When true, it should be present (set either to an empty string or its name).
 // When false, it should be omitted.
@@ -35,7 +31,6 @@ export const POSITIVE_NUMERIC = 6;
 export type PropertyInfo = {
   +acceptsBooleans: boolean,
   +attributeName: string,
-  +attributeNamespace: string | null,
   +type: PropertyType,
 };
 
@@ -44,14 +39,9 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
 }
 
 // $FlowFixMe[missing-this-annot]
-function PropertyInfoRecord(
-  type: PropertyType,
-  attributeName: string,
-  attributeNamespace: string | null,
-) {
+function PropertyInfoRecord(type: PropertyType, attributeName: string) {
   this.acceptsBooleans = type === BOOLEAN || type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
   this.type = type;
 }
 
@@ -90,7 +80,6 @@ const properties: {[string]: $FlowFixMe} = {};
   properties[name] = new PropertyInfoRecord(
     BOOLEAN,
     name.toLowerCase(), // attributeName
-    null, // attributeNamespace
   );
 });
 
@@ -108,7 +97,6 @@ const properties: {[string]: $FlowFixMe} = {};
   properties[name] = new PropertyInfoRecord(
     OVERLOADED_BOOLEAN,
     name, // attributeName
-    null, // attributeNamespace
   );
 });
 
@@ -127,7 +115,6 @@ const properties: {[string]: $FlowFixMe} = {};
   properties[name] = new PropertyInfoRecord(
     POSITIVE_NUMERIC,
     name, // attributeName
-    null, // attributeNamespace
   );
 });
 
@@ -137,50 +124,5 @@ const properties: {[string]: $FlowFixMe} = {};
   properties[name] = new PropertyInfoRecord(
     NUMERIC,
     name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-  );
-});
-
-const CAMELIZE = /[\-\:]([a-z])/g;
-const capitalize = (token: string) => token[1].toUpperCase();
-
-// String SVG attributes with the xlink namespace.
-[
-  'xlink:actuate',
-  'xlink:arcrole',
-  'xlink:role',
-  'xlink:show',
-  'xlink:title',
-  'xlink:type',
-
-  // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(attributeName => {
-  const name = attributeName.replace(CAMELIZE, capitalize);
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    'http://www.w3.org/1999/xlink',
-  );
-});
-
-// String SVG attributes with the xml namespace.
-[
-  'xml:base',
-  'xml:lang',
-  'xml:space',
-
-  // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(attributeName => {
-  const name = attributeName.replace(CAMELIZE, capitalize);
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    'http://www.w3.org/XML/1998/namespace',
   );
 });

@@ -1010,6 +1010,33 @@ function pushAttribute(
     case 'xHeight':
       pushStringAttribute(target, 'x-height', value);
       return;
+    case 'xlinkActuate':
+      pushStringAttribute(target, 'xlink:actuate', value);
+      break;
+    case 'xlinkArcrole':
+      pushStringAttribute(target, 'xlink:arcrole', value);
+      break;
+    case 'xlinkRole':
+      pushStringAttribute(target, 'xlink:role', value);
+      break;
+    case 'xlinkShow':
+      pushStringAttribute(target, 'xlink:show', value);
+      break;
+    case 'xlinkTitle':
+      pushStringAttribute(target, 'xlink:title', value);
+      break;
+    case 'xlinkType':
+      pushStringAttribute(target, 'xlink:type', value);
+      break;
+    case 'xmlBase':
+      pushStringAttribute(target, 'xml:base', value);
+      break;
+    case 'xmlLang':
+      pushStringAttribute(target, 'xml:lang', value);
+      break;
+    case 'xmlSpace':
+      pushStringAttribute(target, 'xml:space', value);
+      break;
   }
   if (
     // shouldIgnoreAttribute
@@ -1089,17 +1116,6 @@ function pushAttribute(
           );
         }
         break;
-      default:
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-        target.push(
-          attributeSeparator,
-          attributeNameChunk,
-          attributeAssign,
-          stringToChunk(escapeTextForBrowser(value)),
-          attributeEnd,
-        );
     }
   } else if (isAttributeNameSafe(name)) {
     // shouldRemoveAttribute

@@ -25,6 +25,7 @@ import {
   setValueForProperty,
   setValueForPropertyOnCustomComponent,
   setValueForAttribute,
+  setValueForNamespacedAttribute,
 } from './DOMPropertyOperations';
 import {
   initWrapperState as ReactDOMInputInitWrapperState,
@@ -266,6 +267,9 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   node.onclick = noop;
 }
 
+const xlinkNamespace = 'http://www.w3.org/1999/xlink';
+const xmlNamespace = 'http://www.w3.org/XML/1998/namespace';
+
 function setProp(
   domElement: Element,
   tag: string,
@@ -441,11 +445,7 @@ function setProp(
       const sanitizedValue = (sanitizeURL(
         enableTrustedTypesIntegration ? value : '' + (value: any),
       ): any);
-      domElement.setAttributeNS(
-        'http://www.w3.org/1999/xlink',
-        'xlink:href',
-        sanitizedValue,
-      );
+      domElement.setAttributeNS(xlinkNamespace, 'xlink:href', sanitizedValue);
       break;
     }
     case 'contentEditable':
@@ -720,6 +720,78 @@ function setProp(
       break;
     case 'xHeight':
       setValueForAttribute(domElement, 'x-height', value);
+      break;
+    case 'xlinkActuate':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:actuate',
+        value,
+      );
+      break;
+    case 'xlinkArcrole':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:arcrole',
+        value,
+      );
+      break;
+    case 'xlinkRole':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:role',
+        value,
+      );
+      break;
+    case 'xlinkShow':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:show',
+        value,
+      );
+      break;
+    case 'xlinkTitle':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:title',
+        value,
+      );
+      break;
+    case 'xlinkType':
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        'xlink:type',
+        value,
+      );
+      break;
+    case 'xmlBase':
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        'xml:base',
+        value,
+      );
+      break;
+    case 'xmlLang':
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        'xml:lang',
+        value,
+      );
+      break;
+    case 'xmlSpace':
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        'xml:space',
+        value,
+      );
       break;
     // Properties that should not be allowed on custom elements.
     case 'innerText':
@@ -2538,6 +2610,87 @@ function diffHydratedGenericElement(
           domElement,
           propKey,
           'x-height',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkActuate':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:actuate',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkArcrole':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:arcrole',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkRole':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:role',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkShow':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:show',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkTitle':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:title',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xlinkType':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xlink:type',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xmlBase':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xml:base',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xmlLang':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xml:lang',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'xmlSpace':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'xml:space',
           value,
           extraAttributes,
         );
