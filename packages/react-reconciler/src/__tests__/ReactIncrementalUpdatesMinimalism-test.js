@@ -16,7 +16,6 @@ let act;
 
 describe('ReactIncrementalUpdatesMinimalism', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 

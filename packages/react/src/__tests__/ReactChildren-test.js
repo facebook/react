@@ -14,7 +14,6 @@ describe('ReactChildren', () => {
   let ReactTestUtils;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactTestUtils = require('react-dom/test-utils');
   });

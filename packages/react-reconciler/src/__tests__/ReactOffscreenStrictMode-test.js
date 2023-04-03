@@ -6,7 +6,6 @@ let log;
 
 describe('ReactOffscreenStrictMode', () => {
   beforeEach(() => {
-    jest.resetModules();
     log = [];
 
     React = require('react');

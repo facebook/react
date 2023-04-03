@@ -15,7 +15,6 @@ let ReactDebugTools;
 
 describe('ReactHooksInspection', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
   });

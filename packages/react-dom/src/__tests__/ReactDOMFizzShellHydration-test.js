@@ -27,7 +27,6 @@ let assertLog;
 
 describe('ReactDOMFizzShellHydration', () => {
   beforeEach(() => {
-    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMClient = require('react-dom/client');

@@ -61,7 +61,6 @@ describe('ReactCompositeComponent', () => {
   }
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCurrentOwner =

@@ -13,7 +13,6 @@ let waitFor;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

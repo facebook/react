@@ -28,8 +28,6 @@ describe('ReactProfiler DevTools integration', () => {
       supportsFiber: true,
     };
 
-    jest.resetModules();
-
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
     Scheduler = require('scheduler');

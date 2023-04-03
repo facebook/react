@@ -20,7 +20,6 @@ function FunctionComponent(props) {
 
 describe('ReactFunctionComponent', () => {
   beforeEach(() => {
-    jest.resetModules();
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');

@@ -39,7 +39,6 @@ let cache;
 
 describe('ReactFetch', () => {
   beforeEach(() => {
-    jest.resetModules();
     fetchCount = 0;
     global.fetch = fetchMock;
 

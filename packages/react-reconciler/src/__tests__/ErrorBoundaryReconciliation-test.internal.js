@@ -9,8 +9,6 @@ describe('ErrorBoundaryReconciliation', () => {
   let act;
 
   beforeEach(() => {
-    jest.resetModules();
-
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

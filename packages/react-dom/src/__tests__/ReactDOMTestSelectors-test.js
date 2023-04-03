@@ -28,8 +28,6 @@ describe('ReactDOMTestSelectors', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     act = React.unstable_act;
 

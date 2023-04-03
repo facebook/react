@@ -17,7 +17,6 @@ let Suspense;
 
 describe('ReactDOMFizzServerNode', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');

@@ -26,8 +26,6 @@ function normalizeCodeLocInfo(str) {
 
 describe('ReactNativeError', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactNative = require('react-native-renderer');
     createReactNativeComponentClass =

@@ -48,8 +48,6 @@ describe('parseHookNames', () => {
   let parseHookNames;
 
   beforeEach(() => {
-    jest.resetModules();
-
     jest.mock('source-map-support', () => {
       console.trace('source-map-support');
     });
@@ -941,7 +939,6 @@ describe('parseHookNames worker', () => {
     window.Worker = true;
 
     // Reset module so mocked worker instance can be updated.
-    jest.resetModules();
     parseHookNames = require('../parseHookNames').parseHookNames;
 
     await getHookNamesForComponent(Component);

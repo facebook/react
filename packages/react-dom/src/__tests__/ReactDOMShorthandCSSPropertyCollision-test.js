@@ -14,7 +14,6 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
   let ReactDOM;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
   });

@@ -18,7 +18,6 @@ let DefaultEventPriority;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     act = React.unstable_act;
     ReactFiberReconciler = require('react-reconciler');

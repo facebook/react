@@ -17,7 +17,6 @@ describe('forwardRef', () => {
   let waitForAll;
 
   beforeEach(() => {
-    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

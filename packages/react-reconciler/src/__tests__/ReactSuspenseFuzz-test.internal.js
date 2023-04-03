@@ -20,7 +20,6 @@ function prettyFormat(thing) {
 
 describe('ReactSuspenseFuzz', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

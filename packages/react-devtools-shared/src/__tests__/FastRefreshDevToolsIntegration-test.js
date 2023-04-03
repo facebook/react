@@ -19,9 +19,7 @@ describe('Fast Refresh', () => {
   let store;
   let withErrorsOrWarningsIgnored;
 
-  afterEach(() => {
-    jest.resetModules();
-  });
+  afterEach(() => {});
 
   beforeEach(() => {
     exportsObj = undefined;

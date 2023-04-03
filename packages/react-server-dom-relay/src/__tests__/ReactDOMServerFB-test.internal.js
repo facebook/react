@@ -15,7 +15,6 @@ let Suspense;
 
 describe('ReactDOMServerFB', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMServer = require('../ReactDOMServerFB');
     Suspense = React.Suspense;

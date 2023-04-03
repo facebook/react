@@ -20,7 +20,6 @@ let Suspense;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static.browser');

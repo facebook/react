@@ -173,5 +173,4 @@ afterEach(() => {
   // Without this, ReactDOM won't re-inject itself into the new hook.
   // It's also important to reset after tests, rather than before,
   // so that we don't disconnect the ReactCurrentDispatcher ref.
-  jest.resetModules();
 });

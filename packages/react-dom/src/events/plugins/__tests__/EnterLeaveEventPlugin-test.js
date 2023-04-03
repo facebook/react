@@ -16,8 +16,6 @@ describe('EnterLeaveEventPlugin', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOM = require('react-dom');
 

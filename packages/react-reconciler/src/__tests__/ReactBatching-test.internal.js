@@ -10,7 +10,6 @@ let TextResource;
 
 describe('ReactBlockingMode', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

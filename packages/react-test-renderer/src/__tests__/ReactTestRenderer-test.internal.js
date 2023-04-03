@@ -17,7 +17,6 @@ const ReactTestRenderer = require('react-test-renderer');
 const {format: prettyFormat} = require('pretty-format');
 
 // Isolate noop renderer
-jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
 
 const InternalTestUtils = require('internal-test-utils');

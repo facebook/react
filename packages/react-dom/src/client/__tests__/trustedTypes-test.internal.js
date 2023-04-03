@@ -18,7 +18,6 @@ describe('when Trusted Types are available in global object', () => {
   let ttObject2;
 
   beforeEach(() => {
-    jest.resetModules();
     container = document.createElement('div');
     const fakeTTObjects = new Set();
     window.trustedTypes = {

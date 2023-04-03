@@ -25,7 +25,6 @@ describe('ReactError', () => {
       global.Error = globalErrorMock.OriginalError;
       expect(typeof global.Error).toBe('function');
     }
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
   });

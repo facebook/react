@@ -37,7 +37,6 @@ describe('ReactLegacyErrorBoundaries', () => {
   let Normal;
 
   beforeEach(() => {
-    jest.resetModules();
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;

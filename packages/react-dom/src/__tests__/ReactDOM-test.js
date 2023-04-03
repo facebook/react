@@ -16,7 +16,6 @@ let ReactTestUtils;
 
 describe('ReactDOM', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -374,7 +373,6 @@ describe('ReactDOM', () => {
         onCommitFiberUnmount: function () {},
         supportsFiber: true,
       };
-      jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
       class Component extends React.Component {

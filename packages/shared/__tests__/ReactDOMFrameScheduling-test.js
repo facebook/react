@@ -11,8 +11,6 @@
 
 describe('ReactDOMFrameScheduling', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     jest.unmock('scheduler');
   });
 
@@ -23,7 +21,6 @@ describe('ReactDOMFrameScheduling', () => {
     try {
       // Simulate the Node environment:
       delete global.window;
-      jest.resetModules();
       expect(() => {
         require('react-dom');
       }).not.toThrow();

@@ -4,7 +4,6 @@ describe('ReactDOMRoot', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     container = document.createElement('div');
     ReactDOM = require('react-dom');
   });

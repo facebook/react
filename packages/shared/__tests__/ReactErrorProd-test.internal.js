@@ -12,7 +12,6 @@ let formatProdErrorMessage;
 
 describe('ReactErrorProd', () => {
   beforeEach(() => {
-    jest.resetModules();
     formatProdErrorMessage = require('shared/formatProdErrorMessage').default;
   });
 

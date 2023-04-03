@@ -19,7 +19,6 @@ const View = props => <RCTView {...props} />;
 
 describe('ReactTestRendererTraversal', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactTestRenderer = require('react-test-renderer');
     Context = React.createContext(null);
   });

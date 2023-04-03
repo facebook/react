@@ -32,7 +32,6 @@ function unmount(dom) {
 }
 
 beforeEach(() => {
-  jest.resetModules();
   jest.unmock('scheduler');
   yields = [];
   React = require('react');

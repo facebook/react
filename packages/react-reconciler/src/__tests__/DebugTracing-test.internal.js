@@ -24,8 +24,6 @@ describe('DebugTracing', () => {
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     const InternalTestUtils = require('internal-test-utils');

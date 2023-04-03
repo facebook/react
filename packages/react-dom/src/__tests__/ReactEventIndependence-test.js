@@ -14,8 +14,6 @@ let ReactDOM;
 
 describe('ReactEventIndependence', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOM = require('react-dom');
   });

@@ -14,7 +14,6 @@ let ReactDOM;
 
 describe('ReactErrorBoundariesHooks', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactDOM = require('react-dom');
     React = require('react');
   });

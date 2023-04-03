@@ -20,7 +20,6 @@ describe('ReactDOMSuspensePlaceholder', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');

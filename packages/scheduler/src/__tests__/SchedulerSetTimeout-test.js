@@ -20,7 +20,6 @@ describe('SchedulerNoDOM', () => {
   // Scheduler falls back to a naive implementation using setTimeout.
   // This is only meant to be used for testing purposes, like with jest's fake timer API.
   beforeEach(() => {
-    jest.resetModules();
     jest.useFakeTimers();
     delete global.setImmediate;
     delete global.MessageChannel;
@@ -100,7 +99,6 @@ describe('SchedulerNoDOM', () => {
 // See: https://github.com/facebook/react/pull/13088
 describe('does not crash non-node SSR environments', () => {
   it('if setTimeout is undefined', () => {
-    jest.resetModules();
     const originalSetTimeout = global.setTimeout;
     try {
       delete global.setTimeout;
@@ -114,7 +112,6 @@ describe('does not crash non-node SSR environments', () => {
   });
 
   it('if clearTimeout is undefined', () => {
-    jest.resetModules();
     const originalClearTimeout = global.clearTimeout;
     try {
       delete global.clearTimeout;

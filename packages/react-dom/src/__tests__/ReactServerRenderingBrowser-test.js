@@ -16,11 +16,9 @@ let ReactDOMServerBrowser;
 
 describe('ReactServerRenderingBrowser', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMServer = require('react-dom/server');
     // For extra isolation between what would be two bundles on npm
-    jest.resetModules();
     ReactDOMServerBrowser = require('react-dom/server.browser');
   });
 

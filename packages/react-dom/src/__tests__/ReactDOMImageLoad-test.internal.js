@@ -90,7 +90,6 @@ function loadImage(element) {
 
 describe('ReactDOMImageLoad', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     Scheduler = require('scheduler');
     // ReactCache = require('react-cache');

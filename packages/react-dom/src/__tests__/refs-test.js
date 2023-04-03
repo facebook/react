@@ -21,7 +21,6 @@ describe('reactiverefs', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -216,7 +215,6 @@ if (!ReactFeatureFlags.disableModulePatternComponents) {
 describe('ref swapping', () => {
   let RefHopsAround;
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -522,7 +520,6 @@ describe('strings refs across renderers', () => {
     class Indirection extends React.Component {
       componentDidUpdate() {
         // One ref is being rendered later using another renderer copy.
-        jest.resetModules();
         const AnotherCopyOfReactDOM = require('react-dom');
         AnotherCopyOfReactDOM.render(this.props.child2, div2);
       }
