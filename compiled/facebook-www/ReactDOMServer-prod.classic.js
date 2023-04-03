@@ -1647,29 +1647,33 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
+      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
+      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
+      name = "" + value;
       break;
     default:
-      if (!isAttributeNameSafe(name)) return;
+      if (
+        (2 < name.length &&
+          ("o" === name[0] || "O" === name[0]) &&
+          ("n" === name[1] || "N" === name[1])) ||
+        !isAttributeNameSafe(name)
+      )
+        return;
+      name = "" + value;
   }
-  if (
-    !(2 < name.length) ||
-    ("o" !== name[0] && "O" !== name[0]) ||
-    ("n" !== name[1] && "N" !== name[1])
-  )
-    (name = "" + value),
-      destination.push(","),
-      (attributeName = escapeJSObjectForInstructionScripts(attributeName)),
-      destination.push(attributeName),
-      destination.push(","),
-      (attributeName = escapeJSObjectForInstructionScripts(name)),
-      destination.push(attributeName);
+  destination.push(",");
+  attributeName = escapeJSObjectForInstructionScripts(attributeName);
+  destination.push(attributeName);
+  destination.push(",");
+  attributeName = escapeJSObjectForInstructionScripts(name);
+  destination.push(attributeName);
 }
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.push("[");
@@ -1739,29 +1743,33 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
+      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
+      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
+      name = "" + value;
       break;
     default:
-      if (!isAttributeNameSafe(name)) return;
+      if (
+        (2 < name.length &&
+          ("o" === name[0] || "O" === name[0]) &&
+          ("n" === name[1] || "N" === name[1])) ||
+        !isAttributeNameSafe(name)
+      )
+        return;
+      name = "" + value;
   }
-  if (
-    !(2 < name.length) ||
-    ("o" !== name[0] && "O" !== name[0]) ||
-    ("n" !== name[1] && "N" !== name[1])
-  )
-    (name = "" + value),
-      destination.push(","),
-      (attributeName = escapeTextForBrowser(JSON.stringify(attributeName))),
-      destination.push(attributeName),
-      destination.push(","),
-      (attributeName = escapeTextForBrowser(JSON.stringify(name))),
-      destination.push(attributeName);
+  destination.push(",");
+  attributeName = escapeTextForBrowser(JSON.stringify(attributeName));
+  destination.push(attributeName);
+  destination.push(",");
+  attributeName = escapeTextForBrowser(JSON.stringify(name));
+  destination.push(attributeName);
 }
 function prefetchDNS(href) {
   if (currentResources) {
@@ -3788,4 +3796,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-2919f4b0";
+exports.version = "18.3.0-www-classic-57e47ad8";

@@ -6318,52 +6318,63 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
       return;
     // Attribute renames
 
-    case "className":
+    case "className": {
       attributeName = "class";
+
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      attributeValue = "" + value;
       break;
+    }
     // Booleans
 
-    case "hidden":
+    case "hidden": {
       if (value === false) {
         return;
       }
 
       attributeValue = "";
       break;
+    }
     // Santized URLs
 
     case "src":
     case "href": {
+      value = sanitizeURL(value);
+
       {
         checkAttributeStringCoercion(value, attributeName);
       }
 
-      value = sanitizeURL(value);
+      attributeValue = "" + value;
       break;
     }
 
     default: {
+      if (
+        // unrecognized event handlers are not SSR'd and we (apparently)
+        // use on* as hueristic for these handler props
+        name.length > 2 &&
+        (name[0] === "o" || name[0] === "O") &&
+        (name[1] === "n" || name[1] === "N")
+      ) {
+        return;
+      }
+
       if (!isAttributeNameSafe(name)) {
         return;
       }
+
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      attributeValue = "" + value;
     }
   }
 
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
-    return;
-  }
-
-  {
-    checkAttributeStringCoercion(value, attributeName);
-  }
-
-  attributeValue = "" + value;
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
@@ -6509,52 +6520,63 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
       return;
     // Attribute renames
 
-    case "className":
+    case "className": {
       attributeName = "class";
+
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      attributeValue = "" + value;
       break;
+    }
     // Booleans
 
-    case "hidden":
+    case "hidden": {
       if (value === false) {
         return;
       }
 
       attributeValue = "";
       break;
+    }
     // Santized URLs
 
     case "src":
     case "href": {
+      value = sanitizeURL(value);
+
       {
         checkAttributeStringCoercion(value, attributeName);
       }
 
-      value = sanitizeURL(value);
+      attributeValue = "" + value;
       break;
     }
 
     default: {
+      if (
+        // unrecognized event handlers are not SSR'd and we (apparently)
+        // use on* as hueristic for these handler props
+        name.length > 2 &&
+        (name[0] === "o" || name[0] === "O") &&
+        (name[1] === "n" || name[1] === "N")
+      ) {
+        return;
+      }
+
       if (!isAttributeNameSafe(name)) {
         return;
       }
+
+      {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+
+      attributeValue = "" + value;
     }
   }
 
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
-    return;
-  }
-
-  {
-    checkAttributeStringCoercion(value, attributeName);
-  }
-
-  attributeValue = "" + value;
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
