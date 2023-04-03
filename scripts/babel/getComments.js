@@ -9,6 +9,9 @@
 
 function getComments(path) {
   const allComments = path.hub.file.ast.comments;
+  if (!Array.isArray(allComments) || allComments.length === 0) {
+    return [];
+  }
   if (path.node.leadingComments) {
     // Babel AST includes comments.
     return path.node.leadingComments;
@@ -17,10 +20,10 @@ function getComments(path) {
   const comments = [];
   let line = path.node.loc.start.line;
   let i = allComments.length - 1;
-  while (i >= 0 && allComments[i].loc.end.line >= line) {
+  while (allComments[i].loc.end.line >= line) {
     i--;
   }
-  while (i >= 0 && allComments[i].loc.end.line === line - 1) {
+  while (allComments[i].loc.end.line === line - 1) {
     line = allComments[i].loc.start.line;
     comments.unshift(allComments[i]);
     i--;
