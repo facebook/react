@@ -48,6 +48,7 @@ var ReactSharedInternals =
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
+  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -12589,11 +12590,14 @@ function createFiberRoot(
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
-  1 === tag
-    ? ((tag = 1),
+  if (1 === tag) {
+    if (
+      ((tag = 1),
       !0 === isStrictMode && (tag |= 24),
-      concurrentUpdatesByDefaultOverride && (tag |= 32))
-    : (tag = 0);
+      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
+    )
+      tag |= 32;
+  } else tag = 0;
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
@@ -14654,7 +14658,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1769 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-ec4b0889",
+  version: "18.3.0-www-classic-828157c0",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2238 = {
@@ -14684,7 +14688,7 @@ var internals$jscomp$inline_2238 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-ec4b0889"
+  reconcilerVersion: "18.3.0-www-classic-828157c0"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16716,4 +16720,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-ec4b0889";
+exports.version = "18.3.0-www-classic-828157c0";

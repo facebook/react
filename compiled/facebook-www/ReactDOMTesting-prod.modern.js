@@ -105,6 +105,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
+  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -11962,11 +11963,14 @@ function createFiberRoot(
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
-  1 === tag
-    ? ((tag = 1),
+  if (1 === tag) {
+    if (
+      ((tag = 1),
       !0 === isStrictMode && (tag |= 24),
-      concurrentUpdatesByDefaultOverride && (tag |= 32))
-    : (tag = 0);
+      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
+    )
+      tag |= 32;
+  } else tag = 0;
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
@@ -15877,7 +15881,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1799 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-be9a0998",
+  version: "18.3.0-www-modern-c754d90a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2205 = {
@@ -15908,7 +15912,7 @@ var internals$jscomp$inline_2205 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-be9a0998"
+  reconcilerVersion: "18.3.0-www-modern-c754d90a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2206 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16228,4 +16232,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-be9a0998";
+exports.version = "18.3.0-www-modern-c754d90a";
