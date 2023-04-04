@@ -1,3 +1,5 @@
+import fbt from "fbt";
+
 function Component(props) {
   return (
     <fbt desc={"Dialog to show to user"}>

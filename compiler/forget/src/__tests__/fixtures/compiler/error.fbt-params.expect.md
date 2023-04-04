@@ -1,3 +1,9 @@
+
+## Input
+
+```javascript
+import fbt from "fbt";
+
 function Component(props) {
   return (
     <fbt desc={"Dialog to show to user"}>
@@ -5,3 +11,17 @@ function Component(props) {
     </fbt>
   );
 }
+
+```
+
+
+## Error
+
+```
+fbt: unsupported babel node: MemberExpression
+---
+props.name
+---
+```
+          
+      

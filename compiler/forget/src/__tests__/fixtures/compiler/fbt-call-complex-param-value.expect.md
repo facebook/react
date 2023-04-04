@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import fbt from "fbt";
+
 function Component(props) {
   const text = fbt(
     `Hello, ${fbt.param("(key) name", capitalize(props.name))}!`,
@@ -15,14 +17,17 @@ function Component(props) {
 ## Code
 
 ```javascript
+import fbt from "fbt";
+
 function Component(props) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.name;
   let t0;
   if (c_0) {
-    t0 = fbt(
-      `Hello, ${fbt.param("(key) name", capitalize(props.name))}!`,
-      "(description) Greeting"
+    t0 = fbt._(
+      "Hello, {(key) name}!",
+      [fbt._param("(key) name", capitalize(props.name))],
+      { hk: "2sOsn5" }
     );
     $[0] = props.name;
     $[1] = t0;

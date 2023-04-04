@@ -27,7 +27,11 @@ export default function runReactForgetBabelPlugin(
     filename: file,
     highlightCode: false,
     retainLines: true,
-    plugins: [[ReactForgetBabelPlugin, options]],
+    plugins: [
+      [ReactForgetBabelPlugin, options],
+      "babel-plugin-fbt",
+      "babel-plugin-fbt-runtime",
+    ],
     sourceType: "module",
   });
   invariant(

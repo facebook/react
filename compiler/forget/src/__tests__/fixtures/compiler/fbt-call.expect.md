@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import fbt from "fbt";
+
 function Component(props) {
   const text = fbt(
     `${fbt.param("(key) count", props.count)} items`,
@@ -15,14 +17,17 @@ function Component(props) {
 ## Code
 
 ```javascript
+import fbt from "fbt";
+
 function Component(props) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.count;
   let t0;
   if (c_0) {
-    t0 = fbt(
-      `${fbt.param("(key) count", props.count)} items`,
-      "(description) Number of items"
+    t0 = fbt._(
+      "{(key) count} items",
+      [fbt._param("(key) count", props.count)],
+      { hk: "3yW91j" }
     );
     $[0] = props.count;
     $[1] = t0;

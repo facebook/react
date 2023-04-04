@@ -53,6 +53,8 @@
     "@typescript-eslint/eslint-plugin": "^5.51.0",
     "@typescript-eslint/parser": "^5.51.0",
     "babel-jest": "^29.0.3",
+    "babel-plugin-fbt": "^1.0.0",
+    "babel-plugin-fbt-runtime": "^1.0.0",
     "concurrently": "^7.4.0",
     "eslint": "^8.33.0",
     "glob": "^7.1.6",
