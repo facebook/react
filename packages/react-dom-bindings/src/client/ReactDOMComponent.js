@@ -22,6 +22,7 @@ import {
   getValueForAttribute,
   getValueForAttributeOnCustomComponent,
   setValueForPropertyOnCustomComponent,
+  setValueForKnownAttribute,
   setValueForAttribute,
   setValueForNamespacedAttribute,
 } from './DOMPropertyOperations';
@@ -300,18 +301,18 @@ function setProp(
     // TODO: aria-label is a very common prop but allows booleans so is not like the others
     // but should ideally go in this list too.
     case 'className':
-      setValueForAttribute(domElement, 'class', value);
+      setValueForKnownAttribute(domElement, 'class', value);
       break;
     case 'tabIndex':
       // This has to be case sensitive in SVG.
-      setValueForAttribute(domElement, 'tabindex', value);
+      setValueForKnownAttribute(domElement, 'tabindex', value);
       break;
     case 'dir':
     case 'role':
     case 'viewBox':
     case 'width':
     case 'height': {
-      setValueForAttribute(domElement, key, value);
+      setValueForKnownAttribute(domElement, key, value);
       break;
     }
     case 'style': {
@@ -1839,13 +1840,7 @@ function diffHydratedGenericElement(
         }
         continue;
       case 'className':
-        hydrateAttribute(
-          domElement,
-          propKey,
-          'class',
-          value,
-          extraAttributes,
-        );
+        hydrateAttribute(domElement, propKey, 'class', value, extraAttributes);
         continue;
       case 'tabIndex':
         hydrateAttribute(
