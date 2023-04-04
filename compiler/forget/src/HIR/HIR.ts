@@ -184,7 +184,7 @@ export type ReactiveForTerminal = {
   kind: "for";
   init: ReactiveValue;
   test: ReactiveValue;
-  update: ReactiveValue;
+  update: ReactiveValue | null;
   loop: ReactiveBlock;
   id: InstructionId;
 };

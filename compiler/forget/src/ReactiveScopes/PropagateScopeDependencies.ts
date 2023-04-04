@@ -374,7 +374,9 @@ function visit(context: Context, block: ReactiveBlock): void {
             visitReactiveValue(context, terminal.id, terminal.init);
             visitReactiveValue(context, terminal.id, terminal.test);
             context.enterConditional(() => {
-              visitReactiveValue(context, terminal.id, terminal.update);
+              if (terminal.update !== null) {
+                visitReactiveValue(context, terminal.id, terminal.update);
+              }
               visit(context, terminal.loop);
             });
             break;

@@ -306,7 +306,9 @@ function codegenTerminal(
       return t.forStatement(
         codegenForInit(cx, terminal.init),
         codegenInstructionValue(cx, terminal.test),
-        codegenInstructionValue(cx, terminal.update),
+        terminal.update !== null
+          ? codegenInstructionValue(cx, terminal.update)
+          : null,
         codegenBlock(cx, terminal.loop)
       );
     }
