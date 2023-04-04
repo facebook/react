@@ -350,7 +350,6 @@ function setProp(
         }
       }
     // Fall through to the last case which shouldn't remove empty strings.
-    // eslint-disable-next-line no-fallthrough
     case 'formAction': {
       if (
         value == null ||
@@ -663,7 +662,7 @@ function setProp(
       if (enableCustomElementPropertySupport) {
         break;
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     default: {
       if (
         key.length > 2 &&
@@ -761,7 +760,7 @@ function setPropOnCustomElement(
       if (enableCustomElementPropertySupport) {
         break;
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
         if (__DEV__ && value != null && typeof value !== 'function') {
@@ -1010,7 +1009,6 @@ export function setInitialProperties(
       listenToNonDelegatedEvent('load', domElement);
       // We fallthrough to the return of the void elements
     }
-    // eslint-disable-next-line no-fallthrough
     case 'area':
     case 'base':
     case 'br':
@@ -1174,7 +1172,7 @@ export function diffProperties(
               'Cannot update the "is" prop after it has been initialized.',
             );
           }
-        // eslint-disable-next-line no-fallthrough
+        // Fall through
         default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
         }
@@ -1790,7 +1788,7 @@ function diffHydratedCustomComponent(
           }
           continue;
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       case 'className':
         if (enableCustomElementPropertySupport) {
           // className is a special cased property on the server to render as an attribute.
@@ -1803,7 +1801,7 @@ function diffHydratedCustomComponent(
           warnForPropDifference('className', serverValue, value);
           continue;
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       default: {
         let ownNamespaceDev = parentNamespaceDev;
         if (ownNamespaceDev === HTML_NAMESPACE) {

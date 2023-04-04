@@ -465,8 +465,8 @@ function throwException(
             }
             break;
           }
+          // Fall through
         }
-        // eslint-disable-next-line no-fallthrough
         default: {
           throw new Error(
             `Unexpected Suspense handler tag (${suspenseBoundary.tag}). This ` +
