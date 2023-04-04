@@ -19,11 +19,9 @@ import {
   getHighestPriorityLane,
   getNextLanes,
   includesSyncLane,
-  includesTransitionLane,
   markStarvedLanesAsExpired,
   markRootEntangled,
   mergeLanes,
-  getTransitionLanes,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -79,6 +77,8 @@ let didScheduleMicrotask_act: boolean = false;
 let mightHavePendingSyncWork: boolean = false;
 
 let isFlushingWork: boolean = false;
+
+let currentEventTransitionLane: Lane = NoLanes;
 
 export function ensureRootIsScheduled(root: FiberRoot): void {
   // This function is called whenever a root receives an update. It does two
@@ -246,12 +246,14 @@ function processRootScheduleInMicrotask() {
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
-    if (includesTransitionLane(root.pendingLanes) && shouldAttemptEagerTransition()) {
+  
+    if (currentEventTransitionLane !== NoLane && shouldAttemptEagerTransition()) {
       markRootEntangled(
         root,
-        mergeLanes(getTransitionLanes(root.pendingLanes), SyncLane),
+        mergeLanes(currentEventTransitionLane, SyncLane),
       );
     }
+
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To
@@ -281,6 +283,8 @@ function processRootScheduleInMicrotask() {
     root = next;
   }
 
+  currentEventTransitionLane = NoLane;
+  
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
   flushSyncWorkOnAllRoots();
@@ -485,4 +489,12 @@ function scheduleImmediateTask(cb: () => mixed) {
     // If microtasks are not supported, use Scheduler.
     Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
   }
+}
+
+export function getCurrentEventTransitionLane(): Lane {
+  return currentEventTransitionLane;
+}
+
+export function setCurrentEventTransitionLane(lane: Lane): void {
+  currentEventTransitionLane = lane;
 }

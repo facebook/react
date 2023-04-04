@@ -452,10 +452,6 @@ export function getLanesToRetrySynchronouslyOnError(
   return NoLanes;
 }
 
-export function getTransitionLanes(lanes: Lanes): Lanes {
-  return lanes & TransitionLanes;
-}
-
 export function includesSyncLane(lanes: Lanes): boolean {
   return (lanes & (SyncLane | SyncHydrationLane)) !== NoLanes;
 }

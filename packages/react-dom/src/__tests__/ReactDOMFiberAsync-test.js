@@ -16,6 +16,7 @@ let ReactDOMClient;
 let Scheduler;
 let act;
 let waitForAll;
+let waitFor;
 let assertLog;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
@@ -37,6 +38,7 @@ describe('ReactDOMFiberAsync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
@@ -567,7 +569,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(container.textContent).toBe('new');
   });
 
-  it('should synchronously render the transition lane in a popState', async () => {
+  it('should synchronously render the transition lane scheduled in a popState', async () => {
     function App() {
       const [syncState, setSyncState] = React.useState(false);
       const [hasNavigated, setHasNavigated] = React.useState(false);
@@ -579,11 +581,8 @@ describe('ReactDOMFiberAsync', () => {
         setSyncState(true);
 
         // Jest is not emulating window.event correctly in the microtask
-        const currentEvent = window.event;
-        window.event = currentEvent;
-        queueMicrotask(() => {
-          window.event = null;
-        });
+        // TODO: this causes `window.event` to always be popState in this test file
+        window.event = window.event;
       }
       React.useEffect(() => {
         window.addEventListener('popstate', onPopstate);
@@ -604,6 +603,47 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     assertLog(['popState', 'render:true/true']);
+
+    root.unmount();
+  });
+
+  it('should not flush transition lanes if there is no transition scheduled in popState', async () => {
+    let _setHasNavigated;
+    function App({shouldTransition}) {
+      const [syncState, setSyncState] = React.useState(false);
+      const [hasNavigated, setHasNavigated] = React.useState(false);
+      _setHasNavigated = setHasNavigated;
+      function onPopstate() {
+        setSyncState(true);
+
+        // Jest is not emulating window.event correctly in the microtask
+        window.event = window.event;
+      }
+
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+
+      Scheduler.log(`render:${hasNavigated}/${syncState}`);
+
+      return null;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['render:false/false']);
+
+    // Trigger a transition update to be scheduled
+    React.startTransition(() => {
+      _setHasNavigated(true);
+    })
+
+    // The popState should not flush the transition update
+    const popStateEvent = new Event('popstate');
+    window.dispatchEvent(popStateEvent);
+    await waitFor(['render:false/true']);
 
     root.unmount();
   });
