@@ -23482,6 +23482,8 @@ function createHostRootFiber(
     }
 
     if (
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
       // Only for internal experiments.
       concurrentUpdatesByDefaultOverride
     ) {
@@ -23882,7 +23884,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-0700dd50b-20230404";
+var ReactVersion = "18.3.0-next-da94e8b24-20230404";
 
 // Might add PROFILE later.
 
