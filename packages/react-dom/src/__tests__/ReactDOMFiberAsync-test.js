@@ -16,7 +16,6 @@ let ReactDOMClient;
 let Scheduler;
 let act;
 let waitForAll;
-let waitFor;
 let assertLog;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
@@ -28,7 +27,6 @@ describe('ReactDOMFiberAsync', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -38,7 +36,6 @@ describe('ReactDOMFiberAsync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
@@ -579,14 +576,12 @@ describe('ReactDOMFiberAsync', () => {
           setHasNavigated(true);
         });
         setSyncState(true);
-
-        // Jest is not emulating window.event correctly in the microtask
-        // TODO: this causes `window.event` to always be popState in this test file
-        window.event = window.event;
       }
       React.useEffect(() => {
         window.addEventListener('popstate', onPopstate);
-        return () => window.removeEventListener('popstate', onPopstate);
+        return () => {
+          window.removeEventListener('popstate', onPopstate);
+        };
       }, []);
       Scheduler.log(`render:${hasNavigated}/${syncState}`);
       return null;
@@ -599,34 +594,38 @@ describe('ReactDOMFiberAsync', () => {
 
     await act(async () => {
       const popStateEvent = new Event('popstate');
+      // Jest is not emulating window.event correctly in the microtask
+      window.event = popStateEvent;
       window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
     });
 
     assertLog(['popState', 'render:true/true']);
-
-    root.unmount();
+    await act(() => {
+      root.unmount();
+    });
   });
 
-  it('should not flush transition lanes if there is no transition scheduled in popState', async () => {
-    let _setHasNavigated;
-    function App({shouldTransition}) {
+  it('Should not flush transition lanes if there is no transition scheduled in popState', async () => {
+    let setHasNavigated;
+    function App() {
       const [syncState, setSyncState] = React.useState(false);
-      const [hasNavigated, setHasNavigated] = React.useState(false);
-      _setHasNavigated = setHasNavigated;
+      const [hasNavigated, _setHasNavigated] = React.useState(false);
+      setHasNavigated = _setHasNavigated;
       function onPopstate() {
         setSyncState(true);
-
-        // Jest is not emulating window.event correctly in the microtask
-        window.event = window.event;
       }
 
       React.useEffect(() => {
         window.addEventListener('popstate', onPopstate);
-        return () => window.removeEventListener('popstate', onPopstate);
+        return () => {
+          window.removeEventListener('popstate', onPopstate);
+        };
       }, []);
 
       Scheduler.log(`render:${hasNavigated}/${syncState}`);
-
       return null;
     }
     const root = ReactDOMClient.createRoot(container);
@@ -635,16 +634,21 @@ describe('ReactDOMFiberAsync', () => {
     });
     assertLog(['render:false/false']);
 
-    // Trigger a transition update to be scheduled
     React.startTransition(() => {
-      _setHasNavigated(true);
-    })
-
-    // The popState should not flush the transition update
-    const popStateEvent = new Event('popstate');
-    window.dispatchEvent(popStateEvent);
-    await waitFor(['render:false/true']);
-
-    root.unmount();
+      setHasNavigated(true);
+    });
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+      // Jest is not emulating window.event correctly in the microtask
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
+    });
+    assertLog(['render:false/true', 'render:true/true']);
+    await act(() => {
+      root.unmount();
+    });
   });
 });

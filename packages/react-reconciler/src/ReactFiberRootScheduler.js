@@ -246,12 +246,12 @@ function processRootScheduleInMicrotask() {
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
-  
-    if (currentEventTransitionLane !== NoLane && shouldAttemptEagerTransition()) {
-      markRootEntangled(
-        root,
-        mergeLanes(currentEventTransitionLane, SyncLane),
-      );
+
+    if (
+      currentEventTransitionLane !== NoLane &&
+      shouldAttemptEagerTransition()
+    ) {
+      markRootEntangled(root, mergeLanes(currentEventTransitionLane, SyncLane));
     }
 
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
@@ -284,7 +284,7 @@ function processRootScheduleInMicrotask() {
   }
 
   currentEventTransitionLane = NoLane;
-  
+
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
   flushSyncWorkOnAllRoots();
