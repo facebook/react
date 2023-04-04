@@ -40,6 +40,7 @@ import {
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
+import getAttributeAlias from '../shared/getAttributeAlias';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -640,21 +641,27 @@ function pushAttribute(
   value: string | boolean | number | Function | Object, // not null or undefined
 ): void {
   switch (name) {
+    // These are very common props and therefore are in the beginning of the switch.
+    // TODO: aria-label is a very common prop but allows booleans so is not like the others
+    // but should ideally go in this list too.
+    case 'className': {
+      pushStringAttribute(target, 'class', value);
+      break;
+    }
+    case 'tabIndex': {
+      pushStringAttribute(target, 'tabindex', value);
+      break;
+    }
+    case 'dir':
+    case 'role':
+    case 'viewBox':
+    case 'width':
+    case 'height': {
+      pushStringAttribute(target, name, value);
+      break;
+    }
     case 'style': {
       pushStyleAttribute(target, value);
-      return;
-    }
-    case 'defaultValue':
-    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
-    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
-    case 'suppressContentEditableWarning':
-    case 'suppressHydrationWarning':
-      // Ignored. These are built-in to React on the client.
-      return;
-    case 'autoFocus':
-    case 'multiple':
-    case 'muted': {
-      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
     case 'src':
@@ -707,6 +714,19 @@ function pushAttribute(
         stringToChunk(escapeTextForBrowser(sanitizedValue)),
         attributeEnd,
       );
+      return;
+    }
+    case 'defaultValue':
+    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
+    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+      // Ignored. These are built-in to React on the client.
+      return;
+    case 'autoFocus':
+    case 'multiple':
+    case 'muted': {
+      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
     case 'xlinkHref': {
@@ -846,278 +866,33 @@ function pushAttribute(
       }
       return;
     }
-    // A few React string attributes have a different name.
-    // This is a mapping from React prop names to the attribute names.
-    case 'acceptCharset':
-      pushStringAttribute(target, 'accept-charset', value);
-      return;
-    case 'className':
-      pushStringAttribute(target, 'class', value);
-      return;
-    case 'htmlFor':
-      pushStringAttribute(target, 'for', value);
-      return;
-    case 'httpEquiv':
-      pushStringAttribute(target, 'http-equiv', value);
-      return;
-    // HTML and SVG attributes, but the SVG attribute is case sensitive.
-    case 'tabIndex':
-      pushStringAttribute(target, 'tabindex', value);
-      return;
-    case 'crossOrigin':
-      pushStringAttribute(target, 'crossorigin', value);
-      return;
-    // This is a list of all SVG attributes that need special casing.
-    // Regular attributes that just accept strings.
-    case 'accentHeight':
-      pushStringAttribute(target, 'accent-height', value);
-      return;
-    case 'alignmentBaseline':
-      pushStringAttribute(target, 'alignment-baseline', value);
-      return;
-    case 'arabicForm':
-      pushStringAttribute(target, 'arabic-form', value);
-      return;
-    case 'baselineShift':
-      pushStringAttribute(target, 'baseline-shift', value);
-      return;
-    case 'capHeight':
-      pushStringAttribute(target, 'cap-height', value);
-      return;
-    case 'clipPath':
-      pushStringAttribute(target, 'clip-path', value);
-      return;
-    case 'clipRule':
-      pushStringAttribute(target, 'clip-rule', value);
-      return;
-    case 'colorInterpolation':
-      pushStringAttribute(target, 'color-interpolation', value);
-      return;
-    case 'colorInterpolationFilters':
-      pushStringAttribute(target, 'color-interpolation-filters', value);
-      return;
-    case 'colorProfile':
-      pushStringAttribute(target, 'color-profile', value);
-      return;
-    case 'colorRendering':
-      pushStringAttribute(target, 'color-rendering', value);
-      return;
-    case 'dominantBaseline':
-      pushStringAttribute(target, 'dominant-baseline', value);
-      return;
-    case 'enableBackground':
-      pushStringAttribute(target, 'enable-background', value);
-      return;
-    case 'fillOpacity':
-      pushStringAttribute(target, 'fill-opacity', value);
-      return;
-    case 'fillRule':
-      pushStringAttribute(target, 'fill-rule', value);
-      return;
-    case 'floodColor':
-      pushStringAttribute(target, 'flood-color', value);
-      return;
-    case 'floodOpacity':
-      pushStringAttribute(target, 'flood-opacity', value);
-      return;
-    case 'fontFamily':
-      pushStringAttribute(target, 'font-family', value);
-      return;
-    case 'fontSize':
-      pushStringAttribute(target, 'font-size', value);
-      return;
-    case 'fontSizeAdjust':
-      pushStringAttribute(target, 'font-size-adjust', value);
-      return;
-    case 'fontStretch':
-      pushStringAttribute(target, 'font-stretch', value);
-      return;
-    case 'fontStyle':
-      pushStringAttribute(target, 'font-style', value);
-      return;
-    case 'fontVariant':
-      pushStringAttribute(target, 'font-variant', value);
-      return;
-    case 'fontWeight':
-      pushStringAttribute(target, 'font-weight', value);
-      return;
-    case 'glyphName':
-      pushStringAttribute(target, 'glyph-name', value);
-      return;
-    case 'glyphOrientationHorizontal':
-      pushStringAttribute(target, 'glyph-orientation-horizontal', value);
-      return;
-    case 'glyphOrientationVertical':
-      pushStringAttribute(target, 'glyph-orientation-vertical', value);
-      return;
-    case 'horizAdvX':
-      pushStringAttribute(target, 'horiz-adv-x', value);
-      return;
-    case 'horizOriginX':
-      pushStringAttribute(target, 'horiz-origin-x', value);
-      return;
-    case 'imageRendering':
-      pushStringAttribute(target, 'image-rendering', value);
-      return;
-    case 'letterSpacing':
-      pushStringAttribute(target, 'letter-spacing', value);
-      return;
-    case 'lightingColor':
-      pushStringAttribute(target, 'lighting-color', value);
-      return;
-    case 'markerEnd':
-      pushStringAttribute(target, 'marker-end', value);
-      return;
-    case 'markerMid':
-      pushStringAttribute(target, 'marker-mid', value);
-      return;
-    case 'markerStart':
-      pushStringAttribute(target, 'marker-start', value);
-      return;
-    case 'overlinePosition':
-      pushStringAttribute(target, 'overline-position', value);
-      return;
-    case 'overlineThickness':
-      pushStringAttribute(target, 'overline-thickness', value);
-      return;
-    case 'paintOrder':
-      pushStringAttribute(target, 'paint-order', value);
-      return;
-    case 'panose-1':
-      pushStringAttribute(target, 'panose-1', value);
-      return;
-    case 'pointerEvents':
-      pushStringAttribute(target, 'pointer-events', value);
-      return;
-    case 'renderingIntent':
-      pushStringAttribute(target, 'rendering-intent', value);
-      return;
-    case 'shapeRendering':
-      pushStringAttribute(target, 'shape-rendering', value);
-      return;
-    case 'stopColor':
-      pushStringAttribute(target, 'stop-color', value);
-      return;
-    case 'stopOpacity':
-      pushStringAttribute(target, 'stop-opacity', value);
-      return;
-    case 'strikethroughPosition':
-      pushStringAttribute(target, 'strikethrough-position', value);
-      return;
-    case 'strikethroughThickness':
-      pushStringAttribute(target, 'strikethrough-thickness', value);
-      return;
-    case 'strokeDasharray':
-      pushStringAttribute(target, 'stroke-dasharray', value);
-      return;
-    case 'strokeDashoffset':
-      pushStringAttribute(target, 'stroke-dashoffset', value);
-      return;
-    case 'strokeLinecap':
-      pushStringAttribute(target, 'stroke-linecap', value);
-      return;
-    case 'strokeLinejoin':
-      pushStringAttribute(target, 'stroke-linejoin', value);
-      return;
-    case 'strokeMiterlimit':
-      pushStringAttribute(target, 'stroke-miterlimit', value);
-      return;
-    case 'strokeOpacity':
-      pushStringAttribute(target, 'stroke-opacity', value);
-      return;
-    case 'strokeWidth':
-      pushStringAttribute(target, 'stroke-width', value);
-      return;
-    case 'textAnchor':
-      pushStringAttribute(target, 'text-anchor', value);
-      return;
-    case 'textDecoration':
-      pushStringAttribute(target, 'text-decoration', value);
-      return;
-    case 'textRendering':
-      pushStringAttribute(target, 'text-rendering', value);
-      return;
-    case 'transformOrigin':
-      pushStringAttribute(target, 'transform-origin', value);
-      return;
-    case 'underlinePosition':
-      pushStringAttribute(target, 'underline-position', value);
-      return;
-    case 'underlineThickness':
-      pushStringAttribute(target, 'underline-thickness', value);
-      return;
-    case 'unicodeBidi':
-      pushStringAttribute(target, 'unicode-bidi', value);
-      return;
-    case 'unicodeRange':
-      pushStringAttribute(target, 'unicode-range', value);
-      return;
-    case 'unitsPerEm':
-      pushStringAttribute(target, 'units-per-em', value);
-      return;
-    case 'vAlphabetic':
-      pushStringAttribute(target, 'v-alphabetic', value);
-      return;
-    case 'vHanging':
-      pushStringAttribute(target, 'v-hanging', value);
-      return;
-    case 'vIdeographic':
-      pushStringAttribute(target, 'v-ideographic', value);
-      return;
-    case 'vMathematical':
-      pushStringAttribute(target, 'v-mathematical', value);
-      return;
-    case 'vectorEffect':
-      pushStringAttribute(target, 'vector-effect', value);
-      return;
-    case 'vertAdvY':
-      pushStringAttribute(target, 'vert-adv-y', value);
-      return;
-    case 'vertOriginX':
-      pushStringAttribute(target, 'vert-origin-x', value);
-      return;
-    case 'vertOriginY':
-      pushStringAttribute(target, 'vert-origin-y', value);
-      return;
-    case 'wordSpacing':
-      pushStringAttribute(target, 'word-spacing', value);
-      return;
-    case 'writingMode':
-      pushStringAttribute(target, 'writing-mode', value);
-      return;
-    case 'xmlnsXlink':
-      pushStringAttribute(target, 'xmlns:xlink', value);
-      return;
-    case 'xHeight':
-      pushStringAttribute(target, 'x-height', value);
-      return;
     case 'xlinkActuate':
       pushStringAttribute(target, 'xlink:actuate', value);
-      break;
+      return;
     case 'xlinkArcrole':
       pushStringAttribute(target, 'xlink:arcrole', value);
-      break;
+      return;
     case 'xlinkRole':
       pushStringAttribute(target, 'xlink:role', value);
-      break;
+      return;
     case 'xlinkShow':
       pushStringAttribute(target, 'xlink:show', value);
-      break;
+      return;
     case 'xlinkTitle':
       pushStringAttribute(target, 'xlink:title', value);
-      break;
+      return;
     case 'xlinkType':
       pushStringAttribute(target, 'xlink:type', value);
-      break;
+      return;
     case 'xmlBase':
       pushStringAttribute(target, 'xml:base', value);
-      break;
+      return;
     case 'xmlLang':
       pushStringAttribute(target, 'xml:lang', value);
-      break;
+      return;
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
-      break;
+      return;
     default:
       if (
         // shouldIgnoreAttribute
@@ -1129,14 +904,15 @@ function pushAttribute(
         return;
       }
 
-      if (isAttributeNameSafe(name)) {
+      const attributeName = getAttributeAlias(name);
+      if (isAttributeNameSafe(attributeName)) {
         // shouldRemoveAttribute
         switch (typeof value) {
           case 'function':
           case 'symbol': // eslint-disable-line
             return;
           case 'boolean': {
-            const prefix = name.toLowerCase().slice(0, 5);
+            const prefix = attributeName.toLowerCase().slice(0, 5);
             if (prefix !== 'data-' && prefix !== 'aria-') {
               return;
             }
@@ -1144,7 +920,7 @@ function pushAttribute(
         }
         target.push(
           attributeSeparator,
-          stringToChunk(name),
+          stringToChunk(attributeName),
           attributeAssign,
           stringToChunk(escapeTextForBrowser(value)),
           attributeEnd,
@@ -2862,6 +2638,16 @@ export function pushStartInstance(
   }
 
   switch (type) {
+    case 'div':
+    case 'span':
+    case 'svg':
+    case 'path':
+    case 'a':
+    case 'g':
+    case 'p':
+    case 'li':
+      // Fast track very common tags
+      break;
     // Special tags
     case 'select':
       return pushStartSelect(target, props);
@@ -2971,15 +2757,14 @@ export function pushStartInstance(
       );
     }
     default: {
-      if (type.indexOf('-') === -1) {
-        // Generic element
-        return pushStartGenericElement(target, props, type);
-      } else {
+      if (type.indexOf('-') !== -1) {
         // Custom element
         return pushStartCustomElement(target, props, type);
       }
     }
   }
+  // Generic element
+  return pushStartGenericElement(target, props, type);
 }
 
 const endTag1 = stringToPrecomputedChunk('</');
