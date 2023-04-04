@@ -15,6 +15,7 @@ import {
   HIRFunction,
   IdentifierId,
   InstructionValue,
+  isMutableEffect,
   isObjectType,
   MethodCall,
   Phi,
@@ -679,13 +680,20 @@ function inferBlock(
         break;
       }
       case "FunctionExpression": {
+        let hasMutableOperand = false;
         for (const operand of eachInstructionOperand(instr)) {
           state.reference(
             operand,
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect
           );
+          hasMutableOperand ||= isMutableEffect(operand.effect);
         }
-        state.initialize(instrValue, ValueKind.Mutable);
+        // If a closure did not capture any mutable values, then we can consider it to be
+        // frozen, which allows it to be independently memoized.
+        state.initialize(
+          instrValue,
+          hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen
+        );
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
         continue;

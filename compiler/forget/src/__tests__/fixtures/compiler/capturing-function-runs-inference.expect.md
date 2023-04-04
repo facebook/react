@@ -14,7 +14,7 @@ function component(a, b) {
 
 ```javascript
 function component(a, b) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = React.unstable_useMemoCache(6);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -28,14 +28,23 @@ function component(a, b) {
   const c_2 = $[2] !== z;
   let t1;
   if (c_2) {
-    const p = () => <Foo>{z}</Foo>;
-    t1 = p();
+    t1 = () => <Foo>{z}</Foo>;
     $[2] = z;
     $[3] = t1;
   } else {
     t1 = $[3];
   }
-  return t1;
+  const p = t1;
+  const c_4 = $[4] !== p;
+  let t2;
+  if (c_4) {
+    t2 = p();
+    $[4] = p;
+    $[5] = t2;
+  } else {
+    t2 = $[5];
+  }
+  return t2;
 }
 
 ```

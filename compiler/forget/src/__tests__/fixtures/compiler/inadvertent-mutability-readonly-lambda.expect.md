@@ -22,14 +22,30 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
+  const $ = React.unstable_useMemoCache(4);
   const [value, setValue] = useState(null);
-
-  const onChange = (e) => setValue((value) => value + e.target.value);
+  const c_0 = $[0] !== setValue;
+  let t0;
+  if (c_0) {
+    t0 = (e) => setValue((value) => value + e.target.value);
+    $[0] = setValue;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const onChange = t0;
 
   useOtherHook();
-
-  const x = {};
-  foo(x, onChange);
+  const c_2 = $[2] !== onChange;
+  let x;
+  if (c_2) {
+    x = {};
+    foo(x, onChange);
+    $[2] = onChange;
+    $[3] = x;
+  } else {
+    x = $[3];
+  }
   return x;
 }
 

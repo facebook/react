@@ -762,6 +762,19 @@ export enum Effect {
   Store = "store",
 }
 
+export function isMutableEffect(effect: Effect): boolean {
+  switch (effect) {
+    case Effect.Capture:
+    case Effect.Mutate:
+    case Effect.Store: {
+      return true;
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
 export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;

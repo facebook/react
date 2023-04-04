@@ -9,10 +9,10 @@ import invariant from "invariant";
 import prettyFormat from "pretty-format";
 import { CompilerError } from "../CompilerError";
 import {
-  Effect,
   IdentifierId,
   InstructionId,
   isHookType,
+  isMutableEffect,
   Pattern,
   Place,
   ReactiveFunction,
@@ -699,19 +699,6 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
       return { kind: "keep" };
     } else {
       return { kind: "replace-many", value: scope.instructions };
-    }
-  }
-}
-
-function isMutableEffect(effect: Effect): boolean {
-  switch (effect) {
-    case Effect.Capture:
-    case Effect.Mutate:
-    case Effect.Store: {
-      return true;
-    }
-    default: {
-      return false;
     }
   }
 }

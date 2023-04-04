@@ -5,6 +5,7 @@
 function Component(props) {
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
+  useFreeze(dispatch);
 
   const exit = useCallback(() => {
     dispatch(createExitAction());
@@ -30,13 +31,22 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = React.unstable_useMemoCache(3);
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
-
-  const exit = () => {
-    dispatch(createExitAction());
-  };
+  useFreeze(dispatch);
+  const c_0 = $[0] !== dispatch;
+  let t0;
+  if (c_0) {
+    t0 = () => {
+      dispatch(createExitAction());
+    };
+    $[0] = dispatch;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const exit = t0;
 
   useEffect(() => {
     const cleanup = GlobalEventEmitter.addListener("onInput", () => {
@@ -48,14 +58,14 @@ function Component(props) {
   }, [exit, item]);
 
   maybeMutate(item);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div />;
-    $[0] = t0;
+  let t1;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <div />;
+    $[2] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[2];
   }
-  return t0;
+  return t1;
 }
 
 ```

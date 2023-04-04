@@ -18,7 +18,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== props.x;
   let t0;
   if (c_0) {
@@ -33,18 +33,27 @@ function Component(props) {
   const c_3 = $[3] !== x;
   let t1;
   if (c_2 || c_3) {
-    const fn = function () {
+    t1 = function () {
       const arr = [...bar(props)];
       return arr.at(x);
     };
-    t1 = fn();
     $[2] = props;
     $[3] = x;
     $[4] = t1;
   } else {
     t1 = $[4];
   }
-  const fnResult = t1;
+  const fn = t1;
+  const c_5 = $[5] !== fn;
+  let t2;
+  if (c_5) {
+    t2 = fn();
+    $[5] = fn;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  const fnResult = t2;
   return fnResult;
 }
 

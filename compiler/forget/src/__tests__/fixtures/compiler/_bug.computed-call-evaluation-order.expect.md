@@ -29,19 +29,26 @@ function changeF(o) {
 }
 
 function Component() {
-  const $ = React.unstable_useMemoCache(1);
-  let x;
+  const $ = React.unstable_useMemoCache(2);
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = { f: () => console.log("original") };
+    t0 = () => console.log("original");
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  let x;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    x = { f: t0 };
 
     console.log("A");
     console.log("B");
     changeF(x);
     console.log("arg");
     x.f(1);
-    $[0] = x;
+    $[1] = x;
   } else {
-    x = $[0];
+    x = $[1];
   }
   return x;
 }

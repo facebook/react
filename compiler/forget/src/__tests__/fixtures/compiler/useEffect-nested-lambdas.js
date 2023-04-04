@@ -1,6 +1,7 @@
 function Component(props) {
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
+  useFreeze(dispatch);
 
   const exit = useCallback(() => {
     dispatch(createExitAction());
