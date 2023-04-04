@@ -276,7 +276,6 @@ function setProp(
 ): void {
   switch (key) {
     case 'style': {
-      // Relies on `updateStylesByID` not mutating `styleUpdates`.
       setValueForStyles(domElement, value);
       break;
     }
@@ -920,7 +919,6 @@ function setPropOnCustomElement(
 ): void {
   switch (key) {
     case 'style': {
-      // Relies on `updateStylesByID` not mutating `styleUpdates`.
       setValueForStyles(domElement, value);
       break;
     }
