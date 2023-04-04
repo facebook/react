@@ -16520,12 +16520,7 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
     0 < targetContainers.length;
 
   ) {
-    var nextBlockedOn = findInstanceBlockingEvent(
-      queuedEvent.domEventName,
-      queuedEvent.eventSystemFlags,
-      targetContainers[0],
-      queuedEvent.nativeEvent
-    );
+    var nextBlockedOn = findInstanceBlockingEvent(queuedEvent.nativeEvent);
     if (null === nextBlockedOn) {
       nextBlockedOn = queuedEvent.nativeEvent;
       var nativeEventClone = new nextBlockedOn.constructor(
@@ -16669,12 +16664,7 @@ function dispatchEvent(
   nativeEvent
 ) {
   if (_enabled) {
-    var blockedOn = findInstanceBlockingEvent(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
+    var blockedOn = findInstanceBlockingEvent(nativeEvent);
     if (null === blockedOn)
       dispatchEventForPluginEventSystem(
         domEventName,
@@ -16702,12 +16692,7 @@ function dispatchEvent(
       for (; null !== blockedOn; ) {
         var fiber = getInstanceFromNode(blockedOn);
         null !== fiber && attemptSynchronousHydration(fiber);
-        fiber = findInstanceBlockingEvent(
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          nativeEvent
-        );
+        fiber = findInstanceBlockingEvent(nativeEvent);
         null === fiber &&
           dispatchEventForPluginEventSystem(
             domEventName,
@@ -16731,35 +16716,29 @@ function dispatchEvent(
   }
 }
 var return_targetInst = null;
-function findInstanceBlockingEvent(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
+function findInstanceBlockingEvent(nativeEvent) {
   return_targetInst = null;
-  domEventName = getEventTarget(nativeEvent);
-  domEventName = getClosestInstanceFromNode(domEventName);
-  if (null !== domEventName)
-    if (
-      ((eventSystemFlags = getNearestMountedFiber(domEventName)),
-      null === eventSystemFlags)
-    )
-      domEventName = null;
-    else if (
-      ((targetContainer = eventSystemFlags.tag), 13 === targetContainer)
-    ) {
-      domEventName = getSuspenseInstanceFromFiber(eventSystemFlags);
-      if (null !== domEventName) return domEventName;
-      domEventName = null;
-    } else if (3 === targetContainer) {
-      if (eventSystemFlags.stateNode.current.memoizedState.isDehydrated)
-        return 3 === eventSystemFlags.tag
-          ? eventSystemFlags.stateNode.containerInfo
-          : null;
-      domEventName = null;
-    } else eventSystemFlags !== domEventName && (domEventName = null);
-  return_targetInst = domEventName;
+  nativeEvent = getEventTarget(nativeEvent);
+  nativeEvent = getClosestInstanceFromNode(nativeEvent);
+  if (null !== nativeEvent) {
+    var nearestMounted = getNearestMountedFiber(nativeEvent);
+    if (null === nearestMounted) nativeEvent = null;
+    else {
+      var tag = nearestMounted.tag;
+      if (13 === tag) {
+        nativeEvent = getSuspenseInstanceFromFiber(nearestMounted);
+        if (null !== nativeEvent) return nativeEvent;
+        nativeEvent = null;
+      } else if (3 === tag) {
+        if (nearestMounted.stateNode.current.memoizedState.isDehydrated)
+          return 3 === nearestMounted.tag
+            ? nearestMounted.stateNode.containerInfo
+            : null;
+        nativeEvent = null;
+      } else nearestMounted !== nativeEvent && (nativeEvent = null);
+    }
+  }
+  return_targetInst = nativeEvent;
   return null;
 }
 function getEventPriority(domEventName) {
@@ -17046,7 +17025,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1891 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-4f47eda7",
+  version: "18.3.0-www-classic-3354107c",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17090,7 +17069,7 @@ var devToolsConfig$jscomp$inline_1891 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-4f47eda7"
+  reconcilerVersion: "18.3.0-www-classic-3354107c"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17317,7 +17296,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-4f47eda7";
+exports.version = "18.3.0-www-classic-3354107c";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

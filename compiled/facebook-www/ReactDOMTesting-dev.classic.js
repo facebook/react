@@ -37438,7 +37438,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-9d7fa017";
+var ReactVersion = "18.3.0-www-classic-2bfd9425";
 
 function createPortal$1(
   children,
@@ -47037,13 +47037,7 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
   var targetContainers = queuedEvent.targetContainers;
 
   while (targetContainers.length > 0) {
-    var targetContainer = targetContainers[0];
-    var nextBlockedOn = findInstanceBlockingEvent(
-      queuedEvent.domEventName,
-      queuedEvent.eventSystemFlags,
-      targetContainer,
-      queuedEvent.nativeEvent
-    );
+    var nextBlockedOn = findInstanceBlockingEvent(queuedEvent.nativeEvent);
 
     if (nextBlockedOn === null) {
       var nativeEvent = queuedEvent.nativeEvent;
@@ -47265,12 +47259,7 @@ function dispatchEvent(
     return;
   }
 
-  var blockedOn = findInstanceBlockingEvent(
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent
-  );
+  var blockedOn = findInstanceBlockingEvent(nativeEvent);
 
   if (blockedOn === null) {
     dispatchEventForPluginEventSystem(
@@ -47311,12 +47300,7 @@ function dispatchEvent(
         attemptSynchronousHydration(fiber);
       }
 
-      var nextBlockedOn = findInstanceBlockingEvent(
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent
-      );
+      var nextBlockedOn = findInstanceBlockingEvent(nativeEvent);
 
       if (nextBlockedOn === null) {
         dispatchEventForPluginEventSystem(
@@ -47354,12 +47338,7 @@ function dispatchEvent(
 var return_targetInst = null; // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
 
-function findInstanceBlockingEvent(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
+function findInstanceBlockingEvent(nativeEvent) {
   // TODO: Warn if _enabled is false.
   return_targetInst = null;
   var nativeEventTarget = getEventTarget(nativeEvent);

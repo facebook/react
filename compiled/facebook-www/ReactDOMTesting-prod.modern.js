@@ -12313,12 +12313,7 @@ function attemptReplayContinuousQueuedEvent(queuedEvent) {
     0 < targetContainers.length;
 
   ) {
-    var nextBlockedOn = findInstanceBlockingEvent(
-      queuedEvent.domEventName,
-      queuedEvent.eventSystemFlags,
-      targetContainers[0],
-      queuedEvent.nativeEvent
-    );
+    var nextBlockedOn = findInstanceBlockingEvent(queuedEvent.nativeEvent);
     if (null === nextBlockedOn) {
       nextBlockedOn = queuedEvent.nativeEvent;
       var nativeEventClone = new nextBlockedOn.constructor(
@@ -12462,12 +12457,7 @@ function dispatchEvent(
   nativeEvent
 ) {
   if (_enabled) {
-    var blockedOn = findInstanceBlockingEvent(
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent
-    );
+    var blockedOn = findInstanceBlockingEvent(nativeEvent);
     if (null === blockedOn)
       dispatchEventForPluginEventSystem(
         domEventName,
@@ -12495,12 +12485,7 @@ function dispatchEvent(
       for (; null !== blockedOn; ) {
         var fiber = getInstanceFromNode$1(blockedOn);
         null !== fiber && attemptSynchronousHydration(fiber);
-        fiber = findInstanceBlockingEvent(
-          domEventName,
-          eventSystemFlags,
-          targetContainer,
-          nativeEvent
-        );
+        fiber = findInstanceBlockingEvent(nativeEvent);
         null === fiber &&
           dispatchEventForPluginEventSystem(
             domEventName,
@@ -12524,35 +12509,29 @@ function dispatchEvent(
   }
 }
 var return_targetInst = null;
-function findInstanceBlockingEvent(
-  domEventName,
-  eventSystemFlags,
-  targetContainer,
-  nativeEvent
-) {
+function findInstanceBlockingEvent(nativeEvent) {
   return_targetInst = null;
-  domEventName = getEventTarget(nativeEvent);
-  domEventName = getClosestInstanceFromNode(domEventName);
-  if (null !== domEventName)
-    if (
-      ((eventSystemFlags = getNearestMountedFiber(domEventName)),
-      null === eventSystemFlags)
-    )
-      domEventName = null;
-    else if (
-      ((targetContainer = eventSystemFlags.tag), 13 === targetContainer)
-    ) {
-      domEventName = getSuspenseInstanceFromFiber(eventSystemFlags);
-      if (null !== domEventName) return domEventName;
-      domEventName = null;
-    } else if (3 === targetContainer) {
-      if (eventSystemFlags.stateNode.current.memoizedState.isDehydrated)
-        return 3 === eventSystemFlags.tag
-          ? eventSystemFlags.stateNode.containerInfo
-          : null;
-      domEventName = null;
-    } else eventSystemFlags !== domEventName && (domEventName = null);
-  return_targetInst = domEventName;
+  nativeEvent = getEventTarget(nativeEvent);
+  nativeEvent = getClosestInstanceFromNode(nativeEvent);
+  if (null !== nativeEvent) {
+    var nearestMounted = getNearestMountedFiber(nativeEvent);
+    if (null === nearestMounted) nativeEvent = null;
+    else {
+      var tag = nearestMounted.tag;
+      if (13 === tag) {
+        nativeEvent = getSuspenseInstanceFromFiber(nearestMounted);
+        if (null !== nativeEvent) return nativeEvent;
+        nativeEvent = null;
+      } else if (3 === tag) {
+        if (nearestMounted.stateNode.current.memoizedState.isDehydrated)
+          return 3 === nearestMounted.tag
+            ? nearestMounted.stateNode.containerInfo
+            : null;
+        nativeEvent = null;
+      } else nearestMounted !== nativeEvent && (nativeEvent = null);
+    }
+  }
+  return_targetInst = nativeEvent;
   return null;
 }
 function getEventPriority(domEventName) {
@@ -16183,7 +16162,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1799 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-a911b5ee",
+  version: "18.3.0-www-modern-51b176b7",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2192 = {
@@ -16214,7 +16193,7 @@ var internals$jscomp$inline_2192 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-a911b5ee"
+  reconcilerVersion: "18.3.0-www-modern-51b176b7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2193 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16534,4 +16513,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-a911b5ee";
+exports.version = "18.3.0-www-modern-51b176b7";
