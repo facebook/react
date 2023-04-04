@@ -38,132 +38,6 @@ function isAttributeNameSafe(attributeName) {
   illegalAttributeNameCache[attributeName] = !0;
   return !1;
 }
-function PropertyInfoRecord(
-  type,
-  attributeName,
-  attributeNamespace,
-  sanitizeURL,
-  removeEmptyString
-) {
-  this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
-}
-var properties = {};
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  properties[_ref[0]] = new PropertyInfoRecord(1, _ref[1], null, !1, !1);
-});
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
-  name
-) {
-  properties[name] = new PropertyInfoRecord(
-    2,
-    name.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(2, name, null, !1, !1);
-});
-"allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
-  .split(" ")
-  .forEach(function (name) {
-    properties[name] = new PropertyInfoRecord(
-      3,
-      name.toLowerCase(),
-      null,
-      !1,
-      !1
-    );
-  });
-["capture", "download"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(4, name, null, !1, !1);
-});
-["cols", "rows", "size", "span"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(6, name, null, !1, !1);
-});
-["rowSpan", "start"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(
-    5,
-    name.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-var CAMELIZE = /[\-:]([a-z])/g;
-function capitalize(token) {
-  return token[1].toUpperCase();
-}
-"accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering transform-origin underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
-  .split(" ")
-  .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(1, attributeName, null, !1, !1);
-  });
-"xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
-  .split(" ")
-  .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(
-      1,
-      attributeName,
-      "http://www.w3.org/1999/xlink",
-      !1,
-      !1
-    );
-  });
-["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize);
-  properties[name] = new PropertyInfoRecord(
-    1,
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    !1,
-    !1
-  );
-});
-["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  properties[attributeName] = new PropertyInfoRecord(
-    1,
-    attributeName.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-properties.xlinkHref = new PropertyInfoRecord(
-  1,
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  !0,
-  !1
-);
-properties.formAction = new PropertyInfoRecord(1, "formaction", null, !0, !1);
-["src", "href", "action"].forEach(function (attributeName) {
-  properties[attributeName] = new PropertyInfoRecord(
-    1,
-    attributeName.toLowerCase(),
-    null,
-    !0,
-    !0
-  );
-});
 var matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
   if ("boolean" === typeof text || "number" === typeof text) return "" + text;
@@ -403,81 +277,402 @@ function pushBooleanAttribute(target, name, value) {
     "symbol" !== typeof value &&
     target.push(" ", name, '=""');
 }
+function pushStringAttribute(target, name, value) {
+  "function" !== typeof value &&
+    "symbol" !== typeof value &&
+    "boolean" !== typeof value &&
+    target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+}
 function pushAttribute(target, name, value) {
   switch (name) {
     case "style":
       pushStyleAttribute(target, value);
-      return;
+      break;
     case "defaultValue":
     case "defaultChecked":
     case "innerHTML":
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
-      return;
+      break;
+    case "autoFocus":
     case "multiple":
     case "muted":
-      pushBooleanAttribute(target, name, value);
-      return;
-  }
-  if (
-    !(2 < name.length) ||
-    ("o" !== name[0] && "O" !== name[0]) ||
-    ("n" !== name[1] && "N" !== name[1])
-  ) {
-    var JSCompiler_inline_result = properties.hasOwnProperty(name)
-      ? properties[name]
-      : null;
-    if (null !== JSCompiler_inline_result) {
-      switch (typeof value) {
-        case "function":
-        case "symbol":
-          return;
-        case "boolean":
-          if (!JSCompiler_inline_result.acceptsBooleans) return;
-      }
-      if (!JSCompiler_inline_result.removeEmptyString || "" !== value)
-        switch (
-          ((name = JSCompiler_inline_result.attributeName),
-          JSCompiler_inline_result.type)
-        ) {
-          case 3:
-            value && target.push(" ", name, '=""');
-            break;
-          case 4:
-            !0 === value
-              ? target.push(" ", name, '=""')
-              : !1 !== value &&
-                target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-            break;
-          case 5:
-            isNaN(value) ||
-              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-            break;
-          case 6:
-            !isNaN(value) &&
-              1 <= value &&
-              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-            break;
-          default:
-            JSCompiler_inline_result.sanitizeURL &&
-              (value = sanitizeURL("" + value)),
-              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-        }
-    } else if (isAttributeNameSafe(name)) {
-      switch (typeof value) {
-        case "function":
-        case "symbol":
-          return;
-        case "boolean":
-          if (
-            ((JSCompiler_inline_result = name.toLowerCase().slice(0, 5)),
-            "data-" !== JSCompiler_inline_result &&
-              "aria-" !== JSCompiler_inline_result)
-          )
-            return;
-      }
+      pushBooleanAttribute(target, name.toLowerCase(), value);
+      break;
+    case "src":
+    case "href":
+    case "action":
+      if ("" === value) break;
+    case "formAction":
+      if (
+        null == value ||
+        "function" === typeof value ||
+        "symbol" === typeof value ||
+        "boolean" === typeof value
+      )
+        break;
+      value = sanitizeURL("" + value);
       target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-    }
+      break;
+    case "xlinkHref":
+      if (
+        "function" === typeof value ||
+        "symbol" === typeof value ||
+        "boolean" === typeof value
+      )
+        break;
+      name = sanitizeURL("" + value);
+      target.push(" ", "xlink:href", '="', escapeTextForBrowser(name), '"');
+      break;
+    case "contentEditable":
+    case "spellCheck":
+    case "draggable":
+    case "value":
+    case "autoReverse":
+    case "externalResourcesRequired":
+    case "focusable":
+    case "preserveAlpha":
+      "function" !== typeof value &&
+        "symbol" !== typeof value &&
+        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      break;
+    case "allowFullScreen":
+    case "async":
+    case "autoPlay":
+    case "controls":
+    case "default":
+    case "defer":
+    case "disabled":
+    case "disablePictureInPicture":
+    case "disableRemotePlayback":
+    case "formNoValidate":
+    case "hidden":
+    case "loop":
+    case "noModule":
+    case "noValidate":
+    case "open":
+    case "playsInline":
+    case "readOnly":
+    case "required":
+    case "reversed":
+    case "scoped":
+    case "seamless":
+    case "itemScope":
+      value &&
+        "function" !== typeof value &&
+        "symbol" !== typeof value &&
+        target.push(" ", name, '=""');
+      break;
+    case "capture":
+    case "download":
+      !0 === value
+        ? target.push(" ", name, '=""')
+        : !1 !== value &&
+          "function" !== typeof value &&
+          "symbol" !== typeof value &&
+          target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      break;
+    case "cols":
+    case "rows":
+    case "size":
+    case "span":
+      "function" !== typeof value &&
+        "symbol" !== typeof value &&
+        !isNaN(value) &&
+        1 <= value &&
+        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      break;
+    case "rowSpan":
+    case "start":
+      "function" === typeof value ||
+        "symbol" === typeof value ||
+        isNaN(value) ||
+        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      break;
+    case "acceptCharset":
+      pushStringAttribute(target, "accept-charset", value);
+      break;
+    case "className":
+      pushStringAttribute(target, "class", value);
+      break;
+    case "htmlFor":
+      pushStringAttribute(target, "for", value);
+      break;
+    case "httpEquiv":
+      pushStringAttribute(target, "http-equiv", value);
+      break;
+    case "tabIndex":
+      pushStringAttribute(target, "tabindex", value);
+      break;
+    case "crossOrigin":
+      pushStringAttribute(target, "crossorigin", value);
+      break;
+    case "accentHeight":
+      pushStringAttribute(target, "accent-height", value);
+      break;
+    case "alignmentBaseline":
+      pushStringAttribute(target, "alignment-baseline", value);
+      break;
+    case "arabicForm":
+      pushStringAttribute(target, "arabic-form", value);
+      break;
+    case "baselineShift":
+      pushStringAttribute(target, "baseline-shift", value);
+      break;
+    case "capHeight":
+      pushStringAttribute(target, "cap-height", value);
+      break;
+    case "clipPath":
+      pushStringAttribute(target, "clip-path", value);
+      break;
+    case "clipRule":
+      pushStringAttribute(target, "clip-rule", value);
+      break;
+    case "colorInterpolation":
+      pushStringAttribute(target, "color-interpolation", value);
+      break;
+    case "colorInterpolationFilters":
+      pushStringAttribute(target, "color-interpolation-filters", value);
+      break;
+    case "colorProfile":
+      pushStringAttribute(target, "color-profile", value);
+      break;
+    case "colorRendering":
+      pushStringAttribute(target, "color-rendering", value);
+      break;
+    case "dominantBaseline":
+      pushStringAttribute(target, "dominant-baseline", value);
+      break;
+    case "enableBackground":
+      pushStringAttribute(target, "enable-background", value);
+      break;
+    case "fillOpacity":
+      pushStringAttribute(target, "fill-opacity", value);
+      break;
+    case "fillRule":
+      pushStringAttribute(target, "fill-rule", value);
+      break;
+    case "floodColor":
+      pushStringAttribute(target, "flood-color", value);
+      break;
+    case "floodOpacity":
+      pushStringAttribute(target, "flood-opacity", value);
+      break;
+    case "fontFamily":
+      pushStringAttribute(target, "font-family", value);
+      break;
+    case "fontSize":
+      pushStringAttribute(target, "font-size", value);
+      break;
+    case "fontSizeAdjust":
+      pushStringAttribute(target, "font-size-adjust", value);
+      break;
+    case "fontStretch":
+      pushStringAttribute(target, "font-stretch", value);
+      break;
+    case "fontStyle":
+      pushStringAttribute(target, "font-style", value);
+      break;
+    case "fontVariant":
+      pushStringAttribute(target, "font-variant", value);
+      break;
+    case "fontWeight":
+      pushStringAttribute(target, "font-weight", value);
+      break;
+    case "glyphName":
+      pushStringAttribute(target, "glyph-name", value);
+      break;
+    case "glyphOrientationHorizontal":
+      pushStringAttribute(target, "glyph-orientation-horizontal", value);
+      break;
+    case "glyphOrientationVertical":
+      pushStringAttribute(target, "glyph-orientation-vertical", value);
+      break;
+    case "horizAdvX":
+      pushStringAttribute(target, "horiz-adv-x", value);
+      break;
+    case "horizOriginX":
+      pushStringAttribute(target, "horiz-origin-x", value);
+      break;
+    case "imageRendering":
+      pushStringAttribute(target, "image-rendering", value);
+      break;
+    case "letterSpacing":
+      pushStringAttribute(target, "letter-spacing", value);
+      break;
+    case "lightingColor":
+      pushStringAttribute(target, "lighting-color", value);
+      break;
+    case "markerEnd":
+      pushStringAttribute(target, "marker-end", value);
+      break;
+    case "markerMid":
+      pushStringAttribute(target, "marker-mid", value);
+      break;
+    case "markerStart":
+      pushStringAttribute(target, "marker-start", value);
+      break;
+    case "overlinePosition":
+      pushStringAttribute(target, "overline-position", value);
+      break;
+    case "overlineThickness":
+      pushStringAttribute(target, "overline-thickness", value);
+      break;
+    case "paintOrder":
+      pushStringAttribute(target, "paint-order", value);
+      break;
+    case "panose-1":
+      pushStringAttribute(target, "panose-1", value);
+      break;
+    case "pointerEvents":
+      pushStringAttribute(target, "pointer-events", value);
+      break;
+    case "renderingIntent":
+      pushStringAttribute(target, "rendering-intent", value);
+      break;
+    case "shapeRendering":
+      pushStringAttribute(target, "shape-rendering", value);
+      break;
+    case "stopColor":
+      pushStringAttribute(target, "stop-color", value);
+      break;
+    case "stopOpacity":
+      pushStringAttribute(target, "stop-opacity", value);
+      break;
+    case "strikethroughPosition":
+      pushStringAttribute(target, "strikethrough-position", value);
+      break;
+    case "strikethroughThickness":
+      pushStringAttribute(target, "strikethrough-thickness", value);
+      break;
+    case "strokeDasharray":
+      pushStringAttribute(target, "stroke-dasharray", value);
+      break;
+    case "strokeDashoffset":
+      pushStringAttribute(target, "stroke-dashoffset", value);
+      break;
+    case "strokeLinecap":
+      pushStringAttribute(target, "stroke-linecap", value);
+      break;
+    case "strokeLinejoin":
+      pushStringAttribute(target, "stroke-linejoin", value);
+      break;
+    case "strokeMiterlimit":
+      pushStringAttribute(target, "stroke-miterlimit", value);
+      break;
+    case "strokeOpacity":
+      pushStringAttribute(target, "stroke-opacity", value);
+      break;
+    case "strokeWidth":
+      pushStringAttribute(target, "stroke-width", value);
+      break;
+    case "textAnchor":
+      pushStringAttribute(target, "text-anchor", value);
+      break;
+    case "textDecoration":
+      pushStringAttribute(target, "text-decoration", value);
+      break;
+    case "textRendering":
+      pushStringAttribute(target, "text-rendering", value);
+      break;
+    case "transformOrigin":
+      pushStringAttribute(target, "transform-origin", value);
+      break;
+    case "underlinePosition":
+      pushStringAttribute(target, "underline-position", value);
+      break;
+    case "underlineThickness":
+      pushStringAttribute(target, "underline-thickness", value);
+      break;
+    case "unicodeBidi":
+      pushStringAttribute(target, "unicode-bidi", value);
+      break;
+    case "unicodeRange":
+      pushStringAttribute(target, "unicode-range", value);
+      break;
+    case "unitsPerEm":
+      pushStringAttribute(target, "units-per-em", value);
+      break;
+    case "vAlphabetic":
+      pushStringAttribute(target, "v-alphabetic", value);
+      break;
+    case "vHanging":
+      pushStringAttribute(target, "v-hanging", value);
+      break;
+    case "vIdeographic":
+      pushStringAttribute(target, "v-ideographic", value);
+      break;
+    case "vMathematical":
+      pushStringAttribute(target, "v-mathematical", value);
+      break;
+    case "vectorEffect":
+      pushStringAttribute(target, "vector-effect", value);
+      break;
+    case "vertAdvY":
+      pushStringAttribute(target, "vert-adv-y", value);
+      break;
+    case "vertOriginX":
+      pushStringAttribute(target, "vert-origin-x", value);
+      break;
+    case "vertOriginY":
+      pushStringAttribute(target, "vert-origin-y", value);
+      break;
+    case "wordSpacing":
+      pushStringAttribute(target, "word-spacing", value);
+      break;
+    case "writingMode":
+      pushStringAttribute(target, "writing-mode", value);
+      break;
+    case "xmlnsXlink":
+      pushStringAttribute(target, "xmlns:xlink", value);
+      break;
+    case "xHeight":
+      pushStringAttribute(target, "x-height", value);
+      break;
+    case "xlinkActuate":
+      pushStringAttribute(target, "xlink:actuate", value);
+      break;
+    case "xlinkArcrole":
+      pushStringAttribute(target, "xlink:arcrole", value);
+      break;
+    case "xlinkRole":
+      pushStringAttribute(target, "xlink:role", value);
+      break;
+    case "xlinkShow":
+      pushStringAttribute(target, "xlink:show", value);
+      break;
+    case "xlinkTitle":
+      pushStringAttribute(target, "xlink:title", value);
+      break;
+    case "xlinkType":
+      pushStringAttribute(target, "xlink:type", value);
+      break;
+    case "xmlBase":
+      pushStringAttribute(target, "xml:base", value);
+      break;
+    case "xmlLang":
+      pushStringAttribute(target, "xml:lang", value);
+      break;
+    case "xmlSpace":
+      pushStringAttribute(target, "xml:space", value);
+      break;
+    default:
+      if (
+        (!(2 < name.length) ||
+          ("o" !== name[0] && "O" !== name[0]) ||
+          ("n" !== name[1] && "N" !== name[1])) &&
+        isAttributeNameSafe(name)
+      ) {
+        switch (typeof value) {
+          case "function":
+          case "symbol":
+            return;
+          case "boolean":
+            var prefix = name.toLowerCase().slice(0, 5);
+            if ("data-" !== prefix && "aria-" !== prefix) return;
+        }
+        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      }
   }
 }
 function pushInnerHTML(target, innerHTML, children) {
@@ -2965,7 +3160,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$13 = getThenableStateAfterSuspending(),
+      var thenableState$14 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -2979,7 +3174,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$13,
+        thenableState$14,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -3397,13 +3592,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$15 = partialBoundaries[i];
+      var boundary$16 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$15.resources;
-        var completedSegments = boundary$15.completedSegments;
+          boundary$16.resources;
+        var completedSegments = boundary$16.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3413,7 +3608,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$15,
+              boundary$16,
               completedSegments[responseState]
             )
           ) {
@@ -3425,7 +3620,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$15.resources,
+          boundary$16.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3478,8 +3673,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$17) {
-    logRecoverableError(request, error$17), fatalError(request, error$17);
+  } catch (error$18) {
+    logRecoverableError(request, error$18), fatalError(request, error$18);
   }
 }
 exports.abortStream = function (stream) {
