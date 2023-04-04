@@ -506,6 +506,30 @@ function setProp(
       }
       break;
     }
+    // Overloaded Boolean
+    case 'capture':
+    case 'download': {
+      // An attribute that can be used as a flag as well as with a value.
+      // When true, it should be present (set either to an empty string or its name).
+      // When false, it should be omitted.
+      // For any other value, should be present with that value.
+      if (value === true) {
+        domElement.setAttribute(key, '');
+      } else if (
+        value !== false &&
+        value != null &&
+        typeof value !== 'function' &&
+        typeof value !== 'symbol'
+      ) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, key);
+        }
+        domElement.setAttribute(key, (value: any));
+      } else {
+        domElement.removeAttribute(key);
+      }
+      break;
+    }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
     case 'acceptCharset':
@@ -1620,6 +1644,54 @@ function hydrateBooleanAttribute(
   warnForPropDifference(propKey, serverValue, value);
 }
 
+function hydrateOverloadedBooleanAttribute(
+  domElement: Element,
+  propKey: string,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol':
+        return;
+      default:
+        if (value === false) {
+          return;
+        }
+    }
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol':
+          break;
+        case 'boolean':
+          if (value === true && serverValue === '') {
+            return;
+          }
+          break;
+        default: {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, propKey);
+          }
+          if (serverValue === '' + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+  warnForPropDifference(propKey, serverValue, value);
+}
+
 function hydrateBooleanishAttribute(
   domElement: Element,
   propKey: string,
@@ -1994,6 +2066,17 @@ function diffHydratedGenericElement(
           domElement,
           propKey,
           propKey.toLowerCase(),
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
+      case 'capture':
+      case 'download': {
+        hydrateOverloadedBooleanAttribute(
+          domElement,
+          propKey,
+          propKey,
           value,
           extraAttributes,
         );

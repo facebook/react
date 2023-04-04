@@ -7,11 +7,7 @@
  * @flow
  */
 
-import {
-  OVERLOADED_BOOLEAN,
-  NUMERIC,
-  POSITIVE_NUMERIC,
-} from '../shared/DOMProperty';
+import {NUMERIC, POSITIVE_NUMERIC} from '../shared/DOMProperty';
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
@@ -44,18 +40,10 @@ export function getValueForProperty(
         case 'symbol': // eslint-disable-line
           return expected;
         case 'boolean': {
-          if (!propertyInfo.acceptsBooleans) {
-            return expected;
-          }
+          return expected;
         }
       }
       switch (propertyInfo.type) {
-        case OVERLOADED_BOOLEAN: {
-          if (expected === false) {
-            return expected;
-          }
-          break;
-        }
         case NUMERIC: {
           if (isNaN(expected)) {
             return expected;
@@ -91,17 +79,6 @@ export function getValueForProperty(
         return value;
     }
     switch (propertyInfo.type) {
-      case OVERLOADED_BOOLEAN: {
-        if (value === '') {
-          return true;
-        }
-        if (expected === false) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-        break;
-      }
       case NUMERIC: {
         if (isNaN(expected)) {
           // We had an attribute but shouldn't have had one, so read it
@@ -247,26 +224,12 @@ export function setValueForProperty(
       node.removeAttribute(attributeName);
       return;
     case 'boolean': {
-      if (!propertyInfo.acceptsBooleans) {
-        node.removeAttribute(attributeName);
-        return;
-      }
+      node.removeAttribute(attributeName);
+      return;
     }
   }
 
   switch (propertyInfo.type) {
-    case OVERLOADED_BOOLEAN:
-      if (value === true) {
-        node.setAttribute(attributeName, '');
-      } else if (value === false) {
-        node.removeAttribute(attributeName);
-      } else {
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-        node.setAttribute(attributeName, (value: any));
-      }
-      return;
     case NUMERIC:
       if (!isNaN(value)) {
         if (__DEV__) {

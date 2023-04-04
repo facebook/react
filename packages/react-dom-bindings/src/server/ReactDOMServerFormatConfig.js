@@ -41,7 +41,6 @@ import {
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   getPropertyInfo,
-  OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
@@ -786,6 +785,7 @@ function pushAttribute(
     case 'scoped':
     case 'seamless':
     case 'itemScope': {
+      // Boolean
       if (value && typeof value !== 'function' && typeof value !== 'symbol') {
         target.push(
           attributeSeparator,
@@ -794,6 +794,28 @@ function pushAttribute(
         );
       }
       return;
+    }
+    case 'capture':
+    case 'download': {
+      // Overloaded Boolean
+      if (value === true) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeEmptyString,
+        );
+      } else if (value === false) {
+        // Ignored
+      } else if (typeof value !== 'function' && typeof value !== 'symbol') {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
+      break;
     }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
@@ -1086,9 +1108,7 @@ function pushAttribute(
       case 'symbol': // eslint-disable-line
         return;
       case 'boolean': {
-        if (!propertyInfo.acceptsBooleans) {
-          return;
-        }
+        return;
       }
     }
 
@@ -1096,25 +1116,6 @@ function pushAttribute(
     const attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
 
     switch (propertyInfo.type) {
-      case OVERLOADED_BOOLEAN:
-        if (value === true) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeEmptyString,
-          );
-        } else if (value === false) {
-          // Ignored
-        } else {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd,
-          );
-        }
-        return;
       case NUMERIC:
         if (!isNaN(value)) {
           target.push(
