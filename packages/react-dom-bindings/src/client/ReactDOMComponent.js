@@ -276,35 +276,6 @@ function setProp(
   props: any,
 ): void {
   switch (key) {
-    case 'style': {
-      setValueForStyles(domElement, value);
-      break;
-    }
-    case 'dangerouslySetInnerHTML': {
-      if (value != null) {
-        if (typeof value !== 'object' || !('__html' in value)) {
-          throw new Error(
-            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
-              'for more information.',
-          );
-        }
-        const nextHtml: any = value.__html;
-        if (nextHtml != null) {
-          if (props.children != null) {
-            throw new Error(
-              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-            );
-          }
-          if (disableIEWorkarounds) {
-            domElement.innerHTML = nextHtml;
-          } else {
-            setInnerHTML(domElement, nextHtml);
-          }
-        }
-      }
-      break;
-    }
     case 'children': {
       if (typeof value === 'string') {
         // Avoid setting initial textContent when the text is empty. In IE11 setting
@@ -325,50 +296,26 @@ function setProp(
       }
       break;
     }
-    case 'onScroll': {
-      if (value != null) {
-        if (__DEV__ && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        listenToNonDelegatedEvent('scroll', domElement);
-      }
+    // These are very common props and therefore are in the beginning of the switch.
+    // TODO: aria-label is a very common prop but allows booleans so is not like the others
+    // but should ideally go in this list too.
+    case 'className':
+      setValueForAttribute(domElement, 'class', value);
+      break;
+    case 'tabIndex':
+      // This has to be case sensitive in SVG.
+      setValueForAttribute(domElement, 'tabindex', value);
+      break;
+    case 'dir':
+    case 'role':
+    case 'viewBox':
+    case 'width':
+    case 'height': {
+      setValueForAttribute(domElement, key, value);
       break;
     }
-    case 'onClick': {
-      // TODO: This cast may not be sound for SVG, MathML or custom elements.
-      if (value != null) {
-        if (__DEV__ && typeof value !== 'function') {
-          warnForInvalidEventListener(key, value);
-        }
-        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
-      }
-      break;
-    }
-    // Note: `option.selected` is not updated if `select.multiple` is
-    // disabled with `removeAttribute`. We have special logic for handling this.
-    case 'multiple': {
-      (domElement: any).multiple =
-        value && typeof value !== 'function' && typeof value !== 'symbol';
-      break;
-    }
-    case 'muted': {
-      (domElement: any).muted =
-        value && typeof value !== 'function' && typeof value !== 'symbol';
-      break;
-    }
-    case 'suppressContentEditableWarning':
-    case 'suppressHydrationWarning':
-    case 'defaultValue': // Reserved
-    case 'defaultChecked':
-    case 'innerHTML': {
-      // Noop
-      break;
-    }
-    case 'autoFocus': {
-      // We polyfill it separately on the client during commit.
-      // We could have excluded it in the property list instead of
-      // adding a special case here, but then it wouldn't be emitted
-      // on server rendering (but we *do* want to emit it in SSR).
+    case 'style': {
+      setValueForStyles(domElement, value);
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
@@ -422,6 +369,77 @@ function setProp(
         enableTrustedTypesIntegration ? value : '' + (value: any),
       ): any);
       domElement.setAttribute(key, sanitizedValue);
+      break;
+    }
+    case 'onClick': {
+      // TODO: This cast may not be sound for SVG, MathML or custom elements.
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
+      }
+      break;
+    }
+    case 'onScroll': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scroll', domElement);
+      }
+      break;
+    }
+    case 'dangerouslySetInnerHTML': {
+      if (value != null) {
+        if (typeof value !== 'object' || !('__html' in value)) {
+          throw new Error(
+            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+              'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+              'for more information.',
+          );
+        }
+        const nextHtml: any = value.__html;
+        if (nextHtml != null) {
+          if (props.children != null) {
+            throw new Error(
+              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+            );
+          }
+          if (disableIEWorkarounds) {
+            domElement.innerHTML = nextHtml;
+          } else {
+            setInnerHTML(domElement, nextHtml);
+          }
+        }
+      }
+      break;
+    }
+    // Note: `option.selected` is not updated if `select.multiple` is
+    // disabled with `removeAttribute`. We have special logic for handling this.
+    case 'multiple': {
+      (domElement: any).multiple =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
+      break;
+    }
+    case 'muted': {
+      (domElement: any).muted =
+        value && typeof value !== 'function' && typeof value !== 'symbol';
+      break;
+    }
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+    case 'defaultValue': // Reserved
+    case 'defaultChecked':
+    case 'innerHTML': {
+      // Noop
+      break;
+    }
+    case 'autoFocus': {
+      // We polyfill it separately on the client during commit.
+      // We could have excluded it in the property list instead of
+      // adding a special case here, but then it wouldn't be emitted
+      // on server rendering (but we *do* want to emit it in SSR).
       break;
     }
     case 'xlinkHref': {
@@ -789,6 +807,21 @@ export function setInitialProperties(
           continue;
         }
         switch (propKey) {
+          case 'type': {
+            // Fast path since 'type' is very common on inputs
+            if (
+              propValue != null &&
+              typeof propValue !== 'function' &&
+              typeof propValue !== 'symbol' &&
+              typeof propValue !== 'boolean'
+            ) {
+              if (__DEV__) {
+                checkAttributeStringCoercion(propValue, propKey);
+              }
+              domElement.setAttribute(propKey, propValue);
+            }
+            break;
+          }
           case 'checked': {
             const node = ((domElement: any): InputWithWrapperState);
             const checked =
@@ -1804,6 +1837,24 @@ function diffHydratedGenericElement(
           const expectedHTML = normalizeHTML(domElement, nextHtml);
           warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
+        continue;
+      case 'className':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'class',
+          value,
+          extraAttributes,
+        );
+        continue;
+      case 'tabIndex':
+        hydrateAttribute(
+          domElement,
+          propKey,
+          'tabindex',
+          value,
+          extraAttributes,
+        );
         continue;
       case 'style':
         extraAttributes.delete(propKey);

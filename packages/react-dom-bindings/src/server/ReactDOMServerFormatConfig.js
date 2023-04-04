@@ -641,21 +641,27 @@ function pushAttribute(
   value: string | boolean | number | Function | Object, // not null or undefined
 ): void {
   switch (name) {
+    // These are very common props and therefore are in the beginning of the switch.
+    // TODO: aria-label is a very common prop but allows booleans so is not like the others
+    // but should ideally go in this list too.
+    case 'className': {
+      pushStringAttribute(target, 'class', value);
+      break;
+    }
+    case 'tabIndex': {
+      pushStringAttribute(target, 'tabindex', value);
+      break;
+    }
+    case 'dir':
+    case 'role':
+    case 'viewBox':
+    case 'width':
+    case 'height': {
+      pushStringAttribute(target, name, value);
+      break;
+    }
     case 'style': {
       pushStyleAttribute(target, value);
-      return;
-    }
-    case 'defaultValue':
-    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
-    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
-    case 'suppressContentEditableWarning':
-    case 'suppressHydrationWarning':
-      // Ignored. These are built-in to React on the client.
-      return;
-    case 'autoFocus':
-    case 'multiple':
-    case 'muted': {
-      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
     case 'src':
@@ -708,6 +714,19 @@ function pushAttribute(
         stringToChunk(escapeTextForBrowser(sanitizedValue)),
         attributeEnd,
       );
+      return;
+    }
+    case 'defaultValue':
+    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
+    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+      // Ignored. These are built-in to React on the client.
+      return;
+    case 'autoFocus':
+    case 'multiple':
+    case 'muted': {
+      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
     case 'xlinkHref': {
@@ -849,31 +868,31 @@ function pushAttribute(
     }
     case 'xlinkActuate':
       pushStringAttribute(target, 'xlink:actuate', value);
-      break;
+      return;
     case 'xlinkArcrole':
       pushStringAttribute(target, 'xlink:arcrole', value);
-      break;
+      return;
     case 'xlinkRole':
       pushStringAttribute(target, 'xlink:role', value);
-      break;
+      return;
     case 'xlinkShow':
       pushStringAttribute(target, 'xlink:show', value);
-      break;
+      return;
     case 'xlinkTitle':
       pushStringAttribute(target, 'xlink:title', value);
-      break;
+      return;
     case 'xlinkType':
       pushStringAttribute(target, 'xlink:type', value);
-      break;
+      return;
     case 'xmlBase':
       pushStringAttribute(target, 'xml:base', value);
-      break;
+      return;
     case 'xmlLang':
       pushStringAttribute(target, 'xml:lang', value);
-      break;
+      return;
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
-      break;
+      return;
     default:
       if (
         // shouldIgnoreAttribute
