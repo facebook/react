@@ -4985,7 +4985,24 @@ function getPublicInstance(instance) {
 
   return null;
 }
+
+function getPublicTextInstance(textInstance, internalInstanceHandle) {
+  if (textInstance.publicInstance == null) {
+    textInstance.publicInstance =
+      ReactNativePrivateInterface.createPublicTextInstance(
+        internalInstanceHandle
+      );
+  }
+
+  return textInstance.publicInstance;
+}
+
 function getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle) {
+  if (internalInstanceHandle.tag === HostText) {
+    var textInstance = internalInstanceHandle.stateNode;
+    return getPublicTextInstance(textInstance, internalInstanceHandle);
+  }
+
   var instance = internalInstanceHandle.stateNode;
   return getPublicInstance(instance);
 }
@@ -27158,7 +27175,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-4a1cc2ddd-20230403";
+var ReactVersion = "18.3.0-next-0700dd50b-20230404";
 
 function createPortal$1(
   children,

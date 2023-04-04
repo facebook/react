@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_243 = {
+var injectedNamesToPlugins$jscomp$inline_244 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_243 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_244 = !1,
-  pluginName$jscomp$inline_245;
-for (pluginName$jscomp$inline_245 in injectedNamesToPlugins$jscomp$inline_243)
+  isOrderingDirty$jscomp$inline_245 = !1,
+  pluginName$jscomp$inline_246;
+for (pluginName$jscomp$inline_246 in injectedNamesToPlugins$jscomp$inline_244)
   if (
-    injectedNamesToPlugins$jscomp$inline_243.hasOwnProperty(
-      pluginName$jscomp$inline_245
+    injectedNamesToPlugins$jscomp$inline_244.hasOwnProperty(
+      pluginName$jscomp$inline_246
     )
   ) {
-    var pluginModule$jscomp$inline_246 =
-      injectedNamesToPlugins$jscomp$inline_243[pluginName$jscomp$inline_245];
+    var pluginModule$jscomp$inline_247 =
+      injectedNamesToPlugins$jscomp$inline_244[pluginName$jscomp$inline_246];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_245) ||
-      namesToPlugins[pluginName$jscomp$inline_245] !==
-        pluginModule$jscomp$inline_246
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_246) ||
+      namesToPlugins[pluginName$jscomp$inline_246] !==
+        pluginModule$jscomp$inline_247
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_245])
+      if (namesToPlugins[pluginName$jscomp$inline_246])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_245 + "`.")
+            (pluginName$jscomp$inline_246 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_245] =
-        pluginModule$jscomp$inline_246;
-      isOrderingDirty$jscomp$inline_244 = !0;
+      namesToPlugins[pluginName$jscomp$inline_246] =
+        pluginModule$jscomp$inline_247;
+      isOrderingDirty$jscomp$inline_245 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_244 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_245 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -9551,10 +9551,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1048 = {
+  devToolsConfig$jscomp$inline_1052 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-4a1cc2ddd-20230403",
+    version: "18.3.0-next-0700dd50b-20230404",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9569,11 +9569,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1293 = {
-  bundleType: devToolsConfig$jscomp$inline_1048.bundleType,
-  version: devToolsConfig$jscomp$inline_1048.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1048.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1048.rendererConfig,
+var internals$jscomp$inline_1297 = {
+  bundleType: devToolsConfig$jscomp$inline_1052.bundleType,
+  version: devToolsConfig$jscomp$inline_1052.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1052.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1052.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9589,26 +9589,26 @@ var internals$jscomp$inline_1293 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1048.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1052.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-4a1cc2ddd-20230403"
+  reconcilerVersion: "18.3.0-next-0700dd50b-20230404"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1294 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1298 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1294.isDisabled &&
-    hook$jscomp$inline_1294.supportsFiber
+    !hook$jscomp$inline_1298.isDisabled &&
+    hook$jscomp$inline_1298.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1294.inject(
-        internals$jscomp$inline_1293
+      (rendererID = hook$jscomp$inline_1298.inject(
+        internals$jscomp$inline_1297
       )),
-        (injectedHook = hook$jscomp$inline_1294);
+        (injectedHook = hook$jscomp$inline_1298);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
@@ -9687,6 +9687,15 @@ exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
 exports.getPublicInstanceFromInternalInstanceHandle = function (
   internalInstanceHandle
 ) {
+  if (6 === internalInstanceHandle.tag) {
+    var textInstance = internalInstanceHandle.stateNode;
+    null == textInstance.publicInstance &&
+      (textInstance.publicInstance =
+        ReactNativePrivateInterface.createPublicTextInstance(
+          internalInstanceHandle
+        ));
+    return textInstance.publicInstance;
+  }
   return getPublicInstance(internalInstanceHandle.stateNode);
 };
 exports.render = function (element, containerTag, callback, concurrentRoot) {
