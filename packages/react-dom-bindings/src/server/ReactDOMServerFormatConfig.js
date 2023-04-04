@@ -2638,6 +2638,16 @@ export function pushStartInstance(
   }
 
   switch (type) {
+    case 'div':
+    case 'span':
+    case 'svg':
+    case 'path':
+    case 'a':
+    case 'g':
+    case 'p':
+    case 'li':
+      // Fast track very common tags
+      break;
     // Special tags
     case 'select':
       return pushStartSelect(target, props);
@@ -2747,15 +2757,14 @@ export function pushStartInstance(
       );
     }
     default: {
-      if (type.indexOf('-') === -1) {
-        // Generic element
-        return pushStartGenericElement(target, props, type);
-      } else {
+      if (type.indexOf('-') !== -1) {
         // Custom element
         return pushStartCustomElement(target, props, type);
       }
     }
   }
+  // Generic element
+  return pushStartGenericElement(target, props, type);
 }
 
 const endTag1 = stringToPrecomputedChunk('</');

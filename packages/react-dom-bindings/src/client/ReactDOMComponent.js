@@ -794,6 +794,17 @@ export function setInitialProperties(
   // TODO: Make sure that we check isMounted before firing any of these events.
 
   switch (tag) {
+    case 'div':
+    case 'span':
+    case 'svg':
+    case 'path':
+    case 'a':
+    case 'g':
+    case 'p':
+    case 'li': {
+      // Fast track the most common tag types
+      break;
+    }
     case 'input': {
       ReactDOMInputInitWrapperState(domElement, props);
       // We listen to this event in case to ensure emulated bubble
@@ -1037,30 +1048,32 @@ export function setInitialProperties(
       }
       return;
     }
+    default: {
+      if (isCustomElement(tag, props)) {
+        for (const propKey in props) {
+          if (!props.hasOwnProperty(propKey)) {
+            continue;
+          }
+          const propValue = props[propKey];
+          if (propValue == null) {
+            continue;
+          }
+          setPropOnCustomElement(domElement, tag, propKey, propValue, props);
+        }
+        return;
+      }
+    }
   }
 
-  if (isCustomElement(tag, props)) {
-    for (const propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
-        continue;
-      }
-      const propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
-      setPropOnCustomElement(domElement, tag, propKey, propValue, props);
+  for (const propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
+      continue;
     }
-  } else {
-    for (const propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
-        continue;
-      }
-      const propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
-      setProp(domElement, tag, propKey, propValue, props);
+    const propValue = props[propKey];
+    if (propValue == null) {
+      continue;
     }
+    setProp(domElement, tag, propKey, propValue, props);
   }
 }
 
@@ -1186,6 +1199,17 @@ export function updateProperties(
   nextProps: Object,
 ): void {
   switch (tag) {
+    case 'div':
+    case 'span':
+    case 'svg':
+    case 'path':
+    case 'a':
+    case 'g':
+    case 'p':
+    case 'li': {
+      // Fast track the most common tag types
+      break;
+    }
     case 'input': {
       // Update checked *before* name.
       // In the middle of an update, it is possible to have multiple checked.
@@ -1343,21 +1367,29 @@ export function updateProperties(
       }
       return;
     }
+    default: {
+      if (isCustomElement(tag, nextProps)) {
+        for (let i = 0; i < updatePayload.length; i += 2) {
+          const propKey = updatePayload[i];
+          const propValue = updatePayload[i + 1];
+          setPropOnCustomElement(
+            domElement,
+            tag,
+            propKey,
+            propValue,
+            nextProps,
+          );
+        }
+        return;
+      }
+    }
   }
 
   // Apply the diff.
-  if (isCustomElement(tag, nextProps)) {
-    for (let i = 0; i < updatePayload.length; i += 2) {
-      const propKey = updatePayload[i];
-      const propValue = updatePayload[i + 1];
-      setPropOnCustomElement(domElement, tag, propKey, propValue, nextProps);
-    }
-  } else {
-    for (let i = 0; i < updatePayload.length; i += 2) {
-      const propKey = updatePayload[i];
-      const propValue = updatePayload[i + 1];
-      setProp(domElement, tag, propKey, propValue, nextProps);
-    }
+  for (let i = 0; i < updatePayload.length; i += 2) {
+    const propKey = updatePayload[i];
+    const propValue = updatePayload[i + 1];
+    setProp(domElement, tag, propKey, propValue, nextProps);
   }
 }
 
