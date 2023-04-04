@@ -3926,48 +3926,51 @@ function writeStyleResourceAttributeInJS(
       return;
 
     // Attribute renames
-    case 'className':
+    case 'className': {
       attributeName = 'class';
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
       break;
-
+    }
     // Booleans
-    case 'hidden':
+    case 'hidden': {
       if (value === false) {
         return;
       }
       attributeValue = '';
       break;
-
+    }
     // Santized URLs
     case 'src':
     case 'href': {
+      value = sanitizeURL(value);
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      value = sanitizeURL(value);
+      attributeValue = '' + (value: any);
       break;
     }
     default: {
+      if (
+        // unrecognized event handlers are not SSR'd and we (apparently)
+        // use on* as hueristic for these handler props
+        name.length > 2 &&
+        (name[0] === 'o' || name[0] === 'O') &&
+        (name[1] === 'n' || name[1] === 'N')
+      ) {
+        return;
+      }
       if (!isAttributeNameSafe(name)) {
         return;
       }
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
     }
   }
-
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
-    return;
-  }
-
-  if (__DEV__) {
-    checkAttributeStringCoercion(value, attributeName);
-  }
-  attributeValue = '' + (value: any);
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
@@ -4119,48 +4122,53 @@ function writeStyleResourceAttributeInAttr(
       return;
 
     // Attribute renames
-    case 'className':
+    case 'className': {
       attributeName = 'class';
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
       break;
+    }
 
     // Booleans
-    case 'hidden':
+    case 'hidden': {
       if (value === false) {
         return;
       }
       attributeValue = '';
       break;
+    }
 
     // Santized URLs
     case 'src':
     case 'href': {
+      value = sanitizeURL(value);
       if (__DEV__) {
         checkAttributeStringCoercion(value, attributeName);
       }
-      value = sanitizeURL(value);
+      attributeValue = '' + (value: any);
       break;
     }
     default: {
+      if (
+        // unrecognized event handlers are not SSR'd and we (apparently)
+        // use on* as hueristic for these handler props
+        name.length > 2 &&
+        (name[0] === 'o' || name[0] === 'O') &&
+        (name[1] === 'n' || name[1] === 'N')
+      ) {
+        return;
+      }
       if (!isAttributeNameSafe(name)) {
         return;
       }
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, attributeName);
+      }
+      attributeValue = '' + (value: any);
     }
   }
-
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
-    return;
-  }
-
-  if (__DEV__) {
-    checkAttributeStringCoercion(value, attributeName);
-  }
-  attributeValue = '' + (value: any);
   writeChunk(destination, arrayInterstitial);
   writeChunk(
     destination,
