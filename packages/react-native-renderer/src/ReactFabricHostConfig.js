@@ -14,13 +14,16 @@ import {
   DefaultEventPriority,
   DiscreteEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import {HostText} from 'react-reconciler/src/ReactWorkTags';
 
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
   deepFreezeAndThrowOnMutationInDev,
   createPublicInstance,
+  createPublicTextInstance,
   type PublicInstance as ReactNativePublicInstance,
+  type PublicTextInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const {
@@ -47,23 +50,33 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // This means that they never overlap.
 let nextReactTag = 2;
 
+type InternalInstanceHandle = Object;
 type Node = Object;
 export type Type = string;
 export type Props = Object;
 export type Instance = {
   // Reference to the shadow node.
   node: Node,
+  // This object is shared by all the clones of the instance.
+  // We use it to access their shared public instance (exposed through refs)
+  // and to access its committed state for events, etc.
   canonical: {
     nativeTag: number,
     viewConfig: ViewConfig,
     currentProps: Props,
     // Reference to the React handle (the fiber)
-    internalInstanceHandle: Object,
+    internalInstanceHandle: InternalInstanceHandle,
     // Exposed through refs.
     publicInstance: PublicInstance,
   },
 };
-export type TextInstance = {node: Node, ...};
+export type TextInstance = {
+  // Reference to the shadow node.
+  node: Node,
+  // Text instances are never cloned, so we don't need to keep a "canonical"
+  // reference to make sure all clones of the instance point to the same values.
+  publicInstance?: PublicTextInstance,
+};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
@@ -115,7 +128,7 @@ export function createInstance(
   props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
-  internalInstanceHandle: Object,
+  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const tag = nextReactTag;
   nextReactTag += 2;
@@ -162,7 +175,7 @@ export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
   hostContext: HostContext,
-  internalInstanceHandle: Object,
+  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   if (__DEV__) {
     if (!hostContext.isInAParentText) {
@@ -239,9 +252,26 @@ export function getPublicInstance(instance: Instance): null | PublicInstance {
   return null;
 }
 
+function getPublicTextInstance(
+  textInstance: TextInstance,
+  internalInstanceHandle: InternalInstanceHandle,
+): PublicTextInstance {
+  if (textInstance.publicInstance == null) {
+    textInstance.publicInstance = createPublicTextInstance(
+      internalInstanceHandle,
+    );
+  }
+  return textInstance.publicInstance;
+}
+
 export function getPublicInstanceFromInternalInstanceHandle(
-  internalInstanceHandle: Object,
-): null | PublicInstance {
+  internalInstanceHandle: InternalInstanceHandle,
+): null | PublicInstance | PublicTextInstance {
+  if (internalInstanceHandle.tag === HostText) {
+    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    return getPublicTextInstance(textInstance, internalInstanceHandle);
+  }
+
   const instance: Instance = internalInstanceHandle.stateNode;
   return getPublicInstance(instance);
 }
@@ -321,7 +351,7 @@ export function cloneInstance(
   type: string,
   oldProps: Props,
   newProps: Props,
-  internalInstanceHandle: Object,
+  internalInstanceHandle: InternalInstanceHandle,
   keepChildren: boolean,
   recyclableInstance: null | Instance,
 ): Instance {
@@ -350,7 +380,7 @@ export function cloneHiddenInstance(
   instance: Instance,
   type: string,
   props: Props,
-  internalInstanceHandle: Object,
+  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
@@ -367,7 +397,7 @@ export function cloneHiddenInstance(
 export function cloneHiddenTextInstance(
   instance: Instance,
   text: string,
-  internalInstanceHandle: Object,
+  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   throw new Error('Not yet implemented.');
 }
@@ -399,7 +429,9 @@ export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
+export function beforeActiveInstanceBlur(
+  internalInstanceHandle: InternalInstanceHandle,
+) {
   // noop
 }
 
