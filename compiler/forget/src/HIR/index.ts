@@ -17,3 +17,5 @@ export {
 } from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
+export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";
+export { validateTerminalSuccessors } from "./ValidateTerminalSuccessors";

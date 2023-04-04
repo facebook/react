@@ -21,6 +21,8 @@ import {
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
   shrink,
+  validateConsistentIdentifiers,
+  validateTerminalSuccessors,
 } from "../HIR";
 import { removeDeadDoWhileStatements } from "../HIR/HIRBuilder";
 import { eliminateRedundantPhi } from "../SSA";
@@ -70,6 +72,9 @@ export function constantPropagation(fn: HIRFunction): void {
     // Finally, merge together any blocks that are now guaranteed to execute
     // consecutively
     mergeConsecutiveBlocks(fn);
+
+    validateConsistentIdentifiers(fn);
+    validateTerminalSuccessors(fn);
   }
 }
 

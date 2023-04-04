@@ -11,9 +11,10 @@ import {
   lower,
   mergeConsecutiveBlocks,
   ReactiveFunction,
+  validateConsistentIdentifiers,
+  validateTerminalSuccessors,
 } from "./HIR";
 import { Environment, EnvironmentConfig } from "./HIR/Environment";
-import { validateConsistentIdentifiers } from "./HIR/ValidateConsistentIdentifiers";
 import {
   analyseFunctions,
   dropMemoCalls,
@@ -61,6 +62,7 @@ export function* run(
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
   validateConsistentIdentifiers(hir);
+  validateTerminalSuccessors(hir);
 
   enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
