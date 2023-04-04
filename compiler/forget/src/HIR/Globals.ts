@@ -169,6 +169,24 @@ const BUILTIN_HOOKS: Array<[string, Hook]> = [
       valueKind: ValueKind.Frozen,
     },
   ],
+  [
+    "useEffect",
+    {
+      kind: "Memo",
+      name: "useEffect",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
+  [
+    "useLayoutEffect",
+    {
+      kind: "Memo",
+      name: "useLayoutEffect",
+      effectKind: Effect.Freeze,
+      valueKind: ValueKind.Frozen,
+    },
+  ],
 ];
 
 export type Global = BuiltInType | HookType | PolyType;

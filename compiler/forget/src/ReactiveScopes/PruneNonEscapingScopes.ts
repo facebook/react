@@ -12,6 +12,7 @@ import {
   Effect,
   IdentifierId,
   InstructionId,
+  isHookType,
   Pattern,
   Place,
   ReactiveFunction,
@@ -23,6 +24,7 @@ import {
   ReactiveValue,
   ScopeId,
 } from "../HIR";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
@@ -37,8 +39,13 @@ import {
 
 /**
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.
- * Specifically, the pass identifies the set of identifiers which are directly returned by
- * the function and/or transitively aliased by a return value - ie, values that "escape".
+ * Specifically, the pass identifies the set of identifiers which may "escape". Values can
+ * escape in one of two ways:
+ * * They are directly returned by the function and/or transitively aliased by a return
+ *   value.
+ * * They are passed as input to a hook. This is because any value passed to a hook may
+ *   have its referenced ultimately stored by React (ie, be aliased by an external value).
+ *   For example, the closure passed to useEffect escapes.
  *
  * Example to build intuition:
  *
@@ -96,7 +103,8 @@ import {
  *      b. Conditional and logical expressions (and a few others) are conditinally aliased,
  *         depending on whether their result value is aliased.
  *      c. JSX is always unaliased (though its props children may be)
- * 2. The same pass which builds the graph also stores the set of returned identifiers.
+ * 2. The same pass which builds the graph also stores the set of returned identifiers and set of
+ *    identifiers passed as arguments to hooks.
  * 3. We traverse the graph starting from the returned identifiers and mark reachable dependencies
  *    as escaping, based on the combination of the parent node's type and its children (eg a
  *    conditional node with an aliased dep promotes to aliased).
@@ -198,7 +206,7 @@ class State {
 
   identifiers: Map<IdentifierId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
-  returned: Set<IdentifierId> = new Set();
+  escapingValues: Set<IdentifierId> = new Set();
 
   /**
    * Declare a new identifier, used for function id and params
@@ -302,8 +310,8 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   }
 
   // Walk from the "roots" aka returned identifiers.
-  for (const returned of state.returned) {
-    visit(returned);
+  for (const value of state.escapingValues) {
+    visit(value);
   }
 
   return memoized;
@@ -649,6 +657,13 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         instruction.lvalue.identifier.id,
         instruction.value.place.identifier.id
       );
+    } else if (instruction.value.kind === "CallExpression") {
+      const callee = instruction.value.callee;
+      if (isHookType(callee.identifier)) {
+        for (const operand of eachInstructionValueOperand(instruction.value)) {
+          state.escapingValues.add(operand.identifier.id);
+        }
+      }
     }
   }
 
@@ -659,7 +674,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     this.traverseTerminal(stmt, state);
 
     if (stmt.terminal.kind === "return" && stmt.terminal.value !== null) {
-      state.returned.add(stmt.terminal.value.identifier.id);
+      state.escapingValues.add(stmt.terminal.value.identifier.id);
     }
   }
 }
