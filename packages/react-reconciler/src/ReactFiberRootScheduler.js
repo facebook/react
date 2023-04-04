@@ -119,6 +119,15 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
     // unblock additional features we have planned.
     scheduleTaskForRootDuringMicrotask(root, now());
   }
+
+  if (
+    __DEV__ &&
+    ReactCurrentActQueue.isBatchingLegacy &&
+    root.tag === LegacyRoot
+  ) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactCurrentActQueue.didScheduleLegacyUpdate = true;
+  }
 }
 
 export function flushSyncWorkOnAllRoots() {
