@@ -530,6 +530,45 @@ function setProp(
       }
       break;
     }
+    case 'cols':
+    case 'rows':
+    case 'size':
+    case 'span': {
+      // These are HTML attributes that must be positive numbers.
+      if (
+        value != null &&
+        typeof value !== 'function' &&
+        typeof value !== 'symbol' &&
+        !isNaN(value) &&
+        (value: any) >= 1
+      ) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, key);
+        }
+        domElement.setAttribute(key, (value: any));
+      } else {
+        domElement.removeAttribute(key);
+      }
+      break;
+    }
+    case 'rowSpan':
+    case 'start': {
+      // These are HTML attributes that must be numbers.
+      if (
+        value != null &&
+        typeof value !== 'function' &&
+        typeof value !== 'symbol' &&
+        !isNaN(value)
+      ) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, key);
+        }
+        domElement.setAttribute(key, (value: any));
+      } else {
+        domElement.removeAttribute(key);
+      }
+      break;
+    }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
     case 'acceptCharset':

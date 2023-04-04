@@ -716,7 +716,6 @@ function pushAttribute(
     }
     case 'xlinkHref': {
       if (
-        value == null ||
         typeof value === 'function' ||
         typeof value === 'symbol' ||
         typeof value === 'boolean'
@@ -748,11 +747,7 @@ function pushAttribute(
       // These are "enumerated" attributes that accept "true" and "false".
       // In React, we let users pass `true` and `false` even though technically
       // these aren't boolean attributes (they are coerced to strings).
-      if (
-        value != null &&
-        typeof value !== 'function' &&
-        typeof value !== 'symbol'
-      ) {
+      if (typeof value !== 'function' && typeof value !== 'symbol') {
         target.push(
           attributeSeparator,
           stringToChunk(name),
@@ -807,6 +802,45 @@ function pushAttribute(
       } else if (value === false) {
         // Ignored
       } else if (typeof value !== 'function' && typeof value !== 'symbol') {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
+      break;
+    }
+    case 'cols':
+    case 'rows':
+    case 'size':
+    case 'span': {
+      // These are HTML attributes that must be positive numbers.
+      if (
+        typeof value !== 'function' &&
+        typeof value !== 'symbol' &&
+        !isNaN(value) &&
+        (value: any) >= 1
+      ) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
+      break;
+    }
+    case 'rowSpan':
+    case 'start': {
+      // These are HTML attributes that must be numbers.
+      if (
+        typeof value !== 'function' &&
+        typeof value !== 'symbol' &&
+        !isNaN(value)
+      ) {
         target.push(
           attributeSeparator,
           stringToChunk(name),
