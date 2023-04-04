@@ -33,6 +33,7 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
+  enableSyncDefaultUpdates,
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
@@ -458,9 +459,11 @@ export function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
+      !enableSyncDefaultUpdates ||
       // Only for internal experiments.
-      allowConcurrentByDefault &&
-      concurrentUpdatesByDefaultOverride
+      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     }

@@ -1366,9 +1366,13 @@ describe('ReactSuspenseList', () => {
     }
 
     // This render is only CPU bound. Nothing suspends.
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
       ReactNoop.render(<Foo />);
-    });
+    }
 
     await waitFor(['A']);
 
@@ -1550,9 +1554,13 @@ describe('ReactSuspenseList', () => {
     }
 
     // This render is only CPU bound. Nothing suspends.
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
       ReactNoop.render(<Foo />);
-    });
+    }
 
     await waitFor(['A']);
 
@@ -2517,9 +2525,15 @@ describe('ReactSuspenseList', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     await act(async () => {
-      React.startTransition(() => {
+      // Add a few items at the end.
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateLowPri(true);
+        });
+      } else {
         updateLowPri(true);
-      });
+      }
+
       // Flush partially through.
       await waitFor(['B', 'C']);
 
@@ -2655,9 +2669,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
       ReactNoop.render(<App />);
-    });
+    }
+
     await waitFor(['App', 'First Pass A', 'Mount A', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
 
@@ -2718,9 +2737,14 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
       ReactNoop.render(<App />);
-    });
+    }
+
     await waitFor([
       'App',
       'First Pass A',

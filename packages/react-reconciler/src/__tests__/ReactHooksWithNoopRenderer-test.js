@@ -179,10 +179,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     // Schedule some updates
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          counter.current.updateCount(1);
+          counter.current.updateCount(count => count + 10);
+        });
+      } else {
         counter.current.updateCount(1);
         counter.current.updateCount(count => count + 10);
-      });
+      }
 
       // Partially flush without committing
       await waitFor(['Count: 11']);
@@ -687,16 +692,24 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll([0]);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
         root.render(<Foo signal={false} />);
-      });
+      }
       await waitForAll(['Suspend!']);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       // Rendering again should suspend again.
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
         root.render(<Foo signal={false} />);
-      });
+      }
       await waitForAll(['Suspend!']);
     });
 
@@ -742,25 +755,38 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
       await act(async () => {
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={false} />);
+            setLabel('B');
+          });
+        } else {
           root.render(<Foo signal={false} />);
           setLabel('B');
-        });
+        }
 
         await waitForAll(['Suspend!']);
         expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
         // Rendering again should suspend again.
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={false} />);
+          });
+        } else {
           root.render(<Foo signal={false} />);
-        });
+        }
         await waitForAll(['Suspend!']);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={true} />);
+          });
+        } else {
           root.render(<Foo signal={true} />);
-        });
+        }
         await waitForAll(['B:0']);
         expect(root).toMatchRenderedOutput(<span prop="B:0" />);
       });
@@ -795,9 +821,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            setRow(20);
+          });
+        } else {
           setRow(20);
-        });
+        }
       });
       assertLog(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);
@@ -1309,9 +1339,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
 
         // Schedule another update for children, and partially process it.
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            setChildStates.forEach(setChildState => setChildState(2));
+          });
+        } else {
           setChildStates.forEach(setChildState => setChildState(2));
-        });
+        }
         await waitFor(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
@@ -1585,21 +1619,39 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
 
         // Rendering again should flush the previous commit's effects
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            ReactNoop.render(<Counter count={1} />, () =>
+              Scheduler.log('Sync effect'),
+            );
+          });
+        } else {
           ReactNoop.render(<Counter count={1} />, () =>
             Scheduler.log('Sync effect'),
           );
-        });
+        }
 
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-        await waitFor([
-          'Count: 0',
-          'Sync effect',
-          'Schedule update [1]',
-          'Count: 1',
-        ]);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+          await waitFor([
+            'Count: 0',
+            'Sync effect',
+            'Schedule update [1]',
+            'Count: 1',
+          ]);
+        } else {
+          expect(ReactNoop).toMatchRenderedOutput(
+            <span prop="Count: (empty)" />,
+          );
+          await waitFor(['Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+
+          ReactNoop.flushPassiveEffects();
+          assertLog(['Schedule update [1]']);
+          await waitForAll(['Count: 1']);
+        }
 
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
       });

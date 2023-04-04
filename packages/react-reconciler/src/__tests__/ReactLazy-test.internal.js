@@ -1559,9 +1559,13 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(<Parent swap={true} />);
+      });
+    } else {
       root.update(<Parent swap={true} />);
-    });
+    }
     await waitForAll(['Init B2', 'Loading...']);
     await resolveFakeImport(ChildB2);
     // We need to flush to trigger the second one to load.

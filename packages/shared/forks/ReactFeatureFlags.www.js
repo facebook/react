@@ -24,6 +24,7 @@ export const {
   enableDebugTracing,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
+  enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
   enableTransitionTracing,
   enableCustomElementPropertySupport,

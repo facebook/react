@@ -885,9 +885,13 @@ describe('ReactNewContext', () => {
         );
       }
 
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<App value={1} />);
+        });
+      } else {
         ReactNoop.render(<App value={1} />);
-      });
+      }
       // Render past the Provider, but don't commit yet
       await waitFor(['Foo']);
 
@@ -930,9 +934,13 @@ describe('ReactNewContext', () => {
         );
       }
 
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<App value={1} />);
+        });
+      } else {
         ReactNoop.render(<App value={1} />);
-      });
+      }
       await waitForAll(['Foo', 'Foo']);
 
       // Get a new copy of ReactNoop
