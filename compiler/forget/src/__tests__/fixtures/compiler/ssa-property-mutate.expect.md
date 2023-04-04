@@ -22,7 +22,6 @@ function foo() {
     const x = [];
     y = {};
     y.x = x;
-
     mutate(y);
     $[0] = y;
   } else {

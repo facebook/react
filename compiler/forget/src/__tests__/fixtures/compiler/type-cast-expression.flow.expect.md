@@ -31,7 +31,6 @@ function Component(props) {
   } else {
     y = $[1];
   }
-
   const z = (y: Foo);
   return z;
 }

@@ -25,7 +25,6 @@ function Component(props) {
     x = {};
     const y = [];
     x.y = y;
-
     child = <Component data={y} />;
     x.y.push(props.p0);
     $[0] = props.p0;

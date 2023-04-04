@@ -24,10 +24,8 @@ function component() {
     const z = [];
     const y = {};
     y.z = z;
-
     x = {};
     x.y = y;
-
     mutate(x.y.z);
     $[0] = x;
   } else {

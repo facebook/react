@@ -30,11 +30,9 @@ function foo(a, b, c) {
   const $ = React.unstable_useMemoCache(5);
 
   const [d, t46] = a;
-
   const [t48] = t46;
   const { e: t50 } = t48;
   const { f: g } = t50;
-
   const { l: t55, o } = b;
   const { m: t58 } = t55;
   const [t60] = t58;

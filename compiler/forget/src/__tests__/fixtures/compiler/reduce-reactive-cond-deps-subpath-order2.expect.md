@@ -36,6 +36,7 @@ function TestConditionalSubpath2(props, other) {
     if (foo(other)) {
       x.a = props.a;
     }
+
     x.b = props.a.b;
     $[0] = other;
     $[1] = props.a;

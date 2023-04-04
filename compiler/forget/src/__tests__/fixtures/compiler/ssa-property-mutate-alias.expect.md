@@ -25,6 +25,7 @@ function foo() {
     const a = {};
     y = a;
     const x = [];
+
     y.x = x;
 
     mutate(a);

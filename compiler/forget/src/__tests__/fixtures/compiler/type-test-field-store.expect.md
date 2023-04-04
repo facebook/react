@@ -33,7 +33,6 @@ function component() {
   } else {
     x = $[0];
   }
-
   const z = x.t;
   return z;
 }

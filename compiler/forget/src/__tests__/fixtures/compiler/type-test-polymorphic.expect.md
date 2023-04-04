@@ -43,13 +43,14 @@ function component() {
   let x;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
+
     x.t = p;
+
     x.t = o;
     $[2] = x;
   } else {
     x = $[2];
   }
-
   const y = x.t;
   return y;
 }

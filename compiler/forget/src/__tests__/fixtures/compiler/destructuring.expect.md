@@ -44,7 +44,6 @@ function foo(a, b, c) {
     d = $[2];
     h = $[3];
   }
-
   const [t1] = t0;
   const c_4 = $[4] !== t1;
   let t2;
@@ -59,7 +58,6 @@ function foo(a, b, c) {
     g = $[6];
   }
   const { f } = t2;
-
   const { l: t51, p } = b;
   const { m: t3 } = t51;
   const c_7 = $[7] !== t3;

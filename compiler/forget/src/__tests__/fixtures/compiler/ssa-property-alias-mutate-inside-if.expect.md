@@ -29,7 +29,6 @@ function foo(a) {
     if (a) {
       const y = {};
       x.y = y;
-
       mutate(y);
     } else {
       let t0;

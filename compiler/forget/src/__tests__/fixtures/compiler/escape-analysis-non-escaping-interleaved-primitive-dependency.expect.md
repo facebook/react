@@ -36,7 +36,6 @@ function Component(props) {
     b = [];
     const c = {};
     c.a = a;
-
     b.push(props.c);
     $[0] = a;
     $[1] = props.c;

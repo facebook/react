@@ -31,6 +31,7 @@ function foo(a, b, c, d) {
     } else {
       x = someObj();
     }
+
     x.f = 1;
     $[0] = a;
     $[1] = x;

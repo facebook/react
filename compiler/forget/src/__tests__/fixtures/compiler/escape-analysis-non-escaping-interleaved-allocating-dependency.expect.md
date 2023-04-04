@@ -42,7 +42,6 @@ function Component(props) {
     b = [];
     const c = {};
     c.a = a;
-
     b.push(props.b);
     $[2] = a;
     $[3] = props.b;

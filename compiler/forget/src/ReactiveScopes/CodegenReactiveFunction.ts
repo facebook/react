@@ -14,6 +14,7 @@ import {
   Identifier,
   IdentifierId,
   InstructionKind,
+  JsxAttribute,
   Pattern,
   Place,
   ReactiveBlock,
@@ -566,6 +567,14 @@ const createLogicalExpression = withLoc(t.logicalExpression);
 const createSequenceExpression = withLoc(t.sequenceExpression);
 const createConditionalExpression = withLoc(t.conditionalExpression);
 const createTemplateLiteral = withLoc(t.templateLiteral);
+const createJsxNamespacedName = withLoc(t.jsxNamespacedName);
+const createJsxElement = withLoc(t.jsxElement);
+const createJsxAttribute = withLoc(t.jsxAttribute);
+const createJsxIdentifier = withLoc(t.jsxIdentifier);
+const createJsxExpressionContainer = withLoc(t.jsxExpressionContainer);
+const createJsxText = withLoc(t.jsxText);
+const createJsxClosingElement = withLoc(t.jsxClosingElement);
+const createStringLiteral = withLoc(t.stringLiteral);
 
 type Temporaries = Map<IdentifierId, t.Expression>;
 
@@ -642,7 +651,7 @@ function codegenInstructionValue(
       break;
     }
     case "Primitive": {
-      value = codegenValue(cx, instrValue.value);
+      value = codegenValue(cx, instrValue.loc, instrValue.value);
       break;
     }
     case "CallExpression": {
@@ -712,58 +721,18 @@ function codegenInstructionValue(
       break;
     }
     case "JSXText": {
-      value = t.stringLiteral(instrValue.value);
+      value = createStringLiteral(instrValue.loc, instrValue.value);
       break;
     }
     case "JsxExpression": {
       const attributes: Array<t.JSXAttribute | t.JSXSpreadAttribute> = [];
       for (const attribute of instrValue.props) {
-        switch (attribute.kind) {
-          case "JsxAttribute": {
-            let propName: t.JSXIdentifier | t.JSXNamespacedName;
-            if (attribute.name.indexOf(":") === -1) {
-              propName = t.jsxIdentifier(attribute.name);
-            } else {
-              const [namespace, name] = attribute.name.split(":", 2);
-              propName = t.jsxNamespacedName(
-                t.jsxIdentifier(namespace),
-                t.jsxIdentifier(name)
-              );
-            }
-            attributes.push(
-              t.jsxAttribute(
-                propName,
-                t.jsxExpressionContainer(codegenPlace(cx, attribute.place))
-              )
-            );
-            break;
-          }
-          case "JsxSpreadAttribute": {
-            attributes.push(
-              t.jsxSpreadAttribute(codegenPlace(cx, attribute.argument))
-            );
-            break;
-          }
-          default: {
-            assertExhaustive(
-              attribute,
-              `Unexpected attribute kind '${(attribute as any).kind}'`
-            );
-          }
-        }
+        attributes.push(codegenJsxAttribute(cx, attribute));
       }
       let tagValue = codegenPlace(cx, instrValue.tag);
       let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
       if (tagValue.type === "Identifier") {
-        if (tagValue.name.indexOf(":") >= 0) {
-          const [namespace, name] = tagValue.name.split(":", 2);
-          tag = t.jsxNamespacedName(
-            t.jsxIdentifier(namespace),
-            t.jsxIdentifier(name)
-          );
-        } else {
-          tag = t.jsxIdentifier(tagValue.name);
-        }
+        tag = createJsxIdentifier(instrValue.tag.loc, tagValue.name);
       } else if (tagValue.type === "MemberExpression") {
         tag = convertMemberExpressionToJsx(tagValue);
       } else {
@@ -772,15 +741,27 @@ function codegenInstructionValue(
           "Expected JSX tag to be an identifier or string, got '%s'",
           tagValue.type
         );
-        tag = t.jsxIdentifier(tagValue.value);
+        if (tagValue.value.indexOf(":") >= 0) {
+          const [namespace, name] = tagValue.value.split(":", 2);
+          tag = createJsxNamespacedName(
+            instrValue.tag.loc,
+            createJsxIdentifier(instrValue.tag.loc, namespace),
+            createJsxIdentifier(instrValue.tag.loc, name)
+          );
+        } else {
+          tag = createJsxIdentifier(instrValue.loc, tagValue.value);
+        }
       }
       const children =
         instrValue.children !== null
           ? instrValue.children.map((child) => codegenJsxElement(cx, child))
           : [];
-      value = t.jsxElement(
+      value = createJsxElement(
+        instrValue.loc,
         t.jsxOpeningElement(tag, attributes, instrValue.children === null),
-        instrValue.children !== null ? t.jsxClosingElement(tag) : null,
+        instrValue.children !== null
+          ? createJsxClosingElement(instrValue.tag.loc, tag)
+          : null,
         children,
         instrValue.children === null
       );
@@ -1007,6 +988,51 @@ function codegenInstructionValue(
   return value;
 }
 
+function codegenJsxAttribute(
+  cx: Context,
+  attribute: JsxAttribute
+): t.JSXAttribute | t.JSXSpreadAttribute {
+  switch (attribute.kind) {
+    case "JsxAttribute": {
+      let propName: t.JSXIdentifier | t.JSXNamespacedName;
+      if (attribute.name.indexOf(":") === -1) {
+        propName = createJsxIdentifier(attribute.place.loc, attribute.name);
+      } else {
+        const [namespace, name] = attribute.name.split(":", 2);
+        propName = createJsxNamespacedName(
+          attribute.place.loc,
+          createJsxIdentifier(attribute.place.loc, namespace),
+          createJsxIdentifier(attribute.place.loc, name)
+        );
+      }
+      const innerValue = codegenPlace(cx, attribute.place);
+      let value;
+      switch (innerValue.type) {
+        case "StringLiteral":
+        case "JSXElement":
+        case "JSXFragment": {
+          value = innerValue;
+          break;
+        }
+        default: {
+          value = createJsxExpressionContainer(attribute.place.loc, innerValue);
+          break;
+        }
+      }
+      return createJsxAttribute(attribute.place.loc, propName, value);
+    }
+    case "JsxSpreadAttribute": {
+      return t.jsxSpreadAttribute(codegenPlace(cx, attribute.argument));
+    }
+    default: {
+      assertExhaustive(
+        attribute,
+        `Unexpected attribute kind '${(attribute as any).kind}'`
+      );
+    }
+  }
+}
+
 function codegenJsxElement(
   cx: Context,
   place: Place
@@ -1019,14 +1045,14 @@ function codegenJsxElement(
   const value = codegenPlace(cx, place);
   switch (value.type) {
     case "StringLiteral": {
-      return t.jsxText(value.value);
+      return createJsxText(place.loc, value.value);
     }
     case "JSXElement":
     case "JSXFragment": {
       return value;
     }
     default: {
-      return t.jsxExpressionContainer(value);
+      return createJsxExpressionContainer(place.loc, value);
     }
   }
 }
@@ -1093,6 +1119,7 @@ function codegenLValue(
 
 function codegenValue(
   cx: Context,
+  loc: SourceLocation,
   value: boolean | number | string | null | undefined
 ): t.Expression {
   if (typeof value === "number") {
@@ -1100,7 +1127,7 @@ function codegenValue(
   } else if (typeof value === "boolean") {
     return t.booleanLiteral(value);
   } else if (typeof value === "string") {
-    return t.stringLiteral(value);
+    return createStringLiteral(loc, value);
   } else if (value === null) {
     return t.nullLiteral();
   } else if (value === undefined) {
@@ -1126,7 +1153,9 @@ function codegenPlace(cx: Context, place: Place): t.Expression {
   if (tmp != null) {
     return tmp;
   }
-  return convertIdentifier(place.identifier);
+  const identifier = convertIdentifier(place.identifier);
+  identifier.loc = place.loc as any;
+  return identifier;
 }
 
 function convertIdentifier(identifier: Identifier): t.Identifier {

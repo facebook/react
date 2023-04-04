@@ -61,7 +61,6 @@ function Component(props) {
     c = [];
     const d = {};
     d.b = b;
-
     c.push(props.b);
     $[4] = b;
     $[5] = props.b;

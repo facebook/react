@@ -34,6 +34,7 @@ function TestConditionalSuperpath2(props, other) {
     if (foo(other)) {
       x.b = props.a.b;
     }
+
     x.a = props.a;
     $[0] = other;
     $[1] = props.a;
