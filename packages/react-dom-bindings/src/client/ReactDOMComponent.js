@@ -21,8 +21,6 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {
   getValueForAttribute,
   getValueForAttributeOnCustomComponent,
-  getValueForProperty,
-  setValueForProperty,
   setValueForPropertyOnCustomComponent,
   setValueForAttribute,
   setValueForNamespacedAttribute,
@@ -59,7 +57,6 @@ import {
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
 import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
-import {getPropertyInfo} from '../shared/DOMProperty';
 import isCustomElement from '../shared/isCustomElement';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -908,12 +905,7 @@ function setProp(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        const propertyInfo = getPropertyInfo(key);
-        if (propertyInfo !== null) {
-          setValueForProperty(domElement, propertyInfo, value);
-        } else {
-          setValueForAttribute(domElement, key, value);
-        }
+        setValueForAttribute(domElement, key, value);
       }
     }
   }
@@ -1770,6 +1762,106 @@ function hydrateBooleanishAttribute(
   warnForPropDifference(propKey, serverValue, value);
 }
 
+function hydrateNumericAttribute(
+  domElement: Element,
+  propKey: string,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol':
+      case 'boolean':
+        return;
+      default:
+        if (isNaN(value)) {
+          return;
+        }
+    }
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol':
+        case 'boolean':
+          break;
+        default: {
+          if (isNaN(value)) {
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            break;
+          }
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, propKey);
+          }
+          if (serverValue === '' + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydratePositiveNumericAttribute(
+  domElement: Element,
+  propKey: string,
+  attributeName: string,
+  value: any,
+  extraAttributes: Set<string>,
+): void {
+  extraAttributes.delete(attributeName);
+  const serverValue = domElement.getAttribute(attributeName);
+  if (serverValue === null) {
+    switch (typeof value) {
+      case 'undefined':
+      case 'function':
+      case 'symbol':
+      case 'boolean':
+        return;
+      default:
+        if (isNaN(value) || value < 1) {
+          return;
+        }
+    }
+  } else {
+    if (value == null) {
+      // We had an attribute but shouldn't have had one, so read it
+      // for the error message.
+    } else {
+      switch (typeof value) {
+        case 'function':
+        case 'symbol':
+        case 'boolean':
+          break;
+        default: {
+          if (isNaN(value) || value < 1) {
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            break;
+          }
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, propKey);
+          }
+          if (serverValue === '' + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+  warnForPropDifference(propKey, serverValue, value);
+}
+
 function hydrateSanitizedAttribute(
   domElement: Element,
   propKey: string,
@@ -2113,6 +2205,39 @@ function diffHydratedGenericElement(
       case 'capture':
       case 'download': {
         hydrateOverloadedBooleanAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
+      case 'cols':
+      case 'rows':
+      case 'size':
+      case 'span': {
+        hydratePositiveNumericAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
+      case 'rowSpan': {
+        hydrateNumericAttribute(
+          domElement,
+          propKey,
+          'rowspan',
+          value,
+          extraAttributes,
+        );
+        continue;
+      }
+      case 'start': {
+        hydrateNumericAttribute(
           domElement,
           propKey,
           propKey,
@@ -2922,40 +3047,27 @@ function diffHydratedGenericElement(
         ) {
           continue;
         }
-        const propertyInfo = getPropertyInfo(propKey);
         let isMismatchDueToBadCasing = false;
-        let serverValue;
-        if (propertyInfo !== null) {
-          extraAttributes.delete(propertyInfo.attributeName);
-          serverValue = getValueForProperty(
-            domElement,
-            propKey,
-            value,
-            propertyInfo,
-          );
-        } else {
-          let ownNamespaceDev = parentNamespaceDev;
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            ownNamespaceDev = getIntrinsicNamespace(tag);
-          }
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            extraAttributes.delete(propKey.toLowerCase());
-          } else {
-            const standardName = getPossibleStandardName(propKey);
-            if (standardName !== null && standardName !== propKey) {
-              // If an SVG prop is supplied with bad casing, it will
-              // be successfully parsed from HTML, but will produce a mismatch
-              // (and would be incorrectly rendered on the client).
-              // However, we already warn about bad casing elsewhere.
-              // So we'll skip the misleading extra mismatch warning in this case.
-              isMismatchDueToBadCasing = true;
-              extraAttributes.delete(standardName);
-            }
-            extraAttributes.delete(propKey);
-          }
-          serverValue = getValueForAttribute(domElement, propKey, value);
+        let ownNamespaceDev = parentNamespaceDev;
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          ownNamespaceDev = getIntrinsicNamespace(tag);
         }
-
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          extraAttributes.delete(propKey.toLowerCase());
+        } else {
+          const standardName = getPossibleStandardName(propKey);
+          if (standardName !== null && standardName !== propKey) {
+            // If an SVG prop is supplied with bad casing, it will
+            // be successfully parsed from HTML, but will produce a mismatch
+            // (and would be incorrectly rendered on the client).
+            // However, we already warn about bad casing elsewhere.
+            // So we'll skip the misleading extra mismatch warning in this case.
+            isMismatchDueToBadCasing = true;
+            extraAttributes.delete(standardName);
+          }
+          extraAttributes.delete(propKey);
+        }
+        const serverValue = getValueForAttribute(domElement, propKey, value);
         if (!isMismatchDueToBadCasing) {
           warnForPropDifference(propKey, serverValue, value);
         }

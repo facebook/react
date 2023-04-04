@@ -39,11 +39,6 @@ import {
 } from 'react-server/src/ReactServerStreamConfig';
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
-import {
-  getPropertyInfo,
-  NUMERIC,
-  POSITIVE_NUMERIC,
-} from '../shared/DOMProperty';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
@@ -810,7 +805,7 @@ function pushAttribute(
           attributeEnd,
         );
       }
-      break;
+      return;
     }
     case 'cols':
     case 'rows':
@@ -831,7 +826,7 @@ function pushAttribute(
           attributeEnd,
         );
       }
-      break;
+      return;
     }
     case 'rowSpan':
     case 'start': {
@@ -849,7 +844,7 @@ function pushAttribute(
           attributeEnd,
         );
       }
-      break;
+      return;
     }
     // A few React string attributes have a different name.
     // This is a mapping from React prop names to the attribute names.
@@ -1123,76 +1118,38 @@ function pushAttribute(
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
       break;
-  }
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
-    return;
-  }
-
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo !== null) {
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        return;
-      case 'boolean': {
+    default:
+      if (
+        // shouldIgnoreAttribute
+        // We have already filtered out null/undefined and reserved words.
+        name.length > 2 &&
+        (name[0] === 'o' || name[0] === 'O') &&
+        (name[1] === 'n' || name[1] === 'N')
+      ) {
         return;
       }
-    }
 
-    const attributeName = propertyInfo.attributeName;
-    const attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
-
-    switch (propertyInfo.type) {
-      case NUMERIC:
-        if (!isNaN(value)) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd,
-          );
+      if (isAttributeNameSafe(name)) {
+        // shouldRemoveAttribute
+        switch (typeof value) {
+          case 'function':
+          case 'symbol': // eslint-disable-line
+            return;
+          case 'boolean': {
+            const prefix = name.toLowerCase().slice(0, 5);
+            if (prefix !== 'data-' && prefix !== 'aria-') {
+              return;
+            }
+          }
         }
-        break;
-      case POSITIVE_NUMERIC:
-        if (!isNaN(value) && (value: any) >= 1) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd,
-          );
-        }
-        break;
-    }
-  } else if (isAttributeNameSafe(name)) {
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        return;
-      case 'boolean': {
-        const prefix = name.toLowerCase().slice(0, 5);
-        if (prefix !== 'data-' && prefix !== 'aria-') {
-          return;
-        }
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
       }
-    }
-    target.push(
-      attributeSeparator,
-      stringToChunk(name),
-      attributeAssign,
-      stringToChunk(escapeTextForBrowser(value)),
-      attributeEnd,
-    );
   }
 }
 

@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {NUMERIC, POSITIVE_NUMERIC} from '../shared/DOMProperty';
-
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {
   enableTrustedTypesIntegration,
@@ -16,97 +14,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-
-import type {PropertyInfo} from '../shared/DOMProperty';
-
-/**
- * Get the value for a property on a node. Only used in DEV for SSR validation.
- * The "expected" argument is used as a hint of what the expected value is.
- * Some properties have multiple equivalent values.
- */
-export function getValueForProperty(
-  node: Element,
-  name: string,
-  expected: mixed,
-  propertyInfo: PropertyInfo,
-): mixed {
-  if (__DEV__) {
-    const attributeName = propertyInfo.attributeName;
-
-    if (!node.hasAttribute(attributeName)) {
-      // shouldRemoveAttribute
-      switch (typeof expected) {
-        case 'function':
-        case 'symbol': // eslint-disable-line
-          return expected;
-        case 'boolean': {
-          return expected;
-        }
-      }
-      switch (propertyInfo.type) {
-        case NUMERIC: {
-          if (isNaN(expected)) {
-            return expected;
-          }
-          break;
-        }
-        case POSITIVE_NUMERIC: {
-          if (isNaN(expected) || (expected: any) < 1) {
-            return expected;
-          }
-          break;
-        }
-      }
-      return expected === undefined ? undefined : null;
-    }
-
-    // Even if this property uses a namespace we use getAttribute
-    // because we assume its namespaced name is the same as our config.
-    // To use getAttributeNS we need the local name which we don't have
-    // in our config atm.
-    const value = node.getAttribute(attributeName);
-
-    if (expected == null) {
-      // We had an attribute but shouldn't have had one, so read it
-      // for the error message.
-      return value;
-    }
-
-    // shouldRemoveAttribute
-    switch (typeof expected) {
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        return value;
-    }
-    switch (propertyInfo.type) {
-      case NUMERIC: {
-        if (isNaN(expected)) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-        break;
-      }
-      case POSITIVE_NUMERIC: {
-        if (isNaN(expected) || (expected: any) < 1) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-        break;
-      }
-    }
-    if (__DEV__) {
-      checkAttributeStringCoercion(expected, name);
-    }
-    // We have already verified this above.
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    if (value === '' + (expected: any)) {
-      return expected;
-    }
-    return value;
-  }
-}
 
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
@@ -194,62 +101,6 @@ export function getValueForAttributeOnCustomComponent(
       return expected;
     }
     return value;
-  }
-}
-
-/**
- * Sets the value for a property on a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- * @param {*} value
- */
-export function setValueForProperty(
-  node: Element,
-  propertyInfo: PropertyInfo,
-  value: mixed,
-) {
-  const attributeName = propertyInfo.attributeName;
-
-  if (value === null) {
-    node.removeAttribute(attributeName);
-    return;
-  }
-
-  // shouldRemoveAttribute
-  switch (typeof value) {
-    case 'undefined':
-    case 'function':
-    case 'symbol': // eslint-disable-line
-      node.removeAttribute(attributeName);
-      return;
-    case 'boolean': {
-      node.removeAttribute(attributeName);
-      return;
-    }
-  }
-
-  switch (propertyInfo.type) {
-    case NUMERIC:
-      if (!isNaN(value)) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-        node.setAttribute(attributeName, (value: any));
-      } else {
-        node.removeAttribute(attributeName);
-      }
-      break;
-    case POSITIVE_NUMERIC:
-      if (!isNaN(value) && (value: any) >= 1) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-        node.setAttribute(attributeName, (value: any));
-      } else {
-        node.removeAttribute(attributeName);
-      }
-      break;
   }
 }
 
