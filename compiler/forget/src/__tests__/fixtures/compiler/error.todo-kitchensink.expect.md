@@ -144,25 +144,7 @@ let moduleLocal = false;
   25 |   }
   26 |   for (;;) {
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
-  21 |     x.push(i);
-  22 |   }
-> 23 |   for (; i < 3; ) {
-     |   ^
-  24 |     break;
-  25 |   }
-  26 |   for (;;) {
-
 [ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  24 |     break;
-  25 |   }
-> 26 |   for (;;) {
-     |   ^
-  27 |     break;
-  28 |   }
-  29 |
-
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty update in ForStatement
   24 |     break;
   25 |   }
 > 26 |   for (;;) {

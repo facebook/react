@@ -347,7 +347,7 @@ export type ForTerminal = {
   loc: SourceLocation;
   init: BlockId;
   test: BlockId;
-  update: BlockId;
+  update: BlockId | null;
   loop: BlockId;
   fallthrough: BlockId;
   id: InstructionId;

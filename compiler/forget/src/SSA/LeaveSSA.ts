@@ -335,7 +335,7 @@ export function leaveSSA(fn: HIRFunction): void {
         }
       }
 
-      if (terminal.kind === "for") {
+      if (terminal.kind === "for" && terminal.update !== null) {
         const update = fn.body.blocks.get(terminal.update)!;
         pushPhis(update);
       }

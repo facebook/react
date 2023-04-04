@@ -347,7 +347,7 @@ class Driver {
 
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
-          terminal.update,
+          terminal.update ?? terminal.test,
           terminal.loop
         );
         scheduleIds.push(scheduleId);
@@ -382,10 +382,10 @@ class Driver {
           terminal.loc
         ).value;
 
-        const updateValue = this.visitValueBlock(
-          terminal.update,
-          terminal.loc
-        ).value;
+        const updateValue =
+          terminal.update !== null
+            ? this.visitValueBlock(terminal.update, terminal.loc).value
+            : null;
 
         let loopBody: ReactiveBlock;
         if (loopId) {

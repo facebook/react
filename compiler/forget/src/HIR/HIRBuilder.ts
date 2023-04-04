@@ -282,6 +282,7 @@ export default class HIRBuilder {
     logHIR("Build (shrunk)", ir);
     // then convert to reverse postorder
     reversePostorderBlocks(ir);
+    removeUnreachableForUpdates(ir);
     removeUnreachableFallthroughs(ir);
     removeDeadDoWhileStatements(ir);
     markInstructionIds(ir);
@@ -524,6 +525,18 @@ export function shrink(func: HIR): void {
   for (const [blockId] of func.blocks) {
     if (!reachable.has(blockId)) {
       func.blocks.delete(blockId);
+    }
+  }
+}
+
+export function removeUnreachableForUpdates(fn: HIR): void {
+  for (const [, block] of fn.blocks) {
+    if (
+      block.terminal.kind === "for" &&
+      block.terminal.update !== null &&
+      !fn.blocks.has(block.terminal.update)
+    ) {
+      block.terminal.update = null;
     }
   }
 }

@@ -205,7 +205,9 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
     case "for": {
       buffer.push(printJumpArrow(blockId, terminal.init, "init"));
       buffer.push(printJumpArrow(blockId, terminal.test, "test"));
-      buffer.push(printJumpArrow(blockId, terminal.update, "update"));
+      if (terminal.update !== null) {
+        buffer.push(printJumpArrow(blockId, terminal.update, "update"));
+      }
       buffer.push(printJumpArrow(blockId, terminal.loop, "loop"));
       buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;

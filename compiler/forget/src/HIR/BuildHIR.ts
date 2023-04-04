@@ -307,35 +307,35 @@ function lowerStatement(
         };
       });
 
-      const updateBlock = builder.enter("loop", (_blockId) => {
-        const update = stmt.get("update");
-        if (update.node == null) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerStatement) Handle empty update in ForStatement`,
-            severity: ErrorSeverity.Todo,
-            nodePath: stmt,
-          });
-          return { kind: "unsupported", id: makeInstructionId(0) };
-        }
-        lowerExpressionToTemporary(builder, update as NodePath<t.Expression>);
-        return {
-          kind: "goto",
-          block: testBlock.id,
-          variant: GotoVariant.Break,
-          id: makeInstructionId(0),
-        };
-      });
-
-      const bodyBlock = builder.enter("block", (_blockId) => {
-        return builder.loop(label, updateBlock, continuationBlock.id, () => {
-          lowerStatement(builder, stmt.get("body"));
+      let updateBlock: BlockId | null = null;
+      const update = stmt.get("update");
+      if (update.node != null) {
+        updateBlock = builder.enter("loop", (_blockId) => {
+          lowerExpressionToTemporary(builder, update as NodePath<t.Expression>);
           return {
             kind: "goto",
-            block: updateBlock,
-            variant: GotoVariant.Continue,
+            block: testBlock.id,
+            variant: GotoVariant.Break,
             id: makeInstructionId(0),
           };
         });
+      }
+
+      const bodyBlock = builder.enter("block", (_blockId) => {
+        return builder.loop(
+          label,
+          updateBlock ?? testBlock.id,
+          continuationBlock.id,
+          () => {
+            lowerStatement(builder, stmt.get("body"));
+            return {
+              kind: "goto",
+              block: updateBlock ?? testBlock.id,
+              variant: GotoVariant.Continue,
+              id: makeInstructionId(0),
+            };
+          }
+        );
       });
 
       builder.terminateWithContinuation(

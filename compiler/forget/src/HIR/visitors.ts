@@ -632,7 +632,7 @@ export function mapTerminalSuccessors(
     case "for": {
       const init = fn(terminal.init);
       const test = fn(terminal.test);
-      const update = fn(terminal.update);
+      const update = terminal.update !== null ? fn(terminal.update) : null;
       const loop = fn(terminal.loop);
       const fallthrough = fn(terminal.fallthrough);
       return {

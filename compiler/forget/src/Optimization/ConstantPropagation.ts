@@ -24,7 +24,10 @@ import {
   validateConsistentIdentifiers,
   validateTerminalSuccessors,
 } from "../HIR";
-import { removeDeadDoWhileStatements } from "../HIR/HIRBuilder";
+import {
+  removeDeadDoWhileStatements,
+  removeUnreachableForUpdates,
+} from "../HIR/HIRBuilder";
 import { eliminateRedundantPhi } from "../SSA";
 
 /**
@@ -52,6 +55,7 @@ export function constantPropagation(fn: HIRFunction): void {
     shrink(fn.body);
     reversePostorderBlocks(fn.body);
     removeUnreachableFallthroughs(fn.body);
+    removeUnreachableForUpdates(fn.body);
     removeDeadDoWhileStatements(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);
