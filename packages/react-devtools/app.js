@@ -40,9 +40,9 @@ app.on('ready', function () {
   }
 
   // https://stackoverflow.com/questions/32402327/
-  mainWindow.webContents.on('new-window', function (event, url) {
-    event.preventDefault();
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     require('electron').shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   // and load the index.html of the app.
