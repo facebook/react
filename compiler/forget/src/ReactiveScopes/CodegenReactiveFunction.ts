@@ -124,6 +124,8 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
               statement
             )
           );
+        } else if (statement.type === "BlockStatement") {
+          statements.push(...statement.body);
         } else {
           statements.push(statement);
         }

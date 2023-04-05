@@ -17,9 +17,7 @@ function foo(a) {
 
 ```javascript
 function foo(a) {
-  {
-    return a + 1;
-  }
+  return a + 1;
 }
 
 ```
