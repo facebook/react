@@ -748,6 +748,7 @@ export function bailoutHooks(
   workInProgress: Fiber,
   lanes: Lanes,
 ): void {
+  workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
   // TODO: Don't need to reset the flags here, because they're reset in the
   // complete phase (bubbleProperties).
