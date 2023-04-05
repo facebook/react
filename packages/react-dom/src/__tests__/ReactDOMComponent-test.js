@@ -512,25 +512,17 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('href')).toBe(false);
       });
 
-      it('should not add an empty action attribute', () => {
+      it('should allow an empty action attribute', () => {
         const container = document.createElement('div');
-        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to action instead of an empty string.',
-        );
+        ReactDOM.render(<form action="" />, container);
         const node = container.firstChild;
-        expect(node.hasAttribute('action')).toBe(false);
+        expect(node.getAttribute('action')).toBe('');
 
         ReactDOM.render(<form action="abc" />, container);
         expect(node.hasAttribute('action')).toBe(true);
 
-        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to action instead of an empty string.',
-        );
-        expect(node.hasAttribute('action')).toBe(false);
+        ReactDOM.render(<form action="" />, container);
+        expect(node.getAttribute('action')).toBe('');
       });
 
       it('allows empty string of a formAction to override the default of a parent', () => {
