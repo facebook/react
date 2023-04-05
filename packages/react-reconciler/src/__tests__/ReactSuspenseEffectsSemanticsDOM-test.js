@@ -496,4 +496,82 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     ReactDOM.render(null, container);
     assertLog(['Unmount']);
   });
+
+  it('does not call cleanup effects twice after a bailout', async () => {
+    const never = new Promise(resolve => {});
+    function Never() {
+      throw never;
+    }
+
+    let setSuspended;
+    let setLetter;
+
+    function App() {
+      const [suspended, _setSuspended] = React.useState(false);
+      setSuspended = _setSuspended;
+      const [letter, _setLetter] = React.useState('A');
+      setLetter = _setLetter;
+
+      return (
+        <React.Suspense fallback="Loading...">
+          <Child letter={letter} />
+          {suspended && <Never />}
+        </React.Suspense>
+      );
+    }
+
+    let nextId = 0;
+    const freed = new Set();
+    let setStep;
+
+    function Child({letter}) {
+      const [, _setStep] = React.useState(0);
+      setStep = _setStep;
+
+      React.useLayoutEffect(() => {
+        const localId = nextId++;
+        Scheduler.log('Did mount: ' + letter + localId);
+        return () => {
+          if (freed.has(localId)) {
+            throw Error('Double free: ' + letter + localId);
+          }
+          freed.add(localId);
+          Scheduler.log('Will unmount: ' + letter + localId);
+        };
+      }, [letter]);
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    assertLog(['Did mount: A0']);
+
+    await act(() => {
+      setStep(1);
+      setSuspended(false);
+    });
+    assertLog([]);
+
+    await act(() => {
+      setStep(1);
+    });
+    assertLog([]);
+
+    await act(() => {
+      setSuspended(true);
+    });
+    assertLog(['Will unmount: A0']);
+
+    await act(() => {
+      setSuspended(false);
+      setLetter('B');
+    });
+    assertLog(['Did mount: B1']);
+
+    await act(() => {
+      root.unmount();
+    });
+    assertLog(['Will unmount: B1']);
+  });
 });
