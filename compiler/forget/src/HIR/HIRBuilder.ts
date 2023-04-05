@@ -541,7 +541,8 @@ export function removeUnreachableFallthroughs(func: HIR): void {
     if (
       block.terminal.kind === "if" ||
       block.terminal.kind === "switch" ||
-      block.terminal.kind === "while"
+      block.terminal.kind === "while" ||
+      block.terminal.kind === "label"
     ) {
       if (
         block.terminal.fallthrough !== null &&

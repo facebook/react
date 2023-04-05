@@ -16,11 +16,21 @@ function foo(a, b, c) {
 
 ```
 
+## Code
 
-## Error
+```javascript
+function foo(a, b, c) {
+  let x = undefined;
+  bb1: {
+    if (a) {
+      x = b;
+      break bb1;
+    }
+
+    x = c;
+  }
+  return x;
+}
 
 ```
-Expected a break target
-```
-          
       

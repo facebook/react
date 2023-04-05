@@ -54,6 +54,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
         break;
       }
       // Non-loop terminals passthrough is contextual, inherits the parent isWithinScope
+      case "label":
       case "break":
       case "continue":
       case "if":

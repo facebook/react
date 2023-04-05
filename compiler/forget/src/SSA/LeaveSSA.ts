@@ -296,7 +296,8 @@ export function leaveSSA(fn: HIRFunction): void {
         terminal.kind === "while" ||
         terminal.kind === "do-while" ||
         terminal.kind === "for" ||
-        terminal.kind === "for-of") &&
+        terminal.kind === "for-of" ||
+        terminal.kind === "label") &&
       terminal.fallthrough !== null
     ) {
       const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;

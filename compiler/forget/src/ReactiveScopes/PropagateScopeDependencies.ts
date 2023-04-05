@@ -443,6 +443,10 @@ function visit(context: Context, block: ReactiveBlock): void {
             }
             break;
           }
+          case "label": {
+            visit(context, terminal.block);
+            break;
+          }
           default: {
             assertExhaustive(
               terminal,

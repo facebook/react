@@ -135,7 +135,8 @@ export type ReactiveTerminal =
   | ReactiveWhileTerminal
   | ReactiveForTerminal
   | ReactiveForOfTerminal
-  | ReactiveIfTerminal;
+  | ReactiveIfTerminal
+  | ReactiveLabelTerminal;
 
 export type ReactiveBreakTerminal = {
   kind: "break";
@@ -199,6 +200,11 @@ export type ReactiveIfTerminal = {
   test: Place;
   consequent: ReactiveBlock;
   alternate: ReactiveBlock | null;
+  id: InstructionId;
+};
+export type ReactiveLabelTerminal = {
+  kind: "label";
+  block: ReactiveBlock;
   id: InstructionId;
 };
 

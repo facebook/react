@@ -409,6 +409,9 @@ function codegenTerminal(
       const test = codegenInstructionValue(cx, terminal.test);
       return t.whileStatement(test, codegenBlock(cx, terminal.loop));
     }
+    case "label": {
+      return codegenBlock(cx, terminal.block);
+    }
     default: {
       assertExhaustive(
         terminal,

@@ -450,15 +450,24 @@ function lowerStatement(
           // All other statements create a continuation block to allow `break`,
           // explicitly *don't* pass the label down
           const continuationBlock = builder.reserve("block");
-          builder.label(label, continuationBlock.id, () => {
-            lowerStatement(builder, stmt.get("body"));
-          });
-          builder.terminateWithContinuation(
-            {
+          const block = builder.enter("block", () => {
+            builder.label(label, continuationBlock.id, () => {
+              lowerStatement(builder, stmt.get("body"));
+            });
+            return {
               kind: "goto",
               block: continuationBlock.id,
               variant: GotoVariant.Break,
               id: makeInstructionId(0),
+            };
+          });
+          builder.terminateWithContinuation(
+            {
+              kind: "label",
+              block,
+              fallthrough: continuationBlock.id,
+              id: makeInstructionId(0),
+              loc: stmt.node.loc ?? GeneratedSource,
             },
             continuationBlock
           );

@@ -258,6 +258,12 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       }
       break;
     }
+    case "label": {
+      writer.writeLine("{");
+      printReactiveInstructions(writer, terminal.block);
+      writer.writeLine("}");
+      break;
+    }
     default:
       assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
   }

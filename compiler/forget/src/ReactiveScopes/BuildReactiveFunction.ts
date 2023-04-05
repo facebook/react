@@ -29,7 +29,6 @@ import {
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
-import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -531,7 +530,35 @@ class Driver {
         break;
       }
       case "label": {
-        todo("Support label terminals");
+        const fallthroughId =
+          terminal.fallthrough !== null &&
+          !this.cx.isScheduled(terminal.fallthrough)
+            ? terminal.fallthrough
+            : null;
+        if (fallthroughId !== null) {
+          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          scheduleIds.push(scheduleId);
+        }
+
+        const block = this.traverseBlock(
+          this.cx.ir.blocks.get(terminal.block)!
+        );
+
+        this.cx.unscheduleAll(scheduleIds);
+        blockValue.push({
+          kind: "terminal",
+          terminal: {
+            kind: "label",
+            block,
+            id: terminal.id,
+          },
+          label: fallthroughId,
+        });
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
+
+        break;
       }
       case "optional-call":
       case "ternary":
