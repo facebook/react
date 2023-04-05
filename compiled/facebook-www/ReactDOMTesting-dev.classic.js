@@ -36509,7 +36509,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-bf1fd846";
+var ReactVersion = "18.3.0-www-classic-dd4bd458";
 
 function createPortal$1(
   children,
@@ -45797,9 +45797,7 @@ function isOwnedInstance(node) {
 
 // has this definition built-in.
 
-var hasScheduledReplayAttempt = false; // The queue of discrete events to be replayed.
-
-var queuedDiscreteEvents = []; // Indicates if any continuous event targets are non-null for early bailout.
+var hasScheduledReplayAttempt = false; // The last of each continuous event type. We only need to replay the last one
 // if the last target was dehydrated.
 
 var queuedFocus = null;
@@ -46180,22 +46178,6 @@ function scheduleCallbackIfUnblocked(queuedEvent, unblocked) {
 }
 
 function retryIfBlockedOn(unblocked) {
-  // Mark anything that was blocked on this as no longer blocked
-  // and eligible for a replay.
-  if (queuedDiscreteEvents.length > 0) {
-    scheduleCallbackIfUnblocked(queuedDiscreteEvents[0], unblocked); // This is a exponential search for each boundary that commits. I think it's
-    // worth it because we expect very few discrete events to queue up and once
-    // we are actually fully unblocked it will be fast to replay them.
-
-    for (var i = 1; i < queuedDiscreteEvents.length; i++) {
-      var queuedEvent = queuedDiscreteEvents[i];
-
-      if (queuedEvent.blockedOn === unblocked) {
-        queuedEvent.blockedOn = null;
-      }
-    }
-  }
-
   if (queuedFocus !== null) {
     scheduleCallbackIfUnblocked(queuedFocus, unblocked);
   }
@@ -46215,8 +46197,8 @@ function retryIfBlockedOn(unblocked) {
   queuedPointers.forEach(unblock);
   queuedPointerCaptures.forEach(unblock);
 
-  for (var _i = 0; _i < queuedExplicitHydrationTargets.length; _i++) {
-    var queuedTarget = queuedExplicitHydrationTargets[_i];
+  for (var i = 0; i < queuedExplicitHydrationTargets.length; i++) {
+    var queuedTarget = queuedExplicitHydrationTargets[i];
 
     if (queuedTarget.blockedOn === unblocked) {
       queuedTarget.blockedOn = null;
