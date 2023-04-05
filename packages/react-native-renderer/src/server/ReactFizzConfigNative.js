@@ -339,8 +339,7 @@ export function hoistResources(
   boundaryResources: BoundaryResources,
 ) {}
 
-export function prepareToRender(resources: Resources) {}
-export function cleanupAfterRender(previousDispatcher: mixed) {}
+export function prepareHostDispatcher() {}
 export function createResources() {}
 export function createBoundaryResources() {}
 export function setCurrentlyRenderingBoundaryResourcesTarget(

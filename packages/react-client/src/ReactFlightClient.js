@@ -18,11 +18,14 @@ import type {
   SSRManifest,
 } from './ReactFlightClientConfig';
 
+import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
+
 import {
   resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
+  dispatchHint,
 } from './ReactFlightClientConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
@@ -776,6 +779,15 @@ export function resolveErrorDev(
   } else {
     triggerErrorOnChunk(chunk, errorWithDigest);
   }
+}
+
+export function resolveHint(
+  response: Response,
+  code: string,
+  model: UninitializedModel,
+): void {
+  const hintModel = parseModel<HintModel>(response, model);
+  dispatchHint(code, hintModel);
 }
 
 export function close(response: Response): void {

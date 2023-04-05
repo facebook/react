@@ -3981,7 +3981,7 @@ body {
     });
 
     // @gate enableFloat
-    it('creates a preload resource when ReactDOM.preinit(..., {as: "script" }) is called outside of render on the client', async () => {
+    it('creates a script resource when ReactDOM.preinit(..., {as: "script" }) is called outside of render on the client', async () => {
       function App() {
         React.useEffect(() => {
           ReactDOM.preinit('foo', {as: 'script'});
