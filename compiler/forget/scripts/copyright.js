@@ -4,17 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 "use strict";
 
 const fs = require("fs");
 const glob = require("glob");
 
-const META_COPYRIGHT_COMMENT_BLOCK = `/**
+const META_COPYRIGHT_COMMENT_BLOCK =
+  `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */`;
+ */`.trim() + "\n\n";
 
 const files = glob.sync("**/*.{js,ts,tsx,jsx}", {
   ignore: [
@@ -55,9 +57,9 @@ function processFile(file) {
     return null;
   }
   if (/^\/\*\*/.test(source)) {
-    source = source.replace(/\/\*\*[^\/]+\//, META_COPYRIGHT_COMMENT_BLOCK);
+    source = source.replace(/\/\*\*[^\/]+\/\s+/, META_COPYRIGHT_COMMENT_BLOCK);
   } else {
-    source = `${META_COPYRIGHT_COMMENT_BLOCK}\n\n${source}`;
+    source = `${META_COPYRIGHT_COMMENT_BLOCK}${source}`;
   }
   return source;
 }
