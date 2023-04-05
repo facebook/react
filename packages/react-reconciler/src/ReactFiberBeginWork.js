@@ -4096,12 +4096,12 @@ function beginWork(
       if (enableFloat && supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     case HostSingleton:
       if (enableHostSingletons && supportsSingletons) {
         return updateHostSingleton(current, workInProgress, renderLanes);
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes);
     case HostText:

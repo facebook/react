@@ -1122,9 +1122,6 @@ function finishConcurrentRender(
     case RootFatalErrored: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
-    // Flow knows about invariant, so it complains if I add a break
-    // statement, but eslint doesn't know about invariant, so it complains
-    // if I do. eslint-disable-next-line no-fallthrough
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
@@ -2381,7 +2378,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       unitOfWork.tag = FunctionComponent;
       // Fallthrough to the next branch.
     }
-    // eslint-disable-next-line no-fallthrough
     case SimpleMemoComponent:
     case FunctionComponent: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.

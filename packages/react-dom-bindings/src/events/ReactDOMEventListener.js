@@ -319,20 +319,17 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'touchend':
     case 'touchstart':
     case 'volumechange':
-    // Used by polyfills:
-    // eslint-disable-next-line no-fallthrough
+    // Used by polyfills: (fall through)
     case 'change':
     case 'selectionchange':
     case 'textInput':
     case 'compositionstart':
     case 'compositionend':
     case 'compositionupdate':
-    // Only enableCreateEventHandleAPI:
-    // eslint-disable-next-line no-fallthrough
+    // Only enableCreateEventHandleAPI: (fall through)
     case 'beforeblur':
     case 'afterblur':
-    // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
+    // Not used by React but could be by user code: (fall through)
     case 'beforeinput':
     case 'blur':
     case 'fullscreenchange':
@@ -357,8 +354,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'toggle':
     case 'touchmove':
     case 'wheel':
-    // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
+    // Not used by React but could be by user code: (fall through)
     case 'mouseenter':
     case 'mouseleave':
     case 'pointerenter':
