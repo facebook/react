@@ -87,16 +87,15 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           calleeEffect: Effect.Read,
         }),
       ],
-      [
-        "from",
-        // Array.from(arrayLike, optionalFn, optionalThis)
-        addFunction(DEFAULT_SHAPES, [], {
-          positionalParams: [Effect.Mutate],
-          restParam: Effect.Read,
-          returnType: { kind: "Object", shapeId: BuiltInArrayId },
-          calleeEffect: Effect.Read,
-        }),
-      ],
+      // https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
+      // Array.from(arrayLike, optionalFn, optionalThis) not added because
+      // the Effect of `arrayLike` is polymorphic i.e.
+      //  - Effect.read if
+      //     - it does not have an @iterator property and is array-like
+      //       (i.e. has a length property)
+      ///    - it is an iterable object whose iterator does not mutate itself
+      //  - Effect.mutate if it is a self-mutative iterator (e.g. a generator
+      //    function)
       [
         "of",
         // Array.of(element0, ..., elementN)
