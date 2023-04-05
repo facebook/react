@@ -2577,6 +2577,10 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
       returnFiber.deletions = null;
     }
 
+    // NOTE: If we re-enable sibling prerendering in some cases, here we
+    // would switch to the normal completion path: check if a sibling
+    // exists, and if so, begin work on it.
+
     // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     incompleteWork = returnFiber;
