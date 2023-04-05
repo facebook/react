@@ -7,10 +7,12 @@ import {
   GlobalRegistry,
 } from "./Globals";
 import {
+  BlockId,
   BuiltInType,
   Effect,
   FunctionType,
   IdentifierId,
+  makeBlockId,
   makeIdentifierId,
   ObjectType,
   PolyType,
@@ -37,6 +39,7 @@ export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
+  #nextBlock: number = 0;
 
   constructor(config: EnvironmentConfig | null) {
     this.#shapes = DEFAULT_SHAPES;
@@ -60,6 +63,10 @@ export class Environment {
 
   get nextIdentifierId(): IdentifierId {
     return makeIdentifierId(this.#nextIdentifer++);
+  }
+
+  get nextBlockId(): BlockId {
+    return makeBlockId(this.#nextBlock++);
   }
 
   getGlobalDeclaration(name: string): Global | null {

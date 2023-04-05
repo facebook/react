@@ -76,9 +76,8 @@ function newBlock(id: BlockId, kind: BlockKind): WipBlock {
  */
 export default class HIRBuilder {
   #completed: Map<BlockId, BasicBlock> = new Map();
-  #nextId: BlockId = makeBlockId(1);
-  #current: WipBlock = newBlock(makeBlockId(0), "block");
-  #entry: BlockId = makeBlockId(0);
+  #current: WipBlock;
+  #entry: BlockId;
   #scopes: Array<Scope> = [];
   #context: t.Identifier[];
   #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
@@ -107,18 +106,8 @@ export default class HIRBuilder {
     this.#env = env;
     this.parentFunction = parentFunction;
     this.#context = context;
-  }
-
-  debug(): string {
-    return JSON.stringify(
-      {
-        completed: this.#completed,
-        current: this.#current,
-        nextId: this.#nextId,
-      },
-      null,
-      2
-    );
+    this.#entry = makeBlockId(env.nextBlockId);
+    this.#current = newBlock(this.#entry, "block");
   }
 
   currentBlockKind(): BlockKind {
@@ -304,7 +293,7 @@ export default class HIRBuilder {
       preds: new Set(),
       phis: new Set(),
     });
-    const nextId = makeBlockId(this.#nextId++);
+    const nextId = this.#env.nextBlockId;
     this.#current = newBlock(nextId, nextBlockKind);
   }
 
@@ -331,7 +320,7 @@ export default class HIRBuilder {
    * call `complete()` to save it without setting it as the current block.
    */
   reserve(kind: BlockKind): WipBlock {
-    return newBlock(makeBlockId(this.#nextId++), kind);
+    return newBlock(makeBlockId(this.#env.nextBlockId), kind);
   }
 
   /**
@@ -357,7 +346,7 @@ export default class HIRBuilder {
    */
   enter(nextBlockKind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
     const current = this.#current;
-    const nextId = makeBlockId(this.#nextId++);
+    const nextId = this.#env.nextBlockId;
     this.#current = newBlock(nextId, nextBlockKind);
     const terminal = fn(nextId);
     const { id: blockId, kind, instructions } = this.#current;
