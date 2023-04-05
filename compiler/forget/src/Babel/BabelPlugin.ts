@@ -10,8 +10,9 @@
 import type * as BabelCore from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
 import * as t from "@babel/types";
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { compile } from "../CompilerPipeline";
+import { GeneratedSource } from "../HIR";
 import {
   GatingOptions,
   parsePluginOptions,
@@ -50,12 +51,22 @@ export default function ReactForgetBabelPlugin(
 
     if (pass.opts.gating != null) {
       // Rename existing function
-      invariant(fn.node.id, "FunctionDeclaration must have a name");
+      if (fn.node.id == null) {
+        CompilerError.invariant(
+          "FunctionDeclaration must have a name",
+          fn.node.loc ?? GeneratedSource
+        );
+      }
       const original = fn.node.id;
       fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
       // Rename and append compiled function
-      invariant(compiled.id, "FunctionDeclaration must produce a name");
+      if (compiled.id == null) {
+        CompilerError.invariant(
+          "FunctionDeclaration must produce a name",
+          fn.node.loc ?? GeneratedSource
+        );
+      }
       compiled.id = addSuffix(compiled.id, "_forget");
       const compiledFn = fn.insertAfter(compiled)[0];
       compiledFn.skip();
@@ -158,20 +169,29 @@ function shouldCompile(
 function buildFunctionDeclaration(
   fn: BabelCore.NodePath<t.ArrowFunctionExpression>
 ): BabelCore.NodePath<t.FunctionDeclaration> {
-  invariant(
-    fn.parentPath.isVariableDeclarator(),
-    "ArrowFunctionExpression must be declared in variable declaration"
-  );
+  if (!fn.parentPath.isVariableDeclarator()) {
+    CompilerError.invariant(
+      "ArrowFunctionExpression must be declared in variable declaration",
+      fn.node.loc ?? GeneratedSource
+    );
+  }
   const variableDeclarator = fn.parentPath;
 
-  invariant(
-    variableDeclarator.parentPath.isVariableDeclaration(),
-    "ArrowFunctionExpression must be a single declaration"
-  );
+  if (!variableDeclarator.parentPath.isVariableDeclaration()) {
+    CompilerError.invariant(
+      "ArrowFunctionExpression must be a single declaration",
+      fn.node.loc ?? GeneratedSource
+    );
+  }
   const variableDeclaration = variableDeclarator.parentPath;
 
   const id = variableDeclarator.get("id");
-  invariant(id.isIdentifier(), "ArrowFunctionExpression must have an id");
+  if (!id.isIdentifier()) {
+    CompilerError.invariant(
+      "ArrowFunctionExpression must have an id",
+      fn.node.loc ?? GeneratedSource
+    );
+  }
 
   const rewrittenFn = variableDeclaration.replaceWith(
     t.functionDeclaration(
@@ -199,7 +219,12 @@ function buildBlockStatement(
     return wrappedBody.node;
   }
 
-  invariant(body.isBlockStatement(), "Body must be a BlockStatement");
+  if (!body.isBlockStatement()) {
+    CompilerError.invariant(
+      "Body must be a BlockStatement",
+      body.node.loc ?? GeneratedSource
+    );
+  }
   return body.node;
 }
 

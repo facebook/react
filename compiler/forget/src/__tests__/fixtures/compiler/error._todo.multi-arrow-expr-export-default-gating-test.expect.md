@@ -18,7 +18,7 @@ export default Renderer = (props) => (
 ## Error
 
 ```
-ArrowFunctionExpression must be declared in variable declaration
+[ReactForget] Invariant: ArrowFunctionExpression must be declared in variable declaration (4:9)
 ```
           
       
