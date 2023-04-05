@@ -79,6 +79,7 @@ export function printMixedHIR(
     return printInstruction(value);
   }
   switch (value.kind) {
+    case "label":
     case "optional-call":
     case "branch":
     case "if":
@@ -211,6 +212,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "for-of": {
       value = `[${terminal.id}] ForOf init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "label": {
+      value = `[${terminal.id}] Label block=bb${terminal.block} fallthrough=${
+        terminal.fallthrough ? `bb${terminal.fallthrough}` : ""
+      }`;
       break;
     }
     case "unsupported": {

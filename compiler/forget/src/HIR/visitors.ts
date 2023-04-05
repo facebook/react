@@ -659,6 +659,18 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "label": {
+      const block = fn(terminal.block);
+      const fallthrough =
+        terminal.fallthrough !== null ? fn(terminal.fallthrough) : null;
+      return {
+        kind: "label",
+        block,
+        fallthrough,
+        id: makeInstructionId(0),
+        loc: terminal.loc,
+      };
+    }
     case "unsupported": {
       return terminal;
     }
@@ -726,6 +738,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.init;
       break;
     }
+    case "label": {
+      yield terminal.block;
+      break;
+    }
     case "unsupported":
       break;
     default: {
@@ -767,6 +783,7 @@ export function mapTerminalOperands(
       }
       break;
     }
+    case "label":
     case "optional-call":
     case "ternary":
     case "logical":
@@ -815,6 +832,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       }
       break;
     }
+    case "label":
     case "optional-call":
     case "ternary":
     case "logical":

@@ -269,7 +269,8 @@ export type Terminal =
   | WhileTerminal
   | LogicalTerminal
   | TernaryTerminal
-  | OptionalCallTerminal;
+  | OptionalCallTerminal
+  | LabelTerminal;
 
 /**
  * Terminal nodes allowed for a value block
@@ -375,6 +376,14 @@ export type TernaryTerminal = {
   kind: "ternary";
   test: BlockId;
   fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type LabelTerminal = {
+  kind: "label";
+  block: BlockId;
+  fallthrough: BlockId | null;
   id: InstructionId;
   loc: SourceLocation;
 };

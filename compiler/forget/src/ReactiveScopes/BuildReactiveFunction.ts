@@ -29,6 +29,7 @@ import {
   ReactiveValue,
   Terminal,
 } from "../HIR/HIR";
+import todo from "../Utils/todo";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -528,6 +529,9 @@ class Driver {
         });
 
         break;
+      }
+      case "label": {
+        todo("Support label terminals");
       }
       case "optional-call":
       case "ternary":
