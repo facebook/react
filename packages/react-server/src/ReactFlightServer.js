@@ -16,6 +16,7 @@ import type {
   ClientReferenceKey,
   ServerReference,
   ServerReferenceId,
+  Directive,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -44,6 +45,7 @@ import {
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
+  processDirectiveChunk,
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
@@ -52,6 +54,7 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
+  prepareHostDispatcher,
 } from './ReactFlightServerConfig';
 
 import {
@@ -66,6 +69,10 @@ import {
   getCurrentCache,
   setCurrentCache,
 } from './ReactFlightCache';
+import {
+  getCurrentDirectives,
+  setCurrentDirectives,
+} from './ReactFlightDirectives';
 import {
   pushProvider,
   popProvider,
@@ -146,17 +153,23 @@ type Task = {
   thenableState: ThenableState | null,
 };
 
+type Store = {
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+};
+
 export type Request = {
   status: 0 | 1 | 2,
   fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: ClientManifest,
-  cache: Map<Function, mixed>,
+  store: Store,
   nextChunkId: number,
   pendingChunks: number,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
+  completedDirectiveChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
@@ -196,6 +209,7 @@ export function createRequest(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
+  prepareHostDispatcher();
   ReactCurrentCache.current = DefaultCacheDispatcher;
 
   const abortSet: Set<Task> = new Set();
@@ -205,12 +219,16 @@ export function createRequest(
     fatalError: null,
     destination: null,
     bundlerConfig,
-    cache: new Map(),
+    store: {
+      cache: new Map(),
+      directives: [],
+    },
     nextChunkId: 0,
     pendingChunks: 0,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
+    completedDirectiveChunks: ([]: Array<Chunk>),
     completedJSONChunks: ([]: Array<Chunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
@@ -1082,6 +1100,15 @@ function emitImportChunk(
   request.completedImportChunks.push(processedChunk);
 }
 
+function emitDirectiveChunk(request: Request, directive: Directive): void {
+  const processedChunk = processDirectiveChunk(
+    request,
+    request.nextChunkId++,
+    directive,
+  );
+  request.completedDirectiveChunks.push(processedChunk);
+}
+
 function emitSymbolChunk(request: Request, id: number, name: string): void {
   const symbolReference = serializeSymbolReference(name);
   const processedChunk = processReferenceChunk(request, id, symbolReference);
@@ -1190,6 +1217,12 @@ function retryTask(request: Request, task: Task): void {
         emitErrorChunkProd(request, task.id, digest);
       }
     }
+  } finally {
+    const directives = request.store.directives;
+    for (let i = 0; i < directives.length; i++) {
+      emitDirectiveChunk(request, directives[i]);
+    }
+    directives.length = 0;
   }
 }
 
@@ -1197,7 +1230,9 @@ function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
   const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = HooksDispatcher;
-  setCurrentCache(request.cache);
+  setCurrentCache(request.store.cache);
+  const prevDirectives = getCurrentDirectives();
+  setCurrentDirectives(request.store.directives);
   prepareToUseHooksForRequest(request);
 
   try {
@@ -1216,6 +1251,7 @@ function performWork(request: Request): void {
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
     setCurrentCache(prevCache);
+    setCurrentDirectives(prevDirectives);
     resetHooksForRequest();
   }
 }
@@ -1250,6 +1286,26 @@ function flushCompletedChunks(
       }
     }
     importsChunks.splice(0, i);
+    // Next comes directives data.
+    if (__DEV__) {
+      if (request.store.directives.length > 0) {
+        console.error(
+          'Internal React Error: React expected all directives to have been processed before writing any but it encountered unprocessed directives. Please file an issue.',
+        );
+      }
+    }
+    const directiveChunks = request.completedDirectiveChunks;
+    i = 0;
+    for (; i < directiveChunks.length; i++) {
+      const chunk = directiveChunks[i];
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
+        request.destination = null;
+        i++;
+        break;
+      }
+    }
+    directiveChunks.splice(0, i);
     // Next comes model data.
     const jsonChunks = request.completedJSONChunks;
     i = 0;
@@ -1292,7 +1348,7 @@ function flushCompletedChunks(
 
 export function startWork(request: Request): void {
   if (supportsRequestStorage) {
-    scheduleWork(() => requestStorage.run(request.cache, performWork, request));
+    scheduleWork(() => requestStorage.run(request.store, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }

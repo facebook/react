@@ -8,6 +8,9 @@
  */
 
 import type {Writable} from 'stream';
+import type {Directive} from './ReactFlightServerConfig';
+import type {Resources} from './ReactFizzConfig';
+
 import {TextEncoder} from 'util';
 import {AsyncLocalStorage} from 'async_hooks';
 
@@ -34,8 +37,17 @@ export function flushBuffered(destination: Destination) {
   }
 }
 
+// Conceptually we don't need two request storages because should have
+// separate modules graphs for Flight and Fizz and we could type the store
+// for the runtime. However, for testing and typing it is simpler to just
+// have two stores. I am calling the second one requestStorage2 to hint
+// that it is not not inherent that there is a Fizz storage and a Flight storage.
 export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+export const requestStorage: AsyncLocalStorage<{
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+}> = new AsyncLocalStorage();
+export const requestStorage2: AsyncLocalStorage<Resources> =
   new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;

@@ -156,6 +156,17 @@ export function processImportChunk(
   return stringToChunk(row);
 }
 
+export function processDirectiveChunk(
+  request: Request,
+  id: number,
+  payload: ReactClientValue,
+): Chunk {
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(payload, request.toJSON);
+  const row = serializeRowHeader('D', id) + json + '\n';
+  return stringToChunk(row);
+}
+
 export {
   scheduleWork,
   flushBuffered,

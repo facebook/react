@@ -16,6 +16,7 @@ import {
   resolveModel,
   resolveErrorProd,
   resolveErrorDev,
+  resolveDirective,
   createResponse as createResponseBase,
   parseModelString,
   parseModelTuple,
@@ -44,6 +45,10 @@ function processFullRow(response: Response, row: string): void {
   switch (tag) {
     case 'I': {
       resolveModule(response, id, row.slice(colon + 2));
+      return;
+    }
+    case 'D': {
+      resolveDirective(response, id, row.slice(colon + 2));
       return;
     }
     case 'E': {

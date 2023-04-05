@@ -279,6 +279,7 @@ const ReactNoopServer = ReactFizzServer({
 
   setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
 
+  prepareHostDispatcher() {},
   prepareToRender() {},
   cleanupAfterRender() {},
 });

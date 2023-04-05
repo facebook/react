@@ -38,6 +38,11 @@ import {
   stringToPrecomputedChunk,
   clonePrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
+import {
+  resolveResources,
+  setCurrentResources,
+  getCurrentResources,
+} from 'react-server/src/ReactFizzResources';
 
 import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
@@ -79,30 +84,34 @@ import {
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
-const ReactDOMServerDispatcher = enableFloat
-  ? {
-      prefetchDNS,
-      preconnect,
-      preload,
-      preinit,
-    }
-  : {};
+const ReactDOMServerDispatcher = {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preinit,
+};
 
-let currentResources: null | Resources = null;
 const currentResourcesStack = [];
 
-export function prepareToRender(resources: Resources): mixed {
-  currentResourcesStack.push(currentResources);
-  currentResources = resources;
-
-  const previousHostDispatcher = ReactDOMCurrentDispatcher.current;
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
-  return previousHostDispatcher;
+function pushResources(resources: null | Resources) {
+  currentResourcesStack.push(getCurrentResources());
+  setCurrentResources(resources);
 }
 
-export function cleanupAfterRender(previousDispatcher: mixed) {
-  currentResources = currentResourcesStack.pop();
-  ReactDOMCurrentDispatcher.current = previousDispatcher;
+function popResources() {
+  setCurrentResources(currentResourcesStack.pop());
+}
+
+export function prepareHostDispatcher() {
+  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+}
+
+export function prepareToRender(resources: Resources): mixed {
+  pushResources(resources);
+}
+
+export function cleanupAfterRender() {
+  popResources();
 }
 
 // Used to distinguish these contexts from ones used in other renderers.
@@ -4804,16 +4813,18 @@ function getResourceKey(as: string, href: string): string {
 }
 
 export function prefetchDNS(href: string, options?: mixed) {
-  if (!currentResources) {
-    // While we expect that preconnect calls are primarily going to be observed
-    // during render because effects and events don't run on the server it is
-    // still possible that these get called in module scope. This is valid on
-    // the client since there is still a document to interact with but on the
-    // server we need a request to associate the call to. Because of this we
-    // simply return and do not warn.
+  if (!enableFloat) {
     return;
   }
-  const resources = currentResources;
+  const resources = resolveResources();
+  if (!resources) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -4858,17 +4869,19 @@ export function prefetchDNS(href: string, options?: mixed) {
   }
 }
 
-export function preconnect(href: string, options?: {crossOrigin?: string}) {
-  if (!currentResources) {
-    // While we expect that preconnect calls are primarily going to be observed
-    // during render because effects and events don't run on the server it is
-    // still possible that these get called in module scope. This is valid on
-    // the client since there is still a document to interact with but on the
-    // server we need a request to associate the call to. Because of this we
-    // simply return and do not warn.
+export function preconnect(href: string, options?: ?{crossOrigin?: string}) {
+  if (!enableFloat) {
     return;
   }
-  const resources = currentResources;
+  const resources = resolveResources();
+  if (!resources) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -4917,24 +4930,25 @@ export function preconnect(href: string, options?: {crossOrigin?: string}) {
   }
 }
 
-type PreloadAs = 'style' | 'font' | 'script';
 type PreloadOptions = {
-  as: PreloadAs,
+  as: string,
   crossOrigin?: string,
   integrity?: string,
   type?: string,
 };
 export function preload(href: string, options: PreloadOptions) {
-  if (!currentResources) {
-    // While we expect that preload calls are primarily going to be observed
-    // during render because effects and events don't run on the server it is
-    // still possible that these get called in module scope. This is valid on
-    // the client since there is still a document to interact with but on the
-    // server we need a request to associate the call to. Because of this we
-    // simply return and do not warn.
+  if (!enableFloat) {
     return;
   }
-  const resources = currentResources;
+  const resources = resolveResources();
+  if (!resources) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -5058,24 +5072,26 @@ export function preload(href: string, options: PreloadOptions) {
   }
 }
 
-type PreinitAs = 'style' | 'script';
 type PreinitOptions = {
-  as: PreinitAs,
+  as: string,
   precedence?: string,
   crossOrigin?: string,
   integrity?: string,
 };
 export function preinit(href: string, options: PreinitOptions): void {
-  if (!currentResources) {
-    // While we expect that preinit calls are primarily going to be observed
-    // during render because effects and events don't run on the server it is
-    // still possible that these get called in module scope. This is valid on
-    // the client since there is still a document to interact with but on the
-    // server we need a request to associate the call to. Because of this we
-    // simply return and do not warn.
+  if (!enableFloat) {
     return;
   }
-  preinitImpl(currentResources, href, options);
+  const resources = resolveResources();
+  if (!resources) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+  preinitImpl(resources, href, options);
 }
 
 // On the server, preinit may be called outside of render when sending an
@@ -5297,7 +5313,7 @@ function preinitImpl(
 
 function preloadPropsFromPreloadOptions(
   href: string,
-  as: PreloadAs,
+  as: string,
   options: PreloadOptions,
 ): PreloadProps {
   return {

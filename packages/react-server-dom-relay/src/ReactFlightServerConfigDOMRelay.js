@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Directive} from 'react-server/src/ReactFlightServerConfig';
+import type {Resources} from 'react-server/src/ReactFizzConfig';
 import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
 
 import type {
@@ -191,6 +193,16 @@ export function processImportChunk(
   return ['I', id, clientReferenceMetadata];
 }
 
+export function processDirectiveChunk(
+  request: Request,
+  id: number,
+  payload: ReactClientValue,
+): Chunk {
+  // The clientReferenceMetadata is already a JSON serializable value.
+  const json = convertModelToJSON(request, {}, '', payload);
+  return ['D', id, json];
+}
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -198,8 +210,11 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  (null: any);
+export const requestStorage: AsyncLocalStorage<{
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+}> = (null: any);
+export const requestStorage2: AsyncLocalStorage<Resources> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

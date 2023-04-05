@@ -21,8 +21,8 @@ function createSignal(): AbortSignal {
 function resolveCache(): Map<Function, mixed> {
   if (currentCache) return currentCache;
   if (supportsRequestStorage) {
-    const cache = requestStorage.getStore();
-    if (cache) return cache;
+    const store = requestStorage.getStore();
+    if (store) return store.cache;
   }
   // Since we override the dispatcher all the time, we're effectively always
   // active and so to support cache() and fetch() outside of render, we yield

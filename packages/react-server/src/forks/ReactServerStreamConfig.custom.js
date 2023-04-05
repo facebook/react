@@ -37,6 +37,7 @@ export const completeWriting = $$$config.completeWriting;
 export const flushBuffered = $$$config.flushBuffered;
 export const supportsRequestStorage = $$$config.supportsRequestStorage;
 export const requestStorage = $$$config.requestStorage;
+export const requestStorage2 = $$$config.requestStorage2;
 export const close = $$$config.close;
 export const closeWithError = $$$config.closeWithError;
 export const stringToChunk = $$$config.stringToChunk;

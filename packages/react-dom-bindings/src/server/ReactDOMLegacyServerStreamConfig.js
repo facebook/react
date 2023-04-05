@@ -23,6 +23,7 @@ export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<any> = (null: any);
+export const requestStorage2: AsyncLocalStorage<any> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

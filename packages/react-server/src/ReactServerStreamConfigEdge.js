@@ -7,6 +7,9 @@
  * @flow
  */
 
+import type {Directive} from './ReactFlightServerConfig';
+import type {Resources} from './ReactFizzConfig';
+
 export type Destination = ReadableStreamController;
 
 export type PrecomputedChunk = Uint8Array;
@@ -23,7 +26,11 @@ export function flushBuffered(destination: Destination) {
 
 // For now, we get this from the global scope, but this will likely move to a module.
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+export const requestStorage: AsyncLocalStorage<{
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+}> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+export const requestStorage2: AsyncLocalStorage<Resources> =
   supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
 
 const VIEW_SIZE = 512;

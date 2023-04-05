@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {HostDispatcher} from 'react-dom/src/ReactDOMDispatcher';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -1868,10 +1869,6 @@ export function clearSingleton(instance: Instance): void {
 
 export const supportsResources = true;
 
-// The resource types we support. currently they match the form for the as argument.
-// In the future this may need to change, especially when modules / scripts are supported
-type ResourceType = 'style' | 'font' | 'script';
-
 type HoistableTagType = 'link' | 'meta' | 'title';
 type TResource<
   T: 'stylesheet' | 'style' | 'script' | 'void',
@@ -1962,7 +1959,7 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
 // We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
 // internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
 // from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher = {
+export const ReactDOMClientDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
@@ -2036,7 +2033,10 @@ function prefetchDNS(href: string, options?: mixed) {
   preconnectAs('dns-prefetch', null, href);
 }
 
-function preconnect(href: string, options?: {crossOrigin?: string}) {
+function preconnect(href: string, options: ?{crossOrigin?: string}) {
+  if (!enableFloat) {
+    return;
+  }
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -2064,9 +2064,8 @@ function preconnect(href: string, options?: {crossOrigin?: string}) {
   preconnectAs('preconnect', crossOrigin, href);
 }
 
-type PreloadAs = ResourceType;
 type PreloadOptions = {
-  as: PreloadAs,
+  as: string,
   crossOrigin?: string,
   integrity?: string,
   type?: string,
@@ -2115,7 +2114,7 @@ function preload(href: string, options: PreloadOptions) {
 
 function preloadPropsFromPreloadOptions(
   href: string,
-  as: ResourceType,
+  as: string,
   options: PreloadOptions,
 ): PreloadProps {
   return {
@@ -2128,9 +2127,8 @@ function preloadPropsFromPreloadOptions(
   };
 }
 
-type PreinitAs = 'style' | 'script';
 type PreinitOptions = {
-  as: PreinitAs,
+  as: string,
   precedence?: string,
   crossOrigin?: string,
   integrity?: string,

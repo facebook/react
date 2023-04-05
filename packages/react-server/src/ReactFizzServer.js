@@ -42,6 +42,8 @@ import {
   flushBuffered,
   close,
   closeWithError,
+  supportsRequestStorage,
+  requestStorage2,
 } from './ReactServerStreamConfig';
 import {
   writeCompletedRoot,
@@ -76,6 +78,7 @@ import {
   setCurrentlyRenderingBoundaryResourcesTarget,
   createResources,
   createBoundaryResources,
+  prepareHostDispatcher,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -277,6 +280,7 @@ export function createRequest(
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
 ): Request {
+  prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const resources: Resources = createResources();
@@ -1947,7 +1951,7 @@ export function performWork(request: Request): void {
     ReactCurrentCache.current = DefaultCacheDispatcher;
   }
 
-  const previousHostDispatcher = prepareToRender(request.resources);
+  prepareToRender(request.resources);
   let prevGetCurrentStackImpl;
   if (__DEV__) {
     prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
@@ -1975,7 +1979,7 @@ export function performWork(request: Request): void {
     if (enableCache) {
       ReactCurrentCache.current = prevCacheDispatcher;
     }
-    cleanupAfterRender(previousHostDispatcher);
+    cleanupAfterRender();
 
     if (__DEV__) {
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
@@ -2411,7 +2415,13 @@ function flushCompletedQueues(
 }
 
 export function startWork(request: Request): void {
-  scheduleWork(() => performWork(request));
+  if (supportsRequestStorage) {
+    scheduleWork(() =>
+      requestStorage2.run(request.resources, performWork, request),
+    );
+  } else {
+    scheduleWork(() => performWork(request));
+  }
 }
 
 export function startFlowing(request: Request, destination: Destination): void {

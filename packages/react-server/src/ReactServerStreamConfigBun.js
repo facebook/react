@@ -7,6 +7,9 @@
  * @flow
  */
 
+import type {Directive} from './ReactFlightServerConfig';
+import type {Resources} from './ReactFizzConfig';
+
 type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
   write(data: Chunk): void,
@@ -28,7 +31,11 @@ export function flushBuffered(destination: Destination) {
 
 // AsyncLocalStorage is not available in bun
 export const supportsRequestStorage = false;
-export const requestStorage = (null: any);
+export const requestStorage: AsyncLocalStorage<{
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+}> = (null: any);
+export const requestStorage2: AsyncLocalStorage<Resources> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

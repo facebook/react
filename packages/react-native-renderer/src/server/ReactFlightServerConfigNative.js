@@ -8,3 +8,7 @@
  */
 
 export const isPrimaryRenderer = true;
+
+export type Directive = void;
+
+export function prepareHostDispatcher() {}

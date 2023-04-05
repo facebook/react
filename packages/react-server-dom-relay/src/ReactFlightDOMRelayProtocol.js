@@ -20,6 +20,7 @@ export type JSONValue =
 export type RowEncoding =
   | ['O', number, JSONValue]
   | ['I', number, ClientReferenceMetadata]
+  | ['D', number, JSONValue]
   | ['P', number, string]
   | ['S', number, string]
   | [

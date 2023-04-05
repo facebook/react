@@ -21,7 +21,9 @@ let webpackMap;
 let webpackServerMap;
 let act;
 let React;
+let ReactDOM;
 let ReactDOMClient;
+let ReactDOMFizzServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
@@ -37,7 +39,9 @@ describe('ReactFlightDOMBrowser', () => {
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ReactDOMFizzServer = require('react-dom/server.browser');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
@@ -1061,5 +1065,129 @@ describe('ReactFlightDOMBrowser', () => {
 
       expect(thrownError.digest).toBe('test-error-digest');
     }
+  });
+
+  it('supports Float directives before the first await in server components in Fiber', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(stream);
+      }
+      return response;
+    }
+
+    function App() {
+      return getResponse();
+    }
+
+    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
+    // we aren't operating separate module graphs for flight and fiber. In a real app
+    // each would have their own dispatcher and there would be no cross dispatching.
+    await expect(async () => {
+      await 1;
+    }).toErrorDev(
+      'ReactDOM.preload(): React expected to be able to associate this call to a specific Request but cannot. It is possible that this call was invoked outside of a React component. If you are calling it from within a React component that is an async function after the first `await` then you are in an environment which does not support AsyncLocalStorage. In this kind of environment ReactDOM.preload() does not do anything when called in an async manner. Try moving this function call above the first `await` within the component or remove this call. In environments that support AsyncLocalStorage such as Node.js you can call this method anywhere in a React component even after `await` operator.',
+      {withoutStack: true},
+    );
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(document.head.innerHTML).toBe(
+      '<link href="before" rel="preload" as="style">',
+    );
+    expect(container.innerHTML).toBe('<p>hello world</p>');
+  });
+
+  it('Does not support Float directives in server components anywhere in Fizz', async () => {
+    // In environments that do not support AsyncLocalStorage the Flight client has no ability
+    // to scope directive dispatching to a specific Request. In Fiber this isn't a problem because
+    // the Browser scope acts like a singleton and we can dispatch away. But in Fizz we need to have
+    // a reference to Resources and this is only possible during render unless you support AsyncLocalStorage.
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(stream);
+      }
+      return response;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>{getResponse()}</body>
+        </html>
+      );
+    }
+
+    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
+    // we aren't operating separate module graphs for flight and fiber. In a real app
+    // each would have their own dispatcher and there would be no cross dispatching.
+    await expect(async () => {
+      await 1;
+    }).toErrorDev(
+      'ReactDOM.preload(): React expected to be able to associate this call to a specific Request but cannot. It is possible that this call was invoked outside of a React component. If you are calling it from within a React component that is an async function after the first `await` then you are in an environment which does not support AsyncLocalStorage. In this kind of environment ReactDOM.preload() does not do anything when called in an async manner. Try moving this function call above the first `await` within the component or remove this call. In environments that support AsyncLocalStorage such as Node.js you can call this method anywhere in a React component even after `await` operator.',
+      {withoutStack: true},
+    );
+
+    let fizzStream;
+    await act(async () => {
+      fizzStream = await ReactDOMFizzServer.renderToReadableStream(<App />);
+    });
+
+    const decoder = new TextDecoder();
+    const reader = fizzStream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        content += decoder.decode();
+        break;
+      }
+      content += decoder.decode(value, {stream: true});
+    }
+
+    expect(content).toEqual(
+      '<!DOCTYPE html><html><head>' +
+        '</head><body><p>hello world</p></body></html>',
+    );
   });
 });

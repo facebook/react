@@ -137,6 +137,7 @@ export {
   writePostamble,
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
+  prepareHostDispatcher,
   prepareToRender,
   cleanupAfterRender,
 } from './ReactFizzConfigDOM';

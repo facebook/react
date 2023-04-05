@@ -10,4 +10,6 @@
 export * from '../ReactFlightServerConfigStream';
 export * from '../ReactFlightServerConfigBundlerCustom';
 
+export type Directive = void;
 export const isPrimaryRenderer = false;
+export const prepareHostDispatcher = () => {};

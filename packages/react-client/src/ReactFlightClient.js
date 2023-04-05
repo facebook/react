@@ -23,6 +23,7 @@ import {
   preloadModule,
   requireModule,
   parseModel,
+  dispatchDirective,
 } from './ReactFlightClientConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
@@ -776,6 +777,15 @@ export function resolveErrorDev(
   } else {
     triggerErrorOnChunk(chunk, errorWithDigest);
   }
+}
+
+export function resolveDirective(
+  response: Response,
+  id: number,
+  model: string,
+): void {
+  const payload = JSON.parse(model);
+  dispatchDirective(payload);
 }
 
 export function close(response: Response): void {

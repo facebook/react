@@ -8,6 +8,8 @@
  */
 
 import type {RowEncoding, JSONValue} from './ReactFlightNativeRelayProtocol';
+import type {Directive} from 'react-server/src/ReactFlightServerConfig';
+import type {Resources} from 'react-server/src/ReactFizzConfig';
 import type {
   Request,
   ReactClientValue,
@@ -187,6 +189,16 @@ export function processImportChunk(
   return ['I', id, clientReferenceMetadata];
 }
 
+export function processDirectiveChunk(
+  request: Request,
+  id: number,
+  payload: ReactClientValue,
+): Chunk {
+  throw new Error(
+    'React Internal Error: processDirectiveChunk is not implemented for Native-Relay. The fact that this method was called means there is a but in React.',
+  );
+}
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -194,8 +206,11 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  (null: any);
+export const requestStorage: AsyncLocalStorage<{
+  cache: Map<Function, mixed>,
+  directives: Array<Directive>,
+}> = (null: any);
+export const requestStorage2: AsyncLocalStorage<Resources> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

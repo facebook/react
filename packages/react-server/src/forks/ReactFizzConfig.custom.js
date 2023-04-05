@@ -68,6 +68,7 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
+export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
 export const prepareToRender = $$$config.prepareToRender;
 export const cleanupAfterRender = $$$config.cleanupAfterRender;
 
