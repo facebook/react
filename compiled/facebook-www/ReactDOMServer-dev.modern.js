@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-a92ea639";
+var ReactVersion = "18.3.0-www-modern-e23ace58";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -280,87 +280,166 @@ function isAttributeNameSafe(attributeName) {
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
+var unitlessNumbers = new Set([
+  "animationIterationCount",
+  "aspectRatio",
+  "borderImageOutset",
+  "borderImageSlice",
+  "borderImageWidth",
+  "boxFlex",
+  "boxFlexGroup",
+  "boxOrdinalGroup",
+  "columnCount",
+  "columns",
+  "flex",
+  "flexGrow",
+  "flexPositive",
+  "flexShrink",
+  "flexNegative",
+  "flexOrder",
+  "gridArea",
+  "gridRow",
+  "gridRowEnd",
+  "gridRowSpan",
+  "gridRowStart",
+  "gridColumn",
+  "gridColumnEnd",
+  "gridColumnSpan",
+  "gridColumnStart",
+  "fontWeight",
+  "lineClamp",
+  "lineHeight",
+  "opacity",
+  "order",
+  "orphans",
+  "scale",
+  "tabSize",
+  "widows",
+  "zIndex",
+  "zoom",
+  "fillOpacity", // SVG-related properties
+  "floodOpacity",
+  "stopOpacity",
+  "strokeDasharray",
+  "strokeDashoffset",
+  "strokeMiterlimit",
+  "strokeOpacity",
+  "strokeWidth",
+  "MozAnimationIterationCount", // Known Prefixed Properties
+  "MozBoxFlex", // TODO: Remove these since they shouldn't be used in modern code
+  "MozBoxFlexGroup",
+  "MozLineClamp",
+  "msAnimationIterationCount",
+  "msFlex",
+  "msZoom",
+  "msFlexGrow",
+  "msFlexNegative",
+  "msFlexOrder",
+  "msFlexPositive",
+  "msFlexShrink",
+  "msGridColumn",
+  "msGridColumnSpan",
+  "msGridRow",
+  "msGridRowSpan",
+  "WebkitAnimationIterationCount",
+  "WebkitBoxFlex",
+  "WebKitBoxFlexGroup",
+  "WebkitBoxOrdinalGroup",
+  "WebkitColumnCount",
+  "WebkitColumns",
+  "WebkitFlex",
+  "WebkitFlexGrow",
+  "WebkitFlexPositive",
+  "WebkitFlexShrink",
+  "WebkitLineClamp"
+]);
 function isUnitlessNumber(name) {
-  switch (name) {
-    case "animationIterationCount":
-    case "aspectRatio":
-    case "borderImageOutset":
-    case "borderImageSlice":
-    case "borderImageWidth":
-    case "boxFlex":
-    case "boxFlexGroup":
-    case "boxOrdinalGroup":
-    case "columnCount":
-    case "columns":
-    case "flex":
-    case "flexGrow":
-    case "flexPositive":
-    case "flexShrink":
-    case "flexNegative":
-    case "flexOrder":
-    case "gridArea":
-    case "gridRow":
-    case "gridRowEnd":
-    case "gridRowSpan":
-    case "gridRowStart":
-    case "gridColumn":
-    case "gridColumnEnd":
-    case "gridColumnSpan":
-    case "gridColumnStart":
-    case "fontWeight":
-    case "lineClamp":
-    case "lineHeight":
-    case "opacity":
-    case "order":
-    case "orphans":
-    case "scale":
-    case "tabSize":
-    case "widows":
-    case "zIndex":
-    case "zoom":
-    case "fillOpacity": // SVG-related properties
+  return unitlessNumbers.has(name);
+}
 
-    case "floodOpacity":
-    case "stopOpacity":
-    case "strokeDasharray":
-    case "strokeDashoffset":
-    case "strokeMiterlimit":
-    case "strokeOpacity":
-    case "strokeWidth":
-    case "MozAnimationIterationCount": // Known Prefixed Properties
-
-    case "MozBoxFlex": // TODO: Remove these since they shouldn't be used in modern code
-
-    case "MozBoxFlexGroup":
-    case "MozLineClamp":
-    case "msAnimationIterationCount":
-    case "msFlex":
-    case "msZoom":
-    case "msFlexGrow":
-    case "msFlexNegative":
-    case "msFlexOrder":
-    case "msFlexPositive":
-    case "msFlexShrink":
-    case "msGridColumn":
-    case "msGridColumnSpan":
-    case "msGridRow":
-    case "msGridRowSpan":
-    case "WebkitAnimationIterationCount":
-    case "WebkitBoxFlex":
-    case "WebKitBoxFlexGroup":
-    case "WebkitBoxOrdinalGroup":
-    case "WebkitColumnCount":
-    case "WebkitColumns":
-    case "WebkitFlex":
-    case "WebkitFlexGrow":
-    case "WebkitFlexPositive":
-    case "WebkitFlexShrink":
-    case "WebkitLineClamp":
-      return true;
-
-    default:
-      return false;
-  }
+var aliases = new Map([
+  ["acceptCharset", "accept-charset"],
+  ["htmlFor", "for"],
+  ["httpEquiv", "http-equiv"], // HTML and SVG attributes, but the SVG attribute is case sensitive.],
+  ["crossOrigin", "crossorigin"], // This is a list of all SVG attributes that need special casing.
+  // Regular attributes that just accept strings.],
+  ["accentHeight", "accent-height"],
+  ["alignmentBaseline", "alignment-baseline"],
+  ["arabicForm", "arabic-form"],
+  ["baselineShift", "baseline-shift"],
+  ["capHeight", "cap-height"],
+  ["clipPath", "clip-path"],
+  ["clipRule", "clip-rule"],
+  ["colorInterpolation", "color-interpolation"],
+  ["colorInterpolationFilters", "color-interpolation-filters"],
+  ["colorProfile", "color-profile"],
+  ["colorRendering", "color-rendering"],
+  ["dominantBaseline", "dominant-baseline"],
+  ["enableBackground", "enable-background"],
+  ["fillOpacity", "fill-opacity"],
+  ["fillRule", "fill-rule"],
+  ["floodColor", "flood-color"],
+  ["floodOpacity", "flood-opacity"],
+  ["fontFamily", "font-family"],
+  ["fontSize", "font-size"],
+  ["fontSizeAdjust", "font-size-adjust"],
+  ["fontStretch", "font-stretch"],
+  ["fontStyle", "font-style"],
+  ["fontVariant", "font-variant"],
+  ["fontWeight", "font-weight"],
+  ["glyphName", "glyph-name"],
+  ["glyphOrientationHorizontal", "glyph-orientation-horizontal"],
+  ["glyphOrientationVertical", "glyph-orientation-vertical"],
+  ["horizAdvX", "horiz-adv-x"],
+  ["horizOriginX", "horiz-origin-x"],
+  ["imageRendering", "image-rendering"],
+  ["letterSpacing", "letter-spacing"],
+  ["lightingColor", "lighting-color"],
+  ["markerEnd", "marker-end"],
+  ["markerMid", "marker-mid"],
+  ["markerStart", "marker-start"],
+  ["overlinePosition", "overline-position"],
+  ["overlineThickness", "overline-thickness"],
+  ["paintOrder", "paint-order"],
+  ["panose-1", "panose-1"],
+  ["pointerEvents", "pointer-events"],
+  ["renderingIntent", "rendering-intent"],
+  ["shapeRendering", "shape-rendering"],
+  ["stopColor", "stop-color"],
+  ["stopOpacity", "stop-opacity"],
+  ["strikethroughPosition", "strikethrough-position"],
+  ["strikethroughThickness", "strikethrough-thickness"],
+  ["strokeDasharray", "stroke-dasharray"],
+  ["strokeDashoffset", "stroke-dashoffset"],
+  ["strokeLinecap", "stroke-linecap"],
+  ["strokeLinejoin", "stroke-linejoin"],
+  ["strokeMiterlimit", "stroke-miterlimit"],
+  ["strokeOpacity", "stroke-opacity"],
+  ["strokeWidth", "stroke-width"],
+  ["textAnchor", "text-anchor"],
+  ["textDecoration", "text-decoration"],
+  ["textRendering", "text-rendering"],
+  ["transformOrigin", "transform-origin"],
+  ["underlinePosition", "underline-position"],
+  ["underlineThickness", "underline-thickness"],
+  ["unicodeBidi", "unicode-bidi"],
+  ["unicodeRange", "unicode-range"],
+  ["unitsPerEm", "units-per-em"],
+  ["vAlphabetic", "v-alphabetic"],
+  ["vHanging", "v-hanging"],
+  ["vIdeographic", "v-ideographic"],
+  ["vMathematical", "v-mathematical"],
+  ["vectorEffect", "vector-effect"],
+  ["vertAdvY", "vert-adv-y"],
+  ["vertOriginX", "vert-origin-x"],
+  ["vertOriginY", "vert-origin-y"],
+  ["wordSpacing", "word-spacing"],
+  ["writingMode", "writing-mode"],
+  ["xmlnsXlink", "xmlns:xlink"],
+  ["xHeight", "x-height"]
+]);
+function getAttributeAlias(name) {
+  return aliases.get(name) || name;
 }
 
 var hasReadOnlyValue = {
@@ -2741,25 +2820,30 @@ function pushStringAttribute(target, name, value) {
 function pushAttribute(target, name, value) {
   // not null or undefined
   switch (name) {
-    case "style": {
-      pushStyleAttribute(target, value);
-      return;
+    // These are very common props and therefore are in the beginning of the switch.
+    // TODO: aria-label is a very common prop but allows booleans so is not like the others
+    // but should ideally go in this list too.
+    case "className": {
+      pushStringAttribute(target, "class", value);
+      break;
     }
 
-    case "defaultValue":
-    case "defaultChecked": // These shouldn't be set as attributes on generic HTML elements.
+    case "tabIndex": {
+      pushStringAttribute(target, "tabindex", value);
+      break;
+    }
 
-    case "innerHTML": // Must use dangerouslySetInnerHTML instead.
+    case "dir":
+    case "role":
+    case "viewBox":
+    case "width":
+    case "height": {
+      pushStringAttribute(target, name, value);
+      break;
+    }
 
-    case "suppressContentEditableWarning":
-    case "suppressHydrationWarning":
-      // Ignored. These are built-in to React on the client.
-      return;
-
-    case "autoFocus":
-    case "multiple":
-    case "muted": {
-      pushBooleanAttribute(target, name.toLowerCase(), value);
+    case "style": {
+      pushStyleAttribute(target, value);
       return;
     }
 
@@ -2793,7 +2877,6 @@ function pushAttribute(target, name, value) {
     }
 
     // Fall through to the last case which shouldn't remove empty strings.
-    // eslint-disable-next-line no-fallthrough
 
     case "formAction": {
       if (
@@ -2817,6 +2900,23 @@ function pushAttribute(target, name, value) {
         stringToChunk(escapeTextForBrowser(sanitizedValue)),
         attributeEnd
       );
+      return;
+    }
+
+    case "defaultValue":
+    case "defaultChecked": // These shouldn't be set as attributes on generic HTML elements.
+
+    case "innerHTML": // Must use dangerouslySetInnerHTML instead.
+
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+      // Ignored. These are built-in to React on the client.
+      return;
+
+    case "autoFocus":
+    case "multiple":
+    case "muted": {
+      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
     }
 
@@ -2969,367 +3069,42 @@ function pushAttribute(target, name, value) {
 
       return;
     }
-    // A few React string attributes have a different name.
-    // This is a mapping from React prop names to the attribute names.
-
-    case "acceptCharset":
-      pushStringAttribute(target, "accept-charset", value);
-      return;
-
-    case "className":
-      pushStringAttribute(target, "class", value);
-      return;
-
-    case "htmlFor":
-      pushStringAttribute(target, "for", value);
-      return;
-
-    case "httpEquiv":
-      pushStringAttribute(target, "http-equiv", value);
-      return;
-    // HTML and SVG attributes, but the SVG attribute is case sensitive.
-
-    case "tabIndex":
-      pushStringAttribute(target, "tabindex", value);
-      return;
-
-    case "crossOrigin":
-      pushStringAttribute(target, "crossorigin", value);
-      return;
-    // This is a list of all SVG attributes that need special casing.
-    // Regular attributes that just accept strings.
-
-    case "accentHeight":
-      pushStringAttribute(target, "accent-height", value);
-      return;
-
-    case "alignmentBaseline":
-      pushStringAttribute(target, "alignment-baseline", value);
-      return;
-
-    case "arabicForm":
-      pushStringAttribute(target, "arabic-form", value);
-      return;
-
-    case "baselineShift":
-      pushStringAttribute(target, "baseline-shift", value);
-      return;
-
-    case "capHeight":
-      pushStringAttribute(target, "cap-height", value);
-      return;
-
-    case "clipPath":
-      pushStringAttribute(target, "clip-path", value);
-      return;
-
-    case "clipRule":
-      pushStringAttribute(target, "clip-rule", value);
-      return;
-
-    case "colorInterpolation":
-      pushStringAttribute(target, "color-interpolation", value);
-      return;
-
-    case "colorInterpolationFilters":
-      pushStringAttribute(target, "color-interpolation-filters", value);
-      return;
-
-    case "colorProfile":
-      pushStringAttribute(target, "color-profile", value);
-      return;
-
-    case "colorRendering":
-      pushStringAttribute(target, "color-rendering", value);
-      return;
-
-    case "dominantBaseline":
-      pushStringAttribute(target, "dominant-baseline", value);
-      return;
-
-    case "enableBackground":
-      pushStringAttribute(target, "enable-background", value);
-      return;
-
-    case "fillOpacity":
-      pushStringAttribute(target, "fill-opacity", value);
-      return;
-
-    case "fillRule":
-      pushStringAttribute(target, "fill-rule", value);
-      return;
-
-    case "floodColor":
-      pushStringAttribute(target, "flood-color", value);
-      return;
-
-    case "floodOpacity":
-      pushStringAttribute(target, "flood-opacity", value);
-      return;
-
-    case "fontFamily":
-      pushStringAttribute(target, "font-family", value);
-      return;
-
-    case "fontSize":
-      pushStringAttribute(target, "font-size", value);
-      return;
-
-    case "fontSizeAdjust":
-      pushStringAttribute(target, "font-size-adjust", value);
-      return;
-
-    case "fontStretch":
-      pushStringAttribute(target, "font-stretch", value);
-      return;
-
-    case "fontStyle":
-      pushStringAttribute(target, "font-style", value);
-      return;
-
-    case "fontVariant":
-      pushStringAttribute(target, "font-variant", value);
-      return;
-
-    case "fontWeight":
-      pushStringAttribute(target, "font-weight", value);
-      return;
-
-    case "glyphName":
-      pushStringAttribute(target, "glyph-name", value);
-      return;
-
-    case "glyphOrientationHorizontal":
-      pushStringAttribute(target, "glyph-orientation-horizontal", value);
-      return;
-
-    case "glyphOrientationVertical":
-      pushStringAttribute(target, "glyph-orientation-vertical", value);
-      return;
-
-    case "horizAdvX":
-      pushStringAttribute(target, "horiz-adv-x", value);
-      return;
-
-    case "horizOriginX":
-      pushStringAttribute(target, "horiz-origin-x", value);
-      return;
-
-    case "imageRendering":
-      pushStringAttribute(target, "image-rendering", value);
-      return;
-
-    case "letterSpacing":
-      pushStringAttribute(target, "letter-spacing", value);
-      return;
-
-    case "lightingColor":
-      pushStringAttribute(target, "lighting-color", value);
-      return;
-
-    case "markerEnd":
-      pushStringAttribute(target, "marker-end", value);
-      return;
-
-    case "markerMid":
-      pushStringAttribute(target, "marker-mid", value);
-      return;
-
-    case "markerStart":
-      pushStringAttribute(target, "marker-start", value);
-      return;
-
-    case "overlinePosition":
-      pushStringAttribute(target, "overline-position", value);
-      return;
-
-    case "overlineThickness":
-      pushStringAttribute(target, "overline-thickness", value);
-      return;
-
-    case "paintOrder":
-      pushStringAttribute(target, "paint-order", value);
-      return;
-
-    case "panose-1":
-      pushStringAttribute(target, "panose-1", value);
-      return;
-
-    case "pointerEvents":
-      pushStringAttribute(target, "pointer-events", value);
-      return;
-
-    case "renderingIntent":
-      pushStringAttribute(target, "rendering-intent", value);
-      return;
-
-    case "shapeRendering":
-      pushStringAttribute(target, "shape-rendering", value);
-      return;
-
-    case "stopColor":
-      pushStringAttribute(target, "stop-color", value);
-      return;
-
-    case "stopOpacity":
-      pushStringAttribute(target, "stop-opacity", value);
-      return;
-
-    case "strikethroughPosition":
-      pushStringAttribute(target, "strikethrough-position", value);
-      return;
-
-    case "strikethroughThickness":
-      pushStringAttribute(target, "strikethrough-thickness", value);
-      return;
-
-    case "strokeDasharray":
-      pushStringAttribute(target, "stroke-dasharray", value);
-      return;
-
-    case "strokeDashoffset":
-      pushStringAttribute(target, "stroke-dashoffset", value);
-      return;
-
-    case "strokeLinecap":
-      pushStringAttribute(target, "stroke-linecap", value);
-      return;
-
-    case "strokeLinejoin":
-      pushStringAttribute(target, "stroke-linejoin", value);
-      return;
-
-    case "strokeMiterlimit":
-      pushStringAttribute(target, "stroke-miterlimit", value);
-      return;
-
-    case "strokeOpacity":
-      pushStringAttribute(target, "stroke-opacity", value);
-      return;
-
-    case "strokeWidth":
-      pushStringAttribute(target, "stroke-width", value);
-      return;
-
-    case "textAnchor":
-      pushStringAttribute(target, "text-anchor", value);
-      return;
-
-    case "textDecoration":
-      pushStringAttribute(target, "text-decoration", value);
-      return;
-
-    case "textRendering":
-      pushStringAttribute(target, "text-rendering", value);
-      return;
-
-    case "transformOrigin":
-      pushStringAttribute(target, "transform-origin", value);
-      return;
-
-    case "underlinePosition":
-      pushStringAttribute(target, "underline-position", value);
-      return;
-
-    case "underlineThickness":
-      pushStringAttribute(target, "underline-thickness", value);
-      return;
-
-    case "unicodeBidi":
-      pushStringAttribute(target, "unicode-bidi", value);
-      return;
-
-    case "unicodeRange":
-      pushStringAttribute(target, "unicode-range", value);
-      return;
-
-    case "unitsPerEm":
-      pushStringAttribute(target, "units-per-em", value);
-      return;
-
-    case "vAlphabetic":
-      pushStringAttribute(target, "v-alphabetic", value);
-      return;
-
-    case "vHanging":
-      pushStringAttribute(target, "v-hanging", value);
-      return;
-
-    case "vIdeographic":
-      pushStringAttribute(target, "v-ideographic", value);
-      return;
-
-    case "vMathematical":
-      pushStringAttribute(target, "v-mathematical", value);
-      return;
-
-    case "vectorEffect":
-      pushStringAttribute(target, "vector-effect", value);
-      return;
-
-    case "vertAdvY":
-      pushStringAttribute(target, "vert-adv-y", value);
-      return;
-
-    case "vertOriginX":
-      pushStringAttribute(target, "vert-origin-x", value);
-      return;
-
-    case "vertOriginY":
-      pushStringAttribute(target, "vert-origin-y", value);
-      return;
-
-    case "wordSpacing":
-      pushStringAttribute(target, "word-spacing", value);
-      return;
-
-    case "writingMode":
-      pushStringAttribute(target, "writing-mode", value);
-      return;
-
-    case "xmlnsXlink":
-      pushStringAttribute(target, "xmlns:xlink", value);
-      return;
-
-    case "xHeight":
-      pushStringAttribute(target, "x-height", value);
-      return;
 
     case "xlinkActuate":
       pushStringAttribute(target, "xlink:actuate", value);
-      break;
+      return;
 
     case "xlinkArcrole":
       pushStringAttribute(target, "xlink:arcrole", value);
-      break;
+      return;
 
     case "xlinkRole":
       pushStringAttribute(target, "xlink:role", value);
-      break;
+      return;
 
     case "xlinkShow":
       pushStringAttribute(target, "xlink:show", value);
-      break;
+      return;
 
     case "xlinkTitle":
       pushStringAttribute(target, "xlink:title", value);
-      break;
+      return;
 
     case "xlinkType":
       pushStringAttribute(target, "xlink:type", value);
-      break;
+      return;
 
     case "xmlBase":
       pushStringAttribute(target, "xml:base", value);
-      break;
+      return;
 
     case "xmlLang":
       pushStringAttribute(target, "xml:lang", value);
-      break;
+      return;
 
     case "xmlSpace":
       pushStringAttribute(target, "xml:space", value);
-      break;
+      return;
 
     default:
       if (
@@ -3342,7 +3117,9 @@ function pushAttribute(target, name, value) {
         return;
       }
 
-      if (isAttributeNameSafe(name)) {
+      var attributeName = getAttributeAlias(name);
+
+      if (isAttributeNameSafe(attributeName)) {
         // shouldRemoveAttribute
         switch (typeof value) {
           case "function":
@@ -3351,7 +3128,7 @@ function pushAttribute(target, name, value) {
             return;
 
           case "boolean": {
-            var prefix = name.toLowerCase().slice(0, 5);
+            var prefix = attributeName.toLowerCase().slice(0, 5);
 
             if (prefix !== "data-" && prefix !== "aria-") {
               return;
@@ -3361,7 +3138,7 @@ function pushAttribute(target, name, value) {
 
         target.push(
           attributeSeparator,
-          stringToChunk(name),
+          stringToChunk(attributeName),
           attributeAssign,
           stringToChunk(escapeTextForBrowser(value)),
           attributeEnd
@@ -3570,12 +3347,10 @@ function pushStartOption(target, props, formatContext) {
         case "dangerouslySetInnerHTML":
           innerHTML = propValue;
           break;
-        // eslint-disable-next-line-no-fallthrough
 
         case "value":
           value = propValue;
         // We intentionally fallthrough to also set the attribute on the node.
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -3707,7 +3482,6 @@ function pushInput(target, props) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         case "defaultChecked":
           defaultChecked = propValue;
@@ -3799,7 +3573,6 @@ function pushStartTextArea(target, props) {
           throw new Error(
             "`dangerouslySetInnerHTML` does not make sense on <textarea>."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -4174,7 +3947,6 @@ function pushLinkImpl(target, props) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -4415,7 +4187,6 @@ function pushSelfClosing(target, props, tag) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -4445,7 +4216,6 @@ function pushStartMenuItem(target, props) {
           throw new Error(
             "menuitems cannot have `children` nor `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -5087,7 +4857,18 @@ function pushStartInstance(
   }
 
   switch (type) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li":
+      // Fast track very common tags
+      break;
     // Special tags
+
     case "select":
       return pushStartSelect(target, props);
 
@@ -5207,15 +4988,14 @@ function pushStartInstance(
     }
 
     default: {
-      if (type.indexOf("-") === -1) {
-        // Generic element
-        return pushStartGenericElement(target, props, type);
-      } else {
+      if (type.indexOf("-") !== -1) {
         // Custom element
         return pushStartCustomElement(target, props, type);
       }
     }
-  }
+  } // Generic element
+
+  return pushStartGenericElement(target, props, type);
 }
 var endTag1 = stringToPrecomputedChunk("</");
 var endTag2 = stringToPrecomputedChunk(">");
@@ -5230,7 +5010,6 @@ function pushEndInstance(target, type, props, responseState, formatContext) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
     // That would require returning a tuple. Which might be ok if it gets inlined.
-    // eslint-disable-next-line-no-fallthrough
 
     case "area":
     case "base":
@@ -6424,7 +6203,6 @@ function writeStyleResourceDependencyInJS(
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           writeStyleResourceAttributeInJS(destination, propKey, propValue);
@@ -6626,7 +6404,6 @@ function writeStyleResourceDependencyInAttr(
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           writeStyleResourceAttributeInAttr(destination, propKey, propValue);
@@ -7722,7 +7499,7 @@ function getComponentNameFromType(type) {
       return "Cache";
     }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -7768,8 +7545,6 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
-
-      // eslint-disable-next-line no-fallthrough
     }
   }
 
@@ -10788,7 +10563,6 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         return;
       }
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case REACT_SUSPENSE_TYPE: {
       {
@@ -10935,7 +10709,6 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
           "Portals are not currently supported by the server renderer. " +
             "Render them conditionally so that they only appear on the client render."
         );
-      // eslint-disable-next-line-no-fallthrough
 
       case REACT_LAZY_TYPE: {
         var lazyNode = node;

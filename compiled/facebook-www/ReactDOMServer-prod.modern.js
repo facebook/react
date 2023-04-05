@@ -50,7 +50,92 @@ function isAttributeNameSafe(attributeName) {
   illegalAttributeNameCache[attributeName] = !0;
   return !1;
 }
-var matchHtmlRegExp = /["'&<>]/;
+var unitlessNumbers = new Set(
+    "animationIterationCount aspectRatio borderImageOutset borderImageSlice borderImageWidth boxFlex boxFlexGroup boxOrdinalGroup columnCount columns flex flexGrow flexPositive flexShrink flexNegative flexOrder gridArea gridRow gridRowEnd gridRowSpan gridRowStart gridColumn gridColumnEnd gridColumnSpan gridColumnStart fontWeight lineClamp lineHeight opacity order orphans scale tabSize widows zIndex zoom fillOpacity floodOpacity stopOpacity strokeDasharray strokeDashoffset strokeMiterlimit strokeOpacity strokeWidth MozAnimationIterationCount MozBoxFlex MozBoxFlexGroup MozLineClamp msAnimationIterationCount msFlex msZoom msFlexGrow msFlexNegative msFlexOrder msFlexPositive msFlexShrink msGridColumn msGridColumnSpan msGridRow msGridRowSpan WebkitAnimationIterationCount WebkitBoxFlex WebKitBoxFlexGroup WebkitBoxOrdinalGroup WebkitColumnCount WebkitColumns WebkitFlex WebkitFlexGrow WebkitFlexPositive WebkitFlexShrink WebkitLineClamp".split(
+      " "
+    )
+  ),
+  aliases = new Map([
+    ["acceptCharset", "accept-charset"],
+    ["htmlFor", "for"],
+    ["httpEquiv", "http-equiv"],
+    ["crossOrigin", "crossorigin"],
+    ["accentHeight", "accent-height"],
+    ["alignmentBaseline", "alignment-baseline"],
+    ["arabicForm", "arabic-form"],
+    ["baselineShift", "baseline-shift"],
+    ["capHeight", "cap-height"],
+    ["clipPath", "clip-path"],
+    ["clipRule", "clip-rule"],
+    ["colorInterpolation", "color-interpolation"],
+    ["colorInterpolationFilters", "color-interpolation-filters"],
+    ["colorProfile", "color-profile"],
+    ["colorRendering", "color-rendering"],
+    ["dominantBaseline", "dominant-baseline"],
+    ["enableBackground", "enable-background"],
+    ["fillOpacity", "fill-opacity"],
+    ["fillRule", "fill-rule"],
+    ["floodColor", "flood-color"],
+    ["floodOpacity", "flood-opacity"],
+    ["fontFamily", "font-family"],
+    ["fontSize", "font-size"],
+    ["fontSizeAdjust", "font-size-adjust"],
+    ["fontStretch", "font-stretch"],
+    ["fontStyle", "font-style"],
+    ["fontVariant", "font-variant"],
+    ["fontWeight", "font-weight"],
+    ["glyphName", "glyph-name"],
+    ["glyphOrientationHorizontal", "glyph-orientation-horizontal"],
+    ["glyphOrientationVertical", "glyph-orientation-vertical"],
+    ["horizAdvX", "horiz-adv-x"],
+    ["horizOriginX", "horiz-origin-x"],
+    ["imageRendering", "image-rendering"],
+    ["letterSpacing", "letter-spacing"],
+    ["lightingColor", "lighting-color"],
+    ["markerEnd", "marker-end"],
+    ["markerMid", "marker-mid"],
+    ["markerStart", "marker-start"],
+    ["overlinePosition", "overline-position"],
+    ["overlineThickness", "overline-thickness"],
+    ["paintOrder", "paint-order"],
+    ["panose-1", "panose-1"],
+    ["pointerEvents", "pointer-events"],
+    ["renderingIntent", "rendering-intent"],
+    ["shapeRendering", "shape-rendering"],
+    ["stopColor", "stop-color"],
+    ["stopOpacity", "stop-opacity"],
+    ["strikethroughPosition", "strikethrough-position"],
+    ["strikethroughThickness", "strikethrough-thickness"],
+    ["strokeDasharray", "stroke-dasharray"],
+    ["strokeDashoffset", "stroke-dashoffset"],
+    ["strokeLinecap", "stroke-linecap"],
+    ["strokeLinejoin", "stroke-linejoin"],
+    ["strokeMiterlimit", "stroke-miterlimit"],
+    ["strokeOpacity", "stroke-opacity"],
+    ["strokeWidth", "stroke-width"],
+    ["textAnchor", "text-anchor"],
+    ["textDecoration", "text-decoration"],
+    ["textRendering", "text-rendering"],
+    ["transformOrigin", "transform-origin"],
+    ["underlinePosition", "underline-position"],
+    ["underlineThickness", "underline-thickness"],
+    ["unicodeBidi", "unicode-bidi"],
+    ["unicodeRange", "unicode-range"],
+    ["unitsPerEm", "units-per-em"],
+    ["vAlphabetic", "v-alphabetic"],
+    ["vHanging", "v-hanging"],
+    ["vIdeographic", "v-ideographic"],
+    ["vMathematical", "v-mathematical"],
+    ["vectorEffect", "vector-effect"],
+    ["vertAdvY", "vert-adv-y"],
+    ["vertOriginX", "vert-origin-x"],
+    ["vertOriginY", "vert-origin-y"],
+    ["wordSpacing", "word-spacing"],
+    ["writingMode", "writing-mode"],
+    ["xmlnsXlink", "xmlns:xlink"],
+    ["xHeight", "x-height"]
+  ]),
+  matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
   if ("boolean" === typeof text || "number" === typeof text) return "" + text;
   text = "" + text;
@@ -167,101 +252,22 @@ function pushStyleAttribute(target, style) {
         if (0 === styleName.indexOf("--")) {
           var nameChunk = escapeTextForBrowser(styleName);
           styleValue = escapeTextForBrowser(("" + styleValue).trim());
-        } else if (
-          ((nameChunk = styleNameCache.get(styleName)),
-          void 0 === nameChunk &&
-            ((nameChunk = escapeTextForBrowser(
-              styleName
-                .replace(uppercasePattern, "-$1")
-                .toLowerCase()
-                .replace(msPattern, "-ms-")
-            )),
-            styleNameCache.set(styleName, nameChunk)),
-          "number" === typeof styleValue)
-        ) {
-          var JSCompiler_temp;
-          if ((JSCompiler_temp = 0 !== styleValue)) {
-            a: switch (styleName) {
-              case "animationIterationCount":
-              case "aspectRatio":
-              case "borderImageOutset":
-              case "borderImageSlice":
-              case "borderImageWidth":
-              case "boxFlex":
-              case "boxFlexGroup":
-              case "boxOrdinalGroup":
-              case "columnCount":
-              case "columns":
-              case "flex":
-              case "flexGrow":
-              case "flexPositive":
-              case "flexShrink":
-              case "flexNegative":
-              case "flexOrder":
-              case "gridArea":
-              case "gridRow":
-              case "gridRowEnd":
-              case "gridRowSpan":
-              case "gridRowStart":
-              case "gridColumn":
-              case "gridColumnEnd":
-              case "gridColumnSpan":
-              case "gridColumnStart":
-              case "fontWeight":
-              case "lineClamp":
-              case "lineHeight":
-              case "opacity":
-              case "order":
-              case "orphans":
-              case "scale":
-              case "tabSize":
-              case "widows":
-              case "zIndex":
-              case "zoom":
-              case "fillOpacity":
-              case "floodOpacity":
-              case "stopOpacity":
-              case "strokeDasharray":
-              case "strokeDashoffset":
-              case "strokeMiterlimit":
-              case "strokeOpacity":
-              case "strokeWidth":
-              case "MozAnimationIterationCount":
-              case "MozBoxFlex":
-              case "MozBoxFlexGroup":
-              case "MozLineClamp":
-              case "msAnimationIterationCount":
-              case "msFlex":
-              case "msZoom":
-              case "msFlexGrow":
-              case "msFlexNegative":
-              case "msFlexOrder":
-              case "msFlexPositive":
-              case "msFlexShrink":
-              case "msGridColumn":
-              case "msGridColumnSpan":
-              case "msGridRow":
-              case "msGridRowSpan":
-              case "WebkitAnimationIterationCount":
-              case "WebkitBoxFlex":
-              case "WebKitBoxFlexGroup":
-              case "WebkitBoxOrdinalGroup":
-              case "WebkitColumnCount":
-              case "WebkitColumns":
-              case "WebkitFlex":
-              case "WebkitFlexGrow":
-              case "WebkitFlexPositive":
-              case "WebkitFlexShrink":
-              case "WebkitLineClamp":
-                JSCompiler_temp = !0;
-                break a;
-              default:
-                JSCompiler_temp = !1;
-            }
-            JSCompiler_temp = !JSCompiler_temp;
-          }
-          styleValue = JSCompiler_temp ? styleValue + "px" : "" + styleValue;
-        } else styleValue = escapeTextForBrowser(("" + styleValue).trim());
+        } else
+          (nameChunk = styleNameCache.get(styleName)),
+            void 0 === nameChunk &&
+              ((nameChunk = escapeTextForBrowser(
+                styleName
+                  .replace(uppercasePattern, "-$1")
+                  .toLowerCase()
+                  .replace(msPattern, "-ms-")
+              )),
+              styleNameCache.set(styleName, nameChunk)),
+            (styleValue =
+              "number" === typeof styleValue
+                ? 0 === styleValue || unitlessNumbers.has(styleName)
+                  ? "" + styleValue
+                  : styleValue + "px"
+                : escapeTextForBrowser(("" + styleValue).trim()));
         isFirst
           ? ((isFirst = !1),
             target.push(' style="', nameChunk, ":", styleValue))
@@ -284,19 +290,21 @@ function pushStringAttribute(target, name, value) {
 }
 function pushAttribute(target, name, value) {
   switch (name) {
+    case "className":
+      pushStringAttribute(target, "class", value);
+      break;
+    case "tabIndex":
+      pushStringAttribute(target, "tabindex", value);
+      break;
+    case "dir":
+    case "role":
+    case "viewBox":
+    case "width":
+    case "height":
+      pushStringAttribute(target, name, value);
+      break;
     case "style":
       pushStyleAttribute(target, value);
-      break;
-    case "defaultValue":
-    case "defaultChecked":
-    case "innerHTML":
-    case "suppressContentEditableWarning":
-    case "suppressHydrationWarning":
-      break;
-    case "autoFocus":
-    case "multiple":
-    case "muted":
-      pushBooleanAttribute(target, name.toLowerCase(), value);
       break;
     case "src":
     case "href":
@@ -313,6 +321,17 @@ function pushAttribute(target, name, value) {
       value = sanitizeURL("" + value);
       target.push(" ", name, '="', escapeTextForBrowser(value), '"');
       break;
+    case "defaultValue":
+    case "defaultChecked":
+    case "innerHTML":
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+      break;
+    case "autoFocus":
+    case "multiple":
+    case "muted":
+      pushBooleanAttribute(target, name.toLowerCase(), value);
+      break;
     case "xlinkHref":
       if (
         "function" === typeof value ||
@@ -320,8 +339,8 @@ function pushAttribute(target, name, value) {
         "boolean" === typeof value
       )
         break;
-      name = sanitizeURL("" + value);
-      target.push(" ", "xlink:href", '="', escapeTextForBrowser(name), '"');
+      value = sanitizeURL("" + value);
+      target.push(" ", "xlink:href", '="', escapeTextForBrowser(value), '"');
       break;
     case "contentEditable":
     case "spellCheck":
@@ -388,246 +407,6 @@ function pushAttribute(target, name, value) {
         isNaN(value) ||
         target.push(" ", name, '="', escapeTextForBrowser(value), '"');
       break;
-    case "acceptCharset":
-      pushStringAttribute(target, "accept-charset", value);
-      break;
-    case "className":
-      pushStringAttribute(target, "class", value);
-      break;
-    case "htmlFor":
-      pushStringAttribute(target, "for", value);
-      break;
-    case "httpEquiv":
-      pushStringAttribute(target, "http-equiv", value);
-      break;
-    case "tabIndex":
-      pushStringAttribute(target, "tabindex", value);
-      break;
-    case "crossOrigin":
-      pushStringAttribute(target, "crossorigin", value);
-      break;
-    case "accentHeight":
-      pushStringAttribute(target, "accent-height", value);
-      break;
-    case "alignmentBaseline":
-      pushStringAttribute(target, "alignment-baseline", value);
-      break;
-    case "arabicForm":
-      pushStringAttribute(target, "arabic-form", value);
-      break;
-    case "baselineShift":
-      pushStringAttribute(target, "baseline-shift", value);
-      break;
-    case "capHeight":
-      pushStringAttribute(target, "cap-height", value);
-      break;
-    case "clipPath":
-      pushStringAttribute(target, "clip-path", value);
-      break;
-    case "clipRule":
-      pushStringAttribute(target, "clip-rule", value);
-      break;
-    case "colorInterpolation":
-      pushStringAttribute(target, "color-interpolation", value);
-      break;
-    case "colorInterpolationFilters":
-      pushStringAttribute(target, "color-interpolation-filters", value);
-      break;
-    case "colorProfile":
-      pushStringAttribute(target, "color-profile", value);
-      break;
-    case "colorRendering":
-      pushStringAttribute(target, "color-rendering", value);
-      break;
-    case "dominantBaseline":
-      pushStringAttribute(target, "dominant-baseline", value);
-      break;
-    case "enableBackground":
-      pushStringAttribute(target, "enable-background", value);
-      break;
-    case "fillOpacity":
-      pushStringAttribute(target, "fill-opacity", value);
-      break;
-    case "fillRule":
-      pushStringAttribute(target, "fill-rule", value);
-      break;
-    case "floodColor":
-      pushStringAttribute(target, "flood-color", value);
-      break;
-    case "floodOpacity":
-      pushStringAttribute(target, "flood-opacity", value);
-      break;
-    case "fontFamily":
-      pushStringAttribute(target, "font-family", value);
-      break;
-    case "fontSize":
-      pushStringAttribute(target, "font-size", value);
-      break;
-    case "fontSizeAdjust":
-      pushStringAttribute(target, "font-size-adjust", value);
-      break;
-    case "fontStretch":
-      pushStringAttribute(target, "font-stretch", value);
-      break;
-    case "fontStyle":
-      pushStringAttribute(target, "font-style", value);
-      break;
-    case "fontVariant":
-      pushStringAttribute(target, "font-variant", value);
-      break;
-    case "fontWeight":
-      pushStringAttribute(target, "font-weight", value);
-      break;
-    case "glyphName":
-      pushStringAttribute(target, "glyph-name", value);
-      break;
-    case "glyphOrientationHorizontal":
-      pushStringAttribute(target, "glyph-orientation-horizontal", value);
-      break;
-    case "glyphOrientationVertical":
-      pushStringAttribute(target, "glyph-orientation-vertical", value);
-      break;
-    case "horizAdvX":
-      pushStringAttribute(target, "horiz-adv-x", value);
-      break;
-    case "horizOriginX":
-      pushStringAttribute(target, "horiz-origin-x", value);
-      break;
-    case "imageRendering":
-      pushStringAttribute(target, "image-rendering", value);
-      break;
-    case "letterSpacing":
-      pushStringAttribute(target, "letter-spacing", value);
-      break;
-    case "lightingColor":
-      pushStringAttribute(target, "lighting-color", value);
-      break;
-    case "markerEnd":
-      pushStringAttribute(target, "marker-end", value);
-      break;
-    case "markerMid":
-      pushStringAttribute(target, "marker-mid", value);
-      break;
-    case "markerStart":
-      pushStringAttribute(target, "marker-start", value);
-      break;
-    case "overlinePosition":
-      pushStringAttribute(target, "overline-position", value);
-      break;
-    case "overlineThickness":
-      pushStringAttribute(target, "overline-thickness", value);
-      break;
-    case "paintOrder":
-      pushStringAttribute(target, "paint-order", value);
-      break;
-    case "panose-1":
-      pushStringAttribute(target, "panose-1", value);
-      break;
-    case "pointerEvents":
-      pushStringAttribute(target, "pointer-events", value);
-      break;
-    case "renderingIntent":
-      pushStringAttribute(target, "rendering-intent", value);
-      break;
-    case "shapeRendering":
-      pushStringAttribute(target, "shape-rendering", value);
-      break;
-    case "stopColor":
-      pushStringAttribute(target, "stop-color", value);
-      break;
-    case "stopOpacity":
-      pushStringAttribute(target, "stop-opacity", value);
-      break;
-    case "strikethroughPosition":
-      pushStringAttribute(target, "strikethrough-position", value);
-      break;
-    case "strikethroughThickness":
-      pushStringAttribute(target, "strikethrough-thickness", value);
-      break;
-    case "strokeDasharray":
-      pushStringAttribute(target, "stroke-dasharray", value);
-      break;
-    case "strokeDashoffset":
-      pushStringAttribute(target, "stroke-dashoffset", value);
-      break;
-    case "strokeLinecap":
-      pushStringAttribute(target, "stroke-linecap", value);
-      break;
-    case "strokeLinejoin":
-      pushStringAttribute(target, "stroke-linejoin", value);
-      break;
-    case "strokeMiterlimit":
-      pushStringAttribute(target, "stroke-miterlimit", value);
-      break;
-    case "strokeOpacity":
-      pushStringAttribute(target, "stroke-opacity", value);
-      break;
-    case "strokeWidth":
-      pushStringAttribute(target, "stroke-width", value);
-      break;
-    case "textAnchor":
-      pushStringAttribute(target, "text-anchor", value);
-      break;
-    case "textDecoration":
-      pushStringAttribute(target, "text-decoration", value);
-      break;
-    case "textRendering":
-      pushStringAttribute(target, "text-rendering", value);
-      break;
-    case "transformOrigin":
-      pushStringAttribute(target, "transform-origin", value);
-      break;
-    case "underlinePosition":
-      pushStringAttribute(target, "underline-position", value);
-      break;
-    case "underlineThickness":
-      pushStringAttribute(target, "underline-thickness", value);
-      break;
-    case "unicodeBidi":
-      pushStringAttribute(target, "unicode-bidi", value);
-      break;
-    case "unicodeRange":
-      pushStringAttribute(target, "unicode-range", value);
-      break;
-    case "unitsPerEm":
-      pushStringAttribute(target, "units-per-em", value);
-      break;
-    case "vAlphabetic":
-      pushStringAttribute(target, "v-alphabetic", value);
-      break;
-    case "vHanging":
-      pushStringAttribute(target, "v-hanging", value);
-      break;
-    case "vIdeographic":
-      pushStringAttribute(target, "v-ideographic", value);
-      break;
-    case "vMathematical":
-      pushStringAttribute(target, "v-mathematical", value);
-      break;
-    case "vectorEffect":
-      pushStringAttribute(target, "vector-effect", value);
-      break;
-    case "vertAdvY":
-      pushStringAttribute(target, "vert-adv-y", value);
-      break;
-    case "vertOriginX":
-      pushStringAttribute(target, "vert-origin-x", value);
-      break;
-    case "vertOriginY":
-      pushStringAttribute(target, "vert-origin-y", value);
-      break;
-    case "wordSpacing":
-      pushStringAttribute(target, "word-spacing", value);
-      break;
-    case "writingMode":
-      pushStringAttribute(target, "writing-mode", value);
-      break;
-    case "xmlnsXlink":
-      pushStringAttribute(target, "xmlns:xlink", value);
-      break;
-    case "xHeight":
-      pushStringAttribute(target, "x-height", value);
-      break;
     case "xlinkActuate":
       pushStringAttribute(target, "xlink:actuate", value);
       break;
@@ -657,21 +436,21 @@ function pushAttribute(target, name, value) {
       break;
     default:
       if (
-        (!(2 < name.length) ||
-          ("o" !== name[0] && "O" !== name[0]) ||
-          ("n" !== name[1] && "N" !== name[1])) &&
-        isAttributeNameSafe(name)
-      ) {
-        switch (typeof value) {
-          case "function":
-          case "symbol":
-            return;
-          case "boolean":
-            var prefix = name.toLowerCase().slice(0, 5);
-            if ("data-" !== prefix && "aria-" !== prefix) return;
+        !(2 < name.length) ||
+        ("o" !== name[0] && "O" !== name[0]) ||
+        ("n" !== name[1] && "N" !== name[1])
+      )
+        if (((name = aliases.get(name) || name), isAttributeNameSafe(name))) {
+          switch (typeof value) {
+            case "function":
+            case "symbol":
+              return;
+            case "boolean":
+              var prefix = name.toLowerCase().slice(0, 5);
+              if ("data-" !== prefix && "aria-" !== prefix) return;
+          }
+          target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
-        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      }
   }
 }
 function pushInnerHTML(target, innerHTML, children) {
@@ -918,6 +697,15 @@ function pushStartInstance(
   textEmbedded
 ) {
   switch (type) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li":
+      break;
     case "select":
       target.push(startChunkForTag("select"));
       resources = textEmbedded = null;
@@ -1326,7 +1114,7 @@ function pushStartInstance(
     case "font-face-format":
     case "font-face-name":
     case "missing-glyph":
-      return pushStartGenericElement(target, props, type);
+      break;
     case "head":
       return (
         2 > formatContext.insertionMode && null === responseState.headChunks
@@ -1352,59 +1140,60 @@ function pushStartInstance(
         target
       );
     default:
-      if (-1 === type.indexOf("-"))
-        return pushStartGenericElement(target, props, type);
-      target.push(startChunkForTag(type));
-      resources = textEmbedded = null;
-      for (var propKey$jscomp$3 in props)
-        if (
-          hasOwnProperty.call(props, propKey$jscomp$3) &&
-          ((propValue = props[propKey$jscomp$3]),
-          !(
-            null == propValue ||
-            (enableCustomElementPropertySupport &&
-              ("function" === typeof propValue ||
-                "object" === typeof propValue)) ||
-            (enableCustomElementPropertySupport && !1 === propValue)
-          ))
-        )
-          switch (
-            (enableCustomElementPropertySupport &&
-              !0 === propValue &&
-              (propValue = ""),
-            enableCustomElementPropertySupport &&
-              "className" === propKey$jscomp$3 &&
-              (propKey$jscomp$3 = "class"),
-            propKey$jscomp$3)
-          ) {
-            case "children":
-              textEmbedded = propValue;
-              break;
-            case "dangerouslySetInnerHTML":
-              resources = propValue;
-              break;
-            case "style":
-              pushStyleAttribute(target, propValue);
-              break;
-            case "suppressContentEditableWarning":
-            case "suppressHydrationWarning":
-              break;
-            default:
-              isAttributeNameSafe(propKey$jscomp$3) &&
-                "function" !== typeof propValue &&
-                "symbol" !== typeof propValue &&
-                target.push(
-                  " ",
-                  propKey$jscomp$3,
-                  '="',
-                  escapeTextForBrowser(propValue),
-                  '"'
-                );
-          }
-      target.push(">");
-      pushInnerHTML(target, resources, textEmbedded);
-      return textEmbedded;
+      if (-1 !== type.indexOf("-")) {
+        target.push(startChunkForTag(type));
+        resources = textEmbedded = null;
+        for (var propKey$jscomp$3 in props)
+          if (
+            hasOwnProperty.call(props, propKey$jscomp$3) &&
+            ((propValue = props[propKey$jscomp$3]),
+            !(
+              null == propValue ||
+              (enableCustomElementPropertySupport &&
+                ("function" === typeof propValue ||
+                  "object" === typeof propValue)) ||
+              (enableCustomElementPropertySupport && !1 === propValue)
+            ))
+          )
+            switch (
+              (enableCustomElementPropertySupport &&
+                !0 === propValue &&
+                (propValue = ""),
+              enableCustomElementPropertySupport &&
+                "className" === propKey$jscomp$3 &&
+                (propKey$jscomp$3 = "class"),
+              propKey$jscomp$3)
+            ) {
+              case "children":
+                textEmbedded = propValue;
+                break;
+              case "dangerouslySetInnerHTML":
+                resources = propValue;
+                break;
+              case "style":
+                pushStyleAttribute(target, propValue);
+                break;
+              case "suppressContentEditableWarning":
+              case "suppressHydrationWarning":
+                break;
+              default:
+                isAttributeNameSafe(propKey$jscomp$3) &&
+                  "function" !== typeof propValue &&
+                  "symbol" !== typeof propValue &&
+                  target.push(
+                    " ",
+                    propKey$jscomp$3,
+                    '="',
+                    escapeTextForBrowser(propValue),
+                    '"'
+                  );
+            }
+        target.push(">");
+        pushInnerHTML(target, resources, textEmbedded);
+        return textEmbedded;
+      }
   }
+  return pushStartGenericElement(target, props, type);
 }
 function writeStartPendingSuspenseBoundary(destination, responseState, id) {
   destination.push('\x3c!--$?--\x3e<template id="');
@@ -3888,4 +3677,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-1787be2a";
+exports.version = "18.3.0-www-modern-5739700d";
