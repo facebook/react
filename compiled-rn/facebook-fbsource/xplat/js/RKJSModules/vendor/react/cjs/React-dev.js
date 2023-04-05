@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-next-d5fd60f7e-20230404";
+var ReactVersion = "18.3.0-next-790ebc962-20230404";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -679,8 +679,6 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
-
-      // eslint-disable-next-line no-fallthrough
     }
   }
 
