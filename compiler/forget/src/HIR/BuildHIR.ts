@@ -36,7 +36,7 @@ import {
   SpreadPattern,
   ThrowTerminal,
 } from "./HIR";
-import HIRBuilder from "./HIRBuilder";
+import HIRBuilder, { Bindings } from "./HIRBuilder";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -58,11 +58,12 @@ import HIRBuilder from "./HIRBuilder";
 export function lower(
   func: NodePath<t.Function>,
   env: Environment,
+  bindings: Bindings | null = null,
   capturedRefs: t.Identifier[] = [],
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
   parent: NodePath<t.Function> | null = null
 ): Result<HIRFunction, CompilerError> {
-  const builder = new HIRBuilder(env, parent ?? func, capturedRefs);
+  const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
   const context: Place[] = [];
 
   for (const ref of capturedRefs ?? []) {
@@ -2134,6 +2135,7 @@ function lowerFunctionExpression(
   const lowering = lower(
     expr,
     builder.environment,
+    builder.bindings,
     [...builder.context, ...captured.identifiers],
     builder.parentFunction
   );

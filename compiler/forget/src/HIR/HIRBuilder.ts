@@ -71,6 +71,11 @@ function newBlock(id: BlockId, kind: BlockKind): WipBlock {
   return { id, kind, instructions: [] };
 }
 
+export type Bindings = Map<
+  string,
+  { node: t.Identifier; identifier: Identifier }
+>;
+
 /**
  * Helper class for constructing a CFG
  */
@@ -80,8 +85,7 @@ export default class HIRBuilder {
   #entry: BlockId;
   #scopes: Array<Scope> = [];
   #context: t.Identifier[];
-  #bindings: Map<string, { node: t.Identifier; identifier: Identifier }> =
-    new Map();
+  #bindings: Bindings;
   #env: Environment;
   parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
@@ -94,6 +98,10 @@ export default class HIRBuilder {
     return this.#context;
   }
 
+  get bindings(): Bindings {
+    return this.#bindings;
+  }
+
   get environment(): Environment {
     return this.#env;
   }
@@ -101,11 +109,13 @@ export default class HIRBuilder {
   constructor(
     env: Environment,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
-    context: t.Identifier[]
+    bindings: Bindings | null = null,
+    context: t.Identifier[] | null = null
   ) {
     this.#env = env;
+    this.#bindings = bindings ?? new Map();
     this.parentFunction = parentFunction;
-    this.#context = context;
+    this.#context = context ?? [];
     this.#entry = makeBlockId(env.nextBlockId);
     this.#current = newBlock(this.#entry, "block");
   }

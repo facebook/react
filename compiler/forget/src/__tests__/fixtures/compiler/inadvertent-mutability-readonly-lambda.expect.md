@@ -27,7 +27,7 @@ function Component(props) {
   const c_0 = $[0] !== setValue;
   let t0;
   if (c_0) {
-    t0 = (e) => setValue((value) => value + e.target.value);
+    t0 = (e) => setValue((value_0) => value_0 + e.target.value);
     $[0] = setValue;
     $[1] = t0;
   } else {

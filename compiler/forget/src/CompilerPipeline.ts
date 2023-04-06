@@ -56,7 +56,8 @@ export function* run(
   func: NodePath<t.FunctionDeclaration>,
   config?: EnvironmentConfig | null
 ): Generator<CompilerPipelineValue, t.FunctionDeclaration> {
-  const hir = lower(func, new Environment(config ?? null)).unwrap();
+  const env = new Environment(config ?? null);
+  const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   mergeConsecutiveBlocks(hir);
