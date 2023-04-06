@@ -135,6 +135,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
             variant: GotoVariant.Break,
             block: targetBlockId,
             id: terminal.id,
+            loc: terminal.loc,
           };
         }
         break;

@@ -182,6 +182,7 @@ function lowerStatement(
         kind: "throw",
         value,
         id: makeInstructionId(0),
+        loc: stmt.node.loc ?? GeneratedSource,
       };
       builder.terminate(terminal, "block");
       return;
@@ -211,12 +212,14 @@ function lowerStatement(
       const continuationBlock = builder.reserve("block");
       //  Block for the consequent (if the test is truthy)
       const consequentBlock = builder.enter("block", (_blockId) => {
-        lowerStatement(builder, stmt.get("consequent"));
+        const consequent = stmt.get("consequent");
+        lowerStatement(builder, consequent);
         return {
           kind: "goto",
           block: continuationBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: consequent.node.loc ?? GeneratedSource,
         };
       });
       //  Block for the alternate (if the test is not truthy)
@@ -230,6 +233,7 @@ function lowerStatement(
             block: continuationBlock.id,
             variant: GotoVariant.Break,
             id: makeInstructionId(0),
+            loc: alternate.node?.loc ?? GeneratedSource,
           };
         });
       } else {
@@ -244,6 +248,7 @@ function lowerStatement(
         alternate: alternateBlock,
         fallthrough: continuationBlock.id,
         id: makeInstructionId(0),
+        loc: stmt.node.loc ?? GeneratedSource,
       };
       builder.terminateWithContinuation(terminal, continuationBlock);
       return;
@@ -262,6 +267,7 @@ function lowerStatement(
           block,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: stmt.node.loc ?? GeneratedSource,
         },
         "block"
       );
@@ -276,6 +282,7 @@ function lowerStatement(
           block,
           variant: GotoVariant.Continue,
           id: makeInstructionId(0),
+          loc: stmt.node.loc ?? GeneratedSource,
         },
         "block"
       );
@@ -297,7 +304,11 @@ function lowerStatement(
             severity: ErrorSeverity.Todo,
             nodePath: stmt,
           });
-          return { kind: "unsupported", id: makeInstructionId(0) };
+          return {
+            kind: "unsupported",
+            id: makeInstructionId(0),
+            loc: init.node?.loc ?? GeneratedSource,
+          };
         }
         lowerStatement(builder, init);
         return {
@@ -305,6 +316,7 @@ function lowerStatement(
           block: testBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: init.node.loc ?? GeneratedSource,
         };
       });
 
@@ -318,6 +330,7 @@ function lowerStatement(
             block: testBlock.id,
             variant: GotoVariant.Break,
             id: makeInstructionId(0),
+            loc: update.node?.loc ?? GeneratedSource,
           };
         });
       }
@@ -328,12 +341,14 @@ function lowerStatement(
           updateBlock ?? testBlock.id,
           continuationBlock.id,
           () => {
-            lowerStatement(builder, stmt.get("body"));
+            const body = stmt.get("body");
+            lowerStatement(builder, body);
             return {
               kind: "goto",
               block: updateBlock ?? testBlock.id,
               variant: GotoVariant.Continue,
               id: makeInstructionId(0),
+              loc: body.node.loc ?? GeneratedSource,
             };
           }
         );
@@ -371,6 +386,7 @@ function lowerStatement(
             consequent: bodyBlock,
             alternate: continuationBlock.id,
             id: makeInstructionId(0),
+            loc: stmt.node.loc ?? GeneratedSource,
           },
           continuationBlock
         );
@@ -390,12 +406,14 @@ function lowerStatement(
           conditionalBlock.id,
           continuationBlock.id,
           () => {
-            lowerStatement(builder, stmt.get("body"));
+            const body = stmt.get("body");
+            lowerStatement(builder, body);
             return {
               kind: "goto",
               block: conditionalBlock.id,
               variant: GotoVariant.Continue,
               id: makeInstructionId(0),
+              loc: body.node.loc ?? GeneratedSource,
             };
           }
         );
@@ -427,6 +445,7 @@ function lowerStatement(
         consequent: loopBlock,
         alternate: continuationBlock.id,
         id: makeInstructionId(0),
+        loc: stmt.node.loc ?? GeneratedSource,
       };
       //  Complete the conditional and continue with code after the loop
       builder.terminateWithContinuation(terminal, continuationBlock);
@@ -452,14 +471,16 @@ function lowerStatement(
           // explicitly *don't* pass the label down
           const continuationBlock = builder.reserve("block");
           const block = builder.enter("block", () => {
+            const body = stmt.get("body");
             builder.label(label, continuationBlock.id, () => {
-              lowerStatement(builder, stmt.get("body"));
+              lowerStatement(builder, body);
             });
             return {
               kind: "goto",
               block: continuationBlock.id,
               variant: GotoVariant.Break,
               id: makeInstructionId(0),
+              loc: body.node.loc ?? GeneratedSource,
             };
           });
           builder.terminateWithContinuation(
@@ -521,6 +542,7 @@ function lowerStatement(
               block: fallthrough,
               variant: GotoVariant.Break,
               id: makeInstructionId(0),
+              loc: case_.node.loc ?? GeneratedSource,
             };
           });
         });
@@ -561,6 +583,7 @@ function lowerStatement(
           cases,
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
+          loc: stmt.node.loc ?? GeneratedSource,
         },
         continuationBlock
       );
@@ -646,12 +669,14 @@ function lowerStatement(
           conditionalBlock.id,
           continuationBlock.id,
           () => {
-            lowerStatement(builder, stmt.get("body"));
+            const body = stmt.get("body");
+            lowerStatement(builder, body);
             return {
               kind: "goto",
               block: conditionalBlock.id,
               variant: GotoVariant.Continue,
               id: makeInstructionId(0),
+              loc: body.node.loc ?? GeneratedSource,
             };
           }
         );
@@ -681,6 +706,7 @@ function lowerStatement(
         consequent: loopBlock,
         alternate: continuationBlock.id,
         id: makeInstructionId(0),
+        loc,
       };
       //  Complete the conditional and continue with code after the loop
       builder.terminateWithContinuation(terminal, continuationBlock);
@@ -729,12 +755,14 @@ function lowerStatement(
 
       const loopBlock = builder.enter("block", (_blockId) => {
         return builder.loop(label, initBlock.id, continuationBlock.id, () => {
-          lowerStatement(builder, stmt.get("body"));
+          const body = stmt.get("body");
+          lowerStatement(builder, body);
           return {
             kind: "goto",
             block: initBlock.id,
             variant: GotoVariant.Continue,
             id: makeInstructionId(0),
+            loc: body.node.loc ?? GeneratedSource,
           };
         });
       });
@@ -794,6 +822,7 @@ function lowerStatement(
           test,
           consequent: loopBlock,
           alternate: continuationBlock.id,
+          loc: stmt.node.loc ?? GeneratedSource,
         },
         continuationBlock
       );
@@ -1078,6 +1107,7 @@ function lowerExpression(
           variant: GotoVariant.Break,
           block: continuationBlock.id,
           id: makeInstructionId(0),
+          loc,
         };
       });
 
@@ -1099,6 +1129,7 @@ function lowerExpression(
           variant: GotoVariant.Break,
           block: continuationBlock.id,
           id: makeInstructionId(0),
+          loc,
         };
       });
 
@@ -1217,10 +1248,8 @@ function lowerExpression(
 
       //  Block for the consequent (if the test is truthy)
       const consequentBlock = builder.enter("value", (_blockId) => {
-        const consequent = lowerExpressionToTemporary(
-          builder,
-          expr.get("consequent")
-        );
+        const consequentPath = expr.get("consequent");
+        const consequent = lowerExpressionToTemporary(builder, consequentPath);
         lowerValueToTemporary(builder, {
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
@@ -1232,14 +1261,13 @@ function lowerExpression(
           block: continuationBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: consequentPath.node.loc ?? GeneratedSource,
         };
       });
       //  Block for the alternate (if the test is not truthy)
       const alternateBlock = builder.enter("value", (_blockId) => {
-        const alternate = lowerExpressionToTemporary(
-          builder,
-          expr.get("alternate")
-        );
+        const alternatePath = expr.get("alternate");
+        const alternate = lowerExpressionToTemporary(builder, alternatePath);
         lowerValueToTemporary(builder, {
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
@@ -1251,6 +1279,7 @@ function lowerExpression(
           block: continuationBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: alternatePath.node.loc ?? GeneratedSource,
         };
       });
 
@@ -1272,6 +1301,7 @@ function lowerExpression(
           consequent: consequentBlock,
           alternate: alternateBlock,
           id: makeInstructionId(0),
+          loc: exprLoc,
         },
         continuationBlock
       );
@@ -1299,6 +1329,7 @@ function lowerExpression(
           block: continuationBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: leftPlace.loc,
         };
       });
       const alternate = builder.enter("value", () => {
@@ -1314,6 +1345,7 @@ function lowerExpression(
           block: continuationBlock.id,
           variant: GotoVariant.Break,
           id: makeInstructionId(0),
+          loc: right.loc,
         };
       });
       builder.terminateWithContinuation(
@@ -1345,6 +1377,7 @@ function lowerExpression(
           consequent,
           alternate,
           id: makeInstructionId(0),
+          loc: exprLoc,
         },
         continuationBlock
       );
@@ -2537,6 +2570,7 @@ function lowerAssignment(
           consequent,
           alternate,
           id: makeInstructionId(0),
+          loc,
         },
         continuationBlock
       );

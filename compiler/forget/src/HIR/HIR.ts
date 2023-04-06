@@ -278,13 +278,36 @@ export type Terminal =
   | OptionalCallTerminal
   | LabelTerminal;
 
+function _staticInvariantTerminalHasLocation(
+  terminal: Terminal
+): SourceLocation {
+  // If this fails, it is because a variant of Terminal is missing a .loc - add it!
+  return terminal.loc;
+}
+
+function _staticInvariantTerminalHasInstructionId(
+  terminal: Terminal
+): InstructionId {
+  // If this fails, it is because a variant of Terminal is missing a .id - add it!
+  return terminal.id;
+}
+
 /**
  * Terminal nodes allowed for a value block
  */
 export type ValueTerminal = IfTerminal | GotoTerminal;
 // A terminal that couldn't be lowered correctly.
-export type UnsupportedTerminal = { kind: "unsupported"; id: InstructionId };
-export type ThrowTerminal = { kind: "throw"; value: Place; id: InstructionId };
+export type UnsupportedTerminal = {
+  kind: "unsupported";
+  id: InstructionId;
+  loc: SourceLocation;
+};
+export type ThrowTerminal = {
+  kind: "throw";
+  value: Place;
+  id: InstructionId;
+  loc: SourceLocation;
+};
 export type Case = { test: Place | null; block: BlockId };
 
 export type ReturnTerminal = {
@@ -299,6 +322,7 @@ export type GotoTerminal = {
   block: BlockId;
   variant: GotoVariant;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 export enum GotoVariant {
@@ -313,6 +337,7 @@ export type IfTerminal = {
   alternate: BlockId;
   fallthrough: BlockId | null;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 export type BranchTerminal = {
@@ -321,6 +346,7 @@ export type BranchTerminal = {
   consequent: BlockId;
   alternate: BlockId;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 export type SwitchTerminal = {
@@ -329,6 +355,7 @@ export type SwitchTerminal = {
   cases: Case[];
   fallthrough: BlockId | null;
   id: InstructionId;
+  loc: SourceLocation;
 };
 
 export type DoWhileTerminal = {

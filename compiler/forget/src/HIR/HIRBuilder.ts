@@ -581,6 +581,7 @@ export function removeDeadDoWhileStatements(func: HIR): void {
           block: block.terminal.loop,
           variant: GotoVariant.Break,
           id: block.terminal.id,
+          loc: block.terminal.loc,
         };
       }
     }

@@ -512,6 +512,7 @@ export function mapTerminalSuccessors(
         block: target,
         variant: terminal.variant,
         id: makeInstructionId(0),
+        loc: terminal.loc,
       };
     }
     case "if": {
@@ -526,6 +527,7 @@ export function mapTerminalSuccessors(
         alternate,
         fallthrough,
         id: makeInstructionId(0),
+        loc: terminal.loc,
       };
     }
     case "branch": {
@@ -537,6 +539,7 @@ export function mapTerminalSuccessors(
         consequent,
         alternate,
         id: makeInstructionId(0),
+        loc: terminal.loc,
       };
     }
     case "switch": {
@@ -555,6 +558,7 @@ export function mapTerminalSuccessors(
         cases,
         fallthrough,
         id: makeInstructionId(0),
+        loc: terminal.loc,
       };
     }
     case "logical": {
