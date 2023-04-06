@@ -1,8 +1,8 @@
 /**
  * Install the hook on window, which is an event emitter.
- * Note because Chrome content scripts cannot directly modify the window object,
- * we are evaling this function by inserting a script tag.
- * That's why we have to inline the whole event emitter implementation,
+ * Note: this global hook __REACT_DEVTOOLS_GLOBAL_HOOK__ is a de facto public API.
+ * It's especially important to avoid creating direct dependency on the DevTools Backend.
+ * That's why we still inline the whole event emitter implementation,
  * the string format implementation, and part of the console implementation here.
  *
  * @flow
