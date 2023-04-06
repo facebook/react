@@ -3857,7 +3857,7 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
     pushEffect(
       9,
       updateStoreInstance.bind(null, fiber, hook, nextSnapshot, getSnapshot),
-      void 0,
+      { destroy: void 0 },
       null
     );
     subscribe = workInProgressRoot;
@@ -3926,18 +3926,18 @@ function mountState(initialState) {
   );
   return [hook.memoizedState, initialState];
 }
-function pushEffect(tag, create, destroy, deps) {
-  tag = { tag: tag, create: create, destroy: destroy, deps: deps, next: null };
+function pushEffect(tag, create, inst, deps) {
+  tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
   create = currentlyRenderingFiber$1.updateQueue;
   null === create
     ? ((create = createFunctionComponentUpdateQueue()),
       (currentlyRenderingFiber$1.updateQueue = create),
       (create.lastEffect = tag.next = tag))
-    : ((destroy = create.lastEffect),
-      null === destroy
+    : ((inst = create.lastEffect),
+      null === inst
         ? (create.lastEffect = tag.next = tag)
-        : ((deps = destroy.next),
-          (destroy.next = tag),
+        : ((deps = inst.next),
+          (inst.next = tag),
           (tag.next = deps),
           (create.lastEffect = tag)));
   return tag;
@@ -3951,24 +3951,20 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
   hook.memoizedState = pushEffect(
     1 | hookFlags,
     create,
-    void 0,
+    { destroy: void 0 },
     void 0 === deps ? null : deps
   );
 }
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   deps = void 0 === deps ? null : deps;
-  var destroy = void 0;
-  if (null !== currentHook) {
-    var prevEffect = currentHook.memoizedState;
-    destroy = prevEffect.destroy;
-    if (null !== deps && areHookInputsEqual(deps, prevEffect.deps)) {
-      hook.memoizedState = pushEffect(hookFlags, create, destroy, deps);
-      return;
-    }
-  }
-  currentlyRenderingFiber$1.flags |= fiberFlags;
-  hook.memoizedState = pushEffect(1 | hookFlags, create, destroy, deps);
+  var inst = hook.memoizedState.inst;
+  null !== currentHook &&
+  null !== deps &&
+  areHookInputsEqual(deps, currentHook.memoizedState.deps)
+    ? (hook.memoizedState = pushEffect(hookFlags, create, inst, deps))
+    : ((currentlyRenderingFiber$1.flags |= fiberFlags),
+      (hook.memoizedState = pushEffect(1 | hookFlags, create, inst, deps)));
 }
 function mountEffect(create, deps) {
   mountEffectImpl(8390656, 8, create, deps);
@@ -4265,7 +4261,7 @@ var HooksDispatcherOnMount = {
     pushEffect(
       9,
       updateStoreInstance.bind(null, fiber, root, nextSnapshot, getSnapshot),
-      void 0,
+      { destroy: void 0 },
       null
     );
     return nextSnapshot;
@@ -6303,10 +6299,11 @@ function commitHookEffectListUnmount(
     var effect = (updateQueue = updateQueue.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var destroy = effect.destroy;
-        effect.destroy = void 0;
+        var inst = effect.inst,
+          destroy = inst.destroy;
         void 0 !== destroy &&
-          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+          ((inst.destroy = void 0),
+          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy));
       }
       effect = effect.next;
     } while (effect !== updateQueue);
@@ -6319,8 +6316,10 @@ function commitHookEffectListMount(flags, finishedWork) {
     var effect = (finishedWork = finishedWork.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var create$81 = effect.create;
-        effect.destroy = create$81();
+        var create$81 = effect.create,
+          inst = effect.inst;
+        create$81 = create$81();
+        inst.destroy = create$81;
       }
       effect = effect.next;
     } while (effect !== finishedWork);
@@ -6664,18 +6663,24 @@ function commitDeletionEffectsOnFiber(
       ) {
         prevHostParentIsContainer = prevHostParent = prevHostParent.next;
         do {
-          var _effect = prevHostParentIsContainer,
-            destroy = _effect.destroy;
-          _effect = _effect.tag;
+          var tag = prevHostParentIsContainer.tag,
+            inst = prevHostParentIsContainer.inst,
+            destroy = inst.destroy;
           void 0 !== destroy &&
-            (0 !== (_effect & 2)
-              ? safelyCallDestroy(deletedFiber, nearestMountedAncestor, destroy)
-              : 0 !== (_effect & 4) &&
+            (0 !== (tag & 2)
+              ? ((inst.destroy = void 0),
                 safelyCallDestroy(
                   deletedFiber,
                   nearestMountedAncestor,
                   destroy
-                ));
+                ))
+              : 0 !== (tag & 4) &&
+                ((inst.destroy = void 0),
+                safelyCallDestroy(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  destroy
+                )));
           prevHostParentIsContainer = prevHostParentIsContainer.next;
         } while (prevHostParentIsContainer !== prevHostParent);
       }
@@ -9810,7 +9815,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1107 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-60cfeeebe-20230406",
+    version: "18.3.0-next-85bb7b685-20230406",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9852,7 +9857,7 @@ var internals$jscomp$inline_1359 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-60cfeeebe-20230406"
+  reconcilerVersion: "18.3.0-next-85bb7b685-20230406"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1360 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
