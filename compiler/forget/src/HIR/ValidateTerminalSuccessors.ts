@@ -15,10 +15,11 @@ export function validateTerminalSuccessors(fn: HIRFunction): void {
     mapTerminalSuccessors(block.terminal, (successor) => {
       if (!fn.body.blocks.has(successor)) {
         CompilerError.invariant(
+          `Terminal successor references unknown block`,
+          (block.terminal as any).loc ?? GeneratedSource,
           `Block bb${successor} does not exist for terminal '${printTerminal(
             block.terminal
-          )}'`,
-          (block.terminal as any).loc ?? GeneratedSource
+          )}'`
         );
       }
       return successor;

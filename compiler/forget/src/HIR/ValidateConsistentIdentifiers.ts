@@ -37,16 +37,16 @@ export function validateConsistentIdentifiers(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       if (instr.lvalue.identifier.name !== null) {
         CompilerError.invariant(
-          `Expected all lvalues to be temporaries, found '${instr.lvalue.identifier.name}'`,
-          instr.lvalue.loc
+          `Expected all lvalues to be temporaries`,
+          instr.lvalue.loc,
+          `Found named lvalue '${instr.lvalue.identifier.name}'`
         );
       }
       if (assignments.has(instr.lvalue.identifier.id)) {
         CompilerError.invariant(
-          `Expected lvalues to be assigned exactly once, found duplicate assignment of '${printPlace(
-            instr.lvalue
-          )}'`,
-          instr.lvalue.loc
+          `Expected lvalues to be assigned exactly once`,
+          instr.lvalue.loc,
+          `Found duplicate assignment of '${printPlace(instr.lvalue)}'`
         );
       }
       assignments.add(instr.lvalue.identifier.id);
@@ -75,8 +75,9 @@ function validate(
     identifiers.set(identifier.id, identifier);
   } else if (identifier !== previous) {
     CompilerError.invariant(
-      `Duplicate identifier for id ${identifier.id}`,
-      loc ?? GeneratedSource
+      `Duplicate identifier object`,
+      loc ?? GeneratedSource,
+      `Found duplicate identifier object for id ${identifier.id}`
     );
   }
 }

@@ -17,7 +17,7 @@ function component(a) {
 ## Error
 
 ```
-[ReactForget] Invariant: identifier x$6 should have been defined before use (4:4)
+[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$6 is undfined (4:4)
 ```
           
       

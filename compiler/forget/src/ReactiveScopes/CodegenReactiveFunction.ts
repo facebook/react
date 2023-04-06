@@ -318,8 +318,9 @@ function codegenTerminal(
     case "for-of": {
       if (terminal.init.kind !== "SequenceExpression") {
         CompilerError.invariant(
-          `Expected a sequence expression init for ForOf, got: ${terminal.init.kind}`,
-          terminal.init.loc
+          `Expected a sequence expression init for ForOf`,
+          terminal.init.loc,
+          `Got '${terminal.init.kind}' expression instead`
         );
       }
       if (terminal.init.instructions.length !== 2) {
@@ -342,8 +343,9 @@ function codegenTerminal(
         }
         default:
           CompilerError.invariant(
-            `Expected a StoreLocal or Destructure to be assigned to the collection, got: ${iterableItem.value.kind}`,
-            iterableItem.value.loc
+            `Expected a StoreLocal or Destructure to be assigned to the collection`,
+            iterableItem.value.loc,
+            `Found ${iterableItem.value.kind}`
           );
       }
       let varDeclKind: "const" | "let";

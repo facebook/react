@@ -219,10 +219,9 @@ class InferenceState {
     }
     if (mergedKind === null) {
       CompilerError.invariant(
-        `InferReferenceEffects::kind: Expected at least one value at '${printPlace(
-          place
-        )}'`,
-        place.loc
+        `InferReferenceEffects::kind: Expected at least one value`,
+        place.loc,
+        `No value found at '${printPlace(place)}'`
       );
     }
     return mergedKind;
@@ -312,10 +311,11 @@ class InferenceState {
         } else {
           if (shouldError) {
             CompilerError.invalidInput(
-              `InferReferenceEffects: inferred mutation of known immutable value ${printIdentifier(
+              `InferReferenceEffects: inferred mutation of known immutable value`,
+              place.loc,
+              `Found mutation of ${printIdentifier(
                 place.identifier
-              )}${printType(place.identifier.type)} (${valueKind})`,
-              place.loc
+              )}${printType(place.identifier.type)} (${valueKind})`
             );
           }
           effect = Effect.Read;

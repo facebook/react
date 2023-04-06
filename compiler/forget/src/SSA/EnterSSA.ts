@@ -86,10 +86,9 @@ class SSABuilder {
     const oldId = oldPlace.identifier;
     if (this.#unknown.has(oldId)) {
       CompilerError.invariant(
-        `identifier ${printIdentifier(
-          oldId
-        )} should have been defined before use`,
-        oldPlace.loc
+        `EnterSSA: Expected identifier to be defined before being used`,
+        oldPlace.loc,
+        `Identifier ${printIdentifier(oldId)} is undfined`
       );
     }
 

@@ -19,6 +19,7 @@ export enum ErrorSeverity {
 
 export type CompilerErrorOptions = {
   reason: string;
+  description?: string | null | undefined;
   severity: ErrorSeverity;
   nodePath: AnyNodePath | null;
 };
@@ -64,7 +65,8 @@ export function tryPrintCodeFrame(
   try {
     return options.nodePath
       .buildCodeFrameError(
-        options.reason,
+        options.reason +
+          (options.description != null ? `. ${options.description}` : ""),
         mapSeverityToErrorCtor(options.severity)
       )
       .toString();
@@ -79,12 +81,14 @@ export function tryPrintCodeFrame(
  */
 export class CompilerErrorDetail {
   reason: string;
+  description: string | null;
   severity: ErrorSeverity;
   codeframe: string | null;
   loc: BabelSourceLocation | null;
 
   constructor(options: CompilerErrorDetailOptions) {
     this.reason = options.reason;
+    this.description = options.description;
     this.severity = options.severity;
     this.codeframe = options.codeframe;
     this.loc = options.loc;
@@ -95,6 +99,9 @@ export class CompilerErrorDetail {
       return this.codeframe;
     }
     const buffer = [`${this.severity}: ${this.reason}`];
+    if (this.description !== null) {
+      buffer.push(`. ${this.description}`);
+    }
     if (this.loc != null) {
       buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
     }
@@ -109,11 +116,16 @@ export class CompilerErrorDetail {
 export class CompilerError extends Error {
   details: CompilerErrorDetail[] = [];
 
-  static invariant(reason: string, loc: SourceLocation): never {
+  static invariant(
+    reason: string,
+    loc: SourceLocation,
+    description: string | null = null
+  ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         codeframe: null,
+        description,
         loc: typeof loc === "symbol" ? null : loc,
         reason,
         severity: ErrorSeverity.Invariant,
@@ -122,11 +134,16 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static todo(reason: string, loc: SourceLocation): never {
+  static todo(
+    reason: string,
+    loc: SourceLocation,
+    description: string | null = null
+  ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         codeframe: null,
+        description,
         loc: typeof loc === "symbol" ? null : loc,
         reason,
         severity: ErrorSeverity.Todo,
@@ -135,11 +152,16 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static invalidInput(reason: string, loc: SourceLocation): never {
+  static invalidInput(
+    reason: string,
+    loc: SourceLocation,
+    description: string | null = null
+  ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         codeframe: null,
+        description,
         loc: typeof loc === "symbol" ? null : loc,
         reason,
         severity: ErrorSeverity.InvalidInput,
@@ -165,6 +187,7 @@ export class CompilerError extends Error {
   push(options: CompilerErrorOptions): CompilerErrorDetail {
     const detail = new CompilerErrorDetail({
       reason: options.reason,
+      description: options.description ?? null,
       severity: options.severity,
       codeframe: tryPrintCodeFrame(options),
       loc: options.nodePath?.node?.loc ?? null,

@@ -133,8 +133,9 @@ export function leaveSSA(fn: HIRFunction): void {
         if (name !== null) {
           if (declarations.has(name)) {
             CompilerError.invariant(
-              `Unexpected duplicate declaration of '${name}'`,
-              value.lvalue.place.loc
+              `Unexpected duplicate declaration`,
+              value.lvalue.place.loc,
+              `Found duplicate declaration for '${name}'`
             );
           }
           declarations.set(name, {
@@ -177,10 +178,11 @@ export function leaveSSA(fn: HIRFunction): void {
           if (place.identifier.name == null) {
             if (kind !== null && kind !== InstructionKind.Const) {
               CompilerError.invariant(
-                `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                `Expected consistent kind for destructuring`,
+                place.loc,
+                `other places were '${kind}' but '${printPlace(
                   place
-                )}' is const`,
-                place.loc
+                )}' is const`
               );
             }
             kind = InstructionKind.Const;
@@ -202,20 +204,22 @@ export function leaveSSA(fn: HIRFunction): void {
               });
               if (kind !== null && kind !== InstructionKind.Const) {
                 CompilerError.invariant(
-                  `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                  `Expected consistent kind for destructuring`,
+                  place.loc,
+                  `Other places were '${kind}' but '${printPlace(
                     place
-                  )}' is const`,
-                  place.loc
+                  )}' is const`
                 );
               }
               kind = InstructionKind.Const;
             } else {
               if (kind !== null && kind !== InstructionKind.Reassign) {
                 CompilerError.invariant(
-                  `Expected consistent kind for destructuring, other places were '${kind}' but '${printPlace(
+                  `Expected consistent kind for destructuring`,
+                  place.loc,
+                  `Other places were '${kind}' but '${printPlace(
                     place
-                  )}' is reassigned`,
-                  place.loc
+                  )}' is reassigned`
                 );
               }
               kind = InstructionKind.Reassign;
