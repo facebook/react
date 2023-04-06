@@ -11,6 +11,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import Bridge from 'react-devtools-shared/src/bridge';
 import {installHook} from 'react-devtools-shared/src/hook';
 import {initBackend} from 'react-devtools-shared/src/backend';
+import {installConsoleFunctionsToWindow} from 'react-devtools-shared/src/backend/console';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import {getDefaultComponentFilters} from 'react-devtools-shared/src/utils';
@@ -38,6 +39,9 @@ type ConnectOptions = {
   ...
 };
 
+// Install a global variable to allow patching console early (during injection).
+// This provides React Native developers with components stacks even if they don't run DevTools.
+installConsoleFunctionsToWindow();
 installHook(window);
 
 const hook: ?DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;

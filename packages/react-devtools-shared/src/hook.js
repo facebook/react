@@ -17,11 +17,6 @@ import type {
   RendererInterface,
 } from './backend/types';
 
-import {
-  patchConsoleUsingWindowValues,
-  registerRenderer as registerRendererWithConsole,
-} from './backend/console';
-
 declare var window: any;
 
 export function installHook(target: any): DevToolsHook | null {
@@ -337,30 +332,18 @@ export function installHook(target: any): DevToolsHook | null {
     // * Disabling or marking logs during a double render in Strict Mode
     // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
     //
-    // For React Native, we intentionally patch early (during injection).
-    // This provides React Native developers with components stacks even if they don't run DevTools.
-    //
-    // This won't work for DOM though, since this entire file is eval'ed and inserted as a script tag.
-    // In that case, we'll only patch parts of the console that are needed during the first render
-    // and patch everything else later (when the frontend attaches).
-    //
-    // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
-    //
-    // Note that because this function is inlined, this conditional check must only use static booleans.
-    // Otherwise the extension will throw with an undefined error.
-    // (See comments in the try/catch below for more context on inlining.)
-    if (!__TEST__ && !__EXTENSION__) {
-      try {
-        // The installHook() function is injected by being stringified in the browser,
-        // so imports outside of this function do not get included.
-        //
-        // Normally we could check "typeof patchConsole === 'function'",
-        // but Webpack wraps imports with an object (e.g. _backend_console__WEBPACK_IMPORTED_MODULE_0__)
-        // and the object itself will be undefined as well for the reasons mentioned above,
-        // so we use try/catch instead.
+    // Allow patching console early (during injection) to
+    // provide developers with components stacks even if they don't run DevTools.
+    if (target.hasOwnProperty('__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__')) {
+      const {registerRendererWithConsole, patchConsoleUsingWindowValues} =
+        target.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__;
+      if (
+        typeof registerRendererWithConsole === 'function' &&
+        typeof patchConsoleUsingWindowValues === 'function'
+      ) {
         registerRendererWithConsole(renderer);
         patchConsoleUsingWindowValues();
-      } catch (error) {}
+      }
     }
 
     // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
