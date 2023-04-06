@@ -133,6 +133,15 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
 
 const BUILTIN_HOOKS: Array<[string, Hook]> = [
   [
+    "useContext",
+    {
+      kind: "State",
+      name: "useContext",
+      effectKind: Effect.Read,
+      valueKind: ValueKind.Mutable,
+    },
+  ],
+  [
     "useState",
     {
       kind: "State",
