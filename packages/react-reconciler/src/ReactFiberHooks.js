@@ -180,11 +180,29 @@ export type Hook = {
   next: Hook | null,
 };
 
+// The effect "instance" is a shared object that remains the same for the entire
+// lifetime of an effect. In Rust terms, a RefCell. We use it to store the
+// "destroy" function that is returned from an effect, because that is stateful.
+// The field is `undefined` if the effect is unmounted, or if the effect ran
+// but is not stateful. We don't explicitly track whether the effect is mounted
+// or unmounted because that can be inferred by the hiddenness of the fiber in
+// the tree, i.e. whether there is a hidden Offscreen fiber above it.
+//
+// It's unfortunate that this is stored on a separate object, because it adds
+// more memory per effect instance, but it's conceptually sound. I think there's
+// likely a better data structure we could use for effects; perhaps just one
+// array of effect instances per fiber. But I think this is OK for now despite
+// the additional memory and we can follow up with performance
+// optimizations later.
+type EffectInstance = {
+  destroy: void | (() => void),
+};
+
 export type Effect = {
   tag: HookFlags,
   create: () => (() => void) | void,
-  destroy: (() => void) | void,
-  deps: Array<mixed> | void | null,
+  inst: EffectInstance,
+  deps: Array<mixed> | null,
   next: Effect,
 };
 
@@ -1662,7 +1680,7 @@ function mountSyncExternalStore<T>(
   pushEffect(
     HookHasEffect | HookPassive,
     updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
-    undefined,
+    createEffectInstance(),
     null,
   );
 
@@ -1719,7 +1737,7 @@ function updateSyncExternalStore<T>(
     pushEffect(
       HookHasEffect | HookPassive,
       updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
-      undefined,
+      createEffectInstance(),
       null,
     );
 
@@ -1860,13 +1878,13 @@ function rerenderState<S>(
 function pushEffect(
   tag: HookFlags,
   create: () => (() => void) | void,
-  destroy: (() => void) | void,
-  deps: Array<mixed> | void | null,
+  inst: EffectInstance,
+  deps: Array<mixed> | null,
 ): Effect {
   const effect: Effect = {
     tag,
     create,
-    destroy,
+    inst,
     deps,
     // Circular
     next: (null: any),
@@ -1889,6 +1907,10 @@ function pushEffect(
     }
   }
   return effect;
+}
+
+function createEffectInstance(): EffectInstance {
+  return {destroy: undefined};
 }
 
 let stackContainsErrorMessage: boolean | null = null;
@@ -1994,7 +2016,7 @@ function mountEffectImpl(
   hook.memoizedState = pushEffect(
     HookHasEffect | hookFlags,
     create,
-    undefined,
+    createEffectInstance(),
     nextDeps,
   );
 }
@@ -2007,16 +2029,16 @@ function updateEffectImpl(
 ): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  let destroy = undefined;
+  const effect: Effect = hook.memoizedState;
+  const inst = effect.inst;
 
   // currentHook is null when rerendering after a render phase state update.
   if (currentHook !== null) {
-    const prevEffect = currentHook.memoizedState;
-    destroy = prevEffect.destroy;
     if (nextDeps !== null) {
+      const prevEffect: Effect = currentHook.memoizedState;
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        hook.memoizedState = pushEffect(hookFlags, create, destroy, nextDeps);
+        hook.memoizedState = pushEffect(hookFlags, create, inst, nextDeps);
         return;
       }
     }
@@ -2027,7 +2049,7 @@ function updateEffectImpl(
   hook.memoizedState = pushEffect(
     HookHasEffect | hookFlags,
     create,
-    destroy,
+    inst,
     nextDeps,
   );
 }

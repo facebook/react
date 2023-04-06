@@ -592,9 +592,10 @@ function commitHookEffectListUnmount(
     do {
       if ((effect.tag & flags) === flags) {
         // Unmount
-        const destroy = effect.destroy;
-        effect.destroy = undefined;
+        const inst = effect.inst;
+        const destroy = inst.destroy;
         if (destroy !== undefined) {
+          inst.destroy = undefined;
           if (enableSchedulingProfiler) {
             if ((flags & HookPassive) !== NoHookEffect) {
               markComponentPassiveEffectUnmountStarted(finishedWork);
@@ -653,7 +654,9 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
             setIsRunningInsertionEffect(true);
           }
         }
-        effect.destroy = create();
+        const inst = effect.inst;
+        const destroy = create();
+        inst.destroy = destroy;
         if (__DEV__) {
           if ((flags & HookInsertion) !== NoHookEffect) {
             setIsRunningInsertionEffect(false);
@@ -669,7 +672,6 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
         }
 
         if (__DEV__) {
-          const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
             let hookName;
             if ((effect.tag & HookLayout) !== NoFlags) {
@@ -2188,9 +2190,12 @@ function commitDeletionEffectsOnFiber(
 
             let effect = firstEffect;
             do {
-              const {destroy, tag} = effect;
+              const tag = effect.tag;
+              const inst = effect.inst;
+              const destroy = inst.destroy;
               if (destroy !== undefined) {
                 if ((tag & HookInsertion) !== NoHookEffect) {
+                  inst.destroy = undefined;
                   safelyCallDestroy(
                     deletedFiber,
                     nearestMountedAncestor,
@@ -2203,6 +2208,7 @@ function commitDeletionEffectsOnFiber(
 
                   if (shouldProfile(deletedFiber)) {
                     startLayoutEffectTimer();
+                    inst.destroy = undefined;
                     safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,
@@ -2210,6 +2216,7 @@ function commitDeletionEffectsOnFiber(
                     );
                     recordLayoutEffectDuration(deletedFiber);
                   } else {
+                    inst.destroy = undefined;
                     safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,
