@@ -113,7 +113,9 @@ window.addEventListener('pageshow', function ({target}) {
 
 if (IS_FIREFOX) {
   // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-  if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+  if (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  ) {
     injectScriptSync(chrome.runtime.getURL('build/renderer.js'));
   }
   // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.

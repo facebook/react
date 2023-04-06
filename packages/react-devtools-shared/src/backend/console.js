@@ -418,5 +418,5 @@ export function installConsoleFunctionsToWindow(): void {
   window.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__ = {
     patchConsoleUsingWindowValues,
     registerRendererWithConsole: registerRenderer,
-  }
+  };
 }
