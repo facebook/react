@@ -70,66 +70,98 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
   }
 }
 
-// Utility function to process received HTML nodes and execute
-//  embedded scripts by:
-//  1. Matching nonce attributes and moving node into an existing
-//      parent container (if passed)
-//  2. Resolving scripts with sources
-//  3. Moving data attribute nodes to the body
-async function replaceScriptsAndMove(
-  window: any,
+async function insertNodesAndExecuteScripts(
+  source: Document | Element,
+  target: Node,
   CSPnonce: string | null,
-  node: Node,
-  parent: Node | null,
 ) {
-  if (
-    node.nodeType === 1 &&
-    (node.nodeName === 'SCRIPT' || node.nodeName === 'script')
-  ) {
-    // $FlowFixMe[incompatible-cast]
-    const element = (node: HTMLElement);
-    const script = window.document.createElement('SCRIPT');
-    const scriptSrc = element.getAttribute('src');
-    if (scriptSrc) {
-      const rollupOutput = await getRollupResult(scriptSrc);
-      if (rollupOutput) {
-        // Manually call eval(...) here, since changing the HTML text content
-        //  may interfere with hydration
-        window.eval(rollupOutput);
+  const ownerDocument = target.ownerDocument || target;
+
+  // We need to remove the script content for any scripts that would not run based on CSP
+  // We restore the script content after moving the nodes into the target
+  const badNonceScriptNodes: Map<Element, string> = new Map();
+  if (CSPnonce) {
+    const scripts = source.querySelectorAll('script');
+    for (let i = 0; i < scripts.length; i++) {
+      const script = scripts[i];
+      if (
+        !script.hasAttribute('src') &&
+        script.getAttribute('nonce') !== CSPnonce
+      ) {
+        badNonceScriptNodes.set(script, script.textContent);
+        script.textContent = '';
       }
-      for (let i = 0; i < element.attributes.length; i++) {
-        const attr = element.attributes.item(i);
-        script.setAttribute(attr.name, attr.value);
-      }
-    } else if (element === null || element.getAttribute('nonce') === CSPnonce) {
-      script.textContent = node.textContent;
     }
-    if (parent) {
-      element.parentNode?.removeChild(element);
-      parent.appendChild(script);
+  }
+  let lastChild = null;
+  while (source.firstChild) {
+    const node = source.firstChild;
+    if (lastChild === node) {
+      throw new Error('Infinite loop.');
+    }
+    lastChild = node;
+
+    if (node.nodeType === 1) {
+      const element: Element = (node: any);
+      if (
+        // $FlowFixMe[prop-missing]
+        element.dataset != null &&
+        (element.dataset.rxi != null ||
+          element.dataset.rri != null ||
+          element.dataset.rci != null ||
+          element.dataset.rsi != null)
+      ) {
+        // Fizz external runtime instructions are expected to be in the body.
+        // When we have renderIntoContainer and renderDocument this will be
+        // more enforceable. At the moment you can misconfigure your stream and end up
+        // with instructions that are deep in the document
+        (ownerDocument.body: any).appendChild(element);
+      } else {
+        target.appendChild(element);
+
+        if (element.nodeName === 'SCRIPT') {
+          await executeScript(element);
+        } else {
+          const scripts = element.querySelectorAll('script');
+          for (let i = 0; i < scripts.length; i++) {
+            const script = scripts[i];
+            await executeScript(script);
+          }
+        }
+      }
     } else {
-      element.parentNode?.replaceChild(script, element);
+      target.appendChild(node);
     }
-  } else if (
-    node.nodeType === 1 &&
-    // $FlowFixMe[prop-missing]
-    node.dataset != null &&
-    (node.dataset.rxi != null ||
-      node.dataset.rri != null ||
-      node.dataset.rci != null ||
-      node.dataset.rsi != null)
-  ) {
-    // External runtime assumes that instruction data nodes are eventually
-    // appended to the body
-    window.document.body.appendChild(node);
+  }
+
+  // restore the textContent now that we have finished attempting to execute scripts
+  badNonceScriptNodes.forEach((scriptContent, script) => {
+    script.textContent = scriptContent;
+  });
+}
+
+async function executeScript(script: Element) {
+  const ownerDocument = script.ownerDocument;
+  if (script.parentNode == null) {
+    throw new Error(
+      'executeScript expects to be called on script nodes that are currently in a document',
+    );
+  }
+  const parent = script.parentNode;
+  const scriptSrc = script.getAttribute('src');
+  if (scriptSrc) {
+    const rollupOutput = await getRollupResult(scriptSrc);
+    if (rollupOutput) {
+      const transientScript = ownerDocument.createElement('script');
+      transientScript.textContent = rollupOutput;
+      parent.appendChild(transientScript);
+      parent.removeChild(transientScript);
+    }
   } else {
-    for (let i = 0; i < node.childNodes.length; i++) {
-      const inner = node.childNodes[i];
-      await replaceScriptsAndMove(window, CSPnonce, inner, null);
-    }
-    if (parent != null) {
-      parent.appendChild(node);
-    }
+    const newScript = ownerDocument.createElement('script');
+    newScript.textContent = script.textContent;
+    parent.insertBefore(newScript, script);
+    parent.removeChild(script);
   }
 }
 
@@ -191,7 +223,7 @@ async function withLoadingReadyState<T>(
 }
 
 export {
-  replaceScriptsAndMove,
+  insertNodesAndExecuteScripts,
   mergeOptions,
   stripExternalRuntimeInNodes,
   withLoadingReadyState,
