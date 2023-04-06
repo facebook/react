@@ -10,7 +10,11 @@
 import type * as BabelCore from "@babel/core";
 import jsx from "@babel/plugin-syntax-jsx";
 import * as t from "@babel/types";
-import { CompilerError } from "../CompilerError";
+import {
+  CompilerError,
+  CompilerErrorDetail,
+  ErrorSeverity,
+} from "../CompilerError";
 import { compile } from "../CompilerPipeline";
 import { GeneratedSource } from "../HIR";
 import {
@@ -23,9 +27,13 @@ type BabelPluginPass = {
   opts: PluginOptions;
 };
 
-function hasUseForgetDirective(directives: t.Directive[]): boolean {
+function hasUseForgetDirective(directive: t.Directive): boolean {
+  return directive.value.value === "use forget";
+}
+
+function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
   for (const directive of directives) {
-    if (directive.value.value === "use forget") {
+    if (hasUseForgetDirective(directive)) {
       return true;
     }
   }
@@ -122,6 +130,61 @@ export default function ReactForgetBabelPlugin(
       // want Forget to run true to source as possible.
       Program(path, pass): void {
         const options = parsePluginOptions(pass.opts);
+
+        const violations = [];
+        const fileComments = pass.file.ast.comments;
+        let fileHasUseForgetDirective = false;
+        if (Array.isArray(fileComments)) {
+          for (const comment of fileComments) {
+            if (
+              /eslint-disable(-next-line)? react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
+                comment.value
+              )
+            ) {
+              violations.push(comment);
+            }
+          }
+        }
+
+        if (violations.length > 0) {
+          path.traverse({
+            Directive(path) {
+              if (hasUseForgetDirective(path.node)) {
+                fileHasUseForgetDirective = true;
+                path.stop();
+              }
+            },
+          });
+
+          const reason = `Skipped compilation as it disables one or more React eslint rules`;
+          const error = new CompilerError();
+          for (const violation of violations) {
+            if (options.logger != null) {
+              options.logger.logEvent("err", {
+                reason,
+                filename: pass.filename,
+                violation,
+              });
+            }
+
+            error.pushErrorDetail(
+              new CompilerErrorDetail({
+                reason,
+                description: violation.value.trim(),
+                severity: ErrorSeverity.InvalidInput,
+                codeframe: null,
+                loc: violation.loc ?? null,
+              })
+            );
+          }
+
+          if (fileHasUseForgetDirective) {
+            throw error;
+          }
+
+          return;
+        }
+
         try {
           path.traverse(visitor, {
             ...pass,
@@ -154,7 +217,7 @@ function shouldCompile(
     if (!body.isBlockStatement()) {
       return false;
     }
-    if (!hasUseForgetDirective(body.node.directives)) {
+    if (!hasAnyUseForgetDirectives(body.node.directives)) {
       return false;
     }
   }
