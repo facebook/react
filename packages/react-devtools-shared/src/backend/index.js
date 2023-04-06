@@ -76,8 +76,7 @@ export function initBackend(
     }
 
     // Notify the DevTools frontend about new renderers.
-    // This includes any that were attached early
-    // (when SESSION_STORAGE_RELOAD_AND_PROFILE_KEY is set to true).
+    // This includes any that were attached early (via __REACT_DEVTOOLS_ATTACH__).
     if (rendererInterface != null) {
       hook.emit('renderer-attached', {
         id,
