@@ -190,7 +190,7 @@ export function updateInput(element: Element, props: Object) {
     // When not syncing the value attribute, React only assigns a new value
     // whenever the defaultValue React prop has changed. When not present,
     // React does nothing
-    if (props.hasOwnProperty('defaultValue')) {
+    if (props.defaultValue != null) {
       setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
     }
   } else {
@@ -199,9 +199,9 @@ export function updateInput(element: Element, props: Object) {
     //  1. The value React property
     //  2. The defaultValue React property
     //  3. Otherwise there should be no change
-    if (props.hasOwnProperty('value')) {
+    if (props.value != null) {
       setDefaultValue(node, props.type, value);
-    } else if (props.hasOwnProperty('defaultValue')) {
+    } else if (props.defaultValue != null) {
       setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
     }
   }
@@ -233,7 +233,7 @@ export function postInitInput(
 
   // Do not assign value if it is already set. This prevents user text input
   // from being lost during SSR hydration.
-  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+  if (props.value != null || props.defaultValue != null) {
     const type = props.type;
     const isButton = type === 'submit' || type === 'reset';
 
@@ -317,7 +317,7 @@ export function postInitInput(
     // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-    if (props.hasOwnProperty('defaultChecked')) {
+    if (props.defaultChecked != null) {
       node.defaultChecked = !node.defaultChecked;
       node.defaultChecked = !!props.defaultChecked;
     }
