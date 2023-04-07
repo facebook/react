@@ -413,3 +413,10 @@ export function writeConsolePatchSettingsToWindow(
     settings.hideConsoleLogsInStrictMode;
   window.__REACT_DEVTOOLS_BROWSER_THEME__ = settings.browserTheme;
 }
+
+export function installConsoleFunctionsToWindow(): void {
+  window.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__ = {
+    patchConsoleUsingWindowValues,
+    registerRendererWithConsole: registerRenderer,
+  };
+}

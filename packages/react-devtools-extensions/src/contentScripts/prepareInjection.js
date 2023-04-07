@@ -1,6 +1,8 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
+import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
+import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {IS_FIREFOX} from '../utils';
 
 // We run scripts on the page via the service worker (backgroud.js) for
@@ -109,9 +111,15 @@ window.addEventListener('pageshow', function ({target}) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-// Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
-// Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
 if (IS_FIREFOX) {
+  // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
+  if (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  ) {
+    injectScriptSync(chrome.runtime.getURL('build/renderer.js'));
+  }
+  // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
+  // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
   switch (document.contentType) {
     case 'text/html':
     case 'application/xhtml+xml': {

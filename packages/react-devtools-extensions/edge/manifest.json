@@ -31,6 +31,7 @@
         "panel.html",
         "build/react_devtools_backend.js",
         "build/proxy.js",
+        "build/renderer.js",
         "build/installHook.js"
       ],
       "matches": [
