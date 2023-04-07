@@ -37,7 +37,7 @@ export type TextAreaWithWrapperState = HTMLTextAreaElement & {
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
-export function initWrapperState(element: Element, props: Object) {
+export function initTextarea(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -102,7 +102,7 @@ export function initWrapperState(element: Element, props: Object) {
   };
 }
 
-export function updateWrapper(element: Element, props: Object) {
+export function updateTextarea(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   const value = getToStringValue(props.value);
   const defaultValue = getToStringValue(props.defaultValue);
@@ -123,7 +123,7 @@ export function updateWrapper(element: Element, props: Object) {
   }
 }
 
-export function postMountWrapper(element: Element, props: Object) {
+export function postInitTextarea(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
@@ -140,7 +140,10 @@ export function postMountWrapper(element: Element, props: Object) {
   }
 }
 
-export function restoreControlledState(element: Element, props: Object) {
+export function restoreControlledTextareaState(
+  element: Element,
+  props: Object,
+) {
   // DOM component is still mounted; update
-  updateWrapper(element, props);
+  updateTextarea(element, props);
 }

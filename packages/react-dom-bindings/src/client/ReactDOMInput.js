@@ -61,7 +61,7 @@ function isControlled(props: any) {
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-export function initWrapperState(element: Element, props: Object) {
+export function initInput(element: Element, props: Object) {
   if (__DEV__) {
     checkControlledValueProps('input', props);
 
@@ -117,7 +117,7 @@ export function initWrapperState(element: Element, props: Object) {
   };
 }
 
-export function updateChecked(element: Element, props: Object) {
+export function updateInputChecked(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
   if (checked != null) {
@@ -125,7 +125,7 @@ export function updateChecked(element: Element, props: Object) {
   }
 }
 
-export function updateWrapper(element: Element, props: Object) {
+export function updateInput(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   if (__DEV__) {
     const controlled = isControlled(props);
@@ -160,7 +160,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
 
-  updateChecked(element, props);
+  updateInputChecked(element, props);
 
   const value = getToStringValue(props.value);
   const type = props.type;
@@ -224,7 +224,7 @@ export function updateWrapper(element: Element, props: Object) {
   }
 }
 
-export function postMountWrapper(
+export function postInitInput(
   element: Element,
   props: Object,
   isHydrating: boolean,
@@ -337,9 +337,9 @@ export function postMountWrapper(
   }
 }
 
-export function restoreControlledState(element: Element, props: Object) {
+export function restoreControlledInputState(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
-  updateWrapper(node, props);
+  updateInput(node, props);
   updateNamedCousins(node, props);
 }
 
@@ -391,7 +391,7 @@ function updateNamedCousins(rootNode: InputWithWrapperState, props: any) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      updateWrapper(otherNode, otherProps);
+      updateInput(otherNode, otherProps);
     }
   }
 }

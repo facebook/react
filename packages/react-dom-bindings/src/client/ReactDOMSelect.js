@@ -129,7 +129,7 @@ function updateOptions(
  * selected.
  */
 
-export function initWrapperState(element: Element, props: Object) {
+export function initSelect(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
   if (__DEV__) {
     checkSelectPropTypes(props);
@@ -157,7 +157,7 @@ export function initWrapperState(element: Element, props: Object) {
   }
 }
 
-export function postMountWrapper(element: Element, props: Object) {
+export function postInitSelect(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
   node.multiple = !!props.multiple;
   const value = props.value;
@@ -168,7 +168,7 @@ export function postMountWrapper(element: Element, props: Object) {
   }
 }
 
-export function postUpdateWrapper(element: Element, props: Object) {
+export function postUpdateSelect(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
   const wasMultiple = node._wrapperState.wasMultiple;
   node._wrapperState.wasMultiple = !!props.multiple;
@@ -187,7 +187,7 @@ export function postUpdateWrapper(element: Element, props: Object) {
   }
 }
 
-export function restoreControlledState(element: Element, props: Object) {
+export function restoreControlledSelectState(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
   const value = props.value;
 
