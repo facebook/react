@@ -9,3 +9,4 @@
 
 export * from 'react-server-dom-relay/src/ReactFlightClientConfigDOMRelay';
 export * from '../ReactFlightClientConfigNoStream';
+export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';

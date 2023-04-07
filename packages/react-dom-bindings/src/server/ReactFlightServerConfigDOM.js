@@ -7,5 +7,6 @@
  * @flow
  */
 
-export * from 'react-server-dom-relay/src/ReactFlightServerConfigDOMRelay';
-export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
+// Used to distinguish these contexts from ones used in other renderers.
+// E.g. this can be used to distinguish legacy renderers from this modern one.
+export const isPrimaryRenderer = true;
