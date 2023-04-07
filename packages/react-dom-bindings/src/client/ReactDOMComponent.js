@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {InputWithWrapperState} from './ReactDOMInput';
-
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -802,7 +800,6 @@ export function setInitialProperties(
       break;
     }
     case 'input': {
-      initInput(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -831,10 +828,10 @@ export function setInitialProperties(
             break;
           }
           case 'checked': {
-            const node = ((domElement: any): InputWithWrapperState);
             const checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+              propValue != null ? propValue : props.defaultChecked;
+            const inputElement: HTMLInputElement = (domElement: any);
+            inputElement.checked =
               !!checked &&
               typeof checked !== 'function' &&
               checked !== 'symbol';
@@ -863,11 +860,11 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      initInput(domElement, props);
       postInitInput(domElement, props, false);
       return;
     }
     case 'select': {
-      initSelect(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -890,11 +887,11 @@ export function setInitialProperties(
           }
         }
       }
+      initSelect(domElement, props);
       postInitSelect(domElement, props);
       return;
     }
     case 'textarea': {
-      initTextarea(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -933,6 +930,7 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      initTextarea(domElement, props);
       postInitTextarea(domElement, props);
       return;
     }
@@ -1217,10 +1215,10 @@ export function updateProperties(
         const propValue = updatePayload[i + 1];
         switch (propKey) {
           case 'checked': {
-            const node = ((domElement: any): InputWithWrapperState);
             const checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+              propValue != null ? propValue : nextProps.defaultChecked;
+            const inputElement: HTMLInputElement = (domElement: any);
+            inputElement.checked =
               !!checked &&
               typeof checked !== 'function' &&
               checked !== 'symbol';
@@ -2260,13 +2258,13 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('toggle', domElement);
       break;
     case 'input':
-      initInput(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      initInput(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
       // option and select we don't quite do the same thing and select
@@ -2278,19 +2276,19 @@ export function diffHydratedProperties(
       validateOptionProps(domElement, props);
       break;
     case 'select':
-      initSelect(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      initSelect(domElement, props);
       break;
     case 'textarea':
-      initTextarea(domElement, props);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      initTextarea(domElement, props);
       postInitTextarea(domElement, props);
       break;
   }
