@@ -39,7 +39,10 @@ import type {
   RendererInterface,
   ConsolePatchSettings,
 } from './types';
-import type {ComponentFilter, BrowserTheme} from 'react-devtools-shared/src/types';
+import type {
+  ComponentFilter,
+  BrowserTheme,
+} from 'react-devtools-shared/src/types';
 import {isSynchronousXHRSupported} from './utils';
 
 const debug = (methodName: string, ...args: Array<string>) => {

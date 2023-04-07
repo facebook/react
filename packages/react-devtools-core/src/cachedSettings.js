@@ -8,9 +8,7 @@
  */
 
 import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/types';
-import {
-  writeConsolePatchSettingsToWindow,
-} from 'react-devtools-shared/src/backend/console';
+import {writeConsolePatchSettingsToWindow} from 'react-devtools-shared/src/backend/console';
 import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';
 
 // Note: all keys should be optional in this type, because users can use newer

@@ -1,4 +1,3 @@
-
 export const CHANGE_LOG_URL =
   'https://github.com/facebook/react/blob/main/packages/react-devtools/CHANGELOG.md';
 
