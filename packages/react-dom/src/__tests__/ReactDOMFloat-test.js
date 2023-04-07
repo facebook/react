@@ -3833,7 +3833,7 @@ body {
     });
 
     // @gate enableFloat
-    it('creates a preload resource when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
+    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
       function App() {
         React.useEffect(() => {
           ReactDOM.preinit('foo', {as: 'style'});
@@ -3851,11 +3851,55 @@ body {
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="preload" href="foo" as="style" />
+            <link rel="stylesheet" href="foo" data-precedence="default" />
           </head>
           <body>foo</body>
         </html>,
       );
+    });
+
+    // @gate enableFloat
+    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
+      // This is testing behavior, but it shows that it is not a good idea to preinit inside a shadowRoot. The point is we are asserting a behavior
+      // you would want to avoid in a real app.
+      const shadow = document.body.attachShadow({mode: 'open'});
+      function ShadowComponent() {
+        ReactDOM.preinit('bar', {as: 'style'});
+        return null;
+      }
+      function App() {
+        React.useEffect(() => {
+          ReactDOM.preinit('foo', {as: 'style'});
+        }, []);
+        return (
+          <html>
+            <body>
+              foo
+              {ReactDOM.createPortal(
+                <div>
+                  <ShadowComponent />
+                  shadow
+                </div>,
+                shadow,
+              )}
+            </body>
+          </html>
+        );
+      }
+
+      const root = ReactDOMClient.createRoot(document);
+      root.render(<App />);
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="stylesheet" href="bar" data-precedence="default" />
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+          </head>
+          <body>foo</body>
+        </html>,
+      );
+      expect(getMeaningfulChildren(shadow)).toEqual(<div>shadow</div>);
     });
 
     // @gate enableFloat
@@ -3955,7 +3999,7 @@ body {
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link rel="preload" href="foo" as="script" />
+            <script async="" src="foo" />
           </head>
           <body>foo</body>
         </html>,

@@ -72,8 +72,6 @@ import {
   afterActiveInstanceBlur,
   getCurrentEventPriority,
   errorHydratingContainer,
-  prepareRendererToRender,
-  resetRendererAfterRender,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
@@ -1757,7 +1755,6 @@ export function shouldRemainOnPreviousScreen(): boolean {
 }
 
 function pushDispatcher(container: any) {
-  prepareRendererToRender(container);
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
   if (prevDispatcher === null) {
@@ -1771,7 +1768,6 @@ function pushDispatcher(container: any) {
 }
 
 function popDispatcher(prevDispatcher: any) {
-  resetRendererAfterRender();
   ReactCurrentDispatcher.current = prevDispatcher;
 }
 

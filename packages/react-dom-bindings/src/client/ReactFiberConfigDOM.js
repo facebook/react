@@ -25,8 +25,6 @@ import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
-import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals.js';
-const {Dispatcher} = ReactDOMSharedInternals;
 
 import {
   precacheFiberNode,
@@ -1936,31 +1934,6 @@ export function prepareToCommitHoistables() {
   tagCaches = null;
 }
 
-// It is valid to preload even when we aren't actively rendering. For cases where Float functions are
-// called when there is no rendering we track the last used document. It is not safe to insert
-// arbitrary resources into the lastCurrentDocument b/c it may not actually be the document
-// that the resource is meant to apply too (for example stylesheets or scripts). This is only
-// appropriate for resources that don't really have a strict tie to the document itself for example
-// preloads
-let lastCurrentDocument: ?Document = null;
-let previousDispatcher = null;
-export function prepareRendererToRender(rootContainer: Container) {
-  if (enableFloat) {
-    const rootNode = getHoistableRoot(rootContainer);
-    lastCurrentDocument = getDocumentFromRoot(rootNode);
-
-    previousDispatcher = Dispatcher.current;
-    Dispatcher.current = ReactDOMClientDispatcher;
-  }
-}
-
-export function resetRendererAfterRender() {
-  if (enableFloat) {
-    Dispatcher.current = previousDispatcher;
-    previousDispatcher = null;
-  }
-}
-
 // global collections of Resources
 const preloadPropsMap: Map<string, PreloadProps> = new Map();
 const preconnectsSet: Set<string> = new Set();
@@ -1982,25 +1955,6 @@ function getCurrentResourceRoot(): null | HoistableRoot {
   return currentContainer ? getHoistableRoot(currentContainer) : null;
 }
 
-// Preloads are somewhat special. Even if we don't have the Document
-// used by the root that is rendering a component trying to insert a preload
-// we can still seed the file cache by doing the preload on any document we have
-// access to. We prefer the currentDocument if it exists, we also prefer the
-// lastCurrentDocument if that exists. As a fallback we will use the window.document
-// if available.
-function getDocumentForPreloads(): ?Document {
-  const root = getCurrentResourceRoot();
-  if (root) {
-    return root.ownerDocument || root;
-  } else {
-    try {
-      return lastCurrentDocument || window.document;
-    } catch (error) {
-      return null;
-    }
-  }
-}
-
 function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
@@ -2015,13 +1969,23 @@ export const ReactDOMClientDispatcher = {
   preinit,
 };
 
+// We expect this to get inlined. It is a function mostly to communicate the special nature of
+// how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
+// these methods outside of render there is no way to know which Document or ShadowRoot is 'scoped'
+// and so we have to fall back to something universal. Currently we just refer to the global document.
+// This is notable because nowhere else in ReactDOM do we actually reference the global document or window
+// because we may be rendering inside an iframe.
+function getDocumentForImperativeFloatMethods(): Document {
+  return document;
+}
+
 function preconnectAs(
   rel: 'preconnect' | 'dns-prefetch',
   crossOrigin: null | '' | 'use-credentials',
   href: string,
 ) {
-  const ownerDocument = getDocumentForPreloads();
-  if (typeof href === 'string' && href && ownerDocument) {
+  const ownerDocument = getDocumentForImperativeFloatMethods();
+  if (typeof href === 'string' && href) {
     const limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
     let key = `link[rel="${rel}"][href="${limitedEscapedHref}"]`;
@@ -2043,6 +2007,9 @@ function preconnectAs(
 }
 
 function prefetchDNS(href: string, options?: mixed) {
+  if (!enableFloat) {
+    return;
+  }
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -2105,10 +2072,13 @@ type PreloadOptions = {
   type?: string,
 };
 function preload(href: string, options: PreloadOptions) {
+  if (!enableFloat) {
+    return;
+  }
   if (__DEV__) {
     validatePreloadArguments(href, options);
   }
-  const ownerDocument = getDocumentForPreloads();
+  const ownerDocument = getDocumentForImperativeFloatMethods();
   if (
     typeof href === 'string' &&
     href &&
@@ -2166,9 +2136,13 @@ type PreinitOptions = {
   integrity?: string,
 };
 function preinit(href: string, options: PreinitOptions) {
+  if (!enableFloat) {
+    return;
+  }
   if (__DEV__) {
     validatePreinitArguments(href, options);
   }
+  const ownerDocument = getDocumentForImperativeFloatMethods();
 
   if (
     typeof href === 'string' &&
@@ -2176,51 +2150,11 @@ function preinit(href: string, options: PreinitOptions) {
     typeof options === 'object' &&
     options !== null
   ) {
-    const resourceRoot = getCurrentResourceRoot();
     const as = options.as;
-    if (!resourceRoot) {
-      if (as === 'style' || as === 'script') {
-        // We are going to emit a preload as a best effort fallback since this preinit
-        // was called outside of a render. Given the passive nature of this fallback
-        // we do not warn in dev when props disagree if there happens to already be a
-        // matching preload with this href
-        const preloadDocument = getDocumentForPreloads();
-        if (preloadDocument) {
-          const limitedEscapedHref =
-            escapeSelectorAttributeValueInsideDoubleQuotes(href);
-          const preloadKey = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
-          let key = preloadKey;
-          switch (as) {
-            case 'style':
-              key = getStyleKey(href);
-              break;
-            case 'script':
-              key = getScriptKey(href);
-              break;
-          }
-          if (!preloadPropsMap.has(key)) {
-            const preloadProps = preloadPropsFromPreinitOptions(
-              href,
-              as,
-              options,
-            );
-            preloadPropsMap.set(key, preloadProps);
-
-            if (null === preloadDocument.querySelector(preloadKey)) {
-              const instance = preloadDocument.createElement('link');
-              setInitialProperties(instance, 'link', preloadProps);
-              markNodeAsHoistable(instance);
-              (preloadDocument.head: any).appendChild(instance);
-            }
-          }
-        }
-      }
-      return;
-    }
 
     switch (as) {
       case 'style': {
-        const styles = getResourcesFromRoot(resourceRoot).hoistableStyles;
+        const styles = getResourcesFromRoot(ownerDocument).hoistableStyles;
 
         const key = getStyleKey(href);
         const precedence = options.precedence || 'default';
@@ -2239,7 +2173,7 @@ function preinit(href: string, options: PreinitOptions) {
         };
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = resourceRoot.querySelector(
+        let instance: null | Instance = ownerDocument.querySelector(
           getStylesheetSelectorFromKey(key),
         );
         if (instance) {
@@ -2255,7 +2189,6 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
           }
-          const ownerDocument = getDocumentFromRoot(resourceRoot);
           const link = (instance = ownerDocument.createElement('link'));
           markNodeAsHoistable(link);
           setInitialProperties(link, 'link', stylesheetProps);
@@ -2272,7 +2205,7 @@ function preinit(href: string, options: PreinitOptions) {
           });
 
           state.loading |= Inserted;
-          insertStylesheet(instance, precedence, resourceRoot);
+          insertStylesheet(instance, precedence, ownerDocument);
         }
 
         // Construct a Resource and cache it
@@ -2287,7 +2220,7 @@ function preinit(href: string, options: PreinitOptions) {
       }
       case 'script': {
         const src = href;
-        const scripts = getResourcesFromRoot(resourceRoot).hoistableScripts;
+        const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
 
         const key = getScriptKey(src);
 
@@ -2300,7 +2233,7 @@ function preinit(href: string, options: PreinitOptions) {
         }
 
         // Attempt to hydrate instance from DOM
-        let instance: null | Instance = resourceRoot.querySelector(
+        let instance: null | Instance = ownerDocument.querySelector(
           getScriptSelectorFromKey(key),
         );
         if (!instance) {
@@ -2311,7 +2244,6 @@ function preinit(href: string, options: PreinitOptions) {
           if (preloadProps) {
             adoptPreloadPropsForScript(scriptProps, preloadProps);
           }
-          const ownerDocument = getDocumentFromRoot(resourceRoot);
           instance = ownerDocument.createElement('script');
           markNodeAsHoistable(instance);
           setInitialProperties(instance, 'link', scriptProps);
@@ -2330,20 +2262,6 @@ function preinit(href: string, options: PreinitOptions) {
       }
     }
   }
-}
-
-function preloadPropsFromPreinitOptions(
-  href: string,
-  as: ResourceType,
-  options: PreinitOptions,
-): PreloadProps {
-  return {
-    href,
-    rel: 'preload',
-    as,
-    crossOrigin: as === 'font' ? '' : options.crossOrigin,
-    integrity: options.integrity,
-  };
 }
 
 function stylesheetPropsFromPreinitOptions(

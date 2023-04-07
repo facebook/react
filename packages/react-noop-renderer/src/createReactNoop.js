@@ -629,9 +629,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     waitForCommitToBeReady,
-
-    prepareRendererToRender() {},
-    resetRendererAfterRender() {},
   };
 
   const hostConfig = useMutation

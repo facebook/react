@@ -75,8 +75,6 @@ export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
-export const prepareRendererToRender = $$$config.prepareRendererToRender;
-export const resetRendererAfterRender = $$$config.resetRendererAfterRender;
 
 // -------------------
 //      Microtasks
