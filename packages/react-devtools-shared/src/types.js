@@ -7,6 +7,15 @@
  * @flow
  */
 
+/**
+ * WARNING:
+ * This file contains types that are shared between the frontend and different
+ * versions of backends.
+ * Be mindful of backwards compatibility when making changes.
+ */
+
+export type BrowserTheme = 'dark' | 'light';
+
 export type Wall = {
   // `listen` returns the "unlisten" function.
   listen: (fn: Function) => Function,

@@ -7,8 +7,8 @@
  * @flow
  */
 
+import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/types';
 import {
-  type ConsolePatchSettings,
   writeConsolePatchSettingsToWindow,
 } from 'react-devtools-shared/src/backend/console';
 import {castBool, castBrowserTheme} from 'react-devtools-shared/src/utils';

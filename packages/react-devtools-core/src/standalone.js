@@ -30,7 +30,7 @@ import {
   __DEBUG__,
   LOCAL_STORAGE_DEFAULT_TAB_KEY,
 } from 'react-devtools-shared/src/constants';
-import {localStorageSetItem} from '../../react-devtools-shared/src/storage';
+import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
