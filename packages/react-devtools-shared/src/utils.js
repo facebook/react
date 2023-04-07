@@ -596,7 +596,7 @@ export function getDataType(data: Object): DataType {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
-      } else if (data instanceof ArrayBuffer) {
+      } else if (data.constructor && data.constructor === ArrayBuffer) {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         const iterator = data[Symbol.iterator]();
@@ -606,7 +606,7 @@ export function getDataType(data: Object): DataType {
         } else {
           return iterator === data ? 'opaque_iterator' : 'iterator';
         }
-      } else if (data instanceof RegExp) {
+      } else if (data.constructor && data.constructor === RegExp) {
         return 'regexp';
       } else {
         // $FlowFixMe[method-unbinding]
