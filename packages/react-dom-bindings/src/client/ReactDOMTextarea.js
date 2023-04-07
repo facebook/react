@@ -9,7 +9,6 @@
 
 import isArray from 'shared/isArray';
 
-import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
@@ -40,7 +39,6 @@ export type TextAreaWithWrapperState = HTMLTextAreaElement & {
 export function initTextarea(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
-    checkControlledValueProps('textarea', props);
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&

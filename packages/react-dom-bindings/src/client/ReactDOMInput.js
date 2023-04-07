@@ -12,7 +12,6 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
@@ -63,8 +62,6 @@ function isControlled(props: any) {
 
 export function initInput(element: Element, props: Object) {
   if (__DEV__) {
-    checkControlledValueProps('input', props);
-
     if (
       props.checked !== undefined &&
       props.defaultChecked !== undefined &&

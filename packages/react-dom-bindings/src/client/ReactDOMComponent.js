@@ -15,6 +15,7 @@ import {
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 
 import {
   getValueForAttribute,
@@ -800,6 +801,9 @@ export function setInitialProperties(
       break;
     }
     case 'input': {
+      if (__DEV__) {
+        checkControlledValueProps('input', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -865,6 +869,9 @@ export function setInitialProperties(
       return;
     }
     case 'select': {
+      if (__DEV__) {
+        checkControlledValueProps('select', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -892,6 +899,9 @@ export function setInitialProperties(
       return;
     }
     case 'textarea': {
+      if (__DEV__) {
+        checkControlledValueProps('textarea', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -2258,6 +2268,9 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('toggle', domElement);
       break;
     case 'input':
+      if (__DEV__) {
+        checkControlledValueProps('input', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -2276,12 +2289,18 @@ export function diffHydratedProperties(
       validateOptionProps(domElement, props);
       break;
     case 'select':
+      if (__DEV__) {
+        checkControlledValueProps('select', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       initSelect(domElement, props);
       break;
     case 'textarea':
+      if (__DEV__) {
+        checkControlledValueProps('textarea', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
