@@ -21,6 +21,7 @@ import {
   dropMemoCalls,
   inferMutableRanges,
   inferReferenceEffects,
+  inlineUseMemo,
 } from "./Inference";
 import { constantPropagation, deadCodeElimination } from "./Optimization";
 import {
@@ -59,6 +60,9 @@ export function* run(
   const env = new Environment(config ?? null);
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
+
+  inlineUseMemo(hir);
+  yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
 
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });

@@ -18,43 +18,52 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = React.unstable_useMemoCache(10);
   const c_0 = $[0] !== props.a;
   let t0;
   if (c_0) {
-    t0 = () => {
-      const items = [];
-      const a = makeObject(props.a);
-      const b = makeObject(props.b);
-      return [a, b];
-    };
+    t0 = makeObject(props.a);
     $[0] = props.a;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const c_2 = $[2] !== t0;
+  const a = t0;
+  const c_2 = $[2] !== props.b;
   let t1;
   if (c_2) {
-    t1 = t0();
-    $[2] = t0;
+    t1 = makeObject(props.b);
+    $[2] = props.b;
     $[3] = t1;
   } else {
     t1 = $[3];
   }
-  const [a_0, b_0] = t1;
-  const c_4 = $[4] !== a_0;
-  const c_5 = $[5] !== b_0;
+  const b = t1;
+  const c_4 = $[4] !== a;
+  const c_5 = $[5] !== b;
   let t2;
   if (c_4 || c_5) {
-    t2 = [a_0, b_0];
-    $[4] = a_0;
-    $[5] = b_0;
+    t2 = [a, b];
+    $[4] = a;
+    $[5] = b;
     $[6] = t2;
   } else {
     t2 = $[6];
   }
-  return t2;
+  const t54 = t2;
+  const [a_0, b_0] = t54;
+  const c_7 = $[7] !== a_0;
+  const c_8 = $[8] !== b_0;
+  let t3;
+  if (c_7 || c_8) {
+    t3 = [a_0, b_0];
+    $[7] = a_0;
+    $[8] = b_0;
+    $[9] = t3;
+  } else {
+    t3 = $[9];
+  }
+  return t3;
 }
 
 ```

@@ -13,7 +13,7 @@ import {
   HIRFunction,
   Instruction,
 } from "./HIR";
-import { removeUnreachableFallthroughs } from "./HIRBuilder";
+import { markPredecessors, removeUnreachableFallthroughs } from "./HIRBuilder";
 
 /**
  * Merges sequences of blocks that will always execute consecutively —
@@ -85,6 +85,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     merged.merge(block.id, predecessorId);
     fn.body.blocks.delete(block.id);
   }
+  markPredecessors(fn.body);
   removeUnreachableFallthroughs(fn.body);
 }
 
