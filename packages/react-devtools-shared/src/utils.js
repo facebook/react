@@ -596,11 +596,7 @@ export function getDataType(data: Object): DataType {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
-      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
-        // HACK This ArrayBuffer check is gross; is there a better way?
-        // We could try to create a new DataView with the value.
-        // If it doesn't error, we know it's an ArrayBuffer,
-        // but this seems kind of awkward and expensive.
+      } else if (data instanceof ArrayBuffer) {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         const iterator = data[Symbol.iterator]();
@@ -610,7 +606,7 @@ export function getDataType(data: Object): DataType {
         } else {
           return iterator === data ? 'opaque_iterator' : 'iterator';
         }
-      } else if (data.constructor && data.constructor.name === 'RegExp') {
+      } else if (data instanceof RegExp) {
         return 'regexp';
       } else {
         // $FlowFixMe[method-unbinding]
