@@ -62,6 +62,9 @@ function isControlled(props: any) {
 
 export function initInput(element: Element, props: Object) {
   if (__DEV__) {
+    // Normally we check for undefined and null the same, but explicitly specifying both
+    // properties, at all is probably worth warning for. We could move this either direction
+    // and just make it ok to pass null or just check hasOwnProperty.
     if (
       props.checked !== undefined &&
       props.defaultChecked !== undefined &&
@@ -228,8 +231,6 @@ export function postInitInput(
 ) {
   const node = ((element: any): InputWithWrapperState);
 
-  // Do not assign value if it is already set. This prevents user text input
-  // from being lost during SSR hydration.
   if (props.value != null || props.defaultValue != null) {
     const type = props.type;
     const isButton = type === 'submit' || type === 'reset';

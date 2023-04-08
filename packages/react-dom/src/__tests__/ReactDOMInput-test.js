@@ -1955,7 +1955,7 @@ describe('ReactDOMInput', () => {
       if (disableInputAttributeSyncing) {
         expect(input.getAttribute('value')).toBe(null);
       } else {
-        expect(input.getAttribute('value')).toBe('first');
+        expect(input.getAttribute('value')).toBe('latest');
       }
     });
 
@@ -2005,7 +2005,7 @@ describe('ReactDOMInput', () => {
       if (disableInputAttributeSyncing) {
         expect(input.hasAttribute('value')).toBe(false);
       } else {
-        expect(input.getAttribute('value')).toBe('first');
+        expect(input.getAttribute('value')).toBe('latest');
       }
     });
 
