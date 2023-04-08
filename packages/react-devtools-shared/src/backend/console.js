@@ -14,7 +14,6 @@ import type {
   WorkTagMap,
   ConsolePatchSettings,
 } from './types';
-import type {BrowserTheme} from 'react-devtools-shared/src/types';
 import {format, formatWithStyles} from './utils';
 
 import {getInternalReactConstants} from './renderer';
