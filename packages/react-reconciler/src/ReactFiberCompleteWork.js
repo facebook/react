@@ -527,7 +527,6 @@ function preloadInstanceAndSuspendIfNeeded(
   workInProgress: Fiber,
   type: Type,
   props: Props,
-  renderLanes: Lanes,
 ) {
   if (!maySuspendCommit(type, props)) {
     // If this flag was set previously, we can remove it. The flag
@@ -1110,12 +1109,7 @@ function completeWork(
 
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
-            preloadInstanceAndSuspendIfNeeded(
-              workInProgress,
-              type,
-              newProps,
-              renderLanes,
-            );
+            preloadInstanceAndSuspendIfNeeded(workInProgress, type, newProps);
             return null;
           }
         } else {
@@ -1162,12 +1156,7 @@ function completeWork(
 
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
-            preloadInstanceAndSuspendIfNeeded(
-              workInProgress,
-              type,
-              newProps,
-              renderLanes,
-            );
+            preloadInstanceAndSuspendIfNeeded(workInProgress, type, newProps);
             return null;
           }
         }
@@ -1323,7 +1312,6 @@ function completeWork(
         workInProgress,
         workInProgress.type,
         workInProgress.pendingProps,
-        renderLanes,
       );
       return null;
     }

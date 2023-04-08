@@ -237,7 +237,7 @@ function coerceRef(
   return mixedRef;
 }
 
-function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+function throwOnInvalidObjectType(newChild: Object) {
   // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
@@ -589,7 +589,7 @@ function createChildReconciler(
         );
       }
 
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectType(newChild);
     }
 
     if (__DEV__) {
@@ -680,7 +680,7 @@ function createChildReconciler(
         );
       }
 
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectType(newChild);
     }
 
     if (__DEV__) {
@@ -770,7 +770,7 @@ function createChildReconciler(
         );
       }
 
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectType(newChild);
     }
 
     if (__DEV__) {
@@ -1455,7 +1455,7 @@ function createChildReconciler(
         );
       }
 
-      throwOnInvalidObjectType(returnFiber, newChild);
+      throwOnInvalidObjectType(newChild);
     }
 
     if (

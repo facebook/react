@@ -382,7 +382,6 @@ export function enqueueCapturedUpdate<State>(
 
 function getStateFromUpdate<State>(
   workInProgress: Fiber,
-  queue: UpdateQueue<State>,
   update: Update<State>,
   prevState: State,
   nextProps: any,
@@ -593,7 +592,6 @@ export function processUpdateQueue<State>(
         // Process this update.
         newState = getStateFromUpdate(
           workInProgress,
-          queue,
           update,
           newState,
           props,

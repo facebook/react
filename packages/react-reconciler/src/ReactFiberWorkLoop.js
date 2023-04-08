@@ -1125,13 +1125,7 @@ function finishConcurrentRender(
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
+      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
     case RootSuspended: {
@@ -1161,27 +1155,14 @@ function finishConcurrentRender(
           // lower priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              finishedWork,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes,
-            ),
+            commitRootWhenReady.bind(null, root, finishedWork, lanes),
             msUntilTimeout,
           );
           break;
         }
       }
       // The work expired. Commit immediately.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
+      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
     case RootSuspendedWithDelay: {
@@ -1212,14 +1193,7 @@ function finishConcurrentRender(
           // Instead of committing the fallback immediately, wait for more data
           // to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              finishedWork,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes,
-            ),
+            commitRootWhenReady.bind(null, root, finishedWork, lanes),
             msUntilTimeout,
           );
           break;
@@ -1227,24 +1201,12 @@ function finishConcurrentRender(
       }
 
       // Commit the placeholder.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
+      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
     case RootCompleted: {
       // The work completed.
-      commitRootWhenReady(
-        root,
-        finishedWork,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions,
-        lanes,
-      );
+      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
     default: {
@@ -1256,8 +1218,6 @@ function finishConcurrentRender(
 function commitRootWhenReady(
   root: FiberRoot,
   finishedWork: Fiber,
-  recoverableErrors: Array<CapturedValue<mixed>> | null,
-  transitions: Array<Transition> | null,
   lanes: Lanes,
 ) {
   if (includesOnlyNonUrgentLanes(lanes)) {
