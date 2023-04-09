@@ -412,9 +412,7 @@ export function setDefaultValue(
     type !== 'number' ||
     getActiveElement(node.ownerDocument) !== node
   ) {
-    if (value == null) {
-      node.defaultValue = toString(node._wrapperState.initialValue);
-    } else if (node.defaultValue !== toString(value)) {
+    if (node.defaultValue !== toString(value)) {
       node.defaultValue = toString(value);
     }
   }
