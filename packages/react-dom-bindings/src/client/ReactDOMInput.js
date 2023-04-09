@@ -92,10 +92,51 @@ export function updateInputChecked(element: Element, props: Object) {
 export function updateInput(element: Element, props: Object) {
   const node: HTMLInputElement = (element: any);
 
-  updateInputChecked(element, props);
-
   const value = getToStringValue(props.value);
   const type = props.type;
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the value attribute, React only assigns a new value
+    // whenever the defaultValue React prop has changed. When not present,
+    // React does nothing
+    if (props.defaultValue != null) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    } else {
+      node.removeAttribute('value');
+    }
+  } else {
+    // When syncing the value attribute, the value comes from a cascade of
+    // properties:
+    //  1. The value React property
+    //  2. The defaultValue React property
+    //  3. Otherwise there should be no change
+    if (props.value != null) {
+      setDefaultValue(node, props.type, value);
+    } else if (props.defaultValue != null) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    } else {
+      node.removeAttribute('value');
+    }
+  }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the attribute is directly
+    // controllable from the defaultValue React property. It needs to be
+    // updated as new props come in.
+    if (props.defaultChecked == null) {
+      node.removeAttribute('checked');
+    } else {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
+    // When syncing the checked attribute, it only changes when it needs
+    // to be removed, such as transitioning from a checkbox into a text input
+    if (props.checked == null && props.defaultChecked != null) {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  }
+
+  updateInputChecked(element, props);
 
   if (value != null) {
     if (type === 'number') {
@@ -116,43 +157,6 @@ export function updateInput(element: Element, props: Object) {
     // blank-text buttons.
     node.removeAttribute('value');
     return;
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the value attribute, React only assigns a new value
-    // whenever the defaultValue React prop has changed. When not present,
-    // React does nothing
-    if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  } else {
-    // When syncing the value attribute, the value comes from a cascade of
-    // properties:
-    //  1. The value React property
-    //  2. The defaultValue React property
-    //  3. Otherwise there should be no change
-    if (props.value != null) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the attribute is directly
-    // controllable from the defaultValue React property. It needs to be
-    // updated as new props come in.
-    if (props.defaultChecked == null) {
-      node.removeAttribute('checked');
-    } else {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  } else {
-    // When syncing the checked attribute, it only changes when it needs
-    // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
   }
 }
 
