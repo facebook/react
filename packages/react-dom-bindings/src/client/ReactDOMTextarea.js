@@ -62,6 +62,11 @@ export function updateTextarea(element: Element, props: Object) {
   const node: HTMLTextAreaElement = (element: any);
   const value = getToStringValue(props.value);
   const defaultValue = getToStringValue(props.defaultValue);
+  if (defaultValue != null) {
+    node.defaultValue = toString(defaultValue);
+  } else {
+    node.defaultValue = '';
+  }
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
@@ -70,12 +75,10 @@ export function updateTextarea(element: Element, props: Object) {
     if (newValue !== node.value) {
       node.value = newValue;
     }
+    // TOOO: This should respect disableInputAttributeSyncing flag.
     if (props.defaultValue == null && node.defaultValue !== newValue) {
       node.defaultValue = newValue;
     }
-  }
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
   }
 }
 
