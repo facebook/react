@@ -60,7 +60,7 @@ export function validateOptionProps(element: Element, props: Object) {
   }
 }
 
-export function postInitOption(element: Element, props: Object) {
+export function initOption(element: Element, props: Object) {
   // value="" should make a value attribute (#6219)
   if (props.value != null) {
     element.setAttribute('value', toString(getToStringValue(props.value)));

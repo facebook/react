@@ -122,7 +122,7 @@ function updateOptions(
  * selected.
  */
 
-export function initSelect(element: Element, props: Object) {
+export function validateSelectProps(element: Element, props: Object) {
   if (__DEV__) {
     checkSelectPropTypes(props);
     if (
@@ -142,7 +142,7 @@ export function initSelect(element: Element, props: Object) {
   }
 }
 
-export function postInitSelect(element: Element, props: Object) {
+export function initSelect(element: Element, props: Object) {
   const node: HTMLSelectElement = (element: any);
   node.multiple = !!props.multiple;
   const value = props.value;

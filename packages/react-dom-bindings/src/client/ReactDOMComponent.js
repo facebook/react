@@ -26,22 +26,22 @@ import {
   setValueForNamespacedAttribute,
 } from './DOMPropertyOperations';
 import {
+  validateInputProps,
   initInput,
-  postInitInput,
   updateInputChecked,
   updateInput,
   restoreControlledInputState,
 } from './ReactDOMInput';
-import {postInitOption, validateOptionProps} from './ReactDOMOption';
+import {initOption, validateOptionProps} from './ReactDOMOption';
 import {
+  validateSelectProps,
   initSelect,
-  postInitSelect,
   restoreControlledSelectState,
   updateSelect,
 } from './ReactDOMSelect';
 import {
+  validateTextareaProps,
   initTextarea,
-  postInitTextarea,
   updateTextarea,
   restoreControlledTextareaState,
 } from './ReactDOMTextarea';
@@ -866,8 +866,8 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
-      initInput(domElement, props);
-      postInitInput(domElement, props, false);
+      validateInputProps(domElement, props);
+      initInput(domElement, props, false);
       return;
     }
     case 'select': {
@@ -896,8 +896,8 @@ export function setInitialProperties(
           }
         }
       }
+      validateSelectProps(domElement, props);
       initSelect(domElement, props);
-      postInitSelect(domElement, props);
       return;
     }
     case 'textarea': {
@@ -942,8 +942,8 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      validateTextareaProps(domElement, props);
       initTextarea(domElement, props);
-      postInitTextarea(domElement, props);
       return;
     }
     case 'option': {
@@ -970,7 +970,7 @@ export function setInitialProperties(
           }
         }
       }
-      postInitOption(domElement, props);
+      initOption(domElement, props);
       return;
     }
     case 'dialog': {
@@ -2319,13 +2319,13 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
-      initInput(domElement, props);
+      validateInputProps(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
       // option and select we don't quite do the same thing and select
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
-      postInitInput(domElement, props, true);
+      initInput(domElement, props, true);
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -2337,7 +2337,7 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      initSelect(domElement, props);
+      validateSelectProps(domElement, props);
       break;
     case 'textarea':
       if (__DEV__) {
@@ -2349,8 +2349,8 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      validateTextareaProps(domElement, props);
       initTextarea(domElement, props);
-      postInitTextarea(domElement, props);
       break;
   }
 

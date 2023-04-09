@@ -31,7 +31,7 @@ let didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
-export function initTextarea(element: Element, props: Object) {
+export function validateTextareaProps(element: Element, props: Object) {
   if (__DEV__) {
     if (
       props.value !== undefined &&
@@ -82,7 +82,7 @@ export function updateTextarea(element: Element, props: Object) {
   }
 }
 
-export function postInitTextarea(element: Element, props: Object) {
+export function initTextarea(element: Element, props: Object) {
   const node: HTMLTextAreaElement = (element: any);
 
   let initialValue = props.value;

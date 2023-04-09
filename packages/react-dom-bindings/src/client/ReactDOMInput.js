@@ -39,7 +39,7 @@ let didWarnCheckedDefaultChecked = false;
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-export function initInput(element: Element, props: Object) {
+export function validateInputProps(element: Element, props: Object) {
   if (__DEV__) {
     // Normally we check for undefined and null the same, but explicitly specifying both
     // properties, at all is probably worth warning for. We could move this either direction
@@ -160,7 +160,7 @@ export function updateInput(element: Element, props: Object) {
   }
 }
 
-export function postInitInput(
+export function initInput(
   element: Element,
   props: Object,
   isHydrating: boolean,
