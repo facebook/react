@@ -241,7 +241,14 @@ export function postInitInput(
       return;
     }
 
-    const initialValue = toString(node._wrapperState.initialValue);
+    const defaultValue =
+      props.defaultValue != null
+        ? toString(getToStringValue(props.defaultValue))
+        : '';
+    const initialValue =
+      props.value != null
+        ? toString(getToStringValue(props.value))
+        : defaultValue;
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
@@ -280,9 +287,8 @@ export function postInitInput(
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      const defaultValue = getToStringValue(props.defaultValue);
-      if (defaultValue != null) {
-        node.defaultValue = toString(defaultValue);
+      if (props.defaultValue != null) {
+        node.defaultValue = defaultValue;
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
@@ -302,13 +308,20 @@ export function postInitInput(
     node.name = '';
   }
 
+  const defaultChecked =
+    props.checked != null ? props.checked : props.defaultChecked;
+  const initialChecked =
+    typeof defaultChecked !== 'function' &&
+    typeof defaultChecked !== 'symbol' &&
+    !!defaultChecked;
+
   // The checked property never gets assigned. It must be manually set.
   // We don't want to do this when hydrating so that existing user input isn't
   // modified
   // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
   // correct for the hydration case then.
   if (!isHydrating) {
-    node.checked = !!node._wrapperState.initialChecked;
+    node.checked = !!initialChecked;
   }
 
   if (disableInputAttributeSyncing) {
@@ -327,7 +340,7 @@ export function postInitInput(
     //   2. The defaultChecked React property when present
     //   3. Otherwise, false
     node.defaultChecked = !node.defaultChecked;
-    node.defaultChecked = !!node._wrapperState.initialChecked;
+    node.defaultChecked = !!initialChecked;
   }
 
   if (name !== '') {
