@@ -2904,6 +2904,53 @@ var canUseDOM = !!(
   typeof window.document.createElement !== "undefined"
 );
 
+var hasReadOnlyValue = {
+  button: true,
+  checkbox: true,
+  image: true,
+  hidden: true,
+  radio: true,
+  reset: true,
+  submit: true
+};
+function checkControlledValueProps(tagName, props) {
+  {
+    if (
+      !(
+        hasReadOnlyValue[props.type] ||
+        props.onChange ||
+        props.onInput ||
+        props.readOnly ||
+        props.disabled ||
+        props.value == null
+      )
+    ) {
+      error(
+        "You provided a `value` prop to a form field without an " +
+          "`onChange` handler. This will render a read-only field. If " +
+          "the field should be mutable use `defaultValue`. Otherwise, " +
+          "set either `onChange` or `readOnly`."
+      );
+    }
+
+    if (
+      !(
+        props.onChange ||
+        props.readOnly ||
+        props.disabled ||
+        props.checked == null
+      )
+    ) {
+      error(
+        "You provided a `checked` prop to a form field without an " +
+          "`onChange` handler. This will render a read-only field. If " +
+          "the field should be mutable use `defaultChecked`. Otherwise, " +
+          "set either `onChange` or `readOnly`."
+      );
+    }
+  }
+}
+
 /* eslint-disable max-len */
 
 var ATTRIBUTE_NAME_START_CHAR =
@@ -3544,53 +3591,6 @@ function getToStringValue(value) {
   }
 }
 
-var hasReadOnlyValue = {
-  button: true,
-  checkbox: true,
-  image: true,
-  hidden: true,
-  radio: true,
-  reset: true,
-  submit: true
-};
-function checkControlledValueProps(tagName, props) {
-  {
-    if (
-      !(
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.onInput ||
-        props.readOnly ||
-        props.disabled ||
-        props.value == null
-      )
-    ) {
-      error(
-        "You provided a `value` prop to a form field without an " +
-          "`onChange` handler. This will render a read-only field. If " +
-          "the field should be mutable use `defaultValue`. Otherwise, " +
-          "set either `onChange` or `readOnly`."
-      );
-    }
-
-    if (
-      !(
-        props.onChange ||
-        props.readOnly ||
-        props.disabled ||
-        props.checked == null
-      )
-    ) {
-      error(
-        "You provided a `checked` prop to a form field without an " +
-          "`onChange` handler. This will render a read-only field. If " +
-          "the field should be mutable use `defaultChecked`. Otherwise, " +
-          "set either `onChange` or `readOnly`."
-      );
-    }
-  }
-}
-
 function isCheckable(elem) {
   var type = elem.type;
   var nodeName = elem.nodeName;
@@ -3698,7 +3698,7 @@ function trackValueOnNode(node) {
 function track(node) {
   if (getTracker(node)) {
     return;
-  } // TODO: Once it's just Fiber we can move this to node._wrapperState
+  }
 
   node._valueTracker = trackValueOnNode(node);
 }
@@ -3741,13 +3741,6 @@ function getActiveElement(doc) {
 
 var didWarnValueDefaultValue$1 = false;
 var didWarnCheckedDefaultChecked = false;
-var didWarnControlledToUncontrolled = false;
-var didWarnUncontrolledToControlled = false;
-
-function isControlled(props) {
-  var usesChecked = props.type === "checkbox" || props.type === "radio";
-  return usesChecked ? props.checked != null : props.value != null;
-}
 /**
  * Implements an <input> host component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
@@ -3765,10 +3758,11 @@ function isControlled(props) {
  * See http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 
-function initWrapperState$2(element, props) {
+function validateInputProps(element, props) {
   {
-    checkControlledValueProps("input", props);
-
+    // Normally we check for undefined and null the same, but explicitly specifying both
+    // properties, at all is probably worth warning for. We could move this either direction
+    // and just make it ok to pass null or just check hasOwnProperty.
     if (
       props.checked !== undefined &&
       props.defaultChecked !== undefined &&
@@ -3807,23 +3801,8 @@ function initWrapperState$2(element, props) {
       didWarnValueDefaultValue$1 = true;
     }
   }
-
-  var node = element;
-  var defaultValue = props.defaultValue == null ? "" : props.defaultValue;
-  var initialChecked =
-    props.checked != null ? props.checked : props.defaultChecked;
-  node._wrapperState = {
-    initialChecked:
-      typeof initialChecked !== "function" &&
-      typeof initialChecked !== "symbol" &&
-      !!initialChecked,
-    initialValue: getToStringValue(
-      props.value != null ? props.value : defaultValue
-    ),
-    controlled: isControlled(props)
-  };
 }
-function updateChecked(element, props) {
+function updateInputChecked(element, props) {
   var node = element;
   var checked = props.checked;
 
@@ -3831,48 +3810,53 @@ function updateChecked(element, props) {
     node.checked = checked;
   }
 }
-function updateWrapper$1(element, props) {
+function updateInput(element, props) {
   var node = element;
+  var value = getToStringValue(props.value);
+  var type = props.type;
 
-  {
-    var controlled = isControlled(props);
-
-    if (
-      !node._wrapperState.controlled &&
-      controlled &&
-      !didWarnUncontrolledToControlled
-    ) {
-      error(
-        "A component is changing an uncontrolled input to be controlled. " +
-          "This is likely caused by the value changing from undefined to " +
-          "a defined value, which should not happen. " +
-          "Decide between using a controlled or uncontrolled input " +
-          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-      );
-
-      didWarnUncontrolledToControlled = true;
+  if (disableInputAttributeSyncing) {
+    // When not syncing the value attribute, React only assigns a new value
+    // whenever the defaultValue React prop has changed. When not present,
+    // React does nothing
+    if (props.defaultValue != null) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    } else {
+      node.removeAttribute("value");
     }
-
-    if (
-      node._wrapperState.controlled &&
-      !controlled &&
-      !didWarnControlledToUncontrolled
-    ) {
-      error(
-        "A component is changing a controlled input to be uncontrolled. " +
-          "This is likely caused by the value changing from a defined to " +
-          "undefined, which should not happen. " +
-          "Decide between using a controlled or uncontrolled input " +
-          "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-      );
-
-      didWarnControlledToUncontrolled = true;
+  } else {
+    // When syncing the value attribute, the value comes from a cascade of
+    // properties:
+    //  1. The value React property
+    //  2. The defaultValue React property
+    //  3. Otherwise there should be no change
+    if (props.value != null) {
+      setDefaultValue(node, props.type, value);
+    } else if (props.defaultValue != null) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    } else {
+      node.removeAttribute("value");
     }
   }
 
-  updateChecked(element, props);
-  var value = getToStringValue(props.value);
-  var type = props.type;
+  if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the attribute is directly
+    // controllable from the defaultValue React property. It needs to be
+    // updated as new props come in.
+    if (props.defaultChecked == null) {
+      node.removeAttribute("checked");
+    } else {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
+    // When syncing the checked attribute, it only changes when it needs
+    // to be removed, such as transitioning from a checkbox into a text input
+    if (props.checked == null && props.defaultChecked != null) {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  }
+
+  updateInputChecked(element, props);
 
   if (value != null) {
     if (type === "number") {
@@ -3893,49 +3877,11 @@ function updateWrapper$1(element, props) {
     node.removeAttribute("value");
     return;
   }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the value attribute, React only assigns a new value
-    // whenever the defaultValue React prop has changed. When not present,
-    // React does nothing
-    if (props.hasOwnProperty("defaultValue")) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  } else {
-    // When syncing the value attribute, the value comes from a cascade of
-    // properties:
-    //  1. The value React property
-    //  2. The defaultValue React property
-    //  3. Otherwise there should be no change
-    if (props.hasOwnProperty("value")) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.hasOwnProperty("defaultValue")) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    }
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the attribute is directly
-    // controllable from the defaultValue React property. It needs to be
-    // updated as new props come in.
-    if (props.defaultChecked == null) {
-      node.removeAttribute("checked");
-    } else {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  } else {
-    // When syncing the checked attribute, it only changes when it needs
-    // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  }
 }
-function postMountWrapper$3(element, props, isHydrating) {
-  var node = element; // Do not assign value if it is already set. This prevents user text input
-  // from being lost during SSR hydration.
+function initInput(element, props, isHydrating) {
+  var node = element;
 
-  if (props.hasOwnProperty("value") || props.hasOwnProperty("defaultValue")) {
+  if (props.value != null || props.defaultValue != null) {
     var type = props.type;
     var isButton = type === "submit" || type === "reset"; // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
@@ -3944,7 +3890,14 @@ function postMountWrapper$3(element, props, isHydrating) {
       return;
     }
 
-    var initialValue = toString(node._wrapperState.initialValue); // Do not assign value if it is already set. This prevents user text input
+    var defaultValue =
+      props.defaultValue != null
+        ? toString(getToStringValue(props.defaultValue))
+        : "";
+    var initialValue =
+      props.value != null
+        ? toString(getToStringValue(props.value))
+        : defaultValue; // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
 
     if (!isHydrating) {
@@ -3981,10 +3934,8 @@ function postMountWrapper$3(element, props, isHydrating) {
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      var defaultValue = getToStringValue(props.defaultValue);
-
-      if (defaultValue != null) {
-        node.defaultValue = toString(defaultValue);
+      if (props.defaultValue != null) {
+        node.defaultValue = defaultValue;
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
@@ -4002,21 +3953,28 @@ function postMountWrapper$3(element, props, isHydrating) {
 
   if (name !== "") {
     node.name = "";
-  } // The checked property never gets assigned. It must be manually set.
+  }
+
+  var defaultChecked =
+    props.checked != null ? props.checked : props.defaultChecked;
+  var initialChecked =
+    typeof defaultChecked !== "function" &&
+    typeof defaultChecked !== "symbol" &&
+    !!defaultChecked; // The checked property never gets assigned. It must be manually set.
   // We don't want to do this when hydrating so that existing user input isn't
   // modified
   // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
   // correct for the hydration case then.
 
   if (!isHydrating) {
-    node.checked = !!node._wrapperState.initialChecked;
+    node.checked = !!initialChecked;
   }
 
   if (disableInputAttributeSyncing) {
     // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-    if (props.hasOwnProperty("defaultChecked")) {
+    if (props.defaultChecked != null) {
       node.defaultChecked = !node.defaultChecked;
       node.defaultChecked = !!props.defaultChecked;
     }
@@ -4028,16 +3986,16 @@ function postMountWrapper$3(element, props, isHydrating) {
     //   2. The defaultChecked React property when present
     //   3. Otherwise, false
     node.defaultChecked = !node.defaultChecked;
-    node.defaultChecked = !!node._wrapperState.initialChecked;
+    node.defaultChecked = !!initialChecked;
   }
 
   if (name !== "") {
     node.name = name;
   }
 }
-function restoreControlledState$3(element, props) {
+function restoreControlledInputState(element, props) {
   var node = element;
-  updateWrapper$1(node, props);
+  updateInput(node, props);
   updateNamedCousins(node, props);
 }
 
@@ -4089,7 +4047,7 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
 
-      updateWrapper$1(otherNode, otherProps);
+      updateInput(otherNode, otherProps);
     }
   }
 } // In Chrome, assigning defaultValue to certain input types triggers input validation.
@@ -4107,9 +4065,7 @@ function setDefaultValue(node, type, value) {
     type !== "number" ||
     getActiveElement(node.ownerDocument) !== node
   ) {
-    if (value == null) {
-      node.defaultValue = toString(node._wrapperState.initialValue);
-    } else if (node.defaultValue !== toString(value)) {
+    if (node.defaultValue !== toString(value)) {
       node.defaultValue = toString(value);
     }
   }
@@ -4122,7 +4078,7 @@ var didWarnInvalidInnerHTML = false;
  * Implements an <option> host component that warns when `selected` is set.
  */
 
-function validateProps(element, props) {
+function validateOptionProps(element, props) {
   {
     // If a value is not provided, then the children must be simple.
     if (props.value == null) {
@@ -4167,7 +4123,7 @@ function validateProps(element, props) {
     }
   }
 }
-function postMountWrapper$2(element, props) {
+function initOption(element, props) {
   // value="" should make a value attribute (#6219)
   if (props.value != null) {
     element.setAttribute("value", toString(getToStringValue(props.value)));
@@ -4203,8 +4159,6 @@ var valuePropNames = ["value", "defaultValue"];
 
 function checkSelectPropTypes(props) {
   {
-    checkControlledValueProps("select", props);
-
     for (var i = 0; i < valuePropNames.length; i++) {
       var propName = valuePropNames[i];
 
@@ -4300,18 +4254,10 @@ function updateOptions(node, multiple, propValue, setDefaultSelected) {
  * selected.
  */
 
-function initWrapperState$1(element, props) {
-  var node = element;
-
+function validateSelectProps(element, props) {
   {
     checkSelectPropTypes(props);
-  }
 
-  node._wrapperState = {
-    wasMultiple: !!props.multiple
-  };
-
-  {
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&
@@ -4329,7 +4275,7 @@ function initWrapperState$1(element, props) {
     }
   }
 }
-function postMountWrapper$1(element, props) {
+function initSelect(element, props) {
   var node = element;
   node.multiple = !!props.multiple;
   var value = props.value;
@@ -4340,10 +4286,9 @@ function postMountWrapper$1(element, props) {
     updateOptions(node, !!props.multiple, props.defaultValue, true);
   }
 }
-function postUpdateWrapper(element, props) {
+function updateSelect(element, prevProps, props) {
   var node = element;
-  var wasMultiple = node._wrapperState.wasMultiple;
-  node._wrapperState.wasMultiple = !!props.multiple;
+  var wasMultiple = !!prevProps.multiple;
   var value = props.value;
 
   if (value != null) {
@@ -4358,7 +4303,7 @@ function postUpdateWrapper(element, props) {
     }
   }
 }
-function restoreControlledState$2(element, props) {
+function restoreControlledSelectState(element, props) {
   var node = element;
   var value = props.value;
 
@@ -4384,12 +4329,8 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 
-function initWrapperState(element, props) {
-  var node = element;
-
+function validateTextareaProps(element, props) {
   {
-    checkControlledValueProps("textarea", props);
-
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&
@@ -4407,8 +4348,42 @@ function initWrapperState(element, props) {
 
       didWarnValDefaultVal = true;
     }
+
+    if (props.children != null && props.value == null) {
+      error(
+        "Use the `defaultValue` or `value` props instead of setting " +
+          "children on <textarea>."
+      );
+    }
+  }
+}
+function updateTextarea(element, props) {
+  var node = element;
+  var value = getToStringValue(props.value);
+  var defaultValue = getToStringValue(props.defaultValue);
+
+  if (defaultValue != null) {
+    node.defaultValue = toString(defaultValue);
+  } else {
+    node.defaultValue = "";
   }
 
+  if (value != null) {
+    // Cast `value` to a string to ensure the value is set correctly. While
+    // browsers typically do this as necessary, jsdom doesn't.
+    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
+
+    if (newValue !== node.value) {
+      node.value = newValue;
+    } // TOOO: This should respect disableInputAttributeSyncing flag.
+
+    if (props.defaultValue == null && node.defaultValue !== newValue) {
+      node.defaultValue = newValue;
+    }
+  }
+}
+function initTextarea(element, props) {
+  var node = element;
   var initialValue = props.value; // Only bother fetching default value if we're going to use it
 
   if (initialValue == null) {
@@ -4416,13 +4391,6 @@ function initWrapperState(element, props) {
       defaultValue = props.defaultValue;
 
     if (children != null) {
-      {
-        error(
-          "Use the `defaultValue` or `value` props instead of setting " +
-            "children on <textarea>."
-        );
-      }
-
       {
         if (defaultValue != null) {
           throw new Error(
@@ -4451,36 +4419,7 @@ function initWrapperState(element, props) {
 
   var stringValue = getToStringValue(initialValue);
   node.defaultValue = stringValue; // This will be toString:ed.
-
-  node._wrapperState = {
-    initialValue: stringValue
-  };
-}
-function updateWrapper(element, props) {
-  var node = element;
-  var value = getToStringValue(props.value);
-  var defaultValue = getToStringValue(props.defaultValue);
-
-  if (value != null) {
-    // Cast `value` to a string to ensure the value is set correctly. While
-    // browsers typically do this as necessary, jsdom doesn't.
-    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
-
-    if (newValue !== node.value) {
-      node.value = newValue;
-    }
-
-    if (props.defaultValue == null && node.defaultValue !== newValue) {
-      node.defaultValue = newValue;
-    }
-  }
-
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
-  }
-}
-function postMountWrapper(element, props) {
-  var node = element; // This is in postMount because we need access to the DOM node, which is not
+  // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
 
   var textContent = node.textContent; // Only set node.value if textContent is equal to the expected
@@ -4488,15 +4427,15 @@ function postMountWrapper(element, props) {
   // will populate textContent as well.
   // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
 
-  if (textContent === node._wrapperState.initialValue) {
+  if (textContent === stringValue) {
     if (textContent !== "" && textContent !== null) {
       node.value = textContent;
     }
   }
 }
-function restoreControlledState$1(element, props) {
+function restoreControlledTextareaState(element, props) {
   // DOM component is still mounted; update
-  updateWrapper(element, props);
+  updateTextarea(element, props);
 }
 
 var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
@@ -33404,7 +33343,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-95157615";
+var ReactVersion = "18.3.0-www-classic-6714ccf8";
 
 function createPortal$1(
   children,
@@ -35605,16 +35544,18 @@ function getTargetInstForInputOrChangeEvent(domEventName, targetInst) {
   }
 }
 
-function handleControlledInputBlur(node) {
-  var state = node._wrapperState;
-
-  if (!state || !state.controlled || node.type !== "number") {
+function handleControlledInputBlur(node, props) {
+  if (node.type !== "number") {
     return;
   }
 
   if (!disableInputAttributeSyncing) {
-    // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue(node, "number", node.value);
+    var isControlled = props.value != null;
+
+    if (isControlled) {
+      // If controlled, assign the value attribute to the current value on blur
+      setDefaultValue(node, "number", node.value);
+    }
   }
 }
 /**
@@ -35677,8 +35618,12 @@ function extractEvents$4(
     handleEventFunc(domEventName, targetNode, targetInst);
   } // When blurring, set the value attribute for number inputs
 
-  if (domEventName === "focusout") {
-    handleControlledInputBlur(targetNode);
+  if (domEventName === "focusout" && targetInst) {
+    // These props aren't necessarily the most current but we warn for changing
+    // between controlled and uncontrolled, so it doesn't matter and the previous
+    // code was also broken for changes.
+    var props = targetInst.memoizedProps;
+    handleControlledInputBlur(targetNode, props);
   }
 }
 
@@ -37678,6 +37623,8 @@ function getListenerSetKey(domEventName, capture) {
   return domEventName + "__" + (capture ? "capture" : "bubble");
 }
 
+var didWarnControlledToUncontrolled = false;
+var didWarnUncontrolledToControlled = false;
 var didWarnInvalidHydration = false;
 var canDiffStyleForHydrationWarning;
 
@@ -38463,7 +38410,9 @@ function setInitialProperties(domElement, tag, props) {
     }
 
     case "input": {
-      initWrapperState$2(domElement, props); // We listen to this event in case to ensure emulated bubble
+      {
+        checkControlledValueProps("input", props);
+      } // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
@@ -38499,10 +38448,9 @@ function setInitialProperties(domElement, tag, props) {
           }
 
           case "checked": {
-            var node = domElement;
-            var checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+            var checked = propValue != null ? propValue : props.defaultChecked;
+            var inputElement = domElement;
+            inputElement.checked =
               !!checked &&
               typeof checked !== "function" &&
               checked !== "symbol";
@@ -38536,12 +38484,15 @@ function setInitialProperties(domElement, tag, props) {
       // up necessary since we never stop tracking anymore.
 
       track(domElement);
-      postMountWrapper$3(domElement, props, false);
+      validateInputProps(domElement, props);
+      initInput(domElement, props, false);
       return;
     }
 
     case "select": {
-      initWrapperState$1(domElement, props); // We listen to this event in case to ensure emulated bubble
+      {
+        checkControlledValueProps("select", props);
+      } // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
@@ -38570,12 +38521,15 @@ function setInitialProperties(domElement, tag, props) {
         }
       }
 
-      postMountWrapper$1(domElement, props);
+      validateSelectProps(domElement, props);
+      initSelect(domElement, props);
       return;
     }
 
     case "textarea": {
-      initWrapperState(domElement, props); // We listen to this event in case to ensure emulated bubble
+      {
+        checkControlledValueProps("textarea", props);
+      } // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
@@ -38622,12 +38576,13 @@ function setInitialProperties(domElement, tag, props) {
       // up necessary since we never stop tracking anymore.
 
       track(domElement);
-      postMountWrapper(domElement);
+      validateTextareaProps(domElement, props);
+      initTextarea(domElement, props);
       return;
     }
 
     case "option": {
-      validateProps(domElement, props);
+      validateOptionProps(domElement, props);
 
       for (var _propKey3 in props) {
         if (!props.hasOwnProperty(_propKey3)) {
@@ -38656,7 +38611,7 @@ function setInitialProperties(domElement, tag, props) {
         }
       }
 
-      postMountWrapper$2(domElement, props);
+      initOption(domElement, props);
       return;
     }
 
@@ -38942,7 +38897,7 @@ function updateProperties(
       // In the middle of an update, it is possible to have multiple checked.
       // When a checked radio tries to change name, browser makes another radio's checked false.
       if (nextProps.type === "radio" && nextProps.name != null) {
-        updateChecked(domElement, nextProps);
+        updateInputChecked(domElement, nextProps);
       }
 
       for (var i = 0; i < updatePayload.length; i += 2) {
@@ -38951,10 +38906,10 @@ function updateProperties(
 
         switch (propKey) {
           case "checked": {
-            var node = domElement;
             var checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+              propValue != null ? propValue : nextProps.defaultChecked;
+            var inputElement = domElement;
+            inputElement.checked =
               !!checked &&
               typeof checked !== "function" &&
               checked !== "symbol";
@@ -38984,11 +38939,54 @@ function updateProperties(
             setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
+      }
+
+      {
+        var wasControlled =
+          lastProps.type === "checkbox" || lastProps.type === "radio"
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        var isControlled =
+          nextProps.type === "checkbox" || nextProps.type === "radio"
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          error(
+            "A component is changing an uncontrolled input to be controlled. " +
+              "This is likely caused by the value changing from undefined to " +
+              "a defined value, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnUncontrolledToControlled = true;
+        }
+
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          error(
+            "A component is changing a controlled input to be uncontrolled. " +
+              "This is likely caused by the value changing from a defined to " +
+              "undefined, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnControlledToUncontrolled = true;
+        }
       } // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
 
-      updateWrapper$1(domElement, nextProps);
+      updateInput(domElement, nextProps);
       return;
     }
 
@@ -39011,7 +39009,7 @@ function updateProperties(
       } // <select> value update needs to occur after <option> children
       // reconciliation
 
-      postUpdateWrapper(domElement, nextProps);
+      updateSelect(domElement, lastProps, nextProps);
       return;
     }
 
@@ -39049,7 +39047,7 @@ function updateProperties(
         }
       }
 
-      updateWrapper(domElement, nextProps);
+      updateTextarea(domElement, nextProps);
       return;
     }
 
@@ -40121,41 +40119,50 @@ function diffHydratedProperties(
       break;
 
     case "input":
-      initWrapperState$2(domElement, props); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement); // TODO: Make sure we check if this is still unmounted or do any clean
-      // up necessary since we never stop tracking anymore.
-
-      track(domElement); // For input and textarea we current always set the value property at
-      // post mount to force it to diverge from attributes. However, for
-      // option and select we don't quite do the same thing and select
-      // is not resilient to the DOM state changing so we don't do that here.
-      // TODO: Consider not doing this for input and textarea.
-
-      postMountWrapper$3(domElement, props, true);
-      break;
-
-    case "option":
-      validateProps(domElement, props);
-      break;
-
-    case "select":
-      initWrapperState$1(domElement, props); // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-
-      listenToNonDelegatedEvent("invalid", domElement);
-      break;
-
-    case "textarea":
-      initWrapperState(domElement, props); // We listen to this event in case to ensure emulated bubble
+      {
+        checkControlledValueProps("input", props);
+      } // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement); // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
 
       track(domElement);
-      postMountWrapper(domElement);
+      validateInputProps(domElement, props); // For input and textarea we current always set the value property at
+      // post mount to force it to diverge from attributes. However, for
+      // option and select we don't quite do the same thing and select
+      // is not resilient to the DOM state changing so we don't do that here.
+      // TODO: Consider not doing this for input and textarea.
+
+      initInput(domElement, props, true);
+      break;
+
+    case "option":
+      validateOptionProps(domElement, props);
+      break;
+
+    case "select":
+      {
+        checkControlledValueProps("select", props);
+      } // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement);
+      validateSelectProps(domElement, props);
+      break;
+
+    case "textarea":
+      {
+        checkControlledValueProps("textarea", props);
+      } // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+
+      listenToNonDelegatedEvent("invalid", domElement); // TODO: Make sure we check if this is still unmounted or do any clean
+      // up necessary since we never stop tracking anymore.
+
+      track(domElement);
+      validateTextareaProps(domElement, props);
+      initTextarea(domElement, props);
       break;
   }
 
@@ -40322,15 +40329,15 @@ function warnForInsertedHydratedText(parentNode, text) {
 function restoreControlledState(domElement, tag, props) {
   switch (tag) {
     case "input":
-      restoreControlledState$3(domElement, props);
+      restoreControlledInputState(domElement, props);
       return;
 
     case "textarea":
-      restoreControlledState$1(domElement, props);
+      restoreControlledTextareaState(domElement, props);
       return;
 
     case "select":
-      restoreControlledState$2(domElement, props);
+      restoreControlledSelectState(domElement, props);
       return;
   }
 }
