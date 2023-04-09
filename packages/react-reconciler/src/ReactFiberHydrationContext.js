@@ -39,6 +39,7 @@ import {
   enableHostSingletons,
   enableFloat,
   enableClientRenderFallbackOnTextMismatch,
+  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -687,12 +688,15 @@ function prepareToHydrateHostInstance(
     fiber,
     shouldWarnIfMismatchDev,
   );
+
   // TODO: Type this specific to this type of component.
-  fiber.updateQueue = (updatePayload: any);
-  // If the update payload indicates that there is a change or if there
-  // is a new ref we mark this as an update.
-  if (updatePayload !== null) {
-    return true;
+  if (!diffInCommitPhase) {
+    fiber.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
+    if (updatePayload !== null) {
+      return true;
+    }
   }
   return false;
 }

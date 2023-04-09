@@ -64,6 +64,26 @@ export function createDangerousStringForStyles(styles) {
   }
 }
 
+export function clearPreviousStyles(node, prevStyles, nextStyles) {
+  const style = node.style;
+  for (const styleName in prevStyles) {
+    if (
+      prevStyles.hasOwnProperty(styleName) &&
+      (nextStyles == null || !nextStyles.hasOwnProperty(styleName))
+    ) {
+      // Clear style
+      const isCustomProperty = styleName.indexOf('--') === 0;
+      if (isCustomProperty) {
+        style.setProperty(styleName, '');
+      } else if (styleName === 'float') {
+        style.cssFloat = '';
+      } else {
+        style[styleName] = '';
+      }
+    }
+  }
+}
+
 /**
  * Sets the value for multiple styles on a node.  If a value is specified as
  * '' (empty string), the corresponding style property will be unset.
@@ -167,7 +187,7 @@ function expandShorthandMap(styles) {
  *   becomes .style.fontVariant = ''
  */
 export function validateShorthandPropertyCollisionInDev(
-  styleUpdates,
+  prevStyles,
   nextStyles,
 ) {
   if (__DEV__) {
@@ -175,7 +195,30 @@ export function validateShorthandPropertyCollisionInDev(
       return;
     }
 
-    const expandedUpdates = expandShorthandMap(styleUpdates);
+    // Compute the diff as it would happen elsewhere.
+    const expandedUpdates = {};
+    if (prevStyles) {
+      for (const key in prevStyles) {
+        if (prevStyles.hasOwnProperty(key) && !nextStyles.hasOwnProperty(key)) {
+          const longhands = shorthandToLonghand[key] || [key];
+          for (let i = 0; i < longhands.length; i++) {
+            expandedUpdates[longhands[i]] = key;
+          }
+        }
+      }
+    }
+    for (const key in nextStyles) {
+      if (
+        nextStyles.hasOwnProperty(key) &&
+        (!prevStyles || prevStyles[key] !== nextStyles[key])
+      ) {
+        const longhands = shorthandToLonghand[key] || [key];
+        for (let i = 0; i < longhands.length; i++) {
+          expandedUpdates[longhands[i]] = key;
+        }
+      }
+    }
+
     const expandedStyles = expandShorthandMap(nextStyles);
     const warnedAbout = {};
     for (const key in expandedUpdates) {
@@ -193,7 +236,7 @@ export function validateShorthandPropertyCollisionInDev(
             "avoid this, don't mix shorthand and non-shorthand properties " +
             'for the same value; instead, replace the shorthand with ' +
             'separate values.',
-          isValueEmpty(styleUpdates[originalKey]) ? 'Removing' : 'Updating',
+          isValueEmpty(nextStyles[originalKey]) ? 'Removing' : 'Updating',
           originalKey,
           correctOriginalKey,
         );

@@ -47,6 +47,7 @@ import {
   setInitialProperties,
   diffProperties,
   updateProperties,
+  updatePropertiesWithDiff,
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
@@ -86,6 +87,7 @@ import {
   enableFloat,
   enableHostSingletons,
   enableTrustedTypesIntegration,
+  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -485,6 +487,10 @@ export function prepareUpdate(
   newProps: Props,
   hostContext: HostContext,
 ): null | Array<mixed> {
+  if (diffInCommitPhase) {
+    // TODO: Figure out how to validateDOMNesting when children turn into a string.
+    return null;
+  }
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     if (
@@ -642,14 +648,26 @@ export function commitMount(
 
 export function commitUpdate(
   domElement: Instance,
-  updatePayload: Array<mixed>,
+  updatePayload: any,
   type: string,
   oldProps: Props,
   newProps: Props,
   internalInstanceHandle: Object,
 ): void {
-  // Apply the diff to the DOM node.
-  updateProperties(domElement, updatePayload, type, oldProps, newProps);
+  if (diffInCommitPhase) {
+    // Diff and update the properties.
+    updateProperties(domElement, type, oldProps, newProps);
+  } else {
+    // Apply the diff to the DOM node.
+    updatePropertiesWithDiff(
+      domElement,
+      updatePayload,
+      type,
+      oldProps,
+      newProps,
+    );
+  }
+
   // Update the props handle so that we know which props are the ones with
   // with current event handlers.
   updateFiberProps(domElement, newProps);
