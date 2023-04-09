@@ -37,7 +37,7 @@ import {
   initSelect,
   postInitSelect,
   restoreControlledSelectState,
-  postUpdateSelect,
+  updateSelect,
 } from './ReactDOMSelect';
 import {
   initTextarea,
@@ -1319,7 +1319,7 @@ export function updateProperties(
       }
       // <select> value update needs to occur after <option> children
       // reconciliation
-      postUpdateSelect(domElement, nextProps);
+      updateSelect(domElement, lastProps, nextProps);
       return;
     }
     case 'textarea': {

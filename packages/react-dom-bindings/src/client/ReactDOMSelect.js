@@ -19,10 +19,6 @@ if (__DEV__) {
   didWarnValueDefaultValue = false;
 }
 
-type SelectWithWrapperState = HTMLSelectElement & {
-  _wrapperState: {wasMultiple: boolean},
-};
-
 function getDeclarationErrorAddendum() {
   const ownerName = getCurrentFiberOwnerNameInDevOrNull();
   if (ownerName) {
@@ -127,16 +123,8 @@ function updateOptions(
  */
 
 export function initSelect(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
   if (__DEV__) {
     checkSelectPropTypes(props);
-  }
-
-  node._wrapperState = {
-    wasMultiple: !!props.multiple,
-  };
-
-  if (__DEV__) {
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&
@@ -155,7 +143,7 @@ export function initSelect(element: Element, props: Object) {
 }
 
 export function postInitSelect(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
+  const node: HTMLSelectElement = (element: any);
   node.multiple = !!props.multiple;
   const value = props.value;
   if (value != null) {
@@ -165,10 +153,13 @@ export function postInitSelect(element: Element, props: Object) {
   }
 }
 
-export function postUpdateSelect(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
-  const wasMultiple = node._wrapperState.wasMultiple;
-  node._wrapperState.wasMultiple = !!props.multiple;
+export function updateSelect(
+  element: Element,
+  prevProps: Object,
+  props: Object,
+) {
+  const node: HTMLSelectElement = (element: any);
+  const wasMultiple = !!prevProps.multiple;
 
   const value = props.value;
   if (value != null) {
@@ -185,7 +176,7 @@ export function postUpdateSelect(element: Element, props: Object) {
 }
 
 export function restoreControlledSelectState(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
+  const node: HTMLSelectElement = (element: any);
   const value = props.value;
 
   if (value != null) {
