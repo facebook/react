@@ -19,20 +19,6 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 
-export type InputWithWrapperState = HTMLInputElement & {
-  _wrapperState: {
-    initialValue: ToStringValue,
-    initialChecked: ?boolean,
-    controlled?: boolean,
-    ...
-  },
-  checked: boolean,
-  value: string,
-  defaultChecked: boolean,
-  defaultValue: string,
-  ...
-};
-
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
 
@@ -93,24 +79,10 @@ export function initInput(element: Element, props: Object) {
       didWarnValueDefaultValue = true;
     }
   }
-
-  const node = ((element: any): InputWithWrapperState);
-  const defaultValue = props.defaultValue == null ? '' : props.defaultValue;
-  const initialChecked =
-    props.checked != null ? props.checked : props.defaultChecked;
-  node._wrapperState = {
-    initialChecked:
-      typeof initialChecked !== 'function' &&
-      typeof initialChecked !== 'symbol' &&
-      !!initialChecked,
-    initialValue: getToStringValue(
-      props.value != null ? props.value : defaultValue,
-    ),
-  };
 }
 
 export function updateInputChecked(element: Element, props: Object) {
-  const node = ((element: any): InputWithWrapperState);
+  const node: HTMLInputElement = (element: any);
   const checked = props.checked;
   if (checked != null) {
     node.checked = checked;
@@ -118,7 +90,7 @@ export function updateInputChecked(element: Element, props: Object) {
 }
 
 export function updateInput(element: Element, props: Object) {
-  const node = ((element: any): InputWithWrapperState);
+  const node: HTMLInputElement = (element: any);
 
   updateInputChecked(element, props);
 
@@ -189,7 +161,7 @@ export function postInitInput(
   props: Object,
   isHydrating: boolean,
 ) {
-  const node = ((element: any): InputWithWrapperState);
+  const node: HTMLInputElement = (element: any);
 
   if (props.value != null || props.defaultValue != null) {
     const type = props.type;
@@ -309,12 +281,12 @@ export function postInitInput(
 }
 
 export function restoreControlledInputState(element: Element, props: Object) {
-  const node = ((element: any): InputWithWrapperState);
+  const node: HTMLInputElement = (element: any);
   updateInput(node, props);
   updateNamedCousins(node, props);
 }
 
-function updateNamedCousins(rootNode: InputWithWrapperState, props: any) {
+function updateNamedCousins(rootNode: HTMLInputElement, props: any) {
   const name = props.name;
   if (props.type === 'radio' && name != null) {
     let queryRoot: Element = rootNode;
@@ -376,7 +348,7 @@ function updateNamedCousins(rootNode: InputWithWrapperState, props: any) {
 //
 // https://github.com/facebook/react/issues/7253
 export function setDefaultValue(
-  node: InputWithWrapperState,
+  node: HTMLInputElement,
   type: ?string,
   value: ToStringValue,
 ) {
