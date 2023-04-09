@@ -11,14 +11,9 @@ import isArray from 'shared/isArray';
 
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
-import type {ToStringValue} from './ToStringValue';
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
 let didWarnValDefaultVal = false;
-
-export type TextAreaWithWrapperState = HTMLTextAreaElement & {
-  _wrapperState: {initialValue: ToStringValue},
-};
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and
@@ -37,7 +32,6 @@ export type TextAreaWithWrapperState = HTMLTextAreaElement & {
  */
 
 export function initTextarea(element: Element, props: Object) {
-  const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
     if (
       props.value !== undefined &&
@@ -55,7 +49,38 @@ export function initTextarea(element: Element, props: Object) {
       );
       didWarnValDefaultVal = true;
     }
+    if (props.children != null && props.value == null) {
+      console.error(
+        'Use the `defaultValue` or `value` props instead of setting ' +
+          'children on <textarea>.',
+      );
+    }
   }
+}
+
+export function updateTextarea(element: Element, props: Object) {
+  const node: HTMLTextAreaElement = (element: any);
+  const value = getToStringValue(props.value);
+  const defaultValue = getToStringValue(props.defaultValue);
+  if (value != null) {
+    // Cast `value` to a string to ensure the value is set correctly. While
+    // browsers typically do this as necessary, jsdom doesn't.
+    const newValue = toString(value);
+    // To avoid side effects (such as losing text selection), only set value if changed
+    if (newValue !== node.value) {
+      node.value = newValue;
+    }
+    if (props.defaultValue == null && node.defaultValue !== newValue) {
+      node.defaultValue = newValue;
+    }
+  }
+  if (defaultValue != null) {
+    node.defaultValue = toString(defaultValue);
+  }
+}
+
+export function postInitTextarea(element: Element, props: Object) {
+  const node: HTMLTextAreaElement = (element: any);
 
   let initialValue = props.value;
 
@@ -63,12 +88,6 @@ export function initTextarea(element: Element, props: Object) {
   if (initialValue == null) {
     let {children, defaultValue} = props;
     if (children != null) {
-      if (__DEV__) {
-        console.error(
-          'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.',
-        );
-      }
       if (!disableTextareaChildren) {
         if (defaultValue != null) {
           throw new Error(
@@ -95,34 +114,7 @@ export function initTextarea(element: Element, props: Object) {
 
   const stringValue = getToStringValue(initialValue);
   node.defaultValue = (stringValue: any); // This will be toString:ed.
-  node._wrapperState = {
-    initialValue: stringValue,
-  };
-}
 
-export function updateTextarea(element: Element, props: Object) {
-  const node = ((element: any): TextAreaWithWrapperState);
-  const value = getToStringValue(props.value);
-  const defaultValue = getToStringValue(props.defaultValue);
-  if (value != null) {
-    // Cast `value` to a string to ensure the value is set correctly. While
-    // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = toString(value);
-    // To avoid side effects (such as losing text selection), only set value if changed
-    if (newValue !== node.value) {
-      node.value = newValue;
-    }
-    if (props.defaultValue == null && node.defaultValue !== newValue) {
-      node.defaultValue = newValue;
-    }
-  }
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
-  }
-}
-
-export function postInitTextarea(element: Element, props: Object) {
-  const node = ((element: any): TextAreaWithWrapperState);
   // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
   const textContent = node.textContent;
@@ -131,7 +123,7 @@ export function postInitTextarea(element: Element, props: Object) {
   // initial value. In IE10/IE11 there is a bug where the placeholder attribute
   // will populate textContent as well.
   // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-  if (textContent === node._wrapperState.initialValue) {
+  if (textContent === stringValue) {
     if (textContent !== '' && textContent !== null) {
       node.value = textContent;
     }
