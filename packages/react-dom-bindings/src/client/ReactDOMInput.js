@@ -35,13 +35,6 @@ export type InputWithWrapperState = HTMLInputElement & {
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
-let didWarnControlledToUncontrolled = false;
-let didWarnUncontrolledToControlled = false;
-
-function isControlled(props: any) {
-  const usesChecked = props.type === 'checkbox' || props.type === 'radio';
-  return usesChecked ? props.checked != null : props.value != null;
-}
 
 /**
  * Implements an <input> host component that allows setting these optional
@@ -113,7 +106,6 @@ export function initInput(element: Element, props: Object) {
     initialValue: getToStringValue(
       props.value != null ? props.value : defaultValue,
     ),
-    controlled: isControlled(props),
   };
 }
 
@@ -127,38 +119,6 @@ export function updateInputChecked(element: Element, props: Object) {
 
 export function updateInput(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
-  if (__DEV__) {
-    const controlled = isControlled(props);
-
-    if (
-      !node._wrapperState.controlled &&
-      controlled &&
-      !didWarnUncontrolledToControlled
-    ) {
-      console.error(
-        'A component is changing an uncontrolled input to be controlled. ' +
-          'This is likely caused by the value changing from undefined to ' +
-          'a defined value, which should not happen. ' +
-          'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-      );
-      didWarnUncontrolledToControlled = true;
-    }
-    if (
-      node._wrapperState.controlled &&
-      !controlled &&
-      !didWarnControlledToUncontrolled
-    ) {
-      console.error(
-        'A component is changing a controlled input to be uncontrolled. ' +
-          'This is likely caused by the value changing from a defined to ' +
-          'undefined, which should not happen. ' +
-          'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-      );
-      didWarnControlledToUncontrolled = true;
-    }
-  }
 
   updateInputChecked(element, props);
 

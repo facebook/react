@@ -263,16 +263,17 @@ function getTargetInstForInputOrChangeEvent(
   }
 }
 
-function handleControlledInputBlur(node: HTMLInputElement) {
-  const state = (node: any)._wrapperState;
-
-  if (!state || !state.controlled || node.type !== 'number') {
+function handleControlledInputBlur(node: HTMLInputElement, props: any) {
+  if (node.type !== 'number') {
     return;
   }
 
   if (!disableInputAttributeSyncing) {
-    // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue((node: any), 'number', (node: any).value);
+    const isControlled = props.value != null;
+    if (isControlled) {
+      // If controlled, assign the value attribute to the current value on blur
+      setDefaultValue((node: any), 'number', (node: any).value);
+    }
   }
 }
 
@@ -335,8 +336,12 @@ function extractEvents(
   }
 
   // When blurring, set the value attribute for number inputs
-  if (domEventName === 'focusout') {
-    handleControlledInputBlur(((targetNode: any): HTMLInputElement));
+  if (domEventName === 'focusout' && targetInst) {
+    // These props aren't necessarily the most current but we warn for changing
+    // between controlled and uncontrolled, so it doesn't matter and the previous
+    // code was also broken for changes.
+    const props = targetInst.memoizedProps;
+    handleControlledInputBlur(((targetNode: any): HTMLInputElement), props);
   }
 }
 

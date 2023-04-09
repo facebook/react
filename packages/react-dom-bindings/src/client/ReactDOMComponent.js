@@ -75,6 +75,8 @@ import {
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
 
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 let didWarnInvalidHydration = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
@@ -1252,6 +1254,46 @@ export function updateProperties(
           default: {
             setProp(domElement, tag, propKey, propValue, nextProps);
           }
+        }
+      }
+
+      if (__DEV__) {
+        const wasControlled =
+          lastProps.type === 'checkbox' || lastProps.type === 'radio'
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        const isControlled =
+          nextProps.type === 'checkbox' || nextProps.type === 'radio'
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          console.error(
+            'A component is changing an uncontrolled input to be controlled. ' +
+              'This is likely caused by the value changing from undefined to ' +
+              'a defined value, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnUncontrolledToControlled = true;
+        }
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          console.error(
+            'A component is changing a controlled input to be uncontrolled. ' +
+              'This is likely caused by the value changing from a defined to ' +
+              'undefined, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnControlledToUncontrolled = true;
         }
       }
       // Update the wrapper around inputs *after* updating props. This has to
