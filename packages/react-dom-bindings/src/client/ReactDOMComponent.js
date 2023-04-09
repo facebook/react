@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {InputWithWrapperState} from './ReactDOMInput';
-
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -17,6 +15,7 @@ import {
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 
 import {
   getValueForAttribute,
@@ -27,27 +26,24 @@ import {
   setValueForNamespacedAttribute,
 } from './DOMPropertyOperations';
 import {
-  initWrapperState as ReactDOMInputInitWrapperState,
-  postMountWrapper as ReactDOMInputPostMountWrapper,
-  updateChecked as ReactDOMInputUpdateChecked,
-  updateWrapper as ReactDOMInputUpdateWrapper,
-  restoreControlledState as ReactDOMInputRestoreControlledState,
+  validateInputProps,
+  initInput,
+  updateInputChecked,
+  updateInput,
+  restoreControlledInputState,
 } from './ReactDOMInput';
+import {initOption, validateOptionProps} from './ReactDOMOption';
 import {
-  postMountWrapper as ReactDOMOptionPostMountWrapper,
-  validateProps as ReactDOMOptionValidateProps,
-} from './ReactDOMOption';
-import {
-  initWrapperState as ReactDOMSelectInitWrapperState,
-  postMountWrapper as ReactDOMSelectPostMountWrapper,
-  restoreControlledState as ReactDOMSelectRestoreControlledState,
-  postUpdateWrapper as ReactDOMSelectPostUpdateWrapper,
+  validateSelectProps,
+  initSelect,
+  restoreControlledSelectState,
+  updateSelect,
 } from './ReactDOMSelect';
 import {
-  initWrapperState as ReactDOMTextareaInitWrapperState,
-  postMountWrapper as ReactDOMTextareaPostMountWrapper,
-  updateWrapper as ReactDOMTextareaUpdateWrapper,
-  restoreControlledState as ReactDOMTextareaRestoreControlledState,
+  validateTextareaProps,
+  initTextarea,
+  updateTextarea,
+  restoreControlledTextareaState,
 } from './ReactDOMTextarea';
 import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
@@ -79,6 +75,8 @@ import {
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
 
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 let didWarnInvalidHydration = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
@@ -805,7 +803,9 @@ export function setInitialProperties(
       break;
     }
     case 'input': {
-      ReactDOMInputInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('input', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -834,10 +834,10 @@ export function setInitialProperties(
             break;
           }
           case 'checked': {
-            const node = ((domElement: any): InputWithWrapperState);
             const checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+              propValue != null ? propValue : props.defaultChecked;
+            const inputElement: HTMLInputElement = (domElement: any);
+            inputElement.checked =
               !!checked &&
               typeof checked !== 'function' &&
               checked !== 'symbol';
@@ -866,11 +866,14 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
-      ReactDOMInputPostMountWrapper(domElement, props, false);
+      validateInputProps(domElement, props);
+      initInput(domElement, props, false);
       return;
     }
     case 'select': {
-      ReactDOMSelectInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('select', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -893,11 +896,14 @@ export function setInitialProperties(
           }
         }
       }
-      ReactDOMSelectPostMountWrapper(domElement, props);
+      validateSelectProps(domElement, props);
+      initSelect(domElement, props);
       return;
     }
     case 'textarea': {
-      ReactDOMTextareaInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('textarea', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
@@ -936,11 +942,12 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
-      ReactDOMTextareaPostMountWrapper(domElement, props);
+      validateTextareaProps(domElement, props);
+      initTextarea(domElement, props);
       return;
     }
     case 'option': {
-      ReactDOMOptionValidateProps(domElement, props);
+      validateOptionProps(domElement, props);
       for (const propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
           continue;
@@ -963,7 +970,7 @@ export function setInitialProperties(
           }
         }
       }
-      ReactDOMOptionPostMountWrapper(domElement, props);
+      initOption(domElement, props);
       return;
     }
     case 'dialog': {
@@ -1213,17 +1220,17 @@ export function updateProperties(
       // In the middle of an update, it is possible to have multiple checked.
       // When a checked radio tries to change name, browser makes another radio's checked false.
       if (nextProps.type === 'radio' && nextProps.name != null) {
-        ReactDOMInputUpdateChecked(domElement, nextProps);
+        updateInputChecked(domElement, nextProps);
       }
       for (let i = 0; i < updatePayload.length; i += 2) {
         const propKey = updatePayload[i];
         const propValue = updatePayload[i + 1];
         switch (propKey) {
           case 'checked': {
-            const node = ((domElement: any): InputWithWrapperState);
             const checked =
-              propValue != null ? propValue : node._wrapperState.initialChecked;
-            node.checked =
+              propValue != null ? propValue : nextProps.defaultChecked;
+            const inputElement: HTMLInputElement = (domElement: any);
+            inputElement.checked =
               !!checked &&
               typeof checked !== 'function' &&
               checked !== 'symbol';
@@ -1249,10 +1256,50 @@ export function updateProperties(
           }
         }
       }
+
+      if (__DEV__) {
+        const wasControlled =
+          lastProps.type === 'checkbox' || lastProps.type === 'radio'
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        const isControlled =
+          nextProps.type === 'checkbox' || nextProps.type === 'radio'
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          console.error(
+            'A component is changing an uncontrolled input to be controlled. ' +
+              'This is likely caused by the value changing from undefined to ' +
+              'a defined value, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnUncontrolledToControlled = true;
+        }
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          console.error(
+            'A component is changing a controlled input to be uncontrolled. ' +
+              'This is likely caused by the value changing from a defined to ' +
+              'undefined, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnControlledToUncontrolled = true;
+        }
+      }
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
-      ReactDOMInputUpdateWrapper(domElement, nextProps);
+      updateInput(domElement, nextProps);
       return;
     }
     case 'select': {
@@ -1272,7 +1319,7 @@ export function updateProperties(
       }
       // <select> value update needs to occur after <option> children
       // reconciliation
-      ReactDOMSelectPostUpdateWrapper(domElement, nextProps);
+      updateSelect(domElement, lastProps, nextProps);
       return;
     }
     case 'textarea': {
@@ -1303,7 +1350,7 @@ export function updateProperties(
           }
         }
       }
-      ReactDOMTextareaUpdateWrapper(domElement, nextProps);
+      updateTextarea(domElement, nextProps);
       return;
     }
     case 'option': {
@@ -2263,38 +2310,47 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('toggle', domElement);
       break;
     case 'input':
-      ReactDOMInputInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('input', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
+      validateInputProps(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
       // option and select we don't quite do the same thing and select
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
-      ReactDOMInputPostMountWrapper(domElement, props, true);
+      initInput(domElement, props, true);
       break;
     case 'option':
-      ReactDOMOptionValidateProps(domElement, props);
+      validateOptionProps(domElement, props);
       break;
     case 'select':
-      ReactDOMSelectInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('select', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      validateSelectProps(domElement, props);
       break;
     case 'textarea':
-      ReactDOMTextareaInitWrapperState(domElement, props);
+      if (__DEV__) {
+        checkControlledValueProps('textarea', props);
+      }
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
-      ReactDOMTextareaPostMountWrapper(domElement, props);
+      validateTextareaProps(domElement, props);
+      initTextarea(domElement, props);
       break;
   }
 
@@ -2472,13 +2528,13 @@ export function restoreControlledState(
 ): void {
   switch (tag) {
     case 'input':
-      ReactDOMInputRestoreControlledState(domElement, props);
+      restoreControlledInputState(domElement, props);
       return;
     case 'textarea':
-      ReactDOMTextareaRestoreControlledState(domElement, props);
+      restoreControlledTextareaState(domElement, props);
       return;
     case 'select':
-      ReactDOMSelectRestoreControlledState(domElement, props);
+      restoreControlledSelectState(domElement, props);
       return;
   }
 }
