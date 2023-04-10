@@ -250,7 +250,8 @@ var disableInputAttributeSyncing =
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask; // On WWW, true is used for a new modern build.
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -4986,6 +4987,44 @@ function createDangerousStringForStyles(styles) {
     return serialized || null;
   }
 }
+
+function setValueForStyle(style, styleName, value) {
+  var isCustomProperty = styleName.indexOf("--") === 0;
+
+  {
+    if (!isCustomProperty) {
+      warnValidStyle(styleName, value);
+    }
+  }
+
+  if (value == null || typeof value === "boolean" || value === "") {
+    if (isCustomProperty) {
+      style.setProperty(styleName, "");
+    } else if (styleName === "float") {
+      style.cssFloat = "";
+    } else {
+      style[styleName] = "";
+    }
+  } else if (isCustomProperty) {
+    style.setProperty(styleName, value);
+  } else if (
+    typeof value === "number" &&
+    value !== 0 &&
+    !isUnitlessNumber(styleName)
+  ) {
+    style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
+  } else {
+    if (styleName === "float") {
+      style.cssFloat = value;
+    } else {
+      {
+        checkCSSPropertyStringCoercion(value, styleName);
+      }
+
+      style[styleName] = ("" + value).trim();
+    }
+  }
+}
 /**
  * Sets the value for multiple styles on a node.  If a value is specified as
  * '' (empty string), the corresponding style property will be unset.
@@ -4994,7 +5033,7 @@ function createDangerousStringForStyles(styles) {
  * @param {object} styles
  */
 
-function setValueForStyles(node, styles) {
+function setValueForStyles(node, styles, prevStyles) {
   if (styles != null && typeof styles !== "object") {
     throw new Error(
       "The `style` prop expects a mapping from style properties to values, " +
@@ -5013,45 +5052,44 @@ function setValueForStyles(node, styles) {
 
   var style = node.style;
 
-  for (var styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-
-    var value = styles[styleName];
-    var isCustomProperty = styleName.indexOf("--") === 0;
-
+  if (diffInCommitPhase && prevStyles != null) {
     {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, value);
+      validateShorthandPropertyCollisionInDev(prevStyles, styles);
+    }
+
+    for (var styleName in prevStyles) {
+      if (
+        prevStyles.hasOwnProperty(styleName) &&
+        (styles == null || !styles.hasOwnProperty(styleName))
+      ) {
+        // Clear style
+        var isCustomProperty = styleName.indexOf("--") === 0;
+
+        if (isCustomProperty) {
+          style.setProperty(styleName, "");
+        } else if (styleName === "float") {
+          style.cssFloat = "";
+        } else {
+          style[styleName] = "";
+        }
       }
     }
 
-    if (value == null || typeof value === "boolean" || value === "") {
-      if (isCustomProperty) {
-        style.setProperty(styleName, "");
-      } else if (styleName === "float") {
-        style.cssFloat = "";
-      } else {
-        style[styleName] = "";
-      }
-    } else if (isCustomProperty) {
-      style.setProperty(styleName, value);
-    } else if (
-      typeof value === "number" &&
-      value !== 0 &&
-      !isUnitlessNumber(styleName)
-    ) {
-      style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
-    } else {
-      if (styleName === "float") {
-        style.cssFloat = value;
-      } else {
-        {
-          checkCSSPropertyStringCoercion(value, styleName);
-        }
+    for (var _styleName in styles) {
+      var value = styles[_styleName];
 
-        style[styleName] = ("" + value).trim();
+      if (
+        styles.hasOwnProperty(_styleName) &&
+        prevStyles[_styleName] !== value
+      ) {
+        setValueForStyle(style, _styleName, value);
+      }
+    }
+  } else {
+    for (var _styleName2 in styles) {
+      if (styles.hasOwnProperty(_styleName2)) {
+        var _value = styles[_styleName2];
+        setValueForStyle(style, _styleName2, _value);
       }
     }
   }
@@ -5097,19 +5135,45 @@ function expandShorthandMap(styles) {
  *   becomes .style.fontVariant = ''
  */
 
-function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
+function validateShorthandPropertyCollisionInDev(prevStyles, nextStyles) {
   {
     if (!nextStyles) {
       return;
+    } // Compute the diff as it would happen elsewhere.
+
+    var expandedUpdates = {};
+
+    if (prevStyles) {
+      for (var key in prevStyles) {
+        if (prevStyles.hasOwnProperty(key) && !nextStyles.hasOwnProperty(key)) {
+          var longhands = shorthandToLonghand[key] || [key];
+
+          for (var i = 0; i < longhands.length; i++) {
+            expandedUpdates[longhands[i]] = key;
+          }
+        }
+      }
     }
 
-    var expandedUpdates = expandShorthandMap(styleUpdates);
+    for (var _key in nextStyles) {
+      if (
+        nextStyles.hasOwnProperty(_key) &&
+        (!prevStyles || prevStyles[_key] !== nextStyles[_key])
+      ) {
+        var _longhands = shorthandToLonghand[_key] || [_key];
+
+        for (var _i = 0; _i < _longhands.length; _i++) {
+          expandedUpdates[_longhands[_i]] = _key;
+        }
+      }
+    }
+
     var expandedStyles = expandShorthandMap(nextStyles);
     var warnedAbout = {};
 
-    for (var key in expandedUpdates) {
-      var originalKey = expandedUpdates[key];
-      var correctOriginalKey = expandedStyles[key];
+    for (var _key2 in expandedUpdates) {
+      var originalKey = expandedUpdates[_key2];
+      var correctOriginalKey = expandedStyles[_key2];
 
       if (correctOriginalKey && originalKey !== correctOriginalKey) {
         var warningKey = originalKey + "," + correctOriginalKey;
@@ -5126,7 +5190,7 @@ function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
             "avoid this, don't mix shorthand and non-shorthand properties " +
             "for the same value; instead, replace the shorthand with " +
             "separate values.",
-          isValueEmpty(styleUpdates[originalKey]) ? "Removing" : "Updating",
+          isValueEmpty(nextStyles[originalKey]) ? "Removing" : "Updating",
           originalKey,
           correctOriginalKey
         );
@@ -7945,11 +8009,13 @@ function prepareToHydrateHostInstance(fiber, hostContext) {
     shouldWarnIfMismatchDev
   ); // TODO: Type this specific to this type of component.
 
-  fiber.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-  // is a new ref we mark this as an update.
+  if (!diffInCommitPhase) {
+    fiber.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
 
-  if (updatePayload !== null) {
-    return true;
+    if (updatePayload !== null) {
+      return true;
+    }
   }
 
   return false;
@@ -21938,29 +22004,34 @@ function updateHostComponent(
       // In mutation mode, this is sufficient for a bailout because
       // we won't touch this node even if children changed.
       return;
-    } // If we get updated because one of our children updated, we don't
-    // have newProps so we'll have to reuse them.
-    // TODO: Split the update API as separate for the props vs. children.
-    // Even better would be if children weren't special cased at all tho.
+    }
 
-    var instance = workInProgress.stateNode;
-    var currentHostContext = getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
-    // component is hitting the resume path. Figure out why. Possibly
-    // related to `hidden`.
-
-    var updatePayload = prepareUpdate(
-      instance,
-      type,
-      oldProps,
-      newProps,
-      currentHostContext
-    ); // TODO: Type this specific to this type of component.
-
-    workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update. All the work is done in commitWork.
-
-    if (updatePayload) {
+    if (diffInCommitPhase) {
       markUpdate(workInProgress);
+    } else {
+      // If we get updated because one of our children updated, we don't
+      // have newProps so we'll have to reuse them.
+      // TODO: Split the update API as separate for the props vs. children.
+      // Even better would be if children weren't special cased at all tho.
+      var instance = workInProgress.stateNode; // TODO: Experiencing an error where oldProps is null. Suggests a host
+      // component is hitting the resume path. Figure out why. Possibly
+      // related to `hidden`.
+
+      var currentHostContext = getHostContext();
+      var updatePayload = prepareUpdate(
+        instance,
+        type,
+        oldProps,
+        newProps,
+        currentHostContext
+      ); // TODO: Type this specific to this type of component.
+
+      workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
+      // is a new ref we mark this as an update. All the work is done in commitWork.
+
+      if (updatePayload) {
+        markUpdate(workInProgress);
+      }
     }
   }
 } // This function must be called at the very end of the complete phase, because
@@ -26091,7 +26162,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null) {
+            if (_updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   _instance2,
@@ -33806,7 +33877,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-835f126b";
+var ReactVersion = "18.3.0-www-modern-16c00150";
 
 function createPortal$1(
   children,
@@ -38947,7 +39018,7 @@ function trapClickOnNonInteractiveElement(node) {
 var xlinkNamespace = "http://www.w3.org/1999/xlink";
 var xmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
-function setProp(domElement, tag, key, value, props) {
+function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children": {
       if (typeof value === "string") {
@@ -38994,7 +39065,7 @@ function setProp(domElement, tag, key, value, props) {
     }
 
     case "style": {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
@@ -39382,6 +39453,20 @@ function setProp(domElement, tag, key, value, props) {
       break;
     // Properties that should not be allowed on custom elements.
 
+    case "is": {
+      {
+        if (prevValue != null) {
+          error('Cannot update the "is" prop after it has been initialized.');
+        }
+      } // TODO: We shouldn't actually set this attribute, because we've already
+      // passed it to createElement. We don't also need the attribute.
+      // However, our tests currently query for it so it's plausible someone
+      // else does too so it's break.
+
+      setValueForAttribute(domElement, "is", value);
+      break;
+    }
+
     case "innerText":
     case "textContent":
       if (enableCustomElementPropertySupport) {
@@ -39411,10 +39496,10 @@ function setProp(domElement, tag, key, value, props) {
   }
 }
 
-function setPropOnCustomElement(domElement, tag, key, value, props) {
+function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "style": {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
 
@@ -39606,7 +39691,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       } // TODO: Make sure we check if this is still unmounted or do any clean
@@ -39645,7 +39730,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey, _propValue, props);
+            setProp(domElement, tag, _propKey, _propValue, props, null);
           }
         }
       }
@@ -39829,7 +39914,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey4, _propValue4, props);
+            setProp(domElement, tag, _propKey4, _propValue4, props, null);
           }
         }
       }
@@ -39855,7 +39940,8 @@ function setInitialProperties(domElement, tag, props) {
             tag,
             _propKey5,
             _propValue5,
-            props
+            props,
+            null
           );
         }
 
@@ -39875,7 +39961,7 @@ function setInitialProperties(domElement, tag, props) {
       continue;
     }
 
-    setProp(domElement, tag, _propKey6, _propValue6, props);
+    setProp(domElement, tag, _propKey6, _propValue6, props, null);
   }
 } // Calculate the diff between the two objects.
 
@@ -39992,16 +40078,514 @@ function diffProperties(domElement, tag, lastProps, nextProps) {
 
   if (styleUpdates) {
     {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
+      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
     }
 
     (updatePayload = updatePayload || []).push("style", styleUpdates);
   }
 
   return updatePayload;
+}
+function updateProperties(domElement, tag, lastProps, nextProps) {
+  {
+    validatePropertiesInDevelopment(tag, nextProps);
+  }
+
+  switch (tag) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li": {
+      // Fast track the most common tag types
+      break;
+    }
+
+    case "input": {
+      // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+      if (nextProps.type === "radio" && nextProps.name != null) {
+        updateInputChecked(domElement, nextProps);
+      }
+
+      for (var propKey in lastProps) {
+        var lastProp = lastProps[propKey];
+
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          switch (propKey) {
+            case "checked": {
+              var checked = nextProps.defaultChecked;
+              var inputElement = domElement;
+              inputElement.checked =
+                !!checked &&
+                typeof checked !== "function" &&
+                checked !== "symbol";
+              break;
+            }
+
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+
+      for (var _propKey7 in nextProps) {
+        var nextProp = nextProps[_propKey7];
+        var _lastProp = lastProps[_propKey7];
+
+        if (
+          nextProps.hasOwnProperty(_propKey7) &&
+          nextProp !== _lastProp &&
+          (nextProp != null || _lastProp != null)
+        ) {
+          switch (_propKey7) {
+            case "checked": {
+              var _checked =
+                nextProp != null ? nextProp : nextProps.defaultChecked;
+
+              var _inputElement = domElement;
+              _inputElement.checked =
+                !!_checked &&
+                typeof _checked !== "function" &&
+                _checked !== "symbol";
+              break;
+            }
+
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+
+            case "children":
+            case "dangerouslySetInnerHTML": {
+              if (nextProp != null) {
+                throw new Error(
+                  tag +
+                    " is a void element tag and must neither have `children` nor " +
+                    "use `dangerouslySetInnerHTML`."
+                );
+              }
+
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey7,
+                nextProp,
+                nextProps,
+                _lastProp
+              );
+            }
+          }
+        }
+      }
+
+      {
+        var wasControlled =
+          lastProps.type === "checkbox" || lastProps.type === "radio"
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        var isControlled =
+          nextProps.type === "checkbox" || nextProps.type === "radio"
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          error(
+            "A component is changing an uncontrolled input to be controlled. " +
+              "This is likely caused by the value changing from undefined to " +
+              "a defined value, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnUncontrolledToControlled = true;
+        }
+
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          error(
+            "A component is changing a controlled input to be uncontrolled. " +
+              "This is likely caused by the value changing from a defined to " +
+              "undefined, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnControlledToUncontrolled = true;
+        }
+      } // Update the wrapper around inputs *after* updating props. This has to
+      // happen after updating the rest of props. Otherwise HTML5 input validations
+      // raise warnings and prevent the new value from being assigned.
+
+      updateInput(domElement, nextProps);
+      return;
+    }
+
+    case "select": {
+      for (var _propKey8 in lastProps) {
+        var _lastProp2 = lastProps[_propKey8];
+
+        if (
+          lastProps.hasOwnProperty(_propKey8) &&
+          _lastProp2 != null &&
+          !nextProps.hasOwnProperty(_propKey8)
+        ) {
+          switch (_propKey8) {
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultValue are ignored by setProp
+
+            default: {
+              setProp(domElement, tag, _propKey8, null, nextProps, _lastProp2);
+            }
+          }
+        }
+      }
+
+      for (var _propKey9 in nextProps) {
+        var _nextProp = nextProps[_propKey9];
+        var _lastProp3 = lastProps[_propKey9];
+
+        if (
+          nextProps.hasOwnProperty(_propKey9) &&
+          _nextProp !== _lastProp3 &&
+          (_nextProp != null || _lastProp3 != null)
+        ) {
+          switch (_propKey9) {
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultValue are ignored by setProp
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey9,
+                _nextProp,
+                nextProps,
+                _lastProp3
+              );
+            }
+          }
+        }
+      } // <select> value update needs to occur after <option> children
+      // reconciliation
+
+      updateSelect(domElement, lastProps, nextProps);
+      return;
+    }
+
+    case "textarea": {
+      for (var _propKey10 in lastProps) {
+        var _lastProp4 = lastProps[_propKey10];
+
+        if (
+          lastProps.hasOwnProperty(_propKey10) &&
+          _lastProp4 != null &&
+          !nextProps.hasOwnProperty(_propKey10)
+        ) {
+          switch (_propKey10) {
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+
+            case "children": {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+            // defaultValue is ignored by setProp
+
+            default: {
+              setProp(domElement, tag, _propKey10, null, nextProps, _lastProp4);
+            }
+          }
+        }
+      }
+
+      for (var _propKey11 in nextProps) {
+        var _nextProp2 = nextProps[_propKey11];
+        var _lastProp5 = lastProps[_propKey11];
+
+        if (
+          nextProps.hasOwnProperty(_propKey11) &&
+          _nextProp2 !== _lastProp5 &&
+          (_nextProp2 != null || _lastProp5 != null)
+        ) {
+          switch (_propKey11) {
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+
+            case "children": {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+
+            case "dangerouslySetInnerHTML": {
+              if (_nextProp2 != null) {
+                // TODO: Do we really need a special error message for this. It's also pretty blunt.
+                throw new Error(
+                  "`dangerouslySetInnerHTML` does not make sense on <textarea>."
+                );
+              }
+
+              break;
+            }
+            // defaultValue is ignored by setProp
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey11,
+                _nextProp2,
+                nextProps,
+                _lastProp5
+              );
+            }
+          }
+        }
+      }
+
+      updateTextarea(domElement, nextProps);
+      return;
+    }
+
+    case "option": {
+      for (var _propKey12 in lastProps) {
+        var _lastProp6 = lastProps[_propKey12];
+
+        if (
+          lastProps.hasOwnProperty(_propKey12) &&
+          _lastProp6 != null &&
+          !nextProps.hasOwnProperty(_propKey12)
+        ) {
+          switch (_propKey12) {
+            case "selected": {
+              // TODO: Remove support for selected on option.
+              domElement.selected = false;
+              break;
+            }
+
+            default: {
+              setProp(domElement, tag, _propKey12, null, nextProps, _lastProp6);
+            }
+          }
+        }
+      }
+
+      for (var _propKey13 in nextProps) {
+        var _nextProp3 = nextProps[_propKey13];
+        var _lastProp7 = lastProps[_propKey13];
+
+        if (
+          nextProps.hasOwnProperty(_propKey13) &&
+          _nextProp3 !== _lastProp7 &&
+          (_nextProp3 != null || _lastProp7 != null)
+        ) {
+          switch (_propKey13) {
+            case "selected": {
+              // TODO: Remove support for selected on option.
+              domElement.selected =
+                _nextProp3 &&
+                typeof _nextProp3 !== "function" &&
+                typeof _nextProp3 !== "symbol";
+              break;
+            }
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey13,
+                _nextProp3,
+                nextProps,
+                _lastProp7
+              );
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    case "img":
+    case "link":
+    case "area":
+    case "base":
+    case "br":
+    case "col":
+    case "embed":
+    case "hr":
+    case "keygen":
+    case "meta":
+    case "param":
+    case "source":
+    case "track":
+    case "wbr":
+    case "menuitem": {
+      // Void elements
+      for (var _propKey14 in lastProps) {
+        var _lastProp8 = lastProps[_propKey14];
+
+        if (
+          lastProps.hasOwnProperty(_propKey14) &&
+          _lastProp8 != null &&
+          !nextProps.hasOwnProperty(_propKey14)
+        ) {
+          setProp(domElement, tag, _propKey14, null, nextProps, _lastProp8);
+        }
+      }
+
+      for (var _propKey15 in nextProps) {
+        var _nextProp4 = nextProps[_propKey15];
+        var _lastProp9 = lastProps[_propKey15];
+
+        if (
+          nextProps.hasOwnProperty(_propKey15) &&
+          _nextProp4 !== _lastProp9 &&
+          (_nextProp4 != null || _lastProp9 != null)
+        ) {
+          switch (_propKey15) {
+            case "children":
+            case "dangerouslySetInnerHTML": {
+              if (_nextProp4 != null) {
+                // TODO: Can we make this a DEV warning to avoid this deny list?
+                throw new Error(
+                  tag +
+                    " is a void element tag and must neither have `children` nor " +
+                    "use `dangerouslySetInnerHTML`."
+                );
+              }
+
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey15,
+                _nextProp4,
+                nextProps,
+                _lastProp9
+              );
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    default: {
+      if (isCustomElement(tag)) {
+        for (var _propKey16 in lastProps) {
+          var _lastProp10 = lastProps[_propKey16];
+
+          if (
+            lastProps.hasOwnProperty(_propKey16) &&
+            _lastProp10 != null &&
+            !nextProps.hasOwnProperty(_propKey16)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              _propKey16,
+              null,
+              nextProps,
+              _lastProp10
+            );
+          }
+        }
+
+        for (var _propKey17 in nextProps) {
+          var _nextProp5 = nextProps[_propKey17];
+          var _lastProp11 = lastProps[_propKey17];
+
+          if (
+            nextProps.hasOwnProperty(_propKey17) &&
+            _nextProp5 !== _lastProp11 &&
+            (_nextProp5 != null || _lastProp11 != null)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              _propKey17,
+              _nextProp5,
+              nextProps,
+              _lastProp11
+            );
+          }
+        }
+
+        return;
+      }
+    }
+  }
+
+  for (var _propKey18 in lastProps) {
+    var _lastProp12 = lastProps[_propKey18];
+
+    if (
+      lastProps.hasOwnProperty(_propKey18) &&
+      _lastProp12 != null &&
+      !nextProps.hasOwnProperty(_propKey18)
+    ) {
+      setProp(domElement, tag, _propKey18, null, nextProps, _lastProp12);
+    }
+  }
+
+  for (var _propKey19 in nextProps) {
+    var _nextProp6 = nextProps[_propKey19];
+    var _lastProp13 = lastProps[_propKey19];
+
+    if (
+      nextProps.hasOwnProperty(_propKey19) &&
+      _nextProp6 !== _lastProp13 &&
+      (_nextProp6 != null || _lastProp13 != null)
+    ) {
+      setProp(domElement, tag, _propKey19, _nextProp6, nextProps, _lastProp13);
+    }
+  }
 } // Apply the diff.
 
-function updateProperties(
+function updatePropertiesWithDiff(
   domElement,
   updatePayload,
   tag,
@@ -40065,7 +40649,7 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -40121,10 +40705,10 @@ function updateProperties(
 
     case "select": {
       for (var _i = 0; _i < updatePayload.length; _i += 2) {
-        var _propKey7 = updatePayload[_i];
+        var _propKey20 = updatePayload[_i];
         var _propValue7 = updatePayload[_i + 1];
 
-        switch (_propKey7) {
+        switch (_propKey20) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -40132,7 +40716,7 @@ function updateProperties(
           // defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey7, _propValue7, nextProps);
+            setProp(domElement, tag, _propKey20, _propValue7, nextProps, null);
           }
         }
       } // <select> value update needs to occur after <option> children
@@ -40144,10 +40728,10 @@ function updateProperties(
 
     case "textarea": {
       for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
-        var _propKey8 = updatePayload[_i2];
+        var _propKey21 = updatePayload[_i2];
         var _propValue8 = updatePayload[_i2 + 1];
 
-        switch (_propKey8) {
+        switch (_propKey21) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -40171,7 +40755,7 @@ function updateProperties(
           // defaultValue is ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey8, _propValue8, nextProps);
+            setProp(domElement, tag, _propKey21, _propValue8, nextProps, null);
           }
         }
       }
@@ -40182,10 +40766,10 @@ function updateProperties(
 
     case "option": {
       for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
-        var _propKey9 = updatePayload[_i3];
+        var _propKey22 = updatePayload[_i3];
         var _propValue9 = updatePayload[_i3 + 1];
 
-        switch (_propKey9) {
+        switch (_propKey22) {
           case "selected": {
             // TODO: Remove support for selected on option.
             domElement.selected =
@@ -40196,7 +40780,7 @@ function updateProperties(
           }
 
           default: {
-            setProp(domElement, tag, _propKey9, _propValue9, nextProps);
+            setProp(domElement, tag, _propKey22, _propValue9, nextProps, null);
           }
         }
       }
@@ -40221,10 +40805,10 @@ function updateProperties(
     case "menuitem": {
       // Void elements
       for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
-        var _propKey10 = updatePayload[_i4];
+        var _propKey23 = updatePayload[_i4];
         var _propValue10 = updatePayload[_i4 + 1];
 
-        switch (_propKey10) {
+        switch (_propKey23) {
           case "children":
           case "dangerouslySetInnerHTML": {
             if (_propValue10 != null) {
@@ -40241,7 +40825,7 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey10, _propValue10, nextProps);
+            setProp(domElement, tag, _propKey23, _propValue10, nextProps, null);
           }
         }
       }
@@ -40252,14 +40836,15 @@ function updateProperties(
     default: {
       if (isCustomElement(tag)) {
         for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
-          var _propKey11 = updatePayload[_i5];
+          var _propKey24 = updatePayload[_i5];
           var _propValue11 = updatePayload[_i5 + 1];
           setPropOnCustomElement(
             domElement,
             tag,
-            _propKey11,
+            _propKey24,
             _propValue11,
-            nextProps
+            nextProps,
+            null
           );
         }
 
@@ -40269,9 +40854,9 @@ function updateProperties(
   } // Apply the diff.
 
   for (var _i6 = 0; _i6 < updatePayload.length; _i6 += 2) {
-    var _propKey12 = updatePayload[_i6];
+    var _propKey25 = updatePayload[_i6];
     var _propValue12 = updatePayload[_i6 + 1];
-    setProp(domElement, tag, _propKey12, _propValue12, nextProps);
+    setProp(domElement, tag, _propKey25, _propValue12, nextProps, null);
   }
 }
 
@@ -41318,7 +41903,18 @@ function diffHydratedProperties(
       }
 
       if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        updatePayload = ["children", children];
+        if (diffInCommitPhase) {
+          // We really should be patching this in the commit phase but since
+          // this only affects legacy mode hydration which is deprecated anyway
+          // we can get away with it.
+          // Host singletons get their children appended and don't use the text
+          // content mechanism.
+          if (tag !== "body") {
+            domElement.textContent = children;
+          }
+        } else {
+          updatePayload = ["children", children];
+        }
       }
     }
   }
@@ -42441,6 +43037,11 @@ function finalizeInitialChildren(domElement, type, props, hostContext) {
   }
 }
 function prepareUpdate(domElement, type, oldProps, newProps, hostContext) {
+  if (diffInCommitPhase) {
+    // TODO: Figure out how to validateDOMNesting when children turn into a string.
+    return null;
+  }
+
   {
     var hostContextDev = hostContext;
 
@@ -42577,8 +43178,19 @@ function commitUpdate(
   newProps,
   internalInstanceHandle
 ) {
-  // Apply the diff to the DOM node.
-  updateProperties(domElement, updatePayload, type, oldProps, newProps); // Update the props handle so that we know which props are the ones with
+  if (diffInCommitPhase) {
+    // Diff and update the properties.
+    updateProperties(domElement, type, oldProps, newProps);
+  } else {
+    // Apply the diff to the DOM node.
+    updatePropertiesWithDiff(
+      domElement,
+      updatePayload,
+      type,
+      oldProps,
+      newProps
+    );
+  } // Update the props handle so that we know which props are the ones with
   // with current event handlers.
 
   updateFiberProps(domElement, newProps);
