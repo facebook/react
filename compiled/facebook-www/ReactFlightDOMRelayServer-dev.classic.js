@@ -189,9 +189,6 @@ function getIteratorFn(maybeIterable) {
   return null;
 }
 
-// Re-export dynamic flags from the www version.
-require("ReactFeatureFlags");
-
 var rendererSigil;
 
 {
@@ -399,6 +396,9 @@ function readContext$1(context) {
   var value = context._currentValue;
   return value;
 }
+
+// Re-export dynamic flags from the www version.
+require("ReactFeatureFlags");
 
 // Corresponds to ReactFiberWakeable and ReactFizzWakeable modules. Generally,
 // changes to one module should be reflected in the others.
