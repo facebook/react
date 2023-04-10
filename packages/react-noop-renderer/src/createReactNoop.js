@@ -88,7 +88,6 @@ if (__DEV__) {
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let instanceCounter = 0;
-  let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
   let hostCloneCounter = 0;
 
@@ -458,16 +457,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       oldProps: Props,
       newProps: Props,
     ): null | {...} {
-      if (type === 'errorInCompletePhase') {
-        throw new Error('Error in host config.');
-      }
       if (oldProps === null) {
         throw new Error('Should have old props');
       }
       if (newProps === null) {
         throw new Error('Should have new props');
       }
-      hostDiffCounter++;
       return UPDATE_SIGNAL;
     },
 
@@ -1186,30 +1181,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     startTrackingHostCounters(): void {
-      hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
     },
 
     stopTrackingHostCounters():
       | {
-          hostDiffCounter: number,
           hostUpdateCounter: number,
         }
       | {
-          hostDiffCounter: number,
           hostCloneCounter: number,
         } {
       const result = useMutation
         ? {
-            hostDiffCounter,
             hostUpdateCounter,
           }
         : {
-            hostDiffCounter,
             hostCloneCounter,
           };
-      hostDiffCounter = 0;
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
 

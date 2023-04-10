@@ -35,14 +35,12 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
     ReactNoop.startTrackingHostCounters();
     await act(() => ReactNoop.render(<Parent />));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      hostDiffCounter: 0,
       hostUpdateCounter: 0,
     });
 
     ReactNoop.startTrackingHostCounters();
     await act(() => ReactNoop.render(<Parent />));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      hostDiffCounter: 1,
       hostUpdateCounter: 1,
     });
   });
@@ -75,14 +73,12 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
     ReactNoop.startTrackingHostCounters();
     await act(() => ReactNoop.render(<Parent />));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      hostDiffCounter: 0,
       hostUpdateCounter: 0,
     });
 
     ReactNoop.startTrackingHostCounters();
     await act(() => ReactNoop.render(<Parent />));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      hostDiffCounter: 0,
       hostUpdateCounter: 0,
     });
   });
@@ -128,17 +124,12 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
     ReactNoop.startTrackingHostCounters();
     await act(() => ReactNoop.render(<Parent />));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      hostDiffCounter: 0,
       hostUpdateCounter: 0,
     });
 
     ReactNoop.startTrackingHostCounters();
     await act(() => childInst.setState({name: 'Robin'}));
     expect(ReactNoop.stopTrackingHostCounters()).toEqual({
-      // Child > div
-      // Child > Leaf > span
-      // Child > Leaf > span > b
-      hostDiffCounter: 3,
       // Child > div
       // Child > Leaf > span
       // Child > Leaf > span > b
@@ -159,7 +150,6 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
       // Parent > section > div > hr
       // Parent > section > div > Leaf > span
       // Parent > section > div > Leaf > span > b
-      hostDiffCounter: 10,
       hostUpdateCounter: 10,
     });
   });

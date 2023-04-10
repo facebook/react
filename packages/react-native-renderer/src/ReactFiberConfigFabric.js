@@ -42,6 +42,8 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
+import {diffInCommitPhase} from 'shared/ReactFeatureFlags';
+
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 // Counter for uniquely identifying views.
@@ -288,6 +290,9 @@ export function prepareUpdate(
   newProps: Props,
   hostContext: HostContext,
 ): null | Object {
+  if (diffInCommitPhase) {
+    return null;
+  }
   const viewConfig = instance.canonical.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
   // TODO: If the event handlers have changed, we need to update the current props
@@ -355,13 +360,27 @@ export function cloneInstance(
   keepChildren: boolean,
   recyclableInstance: null | Instance,
 ): Instance {
+  if (diffInCommitPhase) {
+    const viewConfig = instance.canonical.viewConfig;
+    updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
+    // TODO: If the event handlers have changed, we need to update the current props
+    // in the commit phase but there is no host config hook to do it yet.
+    // So instead we hack it by updating it in the render phase.
+    instance.canonical.currentProps = newProps;
+  }
+
   const node = instance.node;
   let clone;
   if (keepChildren) {
     if (updatePayload !== null) {
       clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      clone = cloneNode(node);
+      if (diffInCommitPhase) {
+        // No changes
+        return instance;
+      } else {
+        clone = cloneNode(node);
+      }
     }
   } else {
     if (updatePayload !== null) {

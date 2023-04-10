@@ -69,6 +69,7 @@ import {
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
+  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -273,6 +274,7 @@ function setProp(
   key: string,
   value: mixed,
   props: any,
+  prevValue: mixed,
 ): void {
   switch (key) {
     case 'children': {
@@ -314,7 +316,7 @@ function setProp(
       break;
     }
     case 'style': {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
@@ -655,6 +657,21 @@ function setProp(
       );
       break;
     // Properties that should not be allowed on custom elements.
+    case 'is': {
+      if (__DEV__) {
+        if (prevValue != null) {
+          console.error(
+            'Cannot update the "is" prop after it has been initialized.',
+          );
+        }
+      }
+      // TODO: We shouldn't actually set this attribute, because we've already
+      // passed it to createElement. We don't also need the attribute.
+      // However, our tests currently query for it so it's plausible someone
+      // else does too so it's break.
+      setValueForAttribute(domElement, 'is', value);
+      break;
+    }
     case 'innerText':
     case 'textContent':
       if (enableCustomElementPropertySupport) {
@@ -689,10 +706,11 @@ function setPropOnCustomElement(
   key: string,
   value: mixed,
   props: any,
+  prevValue: mixed,
 ): void {
   switch (key) {
     case 'style': {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     case 'dangerouslySetInnerHTML': {
@@ -859,7 +877,7 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -892,7 +910,7 @@ export function setInitialProperties(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -1047,7 +1065,7 @@ export function setInitialProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -1063,7 +1081,14 @@ export function setInitialProperties(
           if (propValue == null) {
             continue;
           }
-          setPropOnCustomElement(domElement, tag, propKey, propValue, props);
+          setPropOnCustomElement(
+            domElement,
+            tag,
+            propKey,
+            propValue,
+            props,
+            null,
+          );
         }
         return;
       }
@@ -1078,7 +1103,7 @@ export function setInitialProperties(
     if (propValue == null) {
       continue;
     }
-    setProp(domElement, tag, propKey, propValue, props);
+    setProp(domElement, tag, propKey, propValue, props, null);
   }
 }
 
@@ -1188,15 +1213,428 @@ export function diffProperties(
   }
   if (styleUpdates) {
     if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
+      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
     }
     (updatePayload = updatePayload || []).push('style', styleUpdates);
   }
   return updatePayload;
 }
 
-// Apply the diff.
 export function updateProperties(
+  domElement: Element,
+  tag: string,
+  lastProps: Object,
+  nextProps: Object,
+): void {
+  if (__DEV__) {
+    validatePropertiesInDevelopment(tag, nextProps);
+  }
+
+  switch (tag) {
+    case 'div':
+    case 'span':
+    case 'svg':
+    case 'path':
+    case 'a':
+    case 'g':
+    case 'p':
+    case 'li': {
+      // Fast track the most common tag types
+      break;
+    }
+    case 'input': {
+      // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+      if (nextProps.type === 'radio' && nextProps.name != null) {
+        updateInputChecked(domElement, nextProps);
+      }
+      for (const propKey in lastProps) {
+        const lastProp = lastProps[propKey];
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          switch (propKey) {
+            case 'checked': {
+              const checked = nextProps.defaultChecked;
+              const inputElement: HTMLInputElement = (domElement: any);
+              inputElement.checked =
+                !!checked &&
+                typeof checked !== 'function' &&
+                checked !== 'symbol';
+              break;
+            }
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      for (const propKey in nextProps) {
+        const nextProp = nextProps[propKey];
+        const lastProp = lastProps[propKey];
+        if (
+          nextProps.hasOwnProperty(propKey) &&
+          nextProp !== lastProp &&
+          (nextProp != null || lastProp != null)
+        ) {
+          switch (propKey) {
+            case 'checked': {
+              const checked =
+                nextProp != null ? nextProp : nextProps.defaultChecked;
+              const inputElement: HTMLInputElement = (domElement: any);
+              inputElement.checked =
+                !!checked &&
+                typeof checked !== 'function' &&
+                checked !== 'symbol';
+              break;
+            }
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            case 'children':
+            case 'dangerouslySetInnerHTML': {
+              if (nextProp != null) {
+                throw new Error(
+                  `${tag} is a void element tag and must neither have \`children\` nor ` +
+                    'use `dangerouslySetInnerHTML`.',
+                );
+              }
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+            }
+          }
+        }
+      }
+
+      if (__DEV__) {
+        const wasControlled =
+          lastProps.type === 'checkbox' || lastProps.type === 'radio'
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        const isControlled =
+          nextProps.type === 'checkbox' || nextProps.type === 'radio'
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          console.error(
+            'A component is changing an uncontrolled input to be controlled. ' +
+              'This is likely caused by the value changing from undefined to ' +
+              'a defined value, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnUncontrolledToControlled = true;
+        }
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          console.error(
+            'A component is changing a controlled input to be uncontrolled. ' +
+              'This is likely caused by the value changing from a defined to ' +
+              'undefined, which should not happen. ' +
+              'Decide between using a controlled or uncontrolled input ' +
+              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
+          );
+          didWarnControlledToUncontrolled = true;
+        }
+      }
+      // Update the wrapper around inputs *after* updating props. This has to
+      // happen after updating the rest of props. Otherwise HTML5 input validations
+      // raise warnings and prevent the new value from being assigned.
+      updateInput(domElement, nextProps);
+      return;
+    }
+    case 'select': {
+      for (const propKey in lastProps) {
+        const lastProp = lastProps[propKey];
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          switch (propKey) {
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultValue are ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      for (const propKey in nextProps) {
+        const nextProp = nextProps[propKey];
+        const lastProp = lastProps[propKey];
+        if (
+          nextProps.hasOwnProperty(propKey) &&
+          nextProp !== lastProp &&
+          (nextProp != null || lastProp != null)
+        ) {
+          switch (propKey) {
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultValue are ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      // <select> value update needs to occur after <option> children
+      // reconciliation
+      updateSelect(domElement, lastProps, nextProps);
+      return;
+    }
+    case 'textarea': {
+      for (const propKey in lastProps) {
+        const lastProp = lastProps[propKey];
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          switch (propKey) {
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            case 'children': {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+            // defaultValue is ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      for (const propKey in nextProps) {
+        const nextProp = nextProps[propKey];
+        const lastProp = lastProps[propKey];
+        if (
+          nextProps.hasOwnProperty(propKey) &&
+          nextProp !== lastProp &&
+          (nextProp != null || lastProp != null)
+        ) {
+          switch (propKey) {
+            case 'value': {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            case 'children': {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+            case 'dangerouslySetInnerHTML': {
+              if (nextProp != null) {
+                // TODO: Do we really need a special error message for this. It's also pretty blunt.
+                throw new Error(
+                  '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+                );
+              }
+              break;
+            }
+            // defaultValue is ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      updateTextarea(domElement, nextProps);
+      return;
+    }
+    case 'option': {
+      for (const propKey in lastProps) {
+        const lastProp = lastProps[propKey];
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          switch (propKey) {
+            case 'selected': {
+              // TODO: Remove support for selected on option.
+              (domElement: any).selected = false;
+              break;
+            }
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      for (const propKey in nextProps) {
+        const nextProp = nextProps[propKey];
+        const lastProp = lastProps[propKey];
+        if (
+          nextProps.hasOwnProperty(propKey) &&
+          nextProp !== lastProp &&
+          (nextProp != null || lastProp != null)
+        ) {
+          switch (propKey) {
+            case 'selected': {
+              // TODO: Remove support for selected on option.
+              (domElement: any).selected =
+                nextProp &&
+                typeof nextProp !== 'function' &&
+                typeof nextProp !== 'symbol';
+              break;
+            }
+            default: {
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      return;
+    }
+    case 'img':
+    case 'link':
+    case 'area':
+    case 'base':
+    case 'br':
+    case 'col':
+    case 'embed':
+    case 'hr':
+    case 'keygen':
+    case 'meta':
+    case 'param':
+    case 'source':
+    case 'track':
+    case 'wbr':
+    case 'menuitem': {
+      // Void elements
+      for (const propKey in lastProps) {
+        const lastProp = lastProps[propKey];
+        if (
+          lastProps.hasOwnProperty(propKey) &&
+          lastProp != null &&
+          !nextProps.hasOwnProperty(propKey)
+        ) {
+          setProp(domElement, tag, propKey, null, nextProps, lastProp);
+        }
+      }
+      for (const propKey in nextProps) {
+        const nextProp = nextProps[propKey];
+        const lastProp = lastProps[propKey];
+        if (
+          nextProps.hasOwnProperty(propKey) &&
+          nextProp !== lastProp &&
+          (nextProp != null || lastProp != null)
+        ) {
+          switch (propKey) {
+            case 'children':
+            case 'dangerouslySetInnerHTML': {
+              if (nextProp != null) {
+                // TODO: Can we make this a DEV warning to avoid this deny list?
+                throw new Error(
+                  `${tag} is a void element tag and must neither have \`children\` nor ` +
+                    'use `dangerouslySetInnerHTML`.',
+                );
+              }
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+            default: {
+              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+            }
+          }
+        }
+      }
+      return;
+    }
+    default: {
+      if (isCustomElement(tag, nextProps)) {
+        for (const propKey in lastProps) {
+          const lastProp = lastProps[propKey];
+          if (
+            lastProps.hasOwnProperty(propKey) &&
+            lastProp != null &&
+            !nextProps.hasOwnProperty(propKey)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              propKey,
+              null,
+              nextProps,
+              lastProp,
+            );
+          }
+        }
+        for (const propKey in nextProps) {
+          const nextProp = nextProps[propKey];
+          const lastProp = lastProps[propKey];
+          if (
+            nextProps.hasOwnProperty(propKey) &&
+            nextProp !== lastProp &&
+            (nextProp != null || lastProp != null)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              propKey,
+              nextProp,
+              nextProps,
+              lastProp,
+            );
+          }
+        }
+        return;
+      }
+    }
+  }
+
+  for (const propKey in lastProps) {
+    const lastProp = lastProps[propKey];
+    if (
+      lastProps.hasOwnProperty(propKey) &&
+      lastProp != null &&
+      !nextProps.hasOwnProperty(propKey)
+    ) {
+      setProp(domElement, tag, propKey, null, nextProps, lastProp);
+    }
+  }
+  for (const propKey in nextProps) {
+    const nextProp = nextProps[propKey];
+    const lastProp = lastProps[propKey];
+    if (
+      nextProps.hasOwnProperty(propKey) &&
+      nextProp !== lastProp &&
+      (nextProp != null || lastProp != null)
+    ) {
+      setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+    }
+  }
+}
+
+// Apply the diff.
+export function updatePropertiesWithDiff(
   domElement: Element,
   updatePayload: Array<any>,
   tag: string,
@@ -1252,7 +1690,7 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -1313,7 +1751,7 @@ export function updateProperties(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -1346,7 +1784,7 @@ export function updateProperties(
           }
           // defaultValue is ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -1367,7 +1805,7 @@ export function updateProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -1406,7 +1844,7 @@ export function updateProperties(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
           }
         }
       }
@@ -1423,6 +1861,7 @@ export function updateProperties(
             propKey,
             propValue,
             nextProps,
+            null,
           );
         }
         return;
@@ -1434,7 +1873,7 @@ export function updateProperties(
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, nextProps);
+    setProp(domElement, tag, propKey, propValue, nextProps, null);
   }
 }
 
@@ -2377,7 +2816,18 @@ export function diffHydratedProperties(
         );
       }
       if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        updatePayload = ['children', children];
+        if (diffInCommitPhase) {
+          // We really should be patching this in the commit phase but since
+          // this only affects legacy mode hydration which is deprecated anyway
+          // we can get away with it.
+          // Host singletons get their children appended and don't use the text
+          // content mechanism.
+          if (!enableHostSingletons || tag !== 'body') {
+            domElement.textContent = (children: any);
+          }
+        } else {
+          updatePayload = ['children', children];
+        }
       }
     }
   }
