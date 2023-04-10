@@ -60,7 +60,7 @@ jest.mock('react/react.shared-subset', () => {
 
 // When testing the custom renderer code path through `react-reconciler`,
 // turn the export into a function, and use the argument as host config.
-const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
+const shimHostConfigPath = 'react-reconciler/src/ReactFiberConfig';
 jest.mock('react-reconciler', () => {
   return config => {
     jest.mock(shimHostConfigPath, () => config);
@@ -104,7 +104,7 @@ jest.mock('react-client/flight', () => {
 });
 
 const configPaths = [
-  'react-reconciler/src/ReactFiberHostConfig',
+  'react-reconciler/src/ReactFiberConfig',
   'react-client/src/ReactFlightClientConfig',
   'react-server/src/ReactServerStreamConfig',
   'react-server/src/ReactFizzConfig',

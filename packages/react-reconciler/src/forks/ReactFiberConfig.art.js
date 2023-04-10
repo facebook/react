@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-art/src/ReactARTHostConfig';
+export * from 'react-art/src/ReactFiberConfigART';

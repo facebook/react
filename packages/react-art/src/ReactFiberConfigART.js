@@ -238,13 +238,13 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoResources';
-export * from 'react-reconciler/src/ReactFiberHostConfigWithNoSingletons';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoMicrotasks';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
+export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {

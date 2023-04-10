@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {TextInstance, Instance} from '../../client/ReactDOMHostConfig';
+import type {TextInstance, Instance} from '../../client/ReactFiberConfigDOM';
 import type {AnyNativeEvent} from '../PluginModuleType';
 import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';

@@ -14,7 +14,7 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
@@ -26,7 +26,7 @@ import {
   supportsSingletons,
   isHostHoistableType,
   isHostSingletonType,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,

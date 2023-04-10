@@ -168,8 +168,8 @@ import {
   isPrimaryRenderer,
   getResource,
   createHoistableInstance,
-} from './ReactFiberHostConfig';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,

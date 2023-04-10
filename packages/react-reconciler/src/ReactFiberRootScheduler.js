@@ -49,7 +49,7 @@ import {
   IdleEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberHostConfig';
+import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
