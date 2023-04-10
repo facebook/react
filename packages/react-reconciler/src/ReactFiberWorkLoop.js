@@ -828,7 +828,6 @@ export function scheduleUpdateOnFiber(
     ) {
       if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy) {
         // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
       } else {
         // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
