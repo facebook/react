@@ -19,7 +19,7 @@ import type {
   Usable,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactServerFormatConfig';
+import type {ResponseState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 
@@ -27,7 +27,7 @@ import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
-import {makeId} from './ReactServerFormatConfig';
+import {makeId} from './ReactFizzConfig';
 
 import {
   enableCache,
