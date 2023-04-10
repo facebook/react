@@ -97,7 +97,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
             if (body === undefined) {
               CompilerError.invariant(
                 "Expected first argument to useMemo() to be a function expression",
-                fn.loc
+                lambda.loc
               );
             }
             // We know this function is used for useMemo and can prune it later
