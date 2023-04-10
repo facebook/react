@@ -28594,6 +28594,11 @@ function ensureRootIsScheduled(root) {
     // unblock additional features we have planned.
     scheduleTaskForRootDuringMicrotask(root, now$1());
   }
+
+  if (ReactCurrentActQueue$1.isBatchingLegacy && root.tag === LegacyRoot) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactCurrentActQueue$1.didScheduleLegacyUpdate = true;
+  }
 }
 function flushSyncWorkOnAllRoots() {
   // This is allowed to be called synchronously, but the caller should check
@@ -29419,10 +29424,8 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
       executionContext === NoContext &&
       (fiber.mode & ConcurrentMode) === NoMode
     ) {
-      if (ReactCurrentActQueue.isBatchingLegacy) {
-        // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
-      } else {
+      if (ReactCurrentActQueue.isBatchingLegacy);
+      else {
         // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
@@ -33803,7 +33806,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-845598d4";
+var ReactVersion = "18.3.0-www-modern-835f126b";
 
 function createPortal$1(
   children,
