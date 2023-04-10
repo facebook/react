@@ -23,7 +23,7 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$hostConfig: any;
+declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
 export opaque type Resources = mixed;
@@ -33,54 +33,53 @@ export opaque type SuspenseBoundaryID = mixed;
 
 export const isPrimaryRenderer = false;
 
-export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
+export const getChildFormatContext = $$$config.getChildFormatContext;
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
-  $$$hostConfig.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
-export const assignSuspenseBoundaryID = $$$hostConfig.assignSuspenseBoundaryID;
-export const makeId = $$$hostConfig.makeId;
-export const pushTextInstance = $$$hostConfig.pushTextInstance;
-export const pushStartInstance = $$$hostConfig.pushStartInstance;
-export const pushEndInstance = $$$hostConfig.pushEndInstance;
+  $$$config.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
+export const assignSuspenseBoundaryID = $$$config.assignSuspenseBoundaryID;
+export const makeId = $$$config.makeId;
+export const pushTextInstance = $$$config.pushTextInstance;
+export const pushStartInstance = $$$config.pushStartInstance;
+export const pushEndInstance = $$$config.pushEndInstance;
 export const pushStartCompletedSuspenseBoundary =
-  $$$hostConfig.pushStartCompletedSuspenseBoundary;
+  $$$config.pushStartCompletedSuspenseBoundary;
 export const pushEndCompletedSuspenseBoundary =
-  $$$hostConfig.pushEndCompletedSuspenseBoundary;
-export const pushSegmentFinale = $$$hostConfig.pushSegmentFinale;
-export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
-export const writePlaceholder = $$$hostConfig.writePlaceholder;
+  $$$config.pushEndCompletedSuspenseBoundary;
+export const pushSegmentFinale = $$$config.pushSegmentFinale;
+export const writeCompletedRoot = $$$config.writeCompletedRoot;
+export const writePlaceholder = $$$config.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
-  $$$hostConfig.writeStartCompletedSuspenseBoundary;
+  $$$config.writeStartCompletedSuspenseBoundary;
 export const writeStartPendingSuspenseBoundary =
-  $$$hostConfig.writeStartPendingSuspenseBoundary;
+  $$$config.writeStartPendingSuspenseBoundary;
 export const writeStartClientRenderedSuspenseBoundary =
-  $$$hostConfig.writeStartClientRenderedSuspenseBoundary;
+  $$$config.writeStartClientRenderedSuspenseBoundary;
 export const writeEndCompletedSuspenseBoundary =
-  $$$hostConfig.writeEndCompletedSuspenseBoundary;
+  $$$config.writeEndCompletedSuspenseBoundary;
 export const writeEndPendingSuspenseBoundary =
-  $$$hostConfig.writeEndPendingSuspenseBoundary;
+  $$$config.writeEndPendingSuspenseBoundary;
 export const writeEndClientRenderedSuspenseBoundary =
-  $$$hostConfig.writeEndClientRenderedSuspenseBoundary;
-export const writeStartSegment = $$$hostConfig.writeStartSegment;
-export const writeEndSegment = $$$hostConfig.writeEndSegment;
+  $$$config.writeEndClientRenderedSuspenseBoundary;
+export const writeStartSegment = $$$config.writeStartSegment;
+export const writeEndSegment = $$$config.writeEndSegment;
 export const writeCompletedSegmentInstruction =
-  $$$hostConfig.writeCompletedSegmentInstruction;
+  $$$config.writeCompletedSegmentInstruction;
 export const writeCompletedBoundaryInstruction =
-  $$$hostConfig.writeCompletedBoundaryInstruction;
+  $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
-  $$$hostConfig.writeClientRenderBoundaryInstruction;
-export const prepareToRender = $$$hostConfig.prepareToRender;
-export const cleanupAfterRender = $$$hostConfig.cleanupAfterRender;
+  $$$config.writeClientRenderBoundaryInstruction;
+export const prepareToRender = $$$config.prepareToRender;
+export const cleanupAfterRender = $$$config.cleanupAfterRender;
 
 // -------------------------
 //     Resources
 // -------------------------
-export const writePreamble = $$$hostConfig.writePreamble;
-export const writeHoistables = $$$hostConfig.writeHoistables;
-export const writePostamble = $$$hostConfig.writePostamble;
-export const hoistResources = $$$hostConfig.hoistResources;
-export const createResources = $$$hostConfig.createResources;
-export const createBoundaryResources = $$$hostConfig.createBoundaryResources;
+export const writePreamble = $$$config.writePreamble;
+export const writeHoistables = $$$config.writeHoistables;
+export const writePostamble = $$$config.writePostamble;
+export const hoistResources = $$$config.hoistResources;
+export const createResources = $$$config.createResources;
+export const createBoundaryResources = $$$config.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
-  $$$hostConfig.setCurrentlyRenderingBoundaryResourcesTarget;
-export const writeResourcesForBoundary =
-  $$$hostConfig.writeResourcesForBoundary;
+  $$$config.setCurrentlyRenderingBoundaryResourcesTarget;
+export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
