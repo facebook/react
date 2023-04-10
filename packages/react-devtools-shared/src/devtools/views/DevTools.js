@@ -40,6 +40,7 @@ import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
 import ThemeProvider from './ThemeProvider';
 import {LOCAL_STORAGE_DEFAULT_TAB_KEY} from '../../constants';
+import {logEvent} from '../../Logger';
 
 import styles from './DevTools.css';
 
@@ -49,9 +50,8 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import {logEvent} from '../../Logger';
+import type {BrowserTheme} from 'react-devtools-shared/src/types';
 
-export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
 
 export type ViewElementSource = (
