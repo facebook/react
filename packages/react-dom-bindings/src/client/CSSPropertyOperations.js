@@ -11,6 +11,7 @@ import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
 import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
+import {diffInCommitPhase} from 'shared/ReactFeatureFlags';
 
 /**
  * Operations for dealing with CSS properties.
@@ -64,22 +65,38 @@ export function createDangerousStringForStyles(styles) {
   }
 }
 
-export function clearPreviousStyles(node, prevStyles, nextStyles) {
-  const style = node.style;
-  for (const styleName in prevStyles) {
-    if (
-      prevStyles.hasOwnProperty(styleName) &&
-      (nextStyles == null || !nextStyles.hasOwnProperty(styleName))
-    ) {
-      // Clear style
-      const isCustomProperty = styleName.indexOf('--') === 0;
-      if (isCustomProperty) {
-        style.setProperty(styleName, '');
-      } else if (styleName === 'float') {
-        style.cssFloat = '';
-      } else {
-        style[styleName] = '';
+function setValueForStyle(style, styleName, value) {
+  const isCustomProperty = styleName.indexOf('--') === 0;
+  if (__DEV__) {
+    if (!isCustomProperty) {
+      warnValidStyle(styleName, value);
+    }
+  }
+
+  if (value == null || typeof value === 'boolean' || value === '') {
+    if (isCustomProperty) {
+      style.setProperty(styleName, '');
+    } else if (styleName === 'float') {
+      style.cssFloat = '';
+    } else {
+      style[styleName] = '';
+    }
+  } else if (isCustomProperty) {
+    style.setProperty(styleName, value);
+  } else if (
+    typeof value === 'number' &&
+    value !== 0 &&
+    !isUnitlessNumber(styleName)
+  ) {
+    style[styleName] = value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
+  } else {
+    if (styleName === 'float') {
+      style.cssFloat = value;
+    } else {
+      if (__DEV__) {
+        checkCSSPropertyStringCoercion(value, styleName);
       }
+      style[styleName] = ('' + value).trim();
     }
   }
 }
@@ -91,7 +108,7 @@ export function clearPreviousStyles(node, prevStyles, nextStyles) {
  * @param {DOMElement} node
  * @param {object} styles
  */
-export function setValueForStyles(node, styles) {
+export function setValueForStyles(node, styles, prevStyles) {
   if (styles != null && typeof styles !== 'object') {
     throw new Error(
       'The `style` prop expects a mapping from style properties to values, ' +
@@ -108,42 +125,39 @@ export function setValueForStyles(node, styles) {
   }
 
   const style = node.style;
-  for (const styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-    const value = styles[styleName];
-    const isCustomProperty = styleName.indexOf('--') === 0;
+
+  if (diffInCommitPhase && prevStyles != null) {
     if (__DEV__) {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, value);
-      }
+      validateShorthandPropertyCollisionInDev(prevStyles, styles);
     }
 
-    if (value == null || typeof value === 'boolean' || value === '') {
-      if (isCustomProperty) {
-        style.setProperty(styleName, '');
-      } else if (styleName === 'float') {
-        style.cssFloat = '';
-      } else {
-        style[styleName] = '';
-      }
-    } else if (isCustomProperty) {
-      style.setProperty(styleName, value);
-    } else if (
-      typeof value === 'number' &&
-      value !== 0 &&
-      !isUnitlessNumber(styleName)
-    ) {
-      style[styleName] = value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
-    } else {
-      if (styleName === 'float') {
-        style.cssFloat = value;
-      } else {
-        if (__DEV__) {
-          checkCSSPropertyStringCoercion(value, styleName);
+    for (const styleName in prevStyles) {
+      if (
+        prevStyles.hasOwnProperty(styleName) &&
+        (styles == null || !styles.hasOwnProperty(styleName))
+      ) {
+        // Clear style
+        const isCustomProperty = styleName.indexOf('--') === 0;
+        if (isCustomProperty) {
+          style.setProperty(styleName, '');
+        } else if (styleName === 'float') {
+          style.cssFloat = '';
+        } else {
+          style[styleName] = '';
         }
-        style[styleName] = ('' + value).trim();
+      }
+    }
+    for (const styleName in styles) {
+      const value = styles[styleName];
+      if (styles.hasOwnProperty(styleName) && prevStyles[styleName] !== value) {
+        setValueForStyle(style, styleName, value);
+      }
+    }
+  } else {
+    for (const styleName in styles) {
+      if (styles.hasOwnProperty(styleName)) {
+        const value = styles[styleName];
+        setValueForStyle(style, styleName, value);
       }
     }
   }

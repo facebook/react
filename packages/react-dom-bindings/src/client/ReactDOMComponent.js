@@ -50,7 +50,6 @@ import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
-  clearPreviousStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
@@ -317,13 +316,7 @@ function setProp(
       break;
     }
     case 'style': {
-      if (diffInCommitPhase && prevValue != null) {
-        if (__DEV__) {
-          validateShorthandPropertyCollisionInDev(prevValue, value);
-        }
-        clearPreviousStyles(domElement, prevValue, value);
-      }
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
@@ -702,7 +695,7 @@ function setPropOnCustomElement(
 ): void {
   switch (key) {
     case 'style': {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     case 'dangerouslySetInnerHTML': {
@@ -1413,6 +1406,10 @@ export function updateProperties(
               // This is handled by updateWrapper below.
               break;
             }
+            case 'children': {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
             // defaultValue is ignored by setProp
             default: {
               setProp(domElement, tag, propKey, null, nextProps, lastProp);
@@ -1464,7 +1461,16 @@ export function updateProperties(
           lastProp != null &&
           !nextProps.hasOwnProperty(propKey)
         ) {
-          setProp(domElement, tag, propKey, null, nextProps, lastProp);
+          switch (propKey) {
+            case 'selected': {
+              // TODO: Remove support for selected on option.
+              (domElement: any).selected = false;
+              break;
+            }
+            default: {
+              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
         }
       }
       for (const propKey in nextProps) {
