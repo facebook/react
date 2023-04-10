@@ -7,5 +7,4 @@
  * @flow
  */
 
-export * from 'react-server-dom-relay/src/ReactFlightDOMRelayClientHostConfig';
-export * from '../ReactFlightClientHostConfigNoStream';
+export const isPrimaryRenderer = true;

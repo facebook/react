@@ -11,7 +11,7 @@ import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   ClientManifest,
   Destination,
-} from './ReactFlightDOMRelayServerHostConfig';
+} from './ReactFlightServerConfigDOMRelay';
 
 import {
   createRequest,

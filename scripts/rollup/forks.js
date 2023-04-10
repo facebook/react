@@ -355,7 +355,7 @@ const forks = Object.freeze({
     );
   },
 
-  './packages/react-client/src/ReactFlightClientHostConfig.js': (
+  './packages/react-client/src/ReactFlightClientConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -373,11 +373,11 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-client/src/forks/ReactFlightClientConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactFlightClientHostConfig to always be replaced with a shim, but ' +
+      'Expected ReactFlightClientConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );

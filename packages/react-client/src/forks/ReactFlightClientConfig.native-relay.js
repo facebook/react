@@ -7,5 +7,5 @@
  * @flow
  */
 
-export * from 'react-server-native-relay/src/ReactFlightNativeRelayClientHostConfig';
-export * from '../ReactFlightClientHostConfigNoStream';
+export * from 'react-server-native-relay/src/ReactFlightClientConfigNativeRelay';
+export * from '../ReactFlightClientConfigNoStream';
