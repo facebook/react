@@ -8,7 +8,7 @@
  * @flow
  */
 
-import type {BrowserTheme} from './devtools/views/DevTools';
+import type {BrowserTheme} from './types';
 import type {
   DevToolsHook,
   Handler,

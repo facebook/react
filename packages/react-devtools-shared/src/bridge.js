@@ -15,9 +15,9 @@ import type {
   OwnersList,
   ProfilingDataBackend,
   RendererID,
+  ConsolePatchSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
-import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/console';
 
 const BATCH_DURATION = 100;
 

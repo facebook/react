@@ -7,6 +7,13 @@
  * @flow
  */
 
+/**
+ * WARNING:
+ * This file contains types that are conceptually related to React internals and
+ * DevTools backends, but can be passed to frontend via the bridge.
+ * Be mindful of backwards compatibility when making changes.
+ */
+
 import type {ReactContext, Wakeable} from 'shared/ReactTypes';
 import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -17,6 +24,7 @@ import type {
 } from 'react-devtools-shared/src/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/types';
 
 type BundleType =
   | 0 // PROD
@@ -491,4 +499,12 @@ export type DevToolsHook = {
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
 
   ...
+};
+
+export type ConsolePatchSettings = {
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
 };
