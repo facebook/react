@@ -8,7 +8,7 @@
  */
 
 import type {ResponseBase} from './ReactFlightClient';
-import type {StringDecoder} from './ReactFlightClientHostConfig';
+import type {StringDecoder} from './ReactFlightClientConfig';
 
 export type Response = ResponseBase & {
   _partialRow: string,

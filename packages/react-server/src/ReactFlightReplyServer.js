@@ -16,13 +16,13 @@ import type {
   ServerReferenceId,
   ServerManifest,
   ClientReference as ServerReference,
-} from 'react-client/src/ReactFlightClientHostConfig';
+} from 'react-client/src/ReactFlightClientConfig';
 
 import {
   resolveServerReference,
   preloadModule,
   requireModule,
-} from 'react-client/src/ReactFlightClientHostConfig';
+} from 'react-client/src/ReactFlightClientConfig';
 
 export type JSONValue =
   | number

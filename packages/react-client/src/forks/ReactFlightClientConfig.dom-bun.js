@@ -7,8 +7,8 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientHostConfigBrowser';
-export * from 'react-client/src/ReactFlightClientHostConfigStream';
+export * from 'react-client/src/ReactFlightClientConfigBrowser';
+export * from 'react-client/src/ReactFlightClientConfigStream';
 
 export type Response = any;
 export opaque type SSRManifest = mixed;
