@@ -7,7 +7,7 @@
  * @flow
  */
 
-declare var $$$hostConfig: any;
+declare var $$$config: any;
 
 export opaque type ClientManifest = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
@@ -15,11 +15,11 @@ export opaque type ServerReference<T> = mixed; // eslint-disable-line no-unused-
 export opaque type ClientReferenceMetadata: any = mixed;
 export opaque type ServerReferenceId: any = mixed;
 export opaque type ClientReferenceKey: any = mixed;
-export const isClientReference = $$$hostConfig.isClientReference;
-export const isServerReference = $$$hostConfig.isServerReference;
-export const getClientReferenceKey = $$$hostConfig.getClientReferenceKey;
+export const isClientReference = $$$config.isClientReference;
+export const isServerReference = $$$config.isServerReference;
+export const getClientReferenceKey = $$$config.getClientReferenceKey;
 export const resolveClientReferenceMetadata =
-  $$$hostConfig.resolveClientReferenceMetadata;
-export const getServerReferenceId = $$$hostConfig.getServerReferenceId;
+  $$$config.resolveClientReferenceMetadata;
+export const getServerReferenceId = $$$config.getServerReferenceId;
 export const getServerReferenceBoundArguments =
-  $$$hostConfig.getServerReferenceBoundArguments;
+  $$$config.getServerReferenceBoundArguments;

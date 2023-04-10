@@ -349,7 +349,7 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  module.exports = function $$$reconciler($$$hostConfig) {
+  module.exports = function $$$reconciler($$$config) {
     var exports = {};
 ${source}
     return exports;
@@ -368,7 +368,7 @@ ${source}
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$hostConfig) {
+module.exports = function $$$reconciler($$$config) {
     
     var exports = {};
 ${source}
@@ -387,7 +387,7 @@ Object.defineProperty(module.exports, "__esModule", { value: true });
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$hostConfig) {
+module.exports = function $$$reconciler($$$config) {
     var exports = {};
 ${source}
     return exports;
