@@ -51,7 +51,7 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
     .replace(
       '%REACT_RENDERER_FLOW_OPTIONS%',
       `
-module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
+module.name_mapper='ReactFiberConfig$$' -> 'forks/ReactFiberConfig.${renderer}'
 module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
 module.name_mapper='ReactFizzConfig$$' -> 'forks/ReactFizzConfig.${serverRenderer}'
 module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${serverRenderer}'

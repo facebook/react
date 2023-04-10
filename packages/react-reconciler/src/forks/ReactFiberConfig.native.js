@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+export * from 'react-native-renderer/src/ReactFiberConfigNative';

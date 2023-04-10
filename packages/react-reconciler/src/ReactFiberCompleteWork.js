@@ -18,7 +18,7 @@ import type {
   Container,
   ChildSet,
   Resource,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -115,7 +115,7 @@ import {
   mayResourceSuspendCommit,
   preloadInstance,
   preloadResource,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {
   getRootHostContainer,
   popHostContext,

@@ -16,7 +16,7 @@ import type {
   SuspenseInstance,
   Container,
   HostContext,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {TreeContext} from './ReactFiberTreeContext';
 import type {CapturedValue} from './ReactCapturedValue';
@@ -81,7 +81,7 @@ import {
   canHydrateSuspenseInstance,
   isHydratableType,
   isHydratableText,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {OffscreenLane} from './ReactFiberLane';
 import {
   getSuspendedTreeContext,
