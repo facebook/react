@@ -657,6 +657,21 @@ function setProp(
       );
       break;
     // Properties that should not be allowed on custom elements.
+    case 'is': {
+      if (__DEV__) {
+        if (prevValue != null) {
+          console.error(
+            'Cannot update the "is" prop after it has been initialized.',
+          );
+        }
+      }
+      // TODO: We shouldn't actually set this attribute, because we've already
+      // passed it to createElement. We don't also need the attribute.
+      // However, our tests currently query for it so it's plausible someone
+      // else does too so it's break.
+      setValueForAttribute(domElement, 'is', value);
+      break;
+    }
     case 'innerText':
     case 'textContent':
       if (enableCustomElementPropertySupport) {
