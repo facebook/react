@@ -4845,7 +4845,6 @@ var suspendResource = shim;
 
 var _nativeFabricUIManage = nativeFabricUIManager,
   createNode = _nativeFabricUIManage.createNode,
-  cloneNode = _nativeFabricUIManage.cloneNode,
   cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps =
     _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
@@ -5006,15 +5005,6 @@ function getPublicInstanceFromInternalInstanceHandle(internalInstanceHandle) {
   var instance = internalInstanceHandle.stateNode;
   return getPublicInstance(instance);
 }
-function prepareUpdate(instance, type, oldProps, newProps, hostContext) {
-  var viewConfig = instance.canonical.viewConfig;
-  var updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // TODO: If the event handlers have changed, we need to update the current props
-  // in the commit phase but there is no host config hook to do it yet.
-  // So instead we hack it by updating it in the render phase.
-
-  instance.canonical.currentProps = newProps;
-  return updatePayload;
-}
 function shouldSetTextContent(type, props) {
   // TODO (bvaughn) Revisit this decision.
   // Always returning false simplifies the createInstance() implementation,
@@ -5057,6 +5047,15 @@ function cloneInstance(
   keepChildren,
   recyclableInstance
 ) {
+  {
+    var viewConfig = instance.canonical.viewConfig;
+    updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // TODO: If the event handlers have changed, we need to update the current props
+    // in the commit phase but there is no host config hook to do it yet.
+    // So instead we hack it by updating it in the render phase.
+
+    instance.canonical.currentProps = newProps;
+  }
+
   var node = instance.node;
   var clone;
 
@@ -5064,7 +5063,10 @@ function cloneInstance(
     if (updatePayload !== null) {
       clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      clone = cloneNode(node);
+      {
+        // No changes
+        return instance;
+      }
     }
   } else {
     if (updatePayload !== null) {
@@ -18565,27 +18567,9 @@ function updateHostComponent(
       return;
     }
 
-    var recyclableInstance = workInProgress.stateNode;
-
     getHostContext();
 
     var _updatePayload = null;
-
-    if (_oldProps !== newProps) {
-      _updatePayload = prepareUpdate(
-        recyclableInstance,
-        type,
-        _oldProps,
-        newProps
-      );
-    }
-
-    if (childrenUnchanged && _updatePayload === null) {
-      // No changes, just reuse the existing instance.
-      // Note that this might release a previous clone.
-      workInProgress.stateNode = currentInstance;
-      return;
-    }
 
     var newInstance = cloneInstance(
       currentInstance,
@@ -18596,6 +18580,13 @@ function updateHostComponent(
       workInProgress,
       childrenUnchanged
     );
+
+    if (newInstance === currentInstance) {
+      // No changes, just reuse the existing instance.
+      // Note that this might release a previous clone.
+      workInProgress.stateNode = currentInstance;
+      return;
+    }
 
     workInProgress.stateNode = newInstance;
 
@@ -27187,7 +27178,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-dd0619b2e-20230410";
+var ReactVersion = "18.3.0-next-ca41adb8c-20230410";
 
 function createPortal$1(
   children,

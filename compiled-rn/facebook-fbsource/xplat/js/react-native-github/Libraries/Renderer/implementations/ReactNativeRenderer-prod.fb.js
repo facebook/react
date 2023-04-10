@@ -1957,7 +1957,6 @@ function shim$1() {
 }
 var getViewConfigForType =
     ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
-  UPDATE_SIGNAL = {},
   nextReactTag = 3;
 function allocateTag() {
   var tag = nextReactTag;
@@ -5806,9 +5805,7 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       var type = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps &&
-          (workInProgress.updateQueue = UPDATE_SIGNAL) &&
-          (workInProgress.flags |= 4),
+        current.memoizedProps !== newProps && (workInProgress.flags |= 4),
           current.ref !== workInProgress.ref &&
             (workInProgress.flags |= 2097664);
       else {
@@ -6898,31 +6895,25 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (flags & 4 && ((flags = finishedWork.stateNode), null != flags)) {
         var newProps = finishedWork.memoizedProps;
         current = null !== current ? current.memoizedProps : newProps;
-        var updatePayload = finishedWork.updateQueue;
         finishedWork.updateQueue = null;
-        if (null !== updatePayload)
-          try {
-            var viewConfig = flags.viewConfig;
-            instanceProps.set(flags._nativeTag, newProps);
-            var updatePayload$jscomp$0 = diffProperties(
-              null,
-              current,
-              newProps,
-              viewConfig.validAttributes
+        try {
+          var viewConfig = flags.viewConfig;
+          instanceProps.set(flags._nativeTag, newProps);
+          var updatePayload = diffProperties(
+            null,
+            current,
+            newProps,
+            viewConfig.validAttributes
+          );
+          null != updatePayload &&
+            ReactNativePrivateInterface.UIManager.updateView(
+              flags._nativeTag,
+              viewConfig.uiViewClassName,
+              updatePayload
             );
-            null != updatePayload$jscomp$0 &&
-              ReactNativePrivateInterface.UIManager.updateView(
-                flags._nativeTag,
-                viewConfig.uiViewClassName,
-                updatePayload$jscomp$0
-              );
-          } catch (error$93) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$93
-            );
-          }
+        } catch (error$93) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$93);
+        }
       }
       break;
     case 6:
@@ -6974,14 +6965,13 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         null !== current &&
         safelyDetachRef(current, current.return);
       viewConfig = null !== finishedWork.memoizedState;
-      updatePayload$jscomp$0 =
-        null !== current && null !== current.memoizedState;
+      updatePayload = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || viewConfig;
         offscreenSubtreeWasHidden =
-          prevOffscreenSubtreeWasHidden || updatePayload$jscomp$0;
+          prevOffscreenSubtreeWasHidden || updatePayload;
         recursivelyTraverseMutationEffects(root, finishedWork);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -6999,7 +6989,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         viewConfig &&
           ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
-            updatePayload$jscomp$0 ||
+            updatePayload ||
             root ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))),
@@ -7012,35 +7002,35 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
               current = root;
               try {
                 if (((newProps = root.stateNode), viewConfig)) {
-                  updatePayload = newProps.viewConfig;
-                  var updatePayload$jscomp$1 = diffProperties(
+                  var viewConfig$jscomp$0 = newProps.viewConfig;
+                  var updatePayload$jscomp$0 = diffProperties(
                     null,
                     emptyObject$1,
                     { style: { display: "none" } },
-                    updatePayload.validAttributes
+                    viewConfig$jscomp$0.validAttributes
                   );
                   ReactNativePrivateInterface.UIManager.updateView(
                     newProps._nativeTag,
-                    updatePayload.uiViewClassName,
-                    updatePayload$jscomp$1
+                    viewConfig$jscomp$0.uiViewClassName,
+                    updatePayload$jscomp$0
                   );
                 } else {
                   var instance = root.stateNode,
                     props = root.memoizedProps,
-                    viewConfig$jscomp$0 = instance.viewConfig,
+                    viewConfig$jscomp$1 = instance.viewConfig,
                     prevProps = assign({}, props, {
                       style: [props.style, { display: "none" }]
                     });
-                  var updatePayload$jscomp$2 = diffProperties(
+                  var updatePayload$jscomp$1 = diffProperties(
                     null,
                     prevProps,
                     props,
-                    viewConfig$jscomp$0.validAttributes
+                    viewConfig$jscomp$1.validAttributes
                   );
                   ReactNativePrivateInterface.UIManager.updateView(
                     instance._nativeTag,
-                    viewConfig$jscomp$0.uiViewClassName,
-                    updatePayload$jscomp$2
+                    viewConfig$jscomp$1.uiViewClassName,
+                    updatePayload$jscomp$1
                   );
                 }
               } catch (error) {
@@ -9812,10 +9802,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1107 = {
+  devToolsConfig$jscomp$inline_1106 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-dd0619b2e-20230410",
+    version: "18.3.0-next-ca41adb8c-20230410",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9830,11 +9820,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1359 = {
-  bundleType: devToolsConfig$jscomp$inline_1107.bundleType,
-  version: devToolsConfig$jscomp$inline_1107.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1107.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1107.rendererConfig,
+var internals$jscomp$inline_1358 = {
+  bundleType: devToolsConfig$jscomp$inline_1106.bundleType,
+  version: devToolsConfig$jscomp$inline_1106.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1106.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1106.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9850,26 +9840,26 @@ var internals$jscomp$inline_1359 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1107.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1106.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-dd0619b2e-20230410"
+  reconcilerVersion: "18.3.0-next-ca41adb8c-20230410"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1360 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1359 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1360.isDisabled &&
-    hook$jscomp$inline_1360.supportsFiber
+    !hook$jscomp$inline_1359.isDisabled &&
+    hook$jscomp$inline_1359.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1360.inject(
-        internals$jscomp$inline_1359
+      (rendererID = hook$jscomp$inline_1359.inject(
+        internals$jscomp$inline_1358
       )),
-        (injectedHook = hook$jscomp$inline_1360);
+        (injectedHook = hook$jscomp$inline_1359);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

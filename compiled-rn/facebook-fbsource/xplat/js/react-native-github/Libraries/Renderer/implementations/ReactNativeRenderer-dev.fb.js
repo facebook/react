@@ -2924,6 +2924,7 @@ var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
 var createRootStrictEffectsByDefault = false;
 var enableLazyContextPropagation = false;
+var diffInCommitPhase = true; // Flow magic to verify the exports of this file match the original version.
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -5696,13 +5697,6 @@ var suspendResource = shim;
 
 var getViewConfigForType =
   ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get; // Unused
-// Unused
-
-var UPDATE_SIGNAL = {};
-
-{
-  Object.freeze(UPDATE_SIGNAL);
-} // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
 // % 2 === 0 means it is a Fabric tag.
 
@@ -5840,9 +5834,6 @@ function getPublicInstance(instance) {
   }
 
   return instance;
-}
-function prepareUpdate(instance, type, oldProps, newProps, hostContext) {
-  return UPDATE_SIGNAL;
 }
 var scheduleTimeout = setTimeout;
 var cancelTimeout = clearTimeout;
@@ -18735,17 +18726,9 @@ function updateHostComponent(
       // In mutation mode, this is sufficient for a bailout because
       // we won't touch this node even if children changed.
       return;
-    } // If we get updated because one of our children updated, we don't
-    getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
-    // component is hitting the resume path. Figure out why. Possibly
-    // related to `hidden`.
+    }
 
-    var updatePayload = prepareUpdate(); // TODO: Type this specific to this type of component.
-
-    workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update. All the work is done in commitWork.
-
-    if (updatePayload) {
+    {
       markUpdate(workInProgress);
     }
   }
@@ -21746,7 +21729,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null) {
+            if (_updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   _instance2,
@@ -27708,7 +27691,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-dd0619b2e-20230410";
+var ReactVersion = "18.3.0-next-ca41adb8c-20230410";
 
 function createPortal$1(
   children,

@@ -1575,7 +1575,6 @@ function shim$1() {
 }
 var _nativeFabricUIManage = nativeFabricUIManager,
   createNode = _nativeFabricUIManage.createNode,
-  cloneNode = _nativeFabricUIManage.cloneNode,
   cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps =
     _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
@@ -5830,44 +5829,39 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       renderLanes = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode) {
-        var currentInstance = current.stateNode,
-          oldProps = current.memoizedProps;
-        if (
-          (renderLanes = hadNoMutationsEffects(current, workInProgress)) &&
-          oldProps === newProps
-        )
-          workInProgress.stateNode = currentInstance;
+        renderLanes = current.stateNode;
+        var oldProps = current.memoizedProps,
+          childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
+        if (childrenUnchanged && oldProps === newProps)
+          workInProgress.stateNode = renderLanes;
         else {
-          var recyclableInstance = workInProgress.stateNode,
-            updatePayload = null;
-          oldProps !== newProps &&
-            ((oldProps = diffProperties(
+          b: {
+            oldProps = diffProperties(
               null,
               oldProps,
               newProps,
-              recyclableInstance.canonical.viewConfig.validAttributes
-            )),
-            (recyclableInstance.canonical.currentProps = newProps),
-            (updatePayload = oldProps));
-          renderLanes && null === updatePayload
-            ? (workInProgress.stateNode = currentInstance)
-            : ((newProps = updatePayload),
-              (recyclableInstance = currentInstance.node),
-              (newProps = {
-                node: renderLanes
-                  ? null !== newProps
-                    ? cloneNodeWithNewProps(recyclableInstance, newProps)
-                    : cloneNode(recyclableInstance)
-                  : null !== newProps
-                  ? cloneNodeWithNewChildrenAndProps(
-                      recyclableInstance,
-                      newProps
-                    )
-                  : cloneNodeWithNewChildren(recyclableInstance),
-                canonical: currentInstance.canonical
-              }),
-              (workInProgress.stateNode = newProps),
-              renderLanes
+              renderLanes.canonical.viewConfig.validAttributes
+            );
+            renderLanes.canonical.currentProps = newProps;
+            newProps = renderLanes.node;
+            if (childrenUnchanged)
+              if (null !== oldProps)
+                newProps = cloneNodeWithNewProps(newProps, oldProps);
+              else {
+                newProps = renderLanes;
+                break b;
+              }
+            else
+              newProps =
+                null !== oldProps
+                  ? cloneNodeWithNewChildrenAndProps(newProps, oldProps)
+                  : cloneNodeWithNewChildren(newProps);
+            newProps = { node: newProps, canonical: renderLanes.canonical };
+          }
+          newProps === renderLanes
+            ? (workInProgress.stateNode = renderLanes)
+            : ((workInProgress.stateNode = newProps),
+              childrenUnchanged
                 ? (workInProgress.flags |= 4)
                 : appendAllChildren(newProps, workInProgress, !1, !1));
         }
@@ -5881,36 +5875,36 @@ function completeWork(current, workInProgress, renderLanes) {
           bubbleProperties(workInProgress);
           return null;
         }
-        currentInstance = rootInstanceStackCursor.current;
+        childrenUnchanged = rootInstanceStackCursor.current;
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
-        recyclableInstance = diffProperties(
+        oldProps = diffProperties(
           null,
           emptyObject$1,
           newProps,
           renderLanes.validAttributes
         );
-        currentInstance = createNode(
+        childrenUnchanged = createNode(
           current,
           renderLanes.uiViewClassName,
-          currentInstance,
-          recyclableInstance,
+          childrenUnchanged,
+          oldProps,
           workInProgress
         );
-        recyclableInstance = ReactNativePrivateInterface.createPublicInstance(
+        oldProps = ReactNativePrivateInterface.createPublicInstance(
           current,
           renderLanes,
           workInProgress
         );
         current = {
-          node: currentInstance,
+          node: childrenUnchanged,
           canonical: {
             nativeTag: current,
             viewConfig: renderLanes,
             currentProps: newProps,
             internalInstanceHandle: workInProgress,
-            publicInstance: recyclableInstance
+            publicInstance: oldProps
           }
         };
         appendAllChildren(current, workInProgress, !1, !1);
@@ -5966,12 +5960,12 @@ function completeWork(current, workInProgress, renderLanes) {
             (workInProgress.memoizedState = null);
           workInProgress.flags |= 4;
           bubbleProperties(workInProgress);
-          currentInstance = !1;
+          childrenUnchanged = !1;
         } else
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
-            (currentInstance = !0);
-        if (!currentInstance)
+            (childrenUnchanged = !0);
+        if (!childrenUnchanged)
           return workInProgress.flags & 256 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
@@ -6004,24 +5998,24 @@ function completeWork(current, workInProgress, renderLanes) {
       );
     case 19:
       pop(suspenseStackCursor);
-      currentInstance = workInProgress.memoizedState;
-      if (null === currentInstance)
+      childrenUnchanged = workInProgress.memoizedState;
+      if (null === childrenUnchanged)
         return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      recyclableInstance = currentInstance.rendering;
-      if (null === recyclableInstance)
-        if (newProps) cutOffTailIfNeeded(currentInstance, !1);
+      oldProps = childrenUnchanged.rendering;
+      if (null === oldProps)
+        if (newProps) cutOffTailIfNeeded(childrenUnchanged, !1);
         else {
           if (
             0 !== workInProgressRootExitStatus ||
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              recyclableInstance = findFirstSuspended(current);
-              if (null !== recyclableInstance) {
+              oldProps = findFirstSuspended(current);
+              if (null !== oldProps) {
                 workInProgress.flags |= 128;
-                cutOffTailIfNeeded(currentInstance, !1);
-                current = recyclableInstance.updateQueue;
+                cutOffTailIfNeeded(childrenUnchanged, !1);
+                current = oldProps.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -6037,54 +6031,51 @@ function completeWork(current, workInProgress, renderLanes) {
               }
               current = current.sibling;
             }
-          null !== currentInstance.tail &&
+          null !== childrenUnchanged.tail &&
             now() > workInProgressRootRenderTargetTime &&
             ((workInProgress.flags |= 128),
             (newProps = !0),
-            cutOffTailIfNeeded(currentInstance, !1),
+            cutOffTailIfNeeded(childrenUnchanged, !1),
             (workInProgress.lanes = 8388608));
         }
       else {
         if (!newProps)
-          if (
-            ((current = findFirstSuspended(recyclableInstance)),
-            null !== current)
-          ) {
+          if (((current = findFirstSuspended(oldProps)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
               (current = current.updateQueue),
               (workInProgress.updateQueue = current),
               scheduleRetryEffect(workInProgress, current),
-              cutOffTailIfNeeded(currentInstance, !0),
-              null === currentInstance.tail &&
-                "hidden" === currentInstance.tailMode &&
-                !recyclableInstance.alternate)
+              cutOffTailIfNeeded(childrenUnchanged, !0),
+              null === childrenUnchanged.tail &&
+                "hidden" === childrenUnchanged.tailMode &&
+                !oldProps.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
-            2 * now() - currentInstance.renderingStartTime >
+            2 * now() - childrenUnchanged.renderingStartTime >
               workInProgressRootRenderTargetTime &&
               1073741824 !== renderLanes &&
               ((workInProgress.flags |= 128),
               (newProps = !0),
-              cutOffTailIfNeeded(currentInstance, !1),
+              cutOffTailIfNeeded(childrenUnchanged, !1),
               (workInProgress.lanes = 8388608));
-        currentInstance.isBackwards
-          ? ((recyclableInstance.sibling = workInProgress.child),
-            (workInProgress.child = recyclableInstance))
-          : ((current = currentInstance.last),
+        childrenUnchanged.isBackwards
+          ? ((oldProps.sibling = workInProgress.child),
+            (workInProgress.child = oldProps))
+          : ((current = childrenUnchanged.last),
             null !== current
-              ? (current.sibling = recyclableInstance)
-              : (workInProgress.child = recyclableInstance),
-            (currentInstance.last = recyclableInstance));
+              ? (current.sibling = oldProps)
+              : (workInProgress.child = oldProps),
+            (childrenUnchanged.last = oldProps));
       }
-      if (null !== currentInstance.tail)
+      if (null !== childrenUnchanged.tail)
         return (
-          (workInProgress = currentInstance.tail),
-          (currentInstance.rendering = workInProgress),
-          (currentInstance.tail = workInProgress.sibling),
-          (currentInstance.renderingStartTime = now()),
+          (workInProgress = childrenUnchanged.tail),
+          (childrenUnchanged.rendering = workInProgress),
+          (childrenUnchanged.tail = workInProgress.sibling),
+          (childrenUnchanged.renderingStartTime = now()),
           (workInProgress.sibling = null),
           (current = suspenseStackCursor.current),
           push(suspenseStackCursor, newProps ? (current & 1) | 2 : current & 1),
@@ -9552,10 +9543,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1052 = {
+  devToolsConfig$jscomp$inline_1051 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-dd0619b2e-20230410",
+    version: "18.3.0-next-ca41adb8c-20230410",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9570,11 +9561,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1297 = {
-  bundleType: devToolsConfig$jscomp$inline_1052.bundleType,
-  version: devToolsConfig$jscomp$inline_1052.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1052.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1052.rendererConfig,
+var internals$jscomp$inline_1289 = {
+  bundleType: devToolsConfig$jscomp$inline_1051.bundleType,
+  version: devToolsConfig$jscomp$inline_1051.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1051.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1051.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9590,26 +9581,26 @@ var internals$jscomp$inline_1297 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1052.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1051.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-dd0619b2e-20230410"
+  reconcilerVersion: "18.3.0-next-ca41adb8c-20230410"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1298 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1290 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1298.isDisabled &&
-    hook$jscomp$inline_1298.supportsFiber
+    !hook$jscomp$inline_1290.isDisabled &&
+    hook$jscomp$inline_1290.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1298.inject(
-        internals$jscomp$inline_1297
+      (rendererID = hook$jscomp$inline_1290.inject(
+        internals$jscomp$inline_1289
       )),
-        (injectedHook = hook$jscomp$inline_1298);
+        (injectedHook = hook$jscomp$inline_1290);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
