@@ -3776,7 +3776,7 @@ function updateInputChecked(element, props) {
   var node = element;
   var checked = props.checked;
 
-  if (checked != null) {
+  if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
   }
 }
@@ -4330,13 +4330,6 @@ function validateTextareaProps(element, props) {
 function updateTextarea(element, props) {
   var node = element;
   var value = getToStringValue(props.value);
-  var defaultValue = getToStringValue(props.defaultValue);
-
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
-  } else {
-    node.defaultValue = "";
-  }
 
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
@@ -4347,9 +4340,21 @@ function updateTextarea(element, props) {
       node.value = newValue;
     } // TOOO: This should respect disableInputAttributeSyncing flag.
 
-    if (props.defaultValue == null && node.defaultValue !== newValue) {
-      node.defaultValue = newValue;
+    if (props.defaultValue == null) {
+      if (node.defaultValue !== newValue) {
+        node.defaultValue = newValue;
+      }
+
+      return;
     }
+  }
+
+  var defaultValue = getToStringValue(props.defaultValue);
+
+  if (defaultValue != null) {
+    node.defaultValue = toString(defaultValue);
+  } else {
+    node.defaultValue = "";
   }
 }
 function initTextarea(element, props) {
@@ -33798,7 +33803,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-2b95afab";
+var ReactVersion = "18.3.0-www-modern-845598d4";
 
 function createPortal$1(
   children,

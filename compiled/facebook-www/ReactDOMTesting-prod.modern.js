@@ -963,6 +963,10 @@ function getActiveElement(doc) {
     return doc.body;
   }
 }
+function updateInputChecked(element, props) {
+  props = props.checked;
+  null != props && element.checked !== !!props && (element.checked = props);
+}
 function updateInput(element, props) {
   var value = getToStringValue(props.value),
     type = props.type;
@@ -986,8 +990,7 @@ function updateInput(element, props) {
     : null == props.checked &&
       null != props.defaultChecked &&
       (element.defaultChecked = !!props.defaultChecked);
-  props = props.checked;
-  null != props && (element.checked = props);
+  updateInputChecked(element, props);
   if (null != value)
     if ("number" === type) {
       if ((0 === value && "" === element.value) || element.value != value)
@@ -1067,15 +1070,18 @@ function updateOptions(node, multiple, propValue, setDefaultSelected) {
   }
 }
 function updateTextarea(element, props) {
-  var value = getToStringValue(props.value),
-    defaultValue = getToStringValue(props.defaultValue);
-  element.defaultValue = null != defaultValue ? "" + defaultValue : "";
-  null != value &&
+  var value = getToStringValue(props.value);
+  if (
+    null != value &&
     ((value = "" + value),
     value !== element.value && (element.value = value),
-    null == props.defaultValue &&
-      element.defaultValue !== value &&
-      (element.defaultValue = value));
+    null == props.defaultValue)
+  ) {
+    element.defaultValue !== value && (element.defaultValue = value);
+    return;
+  }
+  props = getToStringValue(props.defaultValue);
+  element.defaultValue = null != props ? "" + props : "";
 }
 function initTextarea(element, props) {
   var initialValue = props.value;
@@ -13120,14 +13126,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$331;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1583 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1583) {
-      var element$jscomp$inline_1584 = document.createElement("div");
-      element$jscomp$inline_1584.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1583 =
-        "function" === typeof element$jscomp$inline_1584.oninput;
+    var isSupported$jscomp$inline_1578 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1578) {
+      var element$jscomp$inline_1579 = document.createElement("div");
+      element$jscomp$inline_1579.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1578 =
+        "function" === typeof element$jscomp$inline_1579.oninput;
     }
-    JSCompiler_inline_result$jscomp$331 = isSupported$jscomp$inline_1583;
+    JSCompiler_inline_result$jscomp$331 = isSupported$jscomp$inline_1578;
   } else JSCompiler_inline_result$jscomp$331 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$331 &&
@@ -13439,20 +13445,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1624 = 0;
-  i$jscomp$inline_1624 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1624++
+  var i$jscomp$inline_1619 = 0;
+  i$jscomp$inline_1619 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1619++
 ) {
-  var eventName$jscomp$inline_1625 =
-      simpleEventPluginEvents[i$jscomp$inline_1624],
-    domEventName$jscomp$inline_1626 =
-      eventName$jscomp$inline_1625.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1627 =
-      eventName$jscomp$inline_1625[0].toUpperCase() +
-      eventName$jscomp$inline_1625.slice(1);
+  var eventName$jscomp$inline_1620 =
+      simpleEventPluginEvents[i$jscomp$inline_1619],
+    domEventName$jscomp$inline_1621 =
+      eventName$jscomp$inline_1620.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1622 =
+      eventName$jscomp$inline_1620[0].toUpperCase() +
+      eventName$jscomp$inline_1620.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1626,
-    "on" + capitalizedEvent$jscomp$inline_1627
+    domEventName$jscomp$inline_1621,
+    "on" + capitalizedEvent$jscomp$inline_1622
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14806,8 +14812,7 @@ function updateProperties(
     case "input":
       "radio" === nextProps.type &&
         null != nextProps.name &&
-        ((lastProps = nextProps.checked),
-        null != lastProps && (domElement.checked = lastProps));
+        updateInputChecked(domElement, nextProps);
       for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2) {
         var propKey = updatePayload[lastProps],
           propValue = updatePayload[lastProps + 1];
@@ -15958,17 +15963,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1809 = {
+var devToolsConfig$jscomp$inline_1799 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-a9e6dcdb",
+  version: "18.3.0-www-modern-bfaf8fe7",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2188 = {
-  bundleType: devToolsConfig$jscomp$inline_1809.bundleType,
-  version: devToolsConfig$jscomp$inline_1809.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1809.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1809.rendererConfig,
+var internals$jscomp$inline_2178 = {
+  bundleType: devToolsConfig$jscomp$inline_1799.bundleType,
+  version: devToolsConfig$jscomp$inline_1799.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1799.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1799.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15985,26 +15990,26 @@ var internals$jscomp$inline_2188 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1809.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1799.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-a9e6dcdb"
+  reconcilerVersion: "18.3.0-www-modern-bfaf8fe7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2189 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2179 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2189.isDisabled &&
-    hook$jscomp$inline_2189.supportsFiber
+    !hook$jscomp$inline_2179.isDisabled &&
+    hook$jscomp$inline_2179.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2189.inject(
-        internals$jscomp$inline_2188
+      (rendererID = hook$jscomp$inline_2179.inject(
+        internals$jscomp$inline_2178
       )),
-        (injectedHook = hook$jscomp$inline_2189);
+        (injectedHook = hook$jscomp$inline_2179);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16312,4 +16317,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-a9e6dcdb";
+exports.version = "18.3.0-www-modern-bfaf8fe7";
