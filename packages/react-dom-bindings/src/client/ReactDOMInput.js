@@ -84,7 +84,7 @@ export function validateInputProps(element: Element, props: Object) {
 export function updateInputChecked(element: Element, props: Object) {
   const node: HTMLInputElement = (element: any);
   const checked = props.checked;
-  if (checked != null) {
+  if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
   }
 }
