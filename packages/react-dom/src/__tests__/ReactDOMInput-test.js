@@ -1226,6 +1226,60 @@ describe('ReactDOMInput', () => {
     expect(firstRadioNode.checked).toBe(false);
   });
 
+  it("shouldn't get tricked by changing radio names, part 2", () => {
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={() => {}}
+        />
+        <input
+          type="radio"
+          name="a"
+          value="2"
+          checked={false}
+          onChange={() => {}}
+        />
+      </div>,
+      container,
+    );
+    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
+      true,
+    );
+    expect(container.querySelector('input[name="a"][value="2"]').checked).toBe(
+      false,
+    );
+
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={() => {}}
+        />
+        <input
+          type="radio"
+          name="b"
+          value="2"
+          checked={true}
+          onChange={() => {}}
+        />
+      </div>,
+      container,
+    );
+    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
+      true,
+    );
+    expect(container.querySelector('input[name="b"][value="2"]').checked).toBe(
+      true,
+    );
+  });
+
   it('should control radio buttons if the tree updates during render', () => {
     const sharedParent = container;
     const container1 = document.createElement('div');
