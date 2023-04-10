@@ -9,8 +9,8 @@
 
 /**
  * WARNING:
- * This file contains types that are shared between the frontend and different
- * versions of backends.
+ * This file contains types that are designed for React DevTools UI and how it interacts with the backend.
+ * They might be used in different versions of DevTools backends.
  * Be mindful of backwards compatibility when making changes.
  */
 

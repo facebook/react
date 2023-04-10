@@ -9,8 +9,8 @@
 
 /**
  * WARNING:
- * This file contains types that are shared between the frontend and different
- * versions of backends.
+ * This file contains types that are conceptually related to React internals and
+ * DevTools backends, but can be passed to frontend via the bridge.
  * Be mindful of backwards compatibility when making changes.
  */
 
