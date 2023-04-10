@@ -123,7 +123,6 @@ export function track(node: ElementWithValueTracker) {
     return;
   }
 
-  // TODO: Once it's just Fiber we can move this to node._wrapperState
   node._valueTracker = trackValueOnNode(node);
 }
 
