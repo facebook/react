@@ -23,7 +23,7 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$hostConfig: any;
+declare var $$$config: any;
 
 export type Response = any;
 export opaque type SSRManifest = mixed;
@@ -31,19 +31,19 @@ export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;
 export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
-export const resolveClientReference = $$$hostConfig.resolveClientReference;
-export const resolveServerReference = $$$hostConfig.resolveServerReference;
-export const preloadModule = $$$hostConfig.preloadModule;
-export const requireModule = $$$hostConfig.requireModule;
+export const resolveClientReference = $$$config.resolveClientReference;
+export const resolveServerReference = $$$config.resolveServerReference;
+export const preloadModule = $$$config.preloadModule;
+export const requireModule = $$$config.requireModule;
 
 export opaque type Source = mixed;
 
 export type UninitializedModel = string;
-export const parseModel = $$$hostConfig.parseModel;
+export const parseModel = $$$config.parseModel;
 
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
-export const supportsBinaryStreams = $$$hostConfig.supportsBinaryStreams;
-export const createStringDecoder = $$$hostConfig.createStringDecoder;
-export const readPartialStringChunk = $$$hostConfig.readPartialStringChunk;
-export const readFinalStringChunk = $$$hostConfig.readFinalStringChunk;
+export const supportsBinaryStreams = $$$config.supportsBinaryStreams;
+export const createStringDecoder = $$$config.createStringDecoder;
+export const readPartialStringChunk = $$$config.readPartialStringChunk;
+export const readFinalStringChunk = $$$config.readFinalStringChunk;
