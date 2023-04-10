@@ -53,7 +53,7 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
       `
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
 module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
-module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
+module.name_mapper='ReactFizzConfig$$' -> 'forks/ReactFizzConfig.${serverRenderer}'
 module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${serverRenderer}'
 module.name_mapper='ReactFlightClientConfig$$' -> 'forks/ReactFlightClientConfig.${serverRenderer}'
 module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.default'

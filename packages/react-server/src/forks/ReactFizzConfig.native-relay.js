@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+export * from 'react-native-renderer/src/server/ReactFizzConfigNative';
