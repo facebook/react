@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-native-renderer/src/ReactFabricHostConfig';
+export * from 'react-native-renderer/src/ReactFiberConfigFabric';

@@ -18,7 +18,7 @@ import {
   getPublicInstance,
   getInstanceFromNode,
   getInstanceFromScope,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
 import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';

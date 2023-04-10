@@ -77,7 +77,7 @@ import {
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 
 import {
   createWorkInProgress,
