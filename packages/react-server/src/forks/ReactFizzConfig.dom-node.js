@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
+export * from 'react-dom-bindings/src/server/ReactFizzConfigDOM';

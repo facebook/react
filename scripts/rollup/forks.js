@@ -299,7 +299,7 @@ const forks = Object.freeze({
     );
   },
 
-  './packages/react-server/src/ReactServerFormatConfig.js': (
+  './packages/react-server/src/ReactFizzConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -317,11 +317,11 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-server/src/forks/ReactFizzConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactServerFormatConfig to always be replaced with a shim, but ' +
+      'Expected ReactFizzConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
