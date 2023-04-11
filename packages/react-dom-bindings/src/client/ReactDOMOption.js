@@ -8,7 +8,6 @@
  */
 
 import {Children} from 'react';
-import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -57,12 +56,5 @@ export function validateOptionProps(element: Element, props: Object) {
       );
       didWarnSelectedSetOnOption = true;
     }
-  }
-}
-
-export function initOption(element: Element, props: Object) {
-  // value="" should make a value attribute (#6219)
-  if (props.value != null) {
-    element.setAttribute('value', toString(getToStringValue(props.value)));
   }
 }
