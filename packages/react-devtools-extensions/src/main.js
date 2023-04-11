@@ -475,7 +475,7 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.panels.create(
         IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
-        '',
+        IS_EDGE ? 'icons/production.svg' : '',
         'panel.html',
         extensionPanel => {
           extensionPanel.onShown.addListener(panel => {
@@ -506,7 +506,7 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.panels.create(
         IS_CHROME || IS_EDGE ? '⚛️ Profiler' : 'Profiler',
-        '',
+        IS_EDGE ? 'icons/production.svg' : '',
         'panel.html',
         extensionPanel => {
           extensionPanel.onShown.addListener(panel => {
