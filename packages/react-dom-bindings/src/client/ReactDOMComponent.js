@@ -924,6 +924,9 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      let value = null;
+      let defaultValue = null;
+      let multiple = null;
       for (const propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
           continue;
@@ -934,17 +937,28 @@ export function setInitialProperties(
         }
         switch (propKey) {
           case 'value': {
-            // This is handled by updateWrapper below.
+            value = propValue;
+            // This is handled by initSelect below.
             break;
           }
-          // defaultValue are ignored by setProp
+          case 'defaultValue': {
+            defaultValue = propValue;
+            // This is handled by initSelect below.
+            break;
+          }
+          case 'multiple': {
+            multiple = propValue;
+            // TODO: We don't actually have to fall through here because we set it
+            // in initSelect anyway. We can remove the special case in setProp.
+          }
+          // Fallthrough
           default: {
             setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
       validateSelectProps(domElement, props);
-      initSelect(domElement, props);
+      initSelect(domElement, value, defaultValue, multiple);
       return;
     }
     case 'textarea': {
@@ -1467,21 +1481,27 @@ export function updateProperties(
       return;
     }
     case 'select': {
+      let value = null;
+      let defaultValue = null;
+      let multiple = null;
+      let wasMultiple = null;
       for (const propKey in lastProps) {
         const lastProp = lastProps[propKey];
-        if (
-          lastProps.hasOwnProperty(propKey) &&
-          lastProp != null &&
-          !nextProps.hasOwnProperty(propKey)
-        ) {
+        if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case 'value': {
               // This is handled by updateWrapper below.
               break;
             }
             // defaultValue are ignored by setProp
+            case 'multiple': {
+              wasMultiple = lastProp;
+              // TODO: Move special case in here from setProp.
+            }
+            // Fallthrough
             default: {
-              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              if (!nextProps.hasOwnProperty(propKey))
+                setProp(domElement, tag, propKey, null, nextProps, lastProp);
             }
           }
         }
@@ -1491,24 +1511,40 @@ export function updateProperties(
         const lastProp = lastProps[propKey];
         if (
           nextProps.hasOwnProperty(propKey) &&
-          nextProp !== lastProp &&
           (nextProp != null || lastProp != null)
         ) {
           switch (propKey) {
             case 'value': {
-              // This is handled by updateWrapper below.
+              value = nextProp;
+              // This is handled by updateSelect below.
               break;
             }
-            // defaultValue are ignored by setProp
+            case 'defaultValue': {
+              defaultValue = nextProp;
+              break;
+            }
+            case 'multiple': {
+              multiple = nextProp;
+              // TODO: Just move the special case in here from setProp.
+            }
+            // Fallthrough
             default: {
-              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+              if (nextProp !== lastProp)
+                setProp(
+                  domElement,
+                  tag,
+                  propKey,
+                  nextProp,
+                  nextProps,
+                  lastProp,
+                );
             }
           }
         }
       }
       // <select> value update needs to occur after <option> children
       // reconciliation
-      updateSelect(domElement, lastProps, nextProps);
+      updateSelect(domElement, value, defaultValue, multiple, wasMultiple);
       return;
     }
     case 'textarea': {
@@ -1906,6 +1942,10 @@ export function updatePropertiesWithDiff(
       return;
     }
     case 'select': {
+      const value = nextProps.value;
+      const defaultValue = nextProps.defaultValue;
+      const multiple = nextProps.multiple;
+      const wasMultiple = lastProps.multiple;
       for (let i = 0; i < updatePayload.length; i += 2) {
         const propKey = updatePayload[i];
         const propValue = updatePayload[i + 1];
@@ -1922,7 +1962,7 @@ export function updatePropertiesWithDiff(
       }
       // <select> value update needs to occur after <option> children
       // reconciliation
-      updateSelect(domElement, lastProps, nextProps);
+      updateSelect(domElement, value, defaultValue, multiple, wasMultiple);
       return;
     }
     case 'textarea': {
