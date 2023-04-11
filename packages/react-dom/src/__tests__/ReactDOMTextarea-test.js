@@ -603,6 +603,7 @@ describe('ReactDOMTextarea', () => {
               ref={n => (node = n)}
               value="foo"
               onChange={emptyFunction}
+              data-count={this.state.count}
             />
           </div>
         );
@@ -735,5 +736,27 @@ describe('ReactDOMTextarea', () => {
       // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
       expect(node.value).toBe('foo');
     });
+  });
+
+  it('should remove previous `defaultValue`', () => {
+    const container = document.createElement('div');
+    const node = ReactDOM.render(<textarea defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<textarea />, container);
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should treat `defaultValue={null}` as missing', () => {
+    const container = document.createElement('div');
+    const node = ReactDOM.render(<textarea defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<textarea defaultValue={null} />, container);
+    expect(node.defaultValue).toBe('');
   });
 });

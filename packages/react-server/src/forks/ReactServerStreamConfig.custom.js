@@ -23,22 +23,22 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$hostConfig: any;
+declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 
 export opaque type PrecomputedChunk = mixed; // eslint-disable-line no-undef
 export opaque type Chunk = mixed; // eslint-disable-line no-undef
 
-export const scheduleWork = $$$hostConfig.scheduleWork;
-export const beginWriting = $$$hostConfig.beginWriting;
-export const writeChunk = $$$hostConfig.writeChunk;
-export const writeChunkAndReturn = $$$hostConfig.writeChunkAndReturn;
-export const completeWriting = $$$hostConfig.completeWriting;
-export const flushBuffered = $$$hostConfig.flushBuffered;
-export const supportsRequestStorage = $$$hostConfig.supportsRequestStorage;
-export const requestStorage = $$$hostConfig.requestStorage;
-export const close = $$$hostConfig.close;
-export const closeWithError = $$$hostConfig.closeWithError;
-export const stringToChunk = $$$hostConfig.stringToChunk;
-export const stringToPrecomputedChunk = $$$hostConfig.stringToPrecomputedChunk;
-export const clonePrecomputedChunk = $$$hostConfig.clonePrecomputedChunk;
+export const scheduleWork = $$$config.scheduleWork;
+export const beginWriting = $$$config.beginWriting;
+export const writeChunk = $$$config.writeChunk;
+export const writeChunkAndReturn = $$$config.writeChunkAndReturn;
+export const completeWriting = $$$config.completeWriting;
+export const flushBuffered = $$$config.flushBuffered;
+export const supportsRequestStorage = $$$config.supportsRequestStorage;
+export const requestStorage = $$$config.requestStorage;
+export const close = $$$config.close;
+export const closeWithError = $$$config.closeWithError;
+export const stringToChunk = $$$config.stringToChunk;
+export const stringToPrecomputedChunk = $$$config.stringToPrecomputedChunk;
+export const clonePrecomputedChunk = $$$config.clonePrecomputedChunk;

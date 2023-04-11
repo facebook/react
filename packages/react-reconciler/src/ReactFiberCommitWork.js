@@ -15,7 +15,7 @@ import type {
   ChildSet,
   UpdatePayload,
   HoistableRoot,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import {NoTimestamp, SyncLane} from './ReactFiberLane';
@@ -54,6 +54,7 @@ import {
   enableFloat,
   enableLegacyHidden,
   enableHostSingletons,
+  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -162,7 +163,7 @@ import {
   prepareToCommitHoistables,
   suspendInstance,
   suspendResource,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {
   captureCommitPhaseError,
   resolveRetryWakeable,
@@ -2772,7 +2773,7 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null) {
+            if (updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   instance,

@@ -9,7 +9,7 @@
 
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
 import type {TreeContext} from './ReactFiberTreeContext';
 
@@ -18,7 +18,7 @@ import {NoFlags, DidCapture} from './ReactFiberFlags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 
 export type SuspenseProps = {
   children?: ReactNodeList,

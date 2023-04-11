@@ -692,24 +692,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       await waitForAll([0]);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<Foo signal={false} />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<Foo signal={false} />);
-      }
+      });
       await waitForAll(['Suspend!']);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       // Rendering again should suspend again.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<Foo signal={false} />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<Foo signal={false} />);
-      }
+      });
       await waitForAll(['Suspend!']);
     });
 
@@ -755,38 +747,25 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
       await act(async () => {
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            root.render(<Foo signal={false} />);
-            setLabel('B');
-          });
-        } else {
+        React.startTransition(() => {
           root.render(<Foo signal={false} />);
           setLabel('B');
-        }
+        });
 
         await waitForAll(['Suspend!']);
         expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
         // Rendering again should suspend again.
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            root.render(<Foo signal={false} />);
-          });
-        } else {
+        React.startTransition(() => {
           root.render(<Foo signal={false} />);
-        }
+        });
         await waitForAll(['Suspend!']);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            root.render(<Foo signal={true} />);
-          });
-        } else {
+        React.startTransition(() => {
           root.render(<Foo signal={true} />);
-        }
+        });
         await waitForAll(['B:0']);
         expect(root).toMatchRenderedOutput(<span prop="B:0" />);
       });

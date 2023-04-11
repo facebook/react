@@ -63,7 +63,7 @@ export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
   if (!errorDigest) {
     // Clear all the existing children. This is complicated because
     // there can be embedded Suspense boundaries in the fallback.
-    // This is similar to clearSuspenseBoundary in ReactDOMHostConfig.
+    // This is similar to clearSuspenseBoundary in ReactFiberConfigDOM.
     // TODO: We could avoid this if we never emitted suspense boundaries in fallback trees.
     // They never hydrate anyway. However, currently we support incrementally loading the fallback.
     const parentInstance = suspenseNode.parentNode;

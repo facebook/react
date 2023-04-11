@@ -82,5 +82,7 @@ export const enableHostSingletons = true;
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;
 
+export const diffInCommitPhase = true;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

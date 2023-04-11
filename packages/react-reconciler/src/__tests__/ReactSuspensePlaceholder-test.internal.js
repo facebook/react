@@ -488,12 +488,11 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspend! [Loaded]',
           'Fallback',
         ]);
-        expect(ReactNoop).toMatchRenderedOutput('Text');
-
         // Show the fallback UI.
-        jest.advanceTimersByTime(900);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(2);
+
+        jest.advanceTimersByTime(900);
 
         // The suspense update should only show the "Loading..." Fallback.
         // The actual duration should include 10ms spent rendering Fallback,
@@ -529,19 +528,19 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspend! [Sibling]',
         ]);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
-        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveBeenCalledTimes(3);
 
         // Resolve the pending promise.
         jest.advanceTimersByTime(100);
         assertLog(['Promise resolved [Loaded]', 'Promise resolved [Sibling]']);
-        await waitForAll(['App', 'Suspending', 'Loaded', 'New', 'Sibling']);
-        expect(onRender).toHaveBeenCalledTimes(3);
+        await waitForAll(['Suspending', 'Loaded', 'New', 'Sibling']);
+        expect(onRender).toHaveBeenCalledTimes(4);
 
         // When the suspending data is resolved and our final UI is rendered,
         // both times should include the 6ms rendering Text,
         // the 2ms rendering Suspending, and the 1ms rendering AsyncText.
-        expect(onRender.mock.calls[2][2]).toBe(9);
-        expect(onRender.mock.calls[2][3]).toBe(9);
+        expect(onRender.mock.calls[3][2]).toBe(9);
+        expect(onRender.mock.calls[3][3]).toBe(9);
       });
     });
   });

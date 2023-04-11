@@ -16,14 +16,14 @@ import type {
   UninitializedModel,
   Response,
   SSRManifest,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 import {
   resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
 

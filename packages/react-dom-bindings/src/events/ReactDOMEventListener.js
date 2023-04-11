@@ -10,7 +10,7 @@
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
+import type {Container, SuspenseInstance} from '../client/ReactFiberConfigDOM';
 import type {DOMEventName} from '../events/DOMEventNames';
 
 import {

@@ -8,4 +8,6 @@
  */
 
 export * from '../ReactFlightServerConfigStream';
-export * from '../ReactFlightServerBundlerConfigCustom';
+export * from '../ReactFlightServerConfigBundlerCustom';
+
+export const isPrimaryRenderer = false;

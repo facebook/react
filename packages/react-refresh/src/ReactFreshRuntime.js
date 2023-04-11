@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Instance} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {Instance} from 'react-reconciler/src/ReactFiberConfig';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   Family,

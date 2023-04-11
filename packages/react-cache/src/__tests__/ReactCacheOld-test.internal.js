@@ -236,7 +236,7 @@ describe('ReactCache', () => {
 
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [4]']);
-    await waitForAll([1, 4, 'Suspend! [5]', 'Loading...']);
+    await waitForAll([1, 4, 'Suspend! [5]']);
 
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [5]']);
@@ -264,7 +264,7 @@ describe('ReactCache', () => {
     ]);
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]', 'Loading...']);
+    await waitForAll([1, 2, 'Suspend! [3]']);
 
     jest.advanceTimersByTime(100);
     assertLog(['Promise resolved [3]']);

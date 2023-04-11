@@ -49,7 +49,7 @@ import {
   IdleEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberHostConfig';
+import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
@@ -118,6 +118,15 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
     // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
     // unblock additional features we have planned.
     scheduleTaskForRootDuringMicrotask(root, now());
+  }
+
+  if (
+    __DEV__ &&
+    ReactCurrentActQueue.isBatchingLegacy &&
+    root.tag === LegacyRoot
+  ) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactCurrentActQueue.didScheduleLegacyUpdate = true;
   }
 }
 

@@ -11,7 +11,7 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response} from 'react-client/src/ReactFlightClientStream';
 
-import type {SSRManifest} from 'react-client/src/ReactFlightClientHostConfig';
+import type {SSRManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import type {Readable} from 'stream';
 

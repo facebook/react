@@ -21,7 +21,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
 import {Readable} from 'stream';
 

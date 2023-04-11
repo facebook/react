@@ -25,7 +25,7 @@ import {
   initialize as setupTraceUpdates,
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
-import {patch as patchConsole, type ConsolePatchSettings} from './console';
+import {patch as patchConsole} from './console';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -37,10 +37,13 @@ import type {
   PathMatch,
   RendererID,
   RendererInterface,
+  ConsolePatchSettings,
 } from './types';
-import type {ComponentFilter} from '../types';
+import type {
+  ComponentFilter,
+  BrowserTheme,
+} from 'react-devtools-shared/src/types';
 import {isSynchronousXHRSupported} from './utils';
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {

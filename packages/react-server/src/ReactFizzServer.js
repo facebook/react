@@ -27,7 +27,7 @@ import type {
   FormatContext,
   Resources,
   BoundaryResources,
-} from './ReactServerFormatConfig';
+} from './ReactFizzConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
@@ -76,7 +76,7 @@ import {
   setCurrentlyRenderingBoundaryResourcesTarget,
   createResources,
   createBoundaryResources,
-} from './ReactServerFormatConfig';
+} from './ReactFizzConfig';
 import {
   constructClassInstance,
   mountClassInstance,
