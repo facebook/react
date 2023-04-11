@@ -1,3 +1,4 @@
+// @inlineUseMemo
 function Component(props) {
   const x = useMemo(() => {
     if (props.cond) {

@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @inlineUseMemo
 function Component(props) {
   const x = useMemo(() => {
     if (props.cond) {
@@ -17,6 +18,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+// @inlineUseMemo
 function Component(props) {
   const $ = React.unstable_useMemoCache(5);
   if (props.cond) {

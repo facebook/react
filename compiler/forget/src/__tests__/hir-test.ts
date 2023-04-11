@@ -45,6 +45,7 @@ describe("React Forget (HIR version)", () => {
             },
           ],
         ]),
+        inlineUseMemo: options.environment?.inlineUseMemo ?? false,
       });
 
       if (compileResult.isErr()) {
