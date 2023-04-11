@@ -100,6 +100,14 @@ export function inlineUseMemo(fn: HIRFunction): void {
                 lambda.loc
               );
             }
+
+            if (body.loweredFunc.params.length > 0) {
+              CompilerError.invariant(
+                "Did not expect any arguments to useMemo callback",
+                body.loc
+              );
+            }
+
             // We know this function is used for useMemo and can prune it later
             useMemoFunctions.add(lambda.identifier.id);
 
