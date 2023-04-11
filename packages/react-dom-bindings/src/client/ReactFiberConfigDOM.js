@@ -59,7 +59,11 @@ import {
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import {validateDOMNesting, validateTextNesting, updatedAncestorInfoDev} from './validateDOMNesting';
+import {
+  validateDOMNesting,
+  validateTextNesting,
+  updatedAncestorInfoDev,
+} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
@@ -329,13 +333,6 @@ export function createInstance(
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
     validateDOMNesting(type, hostContextDev.ancestorInfo);
-    if (
-      typeof props.children === 'string' ||
-      typeof props.children === 'number'
-    ) {
-      const string = '' + props.children;
-      validateTextNesting(string, type);
-    }
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
@@ -486,17 +483,6 @@ export function prepareUpdate(
   if (diffInCommitPhase) {
     // TODO: Figure out how to validateDOMNesting when children turn into a string.
     return null;
-  }
-  if (__DEV__) {
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    if (
-      typeof newProps.children !== typeof oldProps.children &&
-      (typeof newProps.children === 'string' ||
-        typeof newProps.children === 'number')
-    ) {
-      const string = '' + newProps.children;
-      validateTextNesting(string, type);
-    }
   }
   return diffProperties(domElement, type, oldProps, newProps);
 }
