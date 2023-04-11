@@ -747,14 +747,8 @@ function setPropOnCustomElement(
     }
     case 'children': {
       if (typeof value === 'string') {
-        if (__DEV__) {
-          validateTextNesting(value, tag);
-        }
         setTextContent(domElement, value);
       } else if (typeof value === 'number') {
-        if (__DEV__) {
-          validateTextNesting('' + value, tag);
-        }
         setTextContent(domElement, '' + value);
       }
       break;
