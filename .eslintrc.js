@@ -505,6 +505,7 @@ module.exports = {
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
     AsyncLocalStorage: 'readonly',
+    FontFaceSet: 'readonly',
     globalThis: 'readonly',
   },
 };

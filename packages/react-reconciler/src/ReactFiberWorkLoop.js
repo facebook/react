@@ -9,6 +9,7 @@
 
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
+import type {Container} from './ReactFiberConfig';
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -1208,7 +1209,8 @@ function commitRootWhenReady(
     // At the end, ask the renderer if it's ready to commit, or if we should
     // suspend. If it's not ready, it will return a callback to subscribe to
     // a ready event.
-    const schedulePendingCommit = waitForCommitToBeReady();
+    const container: Container = root.containerInfo;
+    const schedulePendingCommit = waitForCommitToBeReady(container);
     if (schedulePendingCommit !== null) {
       // NOTE: waitForCommitToBeReady returns a subscribe function so that we
       // only allocate a function if the commit isn't ready yet. The other

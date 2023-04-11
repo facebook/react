@@ -281,3 +281,21 @@ declare module 'node:worker_threads' {
     port2: MessagePort;
   }
 }
+
+// To avoid having to spec the FontFace module (because currently we don't use it)
+// we alias FontFace to mixed.
+type FontFace = mixed;
+declare class FontFaceSet extends EventTarget {
+  +size: number;
+  +status: 'loading' | 'loaded';
+  +ready: Promise<FontFaceSet>;
+  add(fontFace: FontFace): void;
+  check(font: string, text?: string): boolean;
+  clear(): void;
+  delete(fontFace: FontFace): boolean;
+  has(fontFace: FontFace): boolean;
+  load(font: string, text?: string): Promise<Array<FontFace>>;
+  onloading: (event: Event) => void;
+  onloadingdone: (event: Event) => void;
+  onloadingerror: (event: Event) => void;
+}

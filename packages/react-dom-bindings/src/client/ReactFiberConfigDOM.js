@@ -3200,8 +3200,18 @@ export function preloadResource(resource: Resource): boolean {
 }
 
 type SuspendedState = {
-  stylesheets: null | Map<StylesheetResource, HoistableRoot>,
+  // Refcounts and pings for non-stylesheets
   count: number,
+  ping: null | (() => void),
+  timedOut: boolean,
+
+  // Refcounts and pings for stylesheets
+  sheetCount: number,
+  sheetPing: null | (() => void),
+  stylesheets: null | Map<StylesheetResource, HoistableRoot>,
+
+  // commit or cancel functions
+  clear: () => void,
   unsuspend: null | (() => void),
 };
 let suspendedState: null | SuspendedState = null;
@@ -3213,11 +3223,22 @@ let suspendedState: null | SuspendedState = null;
 function noop() {}
 
 export function startSuspendingCommit(): void {
-  suspendedState = {
-    stylesheets: null,
+  const state = {
+    // Refcounts and pings for non-stylesheets
     count: 0,
+    ping: null,
+    timedOut: false,
+
+    // Refcounts and pings for stylesheets
+    sheetCount: 0,
+    sheetPing: null,
+    stylesheets: null,
+
+    // commit or cancel functions
+    clear: noop,
     unsuspend: noop,
   };
+  suspendedState = state;
 }
 
 export function suspendInstance(type: Type, props: Props): void {
@@ -3265,8 +3286,7 @@ export function suspendResource(
           typeof maybeLoadingState.then === 'function'
         ) {
           const loadingState = maybeLoadingState;
-          state.count++;
-          const ping = onUnsuspend.bind(state);
+          const ping = getStylesheetPing(state);
           loadingState.then(ping, ping);
         }
         resource.state.loading |= Inserted;
@@ -3304,15 +3324,28 @@ export function suspendResource(
 
     const preloadEl = resource.state.preload;
     if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
-      state.count++;
-      const ping = onUnsuspend.bind(state);
+      const ping = getStylesheetPing(state);
       preloadEl.addEventListener('load', ping);
       preloadEl.addEventListener('error', ping);
     }
   }
 }
 
-export function waitForCommitToBeReady(): null | (Function => Function) {
+function checkFontLoading(state: SuspendedState, ownerDocument: Document) {
+  if ((ownerDocument: any).fonts) {
+    // @TODO consider whether we just expect FontFaceSet to be supported and avoid this extra check
+    const fontFaceSet: FontFaceSet = (ownerDocument: any).fonts;
+
+    if (fontFaceSet.status === 'loading') {
+      const ping = getPing(state);
+      fontFaceSet.ready.then(ping, ping);
+    }
+  }
+}
+
+export function waitForCommitToBeReady(
+  rootContainerInstance: Container,
+): null | (Function => Function) {
   if (suspendedState === null) {
     throw new Error(
       'Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.',
@@ -3321,60 +3354,92 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
 
   const state = suspendedState;
 
-  if (state.stylesheets && state.count === 0) {
-    // We are not currently blocked but we have not inserted all stylesheets.
-    // If this insertion happens and loads or errors synchronously then we can
-    // avoid suspending the commit. To do this we check the count again immediately after
-    insertSuspendedStylesheets(state, state.stylesheets);
-  }
+  const ownerDocument: Document =
+    rootContainerInstance.ownerDocument || rootContainerInstance;
+  checkFontLoading(state, ownerDocument);
+
+  // We call this eagerly here. It won't actually commit anything directly because
+  // we haven't received a commit function from the reconciler yet but if it runs and
+  // results in no remaining counted items then we can avoid suspending the commit altogether.
+  tryToCompleteCommit(state);
 
   // We need to check the count again because the inserted stylesheets may have led to new
   // tasks to wait on.
-  if (state.count > 0) {
+  if (state.count > 0 || state.sheetCount > 0) {
     return commit => {
       // We almost never want to show content before its styles have loaded. But
       // eventually we will give up and allow unstyled content. So this number is
       // somewhat arbitrary — big enough that you'd only reach it under
       // extreme circumstances.
-      // TODO: Figure out what the browser engines do during initial page load and
-      // consider aligning our behavior with that.
-      const stylesheetTimer = setTimeout(() => {
-        if (state.stylesheets) {
-          insertSuspendedStylesheets(state, state.stylesheets);
-        }
-        if (state.unsuspend) {
-          const unsuspend = state.unsuspend;
-          state.unsuspend = null;
-          unsuspend();
-        }
-      }, 60000); // one minute
+      // TODO: Chrome will block indefinitely on initial page render. Should we do that instead?
+      // Effectively that is just waiting on the network to timeout.
+      const fontTimeout = setTimeout(onFontTimeout.bind(state), 100); // 100ms
+      const styleTimeout = setTimeout(onStylesheetTimeout.bind(state), 60_000); // one minute
+      state.clear = () => {
+        state.unsuspend = null;
+        clearTimeout(fontTimeout);
+        clearTimeout(styleTimeout);
+      };
 
       state.unsuspend = commit;
 
-      return () => {
-        state.unsuspend = null;
-        clearTimeout(stylesheetTimer);
-      };
+      return state.clear;
     };
   }
   return null;
 }
 
-function onUnsuspend(this: SuspendedState) {
-  this.count--;
-  if (this.count === 0) {
-    if (this.stylesheets) {
-      // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
-      // The reason we do this after everything else has finished is because we want to have all the stylesheets
-      // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
-      // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
-      // wait for them to load before actually continuing. We expect this to increase the count above zero
-      insertSuspendedStylesheets(this, this.stylesheets);
-    } else if (this.unsuspend) {
-      const unsuspend = this.unsuspend;
-      this.unsuspend = null;
-      unsuspend();
+function getPing(state: SuspendedState): () => void {
+  state.count++;
+  return (
+    state.ping ||
+    (state.ping = () => {
+      state.count--;
+      tryToCompleteCommit(state);
+    })
+  );
+}
+
+function getStylesheetPing(state: SuspendedState): () => void {
+  state.sheetCount++;
+  return (
+    state.sheetPing ||
+    (state.sheetPing = () => {
+      state.sheetCount--;
+      tryToCompleteCommit(state);
+    })
+  );
+}
+
+function onFontTimeout(this: SuspendedState) {
+  this.timedOut = true;
+  tryToCompleteCommit(this);
+}
+
+function tryToCompleteCommit(state: SuspendedState) {
+  if ((state.timedOut || state.count === 0) && state.sheetCount === 0) {
+    // We have no underlying sheets still loading, let's insert the stylesheets now.
+    if (state.stylesheets) {
+      insertSuspendedStylesheets(state, state.stylesheets);
+    } else {
+      // There were no stylesheets to insert so we complete the commit
+      completeCommit(state);
     }
+  }
+}
+
+function onStylesheetTimeout(this: SuspendedState) {
+  if (this.stylesheets) {
+    insertSuspendedStylesheets(this, this.stylesheets);
+  }
+  completeCommit(this);
+}
+
+function completeCommit(state: SuspendedState) {
+  const unsuspend = state.unsuspend;
+  state.clear();
+  if (unsuspend) {
+    unsuspend();
   }
 }
 
@@ -3395,18 +3460,9 @@ function insertSuspendedStylesheets(
     return;
   }
 
-  // Temporarily increment count. we don't want any synchronously loaded stylesheets to try to unsuspend
-  // before we finish inserting all stylesheets.
-  state.count++;
-
   precedencesByRoot = new Map();
   resources.forEach(insertStylesheetIntoRoot, state);
   precedencesByRoot = (null: any);
-
-  // We can remove our temporary count and if we're still at zero we can unsuspend.
-  // If we are in the synchronous phase before deciding if the commit should suspend and this
-  // ends up hitting the unsuspend path it will just invoke the noop unsuspend.
-  onUnsuspend.call(state);
 }
 
 function insertStylesheetIntoRoot(
@@ -3458,10 +3514,9 @@ function insertStylesheetIntoRoot(
   }
   precedences.set(precedence, instance);
 
-  this.count++;
-  const onComplete = onUnsuspend.bind(this);
-  instance.addEventListener('load', onComplete);
-  instance.addEventListener('error', onComplete);
+  const ping = getStylesheetPing(this);
+  instance.addEventListener('load', ping);
+  instance.addEventListener('error', ping);
 
   if (prior) {
     (prior.parentNode: any).insertBefore(instance, prior.nextSibling);
