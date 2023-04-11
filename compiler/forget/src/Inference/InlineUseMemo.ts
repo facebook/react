@@ -108,6 +108,13 @@ export function inlineUseMemo(fn: HIRFunction): void {
               );
             }
 
+            if (body.loweredFunc.async || body.loweredFunc.generator) {
+              CompilerError.invariant(
+                "Did not expect useMemo callback to be async or a generator",
+                body.loc
+              );
+            }
+
             // We know this function is used for useMemo and can prune it later
             useMemoFunctions.add(lambda.identifier.id);
 
