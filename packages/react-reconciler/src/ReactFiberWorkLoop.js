@@ -145,7 +145,6 @@ import {
   includesExpiredLane,
   getNextLanes,
   getLanesToRetrySynchronouslyOnError,
-  getMostRecentEventTime,
   markRootUpdated,
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
@@ -283,8 +282,6 @@ import {
   getContinuationForRoot,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
-
-const ceil = Math.ceil;
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -1191,38 +1188,6 @@ function finishConcurrentRender(
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
         break;
-      }
-
-      if (!shouldForceFlushFallbacksInDEV()) {
-        // This is not a transition, but we did trigger an avoided state.
-        // Schedule a placeholder to display after a short delay, using the Just
-        // Noticeable Difference.
-        // TODO: Is the JND optimization worth the added complexity? If this is
-        // the only reason we track the event time, then probably not.
-        // Consider removing.
-
-        const mostRecentEventTime = getMostRecentEventTime(root, lanes);
-        const eventTimeMs = mostRecentEventTime;
-        const timeElapsedMs = now() - eventTimeMs;
-        const msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
-
-        // Don't bother with a very short suspense time.
-        if (msUntilTimeout > 10) {
-          // Instead of committing the fallback immediately, wait for more data
-          // to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              finishedWork,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes,
-            ),
-            msUntilTimeout,
-          );
-          break;
-        }
       }
 
       // Commit the placeholder.
@@ -3578,31 +3543,6 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   }
 
   retryTimedOutBoundary(boundaryFiber, retryLane);
-}
-
-// Computes the next Just Noticeable Difference (JND) boundary.
-// The theory is that a person can't tell the difference between small differences in time.
-// Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
-// difference in the experience. However, waiting for longer might mean that we can avoid
-// showing an intermediate loading state. The longer we have already waited, the harder it
-// is to tell small differences in time. Therefore, the longer we've already waited,
-// the longer we can wait additionally. At some point we have to give up though.
-// We pick a train model where the next boundary commits at a consistent schedule.
-// These particular numbers are vague estimates. We expect to adjust them based on research.
-function jnd(timeElapsed: number) {
-  return timeElapsed < 120
-    ? 120
-    : timeElapsed < 480
-    ? 480
-    : timeElapsed < 1080
-    ? 1080
-    : timeElapsed < 1920
-    ? 1920
-    : timeElapsed < 3000
-    ? 3000
-    : timeElapsed < 4320
-    ? 4320
-    : ceil(timeElapsed / 1960) * 1960;
 }
 
 export function throwIfInfiniteUpdateLoopDetected() {
