@@ -45,6 +45,7 @@ import {
   updateTextarea,
   restoreControlledTextareaState,
 } from './ReactDOMTextarea';
+import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
@@ -279,6 +280,9 @@ function setProp(
   switch (key) {
     case 'children': {
       if (typeof value === 'string') {
+        if (__DEV__) {
+          validateTextNesting(value, tag);
+        }
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
@@ -290,6 +294,9 @@ function setProp(
           setTextContent(domElement, value);
         }
       } else if (typeof value === 'number') {
+        if (__DEV__) {
+          validateTextNesting('' + value, tag);
+        }
         const canSetTextContent = !enableHostSingletons || tag !== 'body';
         if (canSetTextContent) {
           setTextContent(domElement, '' + value);

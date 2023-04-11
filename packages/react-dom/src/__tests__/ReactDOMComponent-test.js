@@ -1855,6 +1855,57 @@ describe('ReactDOMComponent', () => {
       ]);
     });
 
+    it('warns nicely for updating table rows to use text', () => {
+      const container = document.createElement('div');
+
+      function Row({children}) {
+        return <tr>{children}</tr>;
+      }
+
+      function Foo({children}) {
+        return <table>{children}</table>;
+      }
+
+      // First is fine.
+      ReactDOM.render(<Foo />, container);
+
+      expect(() => ReactDOM.render(<Foo> </Foo>, container)).toErrorDev([
+        'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
+          "appear as a child of <table>. Make sure you don't have any extra " +
+          'whitespace between tags on each line of your source code.' +
+          '\n    in table (at **)' +
+          '\n    in Foo (at **)',
+      ]);
+
+      ReactDOM.render(
+        <Foo>
+          <tbody>
+            <Row />
+          </tbody>
+        </Foo>,
+        container,
+      );
+
+      expect(() =>
+        ReactDOM.render(
+          <Foo>
+            <tbody>
+              <Row>text</Row>
+            </tbody>
+          </Foo>,
+          container,
+        ),
+      ).toErrorDev([
+        'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
+          'child of <tr>.' +
+          '\n    in tr (at **)' +
+          '\n    in Row (at **)' +
+          '\n    in tbody (at **)' +
+          '\n    in table (at **)' +
+          '\n    in Foo (at **)',
+      ]);
+    });
+
     it('gives useful context in warnings', () => {
       function Row() {
         return <tr />;
