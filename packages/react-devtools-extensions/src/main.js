@@ -1,4 +1,5 @@
 /* global chrome */
+import {GrReactjs} from "react-icons/fa";
 
 import {createElement} from 'react';
 import {flushSync} from 'react-dom';
@@ -474,7 +475,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
+        IS_CHROME || IS_EDGE ?<GrReactjs/> : 'Components',
         '',
         'panel.html',
         extensionPanel => {
