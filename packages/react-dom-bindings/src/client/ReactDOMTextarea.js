@@ -58,41 +58,47 @@ export function validateTextareaProps(element: Element, props: Object) {
   }
 }
 
-export function updateTextarea(element: Element, props: Object) {
+export function updateTextarea(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+) {
   const node: HTMLTextAreaElement = (element: any);
-  const value = getToStringValue(props.value);
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = toString(value);
+    const newValue = toString(getToStringValue(value));
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
       node.value = newValue;
     }
     // TOOO: This should respect disableInputAttributeSyncing flag.
-    if (props.defaultValue == null) {
+    if (defaultValue == null) {
       if (node.defaultValue !== newValue) {
         node.defaultValue = newValue;
       }
       return;
     }
   }
-  const defaultValue = getToStringValue(props.defaultValue);
   if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
+    node.defaultValue = toString(getToStringValue(defaultValue));
   } else {
     node.defaultValue = '';
   }
 }
 
-export function initTextarea(element: Element, props: Object) {
+export function initTextarea(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  children: ?string,
+) {
   const node: HTMLTextAreaElement = (element: any);
 
-  let initialValue = props.value;
+  let initialValue = value;
 
   // Only bother fetching default value if we're going to use it
   if (initialValue == null) {
-    let {children, defaultValue} = props;
     if (children != null) {
       if (!disableTextareaChildren) {
         if (defaultValue != null) {
@@ -141,5 +147,5 @@ export function restoreControlledTextareaState(
   props: Object,
 ) {
   // DOM component is still mounted; update
-  updateTextarea(element, props);
+  updateTextarea(element, props.value, props.defaultValue);
 }

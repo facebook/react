@@ -954,6 +954,9 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      let value = null;
+      let defaultValue = null;
+      let children = null;
       for (const propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
           continue;
@@ -964,11 +967,17 @@ export function setInitialProperties(
         }
         switch (propKey) {
           case 'value': {
-            // This is handled by updateWrapper below.
+            value = propValue;
+            // This is handled by initTextarea below.
+            break;
+          }
+          case 'defaultValue': {
+            defaultValue = propValue;
             break;
           }
           case 'children': {
-            // TODO: Handled by initWrapperState above.
+            children = propValue;
+            // Handled by initTextarea above.
             break;
           }
           case 'dangerouslySetInnerHTML': {
@@ -980,7 +989,6 @@ export function setInitialProperties(
             }
             break;
           }
-          // defaultValue is ignored by setProp
           default: {
             setProp(domElement, tag, propKey, propValue, props);
           }
@@ -990,7 +998,7 @@ export function setInitialProperties(
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, value, defaultValue, children);
       return;
     }
     case 'option': {
@@ -1504,6 +1512,8 @@ export function updateProperties(
       return;
     }
     case 'textarea': {
+      let value = null;
+      let defaultValue = null;
       for (const propKey in lastProps) {
         const lastProp = lastProps[propKey];
         if (
@@ -1513,7 +1523,7 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'value': {
-              // This is handled by updateWrapper below.
+              // This is handled by updateTextarea below.
               break;
             }
             case 'children': {
@@ -1532,12 +1542,16 @@ export function updateProperties(
         const lastProp = lastProps[propKey];
         if (
           nextProps.hasOwnProperty(propKey) &&
-          nextProp !== lastProp &&
           (nextProp != null || lastProp != null)
         ) {
           switch (propKey) {
             case 'value': {
-              // This is handled by updateWrapper below.
+              value = nextProp;
+              // This is handled by updateTextarea below.
+              break;
+            }
+            case 'defaultValue': {
+              defaultValue = nextProp;
               break;
             }
             case 'children': {
@@ -1553,14 +1567,21 @@ export function updateProperties(
               }
               break;
             }
-            // defaultValue is ignored by setProp
             default: {
-              setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
+              if (nextProp !== lastProp)
+                setProp(
+                  domElement,
+                  tag,
+                  propKey,
+                  nextProp,
+                  nextProps,
+                  lastProp,
+                );
             }
           }
         }
       }
-      updateTextarea(domElement, nextProps);
+      updateTextarea(domElement, value, defaultValue);
       return;
     }
     case 'option': {
@@ -1905,6 +1926,8 @@ export function updatePropertiesWithDiff(
       return;
     }
     case 'textarea': {
+      const value = nextProps.value;
+      const defaultValue = nextProps.defaultValue;
       for (let i = 0; i < updatePayload.length; i += 2) {
         const propKey = updatePayload[i];
         const propValue = updatePayload[i + 1];
@@ -1932,7 +1955,7 @@ export function updatePropertiesWithDiff(
           }
         }
       }
-      updateTextarea(domElement, nextProps);
+      updateTextarea(domElement, value, defaultValue);
       return;
     }
     case 'option': {
@@ -2941,7 +2964,7 @@ export function diffHydratedProperties(
       // up necessary since we never stop tracking anymore.
       track((domElement: any));
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, props.value, props.defaultValue, props.children);
       break;
   }
 
