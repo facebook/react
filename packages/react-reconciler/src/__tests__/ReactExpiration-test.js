@@ -732,13 +732,9 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('A0BC');
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<App step={1} />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<App step={1} />);
-      }
+      });
       await waitForAll(['Suspend! [A1]', 'Loading...']);
 
       // Lots of time elapses before the promise resolves
