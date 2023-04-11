@@ -153,6 +153,16 @@ export function lower(
     return Err(builder.errors);
   }
 
+  builder.terminate(
+    {
+      kind: "return",
+      loc: GeneratedSource,
+      value: null,
+      id: makeInstructionId(0),
+    },
+    null
+  );
+
   return Ok({
     id,
     params,

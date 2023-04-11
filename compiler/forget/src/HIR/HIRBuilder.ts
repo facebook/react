@@ -17,7 +17,6 @@ import {
   BasicBlock,
   BlockId,
   BlockKind,
-  GeneratedSource,
   GotoVariant,
   HIR,
   Identifier,
@@ -257,15 +256,6 @@ export default class HIRBuilder {
    * Construct a final CFG from this context
    */
   build(): HIR {
-    this.terminate(
-      {
-        kind: "return",
-        loc: GeneratedSource,
-        value: null,
-        id: makeInstructionId(0),
-      },
-      null
-    );
     let ir: HIR = {
       blocks: this.#completed,
       entry: this.#entry,
