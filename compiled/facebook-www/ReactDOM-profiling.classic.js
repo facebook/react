@@ -14917,8 +14917,6 @@ function setInitialProperties(domElement, tag, props) {
             default:
               setProp(domElement, tag, propKey$222, propKey, props);
           }
-      null != props.value &&
-        domElement.setAttribute("value", "" + getToStringValue(props.value));
       return;
     case "dialog":
       listenToNonDelegatedEvent("cancel", domElement);
@@ -17103,10 +17101,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1920 = {
+var devToolsConfig$jscomp$inline_1917 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-c5e22311",
+  version: "18.3.0-www-classic-dfa170b8",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17124,10 +17122,10 @@ var devToolsConfig$jscomp$inline_1920 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1920.bundleType,
-  version: devToolsConfig$jscomp$inline_1920.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1920.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1920.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1917.bundleType,
+  version: devToolsConfig$jscomp$inline_1917.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1917.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1917.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17143,14 +17141,14 @@ var devToolsConfig$jscomp$inline_1920 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1920.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1917.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-c5e22311"
+  reconcilerVersion: "18.3.0-www-classic-dfa170b8"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17377,7 +17375,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-c5e22311";
+exports.version = "18.3.0-www-classic-dfa170b8";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

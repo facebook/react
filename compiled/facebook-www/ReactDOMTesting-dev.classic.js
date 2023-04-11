@@ -4132,12 +4132,6 @@ function validateOptionProps(element, props) {
     }
   }
 }
-function initOption(element, props) {
-  // value="" should make a value attribute (#6219)
-  if (props.value != null) {
-    element.setAttribute("value", toString(getToStringValue(props.value)));
-  }
-}
 
 var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
 
@@ -7946,7 +7940,6 @@ function setInitialProperties(domElement, tag, props) {
         }
       }
 
-      initOption(domElement, props);
       return;
     }
 
@@ -37502,7 +37495,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-5ca6dfdf";
+var ReactVersion = "18.3.0-www-classic-046390a7";
 
 function createPortal$1(
   children,

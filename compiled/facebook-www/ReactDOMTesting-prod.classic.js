@@ -1781,8 +1781,6 @@ function setInitialProperties(domElement, tag, props) {
             default:
               setProp(domElement, tag, propKey$24, propKey, props);
           }
-      null != props.value &&
-        domElement.setAttribute("value", "" + getToStringValue(props.value));
       return;
     case "dialog":
       listenToNonDelegatedEvent("cancel", domElement);
@@ -13683,14 +13681,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$370;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1644 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1644) {
-      var element$jscomp$inline_1645 = document.createElement("div");
-      element$jscomp$inline_1645.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1644 =
-        "function" === typeof element$jscomp$inline_1645.oninput;
+    var isSupported$jscomp$inline_1641 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1641) {
+      var element$jscomp$inline_1642 = document.createElement("div");
+      element$jscomp$inline_1642.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1641 =
+        "function" === typeof element$jscomp$inline_1642.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1644;
+    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1641;
   } else JSCompiler_inline_result$jscomp$370 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$370 &&
@@ -14002,20 +14000,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1685 = 0;
-  i$jscomp$inline_1685 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1685++
+  var i$jscomp$inline_1682 = 0;
+  i$jscomp$inline_1682 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1682++
 ) {
-  var eventName$jscomp$inline_1686 =
-      simpleEventPluginEvents[i$jscomp$inline_1685],
-    domEventName$jscomp$inline_1687 =
-      eventName$jscomp$inline_1686.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1688 =
-      eventName$jscomp$inline_1686[0].toUpperCase() +
-      eventName$jscomp$inline_1686.slice(1);
+  var eventName$jscomp$inline_1683 =
+      simpleEventPluginEvents[i$jscomp$inline_1682],
+    domEventName$jscomp$inline_1684 =
+      eventName$jscomp$inline_1683.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1685 =
+      eventName$jscomp$inline_1683[0].toUpperCase() +
+      eventName$jscomp$inline_1683.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1687,
-    "on" + capitalizedEvent$jscomp$inline_1688
+    domEventName$jscomp$inline_1684,
+    "on" + capitalizedEvent$jscomp$inline_1685
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15028,17 +15026,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1799 = {
+var devToolsConfig$jscomp$inline_1796 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-e55ff31a",
+  version: "18.3.0-www-classic-23097578",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2231 = {
-  bundleType: devToolsConfig$jscomp$inline_1799.bundleType,
-  version: devToolsConfig$jscomp$inline_1799.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1799.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1799.rendererConfig,
+var internals$jscomp$inline_2228 = {
+  bundleType: devToolsConfig$jscomp$inline_1796.bundleType,
+  version: devToolsConfig$jscomp$inline_1796.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1796.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1796.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15054,26 +15052,26 @@ var internals$jscomp$inline_2231 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1799.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1796.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-e55ff31a"
+  reconcilerVersion: "18.3.0-www-classic-23097578"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2232 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2229 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2232.isDisabled &&
-    hook$jscomp$inline_2232.supportsFiber
+    !hook$jscomp$inline_2229.isDisabled &&
+    hook$jscomp$inline_2229.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2232.inject(
-        internals$jscomp$inline_2231
+      (rendererID = hook$jscomp$inline_2229.inject(
+        internals$jscomp$inline_2228
       )),
-        (injectedHook = hook$jscomp$inline_2232);
+        (injectedHook = hook$jscomp$inline_2229);
     } catch (err) {}
 }
 var tagToRoleMappings = {
@@ -17061,4 +17059,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-e55ff31a";
+exports.version = "18.3.0-www-classic-23097578";

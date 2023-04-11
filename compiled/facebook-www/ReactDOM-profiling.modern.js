@@ -15143,8 +15143,6 @@ function setInitialProperties(domElement, tag, props) {
             default:
               setProp(domElement, tag, propKey$226, propKey, props);
           }
-      null != props.value &&
-        domElement.setAttribute("value", "" + getToStringValue(props.value));
       return;
     case "dialog":
       listenToNonDelegatedEvent("cancel", domElement);
@@ -16625,10 +16623,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1879 = {
+var devToolsConfig$jscomp$inline_1876 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-f255a7e3",
+  version: "18.3.0-www-modern-e043269d",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16646,10 +16644,10 @@ var devToolsConfig$jscomp$inline_1879 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1879.bundleType,
-  version: devToolsConfig$jscomp$inline_1879.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1879.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1879.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1876.bundleType,
+  version: devToolsConfig$jscomp$inline_1876.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1876.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1876.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16666,14 +16664,14 @@ var devToolsConfig$jscomp$inline_1879 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1879.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1876.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-f255a7e3"
+  reconcilerVersion: "18.3.0-www-modern-e043269d"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16828,7 +16826,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-f255a7e3";
+exports.version = "18.3.0-www-modern-e043269d";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

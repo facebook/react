@@ -14375,8 +14375,6 @@ function setInitialProperties(domElement, tag, props) {
             default:
               setProp(domElement, tag, propKey$205, propKey, props);
           }
-      null != props.value &&
-        domElement.setAttribute("value", "" + getToStringValue(props.value));
       return;
     case "dialog":
       listenToNonDelegatedEvent("cancel", domElement);
@@ -15857,17 +15855,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1800 = {
+var devToolsConfig$jscomp$inline_1797 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-b596b6b5",
+  version: "18.3.0-www-modern-dc667d26",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2165 = {
-  bundleType: devToolsConfig$jscomp$inline_1800.bundleType,
-  version: devToolsConfig$jscomp$inline_1800.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1800.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1800.rendererConfig,
+var internals$jscomp$inline_2162 = {
+  bundleType: devToolsConfig$jscomp$inline_1797.bundleType,
+  version: devToolsConfig$jscomp$inline_1797.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1797.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1797.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15884,26 +15882,26 @@ var internals$jscomp$inline_2165 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1800.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1797.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b596b6b5"
+  reconcilerVersion: "18.3.0-www-modern-dc667d26"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2166 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2166.isDisabled &&
-    hook$jscomp$inline_2166.supportsFiber
+    !hook$jscomp$inline_2163.isDisabled &&
+    hook$jscomp$inline_2163.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2166.inject(
-        internals$jscomp$inline_2165
+      (rendererID = hook$jscomp$inline_2163.inject(
+        internals$jscomp$inline_2162
       )),
-        (injectedHook = hook$jscomp$inline_2166);
+        (injectedHook = hook$jscomp$inline_2163);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16059,4 +16057,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-b596b6b5";
+exports.version = "18.3.0-www-modern-dc667d26";
