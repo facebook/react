@@ -81,26 +81,22 @@ export function validateInputProps(element: Element, props: Object) {
   }
 }
 
-export function updateInputChecked(element: Element, props: Object) {
+export function updateInput(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  checked: ?boolean,
+  defaultChecked: ?boolean,
+  type: ?string,
+) {
   const node: HTMLInputElement = (element: any);
-  const checked = props.checked;
-  if (checked != null && node.checked !== !!checked) {
-    node.checked = checked;
-  }
-}
-
-export function updateInput(element: Element, props: Object) {
-  const node: HTMLInputElement = (element: any);
-
-  const value = getToStringValue(props.value);
-  const type = props.type;
 
   if (disableInputAttributeSyncing) {
     // When not syncing the value attribute, React only assigns a new value
     // whenever the defaultValue React prop has changed. When not present,
     // React does nothing
-    if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
     } else {
       node.removeAttribute('value');
     }
@@ -110,10 +106,10 @@ export function updateInput(element: Element, props: Object) {
     //  1. The value React property
     //  2. The defaultValue React property
     //  3. Otherwise there should be no change
-    if (props.value != null) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    if (value != null) {
+      setDefaultValue(node, type, getToStringValue(value));
+    } else if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
     } else {
       node.removeAttribute('value');
     }
@@ -123,20 +119,22 @@ export function updateInput(element: Element, props: Object) {
     // When not syncing the checked attribute, the attribute is directly
     // controllable from the defaultValue React property. It needs to be
     // updated as new props come in.
-    if (props.defaultChecked == null) {
+    if (defaultChecked == null) {
       node.removeAttribute('checked');
     } else {
-      node.defaultChecked = !!props.defaultChecked;
+      node.defaultChecked = !!defaultChecked;
     }
   } else {
     // When syncing the checked attribute, it only changes when it needs
     // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
+    if (checked == null && defaultChecked != null) {
+      node.defaultChecked = !!defaultChecked;
     }
   }
 
-  updateInputChecked(element, props);
+  if (checked != null && node.checked !== !!checked) {
+    node.checked = checked;
+  }
 
   if (value != null) {
     if (type === 'number') {
@@ -147,10 +145,10 @@ export function updateInput(element: Element, props: Object) {
         // eslint-disable-next-line
         node.value != (value: any)
       ) {
-        node.value = toString((value: any));
+        node.value = toString(getToStringValue(value));
       }
-    } else if (node.value !== toString((value: any))) {
-      node.value = toString((value: any));
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -162,36 +160,33 @@ export function updateInput(element: Element, props: Object) {
 
 export function initInput(
   element: Element,
-  props: Object,
+  value: ?string,
+  defaultValue: ?string,
+  checked: ?boolean,
+  defaultChecked: ?boolean,
+  type: ?string,
   isHydrating: boolean,
 ) {
   const node: HTMLInputElement = (element: any);
 
-  if (props.value != null || props.defaultValue != null) {
-    const type = props.type;
+  if (value != null || defaultValue != null) {
     const isButton = type === 'submit' || type === 'reset';
 
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
-    if (isButton && (props.value === undefined || props.value === null)) {
+    if (isButton && (value === undefined || value === null)) {
       return;
     }
 
-    const defaultValue =
-      props.defaultValue != null
-        ? toString(getToStringValue(props.defaultValue))
-        : '';
+    const defaultValueStr =
+      defaultValue != null ? toString(getToStringValue(defaultValue)) : '';
     const initialValue =
-      props.value != null
-        ? toString(getToStringValue(props.value))
-        : defaultValue;
+      value != null ? toString(getToStringValue(value)) : defaultValueStr;
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (!isHydrating) {
       if (disableInputAttributeSyncing) {
-        const value = getToStringValue(props.value);
-
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
         if (value != null) {
@@ -203,8 +198,8 @@ export function initInput(
           // prematurely marking required inputs as invalid. Equality is compared
           // to the current value in case the browser provided value is not an
           // empty string.
-          if (isButton || value !== node.value) {
-            node.value = toString(value);
+          if (isButton || toString(getToStringValue(value)) !== node.value) {
+            node.value = toString(getToStringValue(value));
           }
         }
       } else {
@@ -223,8 +218,8 @@ export function initInput(
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      if (props.defaultValue != null) {
-        node.defaultValue = defaultValue;
+      if (defaultValue != null) {
+        node.defaultValue = defaultValueStr;
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
@@ -244,12 +239,13 @@ export function initInput(
     node.name = '';
   }
 
-  const defaultChecked =
-    props.checked != null ? props.checked : props.defaultChecked;
+  const checkedOrDefault = checked != null ? checked : defaultChecked;
+  // TODO: This 'function' or 'symbol' check isn't replicated in other places
+  // so this semantic is inconsistent.
   const initialChecked =
-    typeof defaultChecked !== 'function' &&
-    typeof defaultChecked !== 'symbol' &&
-    !!defaultChecked;
+    typeof checkedOrDefault !== 'function' &&
+    typeof checkedOrDefault !== 'symbol' &&
+    !!checkedOrDefault;
 
   // The checked property never gets assigned. It must be manually set.
   // We don't want to do this when hydrating so that existing user input isn't
@@ -264,9 +260,9 @@ export function initInput(
     // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-    if (props.defaultChecked != null) {
+    if (defaultChecked != null) {
       node.defaultChecked = !node.defaultChecked;
-      node.defaultChecked = !!props.defaultChecked;
+      node.defaultChecked = !!defaultChecked;
     }
   } else {
     // When syncing the checked attribute, both the checked property and
@@ -285,12 +281,15 @@ export function initInput(
 }
 
 export function restoreControlledInputState(element: Element, props: Object) {
-  const node: HTMLInputElement = (element: any);
-  updateInput(node, props);
-  updateNamedCousins(node, props);
-}
-
-function updateNamedCousins(rootNode: HTMLInputElement, props: any) {
+  const rootNode: HTMLInputElement = (element: any);
+  updateInput(
+    rootNode,
+    props.value,
+    props.defaultValue,
+    props.checked,
+    props.defaultChecked,
+    props.type,
+  );
   const name = props.name;
   if (props.type === 'radio' && name != null) {
     let queryRoot: Element = rootNode;
@@ -322,7 +321,7 @@ function updateNamedCousins(rootNode: HTMLInputElement, props: any) {
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
-      const otherProps = getFiberCurrentPropsFromNode(otherNode);
+      const otherProps: any = getFiberCurrentPropsFromNode(otherNode);
 
       if (!otherProps) {
         throw new Error(
@@ -338,7 +337,14 @@ function updateNamedCousins(rootNode: HTMLInputElement, props: any) {
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
-      updateInput(otherNode, otherProps);
+      updateInput(
+        otherNode,
+        otherProps.value,
+        otherProps.defaultValue,
+        otherProps.checked,
+        otherProps.defaultChecked,
+        otherProps.type,
+      );
     }
   }
 }
