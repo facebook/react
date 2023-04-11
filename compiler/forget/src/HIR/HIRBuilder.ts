@@ -257,20 +257,15 @@ export default class HIRBuilder {
    * Construct a final CFG from this context
    */
   build(): HIR {
-    const { id: blockId, instructions } = this.#current;
-    this.#completed.set(blockId, {
-      kind: "block",
-      id: blockId,
-      instructions,
-      terminal: {
+    this.terminate(
+      {
         kind: "return",
         loc: GeneratedSource,
         value: null,
         id: makeInstructionId(0),
       },
-      preds: new Set(),
-      phis: new Set(),
-    });
+      null
+    );
     let ir: HIR = {
       blocks: this.#completed,
       entry: this.#entry,
@@ -293,7 +288,7 @@ export default class HIRBuilder {
   /**
    * Terminate the current block w the given terminal, and start a new block
    */
-  terminate(terminal: Terminal, nextBlockKind: BlockKind): void {
+  terminate(terminal: Terminal, nextBlockKind: BlockKind | null): void {
     const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind,
@@ -303,8 +298,10 @@ export default class HIRBuilder {
       preds: new Set(),
       phis: new Set(),
     });
-    const nextId = this.#env.nextBlockId;
-    this.#current = newBlock(nextId, nextBlockKind);
+    if (nextBlockKind) {
+      const nextId = this.#env.nextBlockId;
+      this.#current = newBlock(nextId, nextBlockKind);
+    }
   }
 
   /**
