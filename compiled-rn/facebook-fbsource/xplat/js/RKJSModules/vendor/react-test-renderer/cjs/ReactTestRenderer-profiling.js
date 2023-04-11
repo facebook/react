@@ -484,13 +484,10 @@ function createLaneMap(initial) {
   for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
   return laneMap;
 }
-function markRootUpdated(root, updateLane, eventTime) {
+function markRootUpdated(root, updateLane) {
   root.pendingLanes |= updateLane;
   536870912 !== updateLane &&
     ((root.suspendedLanes = 0), (root.pingedLanes = 0));
-  root = root.eventTimes;
-  updateLane = 31 - clz32(updateLane);
-  root[updateLane] = eventTime;
 }
 function markRootFinished(root, remainingLanes) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
@@ -502,13 +499,11 @@ function markRootFinished(root, remainingLanes) {
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   remainingLanes = root.entanglements;
-  var eventTimes = root.eventTimes,
-    expirationTimes = root.expirationTimes;
+  var expirationTimes = root.expirationTimes;
   for (root = root.hiddenUpdates; 0 < noLongerPendingLanes; ) {
     var index$4 = 31 - clz32(noLongerPendingLanes),
       lane = 1 << index$4;
     remainingLanes[index$4] = 0;
-    eventTimes[index$4] = -1;
     expirationTimes[index$4] = -1;
     var hiddenUpdatesForLane = root[index$4];
     if (null !== hiddenUpdatesForLane)
@@ -2337,7 +2332,7 @@ function checkIfSnapshotChanged(inst) {
 }
 function forceStoreRerender(fiber) {
   var root = enqueueConcurrentRenderForLane(fiber, 2);
-  null !== root && scheduleUpdateOnFiber(root, fiber, 2, -1);
+  null !== root && scheduleUpdateOnFiber(root, fiber, 2);
 }
 function mountState(initialState) {
   var hook = mountWorkInProgressHook();
@@ -2495,11 +2490,9 @@ function refreshCache(fiber) {
         var lane = requestUpdateLane(provider);
         fiber = createUpdate(lane);
         var root = enqueueUpdate(provider, fiber, lane);
-        if (null !== root) {
-          var eventTime = requestEventTime();
-          scheduleUpdateOnFiber(root, provider, lane, eventTime);
-          entangleTransitions(root, provider, lane);
-        }
+        null !== root &&
+          (scheduleUpdateOnFiber(root, provider, lane),
+          entangleTransitions(root, provider, lane));
         provider = { cache: createCache() };
         fiber.payload = provider;
         return;
@@ -2516,16 +2509,13 @@ function dispatchReducerAction(fiber, queue, action) {
     eagerState: null,
     next: null
   };
-  if (isRenderPhaseUpdate(fiber)) enqueueRenderPhaseUpdate(queue, action);
-  else if (
-    (enqueueUpdate$1(fiber, queue, action, lane),
-    (action = getRootForUpdatedFiber(fiber)),
-    null !== action)
-  ) {
-    var eventTime = requestEventTime();
-    scheduleUpdateOnFiber(action, fiber, lane, eventTime);
-    entangleTransitionUpdate(action, queue, lane);
-  }
+  isRenderPhaseUpdate(fiber)
+    ? enqueueRenderPhaseUpdate(queue, action)
+    : (enqueueUpdate$1(fiber, queue, action, lane),
+      (action = getRootForUpdatedFiber(fiber)),
+      null !== action &&
+        (scheduleUpdateOnFiber(action, fiber, lane),
+        entangleTransitionUpdate(action, queue, lane)));
 }
 function dispatchSetState(fiber, queue, action) {
   var lane = requestUpdateLane(fiber),
@@ -2560,8 +2550,7 @@ function dispatchSetState(fiber, queue, action) {
     enqueueUpdate$1(fiber, queue, update, lane);
     action = getRootForUpdatedFiber(fiber);
     null !== action &&
-      ((update = requestEventTime()),
-      scheduleUpdateOnFiber(action, fiber, lane, update),
+      (scheduleUpdateOnFiber(action, fiber, lane),
       entangleTransitionUpdate(action, queue, lane));
   }
 }
@@ -2889,8 +2878,7 @@ var classComponentUpdater = {
     void 0 !== callback && null !== callback && (update.callback = callback);
     payload = enqueueUpdate(inst, update, lane);
     null !== payload &&
-      ((callback = requestEventTime()),
-      scheduleUpdateOnFiber(payload, inst, lane, callback),
+      (scheduleUpdateOnFiber(payload, inst, lane),
       entangleTransitions(payload, inst, lane));
   },
   enqueueReplaceState: function (inst, payload, callback) {
@@ -2902,8 +2890,7 @@ var classComponentUpdater = {
     void 0 !== callback && null !== callback && (update.callback = callback);
     payload = enqueueUpdate(inst, update, lane);
     null !== payload &&
-      ((callback = requestEventTime()),
-      scheduleUpdateOnFiber(payload, inst, lane, callback),
+      (scheduleUpdateOnFiber(payload, inst, lane),
       entangleTransitions(payload, inst, lane));
   },
   enqueueForceUpdate: function (inst, callback) {
@@ -2914,8 +2901,7 @@ var classComponentUpdater = {
     void 0 !== callback && null !== callback && (update.callback = callback);
     callback = enqueueUpdate(inst, update, lane);
     null !== callback &&
-      ((update = requestEventTime()),
-      scheduleUpdateOnFiber(callback, inst, lane, update),
+      (scheduleUpdateOnFiber(callback, inst, lane),
       entangleTransitions(callback, inst, lane));
   }
 };
@@ -3910,7 +3896,7 @@ function updateDehydratedSuspenseComponent(
         throw (
           ((suspenseState.retryLane = didSuspend),
           enqueueConcurrentRenderForLane(current, didSuspend),
-          scheduleUpdateOnFiber(nextProps, current, didSuspend, -1),
+          scheduleUpdateOnFiber(nextProps, current, didSuspend),
           SelectiveHydrationException)
         );
     }
@@ -6741,15 +6727,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   pendingPassiveTransitions = null,
   nestedUpdateCount = 0,
   rootWithNestedUpdates = null,
-  currentEventTime = -1,
   currentEventTransitionLane = 0;
-function requestEventTime() {
-  return 0 !== (executionContext & 6)
-    ? now$1()
-    : -1 !== currentEventTime
-    ? currentEventTime
-    : (currentEventTime = now$1());
-}
 function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
@@ -6763,14 +6741,14 @@ function requestUpdateLane(fiber) {
   fiber = currentUpdatePriority;
   return 0 !== fiber ? fiber : 32;
 }
-function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
+function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
     (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
     null !== root.cancelPendingCommit
   )
     prepareFreshStack(root, 0),
       markRootSuspended(root, workInProgressRootRenderLanes);
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane);
   if (0 === (executionContext & 2) || root !== workInProgressRoot)
     root === workInProgressRoot &&
       (0 === (executionContext & 2) &&
@@ -6786,7 +6764,6 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
 }
 function performConcurrentWorkOnRoot(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
-  currentEventTime = -1;
   currentEventTransitionLane = 0;
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
@@ -7811,10 +7788,8 @@ function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createCapturedValueAtFiber(error, sourceFiber);
   sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
   rootFiber = enqueueUpdate(rootFiber, sourceFiber, 2);
-  sourceFiber = requestEventTime();
   null !== rootFiber &&
-    (markRootUpdated(rootFiber, 2, sourceFiber),
-    ensureRootIsScheduled(rootFiber));
+    (markRootUpdated(rootFiber, 2), ensureRootIsScheduled(rootFiber));
 }
 function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
@@ -7848,9 +7823,8 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
             sourceFiber,
             2
           );
-          sourceFiber = requestEventTime();
           null !== nearestMountedAncestor &&
-            (markRootUpdated(nearestMountedAncestor, 2, sourceFiber),
+            (markRootUpdated(nearestMountedAncestor, 2),
             ensureRootIsScheduled(nearestMountedAncestor));
           break;
         }
@@ -7892,10 +7866,9 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
 function retryTimedOutBoundary(boundaryFiber, retryLane) {
   0 === retryLane &&
     (retryLane = 0 === (boundaryFiber.mode & 1) ? 2 : claimNextRetryLane());
-  var eventTime = requestEventTime();
   boundaryFiber = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   null !== boundaryFiber &&
-    (markRootUpdated(boundaryFiber, retryLane, eventTime),
+    (markRootUpdated(boundaryFiber, retryLane),
     ensureRootIsScheduled(boundaryFiber));
 }
 function retryDehydratedSuspenseBoundary(boundaryFiber) {
@@ -8578,7 +8551,7 @@ function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
         var root = enqueueConcurrentRenderForLane(fiber, 2);
         null !== root &&
           ((primaryChildInstance._pendingVisibility |= 2),
-          scheduleUpdateOnFiber(root, fiber, 2, -1));
+          scheduleUpdateOnFiber(root, fiber, 2));
       }
     },
     attach: function () {
@@ -8591,7 +8564,7 @@ function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
         var root = enqueueConcurrentRenderForLane(fiber, 2);
         null !== root &&
           ((primaryChildInstance._pendingVisibility &= -3),
-          scheduleUpdateOnFiber(root, fiber, 2, -1));
+          scheduleUpdateOnFiber(root, fiber, 2));
       }
     }
   };
@@ -8640,7 +8613,6 @@ function FiberRootNode(
     this.cancelPendingCommit =
       null;
   this.callbackPriority = 0;
-  this.eventTimes = createLaneMap(0);
   this.expirationTimes = createLaneMap(-1);
   this.entangledLanes =
     this.errorRecoveryDisabledLanes =
@@ -8753,8 +8725,7 @@ function updateContainer(element, container, parentComponent, callback) {
   null !== callback && (container.callback = callback);
   element = enqueueUpdate(current, container, lane);
   null !== element &&
-    ((callback = requestEventTime()),
-    scheduleUpdateOnFiber(element, current, lane, callback),
+    (scheduleUpdateOnFiber(element, current, lane),
     entangleTransitions(element, current, lane));
   return lane;
 }
@@ -9065,7 +9036,7 @@ var devToolsConfig$jscomp$inline_1063 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-0b931f90e-20230411",
+  version: "18.3.0-next-58742c21b-20230411",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1245 = {
@@ -9096,7 +9067,7 @@ var internals$jscomp$inline_1245 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-0b931f90e-20230411"
+  reconcilerVersion: "18.3.0-next-58742c21b-20230411"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1246 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
