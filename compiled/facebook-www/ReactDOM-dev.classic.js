@@ -3777,25 +3777,22 @@ function validateInputProps(element, props) {
     }
   }
 }
-function updateInputChecked(element, props) {
+function updateInput(
+  element,
+  value,
+  defaultValue,
+  checked,
+  defaultChecked,
+  type
+) {
   var node = element;
-  var checked = props.checked;
-
-  if (checked != null && node.checked !== !!checked) {
-    node.checked = checked;
-  }
-}
-function updateInput(element, props) {
-  var node = element;
-  var value = getToStringValue(props.value);
-  var type = props.type;
 
   if (disableInputAttributeSyncing) {
     // When not syncing the value attribute, React only assigns a new value
     // whenever the defaultValue React prop has changed. When not present,
     // React does nothing
-    if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
     } else {
       node.removeAttribute("value");
     }
@@ -3805,10 +3802,10 @@ function updateInput(element, props) {
     //  1. The value React property
     //  2. The defaultValue React property
     //  3. Otherwise there should be no change
-    if (props.value != null) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    if (value != null) {
+      setDefaultValue(node, type, getToStringValue(value));
+    } else if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
     } else {
       node.removeAttribute("value");
     }
@@ -3818,20 +3815,22 @@ function updateInput(element, props) {
     // When not syncing the checked attribute, the attribute is directly
     // controllable from the defaultValue React property. It needs to be
     // updated as new props come in.
-    if (props.defaultChecked == null) {
+    if (defaultChecked == null) {
       node.removeAttribute("checked");
     } else {
-      node.defaultChecked = !!props.defaultChecked;
+      node.defaultChecked = !!defaultChecked;
     }
   } else {
     // When syncing the checked attribute, it only changes when it needs
     // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
+    if (checked == null && defaultChecked != null) {
+      node.defaultChecked = !!defaultChecked;
     }
   }
 
-  updateInputChecked(element, props);
+  if (checked != null && node.checked !== !!checked) {
+    node.checked = checked;
+  }
 
   if (value != null) {
     if (type === "number") {
@@ -3841,10 +3840,10 @@ function updateInput(element, props) {
         // eslint-disable-next-line
         node.value != value
       ) {
-        node.value = toString(value);
+        node.value = toString(getToStringValue(value));
       }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
     }
   } else if (type === "submit" || type === "reset") {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -3853,33 +3852,35 @@ function updateInput(element, props) {
     return;
   }
 }
-function initInput(element, props, isHydrating) {
+function initInput(
+  element,
+  value,
+  defaultValue,
+  checked,
+  defaultChecked,
+  type,
+  isHydrating
+) {
   var node = element;
 
-  if (props.value != null || props.defaultValue != null) {
-    var type = props.type;
+  if (value != null || defaultValue != null) {
     var isButton = type === "submit" || type === "reset"; // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
 
-    if (isButton && (props.value === undefined || props.value === null)) {
+    if (isButton && (value === undefined || value === null)) {
       return;
     }
 
-    var defaultValue =
-      props.defaultValue != null
-        ? toString(getToStringValue(props.defaultValue))
-        : "";
+    var defaultValueStr =
+      defaultValue != null ? toString(getToStringValue(defaultValue)) : "";
     var initialValue =
-      props.value != null
-        ? toString(getToStringValue(props.value))
-        : defaultValue; // Do not assign value if it is already set. This prevents user text input
+      value != null ? toString(getToStringValue(value)) : defaultValueStr; // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
 
     if (!isHydrating) {
       if (disableInputAttributeSyncing) {
-        var value = getToStringValue(props.value); // When not syncing the value attribute, the value property points
+        // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
-
         if (value != null) {
           // Always assign on buttons so that it is possible to assign an
           // empty string to clear button text.
@@ -3889,8 +3890,8 @@ function initInput(element, props, isHydrating) {
           // prematurely marking required inputs as invalid. Equality is compared
           // to the current value in case the browser provided value is not an
           // empty string.
-          if (isButton || value !== node.value) {
-            node.value = toString(value);
+          if (isButton || toString(getToStringValue(value)) !== node.value) {
+            node.value = toString(getToStringValue(value));
           }
         }
       } else {
@@ -3909,8 +3910,8 @@ function initInput(element, props, isHydrating) {
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      if (props.defaultValue != null) {
-        node.defaultValue = defaultValue;
+      if (defaultValue != null) {
+        node.defaultValue = defaultValueStr;
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
@@ -3930,12 +3931,13 @@ function initInput(element, props, isHydrating) {
     node.name = "";
   }
 
-  var defaultChecked =
-    props.checked != null ? props.checked : props.defaultChecked;
+  var checkedOrDefault = checked != null ? checked : defaultChecked; // TODO: This 'function' or 'symbol' check isn't replicated in other places
+  // so this semantic is inconsistent.
+
   var initialChecked =
-    typeof defaultChecked !== "function" &&
-    typeof defaultChecked !== "symbol" &&
-    !!defaultChecked; // The checked property never gets assigned. It must be manually set.
+    typeof checkedOrDefault !== "function" &&
+    typeof checkedOrDefault !== "symbol" &&
+    !!checkedOrDefault; // The checked property never gets assigned. It must be manually set.
   // We don't want to do this when hydrating so that existing user input isn't
   // modified
   // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
@@ -3949,9 +3951,9 @@ function initInput(element, props, isHydrating) {
     // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-    if (props.defaultChecked != null) {
+    if (defaultChecked != null) {
       node.defaultChecked = !node.defaultChecked;
-      node.defaultChecked = !!props.defaultChecked;
+      node.defaultChecked = !!defaultChecked;
     }
   } else {
     // When syncing the checked attribute, both the checked property and
@@ -3969,12 +3971,15 @@ function initInput(element, props, isHydrating) {
   }
 }
 function restoreControlledInputState(element, props) {
-  var node = element;
-  updateInput(node, props);
-  updateNamedCousins(node, props);
-}
-
-function updateNamedCousins(rootNode, props) {
+  var rootNode = element;
+  updateInput(
+    rootNode,
+    props.value,
+    props.defaultValue,
+    props.checked,
+    props.defaultChecked,
+    props.type
+  );
   var name = props.name;
 
   if (props.type === "radio" && name != null) {
@@ -4022,7 +4027,14 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
 
-      updateInput(otherNode, otherProps);
+      updateInput(
+        otherNode,
+        otherProps.value,
+        otherProps.defaultValue,
+        otherProps.checked,
+        otherProps.defaultChecked,
+        otherProps.type
+      );
     }
   }
 } // In Chrome, assigning defaultValue to certain input types triggers input validation.
@@ -4244,31 +4256,28 @@ function validateSelectProps(element, props) {
     }
   }
 }
-function initSelect(element, props) {
+function initSelect(element, value, defaultValue, multiple) {
   var node = element;
-  node.multiple = !!props.multiple;
-  var value = props.value;
+  node.multiple = !!multiple;
 
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (props.defaultValue != null) {
-    updateOptions(node, !!props.multiple, props.defaultValue, true);
+    updateOptions(node, !!multiple, value, false);
+  } else if (defaultValue != null) {
+    updateOptions(node, !!multiple, defaultValue, true);
   }
 }
-function updateSelect(element, prevProps, props) {
+function updateSelect(element, value, defaultValue, multiple, wasMultiple) {
   var node = element;
-  var wasMultiple = !!prevProps.multiple;
-  var value = props.value;
 
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (wasMultiple !== !!props.multiple) {
+    updateOptions(node, !!multiple, value, false);
+  } else if (!!wasMultiple !== !!multiple) {
     // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-    if (props.defaultValue != null) {
-      updateOptions(node, !!props.multiple, props.defaultValue, true);
+    if (defaultValue != null) {
+      updateOptions(node, !!multiple, defaultValue, true);
     } else {
       // Revert the select back to its default unselected state.
-      updateOptions(node, !!props.multiple, props.multiple ? [] : "", false);
+      updateOptions(node, !!multiple, multiple ? [] : "", false);
     }
   }
 }
@@ -4326,20 +4335,19 @@ function validateTextareaProps(element, props) {
     }
   }
 }
-function updateTextarea(element, props) {
+function updateTextarea(element, value, defaultValue) {
   var node = element;
-  var value = getToStringValue(props.value);
 
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
+    var newValue = toString(getToStringValue(value)); // To avoid side effects (such as losing text selection), only set value if changed
 
     if (newValue !== node.value) {
       node.value = newValue;
     } // TOOO: This should respect disableInputAttributeSyncing flag.
 
-    if (props.defaultValue == null) {
+    if (defaultValue == null) {
       if (node.defaultValue !== newValue) {
         node.defaultValue = newValue;
       }
@@ -4348,22 +4356,17 @@ function updateTextarea(element, props) {
     }
   }
 
-  var defaultValue = getToStringValue(props.defaultValue);
-
   if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
+    node.defaultValue = toString(getToStringValue(defaultValue));
   } else {
     node.defaultValue = "";
   }
 }
-function initTextarea(element, props) {
+function initTextarea(element, value, defaultValue, children) {
   var node = element;
-  var initialValue = props.value; // Only bother fetching default value if we're going to use it
+  var initialValue = value; // Only bother fetching default value if we're going to use it
 
   if (initialValue == null) {
-    var children = props.children,
-      defaultValue = props.defaultValue;
-
     if (children != null) {
       {
         if (defaultValue != null) {
@@ -4409,7 +4412,7 @@ function initTextarea(element, props) {
 }
 function restoreControlledTextareaState(element, props) {
   // DOM component is still mounted; update
-  updateTextarea(element, props);
+  updateTextarea(element, props.value, props.defaultValue);
 }
 
 // This validation code was written based on the HTML5 parsing spec:
@@ -33773,7 +33776,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-911d0261";
+var ReactVersion = "18.3.0-www-classic-981ea1d0";
 
 function createPortal$1(
   children,
@@ -38862,6 +38865,11 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var type = null;
+      var value = null;
+      var defaultValue = null;
+      var checked = null;
+      var defaultChecked = null;
 
       for (var propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
@@ -38883,6 +38891,8 @@ function setInitialProperties(domElement, tag, props) {
               typeof propValue !== "symbol" &&
               typeof propValue !== "boolean"
             ) {
+              type = propValue;
+
               {
                 checkAttributeStringCoercion(propValue, propKey);
               }
@@ -38894,17 +38904,29 @@ function setInitialProperties(domElement, tag, props) {
           }
 
           case "checked": {
-            var checked = propValue != null ? propValue : props.defaultChecked;
+            checked = propValue;
+            var checkedValue =
+              propValue != null ? propValue : props.defaultChecked;
             var inputElement = domElement;
             inputElement.checked =
-              !!checked &&
-              typeof checked !== "function" &&
-              checked !== "symbol";
+              !!checkedValue &&
+              typeof checkedValue !== "function" &&
+              checkedValue !== "symbol";
+            break;
+          }
+
+          case "defaultChecked": {
+            defaultChecked = propValue;
             break;
           }
 
           case "value": {
-            // This is handled by updateWrapper below.
+            value = propValue;
+            break;
+          }
+
+          case "defaultValue": {
+            defaultValue = propValue;
             break;
           }
 
@@ -38920,7 +38942,6 @@ function setInitialProperties(domElement, tag, props) {
 
             break;
           }
-          // defaultChecked and defaultValue are ignored by setProp
 
           default: {
             setProp(domElement, tag, propKey, propValue, props, null);
@@ -38931,7 +38952,15 @@ function setInitialProperties(domElement, tag, props) {
 
       track(domElement);
       validateInputProps(domElement, props);
-      initInput(domElement, props, false);
+      initInput(
+        domElement,
+        value,
+        defaultValue,
+        checked,
+        defaultChecked,
+        type,
+        false
+      );
       return;
     }
 
@@ -38942,6 +38971,9 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var _value = null;
+      var _defaultValue = null;
+      var multiple = null;
 
       for (var _propKey in props) {
         if (!props.hasOwnProperty(_propKey)) {
@@ -38956,10 +38988,22 @@ function setInitialProperties(domElement, tag, props) {
 
         switch (_propKey) {
           case "value": {
-            // This is handled by updateWrapper below.
+            _value = _propValue; // This is handled by initSelect below.
+
             break;
           }
-          // defaultValue are ignored by setProp
+
+          case "defaultValue": {
+            _defaultValue = _propValue; // This is handled by initSelect below.
+
+            break;
+          }
+
+          case "multiple": {
+            multiple = _propValue; // TODO: We don't actually have to fall through here because we set it
+            // in initSelect anyway. We can remove the special case in setProp.
+          }
+          // Fallthrough
 
           default: {
             setProp(domElement, tag, _propKey, _propValue, props, null);
@@ -38968,7 +39012,7 @@ function setInitialProperties(domElement, tag, props) {
       }
 
       validateSelectProps(domElement, props);
-      initSelect(domElement, props);
+      initSelect(domElement, _value, _defaultValue, multiple);
       return;
     }
 
@@ -38979,6 +39023,9 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var _value2 = null;
+      var _defaultValue2 = null;
+      var children = null;
 
       for (var _propKey2 in props) {
         if (!props.hasOwnProperty(_propKey2)) {
@@ -38993,12 +39040,19 @@ function setInitialProperties(domElement, tag, props) {
 
         switch (_propKey2) {
           case "value": {
-            // This is handled by updateWrapper below.
+            _value2 = _propValue2; // This is handled by initTextarea below.
+
+            break;
+          }
+
+          case "defaultValue": {
+            _defaultValue2 = _propValue2;
             break;
           }
 
           case "children": {
-            // TODO: Handled by initWrapperState above.
+            children = _propValue2; // Handled by initTextarea above.
+
             break;
           }
 
@@ -39012,7 +39066,6 @@ function setInitialProperties(domElement, tag, props) {
 
             break;
           }
-          // defaultValue is ignored by setProp
 
           default: {
             setProp(domElement, tag, _propKey2, _propValue2, props);
@@ -39023,7 +39076,7 @@ function setInitialProperties(domElement, tag, props) {
 
       track(domElement);
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, _value2, _defaultValue2, children);
       return;
     }
 
@@ -39336,12 +39389,12 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
     }
 
     case "input": {
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (nextProps.type === "radio" && nextProps.name != null) {
-        updateInputChecked(domElement, nextProps);
-      }
+      var name = null;
+      var type = null;
+      var value = null;
+      var defaultValue = null;
+      var checked = null;
+      var defaultChecked = null;
 
       for (var propKey in lastProps) {
         var lastProp = lastProps[propKey];
@@ -39353,12 +39406,12 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         ) {
           switch (propKey) {
             case "checked": {
-              var checked = nextProps.defaultChecked;
+              var checkedValue = nextProps.defaultChecked;
               var inputElement = domElement;
               inputElement.checked =
-                !!checked &&
-                typeof checked !== "function" &&
-                checked !== "symbol";
+                !!checkedValue &&
+                typeof checkedValue !== "function" &&
+                checkedValue !== "symbol";
               break;
             }
 
@@ -39381,24 +39434,66 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
         if (
           nextProps.hasOwnProperty(_propKey7) &&
-          nextProp !== _lastProp &&
           (nextProp != null || _lastProp != null)
         ) {
           switch (_propKey7) {
-            case "checked": {
-              var _checked =
-                nextProp != null ? nextProp : nextProps.defaultChecked;
+            case "type": {
+              type = nextProp; // Fast path since 'type' is very common on inputs
 
-              var _inputElement = domElement;
-              _inputElement.checked =
-                !!_checked &&
-                typeof _checked !== "function" &&
-                _checked !== "symbol";
+              if (nextProp !== _lastProp) {
+                if (
+                  nextProp != null &&
+                  typeof nextProp !== "function" &&
+                  typeof nextProp !== "symbol" &&
+                  typeof nextProp !== "boolean"
+                ) {
+                  {
+                    checkAttributeStringCoercion(nextProp, _propKey7);
+                  }
+
+                  domElement.setAttribute(_propKey7, nextProp);
+                } else {
+                  domElement.removeAttribute(_propKey7);
+                }
+              }
+
+              break;
+            }
+
+            case "name": {
+              name = nextProp;
+              break;
+            }
+
+            case "checked": {
+              checked = nextProp;
+
+              if (nextProp !== _lastProp) {
+                var _checkedValue =
+                  nextProp != null ? nextProp : nextProps.defaultChecked;
+
+                var _inputElement = domElement;
+                _inputElement.checked =
+                  !!_checkedValue &&
+                  typeof _checkedValue !== "function" &&
+                  _checkedValue !== "symbol";
+              }
+
+              break;
+            }
+
+            case "defaultChecked": {
+              defaultChecked = nextProp;
               break;
             }
 
             case "value": {
-              // This is handled by updateWrapper below.
+              value = nextProp;
+              break;
+            }
+
+            case "defaultValue": {
+              defaultValue = nextProp;
               break;
             }
 
@@ -39414,17 +39509,17 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
               break;
             }
-            // defaultChecked and defaultValue are ignored by setProp
 
             default: {
-              setProp(
-                domElement,
-                tag,
-                _propKey7,
-                nextProp,
-                nextProps,
-                _lastProp
-              );
+              if (nextProp !== _lastProp)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey7,
+                  nextProp,
+                  nextProps,
+                  _lastProp
+                );
             }
           }
         }
@@ -39471,23 +39566,48 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
           didWarnControlledToUncontrolled = true;
         }
+      } // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+
+      if (
+        name != null &&
+        typeof name !== "function" &&
+        typeof name !== "symbol" &&
+        typeof name !== "boolean"
+      ) {
+        {
+          checkAttributeStringCoercion(name, "name");
+        }
+
+        domElement.setAttribute("name", name);
+      } else {
+        domElement.removeAttribute("name");
       } // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
 
-      updateInput(domElement, nextProps);
+      updateInput(
+        domElement,
+        value,
+        defaultValue,
+        checked,
+        defaultChecked,
+        type
+      );
       return;
     }
 
     case "select": {
+      var _value3 = null;
+      var _defaultValue3 = null;
+      var multiple = null;
+      var wasMultiple = null;
+
       for (var _propKey8 in lastProps) {
         var _lastProp2 = lastProps[_propKey8];
 
-        if (
-          lastProps.hasOwnProperty(_propKey8) &&
-          _lastProp2 != null &&
-          !nextProps.hasOwnProperty(_propKey8)
-        ) {
+        if (lastProps.hasOwnProperty(_propKey8) && _lastProp2 != null) {
           switch (_propKey8) {
             case "value": {
               // This is handled by updateWrapper below.
@@ -39495,8 +39615,21 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
             }
             // defaultValue are ignored by setProp
 
+            case "multiple": {
+              wasMultiple = _lastProp2; // TODO: Move special case in here from setProp.
+            }
+            // Fallthrough
+
             default: {
-              setProp(domElement, tag, _propKey8, null, nextProps, _lastProp2);
+              if (!nextProps.hasOwnProperty(_propKey8))
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey8,
+                  null,
+                  nextProps,
+                  _lastProp2
+                );
             }
           }
         }
@@ -39508,36 +39641,49 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
         if (
           nextProps.hasOwnProperty(_propKey9) &&
-          _nextProp !== _lastProp3 &&
           (_nextProp != null || _lastProp3 != null)
         ) {
           switch (_propKey9) {
             case "value": {
-              // This is handled by updateWrapper below.
+              _value3 = _nextProp; // This is handled by updateSelect below.
+
               break;
             }
-            // defaultValue are ignored by setProp
+
+            case "defaultValue": {
+              _defaultValue3 = _nextProp;
+              break;
+            }
+
+            case "multiple": {
+              multiple = _nextProp; // TODO: Just move the special case in here from setProp.
+            }
+            // Fallthrough
 
             default: {
-              setProp(
-                domElement,
-                tag,
-                _propKey9,
-                _nextProp,
-                nextProps,
-                _lastProp3
-              );
+              if (_nextProp !== _lastProp3)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey9,
+                  _nextProp,
+                  nextProps,
+                  _lastProp3
+                );
             }
           }
         }
       } // <select> value update needs to occur after <option> children
       // reconciliation
 
-      updateSelect(domElement, lastProps, nextProps);
+      updateSelect(domElement, _value3, _defaultValue3, multiple, wasMultiple);
       return;
     }
 
     case "textarea": {
+      var _value4 = null;
+      var _defaultValue4 = null;
+
       for (var _propKey10 in lastProps) {
         var _lastProp4 = lastProps[_propKey10];
 
@@ -39548,7 +39694,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         ) {
           switch (_propKey10) {
             case "value": {
-              // This is handled by updateWrapper below.
+              // This is handled by updateTextarea below.
               break;
             }
 
@@ -39571,12 +39717,17 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
         if (
           nextProps.hasOwnProperty(_propKey11) &&
-          _nextProp2 !== _lastProp5 &&
           (_nextProp2 != null || _lastProp5 != null)
         ) {
           switch (_propKey11) {
             case "value": {
-              // This is handled by updateWrapper below.
+              _value4 = _nextProp2; // This is handled by updateTextarea below.
+
+              break;
+            }
+
+            case "defaultValue": {
+              _defaultValue4 = _nextProp2;
               break;
             }
 
@@ -39595,23 +39746,23 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
 
               break;
             }
-            // defaultValue is ignored by setProp
 
             default: {
-              setProp(
-                domElement,
-                tag,
-                _propKey11,
-                _nextProp2,
-                nextProps,
-                _lastProp5
-              );
+              if (_nextProp2 !== _lastProp5)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey11,
+                  _nextProp2,
+                  nextProps,
+                  _lastProp5
+                );
             }
           }
         }
       }
 
-      updateTextarea(domElement, nextProps);
+      updateTextarea(domElement, _value4, _defaultValue4);
       return;
     }
 
@@ -39837,31 +39988,62 @@ function updatePropertiesWithDiff(
     }
 
     case "input": {
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (nextProps.type === "radio" && nextProps.name != null) {
-        updateInputChecked(domElement, nextProps);
-      }
+      var name = nextProps.name;
+      var type = nextProps.type;
+      var value = nextProps.value;
+      var defaultValue = nextProps.defaultValue;
+      var checked = nextProps.checked;
+      var defaultChecked = nextProps.defaultChecked;
 
       for (var i = 0; i < updatePayload.length; i += 2) {
         var propKey = updatePayload[i];
         var propValue = updatePayload[i + 1];
 
         switch (propKey) {
+          case "type": {
+            // Fast path since 'type' is very common on inputs
+            if (
+              propValue != null &&
+              typeof propValue !== "function" &&
+              typeof propValue !== "symbol" &&
+              typeof propValue !== "boolean"
+            ) {
+              {
+                checkAttributeStringCoercion(propValue, propKey);
+              }
+
+              domElement.setAttribute(propKey, propValue);
+            } else {
+              domElement.removeAttribute(propKey);
+            }
+
+            break;
+          }
+
+          case "name": {
+            break;
+          }
+
           case "checked": {
-            var checked =
+            var checkedValue =
               propValue != null ? propValue : nextProps.defaultChecked;
             var inputElement = domElement;
             inputElement.checked =
-              !!checked &&
-              typeof checked !== "function" &&
-              checked !== "symbol";
+              !!checkedValue &&
+              typeof checkedValue !== "function" &&
+              checkedValue !== "symbol";
+            break;
+          }
+
+          case "defaultChecked": {
             break;
           }
 
           case "value": {
-            // This is handled by updateWrapper below.
+            break;
+          }
+
+          case "defaultValue": {
             break;
           }
 
@@ -39877,7 +40059,6 @@ function updatePropertiesWithDiff(
 
             break;
           }
-          // defaultChecked and defaultValue are ignored by setProp
 
           default: {
             setProp(domElement, tag, propKey, propValue, nextProps, null);
@@ -39926,15 +40107,44 @@ function updatePropertiesWithDiff(
 
           didWarnControlledToUncontrolled = true;
         }
+      } // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+
+      if (
+        name != null &&
+        typeof name !== "function" &&
+        typeof name !== "symbol" &&
+        typeof name !== "boolean"
+      ) {
+        {
+          checkAttributeStringCoercion(name, "name");
+        }
+
+        domElement.setAttribute("name", name);
+      } else {
+        domElement.removeAttribute("name");
       } // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
 
-      updateInput(domElement, nextProps);
+      updateInput(
+        domElement,
+        value,
+        defaultValue,
+        checked,
+        defaultChecked,
+        type
+      );
       return;
     }
 
     case "select": {
+      var _value5 = nextProps.value;
+      var _defaultValue5 = nextProps.defaultValue;
+      var multiple = nextProps.multiple;
+      var wasMultiple = lastProps.multiple;
+
       for (var _i = 0; _i < updatePayload.length; _i += 2) {
         var _propKey20 = updatePayload[_i];
         var _propValue7 = updatePayload[_i + 1];
@@ -39953,11 +40163,14 @@ function updatePropertiesWithDiff(
       } // <select> value update needs to occur after <option> children
       // reconciliation
 
-      updateSelect(domElement, lastProps, nextProps);
+      updateSelect(domElement, _value5, _defaultValue5, multiple, wasMultiple);
       return;
     }
 
     case "textarea": {
+      var _value6 = nextProps.value;
+      var _defaultValue6 = nextProps.defaultValue;
+
       for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
         var _propKey21 = updatePayload[_i2];
         var _propValue8 = updatePayload[_i2 + 1];
@@ -39991,7 +40204,7 @@ function updatePropertiesWithDiff(
         }
       }
 
-      updateTextarea(domElement, nextProps);
+      updateTextarea(domElement, _value6, _defaultValue6);
       return;
     }
 
@@ -41079,7 +41292,15 @@ function diffHydratedProperties(
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
 
-      initInput(domElement, props, true);
+      initInput(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+        props.type,
+        true
+      );
       break;
 
     case "option":
@@ -41107,7 +41328,7 @@ function diffHydratedProperties(
 
       track(domElement);
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, props.value, props.defaultValue, props.children);
       break;
   }
 
