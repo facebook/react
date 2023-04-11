@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-22d10e56";
+var ReactVersion = "18.3.0-www-modern-f295753b";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -2158,7 +2158,7 @@ function createLaneMap(initial) {
 
   return laneMap;
 }
-function markRootUpdated(root, updateLane, eventTime) {
+function markRootUpdated(root, updateLane) {
   root.pendingLanes |= updateLane; // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
   // them again.
@@ -2176,12 +2176,6 @@ function markRootUpdated(root, updateLane, eventTime) {
     root.suspendedLanes = NoLanes;
     root.pingedLanes = NoLanes;
   }
-
-  var eventTimes = root.eventTimes;
-  var index = laneToIndex(updateLane); // We can always overwrite an existing timestamp because we prefer the most
-  // recent event, and we assume time is monotonically increasing.
-
-  eventTimes[index] = eventTime;
 }
 function markRootSuspended$1(root, suspendedLanes) {
   root.suspendedLanes |= suspendedLanes;
@@ -2214,7 +2208,6 @@ function markRootFinished(root, remainingLanes) {
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   var entanglements = root.entanglements;
-  var eventTimes = root.eventTimes;
   var expirationTimes = root.expirationTimes;
   var hiddenUpdates = root.hiddenUpdates; // Clear the lanes that no longer have pending work
 
@@ -2224,7 +2217,6 @@ function markRootFinished(root, remainingLanes) {
     var index = pickArbitraryLaneIndex(lanes);
     var lane = 1 << index;
     entanglements[index] = NoLanes;
-    eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
     var hiddenUpdatesForLane = hiddenUpdates[index];
 
@@ -8546,7 +8538,7 @@ function forceStoreRerender(fiber) {
   var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 
@@ -9193,8 +9185,7 @@ function refreshCache(fiber, seedKey, seedValue) {
         var root = enqueueUpdate(provider, refreshUpdate, lane);
 
         if (root !== null) {
-          var eventTime = requestEventTime();
-          scheduleUpdateOnFiber(root, provider, lane, eventTime);
+          scheduleUpdateOnFiber(root, provider, lane);
           entangleTransitions(root, provider, lane);
         } // TODO: If a refresh never commits, the new cache created here must be
         // released. A simple case is start refreshing a cache boundary, but then
@@ -9248,8 +9239,7 @@ function dispatchReducerAction(fiber, queue, action) {
     var root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
 
     if (root !== null) {
-      var eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -9332,8 +9322,7 @@ function dispatchSetState(fiber, queue, action) {
     var root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
 
     if (root !== null) {
-      var eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -10818,8 +10807,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
-      var eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -10854,8 +10842,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
-      var eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -10890,8 +10877,7 @@ var classComponentUpdater = {
     var root = enqueueUpdate(fiber, update, lane);
 
     if (root !== null) {
-      var eventTime = requestEventTime();
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -14781,16 +14767,9 @@ function updateDehydratedSuspenseComponent(
           // Intentionally mutating since this render will get interrupted. This
           // is one of the very rare times where we mutate the current tree
           // during the render phase.
-          suspenseState.retryLane = attemptHydrationAtLane; // TODO: Ideally this would inherit the event time of the current render
-
-          var eventTime = NoTimestamp;
+          suspenseState.retryLane = attemptHydrationAtLane;
           enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
-          scheduleUpdateOnFiber(
-            root,
-            current,
-            attemptHydrationAtLane,
-            eventTime
-          ); // Throw a special object that signals to the work loop that it should
+          scheduleUpdateOnFiber(root, current, attemptHydrationAtLane); // Throw a special object that signals to the work loop that it should
           // interrupt the current render.
           //
           // Because we're inside a React-only execution stack, we don't
@@ -20641,7 +20620,7 @@ function detachOffscreenInstance(instance) {
 
   if (root !== null) {
     instance._pendingVisibility |= OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 function attachOffscreenInstance(instance) {
@@ -20662,7 +20641,7 @@ function attachOffscreenInstance(instance) {
 
   if (root !== null) {
     instance._pendingVisibility &= ~OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 
@@ -23409,11 +23388,7 @@ var isFlushingPassiveEffects = false;
 var didScheduleUpdateDuringPassiveEffects = false;
 var NESTED_PASSIVE_UPDATE_LIMIT = 50;
 var nestedPassiveUpdateCount = 0;
-var rootWithPassiveNestedUpdates = null; // If two updates are scheduled within the same event, we should treat their
-// event times as simultaneous, even if the actual clock time has advanced
-// between the first and second call.
-
-var currentEventTime = NoTimestamp;
+var rootWithPassiveNestedUpdates = null;
 var currentEventTransitionLane = NoLanes;
 var isRunningInsertionEffect = false;
 function getWorkInProgressRoot() {
@@ -23424,20 +23399,6 @@ function getWorkInProgressRootRenderLanes() {
 }
 function isWorkLoopSuspendedOnData() {
   return workInProgressSuspendedReason === SuspendedOnData;
-}
-function requestEventTime() {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    // We're inside React, so it's fine to read the actual time.
-    return now$1();
-  } // We're not inside React, so we may be in the middle of a browser event.
-
-  if (currentEventTime !== NoTimestamp) {
-    // Use the same start time for all updates until we enter React again.
-    return currentEventTime;
-  } // This is the first update since React yielded. Compute a new start time.
-
-  currentEventTime = now$1();
-  return currentEventTime;
 }
 function requestUpdateLane(fiber) {
   // Special cases
@@ -23522,7 +23483,7 @@ function requestRetryLane(fiber) {
   return claimNextRetryLane();
 }
 
-function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
+function scheduleUpdateOnFiber(root, fiber, lane) {
   {
     if (isRunningInsertionEffect) {
       error("useInsertionEffect must not schedule updates.");
@@ -23548,7 +23509,7 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
     markRootSuspended(root, workInProgressRootRenderLanes);
   } // Mark that the root has a pending update.
 
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -23660,10 +23621,8 @@ function isUnsafeClassRenderPhaseUpdate(fiber) {
 function performConcurrentWorkOnRoot(root, didTimeout) {
   {
     resetNestedUpdateFlag();
-  } // Since we know we're in a React event, we can clear the current
-  // event time. The next update will compute a new event time.
+  }
 
-  currentEventTime = NoTimestamp;
   currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
@@ -25906,10 +25865,9 @@ function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   var errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   var update = createRootErrorUpdate(rootFiber, errorInfo, SyncLane);
   var root = enqueueUpdate(rootFiber, update, SyncLane);
-  var eventTime = requestEventTime();
 
   if (root !== null) {
-    markRootUpdated(root, SyncLane, eventTime);
+    markRootUpdated(root, SyncLane);
     ensureRootIsScheduled(root);
   }
 }
@@ -25945,10 +25903,9 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error$1) {
         var errorInfo = createCapturedValueAtFiber(error$1, sourceFiber);
         var update = createClassErrorUpdate(fiber, errorInfo, SyncLane);
         var root = enqueueUpdate(fiber, update, SyncLane);
-        var eventTime = requestEventTime();
 
         if (root !== null) {
-          markRootUpdated(root, SyncLane, eventTime);
+          markRootUpdated(root, SyncLane);
           ensureRootIsScheduled(root);
         }
 
@@ -26074,11 +26031,10 @@ function retryTimedOutBoundary(boundaryFiber, retryLane) {
     retryLane = requestRetryLane(boundaryFiber);
   } // TODO: Special case idle priority?
 
-  var eventTime = requestEventTime();
   var root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
 
   if (root !== null) {
-    markRootUpdated(root, retryLane, eventTime);
+    markRootUpdated(root, retryLane);
     ensureRootIsScheduled(root);
   }
 }
@@ -26814,7 +26770,7 @@ function scheduleFibersWithFamiliesRecursively(
       var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
       }
     }
 
@@ -27708,7 +27664,6 @@ function FiberRootNode(
   this.next = null;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
-  this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
@@ -27946,8 +27901,7 @@ function updateContainer(element, container, parentComponent, callback) {
   var root = enqueueUpdate(current$1, update, lane);
 
   if (root !== null) {
-    var eventTime = requestEventTime();
-    scheduleUpdateOnFiber(root, current$1, lane, eventTime);
+    scheduleUpdateOnFiber(root, current$1, lane);
     entangleTransitions(root, current$1, lane);
   }
 
@@ -28095,7 +28049,7 @@ var setSuspenseHandler = null;
       var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
       }
     }
   };
@@ -28116,7 +28070,7 @@ var setSuspenseHandler = null;
       var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
       }
     }
   };
@@ -28137,7 +28091,7 @@ var setSuspenseHandler = null;
       var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
       }
     }
   }; // Support DevTools props for function components, forwardRef, memo, host components, etc.
@@ -28152,7 +28106,7 @@ var setSuspenseHandler = null;
     var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
     }
   };
 
@@ -28166,7 +28120,7 @@ var setSuspenseHandler = null;
     var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
     }
   };
 
@@ -28180,7 +28134,7 @@ var setSuspenseHandler = null;
     var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
     }
   };
 
@@ -28188,7 +28142,7 @@ var setSuspenseHandler = null;
     var root = enqueueConcurrentRenderForLane(fiber, SyncLane);
 
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
     }
   };
 
