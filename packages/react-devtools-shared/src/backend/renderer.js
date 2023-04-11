@@ -38,10 +38,13 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {gt, gte} from 'react-devtools-shared/src/backend/utils';
+import {
+  gt,
+  gte,
+  serializeToString,
+} from 'react-devtools-shared/src/backend/utils';
 import {
   cleanForBridge,
-  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
@@ -809,7 +812,7 @@ export function attach(
     name: string,
     fiber: Fiber,
     parentFiber: ?Fiber,
-    extraString?: string = '',
+    extraString: string = '',
   ): void => {
     if (__DEBUG__) {
       const displayName =
@@ -3544,14 +3547,17 @@ export function attach(
     }
   }
 
-  function copyElementPath(id: number, path: Array<string | number>): void {
+  function getSerializedElementValueByPath(
+    id: number,
+    path: Array<string | number>,
+  ): ?string {
     if (isMostRecentlyInspectedElement(id)) {
-      copyToClipboard(
-        getInObject(
-          ((mostRecentlyInspectedElement: any): InspectedElement),
-          path,
-        ),
+      const valueToCopy = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
       );
+
+      return serializeToString(valueToCopy);
     }
   }
 
@@ -4494,7 +4500,7 @@ export function attach(
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
     clearWarningsForFiberID,
-    copyElementPath,
+    getSerializedElementValueByPath,
     deletePath,
     findNativeNodesForFiberID,
     flushInitialOperations,

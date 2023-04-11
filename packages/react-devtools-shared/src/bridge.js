@@ -194,6 +194,7 @@ export type BackendEvents = {
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
+  saveToClipboard: [string],
   selectFiber: [number],
   shutdown: [],
   stopInspectingNative: [boolean],

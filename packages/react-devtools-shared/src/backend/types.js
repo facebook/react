@@ -342,7 +342,6 @@ export type RendererInterface = {
   clearErrorsAndWarnings: () => void,
   clearErrorsForFiberID: (id: number) => void,
   clearWarningsForFiberID: (id: number) => void,
-  copyElementPath: (id: number, path: Array<string | number>) => void,
   deletePath: (
     type: Type,
     id: number,
@@ -359,6 +358,10 @@ export type RendererInterface = {
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
+  getSerializedElementValueByPath: (
+    id: number,
+    path: Array<string | number>,
+  ) => ?string,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,

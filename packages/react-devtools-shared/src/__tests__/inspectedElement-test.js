@@ -1801,7 +1801,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject),
+      JSON.stringify(nestedObject, undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -1811,7 +1811,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject.a.b),
+      JSON.stringify(nestedObject.a.b, undefined, 2),
     );
   });
 
@@ -1894,7 +1894,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify('123n'),
+      JSON.stringify('123n', undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -1904,7 +1904,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify({0: 100, 1: -100, 2: 0}),
+      JSON.stringify({0: 100, 1: -100, 2: 0}, undefined, 2),
     );
   });
 
