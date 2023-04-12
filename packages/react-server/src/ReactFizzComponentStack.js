@@ -39,8 +39,8 @@ export function getStackByComponentStackNode(
 ): string {
   try {
     let info = '';
-    let node: ComponentStackNode = componentStack;
-    do {
+    let node: ComponentStackNode | null = componentStack;
+    while (node) {
       switch (node.tag) {
         case 0:
           info += describeBuiltInComponentFrame(node.type, null, null);
@@ -52,9 +52,8 @@ export function getStackByComponentStackNode(
           info += describeClassComponentFrame(node.type, null, null);
           break;
       }
-      // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.parent;
-    } while (node);
+    }
     return info;
   } catch (x) {
     return '\nError generating stack: ' + x.message + '\n' + x.stack;
