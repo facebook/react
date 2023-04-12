@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,8 +7,9 @@
  * @flow
  */
 
-import type {SchedulingEvent, ReactProfilerData} from '../types';
+import type {SchedulingEvent, TimelineData} from '../types';
 import type {
+  ClickInteraction,
   Interaction,
   MouseMoveInteraction,
   Rect,
@@ -40,13 +41,16 @@ const EVENT_ROW_HEIGHT_FIXED =
   TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 export class SchedulingEventsView extends View {
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _intrinsicSize: Size;
 
   _hoveredEvent: SchedulingEvent | null = null;
   onHover: ((event: SchedulingEvent | null) => void) | null = null;
+  onClick:
+    | ((event: SchedulingEvent | null, eventIndex: number | null) => void)
+    | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
     this._profilerData = profilerData;
 
@@ -56,7 +60,7 @@ export class SchedulingEventsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 
@@ -243,7 +247,7 @@ export class SchedulingEventsView extends View {
         timestamp - eventTimestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + eventTimestampAllowance
       ) {
-        this.currentCursor = 'context-menu';
+        this.currentCursor = 'pointer';
         viewRefs.hoveredView = this;
         onHover(event);
         return;
@@ -253,10 +257,31 @@ export class SchedulingEventsView extends View {
     onHover(null);
   }
 
+  /**
+   * @private
+   */
+  _handleClick(interaction: ClickInteraction) {
+    const {onClick} = this;
+    if (onClick) {
+      const {
+        _profilerData: {schedulingEvents},
+      } = this;
+      const eventIndex = schedulingEvents.findIndex(
+        event => event === this._hoveredEvent,
+      );
+      // onHover is going to take care of all the difficult logic here of
+      // figuring out which event when they're proximity is close.
+      onClick(this._hoveredEvent, eventIndex >= 0 ? eventIndex : null);
+    }
+  }
+
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
         this._handleMouseMove(interaction, viewRefs);
+        break;
+      case 'click':
+        this._handleClick(interaction);
         break;
     }
   }

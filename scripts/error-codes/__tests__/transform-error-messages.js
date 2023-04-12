@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -106,6 +106,54 @@ new Error(\`Expected \${foo} target to \` + \`be an array; got \${bar}\`);
     expect(
       transform(`
 new Error(\`Expected \\\`\$\{listener\}\\\` listener to be a function, instead got a value of \\\`\$\{type\}\\\` type.\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles ignoring errors that are comment-excluded inside ternary expressions', () => {
+    expect(
+      transform(`
+let val = someBool
+  ? //eslint-disable-next-line react-internal/prod-error-codes
+    new Error('foo')
+  : someOtherBool
+  ? new Error('bar')
+  : //eslint-disable-next-line react-internal/prod-error-codes
+    new Error('baz');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles ignoring errors that are comment-excluded outside ternary expressions', () => {
+    expect(
+      transform(`
+//eslint-disable-next-line react-internal/prod-error-codes
+let val = someBool
+  ? new Error('foo')
+  : someOtherBool
+  ? new Error('bar')
+  : new Error('baz');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles deeply nested expressions', () => {
+    expect(
+      transform(`
+let val =
+  (a,
+  (b,
+  // eslint-disable-next-line react-internal/prod-error-codes
+  new Error('foo')));
+`)
+    ).toMatchSnapshot();
+
+    expect(
+      transform(`
+let val =
+  (a,
+  // eslint-disable-next-line react-internal/prod-error-codes
+  (b, new Error('foo')));
 `)
     ).toMatchSnapshot();
   });

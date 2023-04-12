@@ -1,10 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -18,7 +19,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -39,7 +40,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('context', function() {
+  describe('context', function () {
     let Context, PurpleContextProvider, RedContextProvider, Consumer;
     beforeEach(() => {
       Context = React.createContext('none');
@@ -409,12 +410,24 @@ describe('ReactDOMServerIntegration', () => {
         </LoggedInUser.Provider>
       );
 
-      const streamAmy = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Amy'),
-      ).setEncoding('utf8');
-      const streamBob = ReactDOMServer.renderToNodeStream(
-        AppWithUser('Bob'),
-      ).setEncoding('utf8');
+      let streamAmy;
+      let streamBob;
+      expect(() => {
+        streamAmy = ReactDOMServer.renderToNodeStream(
+          AppWithUser('Amy'),
+        ).setEncoding('utf8');
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
+      expect(() => {
+        streamBob = ReactDOMServer.renderToNodeStream(
+          AppWithUser('Bob'),
+        ).setEncoding('utf8');
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
 
       // Testing by filling the buffer using internal _read() with a small
       // number of bytes to avoid a test case which needs to align to a
@@ -449,9 +462,14 @@ describe('ReactDOMServerIntegration', () => {
       const streamCount = 34;
 
       for (let i = 0; i < streamCount; i++) {
-        streams[i] = ReactDOMServer.renderToNodeStream(
-          NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
-        ).setEncoding('utf8');
+        expect(() => {
+          streams[i] = ReactDOMServer.renderToNodeStream(
+            NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
+          ).setEncoding('utf8');
+        }).toErrorDev(
+          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+          {withoutStack: true},
+        );
       }
 
       // Testing by filling the buffer using internal _read() with a small
@@ -468,9 +486,14 @@ describe('ReactDOMServerIntegration', () => {
 
       // Recreate those same streams.
       for (let i = 0; i < streamCount; i += 2) {
-        streams[i] = ReactDOMServer.renderToNodeStream(
-          NthRender(i),
-        ).setEncoding('utf8');
+        expect(() => {
+          streams[i] = ReactDOMServer.renderToNodeStream(
+            NthRender(i),
+          ).setEncoding('utf8');
+        }).toErrorDev(
+          'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+          {withoutStack: true},
+        );
       }
 
       // Read a bit from all streams again.

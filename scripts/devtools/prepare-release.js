@@ -31,6 +31,16 @@ async function main() {
 
   await checkNPMPermissions();
 
+  const sha = await getPreviousCommitSha();
+  const [shortCommitLog, formattedCommitLog] = await getCommitLog(sha);
+
+  console.log('');
+  console.log(
+    'This release includes the following commits:',
+    chalk.gray(shortCommitLog)
+  );
+  console.log('');
+
   const releaseType = await getReleaseType();
 
   const path = join(ROOT_PATH, PACKAGE_PATHS[0]);
@@ -40,6 +50,10 @@ async function main() {
     releaseType === 'minor'
       ? `${major}.${minor + 1}.0`
       : `${major}.${minor}.${patch + 1}`;
+
+  updateChangelog(nextVersion, formattedCommitLog);
+
+  await reviewChangelogPrompt();
 
   updatePackageVersions(previousVersion, nextVersion);
   updateManifestVersions(previousVersion, nextVersion);
@@ -51,13 +65,6 @@ async function main() {
     )} to ${chalk.bold(nextVersion)}`
   );
   console.log('');
-
-  const sha = await getPreviousCommitSha();
-  const commitLog = await getCommitLog(sha);
-
-  updateChangelog(nextVersion, commitLog);
-
-  await reviewChangelogPrompt();
 
   await commitPendingChanges(previousVersion, nextVersion);
 
@@ -89,26 +96,47 @@ async function commitPendingChanges(previousVersion, nextVersion) {
 }
 
 async function getCommitLog(sha) {
+  let shortLog = '';
   let formattedLog = '';
 
+  const hasGh = await hasGithubCLI();
   const rawLog = await execRead(`
     git log --topo-order --pretty=format:'%s' ${sha}...HEAD -- packages/react-devtools*
   `);
-  rawLog.split('\n').forEach(line => {
-    line = line.replace('[DevTools] ', '');
-
+  const lines = rawLog.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].replace(/^\[devtools\] */i, '');
     const match = line.match(/(.+) \(#([0-9]+)\)/);
     if (match !== null) {
       const title = match[1];
       const pr = match[2];
-
-      formattedLog += `\n* ${title} ([USERNAME](https://github.com/USERNAME) in [#${pr}](${PULL_REQUEST_BASE_URL}${pr}))`;
+      let username;
+      if (hasGh) {
+        const response = await execRead(
+          `gh api /repos/facebook/react/pulls/${pr}`
+        );
+        const {user} = JSON.parse(response);
+        username = `[${user.login}](${user.html_url})`;
+      } else {
+        username = '[USERNAME](https://github.com/USERNAME)';
+      }
+      formattedLog += `\n* ${title} (${username} in [#${pr}](${PULL_REQUEST_BASE_URL}${pr}))`;
+      shortLog += `\n* ${title}`;
     } else {
       formattedLog += `\n* ${line}`;
+      shortLog += `\n* ${line}`;
     }
-  });
+  }
 
-  return formattedLog;
+  return [shortLog, formattedLog];
+}
+
+async function hasGithubCLI() {
+  try {
+    await exec('which gh');
+    return true;
+  } catch (_) {}
+  return false;
 }
 
 async function getPreviousCommitSha() {
@@ -204,7 +232,7 @@ function updateChangelog(nextVersion, commitLog) {
     month: 'long',
     day: 'numeric',
   });
-  const header = `## ${nextVersion} (${dateString})`;
+  const header = `---\n\n### ${nextVersion}\n${dateString}`;
 
   const newChangelog = `${beginning}${RELEASE_SCRIPT_TOKEN}\n\n${header}\n${commitLog}${end}`;
 

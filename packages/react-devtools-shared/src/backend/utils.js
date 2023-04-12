@@ -1,5 +1,6 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +9,7 @@
  */
 
 import {copy} from 'clipboard-js';
+import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
@@ -19,8 +21,8 @@ export function cleanForBridge(
   path?: Array<string | number> = [],
 ): DehydratedData | null {
   if (data !== null) {
-    const cleanedPaths = [];
-    const unserializablePaths = [];
+    const cleanedPaths: Array<Array<string | number>> = [];
+    const unserializablePaths: Array<Array<string | number>> = [];
     const cleanedData = dehydrate(
       data,
       cleanedPaths,
@@ -70,7 +72,7 @@ export function copyWithDelete(
       delete updated[key];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[key] = copyWithDelete(obj[key], path, index + 1);
   }
   return updated;
@@ -88,7 +90,7 @@ export function copyWithRename(
   const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === oldPath.length) {
     const newKey = newPath[index];
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[newKey] = updated[oldKey];
     if (isArray(updated)) {
       updated.splice(((oldKey: any): number), 1);
@@ -96,7 +98,7 @@ export function copyWithRename(
       delete updated[oldKey];
     }
   } else {
-    // $FlowFixMe number or string is fine here
+    // $FlowFixMe[incompatible-use] number or string is fine here
     updated[oldKey] = copyWithRename(obj[oldKey], oldPath, newPath, index + 1);
   }
   return updated;
@@ -113,12 +115,15 @@ export function copyWithSet(
   }
   const key = path[index];
   const updated = isArray(obj) ? obj.slice() : {...obj};
-  // $FlowFixMe number or string is fine here
+  // $FlowFixMe[incompatible-use] number or string is fine here
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
 }
 
-export function getEffectDurations(root: Object) {
+export function getEffectDurations(root: Object): {
+  effectDuration: any | null,
+  passiveEffectDuration: any | null,
+} {
   // Profiling durations are only available for certain builds.
   // If available, they'll be stored on the HostRoot.
   let effectDuration = null;
@@ -139,7 +144,7 @@ export function getEffectDurations(root: Object) {
 }
 
 export function serializeToString(data: any): string {
-  const cache = new Set();
+  const cache = new Set<mixed>();
   // Use a custom replacer function to protect against circular references.
   return JSON.stringify(data, (key, value) => {
     if (typeof value === 'object' && value !== null) {
@@ -148,12 +153,67 @@ export function serializeToString(data: any): string {
       }
       cache.add(value);
     }
-    // $FlowFixMe
     if (typeof value === 'bigint') {
       return value.toString() + 'n';
     }
     return value;
   });
+}
+
+// Formats an array of args with a style for console methods, using
+// the following algorithm:
+//     1. The first param is a string that contains %c
+//          - Bail out and return the args without modifying the styles.
+//            We don't want to affect styles that the developer deliberately set.
+//     2. The first param is a string that doesn't contain %c but contains
+//        string formatting
+//          - [`%c${args[0]}`, style, ...args.slice(1)]
+//          - Note: we assume that the string formatting that the developer uses
+//            is correct.
+//     3. The first param is a string that doesn't contain string formatting
+//        OR is not a string
+//          - Create a formatting string where:
+//                 boolean, string, symbol -> %s
+//                 number -> %f OR %i depending on if it's an int or float
+//                 default -> %o
+export function formatWithStyles(
+  inputArgs: $ReadOnlyArray<any>,
+  style?: string,
+): $ReadOnlyArray<any> {
+  if (
+    inputArgs === undefined ||
+    inputArgs === null ||
+    inputArgs.length === 0 ||
+    // Matches any of %c but not %%c
+    (typeof inputArgs[0] === 'string' && inputArgs[0].match(/([^%]|^)(%c)/g)) ||
+    style === undefined
+  ) {
+    return inputArgs;
+  }
+
+  // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
+  const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
+  if (typeof inputArgs[0] === 'string' && inputArgs[0].match(REGEXP)) {
+    return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
+  } else {
+    const firstArg = inputArgs.reduce((formatStr, elem, i) => {
+      if (i > 0) {
+        formatStr += ' ';
+      }
+      switch (typeof elem) {
+        case 'string':
+        case 'boolean':
+        case 'symbol':
+          return (formatStr += '%s');
+        case 'number':
+          const formatting = Number.isInteger(elem) ? '%i' : '%f';
+          return (formatStr += formatting);
+        default:
+          return (formatStr += '%o');
+      }
+    }, '%c');
+    return [firstArg, style, ...inputArgs];
+  }
 }
 
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
@@ -215,4 +275,12 @@ export function isSynchronousXHRSupported(): boolean {
     window.document.featurePolicy &&
     window.document.featurePolicy.allowsFeature('sync-xhr')
   );
+}
+
+export function gt(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) === 1;
+}
+
+export function gte(a: string = '', b: string = ''): boolean {
+  return compareVersions(a, b) > -1;
 }

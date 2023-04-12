@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,12 +12,12 @@
 let PropTypes;
 let React;
 let ReactDOM;
-let act;
+let ReactDOMClient;
 
 describe('ReactES6Class', () => {
   let container;
   let root;
-  const freeze = function(expectation) {
+  const freeze = function (expectation) {
     Object.freeze(expectation);
     return expectation;
   };
@@ -29,9 +29,9 @@ describe('ReactES6Class', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('jest-react').act;
+    ReactDOMClient = require('react-dom/client');
     container = document.createElement('div');
-    root = ReactDOM.createRoot(container);
+    root = ReactDOMClient.createRoot(container);
     attachedListener = null;
     renderedName = null;
     Inner = class extends React.Component {
@@ -47,7 +47,7 @@ describe('ReactES6Class', () => {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    act(() => root.render(element));
+    ReactDOM.flushSync(() => root.render(element));
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
@@ -61,7 +61,7 @@ describe('ReactES6Class', () => {
   it('throws if no render function is defined', () => {
     class Foo extends React.Component {}
     expect(() => {
-      expect(() => act(() => root.render(<Foo />))).toThrow();
+      expect(() => ReactDOM.flushSync(() => root.render(<Foo />))).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
       'Warning: Foo(...): No `render` method found on the returned component ' +
@@ -116,7 +116,7 @@ describe('ReactES6Class', () => {
     }
     const ref = React.createRef();
     test(<Foo initialValue="foo" ref={ref} />, 'DIV', 'foo');
-    act(() => ref.current.changeState());
+    ReactDOM.flushSync(() => ref.current.changeState());
     test(<Foo />, 'SPAN', 'bar');
   });
 
@@ -145,7 +145,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -160,7 +162,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
     );
@@ -173,7 +177,9 @@ describe('ReactES6Class', () => {
         return <div />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
     );
@@ -191,7 +197,9 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    expect(() => act(() => root.render(<Foo foo="foo" />))).toErrorDev(
+    expect(() => {
+      ReactDOM.flushSync(() => root.render(<Foo foo="foo" />));
+    }).toErrorDev(
       '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Foo`. ' +
@@ -238,36 +246,38 @@ describe('ReactES6Class', () => {
     test(<Foo update={true} />, 'DIV', 'updated');
   });
 
-  it('renders based on context in the constructor', () => {
-    class Foo extends React.Component {
-      constructor(props, context) {
-        super(props, context);
-        this.state = {tag: context.tag, className: this.context.className};
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('renders based on context in the constructor', () => {
+      class Foo extends React.Component {
+        constructor(props, context) {
+          super(props, context);
+          this.state = {tag: context.tag, className: this.context.className};
+        }
+        render() {
+          const Tag = this.state.tag;
+          return <Tag className={this.state.className} />;
+        }
       }
-      render() {
-        const Tag = this.state.tag;
-        return <Tag className={this.state.className} />;
-      }
-    }
-    Foo.contextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
+      Foo.contextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
 
-    class Outer extends React.Component {
-      getChildContext() {
-        return {tag: 'span', className: 'foo'};
+      class Outer extends React.Component {
+        getChildContext() {
+          return {tag: 'span', className: 'foo'};
+        }
+        render() {
+          return <Foo />;
+        }
       }
-      render() {
-        return <Foo />;
-      }
-    }
-    Outer.childContextTypes = {
-      tag: PropTypes.string,
-      className: PropTypes.string,
-    };
-    test(<Outer />, 'SPAN', 'foo');
-  });
+      Outer.childContextTypes = {
+        tag: PropTypes.string,
+        className: PropTypes.string,
+      };
+      test(<Outer />, 'SPAN', 'foo');
+    });
+  }
 
   it('renders only once when setting state in componentWillMount', () => {
     let renderCount = 0;
@@ -285,13 +295,11 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'SPAN', 'bar');
-    // This is broken with deferRenderPhaseUpdateToNextBatch flag on.
-    // We can't use the gate feature here because this test is also in CoffeeScript and TypeScript.
-    expect(renderCount).toBe(global.__WWW__ && !global.__VARIANT__ ? 2 : 1);
+    expect(renderCount).toBe(1);
   });
 
   it('should warn with non-object in the initial state property', () => {
-    [['an array'], 'a string', 1234].forEach(function(state) {
+    [['an array'], 'a string', 1234].forEach(function (state) {
       class Foo extends React.Component {
         constructor() {
           super();
@@ -337,7 +345,7 @@ describe('ReactES6Class', () => {
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
 
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -378,7 +386,7 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'DIV', 'foo');
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -427,43 +435,45 @@ describe('ReactES6Class', () => {
       'did-update', freeze({value: 'foo'}), {},
     ]);
     lifeCycles = []; // reset
-    act(() => root.unmount());
+    ReactDOM.flushSync(() => root.unmount());
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
-  it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
-    let getDefaultPropsWasCalled = false;
-    let getInitialStateWasCalled = false;
-    class Foo extends React.Component {
-      constructor() {
-        super();
-        this.contextTypes = {};
-        this.contextType = {};
-        this.propTypes = {};
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
+      let getDefaultPropsWasCalled = false;
+      let getInitialStateWasCalled = false;
+      class Foo extends React.Component {
+        constructor() {
+          super();
+          this.contextTypes = {};
+          this.contextType = {};
+          this.propTypes = {};
+        }
+        getInitialState() {
+          getInitialStateWasCalled = true;
+          return {};
+        }
+        getDefaultProps() {
+          getDefaultPropsWasCalled = true;
+          return {};
+        }
+        render() {
+          return <span className="foo" />;
+        }
       }
-      getInitialState() {
-        getInitialStateWasCalled = true;
-        return {};
-      }
-      getDefaultProps() {
-        getDefaultPropsWasCalled = true;
-        return {};
-      }
-      render() {
-        return <span className="foo" />;
-      }
-    }
 
-    expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
-      'getInitialState was defined on Foo, a plain JavaScript class.',
-      'getDefaultProps was defined on Foo, a plain JavaScript class.',
-      'propTypes was defined as an instance property on Foo.',
-      'contextType was defined as an instance property on Foo.',
-      'contextTypes was defined as an instance property on Foo.',
-    ]);
-    expect(getInitialStateWasCalled).toBe(false);
-    expect(getDefaultPropsWasCalled).toBe(false);
-  });
+      expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
+        'getInitialState was defined on Foo, a plain JavaScript class.',
+        'getDefaultProps was defined on Foo, a plain JavaScript class.',
+        'propTypes was defined as an instance property on Foo.',
+        'contextType was defined as an instance property on Foo.',
+        'contextTypes was defined as an instance property on Foo.',
+      ]);
+      expect(getInitialStateWasCalled).toBe(false);
+      expect(getDefaultPropsWasCalled).toBe(false);
+    });
+  }
 
   it('does not warn about getInitialState() on class components if state is also defined.', () => {
     class Foo extends React.Component {
@@ -539,41 +549,49 @@ describe('ReactES6Class', () => {
       'replaceState(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );
-    expect(() =>
-      expect(() => ref.current.isMounted()).toThrow(),
-    ).toWarnDev(
+    expect(() => expect(() => ref.current.isMounted()).toThrow()).toWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true},
     );
   });
 
-  it('supports this.context passed via getChildContext', () => {
-    class Bar extends React.Component {
-      render() {
-        return <div className={this.context.bar} />;
+  if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
+    it('supports this.context passed via getChildContext', () => {
+      class Bar extends React.Component {
+        render() {
+          return <div className={this.context.bar} />;
+        }
       }
-    }
-    Bar.contextTypes = {bar: PropTypes.string};
-    class Foo extends React.Component {
-      getChildContext() {
-        return {bar: 'bar-through-context'};
+      Bar.contextTypes = {bar: PropTypes.string};
+      class Foo extends React.Component {
+        getChildContext() {
+          return {bar: 'bar-through-context'};
+        }
+        render() {
+          return <Bar />;
+        }
       }
-      render() {
-        return <Bar />;
-      }
-    }
-    Foo.childContextTypes = {bar: PropTypes.string};
-    test(<Foo />, 'DIV', 'bar-through-context');
-  });
+      Foo.childContextTypes = {bar: PropTypes.string};
+      test(<Foo />, 'DIV', 'bar-through-context');
+    });
+  }
 
-  it('supports classic refs', () => {
+  it('supports string refs', () => {
     class Foo extends React.Component {
       render() {
         return <Inner name="foo" ref="inner" />;
       }
     }
     const ref = React.createRef();
-    test(<Foo ref={ref} />, 'DIV', 'foo');
+    expect(() => {
+      test(<Foo ref={ref} />, 'DIV', 'foo');
+    }).toErrorDev([
+      'Warning: Component "Foo" contains the string ref "inner". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Foo (at **)',
+    ]);
     expect(ref.current.refs.inner.getName()).toBe('foo');
   });
 

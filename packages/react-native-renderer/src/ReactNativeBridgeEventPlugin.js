@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
+import type {
+  AnyNativeEvent,
+  EventTypes,
+} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
 
@@ -18,20 +21,20 @@ import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
-const {
-  customBubblingEventTypes,
-  customDirectEventTypes,
-} = ReactNativeViewConfigRegistry;
+const {customBubblingEventTypes, customDirectEventTypes} =
+  ReactNativeViewConfigRegistry;
 
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
+// $FlowFixMe[missing-local-annot]
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     if (!inst) {
@@ -48,6 +51,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function getParent(inst) {
   do {
     inst = inst.return;
@@ -66,7 +70,12 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+export function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: Function,
+  skipBubbling: boolean,
+) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -76,19 +85,43 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
-    fn(path[i], 'bubbled', arg);
+  if (skipBubbling) {
+    // Dispatch on target only
+    fn(path[0], 'bubbled', arg);
+  } else {
+    for (i = 0; i < path.length; i++) {
+      fn(path[i], 'bubbled', arg);
+    }
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      false,
+    );
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+
+// $FlowFixMe[missing-local-annot]
+function accumulateCapturePhaseDispatches(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      true,
+    );
+  }
 }
 
 /**
@@ -133,9 +166,9 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
-  eventTypes: {},
+  eventTypes: ({}: EventTypes),
 
-  extractEvents: function(
+  extractEvents: function (
     topLevelType: TopLevelType,
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
@@ -150,7 +183,7 @@ const ReactNativeBridgeEventPlugin = {
 
     if (!bubbleDispatchConfig && !directDispatchConfig) {
       throw new Error(
-        // $FlowFixMe - Flow doesn't like this string coercion because DOMTopLevelEventType is opaque
+        // $FlowFixMe[incompatible-type] - Flow doesn't like this string coercion because DOMTopLevelEventType is opaque
         `Unsupported top level event type "${topLevelType}" dispatched`,
       );
     }
@@ -162,7 +195,15 @@ const ReactNativeBridgeEventPlugin = {
       nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
-      accumulateTwoPhaseDispatches(event);
+      const skipBubbling =
+        event != null &&
+        event.dispatchConfig.phasedRegistrationNames != null &&
+        event.dispatchConfig.phasedRegistrationNames.skipBubbling;
+      if (skipBubbling) {
+        accumulateCapturePhaseDispatches(event);
+      } else {
+        accumulateTwoPhaseDispatches(event);
+      }
     } else if (directDispatchConfig) {
       accumulateDirectDispatches(event);
     } else {

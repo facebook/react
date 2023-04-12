@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,10 +35,10 @@ export type MeasureLayoutOnSuccessCallback = (
 
 export type AttributeType<T, V> =
   | true
-  | $ReadOnly<{|
+  | $ReadOnly<{
       diff?: (arg1: T, arg2: T) => boolean,
       process?: (arg1: V) => T,
-    |}>;
+    }>;
 
 // We either force that `diff` and `process` always use mixed,
 // or we allow them to define specific types and use this hack
@@ -48,7 +48,7 @@ export type AttributeConfiguration = $ReadOnly<{
   [propName: string]: AnyAttributeType,
   style: $ReadOnly<{
     [propName: string]: AnyAttributeType,
-    ...,
+    ...
   }>,
   ...
 }>;
@@ -57,7 +57,7 @@ export type PartialAttributeConfiguration = $ReadOnly<{
   [propName: string]: AnyAttributeType,
   style?: $ReadOnly<{
     [propName: string]: AnyAttributeType,
-    ...,
+    ...
   }>,
   ...
 }>;
@@ -73,15 +73,16 @@ export type ViewConfig = $ReadOnly<{
       phasedRegistrationNames: $ReadOnly<{
         captured: string,
         bubbled: string,
+        skipBubbling?: ?boolean,
       }>,
     }>,
-    ...,
+    ...
   }>,
   directEventTypes?: $ReadOnly<{
     [eventName: string]: $ReadOnly<{
       registrationName: string,
     }>,
-    ...,
+    ...
   }>,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
@@ -93,6 +94,22 @@ export type PartialViewConfig = $ReadOnly<{
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
 }>;
+
+/**
+ * Current usages should migrate to this definition
+ */
+export interface INativeMethods {
+  blur(): void;
+  focus(): void;
+  measure(callback: MeasureOnSuccessCallback): void;
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void;
+  measureLayout(
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+    onFail?: () => void,
+  ): void;
+  setNativeProps(nativeProps: {...}): void;
+}
 
 export type NativeMethods = $ReadOnly<{|
   blur(): void,
@@ -107,6 +124,10 @@ export type NativeMethods = $ReadOnly<{|
   setNativeProps(nativeProps: {...}): void,
 |}>;
 
+// This validates that INativeMethods and NativeMethods stay in sync using Flow!
+declare var ensureNativeMethodsAreSynced: NativeMethods;
+(ensureNativeMethodsAreSynced: INativeMethods);
+
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 
 type SecretInternalsType = {
@@ -118,45 +139,46 @@ type SecretInternalsType = {
 
 type InspectorDataProps = $ReadOnly<{
   [propName: string]: string,
-  ...,
+  ...
 }>;
 
-type InspectorDataSource = $ReadOnly<{|
+type InspectorDataSource = $ReadOnly<{
   fileName?: string,
   lineNumber?: number,
-|}>;
+}>;
 
 type InspectorDataGetter = (
   <TElementType: ElementType>(
     componentOrHandle: ElementRef<TElementType> | number,
   ) => ?number,
-) => $ReadOnly<{|
+) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
   props: InspectorDataProps,
   source: InspectorDataSource,
-|}>;
+}>;
 
-export type InspectorData = $ReadOnly<{|
-  hierarchy: Array<{|
+export type InspectorData = $ReadOnly<{
+  closestInstance?: mixed,
+  hierarchy: Array<{
     name: ?string,
     getInspectorData: InspectorDataGetter,
-  |}>,
+  }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
   source: ?InspectorDataSource,
-|}>;
+}>;
 
-export type TouchedViewDataAtPoint = $ReadOnly<{|
+export type TouchedViewDataAtPoint = $ReadOnly<{
   pointerY: number,
   touchedViewTag?: number,
-  frame: $ReadOnly<{|
+  frame: $ReadOnly<{
     top: number,
     left: number,
     width: number,
     height: number,
-  |}>,
+  }>,
   ...InspectorData,
-|}>;
+}>;
 
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
@@ -190,6 +212,11 @@ export type ReactNativeType = {
   ...
 };
 
+export opaque type Node = mixed;
+export opaque type InternalInstanceHandle = mixed;
+type PublicInstance = mixed;
+type PublicTextInstance = mixed;
+
 export type ReactFabricType = {
   findHostInstance_DEPRECATED<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
@@ -213,18 +240,12 @@ export type ReactFabricType = {
     concurrentRoot: ?boolean,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
-  ...
-};
-
-export type ReactNativeEventTarget = {
-  node: {...},
-  canonical: {
-    _nativeTag: number,
-    viewConfig: ViewConfig,
-    currentProps: {...},
-    _internalInstanceHandle: {...},
-    ...
-  },
+  getNodeFromInternalInstanceHandle(
+    internalInstanceHandle: InternalInstanceHandle,
+  ): ?Node,
+  getPublicInstanceFromInternalInstanceHandle(
+    internalInstanceHandle: InternalInstanceHandle,
+  ): PublicInstance | PublicTextInstance,
   ...
 };
 
@@ -266,18 +287,18 @@ export type LayoutAnimationProperty =
   | 'scaleY'
   | 'scaleXY';
 
-export type LayoutAnimationAnimationConfig = $ReadOnly<{|
+export type LayoutAnimationAnimationConfig = $ReadOnly<{
   duration?: number,
   delay?: number,
   springDamping?: number,
   initialVelocity?: number,
   type?: LayoutAnimationType,
   property?: LayoutAnimationProperty,
-|}>;
+}>;
 
-export type LayoutAnimationConfig = $ReadOnly<{|
+export type LayoutAnimationConfig = $ReadOnly<{
   duration: number,
   create?: LayoutAnimationAnimationConfig,
   update?: LayoutAnimationAnimationConfig,
   delete?: LayoutAnimationAnimationConfig,
-|}>;
+}>;

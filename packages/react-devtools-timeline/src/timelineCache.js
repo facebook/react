@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
  */
 
 import type {Wakeable} from 'shared/ReactTypes';
-import type {ReactProfilerData} from './types';
+import type {TimelineData} from './types';
 
 import {importFile as importFileWorker} from './import-worker';
 
@@ -16,30 +16,27 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
-|};
+};
 
-type ResolvedRecord<T> = {|
+type ResolvedRecord<T> = {
   status: 1,
   value: T,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: Error,
-|};
+};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // Profiler file contents are static anyway.
-const fileNameToProfilerDataMap: Map<
-  string,
-  Record<ReactProfilerData>,
-> = new Map();
+const fileNameToProfilerDataMap: Map<string, Record<TimelineData>> = new Map();
 
 function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   if (record.status === Resolved) {
@@ -53,14 +50,14 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   }
 }
 
-export function importFile(file: File): ReactProfilerData | Error {
+export function importFile(file: File): TimelineData | Error {
   const fileName = file.name;
   let record = fileNameToProfilerDataMap.get(fileName);
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -74,7 +71,7 @@ export function importFile(file: File): ReactProfilerData | Error {
       callbacks.clear();
     };
 
-    const newRecord: Record<ReactProfilerData> = (record = {
+    const newRecord: Record<TimelineData> = (record = {
       status: Pending,
       value: wakeable,
     });
@@ -82,7 +79,8 @@ export function importFile(file: File): ReactProfilerData | Error {
     importFileWorker(file).then(data => {
       switch (data.status) {
         case 'SUCCESS':
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<ReactProfilerData>);
+          const resolvedRecord =
+            ((newRecord: any): ResolvedRecord<TimelineData>);
           resolvedRecord.status = Resolved;
           resolvedRecord.value = data.processedData;
           break;

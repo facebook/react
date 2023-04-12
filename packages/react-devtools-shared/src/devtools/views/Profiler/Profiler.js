@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,11 +17,16 @@ import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
 import {Timeline} from 'react-devtools-timeline/src/Timeline';
+import SidebarEventInfo from './SidebarEventInfo';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
+import NoProfilingData from './NoProfilingData';
+import RecordingInProgress from './RecordingInProgress';
+import ProcessingData from './ProcessingData';
+import ProfilingNotSupported from './ProfilingNotSupported';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
@@ -29,10 +34,11 @@ import {SettingsModalContextController} from 'react-devtools-shared/src/devtools
 import portaledContent from '../portaledContent';
 import {StoreContext} from '../context';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
+import {enableProfilerComponentTree} from 'react-devtools-feature-flags';
 
 import styles from './Profiler.css';
 
-function Profiler(_: {||}) {
+function Profiler(_: {}) {
   const {
     didRecordCommits,
     isProcessingData,
@@ -44,11 +50,14 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
-  const {searchInputContainerRef} = useContext(TimelineContext);
+  const {file: timelineTraceEventData, searchInputContainerRef} =
+    useContext(TimelineContext);
 
   const {supportsTimeline} = useContext(StoreContext);
 
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
+  const isRightColumnVisible =
+    isLegacyProfilerSelected || enableProfilerComponentTree;
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'timeline') {
@@ -69,6 +78,8 @@ function Profiler(_: {||}) {
     view = <RecordingInProgress />;
   } else if (isProcessingData) {
     view = <ProcessingData />;
+  } else if (timelineTraceEventData) {
+    view = <OnlyTimelineData />;
   } else if (supportsProfiling) {
     view = <NoProfilingData />;
   } else {
@@ -94,6 +105,9 @@ function Profiler(_: {||}) {
           }
         }
         break;
+      case 'timeline':
+        sidebar = <SidebarEventInfo />;
+        break;
       default:
         break;
     }
@@ -104,12 +118,8 @@ function Profiler(_: {||}) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle
-              disabled={!supportsProfiling || selectedTabID === 'timeline'}
-            />
-            <ReloadAndProfileButton
-              disabled={selectedTabID === 'timeline' || !supportsProfiling}
-            />
+            <RecordToggle disabled={!supportsProfiling} />
+            <ReloadAndProfileButton disabled={!supportsProfiling} />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
             <div className={styles.VRule} />
@@ -141,7 +151,7 @@ function Profiler(_: {||}) {
             <ModalDialog />
           </div>
         </div>
-        {isLegacyProfilerSelected && (
+        {isRightColumnVisible && (
           <div className={styles.RightColumn}>{sidebar}</div>
         )}
         <SettingsModal />
@@ -149,6 +159,15 @@ function Profiler(_: {||}) {
     </SettingsModalContextController>
   );
 }
+
+const OnlyTimelineData = () => (
+  <div className={styles.Column}>
+    <div className={styles.Header}>Timeline only</div>
+    <div className={styles.Row}>
+      The current profile contains only Timeline data.
+    </div>
+  </div>
+);
 
 const tabs = [
   {
@@ -176,50 +195,4 @@ const tabsWithTimeline = [
   },
 ];
 
-const NoProfilingData = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>No profiling data has been recorded.</div>
-    <div className={styles.Row}>
-      Click the record button <RecordToggle /> to start recording.
-    </div>
-  </div>
-);
-
-const ProfilingNotSupported = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Profiling not supported.</div>
-    <p className={styles.Paragraph}>
-      Profiling support requires either a development or production-profiling
-      build of React v16.5+.
-    </p>
-    <p className={styles.Paragraph}>
-      Learn more at{' '}
-      <a
-        className={styles.Link}
-        href="https://reactjs.org/link/profiling"
-        rel="noopener noreferrer"
-        target="_blank">
-        reactjs.org/link/profiling
-      </a>
-      .
-    </p>
-  </div>
-);
-
-const ProcessingData = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Processing data...</div>
-    <div className={styles.Row}>This should only take a minute.</div>
-  </div>
-);
-
-const RecordingInProgress = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Profiling is in progress...</div>
-    <div className={styles.Row}>
-      Click the record button <RecordToggle /> to stop recording.
-    </div>
-  </div>
-);
-
-export default portaledContent(Profiler);
+export default (portaledContent(Profiler): React.ComponentType<{}>);

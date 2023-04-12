@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@ import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
 import type {CommitTree} from './types';
 
-export type ChartNode = {|
+export type ChartNode = {
   actualDuration: number,
   didRender: boolean,
   id: number,
@@ -21,16 +21,16 @@ export type ChartNode = {|
   offset: number,
   selfDuration: number,
   treeBaseDuration: number,
-|};
+};
 
-export type ChartData = {|
+export type ChartData = {
   baseDuration: number,
   depth: number,
   idToDepthMap: Map<number, number>,
   maxSelfDuration: number,
   renderPathNodes: Set<number>,
   rows: Array<Array<ChartNode>>,
-|};
+};
 
 const cachedChartData: Map<string, ChartData> = new Map();
 
@@ -39,12 +39,12 @@ export function getChartData({
   commitTree,
   profilerStore,
   rootID,
-}: {|
+}: {
   commitIndex: number,
   commitTree: CommitTree,
   profilerStore: ProfilerStore,
   rootID: number,
-|}): ChartData {
+}): ChartData {
   const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
 
   const {fiberActualDurations, fiberSelfDurations} = commitDatum;
@@ -63,7 +63,11 @@ export function getChartData({
   let maxSelfDuration = 0;
 
   // Generate flame graph structure using tree base durations.
-  const walkTree = (id: number, rightOffset: number, currentDepth: number) => {
+  const walkTree = (
+    id: number,
+    rightOffset: number,
+    currentDepth: number,
+  ): ChartNode => {
     idToDepthMap.set(id, currentDepth);
 
     const node = nodes.get(id);
@@ -71,13 +75,8 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const {
-      children,
-      displayName,
-      hocDisplayNames,
-      key,
-      treeBaseDuration,
-    } = node;
+    const {children, displayName, hocDisplayNames, key, treeBaseDuration} =
+      node;
 
     const actualDuration = fiberActualDurations.get(id) || 0;
     const selfDuration = fiberSelfDurations.get(id) || 0;
@@ -120,7 +119,11 @@ export function getChartData({
 
     for (let i = children.length - 1; i >= 0; i--) {
       const childID = children[i];
-      const childChartNode = walkTree(childID, rightOffset, currentDepth + 1);
+      const childChartNode: $FlowFixMe = walkTree(
+        childID,
+        rightOffset,
+        currentDepth + 1,
+      );
       rightOffset -= childChartNode.treeBaseDuration;
     }
 

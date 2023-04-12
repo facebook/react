@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Point} from './view-base';
+import type {Interaction, Point} from './view-base';
 import type {
-  ReactHoverContextInfo,
-  ReactProfilerData,
+  ReactEventInfo,
+  TimelineData,
   ReactMeasure,
   ViewState,
 } from './types';
@@ -63,17 +63,18 @@ import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useCo
 import {getBatchRange} from './utils/getBatchRange';
 import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 import {TimelineSearchContext} from './TimelineSearchContext';
+import {TimelineContext} from './TimelineContext';
 
 import styles from './CanvasPage.css';
 
 const CONTEXT_MENU_ID = 'canvas';
 
-type Props = {|
-  profilerData: ReactProfilerData,
+type Props = {
+  profilerData: TimelineData,
   viewState: ViewState,
-|};
+};
 
-function CanvasPage({profilerData, viewState}: Props) {
+function CanvasPage({profilerData, viewState}: Props): React.Node {
   return (
     <div
       className={styles.CanvasPage}
@@ -92,7 +93,7 @@ function CanvasPage({profilerData, viewState}: Props) {
   );
 }
 
-const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
+const copySummary = (data: TimelineData, measure: ReactMeasure) => {
   const {batchUID, duration, timestamp, type} = measure;
 
   const [startTime, stopTime] = getBatchRange(batchUID, data);
@@ -108,7 +109,7 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
 };
 
 const zoomToBatch = (
-  data: ReactProfilerData,
+  data: TimelineData,
   measure: ReactMeasure,
   viewState: ViewState,
   width: number,
@@ -131,7 +132,7 @@ const zoomToBatch = (
   viewState.updateHorizontalScrollState(scrollState);
 };
 
-const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
+const EMPTY_CONTEXT_INFO: ReactEventInfo = {
   componentMeasure: null,
   flamechartStackFrame: null,
   measure: null,
@@ -144,12 +145,12 @@ const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
   userTimingMark: null,
 };
 
-type AutoSizedCanvasProps = {|
-  data: ReactProfilerData,
+type AutoSizedCanvasProps = {
+  data: TimelineData,
   height: number,
   viewState: ViewState,
   width: number,
-|};
+};
 
 function AutoSizedCanvas({
   data,
@@ -161,10 +162,7 @@ function AutoSizedCanvas({
 
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
   const [mouseLocation, setMouseLocation] = useState<Point>(zeroPoint); // DOM coordinates
-  const [
-    hoveredEvent,
-    setHoveredEvent,
-  ] = useState<ReactHoverContextInfo | null>(null);
+  const [hoveredEvent, setHoveredEvent] = useState<ReactEventInfo | null>(null);
 
   const resetHoveredEvent = useCallback(
     () => setHoveredEvent(EMPTY_CONTEXT_INFO),
@@ -201,16 +199,16 @@ function AutoSizedCanvas({
   }, [searchIndex, searchRegExp, searchResults, viewState]);
 
   const surfaceRef = useRef(new Surface(resetHoveredEvent));
-  const userTimingMarksViewRef = useRef(null);
-  const nativeEventsViewRef = useRef(null);
-  const schedulingEventsViewRef = useRef(null);
-  const suspenseEventsViewRef = useRef(null);
-  const componentMeasuresViewRef = useRef(null);
-  const reactMeasuresViewRef = useRef(null);
-  const flamechartViewRef = useRef(null);
-  const networkMeasuresViewRef = useRef(null);
-  const snapshotsViewRef = useRef(null);
-  const thrownErrorsViewRef = useRef(null);
+  const userTimingMarksViewRef = useRef<null | UserTimingMarksView>(null);
+  const nativeEventsViewRef = useRef<null | NativeEventsView>(null);
+  const schedulingEventsViewRef = useRef<null | SchedulingEventsView>(null);
+  const suspenseEventsViewRef = useRef<null | SuspenseEventsView>(null);
+  const componentMeasuresViewRef = useRef<null | ComponentMeasuresView>(null);
+  const reactMeasuresViewRef = useRef<null | ReactMeasuresView>(null);
+  const flamechartViewRef = useRef<null | FlamechartView>(null);
+  const networkMeasuresViewRef = useRef<null | NetworkMeasuresView>(null);
+  const snapshotsViewRef = useRef<null | SnapshotsView>(null);
+  const thrownErrorsViewRef = useRef<null | ThrownErrorsView>(null);
 
   const {hideMenu: hideContextMenu} = useContext(RegistryContext);
 
@@ -295,14 +293,21 @@ function AutoSizedCanvas({
       );
     }
 
-    const nativeEventsView = new NativeEventsView(surface, defaultFrame, data);
-    nativeEventsViewRef.current = nativeEventsView;
-    const nativeEventsViewWrapper = createViewHelper(
-      nativeEventsView,
-      'events',
-      true,
-      true,
-    );
+    let nativeEventsViewWrapper = null;
+    if (data.nativeEvents.length > 0) {
+      const nativeEventsView = new NativeEventsView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      nativeEventsViewRef.current = nativeEventsView;
+      nativeEventsViewWrapper = createViewHelper(
+        nativeEventsView,
+        'events',
+        true,
+        true,
+      );
+    }
 
     let thrownErrorsViewWrapper = null;
     if (data.thrownErrors.length > 0) {
@@ -318,16 +323,19 @@ function AutoSizedCanvas({
       );
     }
 
-    const schedulingEventsView = new SchedulingEventsView(
-      surface,
-      defaultFrame,
-      data,
-    );
-    schedulingEventsViewRef.current = schedulingEventsView;
-    const schedulingEventsViewWrapper = createViewHelper(
-      schedulingEventsView,
-      'react updates',
-    );
+    let schedulingEventsViewWrapper = null;
+    if (data.schedulingEvents.length > 0) {
+      const schedulingEventsView = new SchedulingEventsView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      schedulingEventsViewRef.current = schedulingEventsView;
+      schedulingEventsViewWrapper = createViewHelper(
+        schedulingEventsView,
+        'react updates',
+      );
+    }
 
     let suspenseEventsViewWrapper = null;
     if (data.suspenseEvents.length > 0) {
@@ -401,20 +409,23 @@ function AutoSizedCanvas({
       );
     }
 
-    const flamechartView = new FlamechartView(
-      surface,
-      defaultFrame,
-      data.flamechart,
-      data.internalModuleSourceToRanges,
-      data.duration,
-    );
-    flamechartViewRef.current = flamechartView;
-    const flamechartViewWrapper = createViewHelper(
-      flamechartView,
-      'flamechart',
-      true,
-      true,
-    );
+    let flamechartViewWrapper = null;
+    if (data.flamechart.length > 0) {
+      const flamechartView = new FlamechartView(
+        surface,
+        defaultFrame,
+        data.flamechart,
+        data.internalModuleSourceToRanges,
+        data.duration,
+      );
+      flamechartViewRef.current = flamechartView;
+      flamechartViewWrapper = createViewHelper(
+        flamechartView,
+        'flamechart',
+        true,
+        true,
+      );
+    }
 
     // Root view contains all of the sub views defined above.
     // The order we add them below determines their vertical position.
@@ -429,15 +440,21 @@ function AutoSizedCanvas({
     if (userTimingMarksViewWrapper !== null) {
       rootView.addSubview(userTimingMarksViewWrapper);
     }
-    rootView.addSubview(nativeEventsViewWrapper);
-    rootView.addSubview(schedulingEventsViewWrapper);
+    if (nativeEventsViewWrapper !== null) {
+      rootView.addSubview(nativeEventsViewWrapper);
+    }
+    if (schedulingEventsViewWrapper !== null) {
+      rootView.addSubview(schedulingEventsViewWrapper);
+    }
     if (thrownErrorsViewWrapper !== null) {
       rootView.addSubview(thrownErrorsViewWrapper);
     }
     if (suspenseEventsViewWrapper !== null) {
       rootView.addSubview(suspenseEventsViewWrapper);
     }
-    rootView.addSubview(reactMeasuresViewWrapper);
+    if (reactMeasuresViewWrapper !== null) {
+      rootView.addSubview(reactMeasuresViewWrapper);
+    }
     if (componentMeasuresViewWrapper !== null) {
       rootView.addSubview(componentMeasuresViewWrapper);
     }
@@ -447,7 +464,9 @@ function AutoSizedCanvas({
     if (networkMeasuresViewWrapper !== null) {
       rootView.addSubview(networkMeasuresViewWrapper);
     }
-    rootView.addSubview(flamechartViewWrapper);
+    if (flamechartViewWrapper !== null) {
+      rootView.addSubview(flamechartViewWrapper);
+    }
 
     const verticalScrollOverflowView = new VerticalScrollOverflowView(
       surface,
@@ -465,7 +484,7 @@ function AutoSizedCanvas({
     }
   }, [width, height]);
 
-  const interactor = useCallback(interaction => {
+  const interactor = useCallback((interaction: Interaction) => {
     const canvas = canvasRef.current;
     if (canvas === null) {
       return;
@@ -507,6 +526,8 @@ function AutoSizedCanvas({
     ref: canvasRef,
   });
 
+  const {selectEvent} = useContext(TimelineContext);
+
   useEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
     if (userTimingMarksView) {
@@ -541,6 +562,12 @@ function AutoSizedCanvas({
             schedulingEvent,
           });
         }
+      };
+      schedulingEventsView.onClick = schedulingEvent => {
+        selectEvent({
+          ...EMPTY_CONTEXT_INFO,
+          schedulingEvent,
+        });
       };
     }
 
@@ -767,9 +794,9 @@ function AutoSizedCanvas({
                 <ContextMenuItem
                   onClick={() =>
                     copy(
-                      `line ${flamechartStackFrame.locationLine ??
-                        ''}, column ${flamechartStackFrame.locationColumn ??
-                        ''}`,
+                      `line ${
+                        flamechartStackFrame.locationLine ?? ''
+                      }, column ${flamechartStackFrame.locationColumn ?? ''}`,
                     )
                   }
                   title="Copy location">

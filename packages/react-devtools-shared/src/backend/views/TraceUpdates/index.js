@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,16 +26,17 @@ const REMEASUREMENT_AFTER_DURATION = 250;
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
+  // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
     : () => Date.now();
 
-export type Data = {|
+export type Data = {
   count: number,
   expirationTime: number,
   lastMeasuredAt: number,
   rect: Rect | null,
-|};
+};
 
 const nodeToData: Map<NativeType, Data> = new Map();
 
@@ -65,7 +66,7 @@ export function toggleEnabled(value: boolean): void {
       redrawTimeoutID = null;
     }
 
-    destroyCanvas();
+    destroyCanvas(agent);
   }
 }
 
@@ -125,7 +126,7 @@ function prepareToDraw(): void {
     }
   });
 
-  draw(nodeToData);
+  draw(nodeToData, agent);
 
   if (earliestExpiration !== Number.MAX_VALUE) {
     redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);

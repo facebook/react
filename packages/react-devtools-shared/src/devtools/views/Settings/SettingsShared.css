@@ -150,3 +150,9 @@
 .Warning {
   color: var(--color-error-text);
 }
+
+.VersionsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}

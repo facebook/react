@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -53,7 +53,7 @@ describe('ReactEmptyComponent', () => {
         }
       }
 
-      expect(function() {
+      expect(function () {
         ReactTestUtils.renderIntoDocument(<Component />);
       }).not.toThrowError();
     });
@@ -158,10 +158,10 @@ describe('ReactEmptyComponent', () => {
         />
       );
 
-      expect(function() {
+      expect(function () {
         ReactTestUtils.renderIntoDocument(instance1);
       }).not.toThrow();
-      expect(function() {
+      expect(function () {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
@@ -201,10 +201,10 @@ describe('ReactEmptyComponent', () => {
           <TogglingComponent firstComponent={Child} secondComponent={'div'} />
         );
 
-        expect(function() {
+        expect(function () {
           ReactTestUtils.renderIntoDocument(instance1);
         }).not.toThrow();
-        expect(function() {
+        expect(function () {
           ReactTestUtils.renderIntoDocument(instance2);
         }).not.toThrow();
 
@@ -308,7 +308,7 @@ describe('ReactEmptyComponent', () => {
         }
       }
 
-      expect(function() {
+      expect(function () {
         ReactTestUtils.renderIntoDocument(<Parent />);
       }).not.toThrow();
     });

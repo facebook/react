@@ -2,6 +2,8 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
+const getComments = require('./getComments');
+
 function transform(babel) {
   const {types: t} = babel;
 
@@ -278,7 +280,7 @@ function transform(babel) {
                 callee.name === 'it' ||
                 callee.name === 'fit'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {
@@ -304,7 +306,7 @@ function transform(babel) {
                 callee.property.type === 'Identifier' &&
                 callee.property.name === 'only'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 if (comments !== undefined) {
                   const condition = buildGateCondition(comments);
                   if (condition !== null) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,6 @@
 
 let React;
 let ReactTestRenderer;
-let Scheduler;
 let ReactDebugTools;
 let act;
 
@@ -21,12 +20,11 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
   });
 
-  it('should inspect the current state of useState hooks', () => {
+  it('should inspect the current state of useState hooks', async () => {
     const useState = React.useState;
     function Foo(props) {
       const [state1, setState1] = useState('hello');
@@ -58,12 +56,10 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    const {
-      onMouseDown: setStateA,
-      onMouseUp: setStateB,
-    } = renderer.root.findByType('div').props;
+    const {onMouseDown: setStateA, onMouseUp: setStateB} =
+      renderer.root.findByType('div').props;
 
-    act(() => setStateA('Hi'));
+    await act(() => setStateA('Hi'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -85,7 +81,7 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    act(() => setStateB('world!'));
+    await act(() => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -108,7 +104,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inspect the current state of all stateful hooks', () => {
+  it('should inspect the current state of all stateful hooks', async () => {
     const outsideRef = React.createRef();
     function effect() {}
     function Foo(props) {
@@ -131,12 +127,8 @@ describe('ReactHooksInspectionIntegration', () => {
       React.useMemo(() => state1 + state2, [state1]);
 
       function update() {
-        act(() => {
-          setState('A');
-        });
-        act(() => {
-          dispatch({value: 'B'});
-        });
+        setState('A');
+        dispatch({value: 'B'});
         ref.current = 'C';
       }
       const memoizedUpdate = React.useCallback(update, []);
@@ -147,7 +139,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -209,7 +201,9 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    updateStates();
+    await act(() => {
+      updateStates();
+    });
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -268,7 +262,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inspect the current state of all stateful hooks, including useInsertionEffect', () => {
+  it('should inspect the current state of all stateful hooks, including useInsertionEffect', async () => {
     const useInsertionEffect = React.useInsertionEffect;
     const outsideRef = React.createRef();
     function effect() {}
@@ -292,13 +286,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
       React.useMemo(() => state1 + state2, [state1]);
 
-      function update() {
-        act(() => {
-          setState('A');
-        });
-        act(() => {
-          dispatch({value: 'B'});
-        });
+      async function update() {
+        setState('A');
+        dispatch({value: 'B'});
         ref.current = 'C';
       }
       const memoizedUpdate = React.useCallback(update, []);
@@ -309,7 +299,7 @@ describe('ReactHooksInspectionIntegration', () => {
       );
     }
     let renderer;
-    act(() => {
+    await act(() => {
       renderer = ReactTestRenderer.create(<Foo prop="prop" />);
     });
 
@@ -378,7 +368,9 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
 
-    updateStates();
+    await act(() => {
+      updateStates();
+    });
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -469,8 +461,8 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   it('should inspect forwardRef', () => {
-    const obj = function() {};
-    const Foo = React.forwardRef(function(props, ref) {
+    const obj = function () {};
+    const Foo = React.forwardRef(function (props, ref) {
       React.useImperativeHandle(ref, () => obj);
       return <div />;
     });
@@ -546,6 +538,7 @@ describe('ReactHooksInspectionIntegration', () => {
     function Foo(props) {
       React.useTransition();
       const memoizedValue = React.useMemo(() => 'hello', []);
+      React.useMemo(() => 'not used', []);
       return <div>{memoizedValue}</div>;
     }
     const renderer = ReactTestRenderer.create(<Foo />);
@@ -566,16 +559,24 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'hello',
         subHooks: [],
       },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
     ]);
   });
 
-  it('should support composite useDeferredValue hook', () => {
+  it('should support useDeferredValue hook', () => {
     function Foo(props) {
       React.useDeferredValue('abc', {
         timeoutMs: 500,
       });
-      const [state] = React.useState(() => 'hello', []);
-      return <div>{state}</div>;
+      const memoizedValue = React.useMemo(() => 1, []);
+      React.useMemo(() => 2, []);
+      return <div>{memoizedValue}</div>;
     }
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
@@ -590,9 +591,16 @@ describe('ReactHooksInspectionIntegration', () => {
       },
       {
         id: 1,
-        isStateEditable: true,
-        name: 'State',
-        value: 'hello',
+        isStateEditable: false,
+        name: 'Memo',
+        value: 1,
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 2,
         subHooks: [],
       },
     ]);
@@ -614,7 +622,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('Id');
-    expect(String(tree[0].value).startsWith('r:')).toBe(true);
+    expect(String(tree[0].value).startsWith(':r')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,
@@ -880,9 +888,11 @@ describe('ReactHooksInspectionIntegration', () => {
       </Suspense>,
     );
 
-    await LazyFoo;
-
-    Scheduler.unstable_flushAll();
+    await expect(async () => {
+      await act(async () => await LazyFoo);
+    }).toErrorDev([
+      'Foo: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+    ]);
 
     const childFiber = renderer.root._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -920,16 +930,26 @@ describe('ReactHooksInspectionIntegration', () => {
 
     const renderer = ReactTestRenderer.create(<Foo />);
     const childFiber = renderer.root._currentFiber();
-    expect(() => {
+
+    let didCatch = false;
+
+    try {
       ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
-    }).toThrow(
-      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-        ' one of the following reasons:\n' +
-        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-        '2. You might be breaking the Rules of Hooks\n' +
-        '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-    );
+    } catch (error) {
+      expect(error.message).toBe('Error rendering inspected component');
+      expect(error.cause).toBeInstanceOf(Error);
+      expect(error.cause.message).toBe(
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+          ' one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      );
+      didCatch = true;
+    }
+    // avoid false positive if no error was thrown at all
+    expect(didCatch).toBe(true);
 
     expect(getterCalls).toBe(1);
     expect(setterCalls).toHaveLength(2);
@@ -939,7 +959,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   // This test case is based on an open source bug report:
   // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
-  it('should properly advance the current hook for useContext', () => {
+  it('should properly advance the current hook for useContext', async () => {
     const MyContext = React.createContext(1);
 
     let incrementCount;
@@ -960,7 +980,7 @@ describe('ReactHooksInspectionIntegration', () => {
       children: ['count: ', '1'],
     });
 
-    act(incrementCount);
+    await act(() => incrementCount());
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},
@@ -1002,6 +1022,7 @@ describe('ReactHooksInspectionIntegration', () => {
         () => {},
       );
       React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
       return <div />;
     }
     const renderer = ReactTestRenderer.create(<Foo />);
@@ -1022,6 +1043,13 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'memo',
         subHooks: [],
       },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
     ]);
   });
 
@@ -1033,6 +1061,7 @@ describe('ReactHooksInspectionIntegration', () => {
         () => 'snapshot',
       );
       React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
       return value;
     }
 
@@ -1052,6 +1081,13 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
         subHooks: [],
       },
     ]);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,6 +18,8 @@ export const CONCURRENT_MODE_SYMBOL_STRING = 'Symbol(react.concurrent_mode)';
 
 export const CONTEXT_NUMBER = 0xeace;
 export const CONTEXT_SYMBOL_STRING = 'Symbol(react.context)';
+
+export const SERVER_CONTEXT_SYMBOL_STRING = 'Symbol(react.server_context)';
 
 export const DEPRECATED_ASYNC_MODE_SYMBOL_STRING = 'Symbol(react.async_mode)';
 
@@ -60,3 +62,6 @@ export const SUSPENSE_SYMBOL_STRING = 'Symbol(react.suspense)';
 
 export const SUSPENSE_LIST_NUMBER = 0xead8;
 export const SUSPENSE_LIST_SYMBOL_STRING = 'Symbol(react.suspense_list)';
+
+export const SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED_SYMBOL_STRING =
+  'Symbol(react.server_context.defaultValue)';

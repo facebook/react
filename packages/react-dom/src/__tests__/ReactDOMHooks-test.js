@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,8 +11,9 @@
 
 let React;
 let ReactDOM;
-let Scheduler;
+let ReactDOMClient;
 let act;
+let waitForAll;
 
 describe('ReactDOMHooks', () => {
   let container;
@@ -22,8 +23,9 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
+    waitForAll = require('internal-test-utils').waitForAll;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -33,7 +35,7 @@ describe('ReactDOMHooks', () => {
     document.body.removeChild(container);
   });
 
-  it('can ReactDOM.render() from useEffect', () => {
+  it('can ReactDOM.render() from useEffect', async () => {
     const container2 = document.createElement('div');
     const container3 = document.createElement('div');
 
@@ -59,7 +61,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('');
     expect(container3.textContent).toBe('');
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('2');
     expect(container3.textContent).toBe('3');
@@ -68,7 +70,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('2'); // Not flushed yet
     expect(container3.textContent).toBe('3'); // Not flushed yet
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('4');
     expect(container3.textContent).toBe('6');
@@ -127,13 +129,13 @@ describe('ReactDOMHooks', () => {
     const inputRef = createRef();
     const labelRef = createRef();
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
 
-    Scheduler.unstable_flushAll();
+    await waitForAll([]);
 
     inputRef.current.value = 'abc';
-    await act(async () => {
+    await act(() => {
       inputRef.current.dispatchEvent(
         new Event('input', {
           bubbles: true,

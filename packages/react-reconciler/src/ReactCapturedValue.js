@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,13 +11,14 @@ import type {Fiber} from './ReactInternalTypes';
 
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
-export type CapturedValue<T> = {|
+export type CapturedValue<T> = {
   value: T,
   source: Fiber | null,
   stack: string | null,
-|};
+  digest: string | null,
+};
 
-export function createCapturedValue<T>(
+export function createCapturedValueAtFiber<T>(
   value: T,
   source: Fiber,
 ): CapturedValue<T> {
@@ -27,5 +28,19 @@ export function createCapturedValue<T>(
     value,
     source,
     stack: getStackByFiberInDevAndProd(source),
+    digest: null,
+  };
+}
+
+export function createCapturedValue<T>(
+  value: T,
+  digest: ?string,
+  stack: ?string,
+): CapturedValue<T> {
+  return {
+    value,
+    source: null,
+    stack: stack != null ? stack : null,
+    digest: digest != null ? digest : null,
   };
 }

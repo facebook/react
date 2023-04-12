@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,12 +13,11 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
-const renderSubtreeIntoContainer = require('react-dom')
-  .unstable_renderSubtreeIntoContainer;
-
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+const renderSubtreeIntoContainer =
+  require('react-dom').unstable_renderSubtreeIntoContainer;
 
 describe('renderSubtreeIntoContainer', () => {
+  // @gate !disableLegacyContext
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
 
@@ -48,18 +47,13 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        if (ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer) {
-          expect(
-            function() {
-              renderSubtreeIntoContainer(this, <Component />, portal);
-            }.bind(this),
-          ).toWarnDev(
-            'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
-              'will be removed in a future major release. Consider using React Portals instead.',
-          );
-        } else {
-          renderSubtreeIntoContainer(this, <Component />, portal);
-        }
+        expect(
+          function () {
+            renderSubtreeIntoContainer(this, <Component />, portal);
+          }.bind(this),
+        ).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 
@@ -99,13 +93,14 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(function() {
+        expect(function () {
           renderSubtreeIntoContainer(<Parent />, <Component />, portal);
         }).toThrowError('parentComponentmust be a valid React Component');
       }
     }
   });
 
+  // @gate !disableLegacyContext
   it('should update context if it changes due to setState', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -144,11 +139,19 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <Component />, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
 
       componentDidUpdate() {
-        renderSubtreeIntoContainer(this, <Component />, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 
@@ -158,6 +161,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
+  // @gate !disableLegacyContext
   it('should update context if it changes due to re-render', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -192,11 +196,19 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <Component />, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
 
       componentDidUpdate() {
-        renderSubtreeIntoContainer(this, <Component />, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 
@@ -217,7 +229,11 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <div>hello</div>, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <div>hello</div>, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 
@@ -225,6 +241,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('hello');
   });
 
+  // @gate !disableLegacyContext
   it('should get context through non-context-provider parent', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -247,7 +264,11 @@ describe('renderSubtreeIntoContainer', () => {
         return null;
       }
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <Child />, portal);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Child />, portal);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 
@@ -264,6 +285,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.textContent).toBe('foo');
   });
 
+  // @gate !disableLegacyContext
   it('should get context through middle non-context-provider layer', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -278,7 +300,11 @@ describe('renderSubtreeIntoContainer', () => {
         return {value: this.props.value};
       }
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <Middle />, portal1);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Middle />, portal1);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
       static childContextTypes = {
         value: PropTypes.string.isRequired,
@@ -290,7 +316,11 @@ describe('renderSubtreeIntoContainer', () => {
         return null;
       }
       componentDidMount() {
-        renderSubtreeIntoContainer(this, <Child />, portal2);
+        expect(() => {
+          renderSubtreeIntoContainer(this, <Child />, portal2);
+        }).toErrorDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported',
+        );
       }
     }
 

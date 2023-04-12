@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,10 +14,10 @@ describe('ReactDOMEventListener', () => {
   let container;
 
   beforeEach(() => {
-    window.TextEvent = function() {};
+    window.TextEvent = function () {};
     jest.resetModules();
-    React = require('react');
     jest.isolateModules(() => {
+      React = require('react');
       OuterReactDOM = require('react-dom');
     });
     jest.isolateModules(() => {
@@ -1932,7 +1932,7 @@ describe('ReactDOMEventListener', () => {
     // Since the element is created by the inner React, the bubbling
     // stops at the inner parent and never reaches the outer React.
     // In the future, we might consider not bubbling these events
-    // at all, in in which case inner parent also wouldn't be logged.
+    // at all, in which case inner parent also wouldn't be logged.
     expect(log).toEqual(unindent`
       - outer parent capture
       -- outer capture
@@ -2096,7 +2096,7 @@ describe('ReactDOMEventListener', () => {
     // Since the element is created by the inner React, the bubbling
     // stops at the inner parent and never reaches the outer React.
     // In the future, we might consider not bubbling these events
-    // at all, in in which case inner parent also wouldn't be logged.
+    // at all, in which case inner parent also wouldn't be logged.
     expect(log).toEqual(unindent`
       - outer parent capture
       -- outer capture

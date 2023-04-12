@@ -3,18 +3,13 @@
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
 import {createElement} from 'react';
-import {
-  // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
-  render,
-  unmountComponentAtNode,
-} from 'react-dom';
+import {createRoot} from 'react-dom/client';
+import {render, unmountComponentAtNode} from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
-import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
@@ -33,11 +28,12 @@ ignoreErrors([
   'Warning: Legacy context API',
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
+  'Warning: ReactDOM.render is no longer supported in React 18',
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 ignoreLogs([]);
 
-const unmountFunctions = [];
+const unmountFunctions: Array<() => void | boolean> = [];
 
 function createContainer() {
   const container = document.createElement('div');
@@ -47,7 +43,7 @@ function createContainer() {
   return container;
 }
 
-function mountApp(App) {
+function mountApp(App: () => React$Node) {
   const container = createContainer();
 
   const root = createRoot(container);
@@ -56,6 +52,7 @@ function mountApp(App) {
   unmountFunctions.push(() => root.unmount());
 }
 
+// $FlowFixMe[missing-local-annot]
 function mountStrictApp(App) {
   function StrictRoot() {
     return createElement(App);
@@ -69,7 +66,7 @@ function mountStrictApp(App) {
   unmountFunctions.push(() => root.unmount());
 }
 
-function mountLegacyApp(App) {
+function mountLegacyApp(App: () => React$Node) {
   function LegacyRender() {
     return createElement(App);
   }
@@ -87,7 +84,6 @@ function mountTestApp() {
   mountApp(Hydration);
   mountApp(ElementTypes);
   mountApp(EditableProps);
-  mountApp(InlineWarnings);
   mountApp(ReactNativeWeb);
   mountApp(Toggle);
   mountApp(ErrorBoundaries);

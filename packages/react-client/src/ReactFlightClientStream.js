@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,13 +7,15 @@
  * @flow
  */
 
-import type {Response} from './ReactFlightClientHostConfigStream';
+import type {CallServerCallback} from './ReactFlightClient';
+import type {Response} from './ReactFlightClientConfigStream';
+import type {SSRManifest} from './ReactFlightClientConfig';
 
 import {
   resolveModule,
   resolveModel,
-  resolveSymbol,
-  resolveError,
+  resolveErrorProd,
+  resolveErrorDev,
   createResponse as createResponseBase,
   parseModelString,
   parseModelTuple,
@@ -24,7 +26,7 @@ import {
   readFinalStringChunk,
   supportsBinaryStreams,
   createStringDecoder,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 export type {Response};
 
@@ -32,36 +34,37 @@ function processFullRow(response: Response, row: string): void {
   if (row === '') {
     return;
   }
-  const tag = row[0];
+  const colon = row.indexOf(':', 0);
+  const id = parseInt(row.substring(0, colon), 16);
+  const tag = row[colon + 1];
   // When tags that are not text are added, check them here before
   // parsing the row as text.
   // switch (tag) {
   // }
-  const colon = row.indexOf(':', 1);
-  const id = parseInt(row.substring(1, colon), 16);
-  const text = row.substring(colon + 1);
   switch (tag) {
-    case 'J': {
-      resolveModel(response, id, text);
-      return;
-    }
-    case 'M': {
-      resolveModule(response, id, text);
-      return;
-    }
-    case 'S': {
-      resolveSymbol(response, id, JSON.parse(text));
+    case 'I': {
+      resolveModule(response, id, row.substring(colon + 2));
       return;
     }
     case 'E': {
-      const errorInfo = JSON.parse(text);
-      resolveError(response, id, errorInfo.message, errorInfo.stack);
+      const errorInfo = JSON.parse(row.substring(colon + 2));
+      if (__DEV__) {
+        resolveErrorDev(
+          response,
+          id,
+          errorInfo.digest,
+          errorInfo.message,
+          errorInfo.stack,
+        );
+      } else {
+        resolveErrorProd(response, id, errorInfo.digest);
+      }
       return;
     }
     default: {
-      throw new Error(
-        "Error parsing the data. It's probably an error code or network corruption.",
-      );
+      // We assume anything else is JSON.
+      resolveModel(response, id, row.substring(colon + 1));
+      return;
     }
   }
 }
@@ -104,10 +107,11 @@ export function processBinaryChunk(
 }
 
 function createFromJSONCallback(response: Response) {
-  return function(key: string, value: JSONValue) {
+  // $FlowFixMe[missing-this-annot]
+  return function (key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
-      return parseModelString(response, this, value);
+      return parseModelString(response, this, key, value);
     }
     if (typeof value === 'object' && value !== null) {
       return parseModelTuple(response, value);
@@ -116,11 +120,14 @@ function createFromJSONCallback(response: Response) {
   };
 }
 
-export function createResponse(): Response {
+export function createResponse(
+  bundlerConfig: SSRManifest,
+  callServer: void | CallServerCallback,
+): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase();
+  const response: any = createResponseBase(bundlerConfig, callServer);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;
@@ -130,4 +137,4 @@ export function createResponse(): Response {
   return response;
 }
 
-export {reportGlobalError, close} from './ReactFlightClient';
+export {reportGlobalError, getRoot, close} from './ReactFlightClient';

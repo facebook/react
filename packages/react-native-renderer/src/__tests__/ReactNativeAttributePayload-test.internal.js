@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -211,19 +211,19 @@ describe('ReactNativeAttributePayload', () => {
     expect(
       diff(
         {
-          a: function() {
+          a: function () {
             return 1;
           },
-          b: function() {
+          b: function () {
             return 2;
           },
           c: 3,
         },
         {
-          b: function() {
+          b: function () {
             return 9;
           },
-          c: function() {
+          c: function () {
             return 3;
           },
         },
@@ -236,12 +236,12 @@ describe('ReactNativeAttributePayload', () => {
     expect(
       diff(
         {
-          a: function() {
+          a: function () {
             return 1;
           },
         },
         {
-          a: function() {
+          a: function () {
             return 9;
           },
         },
@@ -255,14 +255,14 @@ describe('ReactNativeAttributePayload', () => {
       diff(
         {
           wrapper: {
-            a: function() {
+            a: function () {
               return 1;
             },
           },
         },
         {
           wrapper: {
-            a: function() {
+            a: function () {
               return 9;
             },
           },

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -41,6 +41,8 @@ let Shape;
 let Surface;
 let TestComponent;
 
+let waitFor;
+
 const Missing = {};
 
 function testDOMNodeStructure(domNode, expectedStructure) {
@@ -59,7 +61,7 @@ function testDOMNodeStructure(domNode, expectedStructure) {
     }
   }
   if (expectedStructure.children) {
-    expectedStructure.children.forEach(function(subTree, index) {
+    expectedStructure.children.forEach(function (subTree, index) {
       testDOMNodeStructure(domNode.childNodes[index], subTree);
     });
   }
@@ -77,6 +79,8 @@ describe('ReactART', () => {
     Group = ReactART.Group;
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
+
+    ({waitFor} = require('internal-test-utils'));
 
     TestComponent = class extends React.Component {
       group = React.createRef();
@@ -361,11 +365,11 @@ describe('ReactART', () => {
   });
 
   // @gate !enableSyncDefaultUpdates
-  it('can concurrently render with a "primary" renderer while sharing context', () => {
+  it('can concurrently render with a "primary" renderer while sharing context', async () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      Scheduler.unstable_yieldValue(props.value);
+      Scheduler.log(props.value);
       return null;
     }
 
@@ -392,7 +396,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    await waitFor(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -407,7 +411,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
+    await waitFor(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });
@@ -436,6 +440,60 @@ describe('ReactARTComponents', () => {
   it('should generate a <Shape> with props for drawing the Rectangle', () => {
     const rectangle = ReactTestRenderer.create(
       <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with positive width when width prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle width={-50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with positive height when height prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle height={-50} width={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when top left radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusTopLeft={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when top right radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusTopRight={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusBottomRight={-30} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> with a radius property of 0 when bottom left radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusBottomLeft={-25} width={50} height={50} />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle
+        radiusTopRight={25}
+        radiusTopLeft={26}
+        width={50}
+        height={40}
+      />,
     );
     expect(rectangle.toJSON()).toMatchSnapshot();
   });

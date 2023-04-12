@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,7 +20,7 @@
 
 'use strict';
 
-var assign = require('object-assign');
+var assign = Object.assign;
 var PropTypes = require('prop-types');
 var React = require('react');
 var ReactART = require('react-art');
@@ -31,7 +31,7 @@ var Shape = ReactART.Shape;
 var Path = ReactART.Path;
 
 /**
- * Wedge is a React component for drawing circles, wedges and arcs.  Like other
+ * Wedge is a React component for drawing circles, wedges and arcs. Like other
  * ReactART components, it must be used in a <Surface>.
  */
 var Wedge = createReactClass({

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,8 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
+import {isPrimaryRenderer} from './ReactFizzConfig';
 
 let rendererSigil;
 if (__DEV__) {
@@ -78,9 +79,10 @@ function popToNearestCommonAncestor(
       }
 
       popToNearestCommonAncestor(parentPrev, parentNext);
-      // On the way back, we push the new ones that weren't common.
-      pushNode(next);
     }
+
+    // On the way back, we push the new ones that weren't common.
+    pushNode(next);
   }
 }
 
@@ -161,7 +163,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   const next = newSnapshot;
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);
@@ -243,7 +245,12 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
     }
   }
   if (isPrimaryRenderer) {
-    prevSnapshot.context._currentValue = prevSnapshot.parentValue;
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue = prevSnapshot.context._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue = value;
+    }
     if (__DEV__) {
       if (
         context._currentRenderer !== undefined &&
@@ -258,7 +265,12 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
       context._currentRenderer = rendererSigil;
     }
   } else {
-    prevSnapshot.context._currentValue2 = prevSnapshot.parentValue;
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue2 = prevSnapshot.context._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue2 = value;
+    }
     if (__DEV__) {
       if (
         context._currentRenderer2 !== undefined &&

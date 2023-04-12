@@ -6,13 +6,35 @@
 
 'use strict';
 
-function welcome(event) {
+let welcomeHasInitialized = false;
+
+// $FlowFixMe[missing-local-annot]
+function welcome(event: $FlowFixMe) {
   if (
     event.source !== window ||
     event.data.source !== 'react-devtools-content-script'
   ) {
     return;
   }
+
+  // In some circumstances, this method is called more than once for a single welcome message.
+  // The exact circumstances of this are unclear, though it seems related to 3rd party event batching code.
+  //
+  // Regardless, call this method multiple times can cause DevTools to add duplicate elements to the Store
+  // (and throw an error) or worse yet, choke up entirely and freeze the browser.
+  //
+  // The simplest solution is to ignore the duplicate events.
+  // To be clear, this SHOULD NOT BE NECESSARY, since we remove the event handler below.
+  //
+  // See https://github.com/facebook/react/issues/24162
+  if (welcomeHasInitialized) {
+    console.warn(
+      'React DevTools detected duplicate welcome "message" events from the content script.',
+    );
+    return;
+  }
+
+  welcomeHasInitialized = true;
 
   window.removeEventListener('message', welcome);
 
@@ -21,7 +43,7 @@ function welcome(event) {
 
 window.addEventListener('message', welcome);
 
-function setup(hook) {
+function setup(hook: any) {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
@@ -29,12 +51,12 @@ function setup(hook) {
   const Agent = require('react-devtools-shared/src/backend/agent').default;
   const Bridge = require('react-devtools-shared/src/bridge').default;
   const {initBackend} = require('react-devtools-shared/src/backend');
-  const setupNativeStyleEditor = require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor')
-    .default;
+  const setupNativeStyleEditor =
+    require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor').default;
 
-  const bridge = new Bridge({
+  const bridge = new Bridge<$FlowFixMe, $FlowFixMe>({
     listen(fn) {
-      const listener = event => {
+      const listener = (event: $FlowFixMe) => {
         if (
           event.source !== window ||
           !event.data ||

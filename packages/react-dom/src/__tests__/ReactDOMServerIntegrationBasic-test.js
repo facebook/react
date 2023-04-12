@@ -1,10 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -20,7 +21,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -41,7 +42,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('basic rendering', function() {
+  describe('basic rendering', function () {
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
@@ -115,10 +116,10 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('an iterable', async render => {
       const threeDivIterable = {
-        '@@iterator': function() {
+        '@@iterator': function () {
           let i = 0;
           return {
-            next: function() {
+            next: function () {
               if (i++ < 3) {
                 return {value: <div key={i} />, done: false};
               } else {

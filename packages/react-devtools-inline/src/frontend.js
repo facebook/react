@@ -17,26 +17,27 @@ import type {Wall} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-type Config = {|
+type Config = {
+  checkBridgeProtocolCompatibility?: boolean,
   supportsNativeInspection?: boolean,
-|};
+  supportsProfiling?: boolean,
+};
 
 export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
     supportsTimeline: true,
-    supportsNativeInspection: config?.supportsNativeInspection !== false,
+    supportsNativeInspection: true,
+    ...config,
   });
 }
 
-export function createBridge(
-  contentWindow: window,
-  wall?: Wall,
-): FrontendBridge {
+export function createBridge(contentWindow: any, wall?: Wall): FrontendBridge {
   if (wall == null) {
     wall = {
       listen(fn) {
+        // $FlowFixMe[missing-local-annot]
         const onMessage = ({data}) => {
           fn(data);
         };
@@ -55,14 +56,14 @@ export function createBridge(
 }
 
 export function initialize(
-  contentWindow: window,
+  contentWindow: any,
   {
     bridge,
     store,
-  }: {|
+  }: {
     bridge?: FrontendBridge,
     store?: Store,
-  |} = {},
+  } = {},
 ): React.AbstractComponent<Props, mixed> {
   if (bridge == null) {
     bridge = createBridge(contentWindow);

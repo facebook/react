@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,10 +9,10 @@
 
 describe('profiling HostRoot', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let legacyRender;
-  let store: Store;
+  let store;
   let utils;
   let getEffectDurations;
   let effectDurations;
@@ -29,7 +29,7 @@ describe('profiling HostRoot', () => {
     store = global.store;
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     effectDurations = [];
@@ -49,6 +49,7 @@ describe('profiling HostRoot', () => {
     };
   });
 
+  // @reactVersion >=18.0
   it('should expose passive and layout effect durations for render()', () => {
     function App() {
       React.useEffect(() => {
@@ -77,6 +78,7 @@ describe('profiling HostRoot', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should expose passive and layout effect durations for createRoot()', () => {
     function App() {
       React.useEffect(() => {
@@ -91,7 +93,7 @@ describe('profiling HostRoot', () => {
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
     });
     utils.act(() => store.profilerStore.stopProfiling());
@@ -106,6 +108,7 @@ describe('profiling HostRoot', () => {
     );
   });
 
+  // @reactVersion >=18.0
   it('should properly reset passive and layout effect durations between commits', () => {
     function App({shouldCascade}) {
       const [, setState] = React.useState(false);
@@ -124,7 +127,7 @@ describe('profiling HostRoot', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => root.render(<App />));

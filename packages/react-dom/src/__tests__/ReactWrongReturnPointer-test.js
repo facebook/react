@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,12 +16,16 @@ let SuspenseList;
 let getCacheForType;
 let caches;
 let seededCache;
+let assertLog;
 
 beforeEach(() => {
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
-  act = require('jest-react').act;
+  act = require('internal-test-utils').act;
+
+  const InternalTestUtils = require('internal-test-utils');
+  assertLog = InternalTestUtils.assertLog;
 
   Suspense = React.Suspense;
   if (gate(flags => flags.enableSuspenseList)) {
@@ -90,16 +94,16 @@ function readText(text) {
   if (record !== undefined) {
     switch (record.status) {
       case 'pending':
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        Scheduler.log(`Suspend! [${text}]`);
         throw record.value;
       case 'rejected':
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        Scheduler.log(`Error! [${text}]`);
         throw record.value;
       case 'resolved':
         return textCache.version;
     }
   } else {
-    Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+    Scheduler.log(`Suspend! [${text}]`);
 
     const thenable = {
       pings: [],
@@ -123,14 +127,14 @@ function readText(text) {
 }
 
 function Text({text}) {
-  Scheduler.unstable_yieldValue(text);
+  Scheduler.log(text);
   return <span prop={text} />;
 }
 
 function AsyncText({text, showVersion}) {
   const version = readText(text);
   const fullText = showVersion ? `${text} [v${version}]` : text;
-  Scheduler.unstable_yieldValue(fullText);
+  Scheduler.log(fullText);
   return <span prop={fullText} />;
 }
 
@@ -153,52 +157,7 @@ function resolveMostRecentTextCache(text) {
 
 const resolveText = resolveMostRecentTextCache;
 
-// Don't feel too guilty if you have to delete this test.
-// @gate dfsEffectsRefactor
-// @gate __DEV__
-test('warns in DEV if return pointer is inconsistent', async () => {
-  const {useRef, useLayoutEffect} = React;
-
-  let ref = null;
-  function App({text}) {
-    ref = useRef(null);
-    return (
-      <>
-        <Sibling text={text} />
-        <div ref={ref}>{text}</div>
-      </>
-    );
-  }
-
-  function Sibling({text}) {
-    useLayoutEffect(() => {
-      if (text === 'B') {
-        // Mutate the return pointer of the div to point to the wrong alternate.
-        // This simulates the most common type of return pointer inconsistency.
-        const current = ref.current.fiber;
-        const workInProgress = current.alternate;
-        workInProgress.return = current.return;
-      }
-    }, [text]);
-    return null;
-  }
-
-  const root = ReactNoop.createRoot();
-  await act(async () => {
-    root.render(<App text="A" />);
-  });
-
-  spyOnDev(console, 'error');
-  await act(async () => {
-    root.render(<App text="B" />);
-  });
-  expect(console.error.calls.count()).toBe(1);
-  expect(console.error.calls.argsFor(0)[0]).toMatch(
-    'Internal React error: Return pointer is inconsistent with parent.',
-  );
-});
-
-// @gate enableCache
+// @gate enableLegacyCache
 // @gate enableSuspenseList
 test('regression (#20932): return pointer is correct before entering deleted tree', async () => {
   // Based on a production bug. Designed to trigger a very specific
@@ -230,22 +189,18 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   }
 
   const root = ReactNoop.createRoot();
-  await act(async () => {
+  await act(() => {
     root.render(<App />);
   });
-  expect(Scheduler).toHaveYielded([
-    'Suspend! [0]',
-    'Loading Async...',
-    'Loading Tail...',
-  ]);
-  await act(async () => {
+  assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
+  await act(() => {
     resolveText(0);
   });
-  expect(Scheduler).toHaveYielded([0, 'Tail']);
-  await act(async () => {
+  assertLog([0, 'Tail']);
+  await act(() => {
     setAsyncText(x => x + 1);
   });
-  expect(Scheduler).toHaveYielded([
+  assertLog([
     'Suspend! [1]',
     'Loading Async...',
     'Suspend! [1]',

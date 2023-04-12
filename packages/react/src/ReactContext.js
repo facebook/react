@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,6 +9,7 @@
 
 import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
+import type {ReactProviderType} from 'shared/ReactTypes';
 import type {ReactContext} from 'shared/ReactTypes';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
@@ -30,6 +31,10 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
+
+    // Add these to use same hidden class in VM as ServerContext
+    _defaultValue: (null: any),
+    _globalName: (null: any),
   };
 
   context.Provider = {
@@ -49,7 +54,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
     };
-    // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(Consumer, {
       Provider: {
         get() {
@@ -62,7 +67,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
           }
           return context.Provider;
         },
-        set(_Provider) {
+        set(_Provider: ReactProviderType<T>) {
           context.Provider = _Provider;
         },
       },
@@ -70,7 +75,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._currentValue;
         },
-        set(_currentValue) {
+        set(_currentValue: T) {
           context._currentValue = _currentValue;
         },
       },
@@ -78,7 +83,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._currentValue2;
         },
-        set(_currentValue2) {
+        set(_currentValue2: T) {
           context._currentValue2 = _currentValue2;
         },
       },
@@ -86,7 +91,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context._threadCount;
         },
-        set(_threadCount) {
+        set(_threadCount: number) {
           context._threadCount = _threadCount;
         },
       },
@@ -106,7 +111,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         get() {
           return context.displayName;
         },
-        set(displayName) {
+        set(displayName: void | string) {
           if (!hasWarnedAboutDisplayNameOnConsumer) {
             console.warn(
               'Setting `displayName` on Context.Consumer has no effect. ' +
@@ -118,7 +123,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
         },
       },
     });
-    // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
     context.Consumer = Consumer;
   } else {
     context.Consumer = context;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,9 +17,9 @@ declare class TaskController {
 
 type PostTaskPriorityLevel = 'user-blocking' | 'user-visible' | 'background';
 
-type CallbackNode = {|
+type CallbackNode = {
   _controller: TaskController,
-|};
+};
 
 import {
   ImmediatePriority,
@@ -44,7 +44,7 @@ const setTimeout = window.setTimeout;
 // Use experimental Chrome Scheduler postTask API.
 const scheduler = global.scheduler;
 
-const getCurrentTime = perf.now.bind(perf);
+const getCurrentTime: () => DOMHighResTimeStamp = perf.now.bind(perf);
 
 export const unstable_now = getCurrentTime;
 
@@ -59,7 +59,7 @@ let currentPriorityLevel_DEPRECATED = NormalPriority;
 
 // `isInputPending` is not available. Since we have no way of knowing if
 // there's pending input, always yield at the end of the frame.
-export function unstable_shouldYield() {
+export function unstable_shouldYield(): boolean {
   return getCurrentTime() >= deadline;
 }
 
@@ -67,9 +67,7 @@ export function unstable_requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
-type SchedulerCallback<T> = (
-  didTimeout_DEPRECATED: boolean,
-) =>
+type SchedulerCallback<T> = (didTimeout_DEPRECATED: boolean) =>
   | T
   // May return a continuation
   | SchedulerCallback<T>;
@@ -168,7 +166,7 @@ function runTask<T>(
   }
 }
 
-function handleAbortError(error) {
+function handleAbortError(error: any) {
   // Abort errors are an implementation detail. We don't expose the
   // TaskController to the user, nor do we expose the promise that is returned
   // from `postTask`. So we should suppress them, since there's no way for the
@@ -193,7 +191,7 @@ export function unstable_runWithPriority<T>(
   }
 }
 
-export function unstable_getCurrentPriorityLevel() {
+export function unstable_getCurrentPriorityLevel(): PriorityLevel {
   return currentPriorityLevel_DEPRECATED;
 }
 
@@ -240,7 +238,7 @@ export function unstable_pauseExecution() {}
 
 export function unstable_continueExecution() {}
 
-export function unstable_getFirstCallbackNode() {
+export function unstable_getFirstCallbackNode(): null {
   return null;
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,6 +24,7 @@ import {parseHookPathForEdit} from './utils';
 import styles from './KeyValue.css';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import isArray from 'react-devtools-shared/src/isArray';
 import {InspectedElementContext} from './InspectedElementContext';
 import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 
@@ -32,9 +33,12 @@ import type {Element} from 'react-devtools-shared/src/devtools/views/Components/
 import type {Element as ReactElement} from 'react';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
+// $FlowFixMe[method-unbinding]
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 type Type = 'props' | 'state' | 'context' | 'hooks';
 
-type KeyValueProps = {|
+type KeyValueProps = {
   alphaSort: boolean,
   bridge: FrontendBridge,
   canDeletePaths: boolean,
@@ -53,7 +57,7 @@ type KeyValueProps = {|
   pathRoot: Type,
   store: Store,
   value: any,
-|};
+};
 
 export default function KeyValue({
   alphaSort,
@@ -74,7 +78,7 @@ export default function KeyValue({
   pathRoot,
   store,
   value,
-}: KeyValueProps) {
+}: KeyValueProps): React.Node {
   const {readOnly: readOnlyGlobalFlag} = useContext(OptionsContext);
   canDeletePaths = !readOnlyGlobalFlag && canDeletePaths;
   canEditValues = !readOnlyGlobalFlag && canEditValues;
@@ -134,7 +138,7 @@ export default function KeyValue({
     paddingLeft: `${(depth - 1) * 0.75}rem`,
   };
 
-  const overrideValue = (newPath, newValue) => {
+  const overrideValue = (newPath: Array<string | number>, newValue: any) => {
     if (hookID != null) {
       newPath = parseHookPathForEdit(newPath);
     }
@@ -152,7 +156,7 @@ export default function KeyValue({
     }
   };
 
-  const deletePath = pathToDelete => {
+  const deletePath = (pathToDelete: Array<string | number>) => {
     if (hookID != null) {
       pathToDelete = parseHookPathForEdit(pathToDelete);
     }
@@ -169,7 +173,10 @@ export default function KeyValue({
     }
   };
 
-  const renamePath = (oldPath, newPath) => {
+  const renamePath = (
+    oldPath: Array<string | number>,
+    newPath: Array<string | number>,
+  ) => {
     if (newPath[newPath.length - 1] === '') {
       // Deleting the key suggests an intent to delete the whole path.
       if (canDeletePaths) {
@@ -230,7 +237,7 @@ export default function KeyValue({
     );
   } else {
     renderedName = (
-      <span className={styles.Name}>
+      <span className={styles.Name} data-testname="NonEditableName">
         {name}
         {!!hookName && <span className={styles.HookName}>({hookName})</span>}
       </span>
@@ -285,7 +292,9 @@ export default function KeyValue({
             {displayValue}
           </a>
         ) : (
-          <span className={styles.Value}>{displayValue}</span>
+          <span className={styles.Value} data-testname="NonEditableValue">
+            {displayValue}
+          </span>
         )}
       </div>
     );
@@ -327,7 +336,7 @@ export default function KeyValue({
       );
     }
   } else {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       const hasChildren = value.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
@@ -405,7 +414,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
-      children = entries.map<ReactElement<any>>(([key, keyValue]) => (
+      children = entries.map(([key, keyValue]): ReactElement<any> => (
         <KeyValue
           key={key}
           alphaSort={alphaSort}
@@ -471,7 +480,9 @@ export default function KeyValue({
   return children;
 }
 
+// $FlowFixMe[missing-local-annot]
 function DeleteToggle({deletePath, name, path}) {
+  // $FlowFixMe[missing-local-annot]
   const handleClick = event => {
     event.stopPropagation();
     deletePath(path);

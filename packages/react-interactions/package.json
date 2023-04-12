@@ -21,7 +21,6 @@
     "events/press.js",
     "events/press-legacy.js",
     "events/tap.js",
-    "build-info.json",
     "cjs/",
     "umd/"
   ],

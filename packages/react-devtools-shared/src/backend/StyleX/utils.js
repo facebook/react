@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,11 +8,12 @@
  */
 
 import type {StyleXPlugin} from 'react-devtools-shared/src/types';
+import isArray from 'react-devtools-shared/src/isArray';
 
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
 export function getStyleXData(data: any): StyleXPlugin {
-  const sources = new Set();
+  const sources = new Set<string>();
   const resolvedStyles = {};
 
   crawlData(data, sources, resolvedStyles);
@@ -28,9 +29,17 @@ export function crawlData(
   sources: Set<string>,
   resolvedStyles: Object,
 ): void {
-  if (Array.isArray(data)) {
+  if (data == null) {
+    return;
+  }
+
+  if (isArray(data)) {
     data.forEach(entry => {
-      if (Array.isArray(entry)) {
+      if (entry == null) {
+        return;
+      }
+
+      if (isArray(entry)) {
         crawlData(entry, sources, resolvedStyles);
       } else {
         crawlObjectProperties(entry, sources, resolvedStyles);
@@ -58,7 +67,10 @@ function crawlObjectProperties(
         // Special case; this key is the name of the style's source/file/module.
         sources.add(key);
       } else {
-        resolvedStyles[key] = getPropertyValueForStyleName(value);
+        const propertyValue = getPropertyValueForStyleName(value);
+        if (propertyValue != null) {
+          resolvedStyles[key] = propertyValue;
+        }
       }
     } else {
       const nestedStyle = {};
@@ -81,11 +93,19 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     const styleSheet = ((document.styleSheets[
       styleSheetIndex
     ]: any): CSSStyleSheet);
-    // $FlowFixMe Flow doesn't konw about these properties
-    const rules = styleSheet.rules || styleSheet.cssRules;
+    let rules: CSSRuleList | null = null;
+    // this might throw if CORS rules are enforced https://www.w3.org/TR/cssom-1/#the-cssstylesheet-interface
+    try {
+      rules = styleSheet.cssRules;
+    } catch (_e) {
+      continue;
+    }
+
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
-      const rule = rules[ruleIndex];
-      // $FlowFixMe Flow doesn't konw about these properties
+      if (!(rules[ruleIndex] instanceof CSSStyleRule)) {
+        continue;
+      }
+      const rule = ((rules[ruleIndex]: any): CSSStyleRule);
       const {cssText, selectorText, style} = rule;
 
       if (selectorText != null) {

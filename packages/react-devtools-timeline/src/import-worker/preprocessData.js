@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,7 +25,7 @@ import type {
   ReactComponentMeasureType,
   ReactMeasure,
   ReactMeasureType,
-  ReactProfilerData,
+  TimelineData,
   SchedulingEvent,
   SuspenseEvent,
 } from '../types';
@@ -38,15 +38,15 @@ import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
 import ErrorStackParser from 'error-stack-parser';
 
-type MeasureStackElement = {|
+type MeasureStackElement = {
   type: ReactMeasureType,
   depth: number,
   measure: ReactMeasure,
   startTime: Milliseconds,
   stopTime?: Milliseconds,
-|};
+};
 
-type ProcessorState = {|
+type ProcessorState = {
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
@@ -64,7 +64,7 @@ type ProcessorState = {|
   requestIdToNetworkMeasureMap: Map<string, NetworkMeasure>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
-|};
+};
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 const NESTED_UPDATE_DURATION_THRESHOLD = 20;
@@ -105,7 +105,7 @@ export function getLanesFromTransportDecimalBitmask(
 }
 
 function updateLaneToLabelMap(
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   laneLabelTuplesString: string,
 ): void {
   // These marks appear multiple times in the data;
@@ -143,7 +143,7 @@ function markWorkStarted(
   type: ReactMeasureType,
   startTime: Milliseconds,
   lanes: ReactLane[],
-  currentProfilerData: ReactProfilerData,
+  currentProfilerData: TimelineData,
   state: ProcessorState,
 ) {
   const {batchUID, measureStack} = state;
@@ -179,7 +179,7 @@ function markWorkStarted(
 function markWorkCompleted(
   type: ReactMeasureType,
   stopTime: Milliseconds,
-  currentProfilerData: ReactProfilerData,
+  currentProfilerData: TimelineData,
   stack: $PropertyType<ProcessorState, 'measureStack'>,
 ) {
   if (stack.length === 0) {
@@ -207,7 +207,7 @@ function markWorkCompleted(
     console.error('Could not find matching measure for type "%s".', type);
   }
 
-  // $FlowFixMe This property should not be writable outside of this function.
+  // $FlowFixMe[cannot-write] This property should not be writable outside of this function.
   measure.duration = stopTime - startTime;
 }
 
@@ -229,7 +229,7 @@ function throwIfIncomplete(
 function processEventDispatch(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const data = event.args.data;
@@ -292,7 +292,7 @@ function processEventDispatch(
 function processResourceFinish(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const requestId = event.args.data.requestId;
@@ -314,7 +314,7 @@ function processResourceFinish(
 function processResourceReceivedData(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const requestId = event.args.data.requestId;
@@ -331,7 +331,7 @@ function processResourceReceivedData(
 function processResourceReceiveResponse(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const requestId = event.args.data.requestId;
@@ -344,7 +344,7 @@ function processResourceReceiveResponse(
 function processScreenshot(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const encodedSnapshot = event.args.snapshot; // Base 64 encoded
@@ -370,7 +370,7 @@ function processScreenshot(
   fetch(snapshot.imageSource)
     .then(response => response.blob())
     .then(blob => {
-      // $FlowFixMe createImageBitmap
+      // $FlowFixMe[cannot-resolve-name] createImageBitmap
       createImageBitmap(blob).then(bitmap => {
         snapshot.height = bitmap.height;
         snapshot.width = bitmap.width;
@@ -385,13 +385,13 @@ function processScreenshot(
 function processResourceSendRequest(
   event: TimelineEvent,
   timestamp: Milliseconds,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   state: ProcessorState,
 ) {
   const data = event.args.data;
   const requestId = data.requestId;
 
-  const availableDepths = new Array(
+  const availableDepths = new Array<boolean>(
     state.requestIdToNetworkMeasureMap.size + 1,
   ).fill(true);
   state.requestIdToNetworkMeasureMap.forEach(({depth}) => {
@@ -428,7 +428,7 @@ function processResourceSendRequest(
 function processTimelineEvent(
   event: TimelineEvent,
   /** Finalized profiler data up to `event`. May be mutated. */
-  currentProfilerData: ReactProfilerData,
+  currentProfilerData: TimelineData,
   /** Intermediate processor state. May be mutated. */
   state: ProcessorState,
 ) {
@@ -551,20 +551,13 @@ function processTimelineEvent(
           timestamp: startTime,
           type: 'thrown-error',
         });
-      } // eslint-disable-line brace-style
-
-      // React Events - suspense
-      else if (name.startsWith('--suspense-suspend-')) {
-        const [
-          id,
-          componentName,
-          phase,
-          laneBitmaskString,
-          promiseName,
-        ] = name.substr(19).split('-');
+      } else if (name.startsWith('--suspense-suspend-')) {
+        const [id, componentName, phase, laneBitmaskString, promiseName] = name
+          .substr(19)
+          .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        const availableDepths = new Array(
+        const availableDepths = new Array<boolean>(
           state.unresolvedSuspenseEvents.size + 1,
         ).fill(true);
         state.unresolvedSuspenseEvents.forEach(({depth}) => {
@@ -592,7 +585,6 @@ function processTimelineEvent(
           phase: ((phase: any): Phase),
           promiseName: promiseName || null,
           resolution: 'unresolved',
-          resuspendTimestamps: null,
           timestamp: startTime,
           type: 'suspense',
           warning: null,
@@ -611,16 +603,6 @@ function processTimelineEvent(
 
         currentProfilerData.suspenseEvents.push(suspenseEvent);
         state.unresolvedSuspenseEvents.set(id, suspenseEvent);
-      } else if (name.startsWith('--suspense-resuspend-')) {
-        const [id] = name.substr(21).split('-');
-        const suspenseEvent = state.unresolvedSuspenseEvents.get(id);
-        if (suspenseEvent != null) {
-          if (suspenseEvent.resuspendTimestamps === null) {
-            suspenseEvent.resuspendTimestamps = [startTime];
-          } else {
-            suspenseEvent.resuspendTimestamps.push(startTime);
-          }
-        }
       } else if (name.startsWith('--suspense-resolved-')) {
         const [id] = name.substr(20).split('-');
         const suspenseEvent = state.unresolvedSuspenseEvents.get(id);
@@ -639,10 +621,7 @@ function processTimelineEvent(
           suspenseEvent.duration = startTime - suspenseEvent.timestamp;
           suspenseEvent.resolution = 'rejected';
         }
-      } // eslint-disable-line brace-style
-
-      // React Measures - render
-      else if (name.startsWith('--render-start-')) {
+      } else if (name.startsWith('--render-start-')) {
         if (state.nextRenderShouldGenerateNewBatchID) {
           state.nextRenderShouldGenerateNewBatchID = false;
           state.batchUID = ((state.uidCounter++: any): BatchUID);
@@ -701,24 +680,7 @@ function processTimelineEvent(
           currentProfilerData,
           state.measureStack,
         );
-      } else if (name.startsWith('--render-cancel')) {
-        state.nextRenderShouldGenerateNewBatchID = true;
-        markWorkCompleted(
-          'render',
-          startTime,
-          currentProfilerData,
-          state.measureStack,
-        );
-        markWorkCompleted(
-          'render-idle',
-          startTime,
-          currentProfilerData,
-          state.measureStack,
-        );
-      } // eslint-disable-line brace-style
-
-      // React Measures - commits
-      else if (name.startsWith('--commit-start-')) {
+      } else if (name.startsWith('--commit-start-')) {
         state.nextRenderShouldGenerateNewBatchID = true;
         const [laneBitmaskString] = name.substr(15).split('-');
 
@@ -742,10 +704,7 @@ function processTimelineEvent(
           currentProfilerData,
           state.measureStack,
         );
-      } // eslint-disable-line brace-style
-
-      // React Measures - layout effects
-      else if (name.startsWith('--layout-effects-start-')) {
+      } else if (name.startsWith('--layout-effects-start-')) {
         const [laneBitmaskString] = name.substr(23).split('-');
 
         markWorkStarted(
@@ -762,10 +721,7 @@ function processTimelineEvent(
           currentProfilerData,
           state.measureStack,
         );
-      } // eslint-disable-line brace-style
-
-      // React Measures - passive effects
-      else if (name.startsWith('--passive-effects-start-')) {
+      } else if (name.startsWith('--passive-effects-start-')) {
         const [laneBitmaskString] = name.substr(24).split('-');
 
         markWorkStarted(
@@ -782,10 +738,7 @@ function processTimelineEvent(
           currentProfilerData,
           state.measureStack,
         );
-      } // eslint-disable-line brace-style
-
-      // Internal module ranges
-      else if (name.startsWith('--react-internal-module-start-')) {
+      } else if (name.startsWith('--react-internal-module-start-')) {
         const stackFrameStart = name.substr(30);
 
         if (!state.internalModuleStackStringSet.has(stackFrameStart)) {
@@ -796,7 +749,7 @@ function processTimelineEvent(
           state.internalModuleCurrentStackFrame = parsedStackFrameStart;
         }
       } else if (name.startsWith('--react-internal-module-stop-')) {
-        const stackFrameStop = name.substr(19);
+        const stackFrameStop = name.substr(29);
 
         if (!state.internalModuleStackStringSet.has(stackFrameStop)) {
           state.internalModuleStackStringSet.add(stackFrameStop);
@@ -825,10 +778,7 @@ function processTimelineEvent(
             }
           }
         }
-      } // eslint-disable-line brace-style
-
-      // Other user timing marks/measures
-      else if (ph === 'R' || ph === 'n') {
+      } else if (ph === 'R' || ph === 'n') {
         // User Timing mark
         currentProfilerData.otherUserTimingMarks.push({
           name,
@@ -841,10 +791,7 @@ function processTimelineEvent(
       } else if (ph === 'i' || ph === 'I') {
         // Instant events.
         // Note that the capital "I" is a deprecated value that exists in Chrome Canary traces.
-      } // eslint-disable-line brace-style
-
-      // Unrecognized event
-      else {
+      } else {
         throw new InvalidProfileError(
           `Unrecognized event ${JSON.stringify(
             event,
@@ -882,7 +829,7 @@ function assertCurrentComponentMeasureType(
 function processReactComponentMeasure(
   name: string,
   startTime: Milliseconds,
-  currentProfilerData: ReactProfilerData,
+  currentProfilerData: TimelineData,
   state: ProcessorState,
 ): void {
   if (name.startsWith('--component-render-start-')) {
@@ -1017,21 +964,32 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
 
   const speedscopeFlamechart = new SpeedscopeFlamechart({
+    // $FlowFixMe[method-unbinding]
     getTotalWeight: profile.getTotalWeight.bind(profile),
+    // $FlowFixMe[method-unbinding]
     forEachCall: profile.forEachCall.bind(profile),
+    // $FlowFixMe[method-unbinding]
     formatValue: profile.formatValue.bind(profile),
     getColorBucketForFrame: () => 0,
   });
 
   const flamechart: Flamechart = speedscopeFlamechart.getLayers().map(layer =>
-    layer.map(({start, end, node: {frame: {name, file, line, col}}}) => ({
-      name,
-      timestamp: start / 1000,
-      duration: (end - start) / 1000,
-      scriptUrl: file,
-      locationLine: line,
-      locationColumn: col,
-    })),
+    layer.map(
+      ({
+        start,
+        end,
+        node: {
+          frame: {name, file, line, col},
+        },
+      }) => ({
+        name,
+        timestamp: start / 1000,
+        duration: (end - start) / 1000,
+        scriptUrl: file,
+        locationLine: line,
+        locationColumn: col,
+      }),
+    ),
   );
 
   return flamechart;
@@ -1048,15 +1006,15 @@ function parseStackFrame(stackFrame: string): ErrorStackFrame | null {
 
 export default async function preprocessData(
   timeline: TimelineEvent[],
-): Promise<ReactProfilerData> {
+): Promise<TimelineData> {
   const flamechart = preprocessFlamechart(timeline);
 
-  const laneToReactMeasureMap = new Map();
+  const laneToReactMeasureMap: Map<ReactLane, Array<ReactMeasure>> = new Map();
   for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
     laneToReactMeasureMap.set(lane, []);
   }
 
-  const profilerData: ReactProfilerData = {
+  const profilerData: TimelineData = {
     batchUIDToMeasuresMap: new Map(),
     componentMeasures: [],
     duration: 0,
@@ -1173,7 +1131,10 @@ export default async function preprocessData(
           lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
         )
       ) {
-        schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+        // FIXME: This warning doesn't account for "nested updates" that are
+        // spawned by useDeferredValue. Disabling temporarily until we figure
+        // out the right way to handle this.
+        // schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
       }
     }
   });

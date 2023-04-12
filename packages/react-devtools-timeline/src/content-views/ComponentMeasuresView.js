@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactComponentMeasure,
-  ReactProfilerData,
-  ViewState,
-} from '../types';
+import type {ReactComponentMeasure, TimelineData, ViewState} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -44,7 +40,7 @@ export class ComponentMeasuresView extends View {
   _cachedSearchRegExp: RegExp | null = null;
   _hoveredComponentMeasure: ReactComponentMeasure | null = null;
   _intrinsicSize: IntrinsicSize;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _viewState: ViewState;
 
   onHover: ((event: ReactComponentMeasure | null) => void) | null = null;
@@ -52,7 +48,7 @@ export class ComponentMeasuresView extends View {
   constructor(
     surface: Surface,
     frame: Rect,
-    profilerData: ReactProfilerData,
+    profilerData: TimelineData,
     viewState: ViewState,
   ) {
     super(surface, frame);
@@ -73,7 +69,7 @@ export class ComponentMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 
@@ -96,13 +92,8 @@ export class ComponentMeasuresView extends View {
     showHoverHighlight: boolean,
   ): boolean {
     const {frame} = this;
-    const {
-      componentName,
-      duration,
-      timestamp,
-      type,
-      warning,
-    } = componentMeasure;
+    const {componentName, duration, timestamp, type, warning} =
+      componentMeasure;
 
     const xStart = timestampToPosition(timestamp, scaleFactor, frame);
     const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);

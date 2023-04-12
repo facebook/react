@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -137,28 +137,31 @@ export function attach(
   global: Object,
 ): RendererInterface {
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
-  const internalInstanceToIDMap: WeakMap<
-    InternalInstance,
-    number,
-  > = new WeakMap();
-  const internalInstanceToRootIDMap: WeakMap<
-    InternalInstance,
-    number,
-  > = new WeakMap();
+  const internalInstanceToIDMap: WeakMap<InternalInstance, number> =
+    new WeakMap();
+  const internalInstanceToRootIDMap: WeakMap<InternalInstance, number> =
+    new WeakMap();
 
-  let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
+  let getInternalIDForNative: GetFiberIDForNative =
+    ((null: any): GetFiberIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
+  let getFiberForNative = (node: NativeType) => {
+    // Not implemented.
+    return null;
+  };
 
   if (renderer.ComponentTree) {
     getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
-      const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
-        node,
-      );
+      const internalInstance =
+        renderer.ComponentTree.getClosestInstanceFromNode(node);
       return internalInstanceToIDMap.get(internalInstance) || null;
     };
     findNativeNodeForInternalID = (id: number) => {
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
+    };
+    getFiberForNative = (node: NativeType) => {
+      return renderer.ComponentTree.getClosestInstanceFromNode(node);
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
     getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
@@ -188,7 +191,7 @@ export function attach(
     return ((internalInstanceToIDMap.get(internalInstance): any): number);
   }
 
-  function areEqualArrays(a, b) {
+  function areEqualArrays(a: Array<any>, b: Array<any>) {
     if (a.length !== b.length) {
       return false;
     }
@@ -211,10 +214,12 @@ export function attach(
         const internalInstance = args[0];
         const hostContainerInfo = args[3];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           return fn.apply(this, args);
         }
         if (hostContainerInfo._topLevelWrapper === undefined) {
           // SSR
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           return fn.apply(this, args);
         }
 
@@ -234,10 +239,12 @@ export function attach(
         );
 
         try {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           const result = fn.apply(this, args);
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -253,6 +260,7 @@ export function attach(
       performUpdateIfNecessary(fn, args) {
         const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           return fn.apply(this, args);
         }
 
@@ -261,6 +269,7 @@ export function attach(
 
         const prevChildren = getChildren(internalInstance);
         try {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           const result = fn.apply(this, args);
 
           const nextChildren = getChildren(internalInstance);
@@ -272,6 +281,7 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -287,6 +297,7 @@ export function attach(
       receiveComponent(fn, args) {
         const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           return fn.apply(this, args);
         }
 
@@ -295,6 +306,7 @@ export function attach(
 
         const prevChildren = getChildren(internalInstance);
         try {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           const result = fn.apply(this, args);
 
           const nextChildren = getChildren(internalInstance);
@@ -306,6 +318,7 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -321,12 +334,14 @@ export function attach(
       unmountComponent(fn, args) {
         const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           return fn.apply(this, args);
         }
 
         const id = getID(internalInstance);
         parentIDStack.push(id);
         try {
+          // $FlowFixMe[object-this-reference] found when upgrading Flow
           const result = fn.apply(this, args);
           parentIDStack.pop();
 
@@ -335,6 +350,7 @@ export function attach(
 
           return result;
         } catch (err) {
+          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -387,7 +403,7 @@ export function attach(
       pushOperation(id);
       pushOperation(ElementTypeRoot);
       pushOperation(0); // StrictMode compliant?
-      pushOperation(0); // Profiling supported?
+      pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
@@ -487,11 +503,11 @@ export function attach(
     const numUnmountIDs =
       pendingUnmountedIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Array(
+    const operations = new Array<number>(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
-      // How big is the string table?
-      1 + // [stringTableLength]
+        // How big is the string table?
+        1 + // [stringTableLength]
         // Then goes the actual string table.
         pendingStringTableLength +
         // All unmounts are batched in a single message.
@@ -765,7 +781,7 @@ export function attach(
 
       let owner = element._owner;
       if (owner) {
-        owners = [];
+        owners = ([]: Array<SerializedElement>);
         while (owner != null) {
           owners.push({
             displayName: getData(owner).displayName || 'Unknown',
@@ -787,8 +803,8 @@ export function attach(
     }
 
     // Not implemented
-    const errors = [];
-    const warnings = [];
+    const errors: Array<[string, number]> = [];
+    const warnings: Array<[string, number]> = [];
 
     return {
       id,
@@ -1094,6 +1110,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForFiberID,
+    getFiberForNative,
     getFiberIDForNative: getInternalIDForNative,
     getInstanceAndStyle,
     findNativeNodesForFiberID: (id: number) => {

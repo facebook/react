@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
-  BundlerConfig,
+  ClientManifest,
   Destination,
-} from './ReactFlightNativeRelayServerHostConfig';
+} from './ReactFlightServerConfigNativeRelay';
 
 import {
   createRequest,
@@ -20,9 +20,9 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 function render(
-  model: ReactModel,
+  model: ReactClientValue,
   destination: Destination,
-  config: BundlerConfig,
+  config: ClientManifest,
 ): void {
   const request = createRequest(model, config);
   startWork(request);

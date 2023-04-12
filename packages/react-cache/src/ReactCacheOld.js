@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,28 +7,30 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {ReactContext, Thenable} from 'shared/ReactTypes';
 
 import * as React from 'react';
 
 import {createLRU} from './LRU';
 
-type Suspender = {then(resolve: () => mixed, reject: () => mixed): mixed, ...};
+interface Suspender {
+  then(resolve: () => mixed, reject: () => mixed): mixed;
+}
 
-type PendingResult = {|
+type PendingResult = {
   status: 0,
   value: Suspender,
-|};
+};
 
-type ResolvedResult<V> = {|
+type ResolvedResult<V> = {
   status: 1,
   value: V,
-|};
+};
 
-type RejectedResult = {|
+type RejectedResult = {
   status: 2,
   value: mixed,
-|};
+};
 
 type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 
@@ -46,7 +48,7 @@ const ReactCurrentDispatcher =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     .ReactCurrentDispatcher;
 
-function readContext(Context) {
+function readContext(Context: ReactContext<mixed>) {
   const dispatcher = ReactCurrentDispatcher.current;
   if (dispatcher === null) {
     // This wasn't being minified but we're going to retire this package anyway.
@@ -60,6 +62,7 @@ function readContext(Context) {
   return dispatcher.readContext(Context);
 }
 
+// $FlowFixMe[missing-local-annot]
 function identityHashFn(input) {
   if (__DEV__) {
     if (
@@ -82,11 +85,11 @@ function identityHashFn(input) {
 }
 
 const CACHE_LIMIT = 500;
-const lru = createLRU(CACHE_LIMIT);
+const lru = createLRU<$FlowFixMe>(CACHE_LIMIT);
 
 const entries: Map<Resource<any, any>, Map<any, any>> = new Map();
 
-const CacheContext = React.createContext(null);
+const CacheContext = React.createContext<mixed>(null);
 
 function accessResult<I, K, V>(
   resource: any,
@@ -130,7 +133,7 @@ function accessResult<I, K, V>(
   }
 }
 
-function deleteEntry(resource, key) {
+function deleteEntry(resource: any, key: mixed) {
   const entriesForResource = entries.get(resource);
   if (entriesForResource !== undefined) {
     entriesForResource.delete(key);

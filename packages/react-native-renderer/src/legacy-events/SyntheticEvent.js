@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 /* eslint valid-typeof: 0 */
+
+import assign from 'shared/assign';
 
 const EVENT_POOL_SIZE = 10;
 
@@ -17,13 +19,13 @@ const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
+  currentTarget: function () {
     return null;
   },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
-  timeStamp: function(event) {
+  timeStamp: function (event) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: null,
@@ -110,8 +112,8 @@ function SyntheticEvent(
   return this;
 }
 
-Object.assign(SyntheticEvent.prototype, {
-  preventDefault: function() {
+assign(SyntheticEvent.prototype, {
+  preventDefault: function () {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
     if (!event) {
@@ -126,7 +128,7 @@ Object.assign(SyntheticEvent.prototype, {
     this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
-  stopPropagation: function() {
+  stopPropagation: function () {
     const event = this.nativeEvent;
     if (!event) {
       return;
@@ -151,7 +153,7 @@ Object.assign(SyntheticEvent.prototype, {
    * them back into the pool. This allows a way to hold onto a reference that
    * won't be added back into the pool.
    */
-  persist: function() {
+  persist: function () {
     this.isPersistent = functionThatReturnsTrue;
   },
 
@@ -165,7 +167,7 @@ Object.assign(SyntheticEvent.prototype, {
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
-  destructor: function() {
+  destructor: function () {
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
@@ -226,21 +228,21 @@ SyntheticEvent.Interface = EventInterface;
 /**
  * Helper to reduce boilerplate when creating subclasses.
  */
-SyntheticEvent.extend = function(Interface) {
+SyntheticEvent.extend = function (Interface) {
   const Super = this;
 
-  const E = function() {};
+  const E = function () {};
   E.prototype = Super.prototype;
   const prototype = new E();
 
   function Class() {
     return Super.apply(this, arguments);
   }
-  Object.assign(prototype, Class.prototype);
+  assign(prototype, Class.prototype);
   Class.prototype = prototype;
   Class.prototype.constructor = Class;
 
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
+  Class.Interface = assign({}, Super.Interface, Interface);
   Class.extend = Super.extend;
   addEventPoolingTo(Class);
 

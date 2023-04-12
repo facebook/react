@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 
 import {
   REACT_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -25,7 +26,7 @@ import {
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 
-export function typeOf(object: any) {
+export function typeOf(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
     switch ($$typeof) {
@@ -43,6 +44,7 @@ export function typeOf(object: any) {
             const $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
+              case REACT_SERVER_CONTEXT_TYPE:
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
               case REACT_LAZY_TYPE:
@@ -80,7 +82,7 @@ let hasWarnedAboutDeprecatedIsAsyncMode = false;
 let hasWarnedAboutDeprecatedIsConcurrentMode = false;
 
 // AsyncMode should be deprecated
-export function isAsyncMode(object: any) {
+export function isAsyncMode(object: any): boolean {
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedIsAsyncMode) {
       hasWarnedAboutDeprecatedIsAsyncMode = true;
@@ -93,7 +95,7 @@ export function isAsyncMode(object: any) {
   }
   return false;
 }
-export function isConcurrentMode(object: any) {
+export function isConcurrentMode(object: any): boolean {
   if (__DEV__) {
     if (!hasWarnedAboutDeprecatedIsConcurrentMode) {
       hasWarnedAboutDeprecatedIsConcurrentMode = true;
@@ -106,43 +108,43 @@ export function isConcurrentMode(object: any) {
   }
   return false;
 }
-export function isContextConsumer(object: any) {
+export function isContextConsumer(object: any): boolean {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 }
-export function isContextProvider(object: any) {
+export function isContextProvider(object: any): boolean {
   return typeOf(object) === REACT_PROVIDER_TYPE;
 }
-export function isElement(object: any) {
+export function isElement(object: any): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
-export function isForwardRef(object: any) {
+export function isForwardRef(object: any): boolean {
   return typeOf(object) === REACT_FORWARD_REF_TYPE;
 }
-export function isFragment(object: any) {
+export function isFragment(object: any): boolean {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
 }
-export function isLazy(object: any) {
+export function isLazy(object: any): boolean {
   return typeOf(object) === REACT_LAZY_TYPE;
 }
-export function isMemo(object: any) {
+export function isMemo(object: any): boolean {
   return typeOf(object) === REACT_MEMO_TYPE;
 }
-export function isPortal(object: any) {
+export function isPortal(object: any): boolean {
   return typeOf(object) === REACT_PORTAL_TYPE;
 }
-export function isProfiler(object: any) {
+export function isProfiler(object: any): boolean {
   return typeOf(object) === REACT_PROFILER_TYPE;
 }
-export function isStrictMode(object: any) {
+export function isStrictMode(object: any): boolean {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
 }
-export function isSuspense(object: any) {
+export function isSuspense(object: any): boolean {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 }
-export function isSuspenseList(object: any) {
+export function isSuspenseList(object: any): boolean {
   return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
 }

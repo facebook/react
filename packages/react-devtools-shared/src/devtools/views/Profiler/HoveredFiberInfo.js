@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,16 +18,16 @@ import styles from './HoveredFiberInfo.css';
 
 import type {ChartNode} from './FlamegraphChartBuilder';
 
-export type TooltipFiberData = {|
+export type TooltipFiberData = {
   id: number,
   name: string,
-|};
+};
 
 export type Props = {
   fiberData: ChartNode,
 };
 
-export default function HoveredFiberInfo({fiberData}: Props) {
+export default function HoveredFiberInfo({fiberData}: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 
@@ -44,10 +44,8 @@ export default function HoveredFiberInfo({fiberData}: Props) {
   for (i = 0; i < commitIndices.length; i++) {
     const commitIndex = commitIndices[i];
     if (selectedCommitIndex === commitIndex) {
-      const {
-        fiberActualDurations,
-        fiberSelfDurations,
-      } = profilerStore.getCommitData(((rootID: any): number), commitIndex);
+      const {fiberActualDurations, fiberSelfDurations} =
+        profilerStore.getCommitData(((rootID: any): number), commitIndex);
       const actualDuration = fiberActualDurations.get(id) || 0;
       const selfDuration = fiberSelfDurations.get(id) || 0;
 

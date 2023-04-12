@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,8 +25,9 @@ describe('ReactFlightNativeRelay', () => {
     React = require('react');
     // TODO: Switch this out to react-native
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
     View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTView',
@@ -48,11 +49,20 @@ describe('ReactFlightNativeRelay', () => {
       ReactNativeFlightRelayClient.resolveRow(response, chunk);
     }
     ReactNativeFlightRelayClient.close(response);
-    const model = response.readRoot();
+    const promise = ReactNativeFlightRelayClient.getRoot(response);
+    let model;
+    let error;
+    promise.then(
+      m => (model = m),
+      e => (error = e),
+    );
+    if (error) {
+      throw error;
+    }
     return model;
   }
 
-  it('can render a server component', () => {
+  it('can render a Server Component', () => {
     function Bar({text}) {
       return <Text>{text.toUpperCase()}</Text>;
     }
@@ -77,7 +87,7 @@ describe('ReactFlightNativeRelay', () => {
     expect(model).toMatchSnapshot();
   });
 
-  it('can render a client component using a module reference and render there', () => {
+  it('can render a Client Component using a module reference and render there', () => {
     function UserClient(props) {
       return (
         <Text>
@@ -113,7 +123,7 @@ describe('ReactFlightNativeRelay', () => {
     Foo.prototype = Object.create(Bar.prototype);
     // This is enumerable which some polyfills do.
     Foo.prototype.constructor = Foo;
-    Foo.prototype.method = function() {};
+    Foo.prototype.method = function () {};
 
     expect(() => {
       const transport = [];
@@ -123,7 +133,7 @@ describe('ReactFlightNativeRelay', () => {
       );
       readThrough(transport);
     }).toErrorDev(
-      'Only plain objects can be passed to client components from server components. ',
+      'Only plain objects can be passed to Client Components from Server Components. ',
       {withoutStack: true},
     );
   });

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,10 +13,14 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
+let internalAct;
 let createReactClass;
+let waitFor;
+let assertLog;
 
 describe('ReactFresh', () => {
   let container;
@@ -28,8 +32,15 @@ describe('ReactFresh', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
-      act = require('jest-react').act;
+      act = require('react-dom/test-utils').act;
+      internalAct = require('internal-test-utils').act;
+
+      const InternalTestUtils = require('internal-test-utils');
+      waitFor = InternalTestUtils.waitFor;
+      assertLog = InternalTestUtils.assertLog;
+
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -853,7 +864,7 @@ describe('ReactFresh', () => {
       });
 
       expect(container.textContent).toBe('Loading');
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
       expect(container.textContent).toBe('0');
@@ -1002,7 +1013,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1086,7 +1097,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1171,7 +1182,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -1256,7 +1267,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      await act(async () => {
+      await act(() => {
         jest.runAllTimers();
       });
 
@@ -2409,107 +2420,106 @@ describe('ReactFresh', () => {
     }
   });
 
+  // @gate www && __DEV__
   it('can hot reload offscreen components', async () => {
-    if (__DEV__ && __EXPERIMENTAL__) {
-      const AppV1 = prepare(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-
-        return function App({offscreen}) {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('App#layout');
-          });
-          return (
-            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
-              <Hello />
-            </LegacyHiddenDiv>
-          );
-        };
-      });
-
-      const root = ReactDOM.createRoot(container);
-      root.render(<AppV1 offscreen={true} />);
-      expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
-      const el = container.firstChild;
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
-
-      // Perform a hot update.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
-
-      // It's still offscreen so we don't see anything.
-      expect(container.firstChild).toBe(el);
-      expect(el.hidden).toBe(true);
-      expect(el.firstChild).toBe(null);
-
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
-
-      await act(async () => {
-        el.firstChild.dispatchEvent(
-          new MouseEvent('click', {
-            bubbles: true,
-          }),
+    const AppV1 = prepare(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.log('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
         );
-      });
+      }
+      $RefreshReg$(Hello, 'Hello');
 
-      expect(Scheduler).toHaveYielded(['Hello#layout']);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+      return function App({offscreen}) {
+        React.useLayoutEffect(() => {
+          Scheduler.log('App#layout');
+        });
+        return (
+          <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
+            <Hello />
+          </LegacyHiddenDiv>
+        );
+      };
+    });
 
-      // Hot reload while we're offscreen.
-      patch(() => {
-        function Hello() {
-          React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('Hello#layout');
-          });
-          const [val, setVal] = React.useState(0);
-          return (
-            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
-              {val}
-            </p>
-          );
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<AppV1 offscreen={true} />);
+    await waitFor(['App#layout']);
+    const el = container.firstChild;
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
 
-      // It's still offscreen so we don't see the updates.
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('red');
+    // Perform a hot update.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.log('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
 
-      // Process the offscreen updates.
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
-      expect(container.firstChild).toBe(el);
-      expect(el.firstChild.textContent).toBe('1');
-      expect(el.firstChild.style.color).toBe('orange');
-    }
+    // It's still offscreen so we don't see anything.
+    expect(container.firstChild).toBe(el);
+    expect(el.hidden).toBe(true);
+    expect(el.firstChild).toBe(null);
+
+    // Process the offscreen updates.
+    await waitFor(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('0');
+    expect(el.firstChild.style.color).toBe('red');
+
+    await internalAct(() => {
+      el.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
+    });
+
+    assertLog(['Hello#layout']);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
+
+    // Hot reload while we're offscreen.
+    patch(() => {
+      function Hello() {
+        React.useLayoutEffect(() => {
+          Scheduler.log('Hello#layout');
+        });
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      $RefreshReg$(Hello, 'Hello');
+    });
+
+    // It's still offscreen so we don't see the updates.
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('red');
+
+    // Process the offscreen updates.
+    await waitFor(['Hello#layout']);
+    expect(container.firstChild).toBe(el);
+    expect(el.firstChild.textContent).toBe('1');
+    expect(el.firstChild.style.color).toBe('orange');
   });
 
   it('remounts failed error boundaries (componentDidCatch)', () => {
@@ -3606,7 +3616,7 @@ describe('ReactFresh', () => {
       // a proper reload because we will bottle up the update.
       // So we're being somewhat conservative.
       expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
-      expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(
+      expect(ReactFreshRuntime.isLikelyComponentType(function () {})).toBe(
         false,
       );
       expect(
@@ -3773,7 +3783,7 @@ describe('ReactFresh', () => {
   }
 
   // This simulates the scenario in https://github.com/facebook/react/issues/17626
-  it('can inject the runtime after the renderer executes', () => {
+  it('can inject the runtime after the renderer executes', async () => {
     if (__DEV__) {
       initFauxDevToolsHook();
 
@@ -3782,7 +3792,8 @@ describe('ReactFresh', () => {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('jest-react').act;
+      act = require('react-dom/test-utils').act;
+      internalAct = require('internal-test-utils').act;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');

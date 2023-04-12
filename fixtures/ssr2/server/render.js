@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,6 +20,7 @@ let assets = {
 };
 
 module.exports = function render(url, res) {
+  const data = createServerData();
   // This is how you would wire it up previously:
   //
   // res.send(
@@ -36,18 +37,26 @@ module.exports = function render(url, res) {
     console.error('Fatal', error);
   });
   let didError = false;
-  const data = createServerData();
   const {pipe, abort} = renderToPipeableStream(
     <DataProvider data={data}>
       <App assets={assets} />
     </DataProvider>,
     {
       bootstrapScripts: [assets['main.js']],
-      onCompleteShell() {
+      onAllReady() {
+        // Full completion.
+        // You can use this for SSG or crawlers.
+      },
+      onShellReady() {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
         pipe(res);
+      },
+      onShellError(x) {
+        // Something errored before we could complete the shell so we emit an alternative shell.
+        res.statusCode = 500;
+        res.send('<!doctype><p>Error</p>');
       },
       onError(x) {
         didError = true;

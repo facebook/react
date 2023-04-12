@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,7 @@ const INSTRUCTIONS_FB_URL =
   'https://fb.me/devtools-unsupported-bridge-protocol';
 const MODAL_DIALOG_ID = 'UnsupportedBridgeProtocolDialog';
 
-export default function UnsupportedBridgeProtocolDialog(_: {||}) {
+export default function UnsupportedBridgeProtocolDialog(_: {}): null {
   const {dialogs, dispatch} = useContext(ModalDialogContext);
   const store = useContext(StoreContext);
 
@@ -33,20 +33,18 @@ export default function UnsupportedBridgeProtocolDialog(_: {||}) {
   useEffect(() => {
     const updateDialog = () => {
       if (!isVisible) {
-        if (store.unsupportedBridgeProtocol !== null) {
+        if (store.unsupportedBridgeProtocolDetected) {
           dispatch({
             canBeDismissed: false,
             id: MODAL_DIALOG_ID,
             type: 'SHOW',
             content: (
-              <DialogContent
-                unsupportedBridgeProtocol={store.unsupportedBridgeProtocol}
-              />
+              <DialogContent unsupportedBridgeProtocol={store.bridgeProtocol} />
             ),
           });
         }
       } else {
-        if (store.unsupportedBridgeProtocol === null) {
+        if (!store.unsupportedBridgeProtocolDetected) {
           dispatch({
             type: 'HIDE',
             id: MODAL_DIALOG_ID,
@@ -68,9 +66,9 @@ export default function UnsupportedBridgeProtocolDialog(_: {||}) {
 
 function DialogContent({
   unsupportedBridgeProtocol,
-}: {|
+}: {
   unsupportedBridgeProtocol: BridgeProtocol,
-|}) {
+}) {
   const {version, minNpmVersion, maxNpmVersion} = unsupportedBridgeProtocol;
 
   let instructions;

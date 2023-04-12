@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,7 +24,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
 
       handleColor = color => {
         this.props.logger('parent-handleColor', this.state.color);
-        this.setState({color: color}, function() {
+        this.setState({color: color}, function () {
           this.props.logger('parent-after-setState', this.state.color);
         });
       };
@@ -52,7 +52,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
         this.props.logger('handleHue', this.state.hue, this.props.color);
         this.props.onSelectColor(color);
         this.setState(
-          function(state, props) {
+          function (state, props) {
             this.props.logger(
               'setState-this',
               this.state.hue,
@@ -61,7 +61,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
             this.props.logger('setState-args', state.hue, props.color);
             return {hue: shade + ' ' + props.color};
           },
-          function() {
+          function () {
             this.props.logger(
               'after-setState',
               this.state.hue,

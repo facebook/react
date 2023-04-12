@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,10 +17,10 @@ export default function useSmartTooltip({
   mouseX,
   mouseY,
 }: {
-  canvasRef: {|current: HTMLCanvasElement | null|},
+  canvasRef: {current: HTMLCanvasElement | null},
   mouseX: number,
   mouseY: number,
-}) {
+}): {current: HTMLElement | null} {
   const ref = useRef<HTMLElement | null>(null);
 
   // HACK: Browser extension reports window.innerHeight of 0,
@@ -44,9 +44,9 @@ export default function useSmartTooltip({
         // mouse cursor or finally aligned with the window's top edge.
         if (mouseY - TOOLTIP_OFFSET_TOP - element.offsetHeight > 0) {
           // We position the tooltip above the mouse cursor if it fits there.
-          element.style.top = `${mouseY -
-            element.offsetHeight -
-            TOOLTIP_OFFSET_TOP}px`;
+          element.style.top = `${
+            mouseY - element.offsetHeight - TOOLTIP_OFFSET_TOP
+          }px`;
         } else {
           // Otherwise we align the tooltip with the window's top edge.
           element.style.top = '0px';
@@ -64,9 +64,9 @@ export default function useSmartTooltip({
         if (mouseX - TOOLTIP_OFFSET_TOP - element.offsetWidth > 0) {
           // We position the tooltip at the left of the mouse cursor if it fits
           // there.
-          element.style.left = `${mouseX -
-            element.offsetWidth -
-            TOOLTIP_OFFSET_TOP}px`;
+          element.style.left = `${
+            mouseX - element.offsetWidth - TOOLTIP_OFFSET_TOP
+          }px`;
         } else {
           // Otherwise, align the tooltip with the window's left edge.
           element.style.left = '0px';

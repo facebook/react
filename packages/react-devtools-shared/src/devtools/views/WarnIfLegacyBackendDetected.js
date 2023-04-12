@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,7 @@ import {ModalDialogContext} from './ModalDialog';
 
 import styles from './WarnIfLegacyBackendDetected.css';
 
-export default function WarnIfLegacyBackendDetected(_: {||}) {
+export default function WarnIfLegacyBackendDetected(_: {}): null {
   const bridge = useContext(BridgeContext);
   const {dispatch} = useContext(ModalDialogContext);
 
@@ -23,7 +23,7 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
   // In this case the frontend should show upgrade instructions.
   useEffect(() => {
     // Wall.listen returns a cleanup function
-    let unlisten = bridge.wall.listen(message => {
+    let unlisten: $FlowFixMe = bridge.wall.listen(message => {
       switch (message.type) {
         case 'call':
         case 'event':
@@ -75,7 +75,7 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
   return null;
 }
 
-function InvalidBackendDetected(_: {||}) {
+function InvalidBackendDetected(_: {}) {
   return (
     <Fragment>
       <p>Either upgrade React or install React DevTools v3:</p>

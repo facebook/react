@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let ReactTestUtils;
 let act;
@@ -20,13 +21,14 @@ let SuspenseList;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
 
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
-  act = require('jest-react').act;
+  act = require('internal-test-utils').act;
   if (gate(flags => flags.enableSuspenseList)) {
     SuspenseList = React.SuspenseList;
   }
@@ -39,11 +41,8 @@ function initModules() {
   };
 }
 
-const {
-  itThrowsWhenRendering,
-  resetModules,
-  serverRender,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {itThrowsWhenRendering, resetModules, serverRender} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
@@ -162,8 +161,8 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.tagName).toBe('DIV');
     expect(divB.textContent).toBe('B');
 
-    act(() => {
-      ReactDOM.hydrateRoot(parent, example);
+    await act(() => {
+      ReactDOMClient.hydrateRoot(parent, example);
     });
 
     const parent2 = element.parentNode;
@@ -187,7 +186,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
 
     itThrowsWhenRendering(
@@ -200,7 +199,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
   }
 

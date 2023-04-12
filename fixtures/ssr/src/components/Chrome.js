@@ -1,8 +1,4 @@
-import React, {
-  Component,
-  Suspense,
-  unstable_startTransition as startTransition,
-} from 'react';
+import React, {Component, Suspense, startTransition} from 'react';
 
 import Theme, {ThemeToggleButton} from './Theme';
 

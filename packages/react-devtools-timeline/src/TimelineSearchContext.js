@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,33 +7,31 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
+
 import * as React from 'react';
 import {createContext, useMemo, useReducer} from 'react';
 
-import type {
-  ReactComponentMeasure,
-  ReactProfilerData,
-  ViewState,
-} from './types';
+import type {ReactComponentMeasure, TimelineData, ViewState} from './types';
 
-type State = {|
-  profilerData: ReactProfilerData,
+type State = {
+  profilerData: TimelineData,
   searchIndex: number,
   searchRegExp: RegExp | null,
   searchResults: Array<ReactComponentMeasure>,
   searchText: string,
-|};
+};
 
-type ACTION_GO_TO_NEXT_SEARCH_RESULT = {|
+type ACTION_GO_TO_NEXT_SEARCH_RESULT = {
   type: 'GO_TO_NEXT_SEARCH_RESULT',
-|};
-type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
+};
+type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {
   type: 'GO_TO_PREVIOUS_SEARCH_RESULT',
-|};
-type ACTION_SET_SEARCH_TEXT = {|
+};
+type ACTION_SET_SEARCH_TEXT = {
   type: 'SET_SEARCH_TEXT',
   payload: string,
-|};
+};
 
 type Action =
   | ACTION_GO_TO_NEXT_SEARCH_RESULT
@@ -42,7 +40,7 @@ type Action =
 
 type Dispatch = (action: Action) => void;
 
-const EMPTY_ARRAY = [];
+const EMPTY_ARRAY: Array<ReactComponentMeasure> = [];
 
 function reducer(state: State, action: Action): State {
   let {searchIndex, searchRegExp, searchResults, searchText} = state;
@@ -115,8 +113,8 @@ function reducer(state: State, action: Action): State {
   };
 }
 
-export type Context = {|
-  profilerData: ReactProfilerData,
+export type Context = {
+  profilerData: TimelineData,
 
   // Search state
   dispatch: Dispatch,
@@ -124,22 +122,24 @@ export type Context = {|
   searchRegExp: null,
   searchResults: Array<ReactComponentMeasure>,
   searchText: string,
-|};
+};
 
-const TimelineSearchContext = createContext<Context>(((null: any): Context));
+const TimelineSearchContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 TimelineSearchContext.displayName = 'TimelineSearchContext';
 
-type Props = {|
+type Props = {
   children: React$Node,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   viewState: ViewState,
-|};
+};
 
 function TimelineSearchContextController({
   children,
   profilerData,
   viewState,
-}: Props) {
+}: Props): React.Node {
   const [state, dispatch] = useReducer<State, State, Action>(reducer, {
     profilerData,
     searchIndex: -1,

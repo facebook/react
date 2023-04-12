@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ThrownError, ReactProfilerData} from '../types';
+import type {ThrownError, TimelineData} from '../types';
 import type {
   Interaction,
   MouseMoveInteraction,
@@ -40,12 +40,12 @@ const EVENT_ROW_HEIGHT_FIXED =
   TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 export class ThrownErrorsView extends View {
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _intrinsicSize: Size;
   _hoveredEvent: ThrownError | null = null;
   onHover: ((event: ThrownError | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
     this._profilerData = profilerData;
 
@@ -55,7 +55,7 @@ export class ThrownErrorsView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): Size {
     return this._intrinsicSize;
   }
 

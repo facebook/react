@@ -11,7 +11,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "object-assign": "^4.1.1",
     "react-reconciler": "*",
     "react-client": "*",
     "react-server": "*"
@@ -22,7 +21,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "persistent.js",
     "server.js",
