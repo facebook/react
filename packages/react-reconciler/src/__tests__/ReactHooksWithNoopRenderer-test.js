@@ -3623,9 +3623,8 @@ describe('ReactHooksWithNoopRenderer', () => {
         </>,
       );
 
-      await resolveText('A');
-      assertLog(['Promise resolved [A]']);
-      await waitForAll(['A']);
+      await act(() => resolveText('A'));
+      assertLog(['Promise resolved [A]', 'A']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />
