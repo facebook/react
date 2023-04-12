@@ -651,4 +651,53 @@ describe('ReactDOMFiberAsync', () => {
       root.unmount();
     });
   });
+
+  it('transition lane in popState should yield if it suspends', async () => {
+    const never = {then() {}};
+    let _setText;
+
+    function App() {
+      const [shouldSuspend, setShouldSuspend] = React.useState(false);
+      const [text, setText] = React.useState('0');
+      _setText = setText;
+      if (shouldSuspend) {
+        Scheduler.log('Suspend!');
+        throw never;
+      }
+      function onPopstate() {
+        React.startTransition(() => {
+          setShouldSuspend(val => !val);
+        });
+      }
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+      Scheduler.log(`Child:${shouldSuspend}/${text}`);
+      return text;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['Child:false/0']);
+
+    await act(() => {
+      const popStateEvent = new Event('popstate');
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
+    });
+    assertLog(['Suspend!']);
+
+    await act(async () => {
+      _setText('1');
+    });
+    assertLog(['Child:false/1', 'Suspend!']);
+
+    root.unmount();
+  });
 });
