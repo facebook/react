@@ -42,6 +42,7 @@ let waitFor;
 let waitForAll;
 let assertLog;
 let waitForPaint;
+let clientAct;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -74,6 +75,7 @@ describe('ReactDOMFizzServer', () => {
     waitFor = InternalTestUtils.waitFor;
     waitForPaint = InternalTestUtils.waitForPaint;
     assertLog = InternalTestUtils.assertLog;
+    clientAct = InternalTestUtils.act;
 
     if (gate(flags => flags.source)) {
       // The `with-selector` module composes the main `use-sync-external-store`
@@ -1191,8 +1193,8 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // We now resolve it on the client.
-    resolveText('Hello');
-    await waitForAll([]);
+    await clientAct(() => resolveText('Hello'));
+    assertLog([]);
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
@@ -2884,10 +2886,10 @@ describe('ReactDOMFizzServer', () => {
         </div>,
       );
 
-      await act(() => {
+      await clientAct(() => {
         resolveText('Yay!');
       });
-      await waitForAll(['Yay!']);
+      assertLog(['Yay!']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
@@ -4310,10 +4312,10 @@ describe('ReactDOMFizzServer', () => {
           <h1>Loading...</h1>
         </div>,
       );
-      await unsuspend();
+      await clientAct(() => unsuspend());
       // Since our client components only throw on the very first render there are no
       // new throws in this pass
-      await waitForAll([]);
+      assertLog([]);
       expect(mockError.mock.calls).toEqual([]);
 
       expect(getVisibleChildren(container)).toEqual(

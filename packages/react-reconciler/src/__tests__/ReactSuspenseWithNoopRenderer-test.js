@@ -481,7 +481,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <ErrorBoundary ref={errorBoundary}>
-            <AsyncText text="Result" ms={3000} />
+            <AsyncText text="Result" />
           </ErrorBoundary>
         </Suspense>
       );
@@ -491,9 +491,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await waitForAll(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
-    await rejectText('Result', new Error('Failed to load: Result'));
-
-    await waitForAll([
+    await act(() => rejectText('Result', new Error('Failed to load: Result')));
+    assertLog([
       'Error! [Result]',
 
       // React retries one more time
@@ -3565,20 +3564,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
 
       await resolveText('A1');
-      await waitFor([
-        'A1',
-        'Suspend! [A2]',
-        'Loading...',
-        'Suspend! [B2]',
-        'Loading...',
-      ]);
-      expect(root).toMatchRenderedOutput(
-        <>
-          <span prop="A1" />
-          <span prop="B" />
-        </>,
-      );
+      await waitFor(['A1']);
+    });
+    assertLog(['Suspend! [A2]', 'Loading...', 'Suspend! [B2]', 'Loading...']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A1" />
+        <span prop="B" />
+      </>,
+    );
 
+    await act(async () => {
       await resolveText('A2');
       await resolveText('B2');
     });
