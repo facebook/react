@@ -1016,49 +1016,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop="C" />);
   });
 
-  // TODO: This test was written against the old Expiration Times
-  // implementation. It doesn't really test what it was intended to test
-  // anymore, because all updates to the same queue get entangled together.
-  // Even if they haven't expired. Consider either deleting or rewriting.
-  // @gate enableLegacyCache
-  it('flushes all expired updates in a single batch', async () => {
-    class Foo extends React.Component {
-      componentDidUpdate() {
-        Scheduler.log('Commit: ' + this.props.text);
-      }
-      componentDidMount() {
-        Scheduler.log('Commit: ' + this.props.text);
-      }
-      render() {
-        return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            <AsyncText text={this.props.text} />
-          </Suspense>
-        );
-      }
-    }
-
-    ReactNoop.render(<Foo text="" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo text="go" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo text="good" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo text="goodbye" />);
-
-    await waitForAll(['Suspend! [goodbye]', 'Loading...', 'Commit: goodbye']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
-
-    await resolveText('goodbye');
-    expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
-
-    await waitForAll(['goodbye']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop="goodbye" />);
-  });
-
   // @gate enableLegacyCache
   it('a suspended update that expires', async () => {
     // Regression test. This test used to fall into an infinite loop.
@@ -1780,7 +1737,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  it('does suspend if a fallback has been shown for a short time', async () => {
+  it('throttles content from appearing if a fallback was shown recently', async () => {
     function Foo() {
       Scheduler.log('Foo');
       return (
@@ -1822,23 +1779,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await resolveText('B');
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
-      // Restart and render the complete content.
+      // Restart and render the complete content. The tree will finish but we
+      // won't commit the result yet because the fallback appeared recently.
       await waitForAll(['A', 'B']);
-      // TODO: Because this render was the result of a retry, and a fallback
-      // was shown recently, we should suspend and remain on the fallback
-      // for little bit longer. We currently only do this if there's still
-      // remaining fallbacks in the tree, but we should do it for all retries.
-      //
-      // Correct output:
-      // expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
-      //
-      // Actual output:
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="A" />
-          <span prop="B" />
-        </>,
-      );
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
     });
     assertLog([]);
     expect(ReactNoop).toMatchRenderedOutput(
