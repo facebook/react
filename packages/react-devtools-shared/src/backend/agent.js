@@ -300,7 +300,13 @@ export default class Agent extends EventEmitter<{
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      renderer.copyElementPath(id, path);
+      const value = renderer.getSerializedElementValueByPath(id, path);
+
+      if (value != null) {
+        this._bridge.send('saveToClipboard', value);
+      } else {
+        console.warn(`Unable to obtain serialized value for element "${id}"`);
+      }
     }
   };
 
