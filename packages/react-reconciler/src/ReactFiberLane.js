@@ -494,7 +494,7 @@ export function includesExpiredLane(root: FiberRoot, lanes: Lanes): boolean {
   return (lanes & root.expiredLanes) !== NoLanes;
 }
 
-export function includesTransitionLane(lane: Lane): boolean {
+export function isTransitionLane(lane: Lane): boolean {
   return (lane & TransitionLanes) !== NoLanes;
 }
 

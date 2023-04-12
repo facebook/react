@@ -67,7 +67,7 @@ import {
   mergeLanes,
   removeLanes,
   intersectLanes,
-  includesTransitionLane,
+  isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
 } from './ReactFiberLane';
@@ -2744,7 +2744,7 @@ function entangleTransitionUpdate<S, A>(
   queue: UpdateQueue<S, A>,
   lane: Lane,
 ): void {
-  if (includesTransitionLane(lane)) {
+  if (isTransitionLane(lane)) {
     let queueLanes = queue.lanes;
 
     // If any entangled lanes are no longer pending on the root, then they
