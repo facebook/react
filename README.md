@@ -18,6 +18,11 @@ React has been designed for gradual adoption from the start, and **you can use a
 
 You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/package/react).
 
+After Successfully Installing React on Your First Time , you have to increase number of watchers of your device.These Watchers listen for the changes that occur in state.
+Here is the [Guide](https://stackoverflow.com/questions/55763428/react-native-error-enospc-system-limit-for-number-of-file-watchers-reached) to increase the number of Watchers of your device.
+
+
+
 ## Documentation
 
 You can find the React documentation [on the website](https://reactjs.org/).  
