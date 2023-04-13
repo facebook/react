@@ -52,8 +52,6 @@ var ReactSharedInternals =
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  revertRemovalOfSiblingPrerendering =
-    dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
@@ -11123,21 +11121,38 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    unitOfWork.flags & 32768
-      ? unwindUnitOfWork(unitOfWork)
-      : completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768)
+      a: {
+        do {
+          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== returnFiber) {
+            returnFiber.flags &= 32767;
+            workInProgress = returnFiber;
+            break a;
+          }
+          if (0 !== (unitOfWork.mode & 2)) {
+            stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+            returnFiber = unitOfWork.actualDuration;
+            for (update = unitOfWork.child; null !== update; )
+              (returnFiber += update.actualDuration), (update = update.sibling);
+            unitOfWork.actualDuration = returnFiber;
+          }
+          unitOfWork = unitOfWork.return;
+          null !== unitOfWork &&
+            ((unitOfWork.flags |= 32768),
+            (unitOfWork.subtreeFlags = 0),
+            (unitOfWork.deletions = null));
+          workInProgress = unitOfWork;
+        } while (null !== unitOfWork);
+        workInProgressRootExitStatus = 6;
+        workInProgress = null;
+      }
+    else completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
   do {
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      0 !== (completedWork.flags & 32768)
-    ) {
-      unwindUnitOfWork(completedWork);
-      return;
-    }
     var current = completedWork.alternate;
     unitOfWork = completedWork.return;
     0 === (completedWork.mode & 2)
@@ -11157,36 +11172,6 @@ function completeUnitOfWork(unitOfWork) {
     workInProgress = completedWork = unitOfWork;
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
-}
-function unwindUnitOfWork(unitOfWork) {
-  do {
-    var next = unwindWork(unitOfWork.alternate, unitOfWork);
-    if (null !== next) {
-      next.flags &= 32767;
-      workInProgress = next;
-      return;
-    }
-    if (0 !== (unitOfWork.mode & 2)) {
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
-      next = unitOfWork.actualDuration;
-      for (var child = unitOfWork.child; null !== child; )
-        (next += child.actualDuration), (child = child.sibling);
-      unitOfWork.actualDuration = next;
-    }
-    next = unitOfWork.return;
-    null !== next &&
-      ((next.flags |= 32768), (next.subtreeFlags = 0), (next.deletions = null));
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
-    ) {
-      workInProgress = unitOfWork;
-      return;
-    }
-    workInProgress = unitOfWork = next;
-  } while (null !== unitOfWork);
-  workInProgressRootExitStatus = 6;
-  workInProgress = null;
 }
 function commitRoot(root, recoverableErrors, transitions) {
   var previousUpdateLanePriority = currentUpdatePriority,
@@ -13305,14 +13290,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$400;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1685 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1685) {
-      var element$jscomp$inline_1686 = document.createElement("div");
-      element$jscomp$inline_1686.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1685 =
-        "function" === typeof element$jscomp$inline_1686.oninput;
+    var isSupported$jscomp$inline_1693 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1693) {
+      var element$jscomp$inline_1694 = document.createElement("div");
+      element$jscomp$inline_1694.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1693 =
+        "function" === typeof element$jscomp$inline_1694.oninput;
     }
-    JSCompiler_inline_result$jscomp$400 = isSupported$jscomp$inline_1685;
+    JSCompiler_inline_result$jscomp$400 = isSupported$jscomp$inline_1693;
   } else JSCompiler_inline_result$jscomp$400 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$400 &&
@@ -13624,20 +13609,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1726 = 0;
-  i$jscomp$inline_1726 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1726++
+  var i$jscomp$inline_1734 = 0;
+  i$jscomp$inline_1734 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1734++
 ) {
-  var eventName$jscomp$inline_1727 =
-      simpleEventPluginEvents[i$jscomp$inline_1726],
-    domEventName$jscomp$inline_1728 =
-      eventName$jscomp$inline_1727.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1729 =
-      eventName$jscomp$inline_1727[0].toUpperCase() +
-      eventName$jscomp$inline_1727.slice(1);
+  var eventName$jscomp$inline_1735 =
+      simpleEventPluginEvents[i$jscomp$inline_1734],
+    domEventName$jscomp$inline_1736 =
+      eventName$jscomp$inline_1735.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1737 =
+      eventName$jscomp$inline_1735[0].toUpperCase() +
+      eventName$jscomp$inline_1735.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1728,
-    "on" + capitalizedEvent$jscomp$inline_1729
+    domEventName$jscomp$inline_1736,
+    "on" + capitalizedEvent$jscomp$inline_1737
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17174,10 +17159,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1927 = {
+var devToolsConfig$jscomp$inline_1935 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-8c680283",
+  version: "18.3.0-www-classic-601ad9b2",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17195,10 +17180,10 @@ var devToolsConfig$jscomp$inline_1927 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1927.bundleType,
-  version: devToolsConfig$jscomp$inline_1927.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1927.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1927.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1935.bundleType,
+  version: devToolsConfig$jscomp$inline_1935.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1935.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1935.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17214,14 +17199,14 @@ var devToolsConfig$jscomp$inline_1927 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1927.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1935.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-8c680283"
+  reconcilerVersion: "18.3.0-www-classic-601ad9b2"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17448,7 +17433,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-8c680283";
+exports.version = "18.3.0-www-classic-601ad9b2";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

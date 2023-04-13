@@ -22024,15 +22024,13 @@ function completeUnitOfWork(unitOfWork) {
 
   do {
     {
-      {
-        if ((completedWork.flags & Incomplete) !== NoFlags$1) {
-          // NOTE: If we re-enable sibling prerendering in some cases, this branch
-          // is where we would switch to the unwinding path.
-          error(
-            "Internal React error: Expected this fiber to be complete, but " +
-              "it isn't. It should have been unwound. This is a bug in React."
-          );
-        }
+      if ((completedWork.flags & Incomplete) !== NoFlags$1) {
+        // NOTE: If we re-enable sibling prerendering in some cases, this branch
+        // is where we would switch to the unwinding path.
+        error(
+          "Internal React error: Expected this fiber to be complete, but " +
+            "it isn't. It should have been unwound. This is a bug in React."
+        );
       }
     } // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
@@ -22131,7 +22129,10 @@ function unwindUnitOfWork(unitOfWork) {
       returnFiber.flags |= Incomplete;
       returnFiber.subtreeFlags = NoFlags$1;
       returnFiber.deletions = null;
-    }
+    } // NOTE: If we re-enable sibling prerendering in some cases, here we
+    // would switch to the normal completion path: check if a sibling
+    // exists, and if so, begin work on it.
+    // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null
 
     incompleteWork = returnFiber; // Update the next thing we're working on in case something throws.
@@ -24336,7 +24337,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-ad6e07a1";
+var ReactVersion = "18.3.0-www-modern-50a23993";
 
 // Might add PROFILE later.
 

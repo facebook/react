@@ -109,8 +109,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  revertRemovalOfSiblingPrerendering =
-    dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
@@ -10944,21 +10942,38 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    unitOfWork.flags & 32768
-      ? unwindUnitOfWork(unitOfWork)
-      : completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768)
+      a: {
+        do {
+          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== returnFiber) {
+            returnFiber.flags &= 32767;
+            workInProgress = returnFiber;
+            break a;
+          }
+          if (0 !== (unitOfWork.mode & 2)) {
+            stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
+            returnFiber = unitOfWork.actualDuration;
+            for (update = unitOfWork.child; null !== update; )
+              (returnFiber += update.actualDuration), (update = update.sibling);
+            unitOfWork.actualDuration = returnFiber;
+          }
+          unitOfWork = unitOfWork.return;
+          null !== unitOfWork &&
+            ((unitOfWork.flags |= 32768),
+            (unitOfWork.subtreeFlags = 0),
+            (unitOfWork.deletions = null));
+          workInProgress = unitOfWork;
+        } while (null !== unitOfWork);
+        workInProgressRootExitStatus = 6;
+        workInProgress = null;
+      }
+    else completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
   do {
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      0 !== (completedWork.flags & 32768)
-    ) {
-      unwindUnitOfWork(completedWork);
-      return;
-    }
     var current = completedWork.alternate;
     unitOfWork = completedWork.return;
     0 === (completedWork.mode & 2)
@@ -10978,36 +10993,6 @@ function completeUnitOfWork(unitOfWork) {
     workInProgress = completedWork = unitOfWork;
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
-}
-function unwindUnitOfWork(unitOfWork) {
-  do {
-    var next = unwindWork(unitOfWork.alternate, unitOfWork);
-    if (null !== next) {
-      next.flags &= 32767;
-      workInProgress = next;
-      return;
-    }
-    if (0 !== (unitOfWork.mode & 2)) {
-      stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
-      next = unitOfWork.actualDuration;
-      for (var child = unitOfWork.child; null !== child; )
-        (next += child.actualDuration), (child = child.sibling);
-      unitOfWork.actualDuration = next;
-    }
-    next = unitOfWork.return;
-    null !== next &&
-      ((next.flags |= 32768), (next.subtreeFlags = 0), (next.deletions = null));
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
-    ) {
-      workInProgress = unitOfWork;
-      return;
-    }
-    workInProgress = unitOfWork = next;
-  } while (null !== unitOfWork);
-  workInProgressRootExitStatus = 6;
-  workInProgress = null;
 }
 function commitRoot(root, recoverableErrors, transitions) {
   var previousUpdateLanePriority = currentUpdatePriority,
@@ -13531,14 +13516,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$397;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1677 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1677) {
-      var element$jscomp$inline_1678 = document.createElement("div");
-      element$jscomp$inline_1678.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1677 =
-        "function" === typeof element$jscomp$inline_1678.oninput;
+    var isSupported$jscomp$inline_1685 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1685) {
+      var element$jscomp$inline_1686 = document.createElement("div");
+      element$jscomp$inline_1686.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1685 =
+        "function" === typeof element$jscomp$inline_1686.oninput;
     }
-    JSCompiler_inline_result$jscomp$397 = isSupported$jscomp$inline_1677;
+    JSCompiler_inline_result$jscomp$397 = isSupported$jscomp$inline_1685;
   } else JSCompiler_inline_result$jscomp$397 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$397 &&
@@ -13850,20 +13835,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1718 = 0;
-  i$jscomp$inline_1718 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1718++
+  var i$jscomp$inline_1726 = 0;
+  i$jscomp$inline_1726 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1726++
 ) {
-  var eventName$jscomp$inline_1719 =
-      simpleEventPluginEvents[i$jscomp$inline_1718],
-    domEventName$jscomp$inline_1720 =
-      eventName$jscomp$inline_1719.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1721 =
-      eventName$jscomp$inline_1719[0].toUpperCase() +
-      eventName$jscomp$inline_1719.slice(1);
+  var eventName$jscomp$inline_1727 =
+      simpleEventPluginEvents[i$jscomp$inline_1726],
+    domEventName$jscomp$inline_1728 =
+      eventName$jscomp$inline_1727.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1729 =
+      eventName$jscomp$inline_1727[0].toUpperCase() +
+      eventName$jscomp$inline_1727.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1720,
-    "on" + capitalizedEvent$jscomp$inline_1721
+    domEventName$jscomp$inline_1728,
+    "on" + capitalizedEvent$jscomp$inline_1729
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16695,10 +16680,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1886 = {
+var devToolsConfig$jscomp$inline_1894 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-76ef0e3f",
+  version: "18.3.0-www-modern-a3efb320",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16716,10 +16701,10 @@ var devToolsConfig$jscomp$inline_1886 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1886.bundleType,
-  version: devToolsConfig$jscomp$inline_1886.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1886.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1886.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1894.bundleType,
+  version: devToolsConfig$jscomp$inline_1894.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1894.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1894.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16736,14 +16721,14 @@ var devToolsConfig$jscomp$inline_1886 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1886.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1894.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-76ef0e3f"
+  reconcilerVersion: "18.3.0-www-modern-a3efb320"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16898,7 +16883,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-76ef0e3f";
+exports.version = "18.3.0-www-modern-a3efb320";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

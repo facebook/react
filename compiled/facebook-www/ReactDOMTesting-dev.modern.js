@@ -235,8 +235,6 @@ var disableInputAttributeSyncing =
   disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
   enableTrustedTypesIntegration =
     dynamicFeatureFlags.enableTrustedTypesIntegration,
-  revertRemovalOfSiblingPrerendering =
-    dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback =
     dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
@@ -31478,28 +31476,14 @@ function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
 
   do {
-    if (revertRemovalOfSiblingPrerendering) {
+    {
       if ((completedWork.flags & Incomplete) !== NoFlags$1) {
-        // This fiber did not complete, because one of its children did not
-        // complete. Switch to unwinding the stack instead of completing it.
-        //
-        // The reason "unwind" and "complete" is interleaved is because when
-        // something suspends, we continue rendering the siblings even though
-        // they will be replaced by a fallback.
-        // TODO: Disable sibling prerendering, then remove this branch.
-        unwindUnitOfWork(completedWork);
-        return;
-      }
-    } else {
-      {
-        if ((completedWork.flags & Incomplete) !== NoFlags$1) {
-          // NOTE: If we re-enable sibling prerendering in some cases, this branch
-          // is where we would switch to the unwinding path.
-          error(
-            "Internal React error: Expected this fiber to be complete, but " +
-              "it isn't. It should have been unwound. This is a bug in React."
-          );
-        }
+        // NOTE: If we re-enable sibling prerendering in some cases, this branch
+        // is where we would switch to the unwinding path.
+        error(
+          "Internal React error: Expected this fiber to be complete, but " +
+            "it isn't. It should have been unwound. This is a bug in React."
+        );
       }
     } // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
@@ -31598,23 +31582,10 @@ function unwindUnitOfWork(unitOfWork) {
       returnFiber.flags |= Incomplete;
       returnFiber.subtreeFlags = NoFlags$1;
       returnFiber.deletions = null;
-    }
-
-    if (revertRemovalOfSiblingPrerendering) {
-      // If there are siblings, work on them now even though they're going to be
-      // replaced by a fallback. We're "prerendering" them. Historically our
-      // rationale for this behavior has been to initiate any lazy data requests
-      // in the siblings, and also to warm up the CPU cache.
-      // TODO: Don't prerender siblings. With `use`, we suspend the work loop
-      // until the data has resolved, anyway.
-      var siblingFiber = incompleteWork.sibling;
-
-      if (siblingFiber !== null) {
-        // This branch will return us to the normal work loop.
-        workInProgress = siblingFiber;
-        return;
-      }
-    } // Otherwise, return to the parent
+    } // NOTE: If we re-enable sibling prerendering in some cases, here we
+    // would switch to the normal completion path: check if a sibling
+    // exists, and if so, begin work on it.
+    // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null
 
     incompleteWork = returnFiber; // Update the next thing we're working on in case something throws.
@@ -34206,7 +34177,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-c9e5a93b";
+var ReactVersion = "18.3.0-www-modern-0eebbf55";
 
 function createPortal$1(
   children,

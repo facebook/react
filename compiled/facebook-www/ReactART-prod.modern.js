@@ -63,8 +63,6 @@ function formatProdErrorMessage(code) {
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
-  revertRemovalOfSiblingPrerendering =
-    dynamicFeatureFlags.revertRemovalOfSiblingPrerendering,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
@@ -8424,21 +8422,31 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
-    unitOfWork.flags & 32768
-      ? unwindUnitOfWork(unitOfWork)
-      : completeUnitOfWork(unitOfWork);
+    if (unitOfWork.flags & 32768)
+      a: {
+        do {
+          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== returnFiber) {
+            returnFiber.flags &= 32767;
+            workInProgress = returnFiber;
+            break a;
+          }
+          unitOfWork = unitOfWork.return;
+          null !== unitOfWork &&
+            ((unitOfWork.flags |= 32768),
+            (unitOfWork.subtreeFlags = 0),
+            (unitOfWork.deletions = null));
+          workInProgress = unitOfWork;
+        } while (null !== unitOfWork);
+        workInProgressRootExitStatus = 6;
+        workInProgress = null;
+      }
+    else completeUnitOfWork(unitOfWork);
   }
 }
 function completeUnitOfWork(unitOfWork) {
   var completedWork = unitOfWork;
   do {
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      0 !== (completedWork.flags & 32768)
-    ) {
-      unwindUnitOfWork(completedWork);
-      return;
-    }
     unitOfWork = completedWork.return;
     var next = completeWork(
       completedWork.alternate,
@@ -8457,29 +8465,6 @@ function completeUnitOfWork(unitOfWork) {
     workInProgress = completedWork = unitOfWork;
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
-}
-function unwindUnitOfWork(unitOfWork) {
-  do {
-    var next = unwindWork(unitOfWork.alternate, unitOfWork);
-    if (null !== next) {
-      next.flags &= 32767;
-      workInProgress = next;
-      return;
-    }
-    next = unitOfWork.return;
-    null !== next &&
-      ((next.flags |= 32768), (next.subtreeFlags = 0), (next.deletions = null));
-    if (
-      revertRemovalOfSiblingPrerendering &&
-      ((unitOfWork = unitOfWork.sibling), null !== unitOfWork)
-    ) {
-      workInProgress = unitOfWork;
-      return;
-    }
-    workInProgress = unitOfWork = next;
-  } while (null !== unitOfWork);
-  workInProgressRootExitStatus = 6;
-  workInProgress = null;
 }
 function commitRoot(root, recoverableErrors, transitions) {
   var previousUpdateLanePriority = currentUpdatePriority,
@@ -9647,19 +9632,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1144 = {
+  devToolsConfig$jscomp$inline_1150 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-6f658170",
+    version: "18.3.0-www-modern-f611b8f0",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1309 = {
-  bundleType: devToolsConfig$jscomp$inline_1144.bundleType,
-  version: devToolsConfig$jscomp$inline_1144.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1144.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1144.rendererConfig,
+var internals$jscomp$inline_1315 = {
+  bundleType: devToolsConfig$jscomp$inline_1150.bundleType,
+  version: devToolsConfig$jscomp$inline_1150.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1150.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1150.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9676,26 +9661,26 @@ var internals$jscomp$inline_1309 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1144.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1150.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-6f658170"
+  reconcilerVersion: "18.3.0-www-modern-f611b8f0"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1310 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1316 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1310.isDisabled &&
-    hook$jscomp$inline_1310.supportsFiber
+    !hook$jscomp$inline_1316.isDisabled &&
+    hook$jscomp$inline_1316.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1310.inject(
-        internals$jscomp$inline_1309
+      (rendererID = hook$jscomp$inline_1316.inject(
+        internals$jscomp$inline_1315
       )),
-        (injectedHook = hook$jscomp$inline_1310);
+        (injectedHook = hook$jscomp$inline_1316);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
