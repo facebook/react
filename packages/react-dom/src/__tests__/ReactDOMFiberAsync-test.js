@@ -39,6 +39,7 @@ describe('ReactDOMFiberAsync', () => {
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
+    window.event = undefined;
   });
 
   afterEach(() => {
