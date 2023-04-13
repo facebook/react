@@ -129,7 +129,6 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
-  claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
   isSubsetOfLanes,
@@ -278,10 +277,10 @@ import {
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
-  getCurrentEventTransitionLane,
-  setCurrentEventTransitionLane,
+  requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+import {peekAsyncActionContext} from './ReactFiberAsyncAction';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -633,18 +632,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
       transition._updatedFibers.add(fiber);
     }
-    // The algorithm for assigning an update to a lane should be stable for all
-    // updates at the same priority within the same event. To do this, the
-    // inputs to the algorithm must be the same.
-    //
-    // The trick we use is to cache the first of each of these inputs within an
-    // event. Then reset the cached values once we can be sure the event is
-    // over. Our heuristic for that is whenever we enter a concurrent work loop.
-    if (getCurrentEventTransitionLane() === NoLane) {
-      // All transitions within the same event are assigned the same lane.
-      setCurrentEventTransitionLane(claimNextTransitionLane());
-    }
-    return getCurrentEventTransitionLane();
+
+    const asyncAction = peekAsyncActionContext();
+    return asyncAction !== null
+      ? // We're inside an async action scope. Reuse the same lane.
+        asyncAction.lane
+      : // We may or may not be inside an async action scope. If we are, this
+        // is the first update in that scope. Either way, we need to get a
+        // fresh transition lane.
+        requestTransitionLane();
   }
 
   // Updates originating inside certain React methods, like flushSync, have

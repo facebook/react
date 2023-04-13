@@ -120,6 +120,8 @@ export const enableFizzExternalRuntime = true;
 // Performance related test
 export const diffInCommitPhase = __EXPERIMENTAL__;
 
+export const enableAsyncActions = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
