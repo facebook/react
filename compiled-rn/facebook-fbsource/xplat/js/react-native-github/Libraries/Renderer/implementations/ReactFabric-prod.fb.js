@@ -7618,70 +7618,51 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       }
       root.finishedWork = originallyAttemptedLanes;
       root.finishedLanes = lanes;
-      switch (didTimeout) {
-        case 0:
-        case 1:
-          throw Error("Root did not complete. This is a bug in React.");
-        case 2:
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        case 3:
-          markRootSuspended(root, lanes);
-          if (
-            (lanes & 125829120) === lanes &&
-            ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
-            10 < didTimeout)
-          ) {
-            if (0 !== getNextLanes(root, 0)) break;
-            root.timeoutHandle = scheduleTimeout(
-              commitRootWhenReady.bind(
-                null,
-                root,
-                originallyAttemptedLanes,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                lanes
-              ),
-              didTimeout
-            );
+      a: {
+        switch (didTimeout) {
+          case 0:
+          case 1:
+            throw Error("Root did not complete. This is a bug in React.");
+          case 4:
+            if ((lanes & 8388480) === lanes) {
+              markRootSuspended(root, lanes);
+              break a;
+            }
             break;
-          }
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        case 4:
+          case 2:
+          case 3:
+          case 5:
+            break;
+          default:
+            throw Error("Unknown root exit status.");
+        }
+        if (
+          (lanes & 125829120) === lanes &&
+          ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
+          10 < didTimeout)
+        ) {
           markRootSuspended(root, lanes);
-          if ((lanes & 8388480) === lanes) break;
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
+          if (0 !== getNextLanes(root, 0)) break a;
+          root.timeoutHandle = scheduleTimeout(
+            commitRootWhenReady.bind(
+              null,
+              root,
+              originallyAttemptedLanes,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+              lanes
+            ),
+            didTimeout
           );
-          break;
-        case 5:
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        default:
-          throw Error("Unknown root exit status.");
+          break a;
+        }
+        commitRootWhenReady(
+          root,
+          originallyAttemptedLanes,
+          workInProgressRootRecoverableErrors,
+          workInProgressTransitions,
+          lanes
+        );
       }
     }
   }
@@ -7732,11 +7713,7 @@ function commitRootWhenReady(
   lanes
 ) {
   0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
-  commitRoot(
-    root,
-    workInProgressRootRecoverableErrors,
-    workInProgressTransitions
-  );
+  commitRoot(root, recoverableErrors, transitions);
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -9479,7 +9456,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1045 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-72c890e31-20230412",
+    version: "18.3.0-next-8256781fd-20230412",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9521,7 +9498,7 @@ var internals$jscomp$inline_1274 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-72c890e31-20230412"
+  reconcilerVersion: "18.3.0-next-8256781fd-20230412"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1275 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
