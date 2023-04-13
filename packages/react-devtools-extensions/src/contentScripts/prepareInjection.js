@@ -90,11 +90,9 @@ window.addEventListener('message', function onMessage({data, source}) {
         );
       }
       break;
-    case 'react-devtools-inject-backend':
+    case 'react-devtools-inject-backend-manager':
       if (IS_FIREFOX) {
-        injectScriptSync(
-          chrome.runtime.getURL('build/react_devtools_backend.js'),
-        );
+        injectScriptSync(chrome.runtime.getURL('build/backendManager.js'));
       }
       break;
   }
