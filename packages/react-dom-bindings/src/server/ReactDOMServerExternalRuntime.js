@@ -3,6 +3,7 @@
  *  clients. Therefore, it should be fast and not have many external dependencies.
  * @flow
  */
+/* eslint-disable dot-notation */
 
 // Imports are resolved statically by the closure compiler in release bundles
 // and by rollup in jest unit tests
@@ -11,15 +12,104 @@ import {
   completeBoundaryWithStyles,
   completeBoundary,
   completeSegment,
-} from './fizz-instruction-set/ReactDOMFizzInstructionSet';
+} from './fizz-instruction-set/ReactDOMFizzInstructionSetExternalRuntime';
 
-// Intentionally does nothing. Implementation will be added in future PR.
-// eslint-disable-next-line no-unused-vars
-const observer = new MutationObserver(mutations => {
-  // These are only called so I can check what the module output looks like. The
-  // code is unreachable.
-  clientRenderBoundary();
-  completeBoundaryWithStyles();
-  completeBoundary();
-  completeSegment();
-});
+if (!window.$RC) {
+  // TODO: Eventually remove, we currently need to set these globals for
+  // compatibility with ReactDOMFizzInstructionSet
+  window.$RC = completeBoundary;
+  window.$RM = new Map();
+}
+
+if (document.body != null) {
+  if (document.readyState === 'loading') {
+    installFizzInstrObserver(document.body);
+  }
+  // $FlowFixMe[incompatible-cast]
+  handleExistingNodes((document.body /*: HTMLElement */));
+} else {
+  // Document must be loading -- body may not exist yet if the fizz external
+  // runtime is sent in <head> (e.g. as a preinit resource)
+  // $FlowFixMe[recursive-definition]
+  const domBodyObserver = new MutationObserver(() => {
+    // We expect the body node to be stable once parsed / created
+    if (document.body != null) {
+      if (document.readyState === 'loading') {
+        installFizzInstrObserver(document.body);
+      }
+      // $FlowFixMe[incompatible-cast]
+      handleExistingNodes((document.body /*: HTMLElement */));
+
+      // We can call disconnect without takeRecord here,
+      // since we only expect a single document.body
+      domBodyObserver.disconnect();
+    }
+  });
+  // documentElement must already exist at this point
+  // $FlowFixMe[incompatible-call]
+  domBodyObserver.observe(document.documentElement, {childList: true});
+}
+
+function handleExistingNodes(target /*: HTMLElement */) {
+  const existingNodes = target.querySelectorAll('template');
+  for (let i = 0; i < existingNodes.length; i++) {
+    handleNode(existingNodes[i]);
+  }
+}
+
+function installFizzInstrObserver(target /*: Node */) {
+  const handleMutations = (mutations /*: Array<MutationRecord> */) => {
+    for (let i = 0; i < mutations.length; i++) {
+      const addedNodes = mutations[i].addedNodes;
+      for (let j = 0; j < addedNodes.length; j++) {
+        if (addedNodes[j].parentNode) {
+          handleNode(addedNodes[j]);
+        }
+      }
+    }
+  };
+
+  const fizzInstrObserver = new MutationObserver(handleMutations);
+  // We assume that instruction data nodes are eventually appended to the
+  // body, even if Fizz is streaming to a shell / subtree.
+  fizzInstrObserver.observe(target, {
+    childList: true,
+  });
+  window.addEventListener('DOMContentLoaded', () => {
+    handleMutations(fizzInstrObserver.takeRecords());
+    fizzInstrObserver.disconnect();
+  });
+}
+
+function handleNode(node_ /*: Node */) {
+  // $FlowFixMe[incompatible-cast]
+  if (node_.nodeType !== 1 || !(node_ /*: HTMLElement */).dataset) {
+    return;
+  }
+  // $FlowFixMe[incompatible-cast]
+  const node = (node_ /*: HTMLElement */);
+  const dataset = node.dataset;
+  if (dataset['rxi'] != null) {
+    clientRenderBoundary(
+      dataset['bid'],
+      dataset['dgst'],
+      dataset['msg'],
+      dataset['stck'],
+    );
+    node.remove();
+  } else if (dataset['rri'] != null) {
+    // Convert styles here, since its type is Array<Array<string>>
+    completeBoundaryWithStyles(
+      dataset['bid'],
+      dataset['sid'],
+      JSON.parse(dataset['sty']),
+    );
+    node.remove();
+  } else if (dataset['rci'] != null) {
+    completeBoundary(dataset['bid'], dataset['sid']);
+    node.remove();
+  } else if (dataset['rsi'] != null) {
+    completeSegment(dataset['sid'], dataset['pid']);
+    node.remove();
+  }
+}

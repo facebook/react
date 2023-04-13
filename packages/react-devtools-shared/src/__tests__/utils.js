@@ -46,7 +46,6 @@ export async function actAsync(
   const {act: actTestRenderer} = require('react-test-renderer');
   const {act: actDOM} = require('react-dom/test-utils');
 
-  // $FlowFixMe Flow doesn't know about "await act()" yet
   await actDOM(async () => {
     await actTestRenderer(async () => {
       await cb();
@@ -55,7 +54,6 @@ export async function actAsync(
 
   if (recursivelyFlush) {
     while (jest.getTimerCount() > 0) {
-      // $FlowFixMe Flow doesn't know about "await act()" yet
       await actDOM(async () => {
         await actTestRenderer(async () => {
           jest.runAllTimers();
@@ -63,7 +61,6 @@ export async function actAsync(
       });
     }
   } else {
-    // $FlowFixMe Flow doesn't know about "await act()" yet
     await actDOM(async () => {
       await actTestRenderer(async () => {
         jest.runOnlyPendingTimers();
@@ -203,7 +200,8 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 
   expect(profilerStore.profilingData).not.toBeNull();
 
-  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  const profilingDataFrontendInitial =
+    ((profilerStore.profilingData: any): ProfilingDataFrontend);
   expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
@@ -301,7 +299,7 @@ export function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
     return '\n    in ' + name + ' (at **)';
   });
 }

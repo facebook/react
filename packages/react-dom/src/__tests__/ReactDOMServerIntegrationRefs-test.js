@@ -14,16 +14,14 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
-  ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
@@ -46,7 +44,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('refs', function() {
+  describe('refs', function () {
     it('should not run ref code on server', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
@@ -99,17 +97,13 @@ describe('ReactDOMServerIntegration', () => {
           root,
           true,
         );
-      }).toErrorDev(
-        ReactFeatureFlags.warnAboutStringRefs
-          ? [
-              'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
-                'Support for string refs will be removed in a future major release. ' +
-                'We recommend using useRef() or createRef() instead. ' +
-                'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-                '    in RefsComponent (at **)',
-            ]
-          : [],
-      );
+      }).toErrorDev([
+        'Warning: Component "RefsComponent" contains the string ref "myDiv". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+          '    in RefsComponent (at **)',
+      ]);
       expect(component.refs.myDiv).toBe(root.firstChild);
     });
   });

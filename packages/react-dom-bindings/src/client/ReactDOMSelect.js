@@ -10,9 +10,7 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
-import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getToStringValue, toString} from './ToStringValue';
-import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
 let didWarnValueDefaultValue;
@@ -20,10 +18,6 @@ let didWarnValueDefaultValue;
 if (__DEV__) {
   didWarnValueDefaultValue = false;
 }
-
-type SelectWithWrapperState = HTMLSelectElement & {
-  _wrapperState: {wasMultiple: boolean},
-};
 
 function getDeclarationErrorAddendum() {
   const ownerName = getCurrentFiberOwnerNameInDevOrNull();
@@ -38,10 +32,8 @@ const valuePropNames = ['value', 'defaultValue'];
 /**
  * Validation function for `value` and `defaultValue`.
  */
-function checkSelectPropTypes(props) {
+function checkSelectPropTypes(props: any) {
   if (__DEV__) {
-    checkControlledValueProps('select', props);
-
     for (let i = 0; i < valuePropNames.length; i++) {
       const propName = valuePropNames[i];
       if (props[propName] == null) {
@@ -77,7 +69,7 @@ function updateOptions(
 
   if (multiple) {
     const selectedValues = (propValue: Array<string>);
-    const selectedValue = {};
+    const selectedValue: {[string]: boolean} = {};
     for (let i = 0; i < selectedValues.length; i++) {
       // Prefix to avoid chaos with special keys.
       selectedValue['$' + selectedValues[i]] = true;
@@ -130,23 +122,9 @@ function updateOptions(
  * selected.
  */
 
-export function getHostProps(element: Element, props: Object): Object {
-  return assign({}, props, {
-    value: undefined,
-  });
-}
-
-export function initWrapperState(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
+export function validateSelectProps(element: Element, props: Object) {
   if (__DEV__) {
     checkSelectPropTypes(props);
-  }
-
-  node._wrapperState = {
-    wasMultiple: !!props.multiple,
-  };
-
-  if (__DEV__) {
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&
@@ -164,38 +142,45 @@ export function initWrapperState(element: Element, props: Object) {
   }
 }
 
-export function postMountWrapper(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
-  node.multiple = !!props.multiple;
-  const value = props.value;
+export function initSelect(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  multiple: ?boolean,
+) {
+  const node: HTMLSelectElement = (element: any);
+  node.multiple = !!multiple;
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (props.defaultValue != null) {
-    updateOptions(node, !!props.multiple, props.defaultValue, true);
+    updateOptions(node, !!multiple, value, false);
+  } else if (defaultValue != null) {
+    updateOptions(node, !!multiple, defaultValue, true);
   }
 }
 
-export function postUpdateWrapper(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
-  const wasMultiple = node._wrapperState.wasMultiple;
-  node._wrapperState.wasMultiple = !!props.multiple;
+export function updateSelect(
+  element: Element,
+  value: ?string,
+  defaultValue: ?string,
+  multiple: ?boolean,
+  wasMultiple: ?boolean,
+) {
+  const node: HTMLSelectElement = (element: any);
 
-  const value = props.value;
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (wasMultiple !== !!props.multiple) {
+    updateOptions(node, !!multiple, value, false);
+  } else if (!!wasMultiple !== !!multiple) {
     // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-    if (props.defaultValue != null) {
-      updateOptions(node, !!props.multiple, props.defaultValue, true);
+    if (defaultValue != null) {
+      updateOptions(node, !!multiple, defaultValue, true);
     } else {
       // Revert the select back to its default unselected state.
-      updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
+      updateOptions(node, !!multiple, multiple ? [] : '', false);
     }
   }
 }
 
-export function restoreControlledState(element: Element, props: Object) {
-  const node = ((element: any): SelectWithWrapperState);
+export function restoreControlledSelectState(element: Element, props: Object) {
+  const node: HTMLSelectElement = (element: any);
   const value = props.value;
 
   if (value != null) {

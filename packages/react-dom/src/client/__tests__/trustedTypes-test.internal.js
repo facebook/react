@@ -22,7 +22,7 @@ describe('when Trusted Types are available in global object', () => {
     container = document.createElement('div');
     const fakeTTObjects = new Set();
     window.trustedTypes = {
-      isHTML: function(value) {
+      isHTML: function (value) {
         if (this !== window.trustedTypes) {
           throw new Error(this);
         }
@@ -100,7 +100,7 @@ describe('when Trusted Types are available in global object', () => {
     const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
-      Element.prototype.setAttribute = function(name, value) {
+      Element.prototype.setAttribute = function (name, value) {
         setAttributeCalls.push([this, name.toLowerCase(), value]);
         return setAttribute.apply(this, arguments);
       };
@@ -128,7 +128,7 @@ describe('when Trusted Types are available in global object', () => {
     const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
-      Element.prototype.setAttribute = function(name, value) {
+      Element.prototype.setAttribute = function (name, value) {
         setAttributeCalls.push([this, name.toLowerCase(), value]);
         return setAttribute.apply(this, arguments);
       };
@@ -156,7 +156,7 @@ describe('when Trusted Types are available in global object', () => {
     const setAttributeNS = Element.prototype.setAttributeNS;
     try {
       const setAttributeNSCalls = [];
-      Element.prototype.setAttributeNS = function(ns, name, value) {
+      Element.prototype.setAttributeNS = function (ns, name, value) {
         setAttributeNSCalls.push([this, ns, name, value]);
         return setAttributeNS.apply(this, arguments);
       };
@@ -208,6 +208,7 @@ describe('when Trusted Types are available in global object', () => {
       );
     });
 
+    // @gate !disableIEWorkarounds
     it('should log a warning', () => {
       class Component extends React.Component {
         render() {

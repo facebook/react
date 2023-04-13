@@ -1,0 +1,228 @@
+name: Commit Artifacts for Facebook WWW and fbsource
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  download_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and unzip artifacts
+        uses: actions/github-script@v6
+        env:
+          CIRCLECI_TOKEN: ${{secrets.CIRCLECI_TOKEN_DIFFTRAIN}}
+        with:
+          script: |
+            const cp = require('child_process');
+
+            function sleep(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            function execHelper(command, options, streamStdout = false) {
+              return new Promise((resolve, reject) => {
+                const proc = cp.exec(
+                  command,
+                  options,
+                  (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
+                );
+                if (streamStdout) {
+                  proc.stdout.pipe(process.stdout);
+                }
+              });
+            }
+
+            let artifactsUrl = null;
+            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
+            // workflow to notify this GitHub action. Sorry!
+            let iter = 0;
+            spinloop: while (iter < 15) {
+              const res = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha
+              });
+              for (const status of res.data) {
+                if (/process_artifacts_combined/.test(status.context)) {
+                  switch (status.state) {
+                    case 'pending': {
+                      console.log(`${status.context} is still pending`);
+                      break;
+                    }
+                    case 'failure':
+                    case 'error': {
+                      throw new Error(`${status.context} has failed or errored`);
+                    }
+                    case 'success': {
+                      // The status does not include a build ID, but we can extract it
+                      // from the URL. I couldn't find a better way to do this.
+                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+                        status.target_url,
+                      )[1];
+                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
+                        artifactsUrl =
+                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                        console.log(`Found artifactsUrl: ${artifactsUrl}`);
+                        break spinloop;
+                      } else {
+                        throw new Error(`${ciBuildId} isn't a number`);
+                      }
+                      break;
+                    }
+                    default: {
+                      throw new Error(`Unhandled status state: ${status.state}`);
+                      break;
+                    }
+                  }
+                }
+              }
+              iter++;
+              console.log("Sleeping for 60s...");
+              await sleep(60_000);
+            }
+            if (artifactsUrl != null) {
+              const {CIRCLECI_TOKEN} = process.env;
+              const res = await fetch(artifactsUrl, {
+                headers: {
+                  'Circle-Token': CIRCLECI_TOKEN
+                }
+              });
+              const data = await res.json();
+              if (!Array.isArray(data) && data.message != null) {
+                throw `CircleCI returned: ${data.message}`;
+              }
+              for (const artifact of data) {
+                if (artifact.path === 'build.tgz') {
+                  console.log(`Downloading and unzipping ${artifact.url}`);
+                  await execHelper(
+                    `curl -L ${artifact.url} -H "Circle-Token: ${CIRCLECI_TOKEN}" | tar -xvz`
+                  );
+                }
+              }
+            } else {
+              process.exitCode = 1;
+            }
+      - name: Strip @license from eslint plugin and react-refresh
+        run: |
+          sed -i -e 's/ @license React*//' \
+            build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
+      - name: Move relevant files for React in www into compiled
+        run: |
+          mkdir -p ./compiled
+          mkdir -p ./compiled/facebook-www
+          mkdir -p ./compiled/babel-plugin-react-refresh
+
+          # Copy the facebook-www folder into compiled
+          mv build/facebook-www ./compiled
+
+          # Copy WARNINGS to facebook-www
+          mv build/WARNINGS ./compiled/facebook-www/WARNINGS
+
+          # Copy eslint-plugin-react-hooks into facebook-www
+          mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
+            ./compiled/facebook-www/eslint-plugin-react-hooks.js
+
+          # Copy unstable_server-external-runtime.js into facebook-www
+          mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
+            ./compiled/facebook-www/unstable_server-external-runtime.js
+
+          # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
+          mv build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js \
+            ./compiled/babel-plugin-react-refresh/index.js
+
+          ls -R ./compiled
+      - name: Move relevant files for React in fbsource into compiled-rn
+        run: |
+          BASE_FOLDER='compiled-rn/facebook-fbsource/xplat/js'
+          mkdir -p ${BASE_FOLDER}/react-native-github/Libraries/Renderer/
+          mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/{scheduler,react,react-is,react-test-renderer}/
+
+          # Move React Native renderer 
+          mv build/react-native/implementations/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
+          mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
+          mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/scheduler/
+          mv build/facebook-react-native/react/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/
+          mv build/facebook-react-native/react-is/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-is/
+          mv build/facebook-react-native/react-test-renderer/cjs/ $BASE_FOLDER/RKJSModules/vendor/react-test-renderer/
+
+          # Delete OSS renderer. OSS renderer is synced through internal script.
+          RENDERER_FOLDER=$BASE_FOLDER/react-native-github/Libraries/Renderer/implementations/
+          rm $RENDERER_FOLDER/ReactFabric-{dev,prod,profiling}.js
+          rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
+
+          ls -R ./compiled
+      - name: Add REVISION file
+        run: |
+          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+      - uses: actions/upload-artifact@v3
+        with:
+          name: compiled
+          path: compiled/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
+
+  commit_www_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: builds/facebook-www
+      - name: Ensure clean directory
+        run: rm -rf compiled
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled
+          path: compiled/
+      - run: git status -u
+      - name: Check if only the REVISION file has changed
+        id: check_should_commit
+        run: |
+          if git status --porcelain | grep -qv '/REVISION$'; then
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Commit changes to branch
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.head_commit.message }}
+
+            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
+          branch: builds/facebook-www
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          create_branch: true
+
+  commit_fbsource_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          repository: facebook/react-fbsource-import
+          token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
+      - name: Ensure clean directory
+        run: rm -rf compiled-rn
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
+      - run: git status -u
+      - name: Commit changes to branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.head_commit.message }}
+
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+          commit_user_name: ${{ github.actor }}
+          commit_user_email: ${{ github.actor }}@users.noreply.github.com

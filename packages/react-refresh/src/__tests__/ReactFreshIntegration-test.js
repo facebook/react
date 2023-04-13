@@ -31,7 +31,7 @@ describe('ReactFreshIntegration', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
-      act = require('jest-react').act;
+      act = require('react-dom/test-utils').act;
       container = document.createElement('div');
       document.body.appendChild(container);
       exportsObj = undefined;
@@ -95,7 +95,7 @@ describe('ReactFreshIntegration', () => {
   });
 
   describe('with typescript syntax', () => {
-    runTests(function(source) {
+    runTests(function (source) {
       const typescriptSource = babel.transform(source, {
         babelrc: false,
         configFile: false,

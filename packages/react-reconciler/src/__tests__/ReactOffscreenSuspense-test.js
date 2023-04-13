@@ -9,6 +9,9 @@ let useState;
 let useEffect;
 let startTransition;
 let textCache;
+let waitFor;
+let waitForPaint;
+let assertLog;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -17,13 +20,18 @@ describe('ReactOffscreen', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     LegacyHidden = React.unstable_LegacyHidden;
     Offscreen = React.unstable_Offscreen;
     Suspense = React.Suspense;
     useState = React.useState;
     useEffect = React.useEffect;
     startTransition = React.startTransition;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitFor = InternalTestUtils.waitFor;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
 
     textCache = new Map();
   });
@@ -49,7 +57,7 @@ describe('ReactOffscreen', () => {
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          Scheduler.log(`Suspend! [${text}]`);
           throw record.value;
         case 'rejected':
           throw record.value;
@@ -57,7 +65,7 @@ describe('ReactOffscreen', () => {
           return record.value;
       }
     } else {
-      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+      Scheduler.log(`Suspend! [${text}]`);
       const thenable = {
         pings: [],
         then(resolve) {
@@ -80,13 +88,13 @@ describe('ReactOffscreen', () => {
   }
 
   function Text({text}) {
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
   function AsyncText({text}) {
     readText(text);
-    Scheduler.unstable_yieldValue(text);
+    Scheduler.log(text);
     return text;
   }
 
@@ -112,10 +120,10 @@ describe('ReactOffscreen', () => {
     // The hidden tree hasn't finished loading, but we should still be able to
     // show the surrounding contents. The outer Suspense boundary
     // isn't affected.
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['Visible', 'Suspend! [Hidden]']);
+    assertLog(['Visible', 'Suspend! [Hidden]']);
     expect(root).toMatchRenderedOutput(<span>Visible</span>);
 
     // When the data resolves, we should be able to finish prerendering
@@ -123,7 +131,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Hidden');
     });
-    expect(Scheduler).toHaveYielded(['Hidden']);
+    assertLog(['Hidden']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Visible</span>
@@ -152,14 +160,10 @@ describe('ReactOffscreen', () => {
     }
 
     // Unlike Offscreen, LegacyHidden never captures if something suspends
-    await act(async () => {
+    await act(() => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Visible',
-      'Suspend! [Hidden]',
-      'Loading...',
-    ]);
+    assertLog(['Visible', 'Suspend! [Hidden]', 'Loading...']);
     // Nearest Suspense boundary switches to a fallback even though the
     // suspended content is hidden.
     expect(root).toMatchRenderedOutput(
@@ -190,19 +194,19 @@ describe('ReactOffscreen', () => {
     // The hidden tree hasn't finished loading, but we should still be able to
     // show the surrounding contents. It doesn't matter that there's no
     // Suspense boundary because the unfinished content isn't visible.
-    await act(async () => {
+    await act(() => {
       root.render(
         <Details open={false}>
           <AsyncText text="Async" />
         </Details>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    assertLog(['Closed', 'Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
 
     // But when we switch the boundary from hidden to visible, it should
     // now bubble to the nearest Suspense boundary.
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={true}>
@@ -211,7 +215,7 @@ describe('ReactOffscreen', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(<span>Closed</span>);
@@ -220,7 +224,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Async']);
+    assertLog(['Open', 'Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -247,14 +251,14 @@ describe('ReactOffscreen', () => {
     }
 
     // Initial mount. Nothing suspends
-    await act(async () => {
+    await act(() => {
       root.render(
         <Details open={true}>
           <Text text="(empty)" />
         </Details>,
       );
     });
-    expect(Scheduler).toHaveYielded(['Open', '(empty)']);
+    assertLog(['Open', '(empty)']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Open</span>
@@ -263,7 +267,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Update that suspends inside the currently visible tree
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={true}>
@@ -272,7 +276,7 @@ describe('ReactOffscreen', () => {
         );
       });
     });
-    expect(Scheduler).toHaveYielded(['Open', 'Suspend! [Async]', 'Loading...']);
+    assertLog(['Open', 'Suspend! [Async]', 'Loading...']);
     // It should suspend with delay to prevent the already-visible Suspense
     // boundary from switching to a fallback
     expect(root).toMatchRenderedOutput(
@@ -283,7 +287,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Update that hides the suspended tree
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         root.render(
           <Details open={false}>
@@ -294,7 +298,7 @@ describe('ReactOffscreen', () => {
     });
     // Now the visible part of the tree can commit without being blocked
     // by the suspended content, which is hidden.
-    expect(Scheduler).toHaveYielded(['Closed', 'Suspend! [Async]']);
+    assertLog(['Closed', 'Suspend! [Async]']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Closed</span>
@@ -306,7 +310,7 @@ describe('ReactOffscreen', () => {
     await act(async () => {
       await resolveText('Async');
     });
-    expect(Scheduler).toHaveYielded(['Async']);
+    assertLog(['Async']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>Closed</span>
@@ -336,12 +340,12 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
     resolveText('A');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded(['A']);
+    assertLog(['A']);
 
-    await act(async () => {
+    await act(() => {
       startTransition(() => {
         setText('B');
       });
@@ -374,19 +378,21 @@ describe('ReactOffscreen', () => {
 
     const root = ReactNoop.createRoot();
     resolveText('A0');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={false} />);
     });
-    expect(Scheduler).toHaveYielded(['A0']);
+    assertLog(['A0']);
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
-    await act(async () => {
-      setStep(1);
+    await act(() => {
+      React.startTransition(() => {
+        setStep(1);
+      });
       ReactNoop.flushSync(() => {
         setText('B');
       });
     });
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // The high priority render suspends again
       'Suspend! [B0]',
       // There's still pending work in another lane, so we should attempt
@@ -396,14 +402,13 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>A0</span>);
 
     // Resolve the data and finish rendering
-    await act(async () => {
+    await act(() => {
       resolveText('B1');
     });
-    expect(Scheduler).toHaveYielded(['B1']);
+    assertLog(['B1']);
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
-  // Only works in new reconciler
   // @gate enableOffscreen
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
@@ -423,11 +428,9 @@ describe('ReactOffscreen', () => {
         // Inner and outer values are always updated simultaneously, so they
         // should always be consistent.
         if (inner !== outer) {
-          Scheduler.unstable_yieldValue(
-            'Tearing! Inner and outer are inconsistent!',
-          );
+          Scheduler.log('Tearing! Inner and outer are inconsistent!');
         } else {
-          Scheduler.unstable_yieldValue('Inner and outer are consistent');
+          Scheduler.log('Inner and outer are consistent');
         }
       }, [inner, outer]);
 
@@ -440,17 +443,17 @@ describe('ReactOffscreen', () => {
       setOuter = _setOuter;
       return (
         <>
-          <span>
-            <Text text={'Outer: ' + outer} />
-          </span>
           <Offscreen mode={show ? 'visible' : 'hidden'}>
             <span>
               <Child outer={outer} />
             </span>
           </Offscreen>
+          <span>
+            <Text text={'Outer: ' + outer} />
+          </span>
           <Suspense fallback={<Text text="Loading..." />}>
             <span>
-              <AsyncText text={'Async: ' + outer} />
+              <Text text={'Sibling: ' + outer} />
             </span>
           </Suspense>
         </>
@@ -460,70 +463,62 @@ describe('ReactOffscreen', () => {
     // Render a hidden tree
     const root = ReactNoop.createRoot();
     resolveText('Async: 0');
-    await act(async () => {
+    await act(() => {
       root.render(<App show={true} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 0',
+    assertLog([
       'Inner: 0',
-      'Async: 0',
+      'Outer: 0',
+      'Sibling: 0',
       'Inner and outer are consistent',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
-        <span>Outer: 0</span>
         <span>Inner: 0</span>
-        <span>Async: 0</span>
+        <span>Outer: 0</span>
+        <span>Sibling: 0</span>
       </>,
     );
 
     await act(async () => {
       // Update a value both inside and outside the hidden tree. These values
       // must always be consistent.
-      setOuter(1);
-      setInner(1);
-      // In the same render, also hide the offscreen tree.
-      root.render(<App show={false} />);
+      startTransition(() => {
+        setOuter(1);
+        setInner(1);
+        // In the same render, also hide the offscreen tree.
+        root.render(<App show={false} />);
+      });
 
-      expect(Scheduler).toFlushUntilNextPaint([
+      await waitFor([
         // The outer update will commit, but the inner update is deferred until
         // a later render.
         'Outer: 1',
-
-        // Something suspended. This means we won't commit immediately; there
-        // will be an async gap between render and commit. In this test, we will
-        // use this property to schedule a concurrent update. The fact that
-        // we're using Suspense to schedule a concurrent update is not directly
-        // relevant to the test — we could also use time slicing, but I've
-        // chosen to use Suspense the because implementation details of time
-        // slicing are more volatile.
-        'Suspend! [Async: 1]',
-
-        'Loading...',
       ]);
 
       // Assert that we haven't committed quite yet
       expect(root).toMatchRenderedOutput(
         <>
-          <span>Outer: 0</span>
           <span>Inner: 0</span>
-          <span>Async: 0</span>
+          <span>Outer: 0</span>
+          <span>Sibling: 0</span>
         </>,
       );
 
       // Before the tree commits, schedule a concurrent event. The inner update
       // is to a tree that's just about to be hidden.
-      setOuter(2);
-      setInner(2);
+      startTransition(() => {
+        setOuter(2);
+        setInner(2);
+      });
 
-      // Commit the previous render.
-      jest.runAllTimers();
+      // Finish rendering and commit the in-progress render.
+      await waitForPaint(['Sibling: 1']);
       expect(root).toMatchRenderedOutput(
         <>
-          <span>Outer: 1</span>
           <span hidden={true}>Inner: 0</span>
-          <span hidden={true}>Async: 0</span>
-          Loading...
+          <span>Outer: 1</span>
+          <span>Sibling: 1</span>
         </>,
       );
 
@@ -531,33 +526,28 @@ describe('ReactOffscreen', () => {
       ReactNoop.flushSync(() => {
         root.render(<App show={true} />);
       });
-      expect(Scheduler).toHaveYielded([
-        'Outer: 1',
-
+      assertLog([
         // There are two pending updates on Inner, but only the first one
         // is processed, even though they share the same lane. If the second
         // update were erroneously processed, then Inner would be inconsistent
         // with Outer.
         'Inner: 1',
-
-        'Suspend! [Async: 1]',
-        'Loading...',
+        'Outer: 1',
+        'Sibling: 1',
         'Inner and outer are consistent',
       ]);
     });
-    expect(Scheduler).toHaveYielded([
-      'Outer: 2',
+    assertLog([
       'Inner: 2',
-      'Suspend! [Async: 2]',
-      'Loading...',
+      'Outer: 2',
+      'Sibling: 2',
       'Inner and outer are consistent',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
-        <span>Outer: 2</span>
         <span>Inner: 2</span>
-        <span hidden={true}>Async: 0</span>
-        Loading...
+        <span>Outer: 2</span>
+        <span>Sibling: 2</span>
       </>,
     );
   });

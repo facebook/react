@@ -38,7 +38,7 @@ export default function setupHighlighter(
     registerListenersOnWindow(window);
   }
 
-  function registerListenersOnWindow(window) {
+  function registerListenersOnWindow(window: any) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
     if (window && typeof window.addEventListener === 'function') {
       window.addEventListener('click', onClick, true);
@@ -56,7 +56,7 @@ export default function setupHighlighter(
   function stopInspectingNative() {
     hideOverlay(agent);
     removeListenersOnWindow(window);
-    iframesListeningTo.forEach(function(frame) {
+    iframesListeningTo.forEach(function (frame) {
       try {
         removeListenersOnWindow(frame.contentWindow);
       } catch (error) {
@@ -66,7 +66,7 @@ export default function setupHighlighter(
     iframesListeningTo = new Set();
   }
 
-  function removeListenersOnWindow(window) {
+  function removeListenersOnWindow(window: any) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
     if (window && typeof window.removeEventListener === 'function') {
       window.removeEventListener('click', onClick, true);

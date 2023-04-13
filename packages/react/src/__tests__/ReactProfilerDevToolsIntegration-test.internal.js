@@ -17,6 +17,8 @@ describe('ReactProfiler DevTools integration', () => {
   let Scheduler;
   let AdvanceTime;
   let hook;
+  let waitForAll;
+  let waitFor;
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
@@ -33,6 +35,10 @@ describe('ReactProfiler DevTools integration', () => {
     Scheduler = require('scheduler');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
 
     AdvanceTime = class extends React.Component {
       static defaultProps = {
@@ -138,9 +144,9 @@ describe('ReactProfiler DevTools integration', () => {
     ).toBe(7);
   });
 
-  it('regression test: #17159', () => {
+  it('regression test: #17159', async () => {
     function Text({text}) {
-      Scheduler.unstable_yieldValue(text);
+      Scheduler.log(text);
       return text;
     }
 
@@ -148,7 +154,7 @@ describe('ReactProfiler DevTools integration', () => {
 
     // Commit something
     root.update(<Text text="A" />);
-    expect(Scheduler).toFlushAndYield(['A']);
+    await waitForAll(['A']);
     expect(root).toMatchRenderedOutput('A');
 
     // Advance time by many seconds, larger than the default expiration time
@@ -164,9 +170,9 @@ describe('ReactProfiler DevTools integration', () => {
     }
 
     // Update B should not instantly expire.
-    expect(Scheduler).toFlushAndYieldThrough([]);
+    await waitFor([]);
 
-    expect(Scheduler).toFlushAndYield(['B']);
+    await waitForAll(['B']);
     expect(root).toMatchRenderedOutput('B');
   });
 });

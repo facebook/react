@@ -18,7 +18,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -32,12 +32,8 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itClientRenders,
-  renderIntoDom,
-  serverRender,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itClientRenders, renderIntoDom, serverRender} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegrationUserInteraction', () => {
   let ControlledInput, ControlledTextArea, ControlledCheckbox, ControlledSelect;
@@ -138,7 +134,7 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
     };
   });
 
-  describe('user interaction with controlled inputs', function() {
+  describe('user interaction with controlled inputs', function () {
     itClientRenders('a controlled text input', async render => {
       const setUntrackedValue = Object.getOwnPropertyDescriptor(
         HTMLInputElement.prototype,
@@ -248,7 +244,7 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
     });
   });
 
-  describe('user interaction with inputs before client render', function() {
+  describe('user interaction with inputs before client render', function () {
     // renders the element and changes the value **before** the client
     // code has a chance to render; this simulates what happens when a
     // user starts to interact with a server-rendered form before

@@ -70,7 +70,7 @@ describe('reactiverefs', () => {
     }
   }
 
-  const expectClickLogsLengthToBe = function(instance, length) {
+  const expectClickLogsLengthToBe = function (instance, length) {
     const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       instance,
       'clickLogDiv',
@@ -82,7 +82,7 @@ describe('reactiverefs', () => {
   /**
    * Render a TestRefsComponent and ensure that the main refs are wired up.
    */
-  const renderTestRefsComponent = function() {
+  const renderTestRefsComponent = function () {
     /**
      * Only purpose is to test that refs are tracked even when applied to a
      * component that is injected down several layers. Ref systems are difficult to
@@ -123,28 +123,24 @@ describe('reactiverefs', () => {
     let testRefsComponent;
     expect(() => {
       testRefsComponent = ReactDOM.render(<TestRefsComponent />, container);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "div" contains the string ref "resetDiv". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-            'Warning: Component "span" contains the string ref "clickLog0". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in span (at **)\n' +
-              '    in ClickCounter (at **)\n' +
-              '    in div (at **)\n' +
-              '    in GeneralContainerComponent (at **)\n' +
-              '    in div (at **)\n' +
-              '    in TestRefsComponent (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "div" contains the string ref "resetDiv". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in div (at **)\n' +
+        '    in TestRefsComponent (at **)',
+      'Warning: Component "span" contains the string ref "clickLog0". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in span (at **)\n' +
+        '    in ClickCounter (at **)\n' +
+        '    in div (at **)\n' +
+        '    in GeneralContainerComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in TestRefsComponent (at **)',
+    ]);
 
     expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
 
@@ -349,17 +345,13 @@ describe('ref swapping', () => {
     let a;
     expect(() => {
       a = ReactTestUtils.renderIntoDocument(<A />);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "A" contains the string ref "1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in A (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "A" contains the string ref "1". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in A (at **)',
+    ]);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
@@ -400,35 +392,6 @@ describe('ref swapping', () => {
     }).toThrow(
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
-  });
-
-  it('should warn about callback refs returning a function', () => {
-    const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<div ref={() => () => {}} />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div');
-
-    // Cleanup should warn, too.
-    expect(() => {
-      ReactDOM.render(<span />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div', {
-      withoutStack: true,
-    });
-
-    // No warning when returning non-functions.
-    ReactDOM.render(<p ref={() => ({})} />, container);
-    ReactDOM.render(<p ref={() => null} />, container);
-    ReactDOM.render(<p ref={() => undefined} />, container);
-
-    // Still warns on functions (not deduped).
-    expect(() => {
-      ReactDOM.render(<div ref={() => () => {}} />, container);
-    }).toErrorDev('Unexpected return value from a callback ref in div');
-    expect(() => {
-      ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev('Unexpected return value from a callback ref in div', {
-      withoutStack: true,
-    });
   });
 });
 
@@ -529,7 +492,7 @@ describe('creating element with string ref in constructor', () => {
   it('throws an error', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<RefTest />);
     }).toThrowError(
       'Element ref was specified as a string (p) but no owner was set. This could happen for one of' +
@@ -575,18 +538,14 @@ describe('strings refs across renderers', () => {
     let inst;
     expect(() => {
       inst = ReactDOM.render(<Parent />, div1);
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Indirection" contains the string ref "child1". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in Indirection (at **)\n' +
-              '    in Parent (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "Indirection" contains the string ref "child1". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in Indirection (at **)\n' +
+        '    in Parent (at **)',
+    ]);
 
     // Only the first ref has rendered yet.
     expect(inst.refs.child1.tagName).toBe('DIV');
@@ -596,19 +555,150 @@ describe('strings refs across renderers', () => {
       // Now both refs should be rendered.
       ReactDOM.render(<Parent />, div1);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "Root" contains the string ref "child2". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
-          ]
-        : [],
+      [
+        'Warning: Component "Root" contains the string ref "child2". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref',
+      ],
       {withoutStack: true},
     );
     expect(inst.refs.child1.tagName).toBe('DIV');
     expect(inst.refs.child1).toBe(div1.firstChild);
     expect(inst.refs.child2.tagName).toBe('DIV');
     expect(inst.refs.child2).toBe(div2.firstChild);
+  });
+});
+
+describe('refs return clean up function', () => {
+  it('calls clean up function if it exists', () => {
+    const container = document.createElement('div');
+    let cleanUp = jest.fn();
+    let setup = jest.fn();
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(2);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    expect(cleanUp.mock.calls[0][0]).toBe(undefined);
+
+    ReactDOM.render(<div ref={_ref => {}} />, container);
+
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+    expect(setup).toHaveBeenCalledTimes(3);
+    expect(setup.mock.calls[2][0]).toBe(null);
+
+    cleanUp = jest.fn();
+    setup = jest.fn();
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          return cleanUp;
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(2);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles ref functions with stable identity', () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+
+    function _onRefChange(_ref) {
+      setup(_ref);
+      return cleanUp;
+    }
+
+    ReactDOM.render(<div ref={_onRefChange} />, container);
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(
+      <div className="niceClassName" ref={_onRefChange} />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    ReactDOM.render(<div />, container);
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns if clean up function is returned when called with null', () => {
+    const container = document.createElement('div');
+    const cleanUp = jest.fn();
+    const setup = jest.fn();
+    let returnCleanUp = false;
+
+    ReactDOM.render(
+      <div
+        ref={_ref => {
+          setup(_ref);
+          if (returnCleanUp) {
+            return cleanUp;
+          }
+        }}
+      />,
+      container,
+    );
+
+    expect(setup).toHaveBeenCalledTimes(1);
+    expect(cleanUp).toHaveBeenCalledTimes(0);
+
+    returnCleanUp = true;
+
+    expect(() => {
+      ReactDOM.render(
+        <div
+          ref={_ref => {
+            setup(_ref);
+            if (returnCleanUp) {
+              return cleanUp;
+            }
+          }}
+        />,
+        container,
+      );
+    }).toErrorDev('Unexpected return value from a callback ref in div');
   });
 });

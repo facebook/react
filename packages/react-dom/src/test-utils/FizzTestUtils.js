@@ -10,8 +10,10 @@
 
 import * as tmp from 'tmp';
 import * as fs from 'fs';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
+import resolve from '@rollup/plugin-node-resolve';
 import {rollup} from 'rollup';
+import path from 'path';
 
 const rollupCache: Map<string, string | null> = new Map();
 
@@ -27,7 +29,12 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
     const rollupConfig = {
       input: require.resolve(scriptSrc),
       onwarn: console.warn,
-      plugins: [replace({__DEV__: 'true'})],
+      plugins: [
+        replace({__DEV__: 'true', preventAssignment: true}),
+        resolve({
+          rootDir: path.join(__dirname, '..', '..', '..'),
+        }),
+      ],
       output: {
         externalLiveBindings: false,
         freeze: false,
@@ -68,6 +75,7 @@ async function getRollupResult(scriptSrc: string): Promise<string | null> {
 //  1. Matching nonce attributes and moving node into an existing
 //      parent container (if passed)
 //  2. Resolving scripts with sources
+//  3. Moving data attribute nodes to the body
 async function replaceScriptsAndMove(
   window: any,
   CSPnonce: string | null,
@@ -102,6 +110,18 @@ async function replaceScriptsAndMove(
     } else {
       element.parentNode?.replaceChild(script, element);
     }
+  } else if (
+    node.nodeType === 1 &&
+    // $FlowFixMe[prop-missing]
+    node.dataset != null &&
+    (node.dataset.rxi != null ||
+      node.dataset.rri != null ||
+      node.dataset.rci != null ||
+      node.dataset.rsi != null)
+  ) {
+    // External runtime assumes that instruction data nodes are eventually
+    // appended to the body
+    window.document.body.appendChild(node);
   } else {
     for (let i = 0; i < node.childNodes.length; i++) {
       const inner = node.childNodes[i];
@@ -120,4 +140,59 @@ function mergeOptions(options: Object, defaultOptions: Object): Object {
   };
 }
 
-export {replaceScriptsAndMove, mergeOptions};
+function stripExternalRuntimeInNodes(
+  nodes: HTMLElement[] | HTMLCollection<HTMLElement>,
+  externalRuntimeSrc: string | null,
+): HTMLElement[] {
+  if (!Array.isArray(nodes)) {
+    nodes = Array.from(nodes);
+  }
+  if (externalRuntimeSrc == null) {
+    return nodes;
+  }
+  return nodes.filter(
+    n =>
+      (n.tagName !== 'SCRIPT' && n.tagName !== 'script') ||
+      n.getAttribute('src') !== externalRuntimeSrc,
+  );
+}
+
+// Since JSDOM doesn't implement a streaming HTML parser, we manually overwrite
+// readyState here (currently read by ReactDOMServerExternalRuntime). This does
+// not trigger event callbacks, but we do not rely on any right now.
+async function withLoadingReadyState<T>(
+  fn: () => T,
+  document: Document,
+): Promise<T> {
+  // JSDOM implements readyState in document's direct prototype, but this may
+  // change in later versions
+  let prevDescriptor = null;
+  let proto: Object = document;
+  while (proto != null) {
+    prevDescriptor = Object.getOwnPropertyDescriptor(proto, 'readyState');
+    if (prevDescriptor != null) {
+      break;
+    }
+    proto = Object.getPrototypeOf(proto);
+  }
+  Object.defineProperty(document, 'readyState', {
+    get() {
+      return 'loading';
+    },
+    configurable: true,
+  });
+  const result = await fn();
+  // $FlowFixMe[incompatible-type]
+  delete document.readyState;
+  if (prevDescriptor) {
+    Object.defineProperty(proto, 'readyState', prevDescriptor);
+  }
+  return result;
+}
+
+export {
+  replaceScriptsAndMove,
+  mergeOptions,
+  stripExternalRuntimeInNodes,
+  withLoadingReadyState,
+};

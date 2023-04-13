@@ -10,11 +10,14 @@
 import {
   getDisplayName,
   getDisplayNameForReactElement,
+  isPlainObject,
 } from 'react-devtools-shared/src/utils';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {
   format,
   formatWithStyles,
+  gt,
+  gte,
 } from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
@@ -190,9 +193,9 @@ describe('utils', () => {
 
       // The last letter isn't gray here but I think it's not a big
       // deal, since there is a string substituion but it's incorrect
-      expect(
-        formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray'),
-      ).toEqual(['%c%s %s', 'color: gray', 'a', 'b', 'c']);
+      expect(formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray')).toEqual(
+        ['%c%s %s', 'color: gray', 'a', 'b', 'c'],
+      );
     });
 
     // @reactVersion >= 16.0
@@ -250,6 +253,48 @@ describe('utils', () => {
         {foo: 'bar'},
         'hi',
       ]);
+    });
+  });
+
+  describe('semver comparisons', () => {
+    it('gte should compare versions correctly', () => {
+      expect(gte('1.2.3', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.1')).toBe(true);
+      expect(gte('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
+    });
+
+    it('gt should compare versions correctly', () => {
+      expect(gt('1.2.3', '1.2.1')).toBe(true);
+      expect(gt('1.2.1', '1.2.1')).toBe(false);
+      expect(gt('1.2.1', '1.2.2')).toBe(false);
+      expect(gte('10.0.0', '9.0.0')).toBe(true);
+    });
+  });
+
+  describe('isPlainObject', () => {
+    it('should return true for plain objects', () => {
+      expect(isPlainObject({})).toBe(true);
+      expect(isPlainObject({a: 1})).toBe(true);
+      expect(isPlainObject({a: {b: {c: 123}}})).toBe(true);
+    });
+
+    it('should return false if object is a class instance', () => {
+      expect(isPlainObject(new (class C {})())).toBe(false);
+    });
+
+    it('should retun false for objects, which have not only Object in its prototype chain', () => {
+      expect(isPlainObject([])).toBe(false);
+      expect(isPlainObject(Symbol())).toBe(false);
+    });
+
+    it('should retun false for primitives', () => {
+      expect(isPlainObject(5)).toBe(false);
+      expect(isPlainObject(true)).toBe(false);
+    });
+
+    it('should return true for objects with no prototype', () => {
+      expect(isPlainObject(Object.create(null))).toBe(true);
     });
   });
 });

@@ -18,6 +18,7 @@ import {
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 import {enableUseHook} from 'shared/ReactFeatureFlags';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
+import {isClientReference} from './ReactFlightServerConfig';
 
 let currentRequest = null;
 let thenableIndexCounter = 0;
@@ -47,9 +48,13 @@ export function getThenableStateAfterSuspending(): null | ThenableState {
 function readContext<T>(context: ReactServerContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      console.error(
-        'Only createServerContext is supported in Server Components.',
-      );
+      if (isClientReference(context)) {
+        console.error('Cannot read a Client Context from a Server Component.');
+      } else {
+        console.error(
+          'Only createServerContext is supported in Server Components.',
+        );
+      }
     }
     if (currentRequest === null) {
       console.error(
@@ -89,7 +94,7 @@ export const HooksDispatcher: Dispatcher = {
     return unsupportedRefresh;
   },
   useMemoCache(size: number): Array<any> {
-    const data = new Array(size);
+    const data = new Array<any>(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     }
@@ -118,7 +123,10 @@ function useId(): string {
 }
 
 function use<T>(usable: Usable<T>): T {
-  if (usable !== null && typeof usable === 'object') {
+  if (
+    (usable !== null && typeof usable === 'object') ||
+    typeof usable === 'function'
+  ) {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
       // This is a thenable.
@@ -135,6 +143,12 @@ function use<T>(usable: Usable<T>): T {
     } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
       const context: ReactServerContext<T> = (usable: any);
       return readContext(context);
+    }
+  }
+
+  if (__DEV__) {
+    if (isClientReference(usable)) {
+      console.error('Cannot use() an already resolved Client Reference.');
     }
   }
 

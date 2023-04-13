@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 let JSDOM;
 let React;
 let ReactDOMClient;
-let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
 let Stream;
@@ -23,6 +23,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+let waitForPaint;
 
 describe('useId', () => {
   beforeEach(() => {
@@ -30,13 +31,15 @@ describe('useId', () => {
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    Scheduler = require('scheduler');
-    clientAct = require('jest-react').act;
+    clientAct = require('internal-test-utils').act;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
     useId = React.useId;
     useState = React.useState;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -442,7 +445,7 @@ describe('useId', () => {
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
           id="container"
@@ -523,7 +526,7 @@ describe('useId', () => {
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
           id="container"
@@ -629,6 +632,70 @@ describe('useId', () => {
         </div>
         <div>
           :custom-prefix-r0:
+        </div>
+      </div>
+    `);
+  });
+
+  // https://github.com/vercel/next.js/issues/43033
+  // re-rendering in strict mode caused the localIdCounter to be reset but it the rerender hook does not
+  // increment it again. This only shows up as a problem for subsequent useId's because it affects child
+  // and sibling counters not the initial one
+  it('does not forget it mounted an id when re-rendering in dev', async () => {
+    function Parent() {
+      const id = useId();
+      return (
+        <div>
+          {id} <Child />
+        </div>
+      );
+    }
+    function Child() {
+      const id = useId();
+      return <div>{id}</div>;
+    }
+
+    function App({showMore}) {
+      return (
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
+        </div>
+      </div>
+    `);
+
+    await clientAct(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          :R0:
+          <!-- -->
+           
+          <div>
+            :R7:
+          </div>
         </div>
       </div>
     `);

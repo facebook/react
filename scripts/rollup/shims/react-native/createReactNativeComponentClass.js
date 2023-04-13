@@ -23,7 +23,7 @@ const {register} = ReactNativeViewConfigRegistry;
  * @param {string} config iOS View configuration.
  * @private
  */
-const createReactNativeComponentClass = function(
+const createReactNativeComponentClass = function (
   name: string,
   callback: () => ViewConfig,
 ): string {

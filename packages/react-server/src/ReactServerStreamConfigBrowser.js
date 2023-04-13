@@ -21,12 +21,9 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-// For now we support AsyncLocalStorage as a global for the "browser" builds
-// TODO: Move this to some special WinterCG build.
-export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  (null: any);
 
 const VIEW_SIZE = 512;
 let currentView = null;
@@ -46,6 +43,15 @@ export function writeChunk(
   }
 
   if (chunk.length > VIEW_SIZE) {
+    if (__DEV__) {
+      if (precomputedChunkSet.has(chunk)) {
+        console.error(
+          'A large precomputed chunk was passed to writeChunk without being copied.' +
+            ' Large chunks get enqueued directly and are not copied. This is incompatible with precomputed chunks because you cannot enqueue the same precomputed chunk twice.' +
+            ' Use "cloneChunk" to make a copy of this large precomputed chunk before writing it. This is a bug in React.',
+        );
+      }
+    }
     // this chunk may overflow a single view which implies it was not
     // one that is cached by the streaming renderer. We will enqueu
     // it directly and expect it is not re-used
@@ -117,14 +123,30 @@ export function stringToChunk(content: string): Chunk {
   return textEncoder.encode(content);
 }
 
+const precomputedChunkSet: Set<Chunk> = __DEV__ ? new Set() : (null: any);
+
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
-  return textEncoder.encode(content);
+  const precomputedChunk = textEncoder.encode(content);
+
+  if (__DEV__) {
+    precomputedChunkSet.add(precomputedChunk);
+  }
+
+  return precomputedChunk;
+}
+
+export function clonePrecomputedChunk(
+  precomputedChunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return precomputedChunk.length > VIEW_SIZE
+    ? precomputedChunk.slice()
+    : precomputedChunk;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
-    // $FlowFixMe: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);
   } else {
     // Earlier implementations doesn't support this method. In that environment you're

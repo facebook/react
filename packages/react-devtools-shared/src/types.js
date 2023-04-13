@@ -7,6 +7,15 @@
  * @flow
  */
 
+/**
+ * WARNING:
+ * This file contains types that are designed for React DevTools UI and how it interacts with the backend.
+ * They might be used in different versions of DevTools backends.
+ * Be mindful of backwards compatibility when making changes.
+ */
+
+export type BrowserTheme = 'dark' | 'light';
+
 export type Wall = {
   // `listen` returns the "unlisten" function.
   listen: (fn: Function) => Function,

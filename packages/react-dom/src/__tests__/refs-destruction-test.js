@@ -114,8 +114,8 @@ describe('refs-destruction', () => {
       componentWillUnmount() {
         const self = this;
         // some async animation
-        setTimeout(function() {
-          expect(function() {
+        setTimeout(function () {
+          expect(function () {
             ReactDOM.unmountComponentAtNode(self.div);
           }).not.toThrow();
           document.body.removeChild(self.div);

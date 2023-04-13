@@ -45,7 +45,7 @@ export default function SnapshotSelector(_: Props): React.Node {
 
   const filteredCommitIndices = useMemo(
     () =>
-      commitData.reduce((reduced, commitDatum, index) => {
+      commitData.reduce((reduced: $FlowFixMe, commitDatum, index) => {
         if (
           !isCommitFilterEnabled ||
           commitDatum.duration >= minCommitDuration
@@ -86,6 +86,7 @@ export default function SnapshotSelector(_: Props): React.Node {
 
   let label = null;
   if (numFilteredCommits > 0) {
+    // $FlowFixMe[missing-local-annot]
     const handleCommitInputChange = event => {
       const value = parseInt(event.currentTarget.value, 10);
       if (!isNaN(value)) {
@@ -100,10 +101,12 @@ export default function SnapshotSelector(_: Props): React.Node {
       }
     };
 
+    // $FlowFixMe[missing-local-annot]
     const handleClick = event => {
       event.currentTarget.select();
     };
 
+    // $FlowFixMe[missing-local-annot]
     const handleKeyDown = event => {
       switch (event.key) {
         case 'ArrowDown':
@@ -159,6 +162,7 @@ export default function SnapshotSelector(_: Props): React.Node {
     selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
   };
 
+  // $FlowFixMe[missing-local-annot]
   const handleKeyDown = event => {
     switch (event.key) {
       case 'ArrowLeft':

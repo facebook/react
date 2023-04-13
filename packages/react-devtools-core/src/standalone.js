@@ -30,7 +30,7 @@ import {
   __DEBUG__,
   LOCAL_STORAGE_DEFAULT_TAB_KEY,
 } from 'react-devtools-shared/src/constants';
-import {localStorageSetItem} from '../../react-devtools-shared/src/storage';
+import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -86,11 +86,12 @@ let bridge: FrontendBridge | null = null;
 let store: Store | null = null;
 let root = null;
 
-const log = (...args) => console.log('[React DevTools]', ...args);
-log.warn = (...args) => console.warn('[React DevTools]', ...args);
-log.error = (...args) => console.error('[React DevTools]', ...args);
+const log = (...args: Array<mixed>) => console.log('[React DevTools]', ...args);
+log.warn = (...args: Array<mixed>) => console.warn('[React DevTools]', ...args);
+log.error = (...args: Array<mixed>) =>
+  console.error('[React DevTools]', ...args);
 
-function debug(methodName: string, ...args) {
+function debug(methodName: string, ...args: Array<mixed>) {
   if (__DEBUG__) {
     console.log(
       `%c[core/standalone] %c${methodName}`,
@@ -166,7 +167,8 @@ function onDisconnected() {
   disconnectedCallback();
 }
 
-function onError({code, message}) {
+// $FlowFixMe[missing-local-annot]
+function onError({code, message}: $FlowFixMe) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
@@ -260,6 +262,7 @@ function initialize(socket: WebSocket) {
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsNativeInspection: true,
+    supportsTraceUpdates: true,
   });
 
   log('Connected');
@@ -281,7 +284,7 @@ function connectToSocket(socket: WebSocket): {close(): void} {
   initialize(socket);
 
   return {
-    close: function() {
+    close: function () {
       onDisconnected();
     },
   };
@@ -332,13 +335,13 @@ function startServer(
     initialize(socket);
   });
 
-  server.on('error', event => {
+  server.on('error', (event: $FlowFixMe) => {
     onError(event);
     log.error('Failed to start the DevTools server', event);
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
   });
 
-  httpServer.on('request', (request, response) => {
+  httpServer.on('request', (request: $FlowFixMe, response: $FlowFixMe) => {
     // Serve a file that immediately sets up the connection.
     const backendFile = readFileSync(join(__dirname, 'backend.js'));
 
@@ -374,7 +377,7 @@ function startServer(
     );
   });
 
-  httpServer.on('error', event => {
+  httpServer.on('error', (event: $FlowFixMe) => {
     onError(event);
     statusListener('Failed to start the server.', 'error');
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
@@ -388,7 +391,7 @@ function startServer(
   });
 
   return {
-    close: function() {
+    close: function () {
       connected = null;
       onDisconnected();
       if (startServerTimeoutID !== null) {

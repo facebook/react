@@ -83,7 +83,7 @@ describe('SchedulerPostTask', () => {
     const scheduler = {};
     global.scheduler = scheduler;
 
-    scheduler.postTask = function(callback, {priority, signal}) {
+    scheduler.postTask = function (callback, {priority, signal}) {
       const id = idCounter++;
       log(
         `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,

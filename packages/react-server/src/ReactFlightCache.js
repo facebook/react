@@ -36,7 +36,6 @@ export const DefaultCacheDispatcher: CacheDispatcher = {
     let entry: AbortSignal | void = (cache.get(createSignal): any);
     if (entry === undefined) {
       entry = createSignal();
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
       cache.set(createSignal, entry);
     }
     return entry;
@@ -47,7 +46,6 @@ export const DefaultCacheDispatcher: CacheDispatcher = {
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
       cache.set(resourceType, entry);
     }
     return entry;

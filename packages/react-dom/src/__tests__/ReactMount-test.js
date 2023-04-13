@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {COMMENT_NODE} = require('react-dom-bindings/src/shared/HTMLNodeType');
+const {COMMENT_NODE} = require('react-dom-bindings/src/client/HTMLNodeType');
 
 let React;
 let ReactDOM;
@@ -59,9 +59,7 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(Component),
-    ).toErrorDev(
+    expect(() => ReactTestUtils.renderIntoDocument(Component)).toErrorDev(
       'Functions are not valid as a React child. ' +
         'This may happen if you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
@@ -151,12 +149,17 @@ describe('ReactMount', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
 
-    expect(() =>
-      ReactDOM.render(<div />, iFrame.contentDocument.body),
-    ).toErrorDev(
-      'Rendering components directly into document.body is discouraged',
-      {withoutStack: true},
-    );
+    if (gate(flags => flags.enableHostSingletons)) {
+      // HostSingletons make the warning for document.body unecessary
+      ReactDOM.render(<div />, iFrame.contentDocument.body);
+    } else {
+      expect(() =>
+        ReactDOM.render(<div />, iFrame.contentDocument.body),
+      ).toErrorDev(
+        'Rendering components directly into document.body is discouraged',
+        {withoutStack: true},
+      );
+    }
   });
 
   it('should account for escaping on a checksum mismatch', () => {
@@ -195,9 +198,7 @@ describe('ReactMount', () => {
     // Test that blasting away children throws a warning
     const rootNode = container.firstChild;
 
-    expect(() =>
-      ReactDOM.render(<span />, rootNode),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
       'Warning: render(...): Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
@@ -225,9 +226,7 @@ describe('ReactMount', () => {
     // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
-    expect(() =>
-      ReactDOMOther.unmountComponentAtNode(container),
-    ).toErrorDev(
+    expect(() => ReactDOMOther.unmountComponentAtNode(container)).toErrorDev(
       "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by another copy of React.',
       {withoutStack: true},
@@ -241,34 +240,34 @@ describe('ReactMount', () => {
     const container = document.createElement('div');
     let calls = 0;
 
-    ReactDOM.render(<div />, container, function() {
+    ReactDOM.render(<div />, container, function () {
       expect(this.nodeName).toBe('DIV');
       calls++;
     });
 
     // Update, no type change
-    ReactDOM.render(<div />, container, function() {
+    ReactDOM.render(<div />, container, function () {
       expect(this.nodeName).toBe('DIV');
       calls++;
     });
 
     // Update, type change
-    ReactDOM.render(<span />, container, function() {
+    ReactDOM.render(<span />, container, function () {
       expect(this.nodeName).toBe('SPAN');
       calls++;
     });
 
     // Batched update, no type change
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<span />, container, function() {
+    ReactDOM.unstable_batchedUpdates(function () {
+      ReactDOM.render(<span />, container, function () {
         expect(this.nodeName).toBe('SPAN');
         calls++;
       });
     });
 
     // Batched update, type change
-    ReactDOM.unstable_batchedUpdates(function() {
-      ReactDOM.render(<article />, container, function() {
+    ReactDOM.unstable_batchedUpdates(function () {
+      ReactDOM.render(<article />, container, function () {
         expect(this.nodeName).toBe('ARTICLE');
         calls++;
       });

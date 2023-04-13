@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+import {isPrimaryRenderer} from './ReactFizzConfig';
 
 let rendererSigil;
 if (__DEV__) {
@@ -163,7 +163,7 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   const next = newSnapshot;
   if (prev !== next) {
     if (prev === null) {
-      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
       pushAllNext(next);
     } else if (next === null) {
       popAllPrevious(prev);

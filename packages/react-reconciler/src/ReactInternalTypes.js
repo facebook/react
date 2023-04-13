@@ -22,22 +22,20 @@ import type {
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
-import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
+import type {Lane, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {
   Container,
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
-} from './ReactFiberHostConfig';
-import type {Cache} from './ReactFiberCacheComponent.old';
-// Doing this because there's a merge conflict because of the way sync-reconciler-fork
-// is implemented
+} from './ReactFiberConfig';
+import type {Cache} from './ReactFiberCacheComponent';
 import type {
   TracingMarkerInstance,
   Transition,
-} from './ReactFiberTracingMarkerComponent.new';
-import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates.new';
+} from './ReactFiberTracingMarkerComponent';
+import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -46,7 +44,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
-  | 'useEvent'
+  | 'useEffectEvent'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -130,6 +128,8 @@ export type Fiber = {
     | null
     | (((handle: mixed) => void) & {_stringRef: ?string, ...})
     | RefObject,
+
+  refCleanup: null | (() => void),
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
@@ -227,6 +227,10 @@ type BaseFiberRootProperties = {
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
+  // When a root has a pending commit scheduled, calling this function will
+  // cancel it.
+  // TODO: Can this be consolidated with timeoutHandle?
+  cancelPendingCommit: null | (() => void),
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
@@ -236,11 +240,14 @@ type BaseFiberRootProperties = {
     MutableSource<any> | MutableSourceVersion,
   > | null,
 
+  // Used to create a linked list that represent all the roots that have
+  // pending work scheduled on them.
+  next: FiberRoot | null,
+
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: any,
   callbackPriority: Lane,
-  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 
@@ -379,7 +386,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  useEvent?: <Args, Return, F: (...Array<Args>) => Return>(callback: F) => F,
+  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -401,10 +408,10 @@ export type Dispatcher = {
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
   ],
-  useMutableSource<Source, Snapshot>(
-    source: MutableSource<Source>,
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  useMutableSource<TSource, Snapshot>(
+    source: MutableSource<TSource>,
+    getSnapshot: MutableSourceGetSnapshotFn<TSource, Snapshot>,
+    subscribe: MutableSourceSubscribeFn<TSource, Snapshot>,
   ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
@@ -414,8 +421,6 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-
-  unstable_isNewReconciler?: boolean,
 };
 
 export type CacheDispatcher = {

@@ -7,40 +7,11 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_yarn_cache
-    restore_cache:
-      name: Restore yarn cache
-      keys:
-        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
-        - v1-yarn_cache-{{ arch }}-
-        - v1-yarn_cache-
-
-  - &yarn_install
-    run:
-      name: Install dependencies
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &yarn_install_retry
-    run:
-      name: Install dependencies (retry)
-      when: on_fail
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &save_yarn_cache
-    save_cache:
-      name: Save yarn cache
-      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
-      paths:
-        - ~/.cache/yarn
-
   - &restore_yarn_cache_fixtures_dom
     restore_cache:
       name: Restore yarn cache for fixtures/dom
       keys:
-        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-        - v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
-        - v1-yarn_cache-{{ arch }}-
-        - v1-yarn_cache-
+        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
 
   - &yarn_install_fixtures_dom
     run:
@@ -58,50 +29,35 @@ aliases:
   - &save_yarn_cache_fixtures_dom
     save_cache:
       name: Save yarn cache for fixtures/dom
-      key: v1-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
+      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
       paths:
         - ~/.cache/yarn
-
-  - &save_node_modules
-    save_cache:
-      name: Save node_modules cache
-      # Cache only for the current revision to prevent cache injections from
-      # malicious PRs.
-      key: v1-node_modules-{{ arch }}-{{ .Revision }}
-      paths:
-        - node_modules
-        - packages/eslint-plugin-react-hooks/node_modules
-        - packages/react-art/node_modules
-        - packages/react-client/node_modules
-        - packages/react-devtools-core/node_modules
-        - packages/react-devtools-extensions/node_modules
-        - packages/react-devtools-inline/node_modules
-        - packages/react-devtools-shared/node_modules
-        - packages/react-devtools-shell/node_modules
-        - packages/react-devtools-timeline/node_modules
-        - packages/react-devtools/node_modules
-        - packages/react-dom/node_modules
-        - packages/react-interactions/node_modules
-        - packages/react-native-renderer/node_modules
-        - packages/react-reconciler/node_modules
-        - packages/react-server-dom-relay/node_modules
-        - packages/react-server-dom-webpack/node_modules
-        - packages/react-server-native-relay/node_modules
-        - packages/react-server/node_modules
-        - packages/react-test-renderer/node_modules
-        - packages/react/node_modules
-        - packages/scheduler/node_modules
-
-  - &restore_node_modules
-    restore_cache:
-      name: Restore node_modules cache
-      keys:
-        - v1-node_modules-{{ arch }}-{{ .Revision }}
 
   - &TEST_PARALLELISM 20
 
   - &attach_workspace
     at: build
+
+commands:
+  setup_node_modules:
+    description: "Restore node_modules"
+    steps:
+      - restore_cache:
+          name: Restore yarn cache
+          keys:
+            - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - save_cache:
+          name: Save yarn cache
+          key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
 
 # The CircleCI API doesn't yet support triggering a specific workflow, but it
 # does support triggering a pipeline. So as a workaround you can triggger the
@@ -115,28 +71,13 @@ parameters:
     default: ''
 
 jobs:
-  setup:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - run:
-          name: NodeJS Version
-          command: node --version
-      - *restore_yarn_cache
-      - *restore_node_modules
-      - *yarn_install
-      - *yarn_install_retry
-      - *save_yarn_cache
-      - *save_node_modules
-
   yarn_lint:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -150,7 +91,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run: node ./scripts/tasks/flow-ci
 
   scrape_warning_messages:
@@ -159,7 +100,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           command: |
             mkdir -p ./build
@@ -169,14 +110,14 @@ jobs:
           paths:
             - build
 
-  yarn_build_combined:
+  yarn_build:
     docker: *docker
     environment: *environment
     parallelism: 40
     steps:
       - checkout
-      - *restore_node_modules
-      - run: yarn build-combined
+      - setup_node_modules
+      - run: yarn build
       - persist_to_workspace:
           root: .
           paths:
@@ -190,7 +131,7 @@ jobs:
         type: string
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Download artifacts for revision
           command: |
@@ -207,14 +148,36 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Download artifacts for base revision
+          # TODO: The download-experimental-build.js script works by fetching
+          # artifacts from CI. CircleCI recently updated this endpoint to
+          # require an auth token. This is a problem for PR branches, where
+          # sizebot needs to run, because we don't want to leak the token to
+          # arbitrary code written by an outside contributor.
+          #
+          # This only affects PR branches. CI workflows that run on the main
+          # branch are allowed to access environment variables, because only those
+          # with push access can land code in main.
+          #
+          # As a temporary workaround, we'll fetch the assets from a mirror.
+          # Need to figure out a longer term solution for this.
+          #
+          # Original code
+          #
+          # command: |
+          #     git fetch origin main
+          #     cd ./scripts/release && yarn && cd ../../
+          #     scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+          #     mv ./build ./base-build
+          #
+          # Workaround. Fetch the artifacts from react-builds.vercel.app. This
+          # is the same app that hosts the sizebot diff previews.
           command: |
-              git fetch origin main
-              cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
               mv ./build ./base-build
+
       - run:
           # TODO: The `download-experimental-build` script copies the npm
           # packages into the `node_modules` directory. This is a historical
@@ -235,7 +198,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
@@ -254,7 +217,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           command: node ./scripts/tasks/danger
 
@@ -265,7 +228,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -280,7 +243,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Playwright install deps
           command: |
@@ -302,7 +265,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
 
@@ -317,7 +280,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Playwright install deps
           command: |
@@ -341,7 +304,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run: yarn lint-build
 
   yarn_check_release_dependencies:
@@ -351,7 +314,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run: yarn check-release-dependencies
 
 
@@ -361,20 +324,20 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Search build artifacts for unminified errors
           command: |
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
-  
+
   check_generated_fizz_runtime:
     docker: *docker
     environment: *environment
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Confirm generated inline Fizz runtime is up to date
           command: |
@@ -390,7 +353,7 @@ jobs:
         type: string
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run: yarn test <<parameters.args>> --ci
 
   yarn_test_build:
@@ -404,7 +367,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -414,7 +377,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - *restore_node_modules
+      - setup_node_modules
       - *restore_yarn_cache_fixtures_dom
       - *yarn_install_fixtures_dom
       - *yarn_install_fixtures_dom_retry
@@ -425,7 +388,7 @@ jobs:
             RELEASE_CHANNEL: stable
           working_directory: fixtures/dom
           command: |
-            yarn prestart
+            yarn predev
             yarn test --maxWorkers=2
 
   test_fuzz:
@@ -433,7 +396,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Run fuzz tests
           command: |
@@ -452,7 +415,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_node_modules
+      - setup_node_modules
       - run:
           name: Run publish script
           command: |
@@ -462,60 +425,32 @@ jobs:
             cp ./scripts/release/ci-npmrc ~/.npmrc
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
-  # We don't always keep the reconciler forks in sync (otherwise it we wouldn't
-  # have forked it) but during periods when they are meant to be in sync, we
-  # use this job to confirm there are no differences.
-  sync_reconciler_forks:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_node_modules
-      - run:
-          name: Fetch revisions that contain an intentional fork
-          # This will fetch each revision listed in the `forked-revisions` file,
-          # which may be necessary if it's not part of main. For example, it
-          # may have been part of a PR branch that was squashed on merge.
-          command: |
-            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git fetch origin
-      - run:
-          name: Revert forked revisions
-          # This will revert the changes without committing. At the end, it's
-          # expected that both forks will be identical.
-          command: |
-            cut -d " " -f 1 scripts/merge-fork/forked-revisions | xargs -r git revert --no-commit
-      - run:
-          name: Confirm reconciler forks are the same
-          command: |
-            yarn replace-fork
-            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, add the commit SHA to scripts/merge-fork/forked-revisions." && false)
-
-
 workflows:
   version: 2
 
-  # New workflow that will replace "stable" and "experimental"
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
       - yarn_flow:
-          requires:
-            - setup
-      # NOTE: This job is only enabled when we want the forks to be in sync.
-      # When the forks intentionally diverge, comment out the job to disable it.
-      - sync_reconciler_forks:
-          requires:
-            - setup
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - check_generated_fizz_runtime:
-          requires:
-            - setup    
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_lint:
-          requires:
-            - setup
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - yarn_test:
-          requires:
-            - setup
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
           matrix:
             parameters:
               args:
@@ -538,19 +473,23 @@ workflows:
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
                 - '-r=experimental --env=development --persistent'
-      - yarn_build_combined:
-          requires:
-            - setup
+      - yarn_build:
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - scrape_warning_messages:
-          requires:
-            - setup
+          filters:
+            branches:
+              ignore:
+                - builds/facebook-www
       - process_artifacts_combined:
           requires:
             - scrape_warning_messages
-            - yarn_build_combined
+            - yarn_build
       - yarn_test_build:
           requires:
-            - yarn_build_combined
+            - yarn_build
           matrix:
             parameters:
               args:
@@ -581,8 +520,7 @@ workflows:
             branches:
               ignore:
                 - main
-          requires:
-            - setup
+                - builds/facebook-www
       - sizebot:
           filters:
             branches:
@@ -590,22 +528,22 @@ workflows:
                 - main
           requires:
             - download_base_build_for_sizebot
-            - yarn_build_combined
+            - yarn_build
       - yarn_lint_build:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - yarn_check_release_dependencies:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - check_error_codes:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - build_devtools_and_process_artifacts:
           requires:
-            - yarn_build_combined
+            - yarn_build
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
@@ -621,10 +559,7 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
-      - test_fuzz:
-          requires:
-            - setup
+      - test_fuzz
 
   devtools_regression_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -637,10 +572,7 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
       - download_build:
-          requires:
-            - setup
           revision: << pipeline.git.revision >>
       - build_devtools_and_process_artifacts:
           requires:
@@ -672,11 +604,8 @@ workflows:
   publish_preleases:
     when: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - setup
       - publish_prerelease:
           name: Publish to Next channel
-          requires:
-            - setup
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
           dist_tag: "next"
@@ -704,11 +633,8 @@ workflows:
               only:
                 - main
     jobs:
-      - setup
       - publish_prerelease:
           name: Publish to Next channel
-          requires:
-            - setup
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
           dist_tag: "next"

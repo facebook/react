@@ -50,7 +50,7 @@ const matchHtmlRegExp = /["'&<>]/;
  * @public
  */
 
-function escapeHtml(string) {
+function escapeHtml(string: string) {
   if (__DEV__) {
     checkHtmlStringCoercion(string);
   }

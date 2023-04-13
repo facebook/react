@@ -57,7 +57,6 @@ export function getCacheSignal(): AbortSignal {
       'This CacheSignal was requested outside React which means that it is ' +
         'immediately aborted.',
     );
-    // $FlowFixMe Flow doesn't yet know about this argument.
     controller.abort(reason);
     return controller.signal;
   }
@@ -219,24 +218,26 @@ export function useSyncExternalStore<T>(
 
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useCacheRefresh();
 }
 
 export function use<T>(usable: Usable<T>): T {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.use(usable);
 }
 
 export function useMemoCache(size: number): Array<any> {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.useMemoCache(size);
 }
 
-export function useEvent<T>(callback: T): void {
+export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
+  callback: F,
+): F {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
-  return dispatcher.useEvent(callback);
+  // $FlowFixMe[not-a-function] This is unstable, thus optional
+  return dispatcher.useEffectEvent(callback);
 }

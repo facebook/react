@@ -24,9 +24,8 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = (null: any);
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  (null: any);
 
 export function beginWriting(destination: Destination) {}
 
@@ -57,6 +56,12 @@ export function stringToChunk(content: string): Chunk {
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return content;
+}
+
+export function clonePrecomputedChunk(
+  chunk: PrecomputedChunk,
+): PrecomputedChunk {
+  return chunk;
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {

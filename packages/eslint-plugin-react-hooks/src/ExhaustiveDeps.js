@@ -74,9 +74,9 @@ export default {
     const stateVariables = new WeakSet();
     const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
-    const useEventVariables = new WeakSet();
+    const useEffectEventVariables = new WeakSet();
     function memoizeWithWeakMap(fn, map) {
-      return function(arg) {
+      return function (arg) {
         if (map.has(arg)) {
           // to verify cache hits:
           // console.log(arg.name)
@@ -158,7 +158,7 @@ export default {
       //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
-      // const onStuff = useEvent(() => {})
+      // const onStuff = useEffectEvent(() => {})
       //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
@@ -226,13 +226,16 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (isUseEventIdentifier(callee) && id.type === 'Identifier') {
+        } else if (
+          isUseEffectEventIdentifier(callee) &&
+          id.type === 'Identifier'
+        ) {
           for (const ref of resolved.references) {
             if (ref !== id) {
-              useEventVariables.add(ref.identifier);
+              useEffectEventVariables.add(ref.identifier);
             }
           }
-          // useEvent() return value is always unstable.
+          // useEffectEvent() return value is always unstable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple stable.
@@ -645,11 +648,11 @@ export default {
             });
             return;
           }
-          if (useEventVariables.has(declaredDependencyNode)) {
+          if (useEffectEventVariables.has(declaredDependencyNode)) {
             reportProblem({
               node: declaredDependencyNode,
               message:
-                'Functions returned from `useEvent` must not be included in the dependency array. ' +
+                'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
                 `Remove \`${context.getSource(
                   declaredDependencyNode,
                 )}\` from the list.`,
@@ -1851,9 +1854,9 @@ function isAncestorNodeOf(a, b) {
   return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
 }
 
-function isUseEventIdentifier(node) {
+function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEvent';
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
   return false;
 }

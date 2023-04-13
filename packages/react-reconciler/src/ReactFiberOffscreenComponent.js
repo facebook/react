@@ -8,13 +8,14 @@
  */
 
 import type {ReactNodeList, OffscreenMode, Wakeable} from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane.old';
-import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Lanes} from './ReactFiberLane';
+import type {SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Fiber} from './ReactInternalTypes';
 import type {
   Transition,
   TracingMarkerInstance,
-} from './ReactFiberTracingMarkerComponent.new';
+} from './ReactFiberTracingMarkerComponent';
+import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 export type OffscreenProps = {
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -40,7 +41,7 @@ export type OffscreenState = {
 export type OffscreenQueue = {
   transitions: Array<Transition> | null,
   markerInstances: Array<TracingMarkerInstance> | null,
-  wakeables: Set<Wakeable> | null,
+  retryQueue: RetryQueue | null,
 };
 
 type OffscreenVisibility = number;
@@ -50,17 +51,16 @@ export const OffscreenDetached = /*                    */ 0b010;
 export const OffscreenPassiveEffectsConnected = /*     */ 0b100;
 
 export type OffscreenInstance = {
+  _pendingVisibility: OffscreenVisibility,
   _visibility: OffscreenVisibility,
   _pendingMarkers: Set<TracingMarkerInstance> | null,
   _transitions: Set<Transition> | null,
-  // $FlowFixMe[incompatible-type-arg] found when upgrading Flow
   _retryCache: WeakSet<Wakeable> | Set<Wakeable> | null,
 
   // Represents the current Offscreen fiber
   _current: Fiber | null,
   detach: () => void,
-
-  // TODO: attach
+  attach: () => void,
 };
 
 export function isOffscreenManual(offscreenFiber: Fiber): boolean {

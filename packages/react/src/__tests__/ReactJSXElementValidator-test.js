@@ -75,10 +75,10 @@ describe('ReactJSXElementValidator', () => {
 
   it('warns for keys for iterables of elements in rest args', () => {
     const iterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             const done = ++i > 2;
             return {value: done ? undefined : <Component />, done: done};
           },
@@ -99,10 +99,10 @@ describe('ReactJSXElementValidator', () => {
 
   it('does not warn for iterable elements with keys', () => {
     const iterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             const done = ++i > 2;
             return {
               value: done ? undefined : <Component key={'#' + i} />,
@@ -118,10 +118,10 @@ describe('ReactJSXElementValidator', () => {
 
   it('does not warn for numeric keys in entry iterable as a child', () => {
     const iterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             const done = ++i > 2;
             return {value: done ? undefined : [i, <Component />], done: done};
           },
@@ -210,9 +210,7 @@ describe('ReactJSXElementValidator', () => {
     const Null = null;
     const True = true;
     const Div = 'div';
-    expect(
-      () => void (<Undefined />),
-    ).toErrorDev(
+    expect(() => void (<Undefined />)).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
@@ -221,18 +219,14 @@ describe('ReactJSXElementValidator', () => {
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
-    expect(
-      () => void (<Null />),
-    ).toErrorDev(
+    expect(() => void (<Null />)).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
-    expect(
-      () => void (<True />),
-    ).toErrorDev(
+    expect(() => void (<True />)).toErrorDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
@@ -308,6 +302,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn on invalid context types', () => {
     class NullContextTypeComponent extends React.Component {
       render() {

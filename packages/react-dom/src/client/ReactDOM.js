@@ -11,7 +11,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Container,
   PublicInstance,
-} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import type {
   RootType,
   HydrateRootOptions,
@@ -34,24 +34,14 @@ import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHand
 
 import {
   batchedUpdates,
-  discreteUpdates,
   flushSync as flushSyncWithoutWarningIfAlreadyRendering,
   isAlreadyRendering,
-  flushControlled,
   injectIntoDevTools,
-  attemptSynchronousHydration,
-  attemptDiscreteHydration,
-  attemptContinuousHydration,
-  attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {
-  runWithPriority,
-  getCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities';
+import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   getClosestInstanceFromNode,
@@ -59,40 +49,22 @@ import {
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
-import {restoreControlledState} from 'react-dom-bindings/src/client/ReactDOMComponent';
 import {
-  setAttemptSynchronousHydration,
-  setAttemptDiscreteHydration,
-  setAttemptContinuousHydration,
-  setAttemptHydrationAtCurrentPriority,
-  setGetCurrentUpdatePriority,
-  setAttemptHydrationAtPriority,
-} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
-import {setBatchingImplementation} from 'react-dom-bindings/src/events/ReactDOMUpdateBatching';
-import {
-  setRestoreImplementation,
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
-export {preinit, preload} from 'react-dom-bindings/src/shared/ReactDOMFloat';
-
-setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptDiscreteHydration(attemptDiscreteHydration);
-setAttemptContinuousHydration(attemptContinuousHydration);
-setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
-setGetCurrentUpdatePriority(getCurrentUpdatePriority);
-setAttemptHydrationAtPriority(runWithPriority);
+export {prefetchDNS, preconnect, preload, preinit} from '../ReactDOMFloat';
 
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||
-    // $FlowFixMe Flow incorrectly thinks Map has no prototype
+    // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
     Map.prototype == null ||
     typeof Map.prototype.forEach !== 'function' ||
     typeof Set !== 'function' ||
-    // $FlowFixMe Flow incorrectly thinks Set has no prototype
+    // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
     Set.prototype == null ||
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
@@ -104,13 +76,6 @@ if (__DEV__) {
   }
 }
 
-setRestoreImplementation(restoreControlledState);
-setBatchingImplementation(
-  batchedUpdates,
-  discreteUpdates,
-  flushSyncWithoutWarningIfAlreadyRendering,
-);
-
 function createPortal(
   children: ReactNodeList,
   container: Element | DocumentFragment,
@@ -121,7 +86,7 @@ function createPortal(
   }
 
   // TODO: pass ReactDOM portal implementation as third argument
-  // $FlowFixMe The Flow type is opaque but there's no way to actually create it.
+  // $FlowFixMe[incompatible-return] The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
 }
 
@@ -202,7 +167,6 @@ export {
   // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  flushControlled as unstable_flushControlled,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI
@@ -256,5 +220,3 @@ if (__DEV__) {
     }
   }
 }
-
-export const unstable_isNewReconciler = enableNewReconciler;

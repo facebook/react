@@ -35,8 +35,6 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
     expect(ReactDOM.unstable_batchedUpdates).toBe(undefined);
     expect(ReactDOM.unstable_createEventHandle).toBe(undefined);
-    expect(ReactDOM.unstable_flushControlled).toBe(undefined);
-    expect(ReactDOM.unstable_isNewReconciler).toBe(undefined);
     expect(ReactDOM.unstable_renderSubtreeIntoContainer).toBe(undefined);
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });
@@ -50,7 +48,19 @@ describe('react-dom-server-rendering-stub', () => {
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><link href="foo" rel="preload" as="style"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><link rel="preload" as="style" href="foo"/><div>foo</div>',
+    );
+  });
+
+  it('provides preconnect and prefetchDNS exports', async () => {
+    function App() {
+      ReactDOM.preconnect('foo', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('bar');
+      return <div>foo</div>;
+    }
+    const html = ReactDOMFizzServer.renderToString(<App />);
+    expect(html).toEqual(
+      '<link rel="preconnect" href="foo" crossorigin="use-credentials"/><link href="bar" rel="dns-prefetch"/><div>foo</div>',
     );
   });
 

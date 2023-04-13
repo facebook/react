@@ -137,13 +137,14 @@ export function lazy<T>(
     // In production, this would just set it on the object.
     let defaultProps;
     let propTypes;
-    // $FlowFixMe
+    // $FlowFixMe[prop-missing]
     Object.defineProperties(lazyType, {
       defaultProps: {
         configurable: true,
         get() {
           return defaultProps;
         },
+        // $FlowFixMe[missing-local-annot]
         set(newDefaultProps) {
           console.error(
             'React.lazy(...): It is not supported to assign `defaultProps` to ' +
@@ -152,7 +153,7 @@ export function lazy<T>(
           );
           defaultProps = newDefaultProps;
           // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
           Object.defineProperty(lazyType, 'defaultProps', {
             enumerable: true,
           });
@@ -163,6 +164,7 @@ export function lazy<T>(
         get() {
           return propTypes;
         },
+        // $FlowFixMe[missing-local-annot]
         set(newPropTypes) {
           console.error(
             'React.lazy(...): It is not supported to assign `propTypes` to ' +
@@ -171,7 +173,7 @@ export function lazy<T>(
           );
           propTypes = newPropTypes;
           // Match production behavior more closely:
-          // $FlowFixMe
+          // $FlowFixMe[prop-missing]
           Object.defineProperty(lazyType, 'propTypes', {
             enumerable: true,
           });

@@ -1,14 +1,15 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
+const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
@@ -17,10 +18,10 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
-const stripUnusedImports = require('./plugins/strip-unused-imports');
+const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
@@ -44,7 +45,8 @@ process.on('unhandledRejection', err => {
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -99,7 +101,6 @@ const syncWWWPath = argv['sync-www'];
 // Non-ES2015 stuff applied before closure compiler.
 const babelPlugins = [
   // These plugins filter out non-ES2015.
-  '@babel/plugin-transform-flow-strip-types',
   ['@babel/plugin-proposal-class-properties', {loose: true}],
   'syntax-trailing-function-commas',
   // These use loose mode which avoids embedding a runtime.
@@ -146,6 +147,7 @@ function getBabelConfig(
     configFile: false,
     presets: [],
     plugins: [...babelPlugins],
+    babelHelpers: 'bundled',
   };
   if (isDevelopment) {
     options.plugins.push(
@@ -171,6 +173,35 @@ function getBabelConfig(
   return options;
 }
 
+let getRollupInteropValue = id => {
+  // We're setting Rollup to assume that imports are ES modules unless otherwise specified.
+  // However, we also compile ES import syntax to `require()` using Babel.
+  // This causes Rollup to turn uses of `import SomeDefaultImport from 'some-module' into
+  // references to `SomeDefaultImport.default` due to CJS/ESM interop.
+  // Some CJS modules don't have a `.default` export, and the rewritten import is incorrect.
+  // Specifying `interop: 'default'` instead will have Rollup use the imported variable as-is,
+  // without adding a `.default` to the reference.
+  const modulesWithCommonJsExports = [
+    'art/core/transform',
+    'art/modes/current',
+    'art/modes/fast-noSideEffects',
+    'art/modes/svg',
+    'JSResourceReferenceImpl',
+    'error-stack-parser',
+    'neo-async',
+    'webpack/lib/dependencies/ModuleDependency',
+    'webpack/lib/dependencies/NullDependency',
+    'webpack/lib/Template',
+  ];
+
+  if (modulesWithCommonJsExports.includes(id)) {
+    return 'default';
+  }
+
+  // For all other modules, handle imports without any import helper utils
+  return 'esModule';
+};
+
 function getRollupOutputOptions(
   outputPath,
   format,
@@ -185,10 +216,11 @@ function getRollupOutputOptions(
     format,
     globals,
     freeze: !isProduction,
-    interop: false,
+    interop: getRollupInteropValue,
     name: globalName,
     sourcemap: false,
     esModule: false,
+    exports: 'auto',
   };
 }
 
@@ -214,7 +246,8 @@ function getFormat(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       return `cjs`;
-    case NODE_ESM:
+    case ESM_DEV:
+    case ESM_PROD:
       return `es`;
     case BROWSER_SCRIPT:
       return `iife`;
@@ -224,7 +257,8 @@ function getFormat(bundleType) {
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
+      return true;
+    case ESM_DEV:
     case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
@@ -232,6 +266,7 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
+    case ESM_PROD:
     case UMD_PROD:
     case NODE_PROD:
     case BUN_PROD:
@@ -253,7 +288,6 @@ function isProductionBundleType(bundleType) {
 function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case NODE_DEV:
@@ -264,6 +298,8 @@ function isProfilingBundleType(bundleType) {
     case RN_FB_PROD:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
     case UMD_DEV:
     case UMD_PROD:
     case BROWSER_SCRIPT:
@@ -325,13 +361,25 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
+    // Keep dynamic imports as externals
+    dynamicImports(),
+    {
+      name: 'rollup-plugin-flow-remove-types',
+      transform(code) {
+        const transformed = flowRemoveTypes(code);
+        return {
+          code: transformed.toString(),
+          map: transformed.generateMap(),
+        };
+      },
+    },
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
     forbidFBJSImports(),
     // Use Node resolution mechanism.
     resolve({
-      skip: externals,
+      // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
     }),
     // Remove license headers from individual modules
     stripBanner({
@@ -356,26 +404,36 @@ function getPlugins(
     },
     // Turn __DEV__ and process.env checks into constants.
     replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
-      // Enable forked reconciler.
-      // NOTE: I did not put much thought into how to configure this.
-      __VARIANT__: bundle.enableNewReconciler === true,
+      preventAssignment: true,
+      values: {
+        __DEV__: isProduction ? 'false' : 'true',
+        __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+        __UMD__: isUMDBundle ? 'true' : 'false',
+        'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+        __EXPERIMENTAL__,
+      },
     }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
+    // closure doesn't yet support leaving ESM imports intact
     isProduction &&
+      bundleType !== ESM_PROD &&
       closure({
         compilation_level: 'SIMPLE',
-        language_in: 'ECMASCRIPT_2015',
+        language_in: 'ECMASCRIPT_2020',
         language_out:
-          bundleType === BROWSER_SCRIPT ? 'ECMASCRIPT5' : 'ECMASCRIPT5_STRICT',
+          bundleType === NODE_ES2015
+            ? 'ECMASCRIPT_2020'
+            : bundleType === BROWSER_SCRIPT
+            ? 'ECMASCRIPT5'
+            : 'ECMASCRIPT5_STRICT',
+        emit_use_strict:
+          bundleType !== BROWSER_SCRIPT &&
+          bundleType !== ESM_PROD &&
+          bundleType !== ESM_DEV,
         env: 'CUSTOM',
         warning_level: 'QUIET',
         apply_input_source_maps: false,
@@ -383,19 +441,17 @@ function getPlugins(
         process_common_js_modules: false,
         rewrite_polyfills: false,
         inject_libraries: false,
+        allow_dynamic_import: true,
 
         // Don't let it create global variables in the browser.
         // https://github.com/facebook/react/issues/10909
         assume_function_wrapper: !isUMDBundle,
         renaming: !shouldStayReadable,
       }),
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
       prettier({
-        parser: 'babel',
+        parser: 'flow',
         singleQuote: false,
         trailingComma: 'none',
         bracketSpacing: true,
@@ -506,10 +562,6 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
 }
 
 async function createBundle(bundle, bundleType) {
-  if (shouldSkipBundle(bundle, bundleType)) {
-    return;
-  }
-
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -550,7 +602,9 @@ async function createBundle(bundle, bundleType) {
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
-      pureExternalModules,
+      moduleSideEffects: (id, external) =>
+        !(external && pureExternalModules.includes(id)),
+      propertyReadSideEffects: false,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
@@ -587,7 +641,7 @@ async function createBundle(bundle, bundleType) {
     output: {
       externalLiveBindings: false,
       freeze: false,
-      interop: false,
+      interop: getRollupInteropValue,
       esModule: false,
     },
   };
@@ -640,7 +694,7 @@ async function createBundle(bundle, bundleType) {
 
 function handleRollupWarning(warning) {
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
-    const match = warning.message.match(/external module '([^']+)'/);
+    const match = warning.message.match(/external module "([^"]+)"/);
     if (!match || typeof match[1] !== 'string') {
       throw new Error(
         'Could not parse a Rollup warning. ' + 'Fix this method.'
@@ -721,7 +775,8 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     bundles.push(
       [bundle, NODE_ES2015],
-      [bundle, NODE_ESM],
+      [bundle, ESM_DEV],
+      [bundle, ESM_PROD],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING],
@@ -742,6 +797,10 @@ async function buildEverything() {
       [bundle, BROWSER_SCRIPT]
     );
   }
+
+  bundles = bundles.filter(([bundle, bundleType]) => {
+    return !shouldSkipBundle(bundle, bundleType);
+  });
 
   if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.

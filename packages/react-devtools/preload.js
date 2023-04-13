@@ -1,0 +1,41 @@
+const {clipboard, shell, contextBridge} = require('electron');
+const fs = require('fs');
+const {address} = require('ip');
+
+// Expose protected methods so that render process does not need unsafe node integration
+contextBridge.exposeInMainWorld('api', {
+  electron: {clipboard, shell},
+  ip: {address},
+  getDevTools() {
+    let devtools;
+    try {
+      devtools = require('react-devtools-core/standalone').default;
+    } catch (err) {
+      alert(
+        err.toString() +
+          '\n\nDid you run `yarn` and `yarn run build` in packages/react-devtools-core?',
+      );
+    }
+    return devtools;
+  },
+  readEnv() {
+    let options;
+    let useHttps = false;
+    try {
+      if (process.env.KEY && process.env.CERT) {
+        options = {
+          key: fs.readFileSync(process.env.KEY),
+          cert: fs.readFileSync(process.env.CERT),
+        };
+        useHttps = true;
+      }
+    } catch (err) {
+      console.error('Failed to process SSL options - ', err);
+      options = undefined;
+    }
+    const host = process.env.HOST || 'localhost';
+    const protocol = useHttps ? 'https' : 'http';
+    const port = +process.env.PORT || 8097;
+    return {options, useHttps, host, protocol, port};
+  },
+});
