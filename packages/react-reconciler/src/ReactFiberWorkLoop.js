@@ -1144,19 +1144,34 @@ function finishConcurrentRender(
         // TODO: Combine retry throttling with Suspensey commits. Right now they
         // run one after the other.
         root.timeoutHandle = scheduleTimeout(
-          commitRootWhenReady.bind(null, root, finishedWork, lanes),
+          commitRootWhenReady.bind(
+            null,
+            root,
+            finishedWork,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes,
+          ),
           msUntilTimeout,
         );
         return;
       }
     }
-    commitRootWhenReady(root, finishedWork, lanes);
+    commitRootWhenReady(
+      root,
+      finishedWork,
+      workInProgressRootRecoverableErrors,
+      workInProgressTransitions,
+      lanes,
+    );
   }
 }
 
 function commitRootWhenReady(
   root: FiberRoot,
   finishedWork: Fiber,
+  recoverableErrors: Array<CapturedValue<mixed>> | null,
+  transitions: Array<Transition> | null,
   lanes: Lanes,
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
