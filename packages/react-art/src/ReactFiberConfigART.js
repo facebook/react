@@ -346,6 +346,10 @@ export function getCurrentEventPriority() {
   return DefaultEventPriority;
 }
 
+export function shouldAttemptEagerTransition() {
+  return false;
+}
+
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
 

@@ -278,6 +278,8 @@ import {
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
+  getCurrentEventTransitionLane,
+  setCurrentEventTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
 
@@ -582,8 +584,6 @@ const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
-let currentEventTransitionLane: Lanes = NoLanes;
-
 let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
@@ -640,11 +640,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     // The trick we use is to cache the first of each of these inputs within an
     // event. Then reset the cached values once we can be sure the event is
     // over. Our heuristic for that is whenever we enter a concurrent work loop.
-    if (currentEventTransitionLane === NoLane) {
+    if (getCurrentEventTransitionLane() === NoLane) {
       // All transitions within the same event are assigned the same lane.
-      currentEventTransitionLane = claimNextTransitionLane();
+      setCurrentEventTransitionLane(claimNextTransitionLane());
     }
-    return currentEventTransitionLane;
+    return getCurrentEventTransitionLane();
   }
 
   // Updates originating inside certain React methods, like flushSync, have
@@ -847,8 +847,6 @@ export function performConcurrentWorkOnRoot(
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
-
-  currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');

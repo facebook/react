@@ -66,6 +66,8 @@ export const preparePortalMount = $$$config.preparePortalMount;
 export const prepareScopeUpdate = $$$config.prepareScopeUpdate;
 export const getInstanceFromScope = $$$config.getInstanceFromScope;
 export const getCurrentEventPriority = $$$config.getCurrentEventPriority;
+export const shouldAttemptEagerTransition =
+  $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;
 export const requestPostPaintCallback = $$$config.requestPostPaintCallback;
 export const maySuspendCommit = $$$config.maySuspendCommit;

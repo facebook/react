@@ -20,6 +20,8 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
+  markRootEntangled,
+  mergeLanes,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -49,7 +51,11 @@ import {
   IdleEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberConfig';
+import {
+  supportsMicrotasks,
+  scheduleMicrotask,
+  shouldAttemptEagerTransition,
+} from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
@@ -71,6 +77,8 @@ let didScheduleMicrotask_act: boolean = false;
 let mightHavePendingSyncWork: boolean = false;
 
 let isFlushingWork: boolean = false;
+
+let currentEventTransitionLane: Lane = NoLanes;
 
 export function ensureRootIsScheduled(root: FiberRoot): void {
   // This function is called whenever a root receives an update. It does two
@@ -238,6 +246,14 @@ function processRootScheduleInMicrotask() {
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
+
+    if (
+      currentEventTransitionLane !== NoLane &&
+      shouldAttemptEagerTransition()
+    ) {
+      markRootEntangled(root, mergeLanes(currentEventTransitionLane, SyncLane));
+    }
+
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To
@@ -266,6 +282,8 @@ function processRootScheduleInMicrotask() {
     }
     root = next;
   }
+
+  currentEventTransitionLane = NoLane;
 
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
@@ -471,4 +489,12 @@ function scheduleImmediateTask(cb: () => mixed) {
     // If microtasks are not supported, use Scheduler.
     Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
   }
+}
+
+export function getCurrentEventTransitionLane(): Lane {
+  return currentEventTransitionLane;
+}
+
+export function setCurrentEventTransitionLane(lane: Lane): void {
+  currentEventTransitionLane = lane;
 }
