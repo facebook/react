@@ -79,8 +79,8 @@ function setup(hook: ?DevToolsHook) {
 const requiredBackends = new Set<string>();
 
 function registerRenderer(renderer: ReactRenderer) {
-  let version = renderer.version;
-  if (!hasAssignedBackend(renderer.version)) {
+  let version = renderer.reconcilerVersion || renderer.version;
+  if (!hasAssignedBackend(version)) {
     version = COMPACT_VERSION_NAME;
   }
   requiredBackends.add(version);

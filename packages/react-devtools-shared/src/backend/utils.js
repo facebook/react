@@ -16,7 +16,10 @@ import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Comp
 
 // TODO: update this to the first React version that has a corresponding DevTools backend
 const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
-export function hasAssignedBackend(version: string): boolean {
+export function hasAssignedBackend(version?: string): boolean {
+  if (version == null || version === '') {
+    return false;
+  }
   return gte(version, FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER);
 }
 
