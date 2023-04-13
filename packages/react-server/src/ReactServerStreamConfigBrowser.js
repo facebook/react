@@ -21,12 +21,9 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-// For now we support AsyncLocalStorage as a global for the "browser" builds
-// TODO: Move this to some special WinterCG build.
-export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
+  (null: any);
 
 const VIEW_SIZE = 512;
 let currentView = null;
@@ -149,7 +146,7 @@ export function clonePrecomputedChunk(
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[method-unbinding]
   if (typeof destination.error === 'function') {
-    // $FlowFixMe: This is an Error object or the destination accepts other types.
+    // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
     destination.error(error);
   } else {
     // Earlier implementations doesn't support this method. In that environment you're

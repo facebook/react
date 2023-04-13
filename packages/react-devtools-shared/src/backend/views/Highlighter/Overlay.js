@@ -233,9 +233,8 @@ export default class Overlay {
       name = elements[0].nodeName.toLowerCase();
 
       const node = elements[0];
-      const rendererInterface = this.agent.getBestMatchingRendererInterface(
-        node,
-      );
+      const rendererInterface =
+        this.agent.getBestMatchingRendererInterface(node);
       if (rendererInterface) {
         const id = rendererInterface.getFiberIDForNative(node, true);
         if (id) {
@@ -277,7 +276,11 @@ export default class Overlay {
   }
 }
 
-function findTipPos(dims, bounds, tipSize) {
+function findTipPos(
+  dims: Box,
+  bounds: Box,
+  tipSize: {height: number, width: number},
+) {
   const tipHeight = Math.max(tipSize.height, 20);
   const tipWidth = Math.max(tipSize.width, 60);
   const margin = 5;
@@ -314,7 +317,7 @@ function findTipPos(dims, bounds, tipSize) {
   };
 }
 
-function boxWrap(dims, what, node) {
+function boxWrap(dims: any, what: string, node: HTMLElement) {
   assign(node.style, {
     borderTopWidth: dims[what + 'Top'] + 'px',
     borderLeftWidth: dims[what + 'Left'] + 'px',

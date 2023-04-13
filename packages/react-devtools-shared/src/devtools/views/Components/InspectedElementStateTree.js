@@ -36,7 +36,7 @@ export default function InspectedElementStateTree({
 }: Props): React.Node {
   const {state, type} = inspectedElement;
 
-  // HostSingleton and HostResource may have state that we don't want to expose to users
+  // HostSingleton and HostHoistable may have state that we don't want to expose to users
   const isHostComponent = type === ElementTypeHostComponent;
 
   const entries = state != null ? Object.entries(state) : null;

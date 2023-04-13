@@ -15,7 +15,7 @@ let act;
 let container;
 let yields;
 
-function clearYields() {
+function clearLog() {
   try {
     return yields;
   } finally {
@@ -60,7 +60,7 @@ it('can use act to flush effects', () => {
     render(<App />, container);
   });
 
-  expect(clearYields()).toEqual([100]);
+  expect(clearLog()).toEqual([100]);
 });
 
 // @gate __DEV__
@@ -81,7 +81,7 @@ it('flushes effects on every call', () => {
     render(<App />, container);
   });
 
-  expect(clearYields()).toEqual([0]);
+  expect(clearLog()).toEqual([0]);
 
   const button = container.querySelector('#button');
   function click() {
@@ -94,11 +94,11 @@ it('flushes effects on every call', () => {
     click();
   });
   // it consolidates the 3 updates, then fires the effect
-  expect(clearYields()).toEqual([3]);
+  expect(clearLog()).toEqual([3]);
   act(click);
-  expect(clearYields()).toEqual([4]);
+  expect(clearLog()).toEqual([4]);
   act(click);
-  expect(clearYields()).toEqual([5]);
+  expect(clearLog()).toEqual([5]);
   expect(button.innerHTML).toEqual('5');
 });
 
@@ -136,10 +136,10 @@ it('should flush effects only on exiting the outermost act', () => {
     });
     // the effect wouldn't have yielded yet because
     // we're still inside an act() scope
-    expect(clearYields()).toEqual([]);
+    expect(clearLog()).toEqual([]);
   });
   // but after exiting the last one, effects get flushed
-  expect(clearYields()).toEqual([0]);
+  expect(clearLog()).toEqual([0]);
 });
 
 // @gate __DEV__
@@ -163,6 +163,6 @@ it('can handle cascading promises', async () => {
     render(<App />, container);
   });
   // all 5 ticks present and accounted for
-  expect(clearYields()).toEqual([0, 1, 2, 3, 4]);
+  expect(clearLog()).toEqual([0, 1, 2, 3, 4]);
   expect(container.innerHTML).toBe('5');
 });

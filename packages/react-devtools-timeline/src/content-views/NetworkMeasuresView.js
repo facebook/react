@@ -68,7 +68,7 @@ export class NetworkMeasuresView extends View {
       if (!this._depthToNetworkMeasure.has(depth)) {
         this._depthToNetworkMeasure.set(depth, [event]);
       } else {
-        // $FlowFixMe This is unnecessary.
+        // $FlowFixMe[incompatible-use] This is unnecessary.
         this._depthToNetworkMeasure.get(depth).push(event);
       }
     });

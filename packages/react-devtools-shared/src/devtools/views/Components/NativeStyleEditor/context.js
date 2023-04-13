@@ -55,33 +55,30 @@ type InProgressRequest = {
 };
 
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
-const resource: Resource<
-  Element,
-  Element,
-  StyleAndLayoutFrontend,
-> = createResource(
-  (element: Element) => {
-    const request = inProgressRequests.get(element);
-    if (request != null) {
-      return request.promise;
-    }
+const resource: Resource<Element, Element, StyleAndLayoutFrontend> =
+  createResource(
+    (element: Element) => {
+      const request = inProgressRequests.get(element);
+      if (request != null) {
+        return request.promise;
+      }
 
-    let resolveFn:
-      | ResolveFn
-      | ((
-          result: Promise<StyleAndLayoutFrontend> | StyleAndLayoutFrontend,
-        ) => void) = ((null: any): ResolveFn);
-    const promise = new Promise(resolve => {
-      resolveFn = resolve;
-    });
+      let resolveFn:
+        | ResolveFn
+        | ((
+            result: Promise<StyleAndLayoutFrontend> | StyleAndLayoutFrontend,
+          ) => void) = ((null: any): ResolveFn);
+      const promise = new Promise(resolve => {
+        resolveFn = resolve;
+      });
 
-    inProgressRequests.set(element, {promise, resolveFn});
+      inProgressRequests.set(element, ({promise, resolveFn}: $FlowFixMe));
 
-    return promise;
-  },
-  (element: Element) => element,
-  {useWeakMap: true},
-);
+      return (promise: $FlowFixMe);
+    },
+    (element: Element) => element,
+    {useWeakMap: true},
+  );
 
 type Props = {
   children: React$Node,
@@ -108,10 +105,8 @@ function NativeStyleContextController({children}: Props): React.Node {
   // would itself be blocked by the same render that suspends (waiting for the data).
   const {selectedElementID} = useContext<StateContext>(TreeStateContext);
 
-  const [
-    currentStyleAndLayout,
-    setCurrentStyleAndLayout,
-  ] = useState<StyleAndLayoutFrontend | null>(null);
+  const [currentStyleAndLayout, setCurrentStyleAndLayout] =
+    useState<StyleAndLayoutFrontend | null>(null);
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {

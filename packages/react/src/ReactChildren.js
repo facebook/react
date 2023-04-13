@@ -34,7 +34,7 @@ function escape(key: string): string {
     '=': '=0',
     ':': '=2',
   };
-  const escapedString = key.replace(escapeRegex, function(match) {
+  const escapedString = key.replace(escapeRegex, function (match) {
     return escaperLookup[match];
   });
 
@@ -125,7 +125,7 @@ function mapIntoArray(
         if (__DEV__) {
           // The `if` statement here prevents auto-disabling of the safe
           // coercion ESLint rule, so we must manually disable it below.
-          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
           if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
             checkKeyStringCoercion(mappedChild.key);
           }
@@ -135,13 +135,11 @@ function mapIntoArray(
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
-            // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+            // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? escapeUserProvidedKey(
-                  // eslint-disable-next-line react-internal/safe-string-coercion
-                  '' +
-                    // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                    mappedChild.key,
+                  // $FlowFixMe[unsafe-addition]
+                  '' + mappedChild.key, // eslint-disable-line react-internal/safe-string-coercion
                 ) + '/'
               : '') +
             childKey,
@@ -193,7 +191,7 @@ function mapIntoArray(
       const iterator = iteratorFn.call(iterableChildren);
       let step;
       let ii = 0;
-      // $FlowFixMe `iteratorFn` might return null according to typing.
+      // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
       while (!(step = iterator.next()).done) {
         child = step.value;
         nextName = nextNamePrefix + getElementKey(child, ii++);
@@ -249,9 +247,9 @@ function mapChildren(
   if (children == null) {
     return children;
   }
-  const result = [];
+  const result: Array<React$Node> = [];
   let count = 0;
-  mapIntoArray(children, result, '', '', function(child) {
+  mapIntoArray(children, result, '', '', function (child) {
     return func.call(context, child, count++);
   });
   return result;
@@ -296,7 +294,8 @@ function forEachChildren(
 ): void {
   mapChildren(
     children,
-    function() {
+    // $FlowFixMe[missing-this-annot]
+    function () {
       forEachFunc.apply(this, arguments);
       // Don't return anything.
     },

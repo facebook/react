@@ -31,6 +31,17 @@ export const SuspenseException: mixed = new Error(
     "call the promise's `.catch` method and pass the result to `use`",
 );
 
+export const SuspenseyCommitException: mixed = new Error(
+  'Suspense Exception: This is not a real error, and should not leak into ' +
+    "userspace. If you're seeing this, it's likely a bug in React.",
+);
+
+// This is a noop thenable that we use to trigger a fallback in throwException.
+// TODO: It would be better to refactor throwException into multiple functions
+// so we can trigger a fallback directly without having to check the type. But
+// for now this will do.
+export const noopSuspenseyCommitThenable = {then() {}};
+
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
@@ -88,6 +99,9 @@ export function trackUsedThenable<T>(
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
       } else {
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
@@ -107,17 +121,17 @@ export function trackUsedThenable<T>(
             }
           },
         );
+      }
 
-        // Check one more time in case the thenable resolved synchronously
-        switch (thenable.status) {
-          case 'fulfilled': {
-            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-            return fulfilledThenable.value;
-          }
-          case 'rejected': {
-            const rejectedThenable: RejectedThenable<T> = (thenable: any);
-            throw rejectedThenable.reason;
-          }
+      // Check one more time in case the thenable resolved synchronously.
+      switch (thenable.status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+          return fulfilledThenable.value;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<T> = (thenable: any);
+          throw rejectedThenable.reason;
         }
       }
 
@@ -135,6 +149,14 @@ export function trackUsedThenable<T>(
       throw SuspenseException;
     }
   }
+}
+
+export function suspendCommit(): void {
+  // This extra indirection only exists so it can handle passing
+  // noopSuspenseyCommitThenable through to throwException.
+  // TODO: Factor the thenable check out of throwException
+  suspendedThenable = noopSuspenseyCommitThenable;
+  throw SuspenseyCommitException;
 }
 
 // This is used to track the actual thenable that suspended so it can be

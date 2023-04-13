@@ -17,6 +17,12 @@ const packages = readdirSync(packagesRoot).filter(dir => {
   if (dir.includes('react-devtools')) {
     return false;
   }
+  if (dir === 'internal-test-utils') {
+    // This is an internal package used only for testing. It's OK to read
+    // from source.
+    // TODO: Maybe let's have some convention for this?
+    return false;
+  }
   const packagePath = join(packagesRoot, dir, 'package.json');
   let stat;
   try {

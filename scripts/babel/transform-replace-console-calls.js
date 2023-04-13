@@ -43,7 +43,7 @@ module.exports = function replaceConsoleCalls(babel) {
 
   return {
     visitor: {
-      CallExpression: function(path, pass) {
+      CallExpression: function (path, pass) {
         if (path.node.callee.type !== 'MemberExpression') {
           return;
         }

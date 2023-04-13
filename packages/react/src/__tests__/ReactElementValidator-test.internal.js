@@ -148,10 +148,10 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for iterables of elements in rest args', () => {
     const iterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             const done = ++i > 2;
             return {
               value: done ? undefined : React.createElement(ComponentClass),
@@ -176,10 +176,10 @@ describe('ReactElementValidator', () => {
 
   it('does not warns for iterable elements with keys', () => {
     const iterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             const done = ++i > 2;
             return {
               value: done
@@ -455,9 +455,7 @@ describe('ReactElementValidator', () => {
         {withoutStack: true},
       );
 
-      expect(
-        () => TestFactory.type,
-      ).toWarnDev(
+      expect(() => TestFactory.type).toWarnDev(
         'Warning: Factory.type is deprecated. Access the class directly before ' +
           'passing it to createFactory.',
         {withoutStack: true},
@@ -485,7 +483,7 @@ describe('ReactElementValidator', () => {
 
   it('should not enumerate enumerable numbers (#4776)', () => {
     /*eslint-disable no-extend-native */
-    Number.prototype['@@iterator'] = function() {
+    Number.prototype['@@iterator'] = function () {
       throw new Error('number iterator called');
     };
     /*eslint-enable no-extend-native */

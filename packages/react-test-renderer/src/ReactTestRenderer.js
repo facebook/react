@@ -12,7 +12,7 @@ import type {
   PublicInstance,
   Instance,
   TextInstance,
-} from './ReactTestHostConfig';
+} from './ReactFiberConfigTestHost';
 
 import * as React from 'react';
 import * as Scheduler from 'scheduler/unstable_mock';
@@ -30,7 +30,7 @@ import {
   FunctionComponent,
   ClassComponent,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   HostText,
@@ -50,7 +50,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
-import {getPublicInstance} from './ReactTestHostConfig';
+import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
@@ -84,7 +84,7 @@ type FindOptions = $Shape<{
 export type Predicate = (node: ReactTestInstance) => ?boolean;
 
 const defaultTestOptions = {
-  createNodeMock: function() {
+  createNodeMock: function () {
     return null;
   },
 };
@@ -133,7 +133,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
   }
 }
 
-function childrenToTree(node) {
+function childrenToTree(node: null | Fiber) {
   if (!node) {
     return null;
   }
@@ -146,6 +146,7 @@ function childrenToTree(node) {
   return flatten(children.map(toTree));
 }
 
+// $FlowFixMe[missing-local-annot]
 function nodeAndSiblingsArray(nodeWithSibling) {
   const array = [];
   let node = nodeWithSibling;
@@ -156,6 +157,7 @@ function nodeAndSiblingsArray(nodeWithSibling) {
   return array;
 }
 
+// $FlowFixMe[missing-local-annot]
 function flatten(arr) {
   const result = [];
   const stack = [{i: 0, array: arr}];
@@ -175,7 +177,7 @@ function flatten(arr) {
   return result;
 }
 
-function toTree(node: ?Fiber) {
+function toTree(node: null | Fiber): $FlowFixMe {
   if (node == null) {
     return null;
   }
@@ -201,7 +203,7 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       return {
@@ -312,7 +314,7 @@ class ReactTestInstance {
     const tag = this._fiber.tag;
     if (
       tag === HostComponent ||
-      tag === HostResource ||
+      tag === HostHoistable ||
       tag === HostSingleton
     ) {
       return getPublicInstance(this._fiber.stateNode);
@@ -449,6 +451,7 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
+// $FlowFixMe[missing-local-annot]
 function onRecoverableError(error) {
   // TODO: Expose onRecoverableError option to userspace
   // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
@@ -491,7 +494,7 @@ function create(
     }
   }
   let container = {
-    children: [],
+    children: ([]: Array<Instance | TextInstance>),
     createNodeMock,
     tag: 'CONTAINER',
   };
@@ -588,7 +591,7 @@ function create(
     ({
       configurable: true,
       enumerable: true,
-      get: function() {
+      get: function () {
         if (root === null) {
           throw new Error("Can't access .root on unmounted test renderer");
         }
@@ -611,7 +614,7 @@ function create(
   return entry;
 }
 
-const fiberToWrapper = new WeakMap();
+const fiberToWrapper = new WeakMap<Fiber, ReactTestInstance>();
 function wrapFiber(fiber: Fiber): ReactTestInstance {
   let wrapper = fiberToWrapper.get(fiber);
   if (wrapper === undefined && fiber.alternate !== null) {

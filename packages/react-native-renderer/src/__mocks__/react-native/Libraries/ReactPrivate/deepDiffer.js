@@ -15,7 +15,7 @@ type Options = {+unsafelyIgnoreFunctions?: boolean};
 /*
  * @returns {bool} true if different, false if equal
  */
-const deepDiffer = function(
+function deepDiffer(
   one: any,
   two: any,
   maxDepthOrOptions: Options | number = -1,
@@ -79,6 +79,6 @@ const deepDiffer = function(
     }
   }
   return false;
-};
+}
 
 module.exports = deepDiffer;

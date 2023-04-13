@@ -64,13 +64,10 @@ export default function Tree(props: Props): React.Node {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {hideSettings} = useContext(OptionsContext);
-  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
-    false,
-  );
-  const {
-    highlightNativeElement,
-    clearHighlightNativeElement,
-  } = useHighlightNativeElement();
+  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
+    useState(false);
+  const {highlightNativeElement, clearHighlightNativeElement} =
+    useHighlightNativeElement();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -90,7 +87,7 @@ export default function Tree(props: Props): React.Node {
   // meaning the scroll action would be skipped (since ref updates don't re-run effects).
   // Using a callback ref accounts for this case...
   const listCallbackRef = useCallback(
-    list => {
+    (list: $FlowFixMe) => {
       if (list != null && selectedElementIndex !== null) {
         list.scrollToItem(selectedElementIndex, 'smart');
       }
@@ -101,7 +98,7 @@ export default function Tree(props: Props): React.Node {
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
   useEffect(() => {
-    function handleStopInspectingNative(didSelectNode) {
+    function handleStopInspectingNative(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
         logEvent({
@@ -229,7 +226,7 @@ export default function Tree(props: Props): React.Node {
   }, [dispatch, numElements, selectedElementIndex]);
 
   const handleKeyPress = useCallback(
-    event => {
+    (event: $FlowFixMe) => {
       switch (event.key) {
         case 'Enter':
         case ' ':
@@ -275,7 +272,7 @@ export default function Tree(props: Props): React.Node {
 
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
-    id => {
+    (id: $FlowFixMe) => {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
       if (!isNavigatingWithKeyboard) {
@@ -351,7 +348,7 @@ export default function Tree(props: Props): React.Node {
         If this seems stuck, please follow the{' '}
         <a
           className={styles.Link}
-          href="https://github.com/facebook/react/tree/main/packages/react-devtools#the-issue-with-chrome-v101-and-earlier-versions"
+          href="https://github.com/facebook/react/blob/main/packages/react-devtools/README.md#the-react-tab-shows-no-components"
           target="_blank">
           troubleshooting instructions
         </a>
@@ -540,6 +537,7 @@ function updateIndentationSizeVar(
   list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
+// $FlowFixMe[missing-local-annot]
 function InnerElementType({children, style, ...rest}) {
   const {ownerID} = useContext(TreeStateContext);
 

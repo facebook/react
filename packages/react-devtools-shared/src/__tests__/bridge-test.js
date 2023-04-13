@@ -40,7 +40,7 @@ describe('Bridge', () => {
     expect(shutdownCallback).toHaveBeenCalledTimes(1);
 
     // Verify that the Bridge doesn't send messages after shutdown.
-    spyOn(console, 'warn');
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     wall.send.mockClear();
     bridge.send('should not send');
     jest.runAllTimers();

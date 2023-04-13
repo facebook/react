@@ -6,6 +6,7 @@
  *
  * @flow
  */
+import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
 import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
@@ -16,7 +17,7 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (__DEV__) {
@@ -40,6 +41,7 @@ export function startTransition(
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -47,7 +49,6 @@ export function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        currentTransition._updatedFibers.clear();
       }
     }
   }

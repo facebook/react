@@ -10,10 +10,7 @@
 import type {Source} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {
-  enableComponentStackLocations,
-  disableNativeComponentFrames,
-} from 'shared/ReactFeatureFlags';
+import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
@@ -60,7 +57,7 @@ let reentry = false;
 let componentFrameCache;
 if (__DEV__) {
   const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-  componentFrameCache = new PossiblyWeakMap();
+  componentFrameCache = new PossiblyWeakMap<Function, string>();
 }
 
 export function describeNativeComponentFrame(
@@ -68,7 +65,7 @@ export function describeNativeComponentFrame(
   construct: boolean,
 ): string {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (disableNativeComponentFrames || !fn || reentry) {
+  if (!fn || reentry) {
     return '';
   }
 
@@ -83,7 +80,7 @@ export function describeNativeComponentFrame(
 
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe It does accept undefined.
+  // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
   let previousDispatcher;
   if (__DEV__) {
@@ -97,12 +94,12 @@ export function describeNativeComponentFrame(
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      const Fake = function() {
+      const Fake = function () {
         throw Error();
       };
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       Object.defineProperty(Fake.prototype, 'props', {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();

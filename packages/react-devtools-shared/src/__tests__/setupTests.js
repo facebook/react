@@ -32,8 +32,7 @@ if (compactConsole) {
   global.console = new CustomConsole(process.stdout, process.stderr, formatter);
 }
 
-const env = jasmine.getEnv();
-env.beforeEach(() => {
+beforeEach(() => {
   global.mockClipboardCopy = jest.fn();
 
   // Test environment doesn't support document methods like execCommand()
@@ -61,8 +60,14 @@ env.beforeEach(() => {
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
   global._ignoredErrorOrWarningMessages = [];
   function shouldIgnoreConsoleErrorOrWarn(args) {
-    const firstArg = args[0];
-    if (typeof firstArg !== 'string') {
+    let firstArg = args[0];
+    if (
+      firstArg !== null &&
+      typeof firstArg === 'object' &&
+      String(firstArg).indexOf('Error: Uncaught [') === 0
+    ) {
+      firstArg = String(firstArg);
+    } else if (typeof firstArg !== 'string') {
       return false;
     }
     const shouldFilter = global._ignoredErrorOrWarningMessages.some(
@@ -75,7 +80,6 @@ env.beforeEach(() => {
   }
 
   const originalConsoleError = console.error;
-  // $FlowFixMe
   console.error = (...args) => {
     const firstArg = args[0];
     if (
@@ -106,7 +110,6 @@ env.beforeEach(() => {
     originalConsoleError.apply(console, args);
   };
   const originalConsoleWarn = console.warn;
-  // $FlowFixMe
   console.warn = (...args) => {
     if (shouldIgnoreConsoleErrorOrWarn(args)) {
       // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.
@@ -163,7 +166,7 @@ env.beforeEach(() => {
   }
   global.fetch = mockFetch;
 });
-env.afterEach(() => {
+afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
   // It's important to reset modules between test runs;
@@ -171,8 +174,4 @@ env.afterEach(() => {
   // It's also important to reset after tests, rather than before,
   // so that we don't disconnect the ReactCurrentDispatcher ref.
   jest.resetModules();
-});
-
-expect.extend({
-  ...require('../../../../scripts/jest/matchers/schedulerTestMatchers'),
 });

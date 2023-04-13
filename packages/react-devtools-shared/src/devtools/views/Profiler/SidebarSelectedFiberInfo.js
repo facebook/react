@@ -38,6 +38,7 @@ export default function SidebarSelectedFiberInfo(_: Props): React.Node {
     rootID: ((rootID: any): number),
   });
 
+  // $FlowFixMe[missing-local-annot]
   const handleKeyDown = event => {
     switch (event.key) {
       case 'ArrowUp':

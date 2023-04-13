@@ -244,9 +244,10 @@ function getHookNameFromNode(
       // const flagState = useState(true); -> later referenced as
       // const flag = flagState[0];
       // const setFlag = flagState[1];
-      nodesAssociatedWithReactHookASTNode = nodesAssociatedWithReactHookASTNode.filter(
-        hookPath => filterMemberWithHookVariableName(hookPath),
-      );
+      nodesAssociatedWithReactHookASTNode =
+        nodesAssociatedWithReactHookASTNode.filter(hookPath =>
+          filterMemberWithHookVariableName(hookPath),
+        );
 
       if (nodesAssociatedWithReactHookASTNode.length !== 1) {
         // Something went wrong, only a single desirable hook should remain here
@@ -362,7 +363,7 @@ function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
 export function getHookNamesMappingFromAST(
   sourceAST: File,
 ): $ReadOnlyArray<{name: string, start: Position}> {
-  const hookStack = [];
+  const hookStack: Array<{name: string, start: $FlowFixMe}> = [];
   const hookNames = [];
   const pushFrame = (name: string, node: Node) => {
     const nameInfo = {name, start: {...node.loc.start}};

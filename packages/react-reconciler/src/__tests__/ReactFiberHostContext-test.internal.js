@@ -22,10 +22,10 @@ describe('ReactFiberHostContext', () => {
     React = require('react');
     act = React.unstable_act;
     ReactFiberReconciler = require('react-reconciler');
-    ConcurrentRoot = require('react-reconciler/src/ReactRootTags')
-      .ConcurrentRoot;
-    DefaultEventPriority = require('react-reconciler/src/ReactEventPriorities')
-      .DefaultEventPriority;
+    ConcurrentRoot =
+      require('react-reconciler/src/ReactRootTags').ConcurrentRoot;
+    DefaultEventPriority =
+      require('react-reconciler/src/ReactEventPriorities').DefaultEventPriority;
   });
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
@@ -35,44 +35,55 @@ describe('ReactFiberHostContext', () => {
     const rootContext = {};
     const childContext = {};
     const Renderer = ReactFiberReconciler({
-      prepareForCommit: function(hostContext) {
+      prepareForCommit: function (hostContext) {
         expect(hostContext).toBe(rootContext);
         return null;
       },
-      resetAfterCommit: function(hostContext) {
+      resetAfterCommit: function (hostContext) {
         expect(hostContext).toBe(rootContext);
       },
-      getRootHostContext: function() {
+      getRootHostContext: function () {
         return rootContext;
       },
-      getChildHostContext: function() {
+      getChildHostContext: function () {
         return childContext;
       },
-      shouldSetTextContent: function() {
+      shouldSetTextContent: function () {
         return false;
       },
-      createInstance: function() {
+      createInstance: function () {
         return null;
       },
-      finalizeInitialChildren: function() {
+      finalizeInitialChildren: function () {
         return null;
       },
-      appendInitialChild: function() {
+      appendInitialChild: function () {
         return null;
       },
-      now: function() {
+      now: function () {
         return 0;
       },
-      appendChildToContainer: function() {
+      appendChildToContainer: function () {
         return null;
       },
-      clearContainer: function() {},
-      getCurrentEventPriority: function() {
+      clearContainer: function () {},
+      getCurrentEventPriority: function () {
         return DefaultEventPriority;
       },
-      requestPostPaintCallback: function() {},
-      prepareRendererToRender: function() {},
-      resetRendererAfterRender: function() {},
+      requestPostPaintCallback: function () {},
+      maySuspendCommit(type, props) {
+        return false;
+      },
+      preloadInstance(type, props) {
+        return true;
+      },
+      startSuspendingCommit() {},
+      suspendInstance(type, props) {},
+      waitForCommitToBeReady() {
+        return null;
+      },
+      prepareRendererToRender: function () {},
+      resetRendererAfterRender: function () {},
       supportsMutation: true,
     });
 

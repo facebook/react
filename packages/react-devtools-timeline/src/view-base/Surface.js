@@ -22,7 +22,11 @@ export type ViewRefs = {
 };
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-function configureRetinaCanvas(canvas, height, width) {
+function configureRetinaCanvas(
+  canvas: HTMLCanvasElement,
+  height: number,
+  width: number,
+) {
   canvas.width = width * DPR;
   canvas.height = height * DPR;
   canvas.style.width = `${width}px`;

@@ -10,7 +10,7 @@
 export {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
-} from 'react-devtools-shared/src/constants.js';
+} from 'react-devtools-shared/src/devtools/constants.js';
 
 export const REACT_TOTAL_NUM_LANES = 31;
 

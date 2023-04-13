@@ -10,14 +10,13 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 global.Headers = require('node-fetch').Headers;
 global.Request = require('node-fetch').Request;
 global.Response = require('node-fetch').Response;
-// Patch for Browser environments to be able to polyfill AsyncLocalStorage
-global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 let fetchCount = 0;
 async function fetchMock(resource, options) {
@@ -184,7 +183,7 @@ describe('ReactFetch', () => {
       return text + ' ' + text2;
     }
     expect(await render(Component)).toMatchInlineSnapshot(
-      `"GET world [[\\"a\\",\\"A\\"]] GET world [[\\"b\\",\\"B\\"]]"`,
+      `"GET world [["a","A"]] GET world [["b","B"]]"`,
     );
     expect(fetchCount).toBe(2);
   });

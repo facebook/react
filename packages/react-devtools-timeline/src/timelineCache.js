@@ -55,9 +55,9 @@ export function importFile(file: File): TimelineData | Error {
   let record = fileNameToProfilerDataMap.get(fileName);
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -79,7 +79,8 @@ export function importFile(file: File): TimelineData | Error {
     importFileWorker(file).then(data => {
       switch (data.status) {
         case 'SUCCESS':
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<TimelineData>);
+          const resolvedRecord =
+            ((newRecord: any): ResolvedRecord<TimelineData>);
           resolvedRecord.status = Resolved;
           resolvedRecord.value = data.processedData;
           break;

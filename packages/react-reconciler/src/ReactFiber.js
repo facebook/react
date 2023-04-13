@@ -14,7 +14,7 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
@@ -24,9 +24,9 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import {
   supportsResources,
   supportsSingletons,
-  isHostResourceType,
+  isHostHoistableType,
   isHostSingletonType,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -49,7 +49,7 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   ForwardRef,
   Fragment,
@@ -107,7 +107,10 @@ import {
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
-import {detachOffscreenInstance} from './ReactFiberCommitWork';
+import {
+  detachOffscreenInstance,
+  attachOffscreenInstance,
+} from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 
 export type {Fiber};
@@ -129,6 +132,7 @@ if (__DEV__) {
 }
 
 function FiberNode(
+  this: $FlowFixMe,
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -221,15 +225,15 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-const createFiber = function(
+function createFiber(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
   mode: TypeOfMode,
 ): Fiber {
-  // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
-};
+}
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
@@ -507,15 +511,15 @@ export function createFiberFromTypeAndProps(
       supportsSingletons
     ) {
       const hostContext = getHostContext();
-      fiberTag = isHostResourceType(type, pendingProps, hostContext)
-        ? HostResource
+      fiberTag = isHostHoistableType(type, pendingProps, hostContext)
+        ? HostHoistable
         : isHostSingletonType(type)
         ? HostSingleton
         : HostComponent;
     } else if (enableFloat && supportsResources) {
       const hostContext = getHostContext();
-      fiberTag = isHostResourceType(type, pendingProps, hostContext)
-        ? HostResource
+      fiberTag = isHostHoistableType(type, pendingProps, hostContext)
+        ? HostHoistable
         : HostComponent;
     } else if (enableHostSingletons && supportsSingletons) {
       fiberTag = isHostSingletonType(type) ? HostSingleton : HostComponent;
@@ -546,29 +550,29 @@ export function createFiberFromTypeAndProps(
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       case REACT_CACHE_TYPE:
         if (enableCache) {
           return createFiberFromCache(pendingProps, mode, lanes, key);
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
           fiberTag = Mode;
           mode |= DebugTracingMode;
           break;
         }
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -750,11 +754,13 @@ export function createFiberFromOffscreen(
   fiber.lanes = lanes;
   const primaryChildInstance: OffscreenInstance = {
     _visibility: OffscreenVisible,
+    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _retryCache: null,
     _transitions: null,
     _current: null,
     detach: () => detachOffscreenInstance(primaryChildInstance),
+    attach: () => attachOffscreenInstance(primaryChildInstance),
   };
   fiber.stateNode = primaryChildInstance;
   return fiber;
@@ -773,11 +779,13 @@ export function createFiberFromLegacyHidden(
   // the offscreen implementation, which depends on a state node
   const instance: OffscreenInstance = {
     _visibility: OffscreenVisible,
+    _pendingVisibility: OffscreenVisible,
     _pendingMarkers: null,
     _transitions: null,
     _retryCache: null,
     _current: null,
     detach: () => detachOffscreenInstance(instance),
+    attach: () => attachOffscreenInstance(instance),
   };
   fiber.stateNode = instance;
   return fiber;

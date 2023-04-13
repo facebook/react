@@ -23,7 +23,7 @@ function dumpSubtree(info, indent) {
 }
 
 const RCTFabricUIManager = {
-  __dumpChildSetForJestTestsOnly: function(childSet) {
+  __dumpChildSetForJestTestsOnly: function (childSet) {
     const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const child of childSet) {
@@ -31,7 +31,7 @@ const RCTFabricUIManager = {
     }
     return result.join('\n');
   },
-  __dumpHierarchyForJestTestsOnly: function() {
+  __dumpHierarchyForJestTestsOnly: function () {
     const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [rootTag, childSet] of roots) {
@@ -117,6 +117,8 @@ const RCTFabricUIManager = {
 
   dispatchCommand: jest.fn(),
 
+  setNativeProps: jest.fn(),
+
   sendAccessibilityEvent: jest.fn(),
 
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
@@ -146,6 +148,19 @@ const RCTFabricUIManager = {
     }
 
     callback(10, 10, 100, 100);
+  }),
+  getBoundingClientRect: jest.fn(function getBoundingClientRect(node) {
+    if (typeof node !== 'object') {
+      throw new Error(
+        `Expected node to be an object, was passed "${typeof node}"`,
+      );
+    }
+
+    if (typeof node.viewName !== 'string') {
+      throw new Error('Expected node to be a host node.');
+    }
+
+    return [10, 10, 100, 100];
   }),
   measureLayout: jest.fn(function measureLayout(
     node,
@@ -179,3 +194,19 @@ const RCTFabricUIManager = {
 };
 
 global.nativeFabricUIManager = RCTFabricUIManager;
+
+// DOMRect isn't provided by jsdom, but it's used by `ReactFabricHostComponent`.
+// This is a basic implementation for testing.
+global.DOMRect = class DOMRect {
+  constructor(x, y, width, height) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  toJSON() {
+    const {x, y, width, height} = this;
+    return {x, y, width, height};
+  }
+};

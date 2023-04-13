@@ -10,7 +10,8 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
@@ -61,9 +62,15 @@ describe('ReactDOMFizzServerBrowser', () => {
       </html>,
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFloat)) {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    } else {
+      expect(result).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+      );
+    }
   });
 
   it('should emit bootstrap script src at the end', async () => {
@@ -77,7 +84,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+      `"<div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -204,9 +211,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     const result = await readResult(stream);
     expect(result).toContain('Loading');
 
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   it('should reject if aborting before the shell is complete', async () => {
@@ -227,10 +232,6 @@ describe('ReactDOMFizzServerBrowser', () => {
     await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     let caughtError = null;
@@ -272,22 +273,14 @@ describe('ReactDOMFizzServerBrowser', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(caughtError.message).toBe(
-      'The render was aborted by the server without a reason.',
-    );
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(caughtError.message).toBe('The operation was aborted.');
+    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   it('should reject if passing an already aborted signal', async () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     const promise = ReactDOMFizzServer.renderToReadableStream(
@@ -435,10 +428,6 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = 'foobar';
     controller.abort('foobar');
 
     expect(errors).toEqual(['foobar', 'foobar']);
@@ -476,10 +465,6 @@ describe('ReactDOMFizzServerBrowser', () => {
       },
     });
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = new Error('uh oh');
     controller.abort(new Error('uh oh'));
 
     expect(errors).toEqual(['uh oh', 'uh oh']);

@@ -16,6 +16,7 @@ type __MeasureInWindowOnSuccessCallback = any;
 type __MeasureLayoutOnSuccessCallback = any;
 type __ReactNativeBaseComponentViewConfig = any;
 type __ViewConfigGetter = any;
+type __ViewConfig = any;
 
 // libdefs cannot actually import. This is supposed to be the type imported
 // from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
@@ -143,18 +144,22 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
-  declare export class CustomEvent {
-    isTrusted: boolean;
-
-    constructor(
-      name: string,
-      {
-        detail: any,
-      },
-    ): void;
-
-    setSyntheticEvent(event: any): void;
-  }
+  declare export opaque type PublicInstance;
+  declare export opaque type PublicTextInstance;
+  declare export function getNodeFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): Object;
+  declare export function getNativeTagFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): number;
+  declare export function createPublicInstance(
+    tag: number,
+    viewConfig: __ViewConfig,
+    internalInstanceHandle: mixed,
+  ): PublicInstance;
+  declare export function createPublicTextInstance(
+    internalInstanceHandle: mixed,
+  ): PublicTextInstance;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
@@ -186,29 +191,37 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
-
+  setNativeProps: (node: Object, nativeProps: Object) => Object,
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
   sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
-  measure: (node: Node, callback: __MeasureOnSuccessCallback) => void,
+  measure: (node: Object, callback: __MeasureOnSuccessCallback) => void,
   measureInWindow: (
-    node: Node,
+    node: Object,
     callback: __MeasureInWindowOnSuccessCallback,
   ) => void,
   measureLayout: (
-    node: Node,
-    relativeNode: Node,
+    node: Object,
+    relativeNode: Object,
     onFail: () => void,
     onSuccess: __MeasureLayoutOnSuccessCallback,
   ) => void,
+  getBoundingClientRect: (
+    node: Object,
+  ) => [
+    /* x:*/ number,
+    /* y:*/ number,
+    /* width:*/ number,
+    /* height:*/ number,
+  ],
   findNodeAtPoint: (
-    node: Node,
+    node: Object,
     locationX: number,
     locationY: number,
     callback: (Object) => void,
   ) => void,
   setIsJSResponder: (
-    node: Node,
+    node: Object,
     isJsResponder: boolean,
     blockNativeResponder: boolean,
   ) => void,

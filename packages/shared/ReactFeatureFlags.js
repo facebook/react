@@ -13,9 +13,14 @@
 // Flags that can likely be deleted or landed without consequences
 // -----------------------------------------------------------------------------
 
-export const warnAboutDeprecatedLifecycles = true;
 export const enableComponentStackLocations = true;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+// -----------------------------------------------------------------------------
+// Killswitch
+//
+// Flags that exist solely to turn off a change in case it causes a regression
+// when it rolls out to prod. We should remove these as soon as possible.
+// -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
@@ -24,15 +29,8 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// This rolled out to 10% public in www, so we should be able to land, but some
-// internal tests need to be updated. The open source behavior is correct.
-export const skipUnmountedBoundaries = true;
-
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
-
-// TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
@@ -44,6 +42,10 @@ export const enableSchedulerDebugging = false;
 
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
+
+// This will break some internal tests at Meta so we need to gate this until
+// those can be fixed.
+export const enableDeferRootSchedulingToMicrotask = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -102,31 +104,21 @@ export const enableHostSingletons = true;
 
 export const enableFloat = true;
 
-// When a node is unmounted, recurse into the Fiber subtree and clean out
-// references. Each level cleans up more fiber fields than the previous level.
-// As far as we know, React itself doesn't leak, but because the Fiber contains
-// cycles, even a single leak in product code can cause us to retain large
-// amounts of memory.
-//
-// The long term plan is to remove the cycles, but in the meantime, we clear
-// additional fields to mitigate.
-//
-// It's an enum so that we can experiment with different levels of
-// aggressiveness.
-export const deletedTreeCleanUpLevel = 3;
-
 export const enableUseHook = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
 
-export const enableUseEventHook = __EXPERIMENTAL__;
+export const enableUseEffectEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = false;
+export const enableFizzExternalRuntime = true;
+
+// Performance related test
+export const diffInCommitPhase = __EXPERIMENTAL__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -151,17 +143,11 @@ export const enableUseRefAccessWarning = false;
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const enableSyncDefaultUpdates = true;
 
+export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+
 // Adds an opt-in to time slicing for updates that aren't wrapped in
 // startTransition. Only relevant when enableSyncDefaultUpdates is disabled.
 export const allowConcurrentByDefault = false;
-
-// Updates that occur in the render phase are not officially supported. But when
-// they do occur, we defer them to a subsequent render by picking a lane that's
-// not currently rendering. We treat them the same as if they came from an
-// interleaved event. Remove this flag once we have migrated to the
-// new behavior.
-// NOTE: Not sure if we'll end up doing this or not.
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block
@@ -183,10 +169,13 @@ export const enableTrustedTypesIntegration = false;
 // DOM properties
 export const disableInputAttributeSyncing = false;
 
+// Remove IE and MsApp specific workarounds for innerHTML
+export const disableIEWorkarounds = __EXPERIMENTAL__;
+
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = false;
+export const enableFilterEmptyStringAttributesDOM = __EXPERIMENTAL__;
 
 // Changes the behavior for rendering custom elements in both server rendering
 // and client rendering, mostly to allow JSX attributes to apply to the custom
@@ -196,26 +185,6 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
-
-// -----------------------------------------------------------------------------
-// JSX Chopping Block
-//
-// Similar to main Chopping Block but only flags related to JSX. These are
-// grouped because we will likely batch all of them into a single major release.
-// -----------------------------------------------------------------------------
-
-// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-// Part of the simplification of React.createElement so we can eventually move
-// from React.createElement to React.jsx
-// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = true; // deprecate later, not 18.0
-
-// Enables a warning when trying to spread a 'key' to an element;
-// a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = true;
-
-export const warnAboutStringRefs = true;
 
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
@@ -250,8 +219,6 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-// Only enabled in RN, related to enableComponentStackLocations
-export const disableNativeComponentFrames = false;
 export const enableServerContext = true;
 
 // Internal only.
