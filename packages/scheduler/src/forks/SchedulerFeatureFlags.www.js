@@ -7,8 +7,9 @@
  * @flow
  */
 
-// $FlowFixMe[cannot-resolve-module]
-import {enableProfiling as enableProfilingFeatureFlag} from 'SchedulerFeatureFlags';
+const {enableProfiling: enableProfilingFeatureFlag} =
+  // $FlowFixMe[cannot-resolve-module]
+  require('SchedulerFeatureFlags');
 
 export const enableSchedulerDebugging = true;
 export const enableProfiling: boolean =
