@@ -8064,7 +8064,8 @@ var firstScheduledRoot = null,
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
   mightHavePendingSyncWork = !1,
-  isFlushingWork = !1;
+  isFlushingWork = !1,
+  currentEventTransitionLane = 0;
 function ensureRootIsScheduled(root) {
   root !== lastScheduledRoot &&
     null === root.next &&
@@ -8185,6 +8186,7 @@ function processRootScheduleInMicrotask() {
         0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
     root = next;
   }
+  currentEventTransitionLane = 0;
   flushSyncWorkAcrossRoots_impl(!1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
@@ -8288,8 +8290,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   pendingPassiveEffectsLanes = 0,
   pendingPassiveProfilerEffects = [],
   nestedUpdateCount = 0,
-  rootWithNestedUpdates = null,
-  currentEventTransitionLane = 0;
+  rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
@@ -8327,7 +8328,6 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
 }
 function performConcurrentWorkOnRoot(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
-  currentEventTransitionLane = 0;
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
   var originalCallbackNode = root.callbackNode;
@@ -10421,10 +10421,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1178 = {
+  devToolsConfig$jscomp$inline_1180 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-7b0642bb9-20230412",
+    version: "18.3.0-next-d121c6700-20230413",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10453,10 +10453,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1178.bundleType,
-  version: devToolsConfig$jscomp$inline_1178.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1178.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1178.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1180.bundleType,
+  version: devToolsConfig$jscomp$inline_1180.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1180.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1180.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10472,14 +10472,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1178.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1180.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-7b0642bb9-20230412"
+  reconcilerVersion: "18.3.0-next-d121c6700-20230413"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

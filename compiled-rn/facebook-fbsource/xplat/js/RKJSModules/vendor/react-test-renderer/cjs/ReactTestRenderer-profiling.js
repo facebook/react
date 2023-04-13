@@ -6501,7 +6501,8 @@ var DefaultCacheDispatcher = {
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
   mightHavePendingSyncWork = !1,
-  isFlushingWork = !1;
+  isFlushingWork = !1,
+  currentEventTransitionLane = 0;
 function ensureRootIsScheduled(root) {
   root !== lastScheduledRoot &&
     null === root.next &&
@@ -6620,6 +6621,7 @@ function processRootScheduleInMicrotask() {
         0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
     root = next;
   }
+  currentEventTransitionLane = 0;
   flushSyncWorkAcrossRoots_impl(!1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
@@ -6726,8 +6728,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   pendingPassiveEffectsRemainingLanes = 0,
   pendingPassiveTransitions = null,
   nestedUpdateCount = 0,
-  rootWithNestedUpdates = null,
-  currentEventTransitionLane = 0;
+  rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
@@ -6764,7 +6765,6 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
 }
 function performConcurrentWorkOnRoot(root, didTimeout) {
   nestedUpdateScheduled = currentUpdateIsNested = !1;
-  currentEventTransitionLane = 0;
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
   var originalCallbackNode = root.callbackNode;
@@ -9008,19 +9008,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1063 = {
+var devToolsConfig$jscomp$inline_1065 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-7b0642bb9-20230412",
+  version: "18.3.0-next-d121c6700-20230413",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1245 = {
-  bundleType: devToolsConfig$jscomp$inline_1063.bundleType,
-  version: devToolsConfig$jscomp$inline_1063.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1063.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1063.rendererConfig,
+var internals$jscomp$inline_1247 = {
+  bundleType: devToolsConfig$jscomp$inline_1065.bundleType,
+  version: devToolsConfig$jscomp$inline_1065.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1065.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1065.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9037,26 +9037,26 @@ var internals$jscomp$inline_1245 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1063.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1065.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-7b0642bb9-20230412"
+  reconcilerVersion: "18.3.0-next-d121c6700-20230413"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1246 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1248 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1246.isDisabled &&
-    hook$jscomp$inline_1246.supportsFiber
+    !hook$jscomp$inline_1248.isDisabled &&
+    hook$jscomp$inline_1248.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1246.inject(
-        internals$jscomp$inline_1245
+      (rendererID = hook$jscomp$inline_1248.inject(
+        internals$jscomp$inline_1247
       )),
-        (injectedHook = hook$jscomp$inline_1246);
+        (injectedHook = hook$jscomp$inline_1248);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
