@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  DevToolsBackend,
-  DevToolsHook,
-  ReactRenderer,
-} from 'react-devtools-shared/src/backend/types';
+import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import Bridge from 'react-devtools-shared/src/bridge';

@@ -8,7 +8,6 @@
  */
 
 import type {
-  DevToolsBackend,
   DevToolsHook,
   ReactRenderer,
 } from 'react-devtools-shared/src/backend/types';
