@@ -30,10 +30,7 @@
   "web_accessible_resources": [
     "main.html",
     "panel.html",
-    "build/react_devtools_backend.js",
-    "build/proxy.js",
-    "build/renderer.js",
-    "build/installHook.js"
+    "build/*.js"
   ],
   "background": {
     "scripts": [
