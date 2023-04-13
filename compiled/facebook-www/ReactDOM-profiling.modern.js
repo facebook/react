@@ -10201,70 +10201,51 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       }
       root.finishedWork = originallyAttemptedLanes;
       root.finishedLanes = lanes;
-      switch (didTimeout) {
-        case 0:
-        case 1:
-          throw Error(formatProdErrorMessage(345));
-        case 2:
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        case 3:
-          markRootSuspended(root, lanes);
-          if (
-            (lanes & 125829120) === lanes &&
-            ((didTimeout = globalMostRecentFallbackTime + 500 - now$1()),
-            10 < didTimeout)
-          ) {
-            if (0 !== getNextLanes(root, 0)) break;
-            root.timeoutHandle = scheduleTimeout(
-              commitRootWhenReady.bind(
-                null,
-                root,
-                originallyAttemptedLanes,
-                workInProgressRootRecoverableErrors,
-                workInProgressTransitions,
-                lanes
-              ),
-              didTimeout
-            );
+      a: {
+        switch (didTimeout) {
+          case 0:
+          case 1:
+            throw Error(formatProdErrorMessage(345));
+          case 4:
+            if ((lanes & 8388480) === lanes) {
+              markRootSuspended(root, lanes);
+              break a;
+            }
             break;
-          }
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        case 4:
+          case 2:
+          case 3:
+          case 5:
+            break;
+          default:
+            throw Error(formatProdErrorMessage(329));
+        }
+        if (
+          (lanes & 125829120) === lanes &&
+          ((didTimeout = globalMostRecentFallbackTime + 500 - now$1()),
+          10 < didTimeout)
+        ) {
           markRootSuspended(root, lanes);
-          if ((lanes & 8388480) === lanes) break;
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
+          if (0 !== getNextLanes(root, 0)) break a;
+          root.timeoutHandle = scheduleTimeout(
+            commitRootWhenReady.bind(
+              null,
+              root,
+              originallyAttemptedLanes,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+              lanes
+            ),
+            didTimeout
           );
-          break;
-        case 5:
-          commitRootWhenReady(
-            root,
-            originallyAttemptedLanes,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes
-          );
-          break;
-        default:
-          throw Error(formatProdErrorMessage(329));
+          break a;
+        }
+        commitRootWhenReady(
+          root,
+          originallyAttemptedLanes,
+          workInProgressRootRecoverableErrors,
+          workInProgressTransitions,
+          lanes
+        );
       }
     }
   }
@@ -10321,20 +10302,12 @@ function commitRootWhenReady(
     null !== finishedWork)
   ) {
     root.cancelPendingCommit = finishedWork(
-      commitRoot.bind(
-        null,
-        root,
-        workInProgressRootRecoverableErrors,
-        workInProgressTransitions
-      )
+      commitRoot.bind(null, root, recoverableErrors, transitions)
     );
+    markRootSuspended(root, lanes);
     return;
   }
-  commitRoot(
-    root,
-    workInProgressRootRecoverableErrors,
-    workInProgressTransitions
-  );
+  commitRoot(root, recoverableErrors, transitions);
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -16725,7 +16698,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1886 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-444590b6",
+  version: "18.3.0-www-modern-76ef0e3f",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16770,7 +16743,7 @@ var devToolsConfig$jscomp$inline_1886 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-444590b6"
+  reconcilerVersion: "18.3.0-www-modern-76ef0e3f"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16925,7 +16898,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-444590b6";
+exports.version = "18.3.0-www-modern-76ef0e3f";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
