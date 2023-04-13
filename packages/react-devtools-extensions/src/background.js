@@ -192,7 +192,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           request.payload.versions.forEach(version => {
             if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
               if (!IS_FIREFOX) {
-                // TODO: add equivalent logic for Firefox is in prepareInjection.js
+                // equivalent logic for Firefox is in prepareInjection.js
                 chrome.scripting.executeScript({
                   target: {tabId: id},
                   files: [`/build/react_devtools_backend_${version}.js`],
@@ -204,7 +204,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
             }
           });
           // Request the necessary backends in the extension DevTools UI
-          // TODO: handle this message in main.js
+          // TODO: handle this message in main.js to build the UI
           devtools?.postMessage({
             payload: {
               type: 'react-devtools-additional-backends',
@@ -222,7 +222,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
         // equivalent logic for Firefox is in prepareInjection.js
         chrome.scripting.executeScript({
           target: {tabId},
-          files: [`/build/backendManager.js`],
+          files: ['/build/backendManager.js'],
           world: chrome.scripting.ExecutionWorld.MAIN,
         });
       }
