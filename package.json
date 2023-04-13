@@ -93,6 +93,7 @@
     "rollup-plugin-prettier": "^3.0.0",
     "rollup-plugin-strip-banner": "^3.0.0",
     "semver": "^7.1.1",
+    "signedsource": "^2.0.0",
     "targz": "^1.0.1",
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
