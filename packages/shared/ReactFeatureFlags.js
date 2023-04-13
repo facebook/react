@@ -22,11 +22,6 @@ export const enableComponentStackLocations = true;
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-// This is phrased as a negative so that if someone forgets to add a GK, the
-// default is to enable the feature. It should only be overridden if there's
-// a regression in prod.
-export const revertRemovalOfSiblingPrerendering = false;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //

@@ -106,12 +106,14 @@ describe('memo', () => {
         }
         Counter = memo(Counter);
 
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Counter count={0} />
-          </Suspense>,
+        await act(() =>
+          ReactNoop.render(
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Counter count={0} />
+            </Suspense>,
+          ),
         );
-        await waitForAll(['Loading...', 0]);
+        assertLog(['Loading...', 0]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should bail out because props have not changed
@@ -163,8 +165,8 @@ describe('memo', () => {
         }
 
         const parent = React.createRef(null);
-        ReactNoop.render(<Parent ref={parent} />);
-        await waitForAll(['Loading...', 'Count: 0']);
+        await act(() => ReactNoop.render(<Parent ref={parent} />));
+        assertLog(['Loading...', 'Count: 0']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
 
         // Should bail out because props have not changed
@@ -340,12 +342,14 @@ describe('memo', () => {
           return oldProps.count === newProps.count;
         });
 
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Counter count={0} />
-          </Suspense>,
+        await act(() =>
+          ReactNoop.render(
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Counter count={0} />
+            </Suspense>,
+          ),
         );
-        await waitForAll(['Loading...', 0]);
+        assertLog(['Loading...', 0]);
         expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
 
         // Should bail out because props have not changed
@@ -376,12 +380,14 @@ describe('memo', () => {
         }
         const Counter = memo(CounterInner);
 
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Counter count={0} />
-          </Suspense>,
+        await act(() =>
+          ReactNoop.render(
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Counter count={0} />
+            </Suspense>,
+          ),
         );
-        await waitForAll(['Loading...', '0!']);
+        assertLog(['Loading...', '0!']);
         expect(ReactNoop).toMatchRenderedOutput(<span prop="0!" />);
 
         // Should bail out because props have not changed
@@ -427,13 +433,16 @@ describe('memo', () => {
         };
         // The final layer uses memo() from test fixture (which might be lazy).
         Counter = memo(Counter);
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Counter e={5} />
-          </Suspense>,
-        );
+
         await expect(async () => {
-          await waitForAll(['Loading...', 15]);
+          await act(() => {
+            ReactNoop.render(
+              <Suspense fallback={<Text text="Loading..." />}>
+                <Counter e={5} />
+              </Suspense>,
+            );
+          });
+          assertLog(['Loading...', 15]);
         }).toErrorDev([
           'Counter: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
         ]);

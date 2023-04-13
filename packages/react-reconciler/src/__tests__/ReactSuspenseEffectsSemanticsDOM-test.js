@@ -187,8 +187,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await resolveFakeImport(ChildA);
-    await waitForAll(['A', 'Ref mount: A']);
+    await act(() => resolveFakeImport(ChildA));
+    assertLog(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
@@ -200,8 +200,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
       '<span style="display: none;">A</span>Loading...',
     );
 
-    await resolveFakeImport(ChildB);
-    await waitForAll(['B', 'Ref mount: B']);
+    await act(() => resolveFakeImport(ChildB));
+    assertLog(['B', 'Ref mount: B']);
     expect(container.innerHTML).toBe('<span>B</span>');
   });
 
@@ -247,8 +247,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await resolveFakeImport(ChildA);
-    await waitForAll(['A', 'Did mount: A']);
+    await act(() => resolveFakeImport(ChildA));
+    assertLog(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
@@ -258,8 +258,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
-    await resolveFakeImport(ChildB);
-    await waitForAll(['B', 'Did mount: B']);
+    await act(() => resolveFakeImport(ChildB));
+    assertLog(['B', 'Did mount: B']);
     expect(container.innerHTML).toBe('B');
   });
 
@@ -299,8 +299,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await resolveFakeImport(ChildA);
-    await waitForAll(['A', 'Did mount: A']);
+    await act(() => resolveFakeImport(ChildA));
+    assertLog(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
@@ -366,8 +366,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await resolveFakeImport(ChildA);
-    await waitForAll(['A', 'Ref mount: A']);
+    await act(() => resolveFakeImport(ChildA));
+    assertLog(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
@@ -429,8 +429,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await resolveFakeImport(ChildA);
-    await waitForAll(['A', 'Did mount: A']);
+    await act(() => resolveFakeImport(ChildA));
+    assertLog(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B

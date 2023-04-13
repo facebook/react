@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {copy} from 'clipboard-js';
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
@@ -272,6 +273,8 @@ export default class Store extends EventEmitter<{
 
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
     bridge.send('getBackendVersion');
+
+    bridge.addListener('saveToClipboard', this.onSaveToClipboard);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -1362,6 +1365,7 @@ export default class Store extends EventEmitter<{
     );
     bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+    bridge.removeListener('saveToClipboard', this.onSaveToClipboard);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
@@ -1420,6 +1424,10 @@ export default class Store extends EventEmitter<{
     this._bridgeProtocol = BRIDGE_PROTOCOL[0];
 
     this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  onSaveToClipboard: (text: string) => void = text => {
+    copy(text);
   };
 
   // The Store should never throw an Error without also emitting an event.

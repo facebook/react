@@ -38,7 +38,6 @@ import {
   enableCache,
   enableTransitionTracing,
   useModernStrictMode,
-  revertRemovalOfSiblingPrerendering,
   disableLegacyContext,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -130,7 +129,6 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
-  NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
@@ -584,10 +582,6 @@ const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
-// If two updates are scheduled within the same event, we should treat their
-// event times as simultaneous, even if the actual clock time has advanced
-// between the first and second call.
-let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
 
 let isRunningInsertionEffect = false;
@@ -602,21 +596,6 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 
 export function isWorkLoopSuspendedOnData(): boolean {
   return workInProgressSuspendedReason === SuspendedOnData;
-}
-
-export function requestEventTime(): number {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    // We're inside React, so it's fine to read the actual time.
-    return now();
-  }
-  // We're not inside React, so we may be in the middle of a browser event.
-  if (currentEventTime !== NoTimestamp) {
-    // Use the same start time for all updates until we enter React again.
-    return currentEventTime;
-  }
-  // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = now();
-  return currentEventTime;
 }
 
 export function getCurrentTime(): number {
@@ -707,7 +686,6 @@ export function scheduleUpdateOnFiber(
   root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
-  eventTime: number,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -737,7 +715,7 @@ export function scheduleUpdateOnFiber(
   }
 
   // Mark that the root has a pending update.
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -838,11 +816,7 @@ export function scheduleUpdateOnFiber(
   }
 }
 
-export function scheduleInitialHydrationOnRoot(
-  root: FiberRoot,
-  lane: Lane,
-  eventTime: number,
-) {
+export function scheduleInitialHydrationOnRoot(root: FiberRoot, lane: Lane) {
   // This is a special fork of scheduleUpdateOnFiber that is only used to
   // schedule the initial hydration of a root that has just been created. Most
   // of the stuff in scheduleUpdateOnFiber can be skipped.
@@ -854,7 +828,7 @@ export function scheduleInitialHydrationOnRoot(
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane, eventTime);
+  markRootUpdated(root, lane);
   ensureRootIsScheduled(root);
 }
 
@@ -874,9 +848,6 @@ export function performConcurrentWorkOnRoot(
     resetNestedUpdateFlag();
   }
 
-  // Since we know we're in a React event, we can clear the current
-  // event time. The next update will compute a new event time.
-  currentEventTime = NoTimestamp;
   currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
@@ -1113,76 +1084,73 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  // TODO: The fact that most of these branches are identical suggests that some
+  // of the exit statuses are not best modeled as exit statuses and should be
+  // tracked orthogonally.
   switch (exitStatus) {
     case RootInProgress:
     case RootFatalErrored: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
-    case RootErrored: {
-      // We should have already attempted to retry this tree. If we reached
-      // this point, it errored again. Commit it.
-      commitRootWhenReady(root, finishedWork, lanes);
-      break;
-    }
-    case RootSuspended: {
-      markRootSuspended(root, lanes);
-
-      // We have an acceptable loading state. We need to figure out if we
-      // should immediately commit it or wait a bit.
-
-      if (
-        includesOnlyRetries(lanes) &&
-        // do not delay if we're inside an act() scope
-        !shouldForceFlushFallbacksInDEV()
-      ) {
-        // This render only included retries, no updates. Throttle committing
-        // retries so that we don't show too many loading states too quickly.
-        const msUntilTimeout =
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
-        // Don't bother with a very short suspense time.
-        if (msUntilTimeout > 10) {
-          const nextLanes = getNextLanes(root, NoLanes);
-          if (nextLanes !== NoLanes) {
-            // There's additional work on this root.
-            break;
-          }
-
-          // The render is suspended, it hasn't timed out, and there's no
-          // lower priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(null, root, finishedWork, lanes),
-            msUntilTimeout,
-          );
-          break;
-        }
-      }
-      // The work expired. Commit immediately.
-      commitRootWhenReady(root, finishedWork, lanes);
-      break;
-    }
     case RootSuspendedWithDelay: {
-      markRootSuspended(root, lanes);
-
       if (includesOnlyTransitions(lanes)) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        break;
+        markRootSuspended(root, lanes);
+        return;
       }
-
       // Commit the placeholder.
-      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
+    case RootErrored:
+    case RootSuspended:
     case RootCompleted: {
-      // The work completed.
-      commitRootWhenReady(root, finishedWork, lanes);
       break;
     }
     default: {
       throw new Error('Unknown root exit status.');
     }
+  }
+
+  if (shouldForceFlushFallbacksInDEV()) {
+    // We're inside an `act` scope. Commit immediately.
+    commitRoot(
+      root,
+      workInProgressRootRecoverableErrors,
+      workInProgressTransitions,
+    );
+  } else {
+    if (includesOnlyRetries(lanes)) {
+      // This render only included retries, no updates. Throttle committing
+      // retries so that we don't show too many loading states too quickly.
+      const msUntilTimeout =
+        globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
+
+      // Don't bother with a very short suspense time.
+      if (msUntilTimeout > 10) {
+        markRootSuspended(root, lanes);
+
+        const nextLanes = getNextLanes(root, NoLanes);
+        if (nextLanes !== NoLanes) {
+          // There's additional work we can do on this root. We might as well
+          // attempt to work on that while we're suspended.
+          return;
+        }
+
+        // The render is suspended, it hasn't timed out, and there's no
+        // lower priority work to do. Instead of committing the fallback
+        // immediately, wait for more data to arrive.
+        // TODO: Combine retry throttling with Suspensey commits. Right now they
+        // run one after the other.
+        root.timeoutHandle = scheduleTimeout(
+          commitRootWhenReady.bind(null, root, finishedWork, lanes),
+          msUntilTimeout,
+        );
+        return;
+      }
+    }
+    commitRootWhenReady(root, finishedWork, lanes);
   }
 }
 
@@ -1191,6 +1159,8 @@ function commitRootWhenReady(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
+  // TODO: Combine retry throttling with Suspensey commits. Right now they run
+  // one after the other.
   if (includesOnlyNonUrgentLanes(lanes)) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
@@ -1213,22 +1183,15 @@ function commitRootWhenReady(
       // us that it's ready. This will be canceled if we start work on the
       // root again.
       root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(
-          null,
-          root,
-          workInProgressRootRecoverableErrors,
-          workInProgressTransitions,
-        ),
+        commitRoot.bind(null, root, recoverableErrors, transitions),
       );
+      markRootSuspended(root, lanes);
       return;
     }
   }
+
   // Otherwise, commit immediately.
-  commitRoot(
-    root,
-    workInProgressRootRecoverableErrors,
-    workInProgressTransitions,
-  );
+  commitRoot(root, recoverableErrors, transitions);
 }
 
 function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
@@ -2462,28 +2425,14 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   // sibling. If there are no more siblings, return to the parent fiber.
   let completedWork: Fiber = unitOfWork;
   do {
-    if (revertRemovalOfSiblingPrerendering) {
+    if (__DEV__) {
       if ((completedWork.flags & Incomplete) !== NoFlags) {
-        // This fiber did not complete, because one of its children did not
-        // complete. Switch to unwinding the stack instead of completing it.
-        //
-        // The reason "unwind" and "complete" is interleaved is because when
-        // something suspends, we continue rendering the siblings even though
-        // they will be replaced by a fallback.
-        // TODO: Disable sibling prerendering, then remove this branch.
-        unwindUnitOfWork(completedWork);
-        return;
-      }
-    } else {
-      if (__DEV__) {
-        if ((completedWork.flags & Incomplete) !== NoFlags) {
-          // NOTE: If we re-enable sibling prerendering in some cases, this branch
-          // is where we would switch to the unwinding path.
-          console.error(
-            'Internal React error: Expected this fiber to be complete, but ' +
-              "it isn't. It should have been unwound. This is a bug in React.",
-          );
-        }
+        // NOTE: If we re-enable sibling prerendering in some cases, this branch
+        // is where we would switch to the unwinding path.
+        console.error(
+          'Internal React error: Expected this fiber to be complete, but ' +
+            "it isn't. It should have been unwound. This is a bug in React.",
+        );
       }
     }
 
@@ -2587,24 +2536,9 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
       returnFiber.deletions = null;
     }
 
-    if (revertRemovalOfSiblingPrerendering) {
-      // If there are siblings, work on them now even though they're going to be
-      // replaced by a fallback. We're "prerendering" them. Historically our
-      // rationale for this behavior has been to initiate any lazy data requests
-      // in the siblings, and also to warm up the CPU cache.
-      // TODO: Don't prerender siblings. With `use`, we suspend the work loop
-      // until the data has resolved, anyway.
-      const siblingFiber = incompleteWork.sibling;
-      if (siblingFiber !== null) {
-        // This branch will return us to the normal work loop.
-        workInProgress = siblingFiber;
-        return;
-      }
-    } else {
-      // NOTE: If we re-enable sibling prerendering in some cases, this branch
-      // is where we would switch to the normal completion path: check if a
-      // sibling exists, and if so, begin work on it.
-    }
+    // NOTE: If we re-enable sibling prerendering in some cases, here we
+    // would switch to the normal completion path: check if a sibling
+    // exists, and if so, begin work on it.
 
     // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null
@@ -3280,9 +3214,8 @@ function captureCommitPhaseErrorOnRoot(
   const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
-  const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane, eventTime);
+    markRootUpdated(root, SyncLane);
     ensureRootIsScheduled(root);
   }
 }
@@ -3323,9 +3256,8 @@ export function captureCommitPhaseError(
           (SyncLane: Lane),
         );
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
-        const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane, eventTime);
+          markRootUpdated(root, SyncLane);
           ensureRootIsScheduled(root);
         }
         return;
@@ -3460,10 +3392,9 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
     retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
-  const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane, eventTime);
+    markRootUpdated(root, retryLane);
     ensureRootIsScheduled(root);
   }
 }

@@ -142,7 +142,6 @@ import {
   OffscreenLane,
   DefaultHydrationLane,
   SomeRetryLane,
-  NoTimestamp,
   includesSomeLane,
   laneToLanes,
   removeLanes,
@@ -2872,15 +2871,8 @@ function updateDehydratedSuspenseComponent(
           // is one of the very rare times where we mutate the current tree
           // during the render phase.
           suspenseState.retryLane = attemptHydrationAtLane;
-          // TODO: Ideally this would inherit the event time of the current render
-          const eventTime = NoTimestamp;
           enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
-          scheduleUpdateOnFiber(
-            root,
-            current,
-            attemptHydrationAtLane,
-            eventTime,
-          );
+          scheduleUpdateOnFiber(root, current, attemptHydrationAtLane);
 
           // Throw a special object that signals to the work loop that it should
           // interrupt the current render.

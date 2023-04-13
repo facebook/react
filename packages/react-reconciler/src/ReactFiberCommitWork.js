@@ -18,7 +18,7 @@ import type {
 } from './ReactFiberConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
-import {NoTimestamp, SyncLane} from './ReactFiberLane';
+import {SyncLane} from './ReactFiberLane';
 import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
@@ -2413,7 +2413,7 @@ export function detachOffscreenInstance(instance: OffscreenInstance): void {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     instance._pendingVisibility |= OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 
@@ -2433,7 +2433,7 @@ export function attachOffscreenInstance(instance: OffscreenInstance): void {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
     instance._pendingVisibility &= ~OffscreenDetached;
-    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+    scheduleUpdateOnFiber(root, fiber, SyncLane);
   }
 }
 

@@ -18,7 +18,6 @@ export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
   enableDebugTracing,

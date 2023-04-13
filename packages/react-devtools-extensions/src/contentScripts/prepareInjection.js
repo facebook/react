@@ -128,19 +128,3 @@ if (IS_FIREFOX) {
     }
   }
 }
-
-if (typeof exportFunction === 'function') {
-  // eslint-disable-next-line no-undef
-  exportFunction(
-    text => {
-      // Call clipboard.writeText from the extension content script
-      // (as it has the clipboardWrite permission) and return a Promise
-      // accessible to the webpage js code.
-      return new window.Promise((resolve, reject) =>
-        window.navigator.clipboard.writeText(text).then(resolve, reject),
-      );
-    },
-    window.wrappedJSObject.__REACT_DEVTOOLS_GLOBAL_HOOK__,
-    {defineAs: 'clipboardCopyText'},
-  );
-}
