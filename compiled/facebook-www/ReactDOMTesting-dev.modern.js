@@ -29056,6 +29056,7 @@ var didScheduleMicrotask_act = false; // Used to quickly bail out of flushSync i
 
 var mightHavePendingSyncWork = false;
 var isFlushingWork = false;
+var currentEventTransitionLane = NoLanes;
 function ensureRootIsScheduled(root) {
   // This function is called whenever a root receives an update. It does two
   // things 1) it ensures the root is in the root schedule, and 2) it ensures
@@ -29214,6 +29215,14 @@ function processRootScheduleInMicrotask() {
 
   while (root !== null) {
     var next = root.next;
+
+    if (
+      currentEventTransitionLane !== NoLane &&
+      shouldAttemptEagerTransition()
+    ) {
+      markRootEntangled(root, mergeLanes(currentEventTransitionLane, SyncLane));
+    }
+
     var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
 
     if (nextLanes === NoLane) {
@@ -29245,7 +29254,9 @@ function processRootScheduleInMicrotask() {
     }
 
     root = next;
-  } // At the end of the microtask, flush any pending synchronous work. This has
+  }
+
+  currentEventTransitionLane = NoLane; // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
 
   flushSyncWorkOnAllRoots();
@@ -29434,6 +29445,13 @@ function scheduleImmediateTask(cb) {
       cb();
     });
   }
+}
+
+function getCurrentEventTransitionLane() {
+  return currentEventTransitionLane;
+}
+function setCurrentEventTransitionLane(lane) {
+  currentEventTransitionLane = lane;
 }
 
 var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
@@ -29701,7 +29719,6 @@ var didScheduleUpdateDuringPassiveEffects = false;
 var NESTED_PASSIVE_UPDATE_LIMIT = 50;
 var nestedPassiveUpdateCount = 0;
 var rootWithPassiveNestedUpdates = null;
-var currentEventTransitionLane = NoLanes;
 var isRunningInsertionEffect = false;
 function getWorkInProgressRoot() {
   return workInProgressRoot;
@@ -29753,12 +29770,12 @@ function requestUpdateLane(fiber) {
     // event. Then reset the cached values once we can be sure the event is
     // over. Our heuristic for that is whenever we enter a concurrent work loop.
 
-    if (currentEventTransitionLane === NoLane) {
+    if (getCurrentEventTransitionLane() === NoLane) {
       // All transitions within the same event are assigned the same lane.
-      currentEventTransitionLane = claimNextTransitionLane();
+      setCurrentEventTransitionLane(claimNextTransitionLane());
     }
 
-    return currentEventTransitionLane;
+    return getCurrentEventTransitionLane();
   } // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
   //
@@ -29949,8 +29966,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   {
     resetNestedUpdateFlag();
   }
-
-  currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error("Should not already be working.");
@@ -34177,7 +34192,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-0eebbf55";
+var ReactVersion = "18.3.0-www-modern-cc5ab9ca";
 
 function createPortal$1(
   children,
@@ -43104,6 +43119,9 @@ function getCurrentEventPriority() {
   }
 
   return getEventPriority(currentEvent.type);
+}
+function shouldAttemptEagerTransition() {
+  return window.event && window.event.type === "popstate";
 }
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.

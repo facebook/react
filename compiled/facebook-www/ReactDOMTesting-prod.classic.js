@@ -10576,7 +10576,8 @@ var firstScheduledRoot = null,
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
   mightHavePendingSyncWork = !1,
-  isFlushingWork = !1;
+  isFlushingWork = !1,
+  currentEventTransitionLane = 0;
 function ensureRootIsScheduled(root) {
   root !== lastScheduledRoot &&
     null === root.next &&
@@ -10680,8 +10681,12 @@ function processRootScheduleInMicrotask() {
     null !== root;
 
   ) {
-    var next = root.next,
-      nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
+    var next = root.next;
+    0 !== currentEventTransitionLane &&
+      window.event &&
+      "popstate" === window.event.type &&
+      markRootEntangled(root, currentEventTransitionLane | 2);
+    var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     0 === nextLanes
       ? ((root.next = null),
         null === prev ? (firstScheduledRoot = next) : (prev.next = next),
@@ -10690,6 +10695,7 @@ function processRootScheduleInMicrotask() {
         0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
     root = next;
   }
+  currentEventTransitionLane = 0;
   flushSyncWorkAcrossRoots_impl(!1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
@@ -10865,8 +10871,7 @@ var hasUncaughtError = !1,
   pendingPassiveEffectsRemainingLanes = 0,
   pendingPassiveTransitions = null,
   nestedUpdateCount = 0,
-  rootWithNestedUpdates = null,
-  currentEventTransitionLane = 0;
+  rootWithNestedUpdates = null;
 function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
@@ -10922,7 +10927,6 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
   }
 }
 function performConcurrentWorkOnRoot(root, didTimeout) {
-  currentEventTransitionLane = 0;
   if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
   var originalCallbackNode = root.callbackNode;
   if (flushPassiveEffects() && root.callbackNode !== originalCallbackNode)
@@ -13746,14 +13750,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$382;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1657 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1657) {
-      var element$jscomp$inline_1658 = document.createElement("div");
-      element$jscomp$inline_1658.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1657 =
-        "function" === typeof element$jscomp$inline_1658.oninput;
+    var isSupported$jscomp$inline_1659 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1659) {
+      var element$jscomp$inline_1660 = document.createElement("div");
+      element$jscomp$inline_1660.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1659 =
+        "function" === typeof element$jscomp$inline_1660.oninput;
     }
-    JSCompiler_inline_result$jscomp$382 = isSupported$jscomp$inline_1657;
+    JSCompiler_inline_result$jscomp$382 = isSupported$jscomp$inline_1659;
   } else JSCompiler_inline_result$jscomp$382 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$382 &&
@@ -14065,20 +14069,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1698 = 0;
-  i$jscomp$inline_1698 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1698++
+  var i$jscomp$inline_1700 = 0;
+  i$jscomp$inline_1700 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1700++
 ) {
-  var eventName$jscomp$inline_1699 =
-      simpleEventPluginEvents[i$jscomp$inline_1698],
-    domEventName$jscomp$inline_1700 =
-      eventName$jscomp$inline_1699.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1701 =
-      eventName$jscomp$inline_1699[0].toUpperCase() +
-      eventName$jscomp$inline_1699.slice(1);
+  var eventName$jscomp$inline_1701 =
+      simpleEventPluginEvents[i$jscomp$inline_1700],
+    domEventName$jscomp$inline_1702 =
+      eventName$jscomp$inline_1701.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1703 =
+      eventName$jscomp$inline_1701[0].toUpperCase() +
+      eventName$jscomp$inline_1701.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1700,
-    "on" + capitalizedEvent$jscomp$inline_1701
+    domEventName$jscomp$inline_1702,
+    "on" + capitalizedEvent$jscomp$inline_1703
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15091,17 +15095,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1812 = {
+var devToolsConfig$jscomp$inline_1814 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-4e76503d",
+  version: "18.3.0-www-classic-09c9197a",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2250 = {
-  bundleType: devToolsConfig$jscomp$inline_1812.bundleType,
-  version: devToolsConfig$jscomp$inline_1812.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1812.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1812.rendererConfig,
+var internals$jscomp$inline_2252 = {
+  bundleType: devToolsConfig$jscomp$inline_1814.bundleType,
+  version: devToolsConfig$jscomp$inline_1814.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1814.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1814.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -15117,26 +15121,26 @@ var internals$jscomp$inline_2250 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1812.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1814.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-4e76503d"
+  reconcilerVersion: "18.3.0-www-classic-09c9197a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2251 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2253 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2251.isDisabled &&
-    hook$jscomp$inline_2251.supportsFiber
+    !hook$jscomp$inline_2253.isDisabled &&
+    hook$jscomp$inline_2253.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2251.inject(
-        internals$jscomp$inline_2250
+      (rendererID = hook$jscomp$inline_2253.inject(
+        internals$jscomp$inline_2252
       )),
-        (injectedHook = hook$jscomp$inline_2251);
+        (injectedHook = hook$jscomp$inline_2253);
     } catch (err) {}
 }
 var tagToRoleMappings = {
@@ -17124,4 +17128,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-4e76503d";
+exports.version = "18.3.0-www-classic-09c9197a";
