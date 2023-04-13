@@ -71,9 +71,10 @@ function setup(hook: ?DevToolsHook) {
   });
 
   // listen for backend installations.
-  hook.sub('devtools-backend-installed', version =>
-    activateBackend(version, hook),
-  );
+  hook.sub('devtools-backend-installed', version => {
+    activateBackend(version, hook);
+    updateRequiredBackends();
+  });
 }
 
 const requiredBackends = new Set<string>();
