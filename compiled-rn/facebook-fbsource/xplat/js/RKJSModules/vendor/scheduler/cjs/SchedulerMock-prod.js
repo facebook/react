@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated
+ * @generated SignedSource<<87e7b57a62257e3d246f6aac3f6ce7c3>>
  */
 
 "use strict";

@@ -4,8 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
+ * @noformat
  * @flow
+ * @nolint
+ * @generated SignedSource<<0debd6e5a17dc037cb4661315a886de6>>
  */
 
 'use strict';

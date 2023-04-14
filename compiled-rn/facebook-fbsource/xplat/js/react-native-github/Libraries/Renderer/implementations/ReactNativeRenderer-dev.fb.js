@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated
+ * @generated SignedSource<<251dd2a17860a00b36073837aeb01f90>>
  */
 
 'use strict';
@@ -27565,7 +27565,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-d121c6700-20230413";
+var ReactVersion = "18.3.0-next-39a3b72c6-20230414";
 
 function createPortal$1(
   children,

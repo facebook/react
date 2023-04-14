@@ -4,8 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
+ * @noformat
  * @flow strict
+ * @nolint
+ * @generated SignedSource<<652b117c94307244bcf5e4af18928903>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';

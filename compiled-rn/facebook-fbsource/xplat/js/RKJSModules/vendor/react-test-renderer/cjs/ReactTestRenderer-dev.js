@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated
+ * @generated SignedSource<<ae4eb8b4cf9bd4b8d67e0fe8f50fe731>>
  */
 
 'use strict';
@@ -23745,7 +23745,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-d121c6700-20230413";
+var ReactVersion = "18.3.0-next-39a3b72c6-20230414";
 
 // Might add PROFILE later.
 
