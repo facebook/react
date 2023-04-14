@@ -263,6 +263,30 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
+  it('can transport weird numbers', async () => {
+    const nums = [0, -0, Infinity, -Infinity, NaN];
+    function ComponentClient({prop}) {
+      expect(prop).not.toBe(nums);
+      expect(prop).toEqual(nums);
+      expect(prop.every((p, i) => Object.is(p, nums[i]))).toBe(true);
+      return `prop: ${prop}`;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const model = <Component prop={nums} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      // already checked -0 with expects above
+      'prop: 0,0,Infinity,-Infinity,NaN',
+    );
+  });
+
   it('can transport BigInt', async () => {
     function ComponentClient({prop}) {
       return `prop: ${prop} (${typeof prop})`;
