@@ -580,6 +580,10 @@ export function parseModelString(
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
+      case 'D': {
+        // Date
+        return new Date(Date.parse(value.substring(2)));
+      }
       case 'n': {
         // BigInt
         return BigInt(value.substring(2));

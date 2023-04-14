@@ -101,6 +101,12 @@ function serializeUndefined(): string {
   return '$undefined';
 }
 
+function serializeDateFromDateJSON(dateJSON: string): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + dateJSON;
+}
+
 function serializeBigInt(n: bigint): string {
   return '$n' + n.toString(10);
 }
@@ -133,10 +139,16 @@ export function processReply(
     value: ReactServerValue,
   ): ReactJSONValue {
     const parent = this;
+
+    // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
     if (__DEV__) {
       // $FlowFixMe[incompatible-use]
-      const originalValue = this[key];
-      if (typeof originalValue === 'object' && originalValue !== value) {
+      const originalValue = parent[key];
+      if (
+        typeof originalValue === 'object' &&
+        originalValue !== value &&
+        !(originalValue instanceof Date)
+      ) {
         if (objectName(originalValue) !== 'Object') {
           console.error(
             'Only plain objects can be passed to Server Functions from the Client. ' +
@@ -266,6 +278,17 @@ export function processReply(
     }
 
     if (typeof value === 'string') {
+      // TODO: Maybe too clever. If we support URL there's no similar trick.
+      if (value[value.length - 1] === 'Z') {
+        // Possibly a Date, whose toJSON automatically calls toISOString
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[key];
+        // $FlowFixMe[method-unbinding]
+        if (originalValue instanceof Date) {
+          return serializeDateFromDateJSON(value);
+        }
+      }
+
       return escapeStringValue(value);
     }
 
