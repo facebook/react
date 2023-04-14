@@ -7,6 +7,7 @@ const {
   readFileSync,
   writeFileSync,
 } = require('fs');
+const path = require('path');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -14,6 +15,7 @@ const {
   asyncExtractTar,
   asyncRimRaf,
 } = require('./utils');
+const {getSigningToken, signFile} = require('signedsource');
 
 const {
   NODE_ES2015,
@@ -134,6 +136,24 @@ async function copyRNShims() {
     require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
     'build/react-native/shims/ReactNativeTypes.js'
   );
+  processGenerated('build/react-native/shims');
+}
+
+function processGenerated(directory) {
+  const files = readdirSync(directory)
+    .filter(dir => dir.endsWith('.js'))
+    .map(file => path.join(directory, file));
+
+  files.forEach(file => {
+    const originalContents = readFileSync(file, 'utf8');
+    const contents = originalContents
+      // Replace {@}format with {@}noformat
+      .replace(/(\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
+      // Add {@}nolint and {@}generated
+      .replace(' */\n', ` * @nolint\n * ${getSigningToken()}\n */\n`);
+    const signedContents = signFile(contents);
+    writeFileSync(file, signedContents, 'utf8');
+  });
 }
 
 async function copyAllShims() {
