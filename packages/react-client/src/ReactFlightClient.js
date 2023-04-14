@@ -16,14 +16,14 @@ import type {
   UninitializedModel,
   Response,
   SSRManifest,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 import {
   resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
 
@@ -558,6 +558,22 @@ export function parseModelString(
           default:
             throw chunk.reason;
         }
+      }
+      case 'I': {
+        // $Infinity
+        return Infinity;
+      }
+      case '-': {
+        // $-0 or $-Infinity
+        if (value === '$-0') {
+          return -0;
+        } else {
+          return -Infinity;
+        }
+      }
+      case 'N': {
+        // $NaN
+        return NaN;
       }
       case 'u': {
         // matches "$undefined"

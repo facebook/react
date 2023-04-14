@@ -37,6 +37,7 @@ let waitForAll;
 let waitForThrow;
 let assertLog;
 let Scheduler;
+let clientAct;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -71,6 +72,7 @@ describe('ReactDOMFloat', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
+    clientAct = InternalTestUtils.act;
 
     textCache = new Map();
     loadCache = new Set();
@@ -1186,7 +1188,7 @@ body {
     // events have already fired. This requires the load to be awaited for the commit to have a chance to flush
     // We could change this by tracking the loadingState's fulfilled status directly on the loadingState similar
     // to thenables however this slightly increases the fizz runtime code size.
-    await loadStylesheets();
+    await clientAct(() => loadStylesheets());
     assertLog(['load stylesheet: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -3163,7 +3165,7 @@ body {
     );
   });
 
-  it('can unsuspend after a timeout even if some assets never load', async () => {
+  it('stylesheets block render, with a really long timeout', async () => {
     function App({children}) {
       return (
         <html>
@@ -3191,7 +3193,22 @@ body {
       </html>,
     );
 
-    jest.advanceTimersByTime(1000);
+    // Advance time by 50 seconds. Even still, the transition is suspended.
+    jest.advanceTimersByTime(50000);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body />
+      </html>,
+    );
+
+    // Advance time by 10 seconds more. A full minute total has elapsed. At this
+    // point, something must have really gone wrong, so we time out and allow
+    // unstyled content to be displayed.
+    jest.advanceTimersByTime(10000);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -3216,7 +3233,7 @@ body {
     );
   });
 
-  it('can start a new suspended commit after a previous one finishes', async () => {
+  it('can interrupt a suspended commit with a new transition', async () => {
     function App({children}) {
       return (
         <html>
@@ -3225,81 +3242,66 @@ body {
       );
     }
     const root = ReactDOMClient.createRoot(document);
-    root.render(<App />);
+    root.render(<App>(empty)</App>);
+
+    // Start a transition to "A"
     React.startTransition(() => {
       root.render(
         <App>
-          hello
-          <link rel="stylesheet" href="foo" precedence="default" />
+          A
+          <link rel="stylesheet" href="A" precedence="default" />
         </App>,
       );
     });
     await waitForAll([]);
+
+    // "A" hasn't loaded yet, so we remain on the initial UI. Its preload
+    // has been inserted into the head, though.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="A" as="style" />
         </head>
-        <body />
+        <body>(empty)</body>
       </html>,
     );
 
+    // Interrupt the "A" transition with a new one, "B"
     React.startTransition(() => {
       root.render(
         <App>
-          hello2
-          {null}
-          <link rel="stylesheet" href="bar" precedence="default" />
+          B
+          <link rel="stylesheet" href="B" precedence="default" />
         </App>,
       );
     });
     await waitForAll([]);
+
+    // Still on the initial UI because "B" hasn't loaded, but its preload
+    // is now in the head, too.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="A" as="style" />
+          <link rel="preload" href="B" as="style" />
         </head>
-        <body />
+        <body>(empty)</body>
       </html>,
     );
 
+    // Finish loading
     loadPreloads();
     loadStylesheets();
-    assertLog(['load preload: foo', 'load stylesheet: foo']);
+    assertLog(['load preload: A', 'load preload: B', 'load stylesheet: B']);
+    // The "B" transition has finished.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
+          <link rel="stylesheet" href="B" data-precedence="default" />
+          <link rel="preload" href="A" as="style" />
+          <link rel="preload" href="B" as="style" />
         </head>
-        <body>hello</body>
-      </html>,
-    );
-
-    // The second update should process now
-    await waitForAll([]);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>hello</body>
-      </html>,
-    );
-    loadPreloads();
-    loadStylesheets();
-    assertLog(['load preload: bar', 'load stylesheet: bar']);
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="stylesheet" href="foo" data-precedence="default" />
-          <link rel="stylesheet" href="bar" data-precedence="default" />
-          <link rel="preload" href="foo" as="style" />
-          <link rel="preload" href="bar" as="style" />
-        </head>
-        <body>hello2</body>
+        <body>B</body>
       </html>,
     );
   });

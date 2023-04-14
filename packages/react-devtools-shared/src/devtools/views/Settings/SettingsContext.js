@@ -18,8 +18,6 @@ import {
   useMemo,
 } from 'react';
 import {
-  COMFORTABLE_LINE_HEIGHT,
-  COMPACT_LINE_HEIGHT,
   LOCAL_STORAGE_BROWSER_THEME,
   LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
@@ -28,11 +26,15 @@ import {
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from 'react-devtools-shared/src/constants';
+import {
+  COMFORTABLE_LINE_HEIGHT,
+  COMPACT_LINE_HEIGHT,
+} from 'react-devtools-shared/src/devtools/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
-import type {BrowserTheme} from '../DevTools';
+import type {BrowserTheme} from 'react-devtools-shared/src/types';
 
 export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';

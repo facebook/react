@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
+import type {Container, SuspenseInstance} from './ReactFiberConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';

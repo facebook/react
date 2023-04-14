@@ -179,10 +179,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     // Schedule some updates
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          counter.current.updateCount(1);
+          counter.current.updateCount(count => count + 10);
+        });
+      } else {
         counter.current.updateCount(1);
         counter.current.updateCount(count => count + 10);
-      });
+      }
 
       // Partially flush without committing
       await waitFor(['Count: 11']);
@@ -795,9 +800,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.discreteUpdates(() => {
           setRow(5);
         });
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            setRow(20);
+          });
+        } else {
           setRow(20);
-        });
+        }
       });
       assertLog(['Up', 'Down']);
       expect(root).toMatchRenderedOutput(<span prop="Down" />);
@@ -1309,9 +1318,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
 
         // Schedule another update for children, and partially process it.
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            setChildStates.forEach(setChildState => setChildState(2));
+          });
+        } else {
           setChildStates.forEach(setChildState => setChildState(2));
-        });
+        }
         await waitFor(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
@@ -1585,21 +1598,39 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
 
         // Rendering again should flush the previous commit's effects
-        React.startTransition(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            ReactNoop.render(<Counter count={1} />, () =>
+              Scheduler.log('Sync effect'),
+            );
+          });
+        } else {
           ReactNoop.render(<Counter count={1} />, () =>
             Scheduler.log('Sync effect'),
           );
-        });
+        }
 
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-        await waitFor([
-          'Count: 0',
-          'Sync effect',
-          'Schedule update [1]',
-          'Count: 1',
-        ]);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+          await waitFor([
+            'Count: 0',
+            'Sync effect',
+            'Schedule update [1]',
+            'Count: 1',
+          ]);
+        } else {
+          expect(ReactNoop).toMatchRenderedOutput(
+            <span prop="Count: (empty)" />,
+          );
+          await waitFor(['Sync effect']);
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+
+          ReactNoop.flushPassiveEffects();
+          assertLog(['Schedule update [1]']);
+          await waitForAll(['Count: 1']);
+        }
 
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
       });
@@ -2254,7 +2285,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         };
       });
 
-      // @gate skipUnmountedBoundaries
       it('should use the nearest still-mounted boundary if there are no unmounted boundaries', async () => {
         await act(() => {
           ReactNoop.render(
@@ -2280,7 +2310,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // @gate skipUnmountedBoundaries
       it('should skip unmounted boundaries and use the nearest still-mounted boundary', async () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -2323,7 +2352,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // @gate skipUnmountedBoundaries
       it('should call getDerivedStateFromError in the nearest still-mounted boundary', async () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -2367,7 +2395,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
       });
 
-      // @gate skipUnmountedBoundaries
       it('should rethrow error if there are no still-mounted boundaries', async () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -2531,10 +2558,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['layout destroy', 'passive destroy']);
     });
 
-    // TODO: This test fails when skipUnmountedBoundaries is disabled. However,
-    // it's also rolled out to open source already and partially to www. So
-    // we should probably just land it.
-    // @gate skipUnmountedBoundaries
     it('assumes passive effect destroy function is either a function or undefined', async () => {
       function App(props) {
         useEffect(() => {
@@ -3117,7 +3140,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       assertLog(['Unmount normal [current: 1]', 'Mount normal [current: 1]']);
     });
 
-    // @gate skipUnmountedBoundaries
     it('catches errors thrown in useLayoutEffect', async () => {
       class ErrorBoundary extends React.Component {
         state = {error: null};
@@ -3601,9 +3623,8 @@ describe('ReactHooksWithNoopRenderer', () => {
         </>,
       );
 
-      await resolveText('A');
-      assertLog(['Promise resolved [A]']);
-      await waitForAll(['A']);
+      await act(() => resolveText('A'));
+      assertLog(['Promise resolved [A]', 'A']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />

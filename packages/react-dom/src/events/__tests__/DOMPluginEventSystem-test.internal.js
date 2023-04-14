@@ -666,18 +666,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // We're now full hydrated.
-
-          if (
-            gate(
-              flags =>
-                flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-            )
-          ) {
-            expect(clicks).toBe(0);
-          } else {
-            expect(clicks).toBe(1);
-          }
-
+          expect(clicks).toBe(0);
           document.body.removeChild(parentContainer);
         });
 
@@ -1995,9 +1984,13 @@ describe('DOMPluginEventSystem', () => {
             log.length = 0;
 
             // Increase counter
-            React.startTransition(() => {
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.startTransition(() => {
+                root.render(<Test counter={1} />);
+              });
+            } else {
               root.render(<Test counter={1} />);
-            });
+            }
             // Yield before committing
             await waitFor(['Test']);
 

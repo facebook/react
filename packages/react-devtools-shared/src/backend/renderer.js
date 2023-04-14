@@ -38,10 +38,13 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {gt, gte} from 'react-devtools-shared/src/backend/utils';
+import {
+  gt,
+  gte,
+  serializeToString,
+} from 'react-devtools-shared/src/backend/utils';
 import {
   cleanForBridge,
-  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
@@ -88,13 +91,6 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
-import {
-  DidCapture,
-  NoFlags,
-  PerformedWork,
-  Placement,
-  Hydrating,
-} from './ReactFiberFlags';
 import {format} from './utils';
 import {
   enableProfilerChangedHookIndices,
@@ -816,7 +812,7 @@ export function attach(
     name: string,
     fiber: Fiber,
     parentFiber: ?Fiber,
-    extraString?: string = '',
+    extraString: string = '',
   ): void => {
     if (__DEBUG__) {
       const displayName =
@@ -1555,7 +1551,10 @@ export function attach(
       case ForwardRef:
         // For types that execute user code, we check PerformedWork effect.
         // We don't reflect bailouts (either referential or sCU) in DevTools.
-        // eslint-disable-next-line no-bitwise
+        // TODO: This flag is a leaked implementation detail. Once we start
+        // releasing DevTools in lockstep with React, we should import a
+        // function from the reconciler instead.
+        const PerformedWork = 0b000000000000000000000000001;
         return (getFiberFlags(nextFiber) & PerformedWork) === PerformedWork;
       // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
       // so it won't get highlighted with React 16.3.0 to 16.3.2.
@@ -2843,7 +2842,12 @@ export function attach(
       let nextNode: Fiber = node;
       do {
         node = nextNode;
-        if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
+        // TODO: This function, and these flags, are a leaked implementation
+        // detail. Once we start releasing DevTools in lockstep with React, we
+        // should import a function from the reconciler instead.
+        const Placement = 0b000000000000000000000000010;
+        const Hydrating = 0b000000000000001000000000000;
+        if ((node.flags & (Placement | Hydrating)) !== 0) {
           // This is an insertion or in-progress hydration. The nearest possible
           // mounted fiber is the parent but we need to continue to figure out
           // if that one is still mounted.
@@ -3300,16 +3304,21 @@ export function attach(
     const errors = fiberIDToErrorsMap.get(id) || new Map();
     const warnings = fiberIDToWarningsMap.get(id) || new Map();
 
-    const isErrored =
-      (fiber.flags & DidCapture) !== NoFlags ||
-      forceErrorForFiberIDs.get(id) === true;
-
+    let isErrored = false;
     let targetErrorBoundaryID;
     if (isErrorBoundary(fiber)) {
       // if the current inspected element is an error boundary,
       // either that we want to use it to toggle off error state
       // or that we allow to force error state on it if it's within another
       // error boundary
+      //
+      // TODO: This flag is a leaked implementation detail. Once we start
+      // releasing DevTools in lockstep with React, we should import a function
+      // from the reconciler instead.
+      const DidCapture = 0b000000000000000000010000000;
+      isErrored =
+        (fiber.flags & DidCapture) !== 0 ||
+        forceErrorForFiberIDs.get(id) === true;
       targetErrorBoundaryID = isErrored ? id : getNearestErrorBoundaryID(fiber);
     } else {
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
@@ -3538,14 +3547,17 @@ export function attach(
     }
   }
 
-  function copyElementPath(id: number, path: Array<string | number>): void {
+  function getSerializedElementValueByPath(
+    id: number,
+    path: Array<string | number>,
+  ): ?string {
     if (isMostRecentlyInspectedElement(id)) {
-      copyToClipboard(
-        getInObject(
-          ((mostRecentlyInspectedElement: any): InspectedElement),
-          path,
-        ),
+      const valueToCopy = getInObject(
+        ((mostRecentlyInspectedElement: any): InspectedElement),
+        path,
       );
+
+      return serializeToString(valueToCopy);
     }
   }
 
@@ -4488,7 +4500,7 @@ export function attach(
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
     clearWarningsForFiberID,
-    copyElementPath,
+    getSerializedElementValueByPath,
     deletePath,
     findNativeNodesForFiberID,
     flushInitialOperations,

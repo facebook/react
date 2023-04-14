@@ -32,7 +32,6 @@ export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
-export const revertRemovalOfSiblingPrerendering = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
@@ -42,15 +41,11 @@ export const enableCPUSuspense = false;
 export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
 export const enableUseEffectEventHook = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-  true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const skipUnmountedBoundaries = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
@@ -58,6 +53,7 @@ export const enableUseRefAccessWarning = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
+export const enableSyncDefaultUpdates = true;
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
@@ -73,6 +69,9 @@ export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;
+export const enableDeferRootSchedulingToMicrotask = true;
+
+export const diffInCommitPhase = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

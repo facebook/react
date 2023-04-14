@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {ATTRIBUTE_NAME_CHAR, BOOLEAN, getPropertyInfo} from './DOMProperty';
-import isCustomComponent from './isCustomComponent';
+import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
+import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
@@ -130,8 +130,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
       return true;
     }
 
-    const propertyInfo = getPropertyInfo(name);
-
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       const standardName = possibleStandardNames[lowerCasedName];
@@ -180,75 +178,144 @@ function validateProperty(tagName, name, value, eventRegistry) {
         }
     }
 
-    if (typeof value === 'boolean') {
-      const prefix = name.toLowerCase().slice(0, 5);
-      const acceptsBooleans =
-        propertyInfo !== null
-          ? propertyInfo.acceptsBooleans
-          : prefix === 'data-' || prefix === 'aria-';
-      if (!acceptsBooleans) {
-        if (value) {
-          console.error(
-            'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-              'If you want to write it to the DOM, pass a string instead: ' +
-              '%s="%s" or %s={value.toString()}.',
-            value,
-            name,
-            name,
-            value,
-            name,
-          );
-        } else {
-          console.error(
-            'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-              'If you want to write it to the DOM, pass a string instead: ' +
-              '%s="%s" or %s={value.toString()}.\n\n' +
-              'If you used to conditionally omit it with %s={condition && value}, ' +
-              'pass %s={condition ? value : undefined} instead.',
-            value,
-            name,
-            name,
-            value,
-            name,
-            name,
-            name,
-          );
+    switch (typeof value) {
+      case 'boolean': {
+        switch (name) {
+          case 'autoFocus':
+          case 'checked':
+          case 'multiple':
+          case 'muted':
+          case 'selected':
+          case 'contentEditable':
+          case 'spellCheck':
+          case 'draggable':
+          case 'value':
+          case 'autoReverse':
+          case 'externalResourcesRequired':
+          case 'focusable':
+          case 'preserveAlpha':
+          case 'allowFullScreen':
+          case 'async':
+          case 'autoPlay':
+          case 'controls':
+          case 'default':
+          case 'defer':
+          case 'disabled':
+          case 'disablePictureInPicture':
+          case 'disableRemotePlayback':
+          case 'formNoValidate':
+          case 'hidden':
+          case 'loop':
+          case 'noModule':
+          case 'noValidate':
+          case 'open':
+          case 'playsInline':
+          case 'readOnly':
+          case 'required':
+          case 'reversed':
+          case 'scoped':
+          case 'seamless':
+          case 'itemScope':
+          case 'capture':
+          case 'download': {
+            // Boolean properties can accept boolean values
+            return true;
+          }
+          default: {
+            const prefix = name.toLowerCase().slice(0, 5);
+            if (prefix === 'data-' || prefix === 'aria-') {
+              return true;
+            }
+            if (value) {
+              console.error(
+                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+                  'If you want to write it to the DOM, pass a string instead: ' +
+                  '%s="%s" or %s={value.toString()}.',
+                value,
+                name,
+                name,
+                value,
+                name,
+              );
+            } else {
+              console.error(
+                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+                  'If you want to write it to the DOM, pass a string instead: ' +
+                  '%s="%s" or %s={value.toString()}.\n\n' +
+                  'If you used to conditionally omit it with %s={condition && value}, ' +
+                  'pass %s={condition ? value : undefined} instead.',
+                value,
+                name,
+                name,
+                value,
+                name,
+                name,
+                name,
+              );
+            }
+            warnedProperties[name] = true;
+            return true;
+          }
         }
       }
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    // Warn when a known attribute is a bad type
-    switch (typeof value) {
       case 'function':
       case 'symbol': // eslint-disable-line
+        // Warn when a known attribute is a bad type
         warnedProperties[name] = true;
         return false;
+      case 'string': {
+        // Warn when passing the strings 'false' or 'true' into a boolean prop
+        if (value === 'false' || value === 'true') {
+          switch (name) {
+            case 'checked':
+            case 'selected':
+            case 'multiple':
+            case 'muted':
+            case 'allowFullScreen':
+            case 'async':
+            case 'autoPlay':
+            case 'controls':
+            case 'default':
+            case 'defer':
+            case 'disabled':
+            case 'disablePictureInPicture':
+            case 'disableRemotePlayback':
+            case 'formNoValidate':
+            case 'hidden':
+            case 'loop':
+            case 'noModule':
+            case 'noValidate':
+            case 'open':
+            case 'playsInline':
+            case 'readOnly':
+            case 'required':
+            case 'reversed':
+            case 'scoped':
+            case 'seamless':
+            case 'itemScope': {
+              break;
+            }
+            default: {
+              return true;
+            }
+          }
+          console.error(
+            'Received the string `%s` for the boolean attribute `%s`. ' +
+              '%s ' +
+              'Did you mean %s={%s}?',
+            value,
+            name,
+            value === 'false'
+              ? 'The browser will interpret it as a truthy value.'
+              : 'Although this works, it will not work as expected if you pass the string "false".',
+            name,
+            value,
+          );
+          warnedProperties[name] = true;
+          return true;
+        }
+      }
     }
-
-    // Warn when passing the strings 'false' or 'true' into a boolean prop
-    if (
-      (value === 'false' || value === 'true') &&
-      propertyInfo !== null &&
-      propertyInfo.type === BOOLEAN
-    ) {
-      console.error(
-        'Received the string `%s` for the boolean attribute `%s`. ' +
-          '%s ' +
-          'Did you mean %s={%s}?',
-        value,
-        name,
-        value === 'false'
-          ? 'The browser will interpret it as a truthy value.'
-          : 'Although this works, it will not work as expected if you pass the string "false".',
-        name,
-        value,
-      );
-      warnedProperties[name] = true;
-      return true;
-    }
-
     return true;
   }
 }
@@ -287,7 +354,7 @@ function warnUnknownProperties(type, props, eventRegistry) {
 }
 
 export function validateProperties(type, props, eventRegistry) {
-  if (isCustomComponent(type, props)) {
+  if (isCustomElement(type, props) || typeof props.is === 'string') {
     return;
   }
   warnUnknownProperties(type, props, eventRegistry);

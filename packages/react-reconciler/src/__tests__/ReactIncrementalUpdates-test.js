@@ -156,11 +156,21 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    React.startTransition(() => {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates || flags.enableUnifiedSyncLane,
+      )
+    ) {
+      React.startTransition(() => {
+        instance.setState(createUpdate('a'));
+        instance.setState(createUpdate('b'));
+        instance.setState(createUpdate('c'));
+      });
+    } else {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    });
+    }
 
     // Begin the updates but don't flush them yet
     await waitFor(['a', 'b', 'c']);
@@ -177,7 +187,11 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates && flags.enableUnifiedSyncLane,
+      )
+    ) {
       assertLog(['d', 'e', 'f']);
       expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
     } else {
@@ -189,7 +203,11 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    if (gate(flags => !flags.enableUnifiedSyncLane)) {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates && !flags.enableUnifiedSyncLane,
+      )
+    ) {
       await waitForAll([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
@@ -243,11 +261,21 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    React.startTransition(() => {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates || flags.enableUnifiedSyncLane,
+      )
+    ) {
+      React.startTransition(() => {
+        instance.setState(createUpdate('a'));
+        instance.setState(createUpdate('b'));
+        instance.setState(createUpdate('c'));
+      });
+    } else {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    });
+    }
 
     // Begin the updates but don't flush them yet
     await waitFor(['a', 'b', 'c']);
@@ -267,7 +295,11 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates && flags.enableUnifiedSyncLane,
+      )
+    ) {
       assertLog(['d', 'e', 'f']);
     } else {
       // Update d was dropped and replaced by e.
@@ -278,7 +310,11 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    if (gate(flags => !flags.enableUnifiedSyncLane)) {
+    if (
+      gate(
+        flags => flags.enableSyncDefaultUpdates && !flags.enableUnifiedSyncLane,
+      )
+    ) {
       await waitForAll([
         // Since 'g' is in a transition, we'll process 'd' separately first.
         // That causes us to process 'd' with 'e' and 'f' rebased.
@@ -387,11 +423,7 @@ describe('ReactIncrementalUpdates', () => {
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
-    if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
-      assertLog(['componentWillReceiveProps', 'render', 'render']);
-    } else {
-      assertLog(['componentWillReceiveProps', 'render']);
-    }
+    assertLog(['componentWillReceiveProps', 'render']);
   });
 
   it('updates triggered from inside a class setState updater', async () => {
@@ -419,26 +451,12 @@ describe('ReactIncrementalUpdates', () => {
 
     await expect(
       async () =>
-        await waitForAll(
-          gate(flags =>
-            flags.deferRenderPhaseUpdateToNextBatch
-              ? [
-                  'setState updater',
-                  // In the new reconciler, updates inside the render phase are
-                  // treated as if they came from an event, so the update gets
-                  // shifted to a subsequent render.
-                  'render',
-                  'render',
-                ]
-              : [
-                  'setState updater',
-                  // In the old reconciler, updates in the render phase receive
-                  // the currently rendering expiration time, so the update
-                  // flushes immediately in the same render.
-                  'render',
-                ],
-          ),
-        ),
+        await waitForAll([
+          'setState updater',
+          // Updates in the render phase receive the currently rendering
+          // lane, so the update flushes immediately in the same render.
+          'render',
+        ]),
     ).toErrorDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
@@ -454,15 +472,9 @@ describe('ReactIncrementalUpdates', () => {
     });
     await waitForAll(
       gate(flags =>
-        flags.deferRenderPhaseUpdateToNextBatch
-          ? // In the new reconciler, updates inside the render phase are
-            // treated as if they came from an event, so the update gets shifted
-            // to a subsequent render.
-            ['render', 'render']
-          : // In the old reconciler, updates in the render phase receive
-            // the currently rendering expiration time, so the update flushes
-            // immediately in the same render.
-            ['render'],
+        // Updates in the render phase receive the currently rendering
+        // lane, so the update flushes immediately in the same render.
+        ['render'],
       ),
     );
   });
@@ -531,9 +543,13 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<App />);
+        });
+      } else {
         ReactNoop.render(<App />);
-      });
+      }
       assertLog([]);
       await waitForAll([
         'Render: 0',
@@ -544,9 +560,13 @@ describe('ReactIncrementalUpdates', () => {
       ]);
 
       Scheduler.unstable_advanceTime(10000);
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          setCount(2);
+        });
+      } else {
         setCount(2);
-      });
+      }
       // The transition should not have expired, so we should be able to
       // partially render it.
       await waitFor(['Render: 2']);
@@ -563,7 +583,18 @@ describe('ReactIncrementalUpdates', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(
+          <>
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+            <Text text="D" />
+          </>,
+        );
+      });
+    } else {
       ReactNoop.render(
         <>
           <Text text="A" />
@@ -572,27 +603,27 @@ describe('ReactIncrementalUpdates', () => {
           <Text text="D" />
         </>,
       );
-    });
+    }
     // The transition should not have expired, so we should be able to
     // partially render it.
     await waitFor(['A']);
-
-    // FIXME:  We should be able to partially render B, too, but currently it
-    // expires. This is an existing bug that I discovered, which will be fixed
-    // in a PR that I'm currently working on.
-    //
-    // Correct behavior:
-    //   await waitFor(['B']);
-    //   await waitForAll(['C', 'D']);
-    //
-    // Current behavior:
-    await waitFor(['B'], {
-      additionalLogsAfterAttemptingToYield: ['C', 'D'],
-    });
+    await waitFor(['B']);
+    await waitForAll(['C', 'D']);
   });
 
   it('regression: does not expire soon due to previous expired work', async () => {
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(
+          <>
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+            <Text text="D" />
+          </>,
+        );
+      });
+    } else {
       ReactNoop.render(
         <>
           <Text text="A" />
@@ -601,9 +632,8 @@ describe('ReactIncrementalUpdates', () => {
           <Text text="D" />
         </>,
       );
-    });
+    }
     await waitFor(['A']);
-
     // This will expire the rest of the update
     Scheduler.unstable_advanceTime(10000);
     await waitFor(['B'], {
@@ -613,7 +643,18 @@ describe('ReactIncrementalUpdates', () => {
     Scheduler.unstable_advanceTime(10000);
 
     // Now do another transition. This one should not expire.
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(
+          <>
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+            <Text text="D" />
+          </>,
+        );
+      });
+    } else {
       ReactNoop.render(
         <>
           <Text text="A" />
@@ -622,7 +663,7 @@ describe('ReactIncrementalUpdates', () => {
           <Text text="D" />
         </>,
       );
-    });
+    }
     // The transition should not have expired, so we should be able to
     // partially render it.
     await waitFor(['A']);
@@ -662,9 +703,13 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(() => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          pushToLog('A');
+        });
+      } else {
         pushToLog('A');
-      });
+      }
 
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
@@ -723,9 +768,13 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput(null);
 
     await act(() => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          pushToLog('A');
+        });
+      } else {
         pushToLog('A');
-      });
+      }
       ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );

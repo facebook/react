@@ -74,31 +74,37 @@ describe('useMemoCache()', () => {
     let setX;
     let forceUpdate;
     function Component(props) {
-      const cache = useMemoCache(4);
+      const cache = useMemoCache(5);
 
       // x is used to produce a `data` object passed to the child
       const [x, _setX] = useState(0);
       setX = _setX;
-      const c_x = x !== cache[0];
-      cache[0] = x;
 
       // n is passed as-is to the child as a cache breaker
       const [n, setN] = useState(0);
       forceUpdate = () => setN(a => a + 1);
-      const c_n = n !== cache[1];
-      cache[1] = n;
 
+      const c_0 = x !== cache[0];
       let data;
-      if (c_x) {
-        data = cache[2] = {text: `Count ${x}`};
+      if (c_0) {
+        data = {text: `Count ${x}`};
+        cache[0] = x;
+        cache[1] = data;
       } else {
-        data = cache[2];
+        data = cache[1];
       }
-      if (c_x || c_n) {
-        return (cache[3] = <Text data={data} n={n} />);
+      const c_2 = x !== cache[2];
+      const c_3 = n !== cache[3];
+      let t0;
+      if (c_2 || c_3) {
+        t0 = <Text data={data} n={n} />;
+        cache[2] = x;
+        cache[3] = n;
+        cache[4] = t0;
       } else {
-        return cache[3];
+        t0 = cache[4];
       }
+      return t0;
     }
     let data;
     const Text = jest.fn(function Text(props) {
@@ -135,132 +141,117 @@ describe('useMemoCache()', () => {
 
   // @gate enableUseMemoCacheHook
   test('update component using cache with setstate during render', async () => {
-    let setX;
     let setN;
     function Component(props) {
-      const cache = useMemoCache(4);
+      const cache = useMemoCache(5);
 
       // x is used to produce a `data` object passed to the child
-      const [x, _setX] = useState(0);
-      setX = _setX;
-      const c_x = x !== cache[0];
-      cache[0] = x;
+      const [x] = useState(0);
+
+      const c_0 = x !== cache[0];
+      let data;
+      if (c_0) {
+        data = {text: `Count ${x}`};
+        cache[0] = x;
+        cache[1] = data;
+      } else {
+        data = cache[1];
+      }
 
       // n is passed as-is to the child as a cache breaker
       const [n, _setN] = useState(0);
       setN = _setN;
-      const c_n = n !== cache[1];
-      cache[1] = n;
 
-      // NOTE: setstate and early return here means that x will update
-      // without the data value being updated. Subsequent renders could
-      // therefore think that c_x = false (hasn't changed) and skip updating
-      // data.
-      // The memoizing compiler will have to handle this case, but the runtime
-      // can help by falling back to resetting the cache if a setstate occurs
-      // during render (this mirrors what we do for useMemo and friends)
       if (n === 1) {
         setN(2);
         return;
       }
 
-      let data;
-      if (c_x) {
-        data = cache[2] = {text: `Count ${x}`};
+      const c_2 = x !== cache[2];
+      const c_3 = n !== cache[3];
+      let t0;
+      if (c_2 || c_3) {
+        t0 = <Text data={data} n={n} />;
+        cache[2] = x;
+        cache[3] = n;
+        cache[4] = t0;
       } else {
-        data = cache[2];
+        t0 = cache[4];
       }
-      if (c_x || c_n) {
-        return (cache[3] = <Text data={data} n={n} />);
-      } else {
-        return cache[3];
-      }
+      return t0;
     }
     let data;
     const Text = jest.fn(function Text(props) {
       data = props.data;
-      return data.text;
+      return `${data.text} (n=${props.n})`;
     });
 
     const root = ReactNoop.createRoot();
     await act(() => {
       root.render(<Component />);
     });
-    expect(root).toMatchRenderedOutput('Count 0');
+    expect(root).toMatchRenderedOutput('Count 0 (n=0)');
     expect(Text).toBeCalledTimes(1);
     const data0 = data;
 
-    // Simultaneously trigger an update to x (should create a new data value)
-    // and trigger the setState+early return. The runtime should reset the cache
-    // to avoid an inconsistency
+    // Trigger an update that will cause a setState during render. The `data` prop
+    // does not depend on `n`, and should remain cached.
     await act(() => {
-      setX(1);
       setN(1);
     });
-    expect(root).toMatchRenderedOutput('Count 1');
+    expect(root).toMatchRenderedOutput('Count 0 (n=2)');
     expect(Text).toBeCalledTimes(2);
-    expect(data).not.toBe(data0);
-    const data1 = data;
-
-    // Forcing an unrelated update shouldn't recreate the
-    // data object.
-    await act(() => {
-      setN(3);
-    });
-    expect(root).toMatchRenderedOutput('Count 1');
-    expect(Text).toBeCalledTimes(3);
-    expect(data).toBe(data1); // confirm that the cache persisted across renders
+    expect(data).toBe(data0);
   });
 
   // @gate enableUseMemoCacheHook
   test('update component using cache with throw during render', async () => {
-    let setX;
     let setN;
     let shouldFail = true;
     function Component(props) {
-      const cache = useMemoCache(4);
+      const cache = useMemoCache(5);
 
       // x is used to produce a `data` object passed to the child
-      const [x, _setX] = useState(0);
-      setX = _setX;
-      const c_x = x !== cache[0];
-      cache[0] = x;
+      const [x] = useState(0);
+
+      const c_0 = x !== cache[0];
+      let data;
+      if (c_0) {
+        data = {text: `Count ${x}`};
+        cache[0] = x;
+        cache[1] = data;
+      } else {
+        data = cache[1];
+      }
 
       // n is passed as-is to the child as a cache breaker
       const [n, _setN] = useState(0);
       setN = _setN;
-      const c_n = n !== cache[1];
-      cache[1] = n;
 
-      // NOTE the initial failure will trigger a re-render, after which the function
-      // will early return. This validates that the runtime resets the cache on error:
-      // if it doesn't the cache will be corrupt, with the cached version of data
-      // out of data from the cached version of x.
       if (n === 1) {
         if (shouldFail) {
           shouldFail = false;
           throw new Error('failed');
         }
-        setN(2);
-        return;
       }
 
-      let data;
-      if (c_x) {
-        data = cache[2] = {text: `Count ${x}`};
+      const c_2 = x !== cache[2];
+      const c_3 = n !== cache[3];
+      let t0;
+      if (c_2 || c_3) {
+        t0 = <Text data={data} n={n} />;
+        cache[2] = x;
+        cache[3] = n;
+        cache[4] = t0;
       } else {
-        data = cache[2];
+        t0 = cache[4];
       }
-      if (c_x || c_n) {
-        return (cache[3] = <Text data={data} n={n} />);
-      } else {
-        return cache[3];
-      }
+      return t0;
     }
     let data;
     const Text = jest.fn(function Text(props) {
       data = props.data;
-      return data.text;
+      return `${data.text} (n=${props.n})`;
     });
 
     spyOnDev(console, 'error');
@@ -273,30 +264,25 @@ describe('useMemoCache()', () => {
         </ErrorBoundary>,
       );
     });
-    expect(root).toMatchRenderedOutput('Count 0');
+    expect(root).toMatchRenderedOutput('Count 0 (n=0)');
     expect(Text).toBeCalledTimes(1);
     const data0 = data;
 
-    // Simultaneously trigger an update to x (should create a new data value)
-    // and trigger the setState+early return. The runtime should reset the cache
-    // to avoid an inconsistency
     await act(() => {
-      // this update bumps the count
-      setX(1);
       // this triggers a throw.
       setN(1);
     });
-    expect(root).toMatchRenderedOutput('Count 1');
+    expect(root).toMatchRenderedOutput('Count 0 (n=1)');
     expect(Text).toBeCalledTimes(2);
-    expect(data).not.toBe(data0);
+    expect(data).toBe(data0);
     const data1 = data;
 
     // Forcing an unrelated update shouldn't recreate the
     // data object.
     await act(() => {
-      setN(3);
+      setN(2);
     });
-    expect(root).toMatchRenderedOutput('Count 1');
+    expect(root).toMatchRenderedOutput('Count 0 (n=2)');
     expect(Text).toBeCalledTimes(3);
     expect(data).toBe(data1); // confirm that the cache persisted across renders
   });

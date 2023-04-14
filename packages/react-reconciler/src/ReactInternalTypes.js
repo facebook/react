@@ -29,7 +29,7 @@ import type {
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {
   TracingMarkerInstance,
@@ -240,11 +240,14 @@ type BaseFiberRootProperties = {
     MutableSource<any> | MutableSourceVersion,
   > | null,
 
+  // Used to create a linked list that represent all the roots that have
+  // pending work scheduled on them.
+  next: FiberRoot | null,
+
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: any,
   callbackPriority: Lane,
-  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 

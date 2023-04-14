@@ -521,9 +521,7 @@ describe('ReactTypeScriptClass', function() {
   it('renders only once when setting state in componentWillMount', function() {
     renderCount = 0;
     test(React.createElement(RenderOnce, {initialValue: 'foo'}), 'SPAN', 'bar');
-    // This is broken with deferRenderPhaseUpdateToNextBatch flag on.
-    // We can't use the gate feature in TypeScript.
-    expect(renderCount).toBe(global.__WWW__ && !global.__VARIANT__ ? 2 : 1);
+    expect(renderCount).toBe(1);
   });
 
   it('should warn with non-object in the initial state property', function() {

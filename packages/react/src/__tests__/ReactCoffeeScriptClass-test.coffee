@@ -264,9 +264,7 @@ describe 'ReactCoffeeScriptClass', ->
         React.createElement('span', className: @state.bar)
 
     test React.createElement(Foo, initialValue: 'foo'), 'SPAN', 'bar'
-    # This is broken with deferRenderPhaseUpdateToNextBatch flag on.
-    # We can't use the gate feature here because this test is also in CoffeeScript and TypeScript.
-    expect(renderCount).toBe(if global.__WWW__ and !global.__VARIANT__ then 2 else 1)
+    expect(renderCount).toBe(1)
 
   it 'should warn with non-object in the initial state property', ->
     [['an array'], 'a string', 1234].forEach (state) ->

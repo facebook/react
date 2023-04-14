@@ -142,7 +142,6 @@ import {
   OffscreenLane,
   DefaultHydrationLane,
   SomeRetryLane,
-  NoTimestamp,
   includesSomeLane,
   laneToLanes,
   removeLanes,
@@ -168,8 +167,8 @@ import {
   isPrimaryRenderer,
   getResource,
   createHoistableInstance,
-} from './ReactFiberHostConfig';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
@@ -1168,17 +1167,12 @@ export function replayFunctionComponent(
   workInProgress: Fiber,
   nextProps: any,
   Component: any,
+  secondArg: any,
   renderLanes: Lanes,
 ): Fiber | null {
   // This function is used to replay a component that previously suspended,
   // after its data resolves. It's a simplified version of
   // updateFunctionComponent that reuses the hooks from the previous attempt.
-
-  let context;
-  if (!disableLegacyContext) {
-    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-    context = getMaskedContext(workInProgress, unmaskedContext);
-  }
 
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
@@ -1189,7 +1183,7 @@ export function replayFunctionComponent(
     workInProgress,
     Component,
     nextProps,
-    context,
+    secondArg,
   );
   const hasId = checkDidRenderIdHook();
   if (enableSchedulingProfiler) {
@@ -2881,15 +2875,8 @@ function updateDehydratedSuspenseComponent(
           // is one of the very rare times where we mutate the current tree
           // during the render phase.
           suspenseState.retryLane = attemptHydrationAtLane;
-          // TODO: Ideally this would inherit the event time of the current render
-          const eventTime = NoTimestamp;
           enqueueConcurrentRenderForLane(current, attemptHydrationAtLane);
-          scheduleUpdateOnFiber(
-            root,
-            current,
-            attemptHydrationAtLane,
-            eventTime,
-          );
+          scheduleUpdateOnFiber(root, current, attemptHydrationAtLane);
 
           // Throw a special object that signals to the work loop that it should
           // interrupt the current render.
@@ -4101,12 +4088,12 @@ function beginWork(
       if (enableFloat && supportsResources) {
         return updateHostHoistable(current, workInProgress, renderLanes);
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     case HostSingleton:
       if (enableHostSingletons && supportsSingletons) {
         return updateHostSingleton(current, workInProgress, renderLanes);
       }
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
     case HostComponent:
       return updateHostComponent(current, workInProgress, renderLanes);
     case HostText:

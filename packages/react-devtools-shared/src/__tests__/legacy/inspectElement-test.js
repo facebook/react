@@ -26,7 +26,7 @@ describe('InspectedElementContext', () => {
 
   async function read(
     id: number,
-    path?: Array<string | number> = null,
+    path: Array<string | number> = null,
   ): Promise<Object> {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
     const promise = backendAPI
@@ -826,7 +826,7 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject),
+      JSON.stringify(nestedObject, undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -842,7 +842,7 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject.a.b),
+      JSON.stringify(nestedObject.a.b, undefined, 2),
     );
   });
 
@@ -932,7 +932,7 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify({0: 100, 1: -100, 2: 0}),
+      JSON.stringify({0: 100, 1: -100, 2: 0}, undefined, 2),
     );
   });
 });

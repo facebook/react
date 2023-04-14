@@ -12,7 +12,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Request} from 'react-server/src/ReactFizzServer';
 
 import type {Destination} from 'react-server/src/ReactServerStreamConfig';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import {
   createRequest,
@@ -25,7 +25,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-server/src/ReactServerFormatConfig';
+} from 'react-server/src/ReactFizzConfig';
 
 type Options = {
   identifierPrefix?: string,

@@ -49,9 +49,13 @@ describe('ReactFlushSync', () => {
 
     const root = ReactNoop.createRoot();
     await act(async () => {
-      React.startTransition(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<App />);
+        });
+      } else {
         root.render(<App />);
-      });
+      }
       // This will yield right before the passive effect fires
       await waitForPaint(['0, 0']);
 

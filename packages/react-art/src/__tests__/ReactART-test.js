@@ -33,11 +33,15 @@ const ReactTestRenderer = require('react-test-renderer');
 
 // Isolate the noop renderer
 jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
 let Surface;
 let TestComponent;
+
+let waitFor;
 
 const Missing = {};
 
@@ -75,6 +79,8 @@ describe('ReactART', () => {
     Group = ReactART.Group;
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
+
+    ({waitFor} = require('internal-test-utils'));
 
     TestComponent = class extends React.Component {
       group = React.createRef();
@@ -356,6 +362,58 @@ describe('ReactART', () => {
     instance = render(onClick2);
     doClick(instance);
     expect(onClick2).toBeCalled();
+  });
+
+  // @gate !enableSyncDefaultUpdates
+  it('can concurrently render with a "primary" renderer while sharing context', async () => {
+    const CurrentRendererContext = React.createContext(null);
+
+    function Yield(props) {
+      Scheduler.log(props.value);
+      return null;
+    }
+
+    let ops = [];
+    function LogCurrentRenderer() {
+      return (
+        <CurrentRendererContext.Consumer>
+          {currentRenderer => {
+            ops.push(currentRenderer);
+            return null;
+          }}
+        </CurrentRendererContext.Consumer>
+      );
+    }
+
+    // Using test renderer instead of the DOM renderer here because async
+    // testing APIs for the DOM renderer don't exist.
+    ReactNoop.render(
+      <CurrentRendererContext.Provider value="Test">
+        <Yield value="A" />
+        <Yield value="B" />
+        <LogCurrentRenderer />
+        <Yield value="C" />
+      </CurrentRendererContext.Provider>,
+    );
+
+    await waitFor(['A']);
+
+    ReactDOM.render(
+      <Surface>
+        <LogCurrentRenderer />
+        <CurrentRendererContext.Provider value="ART">
+          <LogCurrentRenderer />
+        </CurrentRendererContext.Provider>
+      </Surface>,
+      container,
+    );
+
+    expect(ops).toEqual([null, 'ART']);
+
+    ops = [];
+    await waitFor(['B', 'C']);
+
+    expect(ops).toEqual(['Test']);
   });
 });
 

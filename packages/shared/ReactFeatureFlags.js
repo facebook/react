@@ -22,11 +22,6 @@ export const enableComponentStackLocations = true;
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-// This is phrased as a negative so that if someone forgets to add a GK, the
-// default is to enable the feature. It should only be overridden if there's
-// a regression in prod.
-export const revertRemovalOfSiblingPrerendering = false;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -34,16 +29,8 @@ export const revertRemovalOfSiblingPrerendering = false;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
-// This rolled out to 10% public in www, so we should be able to land, but some
-// internal tests need to be updated. The open source behavior is correct.
-export const skipUnmountedBoundaries = true;
-
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
-
-// TODO: Need to review this code one more time before landing
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay =
-  true;
 
 // Recoil still uses useMutableSource in www, need to delete
 export const enableUseMutableSource = false;
@@ -55,6 +42,10 @@ export const enableSchedulerDebugging = false;
 
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
+
+// This will break some internal tests at Meta so we need to gate this until
+// those can be fixed.
+export const enableDeferRootSchedulingToMicrotask = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -126,6 +117,9 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
+// Performance related test
+export const diffInCommitPhase = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -146,19 +140,14 @@ export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
 
+// Enables time slicing for updates that aren't wrapped in startTransition.
+export const enableSyncDefaultUpdates = true;
+
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in
 // startTransition. Only relevant when enableSyncDefaultUpdates is disabled.
 export const allowConcurrentByDefault = false;
-
-// Updates that occur in the render phase are not officially supported. But when
-// they do occur, we defer them to a subsequent render by picking a lane that's
-// not currently rendering. We treat them the same as if they came from an
-// interleaved event. Remove this flag once we have migrated to the
-// new behavior.
-// NOTE: Not sure if we'll end up doing this or not.
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block

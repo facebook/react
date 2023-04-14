@@ -642,19 +642,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           'Text:Fallback render',
           'Text:Outside render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Inside:Before" />
-            <span prop="Inside:After" />
-            <span prop="Outside" />
-          </>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        assertLog([
           'Text:Inside:Before destroy layout',
           'Text:Inside:After destroy layout',
           'Text:Fallback create layout',
@@ -796,19 +783,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           'ClassText:Fallback render',
           'ClassText:Outside render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Inside:Before" />
-            <span prop="Inside:After" />
-            <span prop="Outside" />
-          </>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        assertLog([
           'ClassText:Inside:Before componentWillUnmount',
           'ClassText:Inside:After componentWillUnmount',
           'ClassText:Fallback componentDidMount',
@@ -914,17 +888,10 @@ describe('ReactSuspenseEffectsSemantics', () => {
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
-        await waitFor(['App render', 'Suspend:Async', 'Text:Fallback render']);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <span prop="Outer">
-            <span prop="Inner" />
-          </span>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        assertLog([
+        await waitFor([
+          'App render',
+          'Suspend:Async',
+          'Text:Fallback render',
           'Text:Outer destroy layout',
           'Text:Inner destroy layout',
           'Text:Fallback create layout',
@@ -1040,18 +1007,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           // Text:MemoizedInner is memoized
           'Text:Fallback render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <span prop="Outer">
-            <span prop="MemoizedInner" />
-          </span>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        // Even though the innermost layout effects are beneath a hidden HostComponent.
-        assertLog([
           'Text:Outer destroy layout',
           'Text:MemoizedInner destroy layout',
           'Text:Fallback create layout',
@@ -1501,17 +1456,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Inside render',
           'Text:Fallback:Outside render',
           'Text:Outside render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Inside" />
-            <span prop="Outside" />
-          </>,
-        );
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        await jest.runAllTimers();
-        assertLog([
           'Text:Inside destroy layout',
           'Text:Fallback:Inside create layout',
           'Text:Fallback:Outside create layout',
@@ -1546,19 +1490,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Fallback render',
           'Text:Fallback:Outside render',
           'Text:Outside render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Inside" hidden={true} />
-            <span prop="Fallback:Inside" />
-            <span prop="Fallback:Outside" />
-            <span prop="Outside" />
-          </>,
-        );
-
-        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
-        await jest.runAllTimers();
-        assertLog([
           'Text:Fallback:Inside destroy layout',
           'Text:Fallback:Fallback create layout',
         ]);
@@ -1771,17 +1702,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Suspend',
           'Text:Fallback render',
           'Text:Outside render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Inside" />
-            <span prop="Outside" />
-          </>,
-        );
-
-        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
-        await jest.runAllTimers();
-        assertLog([
           'Text:Inside destroy layout',
           'Text:Fallback create layout',
         ]);
@@ -2366,18 +2286,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Function render',
           'Suspend:Async_1',
           'ClassText:Fallback render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Function" />
-            <span prop="Class" />
-          </>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        assertLog([
           'Text:Function destroy layout',
           'ClassText:Class componentWillUnmount',
           'ClassText:Fallback componentDidMount',
@@ -2518,19 +2426,6 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspender "A" render',
           'Suspend:A',
           'ClassText:Fallback render',
-        ]);
-        expect(ReactNoop).toMatchRenderedOutput(
-          <>
-            <span prop="Function" />
-            <span prop="Suspender" />
-            <span prop="Class" />
-          </>,
-        );
-
-        await jest.runAllTimers();
-
-        // Timing out should commit the fallback and destroy inner layout effects.
-        assertLog([
           'Text:Function destroy layout',
           'ClassText:Class componentWillUnmount',
           'ClassText:Fallback componentDidMount',

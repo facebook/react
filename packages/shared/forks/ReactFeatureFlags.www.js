@@ -18,18 +18,17 @@ export const {
   disableInputAttributeSyncing,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  revertRemovalOfSiblingPrerendering,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
+  enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

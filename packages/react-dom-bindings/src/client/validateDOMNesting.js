@@ -434,28 +434,13 @@ function findInvalidAncestorForTag(
 const didWarn: {[string]: boolean} = {};
 
 function validateDOMNesting(
-  childTag: ?string,
-  childText: ?string,
+  childTag: string,
   ancestorInfo: AncestorInfoDev,
 ): void {
   if (__DEV__) {
     ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
     const parentInfo = ancestorInfo.current;
     const parentTag = parentInfo && parentInfo.tag;
-
-    if (childText != null) {
-      if (childTag != null) {
-        console.error(
-          'validateDOMNesting: when childText is passed, childTag should be null',
-        );
-      }
-      childTag = '#text';
-    } else if (childTag == null) {
-      console.error(
-        'validateDOMNesting: when childText or childTag must be provided',
-      );
-      return;
-    }
 
     const invalidParent = isTagValidWithParent(childTag, parentTag)
       ? null
@@ -478,21 +463,7 @@ function validateDOMNesting(
     }
     didWarn[warnKey] = true;
 
-    let tagDisplayName = childTag;
-    let whitespaceInfo = '';
-    if (childTag === '#text') {
-      if (childText != null && /\S/.test(childText)) {
-        tagDisplayName = 'Text nodes';
-      } else {
-        tagDisplayName = 'Whitespace text nodes';
-        whitespaceInfo =
-          " Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.';
-      }
-    } else {
-      tagDisplayName = '<' + childTag + '>';
-    }
-
+    const tagDisplayName = '<' + childTag + '>';
     if (invalidParent) {
       let info = '';
       if (ancestorTag === 'table' && childTag === 'tr') {
@@ -501,10 +472,9 @@ function validateDOMNesting(
           'the browser.';
       }
       console.error(
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s',
+        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s',
         tagDisplayName,
         ancestorTag,
-        whitespaceInfo,
         info,
       );
     } else {
@@ -518,4 +488,33 @@ function validateDOMNesting(
   }
 }
 
-export {updatedAncestorInfoDev, validateDOMNesting};
+function validateTextNesting(childText: string, parentTag: string): void {
+  if (__DEV__) {
+    if (isTagValidWithParent('#text', parentTag)) {
+      return;
+    }
+
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const warnKey = '#text|' + parentTag;
+    if (didWarn[warnKey]) {
+      return;
+    }
+    didWarn[warnKey] = true;
+
+    if (/\S/.test(childText)) {
+      console.error(
+        'validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.',
+        parentTag,
+      );
+    } else {
+      console.error(
+        'validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. ' +
+          "Make sure you don't have any extra whitespace between tags on " +
+          'each line of your source code.',
+        parentTag,
+      );
+    }
+  }
+}
+
+export {updatedAncestorInfoDev, validateDOMNesting, validateTextNesting};
