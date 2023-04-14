@@ -20,10 +20,12 @@ export const enableUseRefAccessWarning = __VARIANT__;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
+export const enableSyncDefaultUpdates = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const enableCustomElementPropertySupport = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
+export const diffInCommitPhase = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
@@ -36,12 +38,6 @@ export const enableSchedulingProfiler = __VARIANT__;
 // These are already tested in both modes using the build type dimension,
 // so we don't need to use __VARIANT__ to get extra coverage.
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// This flag only exists so it can be connected to a www GK that acts as a
-// killswitch. We don't run our tests against the `true` value because 1) it
-// affects too many tests 2) it shouldn't break anything. But it is mildly
-// risky, hence this extra precaution.
-export const revertRemovalOfSiblingPrerendering = false;
 
 // TODO: These flags are hard-coded to the default values used in open source.
 // Update the tests so that they pass in either mode, then set these

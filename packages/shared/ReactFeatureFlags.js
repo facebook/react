@@ -22,11 +22,6 @@ export const enableComponentStackLocations = true;
 // when it rolls out to prod. We should remove these as soon as possible.
 // -----------------------------------------------------------------------------
 
-// This is phrased as a negative so that if someone forgets to add a GK, the
-// default is to enable the feature. It should only be overridden if there's
-// a regression in prod.
-export const revertRemovalOfSiblingPrerendering = false;
-
 // -----------------------------------------------------------------------------
 // Land or remove (moderate effort)
 //
@@ -122,6 +117,9 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
+// Performance related test
+export const diffInCommitPhase = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -141,6 +139,9 @@ export const disableModulePatternComponents = false;
 export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;
+
+// Enables time slicing for updates that aren't wrapped in startTransition.
+export const enableSyncDefaultUpdates = true;
 
 export const enableUnifiedSyncLane = __EXPERIMENTAL__;
 

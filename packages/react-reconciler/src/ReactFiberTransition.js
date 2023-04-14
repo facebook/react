@@ -13,7 +13,7 @@ import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
 import type {Transition} from './ReactFiberTracingMarkerComponent';
 
 import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
-import {isPrimaryRenderer} from './ReactFiberHostConfig';
+import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
   getWorkInProgressRoot,

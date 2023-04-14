@@ -9,9 +9,9 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
-import type {Container, HostContext} from './ReactFiberHostConfig';
+import type {Container, HostContext} from './ReactFiberConfig';
 
-import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
+import {getChildHostContext, getRootHostContext} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 
 const contextStackCursor: StackCursor<HostContext | null> = createCursor(null);

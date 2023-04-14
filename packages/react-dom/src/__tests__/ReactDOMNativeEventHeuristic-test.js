@@ -312,7 +312,11 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       expect(container.textContent).toEqual('not hovered');
 
       await waitFor(['hovered']);
-      expect(container.textContent).toEqual('hovered');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        expect(container.textContent).toEqual('hovered');
+      } else {
+        expect(container.textContent).toEqual('not hovered');
+      }
     });
     expect(container.textContent).toEqual('hovered');
   });

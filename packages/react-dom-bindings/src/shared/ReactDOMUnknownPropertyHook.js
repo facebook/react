@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {BOOLEAN, getPropertyInfo} from './DOMProperty';
 import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
@@ -131,8 +130,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
       return true;
     }
 
-    const propertyInfo = getPropertyInfo(name);
-
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       const standardName = possibleStandardNames[lowerCasedName];
@@ -184,20 +181,49 @@ function validateProperty(tagName, name, value, eventRegistry) {
     switch (typeof value) {
       case 'boolean': {
         switch (name) {
+          case 'autoFocus':
           case 'checked':
-          case 'selected':
           case 'multiple':
-          case 'muted': {
+          case 'muted':
+          case 'selected':
+          case 'contentEditable':
+          case 'spellCheck':
+          case 'draggable':
+          case 'value':
+          case 'autoReverse':
+          case 'externalResourcesRequired':
+          case 'focusable':
+          case 'preserveAlpha':
+          case 'allowFullScreen':
+          case 'async':
+          case 'autoPlay':
+          case 'controls':
+          case 'default':
+          case 'defer':
+          case 'disabled':
+          case 'disablePictureInPicture':
+          case 'disableRemotePlayback':
+          case 'formNoValidate':
+          case 'hidden':
+          case 'loop':
+          case 'noModule':
+          case 'noValidate':
+          case 'open':
+          case 'playsInline':
+          case 'readOnly':
+          case 'required':
+          case 'reversed':
+          case 'scoped':
+          case 'seamless':
+          case 'itemScope':
+          case 'capture':
+          case 'download': {
             // Boolean properties can accept boolean values
             return true;
           }
           default: {
-            if (propertyInfo === null) {
-              const prefix = name.toLowerCase().slice(0, 5);
-              if (prefix === 'data-' || prefix === 'aria-') {
-                return true;
-              }
-            } else if (propertyInfo.acceptsBooleans) {
+            const prefix = name.toLowerCase().slice(0, 5);
+            if (prefix === 'data-' || prefix === 'aria-') {
               return true;
             }
             if (value) {
@@ -244,13 +270,33 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'checked':
             case 'selected':
             case 'multiple':
-            case 'muted': {
+            case 'muted':
+            case 'allowFullScreen':
+            case 'async':
+            case 'autoPlay':
+            case 'controls':
+            case 'default':
+            case 'defer':
+            case 'disabled':
+            case 'disablePictureInPicture':
+            case 'disableRemotePlayback':
+            case 'formNoValidate':
+            case 'hidden':
+            case 'loop':
+            case 'noModule':
+            case 'noValidate':
+            case 'open':
+            case 'playsInline':
+            case 'readOnly':
+            case 'required':
+            case 'reversed':
+            case 'scoped':
+            case 'seamless':
+            case 'itemScope': {
               break;
             }
             default: {
-              if (propertyInfo === null || propertyInfo.type !== BOOLEAN) {
-                return true;
-              }
+              return true;
             }
           }
           console.error(

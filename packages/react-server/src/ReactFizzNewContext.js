@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+import {isPrimaryRenderer} from './ReactFizzConfig';
 
 let rendererSigil;
 if (__DEV__) {

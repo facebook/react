@@ -76,6 +76,18 @@ describe('ReactFlightDOMReply', () => {
     expect(items).toEqual(['A', 'B', 'C']);
   });
 
+  it('can pass weird numbers as a reply', async () => {
+    const nums = [0, -0, Infinity, -Infinity, NaN];
+    const body = await ReactServerDOMClient.encodeReply(nums);
+    const nums2 = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    expect(nums).toEqual(nums2);
+    expect(nums.every((n, i) => Object.is(n, nums2[i]))).toBe(true);
+  });
+
   it('can pass a BigInt as a reply', async () => {
     const body = await ReactServerDOMClient.encodeReply(90071992547409910000n);
     const n = await ReactServerDOMServer.decodeReply(body, webpackServerMap);

@@ -37,6 +37,7 @@ let waitForAll;
 let waitForThrow;
 let assertLog;
 let Scheduler;
+let clientAct;
 
 function resetJSDOM(markup) {
   // Test Environment
@@ -71,6 +72,7 @@ describe('ReactDOMFloat', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
+    clientAct = InternalTestUtils.act;
 
     textCache = new Map();
     loadCache = new Set();
@@ -1186,7 +1188,7 @@ body {
     // events have already fired. This requires the load to be awaited for the commit to have a chance to flush
     // We could change this by tracking the loadingState's fulfilled status directly on the loadingState similar
     // to thenables however this slightly increases the fizz runtime code size.
-    await loadStylesheets();
+    await clientAct(() => loadStylesheets());
     assertLog(['load stylesheet: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>

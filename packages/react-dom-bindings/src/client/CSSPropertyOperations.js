@@ -11,6 +11,7 @@ import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
 import isUnitlessNumber from '../shared/isUnitlessNumber';
 import {checkCSSPropertyStringCoercion} from 'shared/CheckStringCoercion';
+import {diffInCommitPhase} from 'shared/ReactFeatureFlags';
 
 /**
  * Operations for dealing with CSS properties.
@@ -64,6 +65,42 @@ export function createDangerousStringForStyles(styles) {
   }
 }
 
+function setValueForStyle(style, styleName, value) {
+  const isCustomProperty = styleName.indexOf('--') === 0;
+  if (__DEV__) {
+    if (!isCustomProperty) {
+      warnValidStyle(styleName, value);
+    }
+  }
+
+  if (value == null || typeof value === 'boolean' || value === '') {
+    if (isCustomProperty) {
+      style.setProperty(styleName, '');
+    } else if (styleName === 'float') {
+      style.cssFloat = '';
+    } else {
+      style[styleName] = '';
+    }
+  } else if (isCustomProperty) {
+    style.setProperty(styleName, value);
+  } else if (
+    typeof value === 'number' &&
+    value !== 0 &&
+    !isUnitlessNumber(styleName)
+  ) {
+    style[styleName] = value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
+  } else {
+    if (styleName === 'float') {
+      style.cssFloat = value;
+    } else {
+      if (__DEV__) {
+        checkCSSPropertyStringCoercion(value, styleName);
+      }
+      style[styleName] = ('' + value).trim();
+    }
+  }
+}
+
 /**
  * Sets the value for multiple styles on a node.  If a value is specified as
  * '' (empty string), the corresponding style property will be unset.
@@ -71,44 +108,56 @@ export function createDangerousStringForStyles(styles) {
  * @param {DOMElement} node
  * @param {object} styles
  */
-export function setValueForStyles(node, styles) {
-  const style = node.style;
-  for (const styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
+export function setValueForStyles(node, styles, prevStyles) {
+  if (styles != null && typeof styles !== 'object') {
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
+  }
+  if (__DEV__) {
+    if (styles) {
+      // Freeze the next style object so that we can assume it won't be
+      // mutated. We have already warned for this in the past.
+      Object.freeze(styles);
     }
-    const value = styles[styleName];
-    const isCustomProperty = styleName.indexOf('--') === 0;
+  }
+
+  const style = node.style;
+
+  if (diffInCommitPhase && prevStyles != null) {
     if (__DEV__) {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, value);
-      }
+      validateShorthandPropertyCollisionInDev(prevStyles, styles);
     }
 
-    if (value == null || typeof value === 'boolean' || value === '') {
-      if (isCustomProperty) {
-        style.setProperty(styleName, '');
-      } else if (styleName === 'float') {
-        style.cssFloat = '';
-      } else {
-        style[styleName] = '';
-      }
-    } else if (isCustomProperty) {
-      style.setProperty(styleName, value);
-    } else if (
-      typeof value === 'number' &&
-      value !== 0 &&
-      !isUnitlessNumber(styleName)
-    ) {
-      style[styleName] = value + 'px'; // Presumes implicit 'px' suffix for unitless numbers
-    } else {
-      if (styleName === 'float') {
-        style.cssFloat = value;
-      } else {
-        if (__DEV__) {
-          checkCSSPropertyStringCoercion(value, styleName);
+    for (const styleName in prevStyles) {
+      if (
+        prevStyles.hasOwnProperty(styleName) &&
+        (styles == null || !styles.hasOwnProperty(styleName))
+      ) {
+        // Clear style
+        const isCustomProperty = styleName.indexOf('--') === 0;
+        if (isCustomProperty) {
+          style.setProperty(styleName, '');
+        } else if (styleName === 'float') {
+          style.cssFloat = '';
+        } else {
+          style[styleName] = '';
         }
-        style[styleName] = ('' + value).trim();
+      }
+    }
+    for (const styleName in styles) {
+      const value = styles[styleName];
+      if (styles.hasOwnProperty(styleName) && prevStyles[styleName] !== value) {
+        setValueForStyle(style, styleName, value);
+      }
+    }
+  } else {
+    for (const styleName in styles) {
+      if (styles.hasOwnProperty(styleName)) {
+        const value = styles[styleName];
+        setValueForStyle(style, styleName, value);
       }
     }
   }
@@ -152,7 +201,7 @@ function expandShorthandMap(styles) {
  *   becomes .style.fontVariant = ''
  */
 export function validateShorthandPropertyCollisionInDev(
-  styleUpdates,
+  prevStyles,
   nextStyles,
 ) {
   if (__DEV__) {
@@ -160,7 +209,30 @@ export function validateShorthandPropertyCollisionInDev(
       return;
     }
 
-    const expandedUpdates = expandShorthandMap(styleUpdates);
+    // Compute the diff as it would happen elsewhere.
+    const expandedUpdates = {};
+    if (prevStyles) {
+      for (const key in prevStyles) {
+        if (prevStyles.hasOwnProperty(key) && !nextStyles.hasOwnProperty(key)) {
+          const longhands = shorthandToLonghand[key] || [key];
+          for (let i = 0; i < longhands.length; i++) {
+            expandedUpdates[longhands[i]] = key;
+          }
+        }
+      }
+    }
+    for (const key in nextStyles) {
+      if (
+        nextStyles.hasOwnProperty(key) &&
+        (!prevStyles || prevStyles[key] !== nextStyles[key])
+      ) {
+        const longhands = shorthandToLonghand[key] || [key];
+        for (let i = 0; i < longhands.length; i++) {
+          expandedUpdates[longhands[i]] = key;
+        }
+      }
+    }
+
     const expandedStyles = expandShorthandMap(nextStyles);
     const warnedAbout = {};
     for (const key in expandedUpdates) {
@@ -178,7 +250,7 @@ export function validateShorthandPropertyCollisionInDev(
             "avoid this, don't mix shorthand and non-shorthand properties " +
             'for the same value; instead, replace the shorthand with ' +
             'separate values.',
-          isValueEmpty(styleUpdates[originalKey]) ? 'Removing' : 'Updating',
+          isValueEmpty(nextStyles[originalKey]) ? 'Removing' : 'Updating',
           originalKey,
           correctOriginalKey,
         );

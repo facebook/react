@@ -8,7 +8,6 @@
  */
 
 import {Children} from 'react';
-import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -18,7 +17,7 @@ let didWarnInvalidInnerHTML = false;
  * Implements an <option> host component that warns when `selected` is set.
  */
 
-export function validateProps(element: Element, props: Object) {
+export function validateOptionProps(element: Element, props: Object) {
   if (__DEV__) {
     // If a value is not provided, then the children must be simple.
     if (props.value == null) {
@@ -57,12 +56,5 @@ export function validateProps(element: Element, props: Object) {
       );
       didWarnSelectedSetOnOption = true;
     }
-  }
-}
-
-export function postMountWrapper(element: Element, props: Object) {
-  // value="" should make a value attribute (#6219)
-  if (props.value != null) {
-    element.setAttribute('value', toString(getToStringValue(props.value)));
   }
 }

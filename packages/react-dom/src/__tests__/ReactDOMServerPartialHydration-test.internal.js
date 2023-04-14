@@ -2036,7 +2036,14 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     await act(async () => {
-      await waitFor(['Before', 'After']);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        await waitFor(['Before', 'After']);
+      } else {
+        await waitFor(['Before']);
+        // This took a long time to render.
+        Scheduler.unstable_advanceTime(1000);
+        await waitFor(['After']);
+      }
 
       // This will cause us to skip the second row completely.
     });

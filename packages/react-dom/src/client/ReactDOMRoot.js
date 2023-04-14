@@ -15,7 +15,7 @@ import type {
 
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
 const {Dispatcher} = ReactDOMSharedInternals;
-import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+import {ReactDOMClientDispatcher} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {

@@ -3,6 +3,7 @@
 import Agent from 'react-devtools-shared/src/backend/agent';
 import Bridge from 'react-devtools-shared/src/bridge';
 import {initBackend} from 'react-devtools-shared/src/backend';
+import {installConsoleFunctionsToWindow} from 'react-devtools-shared/src/backend/console';
 import {installHook} from 'react-devtools-shared/src/hook';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -119,5 +120,8 @@ export function createBridge(contentWindow: any, wall?: Wall): BackendBridge {
 }
 
 export function initialize(contentWindow: any): void {
+  // Install a global variable to allow patching console early (during injection).
+  // This provides React Native developers with components stacks even if they don't run DevTools.
+  installConsoleFunctionsToWindow();
   installHook(contentWindow);
 }

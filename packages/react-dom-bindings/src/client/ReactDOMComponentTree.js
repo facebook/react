@@ -21,7 +21,7 @@ import type {
   Props,
   HoistableRoot,
   RootResources,
-} from './ReactDOMHostConfig';
+} from './ReactFiberConfigDOM';
 
 import {
   HostComponent,
@@ -32,7 +32,7 @@ import {
   SuspenseComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 
-import {getParentSuspenseInstance} from './ReactDOMHostConfig';
+import {getParentSuspenseInstance} from './ReactFiberConfigDOM';
 
 import {
   enableScopeAPI,

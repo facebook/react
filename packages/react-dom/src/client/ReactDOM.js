@@ -11,7 +11,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Container,
   PublicInstance,
-} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import type {
   RootType,
   HydrateRootOptions,
