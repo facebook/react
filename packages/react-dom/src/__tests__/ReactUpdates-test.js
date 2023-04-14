@@ -1638,8 +1638,9 @@ describe('ReactUpdates', () => {
     const root = ReactDOMClient.createRoot(container);
 
     expect(() => {
-      // TODO: Add more specific error message once this is fixed
-      expect(() => ReactDOM.flushSync(() => root.render(<App />))).toThrow();
+      expect(() => ReactDOM.flushSync(() => root.render(<App />))).toThrow(
+        'Maximum update depth exceeded',
+      );
     }).toErrorDev(
       'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
     );

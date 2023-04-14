@@ -169,10 +169,39 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
 
   // There may or may not be synchronous work scheduled. Let's check.
   let didPerformSomeWork;
+  let nestedUpdatePasses = 0;
   let errors: Array<mixed> | null = null;
   isFlushingWork = true;
   do {
     didPerformSomeWork = false;
+
+    // This outer loop re-runs if performing sync work on a root spawns
+    // additional sync work. If it happens too many times, it's very likely
+    // caused by some sort of infinite update loop. We already have a loop guard
+    // in place that will trigger an error on the n+1th update, but it's
+    // possible for that error to get swallowed if the setState is called from
+    // an unexpected place, like during the render phase. So as an added
+    // precaution, we also use a guard here.
+    //
+    // This limit is slightly larger than the one that throws inside setState,
+    // because that one is preferable because it includes a componens stack.
+    if (++nestedUpdatePasses > 60) {
+      // This is a fatal error, so we'll unschedule all the roots.
+      firstScheduledRoot = lastScheduledRoot = null;
+      const infiniteUpdateError = new Error(
+        'Maximum update depth exceeded. This can happen when a component ' +
+          'repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
+      if (errors === null) {
+        errors = [infiniteUpdateError];
+      } else {
+        errors.push(infiniteUpdateError);
+      }
+      break;
+    }
+
     let root = firstScheduledRoot;
     while (root !== null) {
       if (onlyLegacy && root.tag !== LegacyRoot) {
