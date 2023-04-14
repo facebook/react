@@ -288,7 +288,7 @@ function parseModelString(response, parentObject, key, value) {
       case "I":
         return Infinity;
       case "-":
-        return "0" === value[2] ? -0 : -Infinity;
+        return "$-0" === value ? -0 : -Infinity;
       case "N":
         return NaN;
       case "u":

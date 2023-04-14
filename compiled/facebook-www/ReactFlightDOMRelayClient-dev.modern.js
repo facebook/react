@@ -565,7 +565,7 @@ function parseModelString(response, parentObject, key, value) {
 
       case "-": {
         // $-0 or $-Infinity
-        if (value[2] === "0") {
+        if (value === "$-0") {
           return -0;
         } else {
           return -Infinity;
