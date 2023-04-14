@@ -1952,7 +1952,11 @@ describe('ReactDOMInput', () => {
       expect(renderInputWithStringThenWithUndefined).toErrorDev(
         'A component is changing a controlled input to be uncontrolled.',
       );
-      expect(input.getAttribute('value')).toBe(null);
+      if (disableInputAttributeSyncing) {
+        expect(input.getAttribute('value')).toBe(null);
+      } else {
+        expect(input.getAttribute('value')).toBe('latest');
+      }
     });
 
     it('preserves the value property', () => {
@@ -1998,7 +2002,11 @@ describe('ReactDOMInput', () => {
           'or `undefined` for uncontrolled components.',
         'A component is changing a controlled input to be uncontrolled.',
       ]);
-      expect(input.hasAttribute('value')).toBe(false);
+      if (disableInputAttributeSyncing) {
+        expect(input.getAttribute('value')).toBe(null);
+      } else {
+        expect(input.getAttribute('value')).toBe('latest');
+      }
     });
 
     it('preserves the value property', () => {
@@ -2182,5 +2190,27 @@ describe('ReactDOMInput', () => {
 
     ReactDOM.render(<input type="text" defaultValue={null} />, container);
     expect(node.defaultValue).toBe('');
+  });
+
+  it('should notice input changes when reverting back to original value', () => {
+    const log = [];
+    function onChange(e) {
+      log.push(e.target.value);
+    }
+    ReactDOM.render(
+      <input type="text" value="" onChange={onChange} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="a" onChange={onChange} />,
+      container,
+    );
+
+    const node = container.firstChild;
+    setUntrackedValue.call(node, '');
+    dispatchEventOnNode(node, 'input');
+
+    expect(log).toEqual(['']);
+    expect(node.value).toBe('a');
   });
 });

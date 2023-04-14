@@ -1297,32 +1297,36 @@ export function updateProperties(
       let type = null;
       let value = null;
       let defaultValue = null;
+      let lastDefaultValue = null;
       let checked = null;
       let defaultChecked = null;
       for (const propKey in lastProps) {
         const lastProp = lastProps[propKey];
-        if (
-          lastProps.hasOwnProperty(propKey) &&
-          lastProp != null &&
-          !nextProps.hasOwnProperty(propKey)
-        ) {
+        if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case 'checked': {
-              const checkedValue = nextProps.defaultChecked;
-              const inputElement: HTMLInputElement = (domElement: any);
-              inputElement.checked =
-                !!checkedValue &&
-                typeof checkedValue !== 'function' &&
-                checkedValue !== 'symbol';
+              if (!nextProps.hasOwnProperty(propKey)) {
+                const checkedValue = nextProps.defaultChecked;
+                const inputElement: HTMLInputElement = (domElement: any);
+                inputElement.checked =
+                  !!checkedValue &&
+                  typeof checkedValue !== 'function' &&
+                  checkedValue !== 'symbol';
+              }
               break;
             }
             case 'value': {
               // This is handled by updateWrapper below.
               break;
             }
+            case 'defaultValue': {
+              lastDefaultValue = lastProp;
+            }
             // defaultChecked and defaultValue are ignored by setProp
+            // Fallthrough
             default: {
-              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              if (!nextProps.hasOwnProperty(propKey))
+                setProp(domElement, tag, propKey, null, nextProps, lastProp);
             }
           }
         }
@@ -1473,6 +1477,7 @@ export function updateProperties(
         domElement,
         value,
         defaultValue,
+        lastDefaultValue,
         checked,
         defaultChecked,
         type,
@@ -1809,6 +1814,7 @@ export function updatePropertiesWithDiff(
       const type = nextProps.type;
       const value = nextProps.value;
       const defaultValue = nextProps.defaultValue;
+      const lastDefaultValue = lastProps.defaultValue;
       const checked = nextProps.checked;
       const defaultChecked = nextProps.defaultChecked;
       for (let i = 0; i < updatePayload.length; i += 2) {
@@ -1934,6 +1940,7 @@ export function updatePropertiesWithDiff(
         domElement,
         value,
         defaultValue,
+        lastDefaultValue,
         checked,
         defaultChecked,
         type,

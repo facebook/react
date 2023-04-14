@@ -85,11 +85,33 @@ export function updateInput(
   element: Element,
   value: ?string,
   defaultValue: ?string,
+  lastDefaultValue: ?string,
   checked: ?boolean,
   defaultChecked: ?boolean,
   type: ?string,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  if (value != null) {
+    if (type === 'number') {
+      if (
+        // $FlowFixMe[incompatible-type]
+        (value === 0 && node.value === '') ||
+        // We explicitly want to coerce to number here if possible.
+        // eslint-disable-next-line
+        node.value != (value: any)
+      ) {
+        node.value = toString(getToStringValue(value));
+      }
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
+    }
+  } else if (type === 'submit' || type === 'reset') {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute('value');
+    return;
+  }
 
   if (disableInputAttributeSyncing) {
     // When not syncing the value attribute, React only assigns a new value
@@ -97,7 +119,7 @@ export function updateInput(
     // React does nothing
     if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
   } else {
@@ -110,7 +132,7 @@ export function updateInput(
       setDefaultValue(node, type, getToStringValue(value));
     } else if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
   }
@@ -134,27 +156,6 @@ export function updateInput(
 
   if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
-  }
-
-  if (value != null) {
-    if (type === 'number') {
-      if (
-        // $FlowFixMe[incompatible-type]
-        (value === 0 && node.value === '') ||
-        // We explicitly want to coerce to number here if possible.
-        // eslint-disable-next-line
-        node.value != (value: any)
-      ) {
-        node.value = toString(getToStringValue(value));
-      }
-    } else if (node.value !== toString(getToStringValue(value))) {
-      node.value = toString(getToStringValue(value));
-    }
-  } else if (type === 'submit' || type === 'reset') {
-    // Submit/reset inputs need the attribute removed completely to avoid
-    // blank-text buttons.
-    node.removeAttribute('value');
-    return;
   }
 }
 
@@ -286,6 +287,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
     rootNode,
     props.value,
     props.defaultValue,
+    props.defaultValue,
     props.checked,
     props.defaultChecked,
     props.type,
@@ -340,6 +342,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
       updateInput(
         otherNode,
         otherProps.value,
+        otherProps.defaultValue,
         otherProps.defaultValue,
         otherProps.checked,
         otherProps.defaultChecked,
