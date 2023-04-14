@@ -558,6 +558,25 @@ function parseModelString(response, parentObject, key, value) {
         }
       }
 
+      case "I": {
+        // $Infinity
+        return Infinity;
+      }
+
+      case "-": {
+        // $-0 or $-Infinity
+        if (value[2] === "0") {
+          return -0;
+        } else {
+          return -Infinity;
+        }
+      }
+
+      case "N": {
+        // $NaN
+        return NaN;
+      }
+
       case "u": {
         // matches "$undefined"
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.

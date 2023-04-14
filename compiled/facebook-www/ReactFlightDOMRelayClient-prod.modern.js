@@ -285,6 +285,12 @@ function parseModelString(response, parentObject, key, value) {
           default:
             throw parentObject.reason;
         }
+      case "I":
+        return Infinity;
+      case "-":
+        return "0" === value[2] ? -0 : -Infinity;
+      case "N":
+        return NaN;
       case "u":
         return;
       case "n":

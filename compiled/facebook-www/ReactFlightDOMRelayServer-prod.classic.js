@@ -753,7 +753,20 @@ function resolveModelToJSON(request, parent, key, value) {
   }
   if ("string" === typeof value)
     return (request = "$" === value[0] ? "$" + value : value), request;
-  if ("boolean" === typeof value || "number" === typeof value) return value;
+  if ("boolean" === typeof value) return value;
+  if ("number" === typeof value)
+    return (
+      (request = value),
+      Number.isFinite(request)
+        ? 0 === request && -Infinity === 1 / request
+          ? "$-0"
+          : request
+        : Infinity === request
+        ? "$Infinity"
+        : -Infinity === request
+        ? "$-Infinity"
+        : "$NaN"
+    );
   if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
