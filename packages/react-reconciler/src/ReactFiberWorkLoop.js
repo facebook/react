@@ -3471,6 +3471,17 @@ export function throwIfInfiniteUpdateLoopDetected() {
     rootWithNestedUpdates = null;
     rootWithPassiveNestedUpdates = null;
 
+    if (executionContext & RenderContext && workInProgressRoot !== null) {
+      // We're in the render phase. Disable the concurrent error recovery
+      // mechanism to ensure that the error we're about to throw gets handled.
+      // We need it to trigger the nearest error boundary so that the infinite
+      // update loop is broken.
+      workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
+        workInProgressRoot.errorRecoveryDisabledLanes,
+        workInProgressRootRenderLanes,
+      );
+    }
+
     throw new Error(
       'Maximum update depth exceeded. This can happen when a component ' +
         'repeatedly calls setState inside componentWillUpdate or ' +

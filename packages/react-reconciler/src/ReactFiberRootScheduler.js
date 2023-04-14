@@ -139,6 +139,18 @@ export function ensureRootIsScheduled(root: FiberRoot): void {
   }
 }
 
+function unscheduleAllRoots() {
+  // This is only done in a fatal error situation, as a last resort to prevent
+  // an infinite render loop.
+  let root = firstScheduledRoot;
+  while (root !== null) {
+    const next = root.next;
+    root.next = null;
+    root = next;
+  }
+  firstScheduledRoot = lastScheduledRoot = null;
+}
+
 export function flushSyncWorkOnAllRoots() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
@@ -183,11 +195,19 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
     // an unexpected place, like during the render phase. So as an added
     // precaution, we also use a guard here.
     //
+    // Ideally, there should be no known way to trigger this synchronous loop.
+    // It's really just here as a safety net.
+    //
     // This limit is slightly larger than the one that throws inside setState,
     // because that one is preferable because it includes a componens stack.
     if (++nestedUpdatePasses > 60) {
       // This is a fatal error, so we'll unschedule all the roots.
-      firstScheduledRoot = lastScheduledRoot = null;
+      unscheduleAllRoots();
+      // TODO: Change this error message to something different to distinguish
+      // it from the one that is thrown from setState. Those are less fatal
+      // because they usually will result in the bad component being unmounted,
+      // and an error boundary being triggered, rather than us having to
+      // forcibly stop the entire scheduler.
       const infiniteUpdateError = new Error(
         'Maximum update depth exceeded. This can happen when a component ' +
           'repeatedly calls setState inside componentWillUpdate or ' +
