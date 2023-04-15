@@ -9,7 +9,10 @@
 
 import type {Thenable} from 'shared/ReactTypes';
 
-import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+import {
+  knownServerReferences,
+  createServerReference,
+} from './ReactFlightServerReferenceRegistry';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -312,3 +315,5 @@ export function processReply(
     }
   }
 }
+
+export {createServerReference};
