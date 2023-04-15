@@ -335,6 +335,45 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableUseHook
+  it('should be able to render a module split named component export', async () => {
+    const Module = {
+      // This gets split into a separate module from the original one.
+      split: function ({greeting}) {
+        return greeting + ' World';
+      },
+    };
+
+    function Print({response}) {
+      return <p>{use(response)}</p>;
+    }
+
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Print response={response} />
+        </Suspense>
+      );
+    }
+
+    const {split: Component} = clientExports(Module);
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <Component greeting={'Hello'} />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>Hello World</p>');
+  });
+
+  // @gate enableUseHook
   it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;

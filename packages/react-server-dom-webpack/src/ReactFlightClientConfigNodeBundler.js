@@ -39,8 +39,29 @@ export function resolveClientReference<T>(
   bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
-  return resolvedModuleData;
+  const moduleExports = bundlerConfig[metadata.id];
+  let resolvedModuleData = moduleExports[metadata.name];
+  let name;
+  if (resolvedModuleData) {
+    // The potentially aliased name.
+    name = resolvedModuleData.name;
+  } else {
+    // If we don't have this specific name, we might have the full module.
+    resolvedModuleData = moduleExports['*'];
+    if (!resolvedModuleData) {
+      throw new Error(
+        'Could not find the module "' +
+          metadata.id +
+          '" in the React SSR Manifest. ' +
+          'This is probably a bug in the React Server Components bundler.',
+      );
+    }
+    name = metadata.name;
+  }
+  return {
+    specifier: resolvedModuleData.specifier,
+    name: name,
+  };
 }
 
 export function resolveServerReference<T>(
