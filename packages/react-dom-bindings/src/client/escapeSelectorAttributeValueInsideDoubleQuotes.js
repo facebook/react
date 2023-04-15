@@ -18,6 +18,6 @@ export default function escapeSelectorAttributeValueInsideDoubleQuotes(
 ): string {
   return value.replace(
     escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    ch => '\\' + ch.charCodeAt(0).toString(16),
+    ch => '\\' + ch.charCodeAt(0).toString(16) + ' ',
   );
 }
