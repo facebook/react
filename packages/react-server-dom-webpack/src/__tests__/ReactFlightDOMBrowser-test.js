@@ -893,6 +893,70 @@ describe('ReactFlightDOMBrowser', () => {
     expect(result).toBe('Hello Split');
   });
 
+  it('can pass a server function by importing from client back to server', async () => {
+    function greet(transform, text) {
+      return 'Hello ' + transform(text);
+    }
+
+    function upper(text) {
+      return text.toUpperCase();
+    }
+
+    const ServerModuleA = serverExports({
+      greet,
+    });
+    const ServerModuleB = serverExports({
+      upper,
+    });
+
+    let actionProxy;
+
+    // This is a Proxy representing ServerModuleB in the Client bundle.
+    const ServerModuleBImportedOnClient = {
+      upper: ReactServerDOMClient.createServerReference(
+        ServerModuleB.upper.$$id,
+        async function (ref, args) {
+          const body = await ReactServerDOMClient.encodeReply(args);
+          return callServer(ref, body);
+        },
+      ),
+    };
+
+    function Client({action}) {
+      // Client side pass a Server Reference into an action.
+      actionProxy = text => action(ServerModuleBImportedOnClient.upper, text);
+      return 'Click Me';
+    }
+
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={ServerModuleA.greet} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+
+    const result = await actionProxy('hi');
+    expect(result).toBe('Hello HI');
+  });
+
   it('can bind arguments to a server reference', async () => {
     let actionProxy;
 
