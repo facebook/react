@@ -2514,11 +2514,13 @@ function styleTagPropsFromRawProps(
 function getStyleKey(href: string) {
   const limitedEscapedHref =
     escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return `href~="${limitedEscapedHref}"`;
+  return `href="${limitedEscapedHref}"`;
 }
 
-function getStyleTagSelectorFromKey(key: string) {
-  return `style[data-${key}]`;
+function getStyleTagSelector(href: string) {
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
+  return `style[data-href~="${limitedEscapedHref}"]`;
 }
 
 function getStylesheetSelectorFromKey(key: string) {
@@ -2603,11 +2605,10 @@ export function acquireResource(
     switch (resource.type) {
       case 'style': {
         const qualifiedProps: StyleTagQualifyingProps = props;
-        const key = getStyleKey(qualifiedProps.href);
 
         // Attempt to hydrate instance from DOM
         let instance: null | Instance = hoistableRoot.querySelector(
-          getStyleTagSelectorFromKey(key),
+          getStyleTagSelector(qualifiedProps.href),
         );
         if (instance) {
           resource.instance = instance;
