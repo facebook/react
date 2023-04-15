@@ -40,17 +40,31 @@ export function resolveClientReference<T>(
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {
-    const resolvedModuleData = bundlerConfig[metadata.id][metadata.name];
-    if (metadata.async) {
-      return {
-        id: resolvedModuleData.id,
-        chunks: resolvedModuleData.chunks,
-        name: resolvedModuleData.name,
-        async: true,
-      };
+    const moduleExports = bundlerConfig[metadata.id];
+    let resolvedModuleData = moduleExports[metadata.name];
+    let name;
+    if (resolvedModuleData) {
+      // The potentially aliased name.
+      name = resolvedModuleData.name;
     } else {
-      return resolvedModuleData;
+      // If we don't have this specific name, we might have the full module.
+      resolvedModuleData = moduleExports['*'];
+      if (!resolvedModuleData) {
+        throw new Error(
+          'Could not find the module "' +
+            metadata.id +
+            '" in the React SSR Manifest. ' +
+            'This is probably a bug in the React Server Components bundler.',
+        );
+      }
+      name = metadata.name;
     }
+    return {
+      id: resolvedModuleData.id,
+      chunks: resolvedModuleData.chunks,
+      name: name,
+      async: !!metadata.async,
+    };
   }
   return metadata;
 }
@@ -59,8 +73,37 @@ export function resolveServerReference<T>(
   bundlerConfig: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
-  // This needs to return async: true if it's an async module.
-  return bundlerConfig[id];
+  let name = '';
+  let resolvedModuleData = bundlerConfig[id];
+  if (resolvedModuleData) {
+    // The potentially aliased name.
+    name = resolvedModuleData.name;
+  } else {
+    // We didn't find this specific export name but we might have the * export
+    // which contains this name as well.
+    // TODO: It's unfortunate that we now have to parse this string. We should
+    // probably go back to encoding path and name separately on the client reference.
+    const idx = id.lastIndexOf('#');
+    if (idx !== -1) {
+      name = id.substr(idx + 1);
+      resolvedModuleData = bundlerConfig[id.substr(0, idx)];
+    }
+    if (!resolvedModuleData) {
+      throw new Error(
+        'Could not find the module "' +
+          id +
+          '" in the React Server Manifest. ' +
+          'This is probably a bug in the React Server Components bundler.',
+      );
+    }
+  }
+  // TODO: This needs to return async: true if it's an async module.
+  return {
+    id: resolvedModuleData.id,
+    chunks: resolvedModuleData.chunks,
+    name: name,
+    async: false,
+  };
 }
 
 // The chunk cache contains all the chunks we've preloaded so far.
