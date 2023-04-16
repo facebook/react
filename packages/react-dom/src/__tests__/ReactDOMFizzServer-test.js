@@ -2524,7 +2524,7 @@ describe('ReactDOMFizzServer', () => {
         getClientSnapshot,
         getServerSnapshot,
       );
-      Scheduler.unstable_yieldValue(value);
+      Scheduler.log(value);
 
       return value;
     }
@@ -2539,12 +2539,16 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(element);
       pipe(writable);
     });
-    expect(Scheduler).toHaveYielded(['Nay!']);
 
-    ReactDOMClient.hydrateRoot(container, element);
-    expect(() => {
-      expect(Scheduler).toFlushAndYield(['Nay!', 'Yay!']);
-    }).toErrorDev([]);
+    assertLog(['Nay!']);
+    expect(getVisibleChildren(container)).toEqual('Nay!');
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, element);
+    });
+
+    expect(getVisibleChildren(container)).toEqual('Yay!');
+    assertLog(['Nay!', 'Yay!']);
   });
 
   it(
