@@ -59,11 +59,7 @@ import {
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import {
-  validateDOMNesting,
-  validateTextNesting,
-  updatedAncestorInfoDev,
-} from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfoDev} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
@@ -332,7 +328,18 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
-    validateDOMNesting(type, hostContextDev.ancestorInfo);
+    validateDOMNesting(type, null, hostContextDev.ancestorInfo);
+    if (
+      typeof props.children === 'string' ||
+      typeof props.children === 'number'
+    ) {
+      const string = '' + props.children;
+      const ownAncestorInfo = updatedAncestorInfoDev(
+        hostContextDev.ancestorInfo,
+        type,
+      );
+      validateDOMNesting(null, string, ownAncestorInfo);
+    }
     namespace = hostContextDev.namespace;
   } else {
     const hostContextProd: HostContextProd = (hostContext: any);
@@ -484,6 +491,21 @@ export function prepareUpdate(
     // TODO: Figure out how to validateDOMNesting when children turn into a string.
     return null;
   }
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    if (
+      typeof newProps.children !== typeof oldProps.children &&
+      (typeof newProps.children === 'string' ||
+        typeof newProps.children === 'number')
+    ) {
+      const string = '' + newProps.children;
+      const ownAncestorInfo = updatedAncestorInfoDev(
+        hostContextDev.ancestorInfo,
+        type,
+      );
+      validateDOMNesting(null, string, ownAncestorInfo);
+    }
+  }
   return diffProperties(domElement, type, oldProps, newProps);
 }
 
@@ -507,10 +529,7 @@ export function createTextInstance(
 ): TextInstance {
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
-    const ancestor = hostContextDev.ancestorInfo.current;
-    if (ancestor != null) {
-      validateTextNesting(text, ancestor.tag);
-    }
+    validateDOMNesting(null, text, hostContextDev.ancestorInfo);
   }
   const textNode: TextInstance = getOwnerDocumentFromRootContainer(
     rootContainerInstance,
@@ -1737,7 +1756,7 @@ export function resolveSingletonInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     if (validateDOMNestingDev) {
-      validateDOMNesting(type, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     }
   }
   const ownerDocument = getOwnerDocumentFromRootContainer(
