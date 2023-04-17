@@ -576,7 +576,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -642,6 +642,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           'Text:Fallback render',
           'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" />
+            <span prop="Inside:After" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
           'Text:Inside:Before destroy layout',
           'Text:Inside:After destroy layout',
           'Text:Fallback create layout',
@@ -698,7 +711,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated for class components', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -783,6 +796,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           'ClassText:Fallback render',
           'ClassText:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside:Before" />
+            <span prop="Inside:After" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
           'ClassText:Inside:Before componentWillUnmount',
           'ClassText:Inside:After componentWillUnmount',
           'ClassText:Fallback componentDidMount',
@@ -834,7 +860,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
         Scheduler.log('App render');
@@ -888,10 +914,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
             <AsyncText text="Async" ms={1000} />
           </App>,
         );
-        await waitFor([
-          'App render',
-          'Suspend:Async',
-          'Text:Fallback render',
+        await waitFor(['App render', 'Suspend:Async', 'Text:Fallback render']);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <span prop="Outer">
+            <span prop="Inner" />
+          </span>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
           'Text:Outer destroy layout',
           'Text:Inner destroy layout',
           'Text:Fallback create layout',
@@ -946,7 +979,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be destroyed and recreated even if there is a bailout because of memoization', async () => {
       const MemoizedText = React.memo(Text, () => true);
 
@@ -1007,6 +1040,18 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Async',
           // Text:MemoizedInner is memoized
           'Text:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <span prop="Outer">
+            <span prop="MemoizedInner" />
+          </span>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        // Even though the innermost layout effects are beneath a hidden HostComponent.
+        assertLog([
           'Text:Outer destroy layout',
           'Text:MemoizedInner destroy layout',
           'Text:Fallback create layout',
@@ -1403,7 +1448,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be cleaned up inside of a fallback that suspends', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1456,6 +1501,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Inside render',
           'Text:Fallback:Outside render',
           'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        await jest.runAllTimers();
+        assertLog([
           'Text:Inside destroy layout',
           'Text:Fallback:Inside create layout',
           'Text:Fallback:Outside create layout',
@@ -1490,6 +1546,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Fallback:Fallback render',
           'Text:Fallback:Outside render',
           'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" hidden={true} />
+            <span prop="Fallback:Inside" />
+            <span prop="Fallback:Outside" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
+        await jest.runAllTimers();
+        assertLog([
           'Text:Fallback:Inside destroy layout',
           'Text:Fallback:Fallback create layout',
         ]);
@@ -1655,7 +1724,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       );
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be cleaned up deeper inside of a subtree that suspends', async () => {
       function ConditionalSuspense({shouldSuspend}) {
         if (shouldSuspend) {
@@ -1702,6 +1771,17 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspend:Suspend',
           'Text:Fallback render',
           'Text:Outside render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Inside" />
+            <span prop="Outside" />
+          </>,
+        );
+
+        // Timing out should commit the inner fallback and destroy outer fallback layout effects.
+        await jest.runAllTimers();
+        assertLog([
           'Text:Inside destroy layout',
           'Text:Fallback create layout',
         ]);
@@ -2225,7 +2305,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       });
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be only destroy layout effects once if a tree suspends in multiple places', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2286,6 +2366,18 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Text:Function render',
           'Suspend:Async_1',
           'ClassText:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" />
+            <span prop="Class" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
           'Text:Function destroy layout',
           'ClassText:Class componentWillUnmount',
           'ClassText:Fallback componentDidMount',
@@ -2356,7 +2448,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
     });
 
-    // @gate enableLegacyCache
+    // @gate enableLegacyCache && enableSyncDefaultUpdates
     it('should be only destroy layout effects once if a component suspends multiple times', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2426,6 +2518,19 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'Suspender "A" render',
           'Suspend:A',
           'ClassText:Fallback render',
+        ]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="Function" />
+            <span prop="Suspender" />
+            <span prop="Class" />
+          </>,
+        );
+
+        await jest.runAllTimers();
+
+        // Timing out should commit the fallback and destroy inner layout effects.
+        assertLog([
           'Text:Function destroy layout',
           'ClassText:Class componentWillUnmount',
           'ClassText:Fallback componentDidMount',

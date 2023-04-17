@@ -125,9 +125,13 @@ describe('ReactSuspense', () => {
 
     // Navigate the shell to now render the child content.
     // This should suspend.
-    React.startTransition(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(<Foo renderBar={true} />);
+      });
+    } else {
       root.update(<Foo renderBar={true} />);
-    });
+    }
 
     await waitForAll([
       'Foo',
