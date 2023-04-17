@@ -1083,17 +1083,10 @@ describe('ReactDOMComponent', () => {
       );
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      expect(() => {
-        ReactDOM.render(
-          <input type="checkbox" onChange={onChange} checked={false} />,
-          container,
-        );
-      }).toErrorDev(
-        ' A component is changing an uncontrolled input to be controlled. This is likely caused by ' +
-          'the value changing from undefined to a defined value, which should not happen. Decide between ' +
-          'using a controlled or uncontrolled input element for the lifetime of the component.',
+      ReactDOM.render(
+        <input type="checkbox" onChange={onChange} checked={false} />,
+        container,
       );
-
       // TODO: Non-null values are updated twice on inputs. This is should ideally be fixed.
       expect(nodeValueSetter).toHaveBeenCalledTimes(3);
 
