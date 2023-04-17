@@ -603,7 +603,6 @@ describe('ReactDOMTextarea', () => {
               ref={n => (node = n)}
               value="foo"
               onChange={emptyFunction}
-              data-count={this.state.count}
             />
           </div>
         );
