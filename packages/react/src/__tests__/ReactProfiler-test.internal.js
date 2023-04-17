@@ -268,13 +268,14 @@ describe(`onRender`, () => {
       </div>,
     );
 
-    // Restore original mock
-    jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
-
     // TODO: unstable_now is called by more places than just the profiler.
     // Rewrite this test so it's less fragile.
     if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
-      assertLog(['read current time', 'read current time']);
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+      ]);
     } else {
       assertLog([
         'read current time',
@@ -282,8 +283,12 @@ describe(`onRender`, () => {
         'read current time',
         'read current time',
         'read current time',
+        'read current time',
       ]);
     }
+
+    // Restore original mock
+    jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
   });
 
   it('does not report work done on a sibling', async () => {

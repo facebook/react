@@ -130,6 +130,7 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
+  NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
@@ -583,6 +584,10 @@ const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
+// If two updates are scheduled within the same event, we should treat their
+// event times as simultaneous, even if the actual clock time has advanced
+// between the first and second call.
+let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
 
 let isRunningInsertionEffect = false;
@@ -597,6 +602,21 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 
 export function isWorkLoopSuspendedOnData(): boolean {
   return workInProgressSuspendedReason === SuspendedOnData;
+}
+
+export function requestEventTime(): number {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+    // We're inside React, so it's fine to read the actual time.
+    return now();
+  }
+  // We're not inside React, so we may be in the middle of a browser event.
+  if (currentEventTime !== NoTimestamp) {
+    // Use the same start time for all updates until we enter React again.
+    return currentEventTime;
+  }
+  // This is the first update since React yielded. Compute a new start time.
+  currentEventTime = now();
+  return currentEventTime;
 }
 
 export function getCurrentTime(): number {
@@ -687,6 +707,7 @@ export function scheduleUpdateOnFiber(
   root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
+  eventTime: number,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -716,7 +737,7 @@ export function scheduleUpdateOnFiber(
   }
 
   // Mark that the root has a pending update.
-  markRootUpdated(root, lane);
+  markRootUpdated(root, lane, eventTime);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -817,7 +838,11 @@ export function scheduleUpdateOnFiber(
   }
 }
 
-export function scheduleInitialHydrationOnRoot(root: FiberRoot, lane: Lane) {
+export function scheduleInitialHydrationOnRoot(
+  root: FiberRoot,
+  lane: Lane,
+  eventTime: number,
+) {
   // This is a special fork of scheduleUpdateOnFiber that is only used to
   // schedule the initial hydration of a root that has just been created. Most
   // of the stuff in scheduleUpdateOnFiber can be skipped.
@@ -829,7 +854,7 @@ export function scheduleInitialHydrationOnRoot(root: FiberRoot, lane: Lane) {
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane);
+  markRootUpdated(root, lane, eventTime);
   ensureRootIsScheduled(root);
 }
 
@@ -849,6 +874,9 @@ export function performConcurrentWorkOnRoot(
     resetNestedUpdateFlag();
   }
 
+  // Since we know we're in a React event, we can clear the current
+  // event time. The next update will compute a new event time.
+  currentEventTime = NoTimestamp;
   currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
@@ -3285,8 +3313,9 @@ function captureCommitPhaseErrorOnRoot(
   const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
+  const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane);
+    markRootUpdated(root, SyncLane, eventTime);
     ensureRootIsScheduled(root);
   }
 }
@@ -3327,8 +3356,9 @@ export function captureCommitPhaseError(
           (SyncLane: Lane),
         );
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
+        const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane);
+          markRootUpdated(root, SyncLane, eventTime);
           ensureRootIsScheduled(root);
         }
         return;
@@ -3463,9 +3493,10 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
     retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
+  const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane);
+    markRootUpdated(root, retryLane, eventTime);
     ensureRootIsScheduled(root);
   }
 }

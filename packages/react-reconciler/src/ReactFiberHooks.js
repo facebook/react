@@ -70,6 +70,7 @@ import {
   isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
+  NoTimestamp,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -100,6 +101,7 @@ import {
   getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
+  requestEventTime,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop';
@@ -1835,7 +1837,7 @@ function checkIfSnapshotChanged<T>(inst: StoreInstance<T>): boolean {
 function forceStoreRerender(fiber: Fiber) {
   const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, SyncLane);
+    scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
   }
 }
 
@@ -2556,7 +2558,8 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T): void {
         const refreshUpdate = createLegacyQueueUpdate(lane);
         const root = enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         if (root !== null) {
-          scheduleUpdateOnFiber(root, provider, lane);
+          const eventTime = requestEventTime();
+          scheduleUpdateOnFiber(root, provider, lane, eventTime);
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
@@ -2620,7 +2623,8 @@ function dispatchReducerAction<S, A>(
   } else {
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane);
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
@@ -2702,7 +2706,8 @@ function dispatchSetState<S, A>(
 
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane);
+      const eventTime = requestEventTime();
+      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }
   }
