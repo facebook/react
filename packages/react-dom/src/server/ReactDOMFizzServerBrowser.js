@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -22,7 +22,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 type Options = {
   identifierPrefix?: string,

@@ -334,11 +334,6 @@
         },
       });
 
-      class Foo {
-        flag = false;
-        object = {a: {b: {c: {d: 1}}}}
-      }
-
       function UnserializableProps() {
         return (
           <ChildComponent
@@ -348,7 +343,6 @@
             setOfSets={setOfSets}
             typedArray={typedArray}
             immutable={immutable}
-            classInstance={new Foo()}
           />
         );
       }

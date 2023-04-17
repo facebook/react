@@ -75,35 +75,12 @@ describe('ReactFlightDOMBrowser', () => {
   }
 
   function requireServerRef(ref) {
-    let name = '';
-    let resolvedModuleData = webpackServerMap[ref];
-    if (resolvedModuleData) {
-      // The potentially aliased name.
-      name = resolvedModuleData.name;
-    } else {
-      // We didn't find this specific export name but we might have the * export
-      // which contains this name as well.
-      // TODO: It's unfortunate that we now have to parse this string. We should
-      // probably go back to encoding path and name separately on the client reference.
-      const idx = ref.lastIndexOf('#');
-      if (idx !== -1) {
-        name = ref.substr(idx + 1);
-        resolvedModuleData = webpackServerMap[ref.substr(0, idx)];
-      }
-      if (!resolvedModuleData) {
-        throw new Error(
-          'Could not find the module "' +
-            ref +
-            '" in the React Client Manifest. ' +
-            'This is probably a bug in the React Server Components bundler.',
-        );
-      }
-    }
-    const mod = __webpack_require__(resolvedModuleData.id);
-    if (name === '*') {
+    const metaData = webpackServerMap[ref];
+    const mod = __webpack_require__(metaData.id);
+    if (metaData.name === '*') {
       return mod;
     }
-    return mod[name];
+    return mod[metaData.name];
   }
 
   async function callServer(actionId, body) {
@@ -842,116 +819,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('Click Me');
     expect(typeof actionProxy).toBe('function');
     expect(actionProxy).not.toBe(boundFn);
-
-    const result = await actionProxy('hi');
-    expect(result).toBe('Hello HI');
-  });
-
-  it('can call a module split server function', async () => {
-    let actionProxy;
-
-    function Client({action}) {
-      actionProxy = action;
-      return 'Click Me';
-    }
-
-    function greet(text) {
-      return 'Hello ' + text;
-    }
-
-    const ServerModule = serverExports({
-      // This gets split into another module
-      split: greet,
-    });
-    const ClientRef = clientExports(Client);
-
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={ServerModule.split} />,
-      webpackMap,
-    );
-
-    const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      async callServer(ref, args) {
-        const body = await ReactServerDOMClient.encodeReply(args);
-        return callServer(ref, body);
-      },
-    });
-
-    function App() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<App />);
-    });
-    expect(container.innerHTML).toBe('Click Me');
-    expect(typeof actionProxy).toBe('function');
-
-    const result = await actionProxy('Split');
-    expect(result).toBe('Hello Split');
-  });
-
-  it('can pass a server function by importing from client back to server', async () => {
-    function greet(transform, text) {
-      return 'Hello ' + transform(text);
-    }
-
-    function upper(text) {
-      return text.toUpperCase();
-    }
-
-    const ServerModuleA = serverExports({
-      greet,
-    });
-    const ServerModuleB = serverExports({
-      upper,
-    });
-
-    let actionProxy;
-
-    // This is a Proxy representing ServerModuleB in the Client bundle.
-    const ServerModuleBImportedOnClient = {
-      upper: ReactServerDOMClient.createServerReference(
-        ServerModuleB.upper.$$id,
-        async function (ref, args) {
-          const body = await ReactServerDOMClient.encodeReply(args);
-          return callServer(ref, body);
-        },
-      ),
-    };
-
-    function Client({action}) {
-      // Client side pass a Server Reference into an action.
-      actionProxy = text => action(ServerModuleBImportedOnClient.upper, text);
-      return 'Click Me';
-    }
-
-    const ClientRef = clientExports(Client);
-
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={ServerModuleA.greet} />,
-      webpackMap,
-    );
-
-    const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      async callServer(ref, args) {
-        const body = await ReactServerDOMClient.encodeReply(args);
-        return callServer(ref, body);
-      },
-    });
-
-    function App() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<App />);
-    });
-    expect(container.innerHTML).toBe('Click Me');
 
     const result = await actionProxy('hi');
     expect(result).toBe('Hello HI');

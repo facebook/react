@@ -14,7 +14,7 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseInstance} from './ReactFiberConfig';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
@@ -26,14 +26,13 @@ import {
   supportsSingletons,
   isHostHoistableType,
   isHostSingletonType,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  enableSyncDefaultUpdates,
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
@@ -459,11 +458,9 @@ export function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
-      !enableSyncDefaultUpdates ||
       // Only for internal experiments.
-      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
+      allowConcurrentByDefault &&
+      concurrentUpdatesByDefaultOverride
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     }
@@ -550,29 +547,29 @@ export function createFiberFromTypeAndProps(
         if (enableLegacyHidden) {
           return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
         }
-      // Fall through
+      // eslint-disable-next-line no-fallthrough
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
-      // Fall through
+      // eslint-disable-next-line no-fallthrough
       case REACT_CACHE_TYPE:
         if (enableCache) {
           return createFiberFromCache(pendingProps, mode, lanes, key);
         }
-      // Fall through
+      // eslint-disable-next-line no-fallthrough
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
         }
-      // Fall through
+      // eslint-disable-next-line no-fallthrough
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
           fiberTag = Mode;
           mode |= DebugTracingMode;
           break;
         }
-      // Fall through
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {

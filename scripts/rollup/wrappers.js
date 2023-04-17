@@ -2,7 +2,6 @@
 
 const {resolve} = require('path');
 const {readFileSync} = require('fs');
-const {signFile, getSigningToken} = require('signedsource');
 const {bundleTypes, moduleTypes} = require('./bundles');
 
 const {
@@ -239,14 +238,14 @@ ${source}`;
 
   /****************** RN_OSS_DEV ******************/
   [RN_OSS_DEV](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-dev
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -255,48 +254,48 @@ if (__DEV__) {
   (function() {
 ${source}
   })();
-}`);
+}`;
   },
 
   /****************** RN_OSS_PROD ******************/
   [RN_OSS_PROD](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-prod
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_OSS_PROFILING ******************/
   [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-profiling
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_FB_DEV ******************/
   [RN_FB_DEV](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -305,35 +304,35 @@ if (__DEV__) {
   (function() {
 ${source}
   })();
-}`);
+}`;
   },
 
   /****************** RN_FB_PROD ******************/
   [RN_FB_PROD](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_FB_PROFILING ******************/
   [RN_FB_PROFILING](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
+ * ${'@gen' + 'erated'}
  */
 
-${source}`);
+${source}`;
   },
 };
 
@@ -350,7 +349,7 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  module.exports = function $$$reconciler($$$config) {
+  module.exports = function $$$reconciler($$$hostConfig) {
     var exports = {};
 ${source}
     return exports;
@@ -369,8 +368,8 @@ ${source}
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$config) {
-
+module.exports = function $$$reconciler($$$hostConfig) {
+    
     var exports = {};
 ${source}
     return exports;
@@ -388,7 +387,7 @@ Object.defineProperty(module.exports, "__esModule", { value: true });
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$config) {
+module.exports = function $$$reconciler($$$hostConfig) {
     var exports = {};
 ${source}
     return exports;

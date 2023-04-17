@@ -10,7 +10,7 @@
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {Container, SuspenseInstance} from '../client/ReactFiberConfigDOM';
+import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 
 import {
@@ -57,7 +57,7 @@ import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
-let _enabled: boolean = true;
+export let _enabled: boolean = true;
 
 // This is exported in FB builds for use by legacy FB layer infra.
 // We'd like to remove this but it's not clear if this is safe.
@@ -155,7 +155,12 @@ export function dispatchEvent(
     return;
   }
 
-  let blockedOn = findInstanceBlockingEvent(nativeEvent);
+  let blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
   if (blockedOn === null) {
     dispatchEventForPluginEventSystem(
       domEventName,
@@ -193,7 +198,12 @@ export function dispatchEvent(
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
-      const nextBlockedOn = findInstanceBlockingEvent(nativeEvent);
+      const nextBlockedOn = findInstanceBlockingEvent(
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
       if (nextBlockedOn === null) {
         dispatchEventForPluginEventSystem(
           domEventName,
@@ -230,6 +240,9 @@ export let return_targetInst: null | Fiber = null;
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
 export function findInstanceBlockingEvent(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
@@ -319,17 +332,20 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'touchend':
     case 'touchstart':
     case 'volumechange':
-    // Used by polyfills: (fall through)
+    // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
     case 'change':
     case 'selectionchange':
     case 'textInput':
     case 'compositionstart':
     case 'compositionend':
     case 'compositionupdate':
-    // Only enableCreateEventHandleAPI: (fall through)
+    // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
     case 'beforeblur':
     case 'afterblur':
-    // Not used by React but could be by user code: (fall through)
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
     case 'beforeinput':
     case 'blur':
     case 'fullscreenchange':
@@ -354,7 +370,8 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'toggle':
     case 'touchmove':
     case 'wheel':
-    // Not used by React but could be by user code: (fall through)
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
     case 'mouseenter':
     case 'mouseleave':
     case 'pointerenter':

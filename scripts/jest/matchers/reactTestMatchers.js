@@ -20,13 +20,13 @@ function captureAssertion(fn) {
   return {pass: true};
 }
 
-function assertYieldsWereCleared(Scheduler, caller) {
+function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearLog();
   if (actualYields.length !== 0) {
     const error = Error(
       'The event log is not empty. Call assertLog(...) first.'
     );
-    Error.captureStackTrace(error, caller);
+    Error.captureStackTrace(error, assertYieldsWereCleared);
     throw error;
   }
 }
@@ -34,7 +34,7 @@ function assertYieldsWereCleared(Scheduler, caller) {
 function toMatchRenderedOutput(ReactNoop, expectedJSX) {
   if (typeof ReactNoop.getChildrenAsJSX === 'function') {
     const Scheduler = ReactNoop._Scheduler;
-    assertYieldsWereCleared(Scheduler, toMatchRenderedOutput);
+    assertYieldsWereCleared(Scheduler);
     return captureAssertion(() => {
       expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
     });

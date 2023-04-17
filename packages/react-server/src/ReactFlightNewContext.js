@@ -13,7 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
-import {isPrimaryRenderer} from './ReactFlightServerConfig';
+import {isPrimaryRenderer} from './ReactServerFormatConfig';
 
 let rendererSigil;
 if (__DEV__) {

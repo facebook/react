@@ -53,8 +53,9 @@ import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
-import type {ComponentFilter, ElementType, BrowserTheme} from './types';
+import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -533,7 +534,6 @@ export type DataType =
   | 'array_buffer'
   | 'bigint'
   | 'boolean'
-  | 'class_instance'
   | 'data_view'
   | 'date'
   | 'function'
@@ -620,11 +620,6 @@ export function getDataType(data: Object): DataType {
           return 'html_all_collection';
         }
       }
-
-      if (!isPlainObject(data)) {
-        return 'class_instance';
-      }
-
       return 'object';
     case 'string':
       return 'string';
@@ -840,8 +835,6 @@ export function formatDataForPreview(
     }
     case 'date':
       return data.toString();
-    case 'class_instance':
-      return data.constructor.name;
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -880,12 +873,3 @@ export function formatDataForPreview(
       }
   }
 }
-
-// Basically checking that the object only has Object in its prototype chain
-export const isPlainObject = (object: Object): boolean => {
-  const objectPrototype = Object.getPrototypeOf(object);
-  if (!objectPrototype) return true;
-
-  const objectParentPrototype = Object.getPrototypeOf(objectPrototype);
-  return !objectParentPrototype;
-};

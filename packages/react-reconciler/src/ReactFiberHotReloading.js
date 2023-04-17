@@ -11,7 +11,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Instance} from './ReactFiberConfig';
+import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
@@ -23,7 +23,7 @@ import {
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {updateContainer} from './ReactFiberReconciler';
 import {emptyContextObject} from './ReactFiberContext';
-import {SyncLane} from './ReactFiberLane';
+import {SyncLane, NoTimestamp} from './ReactFiberLane';
 import {
   ClassComponent,
   FunctionComponent,
@@ -41,7 +41,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {supportsSingletons} from './ReactFiberConfig';
+import {supportsSingletons} from './ReactFiberHostConfig';
 
 export type Family = {
   current: any,
@@ -328,7 +328,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (needsRemount || needsRender) {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane);
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
     if (child !== null && !needsRemount) {

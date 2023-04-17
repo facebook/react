@@ -22,7 +22,6 @@ import type {
   TransitionAbort,
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
-import type {RenderTaskFn} from './ReactFiberRootScheduler';
 
 import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -38,7 +37,7 @@ import {
   enableCache,
   enableTransitionTracing,
   useModernStrictMode,
-  disableLegacyContext,
+  revertRemovalOfSiblingPrerendering,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -46,12 +45,21 @@ import is from 'shared/objectIs';
 import {
   // Aliased because `act` will override and push to an internal queue
   scheduleCallback as Scheduler_scheduleCallback,
+  cancelCallback as Scheduler_cancelCallback,
   shouldYield,
   requestPaint,
   now,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
 } from './Scheduler';
+import {
+  flushSyncCallbacks,
+  flushSyncCallbacksOnlyInLegacyMode,
+  scheduleSyncCallback,
+  scheduleLegacySyncCallback,
+} from './ReactFiberSyncTaskQueue';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -70,13 +78,15 @@ import {
   noTimeout,
   afterActiveInstanceBlur,
   getCurrentEventPriority,
+  supportsMicrotasks,
   errorHydratingContainer,
+  scheduleMicrotask,
   prepareRendererToRender,
   resetRendererAfterRender,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 
 import {
   createWorkInProgress,
@@ -129,6 +139,7 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
+  NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
@@ -142,12 +153,15 @@ import {
   includesBlockingLane,
   includesExpiredLane,
   getNextLanes,
+  markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
+  getMostRecentEventTime,
   markRootUpdated,
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
   markRootEntangled,
   markRootFinished,
+  getHighestPriorityLane,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
@@ -158,7 +172,9 @@ import {
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
+  ContinuousEventPriority,
   DefaultEventPriority,
+  IdleEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   lowerEventPriority,
@@ -273,15 +289,8 @@ import {
 } from './ReactFiberSuspenseContext';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {resetChildReconcilerOnUnwind} from './ReactChildFiber';
-import {
-  ensureRootIsScheduled,
-  flushSyncWorkOnAllRoots,
-  flushSyncWorkOnLegacyRootsOnly,
-  getContinuationForRoot,
-  getCurrentEventTransitionLane,
-  setCurrentEventTransitionLane,
-} from './ReactFiberRootScheduler';
-import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+
+const ceil = Math.ceil;
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -584,6 +593,12 @@ const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
+// If two updates are scheduled within the same event, we should treat their
+// event times as simultaneous, even if the actual clock time has advanced
+// between the first and second call.
+let currentEventTime: number = NoTimestamp;
+let currentEventTransitionLane: Lanes = NoLanes;
+
 let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
@@ -594,8 +609,19 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
   return workInProgressRootRenderLanes;
 }
 
-export function isWorkLoopSuspendedOnData(): boolean {
-  return workInProgressSuspendedReason === SuspendedOnData;
+export function requestEventTime(): number {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+    // We're inside React, so it's fine to read the actual time.
+    return now();
+  }
+  // We're not inside React, so we may be in the middle of a browser event.
+  if (currentEventTime !== NoTimestamp) {
+    // Use the same start time for all updates until we enter React again.
+    return currentEventTime;
+  }
+  // This is the first update since React yielded. Compute a new start time.
+  currentEventTime = now();
+  return currentEventTime;
 }
 
 export function getCurrentTime(): number {
@@ -640,11 +666,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     // The trick we use is to cache the first of each of these inputs within an
     // event. Then reset the cached values once we can be sure the event is
     // over. Our heuristic for that is whenever we enter a concurrent work loop.
-    if (getCurrentEventTransitionLane() === NoLane) {
+    if (currentEventTransitionLane === NoLane) {
       // All transitions within the same event are assigned the same lane.
-      setCurrentEventTransitionLane(claimNextTransitionLane());
+      currentEventTransitionLane = claimNextTransitionLane();
     }
-    return getCurrentEventTransitionLane();
+    return currentEventTransitionLane;
   }
 
   // Updates originating inside certain React methods, like flushSync, have
@@ -686,6 +712,7 @@ export function scheduleUpdateOnFiber(
   root: FiberRoot,
   fiber: Fiber,
   lane: Lane,
+  eventTime: number,
 ) {
   if (__DEV__) {
     if (isRunningInsertionEffect) {
@@ -702,11 +729,8 @@ export function scheduleUpdateOnFiber(
   // Check if the work loop is currently suspended and waiting for data to
   // finish loading.
   if (
-    // Suspended render phase
-    (root === workInProgressRoot &&
-      workInProgressSuspendedReason === SuspendedOnData) ||
-    // Suspended commit phase
-    root.cancelPendingCommit !== null
+    workInProgressSuspendedReason === SuspendedOnData &&
+    root === workInProgressRoot
   ) {
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
@@ -715,7 +739,7 @@ export function scheduleUpdateOnFiber(
   }
 
   // Mark that the root has a pending update.
-  markRootUpdated(root, lane);
+  markRootUpdated(root, lane, eventTime);
 
   if (
     (executionContext & RenderContext) !== NoLanes &&
@@ -795,28 +819,30 @@ export function scheduleUpdateOnFiber(
       }
     }
 
-    ensureRootIsScheduled(root);
+    ensureRootIsScheduled(root, eventTime);
     if (
       lane === SyncLane &&
       executionContext === NoContext &&
-      (fiber.mode & ConcurrentMode) === NoMode
+      (fiber.mode & ConcurrentMode) === NoMode &&
+      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
     ) {
-      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy) {
-        // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-      } else {
-        // Flush the synchronous work now, unless we're already working or inside
-        // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
-        // scheduleCallbackForFiber to preserve the ability to schedule a callback
-        // without immediately flushing it. We only do this for user-initiated
-        // updates, to preserve historical behavior of legacy mode.
-        resetRenderTimer();
-        flushSyncWorkOnLegacyRootsOnly();
-      }
+      // Flush the synchronous work now, unless we're already working or inside
+      // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+      // scheduleCallbackForFiber to preserve the ability to schedule a callback
+      // without immediately flushing it. We only do this for user-initiated
+      // updates, to preserve historical behavior of legacy mode.
+      resetRenderTimer();
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
 }
 
-export function scheduleInitialHydrationOnRoot(root: FiberRoot, lane: Lane) {
+export function scheduleInitialHydrationOnRoot(
+  root: FiberRoot,
+  lane: Lane,
+  eventTime: number,
+) {
   // This is a special fork of scheduleUpdateOnFiber that is only used to
   // schedule the initial hydration of a root that has just been created. Most
   // of the stuff in scheduleUpdateOnFiber can be skipped.
@@ -828,8 +854,8 @@ export function scheduleInitialHydrationOnRoot(root: FiberRoot, lane: Lane) {
   // match what was rendered on the server.
   const current = root.current;
   current.lanes = lane;
-  markRootUpdated(root, lane);
-  ensureRootIsScheduled(root);
+  markRootUpdated(root, lane, eventTime);
+  ensureRootIsScheduled(root, eventTime);
 }
 
 export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
@@ -838,15 +864,180 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
   return (executionContext & RenderContext) !== NoContext;
 }
 
+// Use this function to schedule a task for a root. There's only one task per
+// root; if a task was already scheduled, we'll check to make sure the priority
+// of the existing task is the same as the priority of the next level that the
+// root has work on. This function is called on every update, and right before
+// exiting a task.
+function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
+  const existingCallbackNode = root.callbackNode;
+
+  // Check if any lanes are being starved by other work. If so, mark them as
+  // expired so we know to work on those next.
+  markStarvedLanesAsExpired(root, currentTime);
+
+  // Determine the next lanes to work on, and their priority.
+  const nextLanes = getNextLanes(
+    root,
+    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
+  );
+
+  if (nextLanes === NoLanes) {
+    // Special case: There's nothing to work on.
+    if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+    }
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    return;
+  }
+
+  // If this root is currently suspended and waiting for data to resolve, don't
+  // schedule a task to render it. We'll either wait for a ping, or wait to
+  // receive an update.
+  if (
+    workInProgressSuspendedReason === SuspendedOnData &&
+    workInProgressRoot === root
+  ) {
+    root.callbackPriority = NoLane;
+    root.callbackNode = null;
+    return;
+  }
+
+  const cancelPendingCommit = root.cancelPendingCommit;
+  if (cancelPendingCommit !== null) {
+    // We should only interrupt a pending commit if the new update
+    // is urgent.
+    if (includesOnlyNonUrgentLanes(nextLanes)) {
+      // The new update is not urgent. Don't interrupt the pending commit.
+      root.callbackPriority = NoLane;
+      root.callbackNode = null;
+      return;
+    }
+  }
+
+  // We use the highest priority lane to represent the priority of the callback.
+  const newCallbackPriority = getHighestPriorityLane(nextLanes);
+
+  // Check if there's an existing task. We may be able to reuse it.
+  const existingCallbackPriority = root.callbackPriority;
+  if (
+    existingCallbackPriority === newCallbackPriority &&
+    // Special case related to `act`. If the currently scheduled task is a
+    // Scheduler task, rather than an `act` task, cancel it and re-scheduled
+    // on the `act` queue.
+    !(
+      __DEV__ &&
+      ReactCurrentActQueue.current !== null &&
+      existingCallbackNode !== fakeActCallbackNode
+    )
+  ) {
+    if (__DEV__) {
+      // If we're going to re-use an existing task, it needs to exist.
+      // Assume that discrete update microtasks are non-cancellable and null.
+      // TODO: Temporary until we confirm this warning is not fired.
+      if (
+        existingCallbackNode == null &&
+        !includesSyncLane(existingCallbackPriority)
+      ) {
+        console.error(
+          'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+    // The priority hasn't changed. We can reuse the existing task. Exit.
+    return;
+  }
+
+  if (existingCallbackNode != null) {
+    // Cancel the existing callback. We'll schedule a new one below.
+    cancelCallback(existingCallbackNode);
+  }
+
+  // Schedule a new callback.
+  let newCallbackNode;
+  if (includesSyncLane(newCallbackPriority)) {
+    // Special case: Sync React callbacks are scheduled on a special
+    // internal queue
+    if (root.tag === LegacyRoot) {
+      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy !== null) {
+        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
+      }
+      scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
+    } else {
+      scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+    }
+    if (supportsMicrotasks) {
+      // Flush the queue in a microtask.
+      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+        // Inside `act`, use our internal `act` queue so that these get flushed
+        // at the end of the current scope even when using the sync version
+        // of `act`.
+        ReactCurrentActQueue.current.push(flushSyncCallbacks);
+      } else {
+        scheduleMicrotask(() => {
+          // In Safari, appending an iframe forces microtasks to run.
+          // https://github.com/facebook/react/issues/22459
+          // We don't support running callbacks in the middle of render
+          // or commit so we need to check against that.
+          if (
+            (executionContext & (RenderContext | CommitContext)) ===
+            NoContext
+          ) {
+            // Note that this would still prematurely flush the callbacks
+            // if this happens outside render or commit phase (e.g. in an event).
+            flushSyncCallbacks();
+          }
+        });
+      }
+    } else {
+      // Flush the queue in an Immediate task.
+      scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbacks);
+    }
+    newCallbackNode = null;
+  } else {
+    let schedulerPriorityLevel;
+    switch (lanesToEventPriority(nextLanes)) {
+      case DiscreteEventPriority:
+        schedulerPriorityLevel = ImmediateSchedulerPriority;
+        break;
+      case ContinuousEventPriority:
+        schedulerPriorityLevel = UserBlockingSchedulerPriority;
+        break;
+      case DefaultEventPriority:
+        schedulerPriorityLevel = NormalSchedulerPriority;
+        break;
+      case IdleEventPriority:
+        schedulerPriorityLevel = IdleSchedulerPriority;
+        break;
+      default:
+        schedulerPriorityLevel = NormalSchedulerPriority;
+        break;
+    }
+    newCallbackNode = scheduleCallback(
+      schedulerPriorityLevel,
+      performConcurrentWorkOnRoot.bind(null, root),
+    );
+  }
+
+  root.callbackPriority = newCallbackPriority;
+  root.callbackNode = newCallbackNode;
+}
+
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
-export function performConcurrentWorkOnRoot(
+function performConcurrentWorkOnRoot(
   root: FiberRoot,
   didTimeout: boolean,
-): RenderTaskFn | null {
+): $FlowFixMe {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
+
+  // Since we know we're in a React event, we can clear the current
+  // event time. The next update will compute a new event time.
+  currentEventTime = NoTimestamp;
+  currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
@@ -871,7 +1062,6 @@ export function performConcurrentWorkOnRoot(
 
   // Determine the next lanes to work on, using the fields stored
   // on the root.
-  // TODO: This was already computed in the caller. Pass it as an argument.
   let lanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -918,7 +1108,7 @@ export function performConcurrentWorkOnRoot(
       const fatalError = workInProgressRootFatalError;
       prepareFreshStack(root, NoLanes);
       markRootSuspended(root, lanes);
-      ensureRootIsScheduled(root);
+      ensureRootIsScheduled(root, now());
       throw fatalError;
     }
 
@@ -967,7 +1157,7 @@ export function performConcurrentWorkOnRoot(
           const fatalError = workInProgressRootFatalError;
           prepareFreshStack(root, NoLanes);
           markRootSuspended(root, lanes);
-          ensureRootIsScheduled(root);
+          ensureRootIsScheduled(root, now());
           throw fatalError;
         }
 
@@ -983,8 +1173,13 @@ export function performConcurrentWorkOnRoot(
     }
   }
 
-  ensureRootIsScheduled(root);
-  return getContinuationForRoot(root, originalCallbackNode);
+  ensureRootIsScheduled(root, now());
+  if (root.callbackNode === originalCallbackNode) {
+    // The task node scheduled for this root is the same one that's
+    // currently executed. Need to return a continuation.
+    return performConcurrentWorkOnRoot.bind(null, root);
+  }
+  return null;
 }
 
 function recoverFromConcurrentError(
@@ -1082,86 +1277,142 @@ function finishConcurrentRender(
   finishedWork: Fiber,
   lanes: Lanes,
 ) {
-  // TODO: The fact that most of these branches are identical suggests that some
-  // of the exit statuses are not best modeled as exit statuses and should be
-  // tracked orthogonally.
   switch (exitStatus) {
     case RootInProgress:
     case RootFatalErrored: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
+    // Flow knows about invariant, so it complains if I add a break
+    // statement, but eslint doesn't know about invariant, so it complains
+    // if I do. eslint-disable-next-line no-fallthrough
+    case RootErrored: {
+      // We should have already attempted to retry this tree. If we reached
+      // this point, it errored again. Commit it.
+      commitRootWhenReady(
+        root,
+        finishedWork,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+        lanes,
+      );
+      break;
+    }
+    case RootSuspended: {
+      markRootSuspended(root, lanes);
+
+      // We have an acceptable loading state. We need to figure out if we
+      // should immediately commit it or wait a bit.
+
+      if (
+        includesOnlyRetries(lanes) &&
+        // do not delay if we're inside an act() scope
+        !shouldForceFlushFallbacksInDEV()
+      ) {
+        // This render only included retries, no updates. Throttle committing
+        // retries so that we don't show too many loading states too quickly.
+        const msUntilTimeout =
+          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
+        // Don't bother with a very short suspense time.
+        if (msUntilTimeout > 10) {
+          const nextLanes = getNextLanes(root, NoLanes);
+          if (nextLanes !== NoLanes) {
+            // There's additional work on this root.
+            break;
+          }
+
+          // The render is suspended, it hasn't timed out, and there's no
+          // lower priority work to do. Instead of committing the fallback
+          // immediately, wait for more data to arrive.
+          root.timeoutHandle = scheduleTimeout(
+            commitRootWhenReady.bind(
+              null,
+              root,
+              finishedWork,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+              lanes,
+            ),
+            msUntilTimeout,
+          );
+          break;
+        }
+      }
+      // The work expired. Commit immediately.
+      commitRootWhenReady(
+        root,
+        finishedWork,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+        lanes,
+      );
+      break;
+    }
     case RootSuspendedWithDelay: {
+      markRootSuspended(root, lanes);
+
       if (includesOnlyTransitions(lanes)) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        markRootSuspended(root, lanes);
-        return;
+        break;
       }
+
+      if (!shouldForceFlushFallbacksInDEV()) {
+        // This is not a transition, but we did trigger an avoided state.
+        // Schedule a placeholder to display after a short delay, using the Just
+        // Noticeable Difference.
+        // TODO: Is the JND optimization worth the added complexity? If this is
+        // the only reason we track the event time, then probably not.
+        // Consider removing.
+
+        const mostRecentEventTime = getMostRecentEventTime(root, lanes);
+        const eventTimeMs = mostRecentEventTime;
+        const timeElapsedMs = now() - eventTimeMs;
+        const msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
+
+        // Don't bother with a very short suspense time.
+        if (msUntilTimeout > 10) {
+          // Instead of committing the fallback immediately, wait for more data
+          // to arrive.
+          root.timeoutHandle = scheduleTimeout(
+            commitRootWhenReady.bind(
+              null,
+              root,
+              finishedWork,
+              workInProgressRootRecoverableErrors,
+              workInProgressTransitions,
+              lanes,
+            ),
+            msUntilTimeout,
+          );
+          break;
+        }
+      }
+
       // Commit the placeholder.
+      commitRootWhenReady(
+        root,
+        finishedWork,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+        lanes,
+      );
       break;
     }
-    case RootErrored:
-    case RootSuspended:
     case RootCompleted: {
+      // The work completed.
+      commitRootWhenReady(
+        root,
+        finishedWork,
+        workInProgressRootRecoverableErrors,
+        workInProgressTransitions,
+        lanes,
+      );
       break;
     }
     default: {
       throw new Error('Unknown root exit status.');
     }
-  }
-
-  if (shouldForceFlushFallbacksInDEV()) {
-    // We're inside an `act` scope. Commit immediately.
-    commitRoot(
-      root,
-      workInProgressRootRecoverableErrors,
-      workInProgressTransitions,
-    );
-  } else {
-    if (includesOnlyRetries(lanes)) {
-      // This render only included retries, no updates. Throttle committing
-      // retries so that we don't show too many loading states too quickly.
-      const msUntilTimeout =
-        globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
-
-      // Don't bother with a very short suspense time.
-      if (msUntilTimeout > 10) {
-        markRootSuspended(root, lanes);
-
-        const nextLanes = getNextLanes(root, NoLanes);
-        if (nextLanes !== NoLanes) {
-          // There's additional work we can do on this root. We might as well
-          // attempt to work on that while we're suspended.
-          return;
-        }
-
-        // The render is suspended, it hasn't timed out, and there's no
-        // lower priority work to do. Instead of committing the fallback
-        // immediately, wait for more data to arrive.
-        // TODO: Combine retry throttling with Suspensey commits. Right now they
-        // run one after the other.
-        root.timeoutHandle = scheduleTimeout(
-          commitRootWhenReady.bind(
-            null,
-            root,
-            finishedWork,
-            workInProgressRootRecoverableErrors,
-            workInProgressTransitions,
-            lanes,
-          ),
-          msUntilTimeout,
-        );
-        return;
-      }
-    }
-    commitRootWhenReady(
-      root,
-      finishedWork,
-      workInProgressRootRecoverableErrors,
-      workInProgressTransitions,
-      lanes,
-    );
   }
 }
 
@@ -1172,8 +1423,6 @@ function commitRootWhenReady(
   transitions: Array<Transition> | null,
   lanes: Lanes,
 ) {
-  // TODO: Combine retry throttling with Suspensey commits. Right now they run
-  // one after the other.
   if (includesOnlyNonUrgentLanes(lanes)) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
@@ -1196,15 +1445,22 @@ function commitRootWhenReady(
       // us that it's ready. This will be canceled if we start work on the
       // root again.
       root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(null, root, recoverableErrors, transitions),
+        commitRoot.bind(
+          null,
+          root,
+          workInProgressRootRecoverableErrors,
+          workInProgressTransitions,
+        ),
       );
-      markRootSuspended(root, lanes);
       return;
     }
   }
-
   // Otherwise, commit immediately.
-  commitRoot(root, recoverableErrors, transitions);
+  commitRoot(
+    root,
+    workInProgressRootRecoverableErrors,
+    workInProgressTransitions,
+  );
 }
 
 function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
@@ -1275,7 +1531,7 @@ function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
 
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
-export function performSyncWorkOnRoot(root: FiberRoot): null {
+function performSyncWorkOnRoot(root: FiberRoot) {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     syncNestedUpdateFlag();
   }
@@ -1286,11 +1542,10 @@ export function performSyncWorkOnRoot(root: FiberRoot): null {
 
   flushPassiveEffects();
 
-  // TODO: This was already computed in the caller. Pass it as an argument.
   let lanes = getNextLanes(root, NoLanes);
   if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
-    ensureRootIsScheduled(root);
+    ensureRootIsScheduled(root, now());
     return null;
   }
 
@@ -1319,7 +1574,7 @@ export function performSyncWorkOnRoot(root: FiberRoot): null {
     const fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, NoLanes);
     markRootSuspended(root, lanes);
-    ensureRootIsScheduled(root);
+    ensureRootIsScheduled(root, now());
     throw fatalError;
   }
 
@@ -1328,7 +1583,7 @@ export function performSyncWorkOnRoot(root: FiberRoot): null {
     // cases where need to exit the current render without producing a
     // consistent tree or committing.
     markRootSuspended(root, lanes);
-    ensureRootIsScheduled(root);
+    ensureRootIsScheduled(root, now());
     return null;
   }
 
@@ -1345,7 +1600,7 @@ export function performSyncWorkOnRoot(root: FiberRoot): null {
 
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
-  ensureRootIsScheduled(root);
+  ensureRootIsScheduled(root, now());
 
   return null;
 }
@@ -1353,13 +1608,10 @@ export function performSyncWorkOnRoot(root: FiberRoot): null {
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
   if (lanes !== NoLanes) {
     markRootEntangled(root, mergeLanes(lanes, SyncLane));
-    ensureRootIsScheduled(root);
+    ensureRootIsScheduled(root, now());
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       resetRenderTimer();
-      // TODO: For historical reasons this flushes all sync work across all
-      // roots. It shouldn't really matter either way, but we could change this
-      // to only flush the given root.
-      flushSyncWorkOnAllRoots();
+      flushSyncCallbacks();
     }
   }
 }
@@ -1397,7 +1649,7 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
       !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
     ) {
       resetRenderTimer();
-      flushSyncWorkOnLegacyRootsOnly();
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
 }
@@ -1465,7 +1717,7 @@ export function flushSync<R>(fn: (() => R) | void): R | void {
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-      flushSyncWorkOnAllRoots();
+      flushSyncCallbacks();
     }
   }
 }
@@ -2061,7 +2313,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               // Ensure the root is scheduled. We should do this even if we're
               // currently working on a different root, so that we resume
               // rendering later.
-              ensureRootIsScheduled(root);
+              ensureRootIsScheduled(root, now());
             };
             thenable.then(onResolution, onResolution);
             break outer;
@@ -2285,8 +2537,9 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       unitOfWork.tag = FunctionComponent;
       // Fallthrough to the next branch.
     }
-    case SimpleMemoComponent:
-    case FunctionComponent: {
+    // eslint-disable-next-line no-fallthrough
+    case FunctionComponent:
+    case ForwardRef: {
       // Resolve `defaultProps`. This logic is copied from `beginWork`.
       // TODO: Consider moving this switch statement into that module. Also,
       // could maybe use this as an opportunity to say `use` doesn't work with
@@ -2297,39 +2550,23 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         unitOfWork.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
-      let context: any;
-      if (!disableLegacyContext) {
-        const unmaskedContext = getUnmaskedContext(unitOfWork, Component, true);
-        context = getMaskedContext(unitOfWork, unmaskedContext);
-      }
       next = replayFunctionComponent(
         current,
         unitOfWork,
         resolvedProps,
         Component,
-        context,
         workInProgressRootRenderLanes,
       );
       break;
     }
-    case ForwardRef: {
-      // Resolve `defaultProps`. This logic is copied from `beginWork`.
-      // TODO: Consider moving this switch statement into that module. Also,
-      // could maybe use this as an opportunity to say `use` doesn't work with
-      // `defaultProps` :)
-      const Component = unitOfWork.type.render;
-      const unresolvedProps = unitOfWork.pendingProps;
-      const resolvedProps =
-        unitOfWork.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
-
+    case SimpleMemoComponent: {
+      const Component = unitOfWork.type;
+      const nextProps = unitOfWork.pendingProps;
       next = replayFunctionComponent(
         current,
         unitOfWork,
-        resolvedProps,
+        nextProps,
         Component,
-        unitOfWork.ref,
         workInProgressRootRenderLanes,
       );
       break;
@@ -2438,14 +2675,28 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   // sibling. If there are no more siblings, return to the parent fiber.
   let completedWork: Fiber = unitOfWork;
   do {
-    if (__DEV__) {
+    if (revertRemovalOfSiblingPrerendering) {
       if ((completedWork.flags & Incomplete) !== NoFlags) {
-        // NOTE: If we re-enable sibling prerendering in some cases, this branch
-        // is where we would switch to the unwinding path.
-        console.error(
-          'Internal React error: Expected this fiber to be complete, but ' +
-            "it isn't. It should have been unwound. This is a bug in React.",
-        );
+        // This fiber did not complete, because one of its children did not
+        // complete. Switch to unwinding the stack instead of completing it.
+        //
+        // The reason "unwind" and "complete" is interleaved is because when
+        // something suspends, we continue rendering the siblings even though
+        // they will be replaced by a fallback.
+        // TODO: Disable sibling prerendering, then remove this branch.
+        unwindUnitOfWork(completedWork);
+        return;
+      }
+    } else {
+      if (__DEV__) {
+        if ((completedWork.flags & Incomplete) !== NoFlags) {
+          // NOTE: If we re-enable sibling prerendering in some cases, this branch
+          // is where we would switch to the unwinding path.
+          console.error(
+            'Internal React error: Expected this fiber to be complete, but ' +
+              "it isn't. It should have been unwound. This is a bug in React.",
+          );
+        }
       }
     }
 
@@ -2549,9 +2800,24 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
       returnFiber.deletions = null;
     }
 
-    // NOTE: If we re-enable sibling prerendering in some cases, here we
-    // would switch to the normal completion path: check if a sibling
-    // exists, and if so, begin work on it.
+    if (revertRemovalOfSiblingPrerendering) {
+      // If there are siblings, work on them now even though they're going to be
+      // replaced by a fallback. We're "prerendering" them. Historically our
+      // rationale for this behavior has been to initiate any lazy data requests
+      // in the siblings, and also to warm up the CPU cache.
+      // TODO: Don't prerender siblings. With `use`, we suspend the work loop
+      // until the data has resolved, anyway.
+      const siblingFiber = incompleteWork.sibling;
+      if (siblingFiber !== null) {
+        // This branch will return us to the normal work loop.
+        workInProgress = siblingFiber;
+        return;
+      }
+    } else {
+      // NOTE: If we re-enable sibling prerendering in some cases, this branch
+      // is where we would switch to the normal completion path: check if a
+      // sibling exists, and if so, begin work on it.
+    }
 
     // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null
@@ -2884,7 +3150,7 @@ function commitRootImpl(
 
   // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
-  ensureRootIsScheduled(root);
+  ensureRootIsScheduled(root, now());
 
   if (recoverableErrors !== null) {
     // There were errors during this render, but recovered from them without
@@ -2939,7 +3205,7 @@ function commitRootImpl(
   }
 
   // If layout work was scheduled, flush it now.
-  flushSyncWorkOnAllRoots();
+  flushSyncCallbacks();
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -3145,7 +3411,7 @@ function flushPassiveEffectsImpl() {
 
   executionContext = prevExecutionContext;
 
-  flushSyncWorkOnAllRoots();
+  flushSyncCallbacks();
 
   if (enableTransitionTracing) {
     const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
@@ -3227,9 +3493,10 @@ function captureCommitPhaseErrorOnRoot(
   const errorInfo = createCapturedValueAtFiber(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
   const root = enqueueUpdate(rootFiber, update, (SyncLane: Lane));
+  const eventTime = requestEventTime();
   if (root !== null) {
-    markRootUpdated(root, SyncLane);
-    ensureRootIsScheduled(root);
+    markRootUpdated(root, SyncLane, eventTime);
+    ensureRootIsScheduled(root, eventTime);
   }
 }
 
@@ -3269,9 +3536,10 @@ export function captureCommitPhaseError(
           (SyncLane: Lane),
         );
         const root = enqueueUpdate(fiber, update, (SyncLane: Lane));
+        const eventTime = requestEventTime();
         if (root !== null) {
-          markRootUpdated(root, SyncLane);
-          ensureRootIsScheduled(root);
+          markRootUpdated(root, SyncLane, eventTime);
+          ensureRootIsScheduled(root, eventTime);
         }
         return;
       }
@@ -3349,6 +3617,7 @@ function pingSuspendedRoot(
     pingCache.delete(wakeable);
   }
 
+  const eventTime = requestEventTime();
   markRootPinged(root, pingedLanes);
 
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
@@ -3391,7 +3660,7 @@ function pingSuspendedRoot(
     }
   }
 
-  ensureRootIsScheduled(root);
+  ensureRootIsScheduled(root, eventTime);
 }
 
 function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
@@ -3405,10 +3674,11 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
     retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
+  const eventTime = requestEventTime();
   const root = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   if (root !== null) {
-    markRootUpdated(root, retryLane);
-    ensureRootIsScheduled(root);
+    markRootUpdated(root, retryLane, eventTime);
+    ensureRootIsScheduled(root, eventTime);
   }
 }
 
@@ -3454,6 +3724,31 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
   }
 
   retryTimedOutBoundary(boundaryFiber, retryLane);
+}
+
+// Computes the next Just Noticeable Difference (JND) boundary.
+// The theory is that a person can't tell the difference between small differences in time.
+// Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
+// difference in the experience. However, waiting for longer might mean that we can avoid
+// showing an intermediate loading state. The longer we have already waited, the harder it
+// is to tell small differences in time. Therefore, the longer we've already waited,
+// the longer we can wait additionally. At some point we have to give up though.
+// We pick a train model where the next boundary commits at a consistent schedule.
+// These particular numbers are vague estimates. We expect to adjust them based on research.
+function jnd(timeElapsed: number) {
+  return timeElapsed < 120
+    ? 120
+    : timeElapsed < 480
+    ? 480
+    : timeElapsed < 1080
+    ? 1080
+    : timeElapsed < 1920
+    ? 1920
+    : timeElapsed < 3000
+    ? 3000
+    : timeElapsed < 4320
+    ? 4320
+    : ceil(timeElapsed / 1960) * 1960;
 }
 
 export function throwIfInfiniteUpdateLoopDetected() {
@@ -3863,6 +4158,14 @@ function scheduleCallback(priorityLevel: any, callback) {
     // In production, always call Scheduler. This function will be stripped out.
     return Scheduler_scheduleCallback(priorityLevel, callback);
   }
+}
+
+function cancelCallback(callbackNode: any) {
+  if (__DEV__ && callbackNode === fakeActCallbackNode) {
+    return;
+  }
+  // In production, always call Scheduler. This function will be stripped out.
+  return Scheduler_cancelCallback(callbackNode);
 }
 
 function shouldForceFlushFallbacksInDEV() {

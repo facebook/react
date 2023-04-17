@@ -187,8 +187,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Ref mount: A']);
+    await resolveFakeImport(ChildA);
+    await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
@@ -200,8 +200,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
       '<span style="display: none;">A</span>Loading...',
     );
 
-    await act(() => resolveFakeImport(ChildB));
-    assertLog(['B', 'Ref mount: B']);
+    await resolveFakeImport(ChildB);
+    await waitForAll(['B', 'Ref mount: B']);
     expect(container.innerHTML).toBe('<span>B</span>');
   });
 
@@ -247,8 +247,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Did mount: A']);
+    await resolveFakeImport(ChildA);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
@@ -258,8 +258,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     assertLog(['Loading...', 'Will unmount: A']);
     expect(container.innerHTML).toBe('Loading...');
 
-    await act(() => resolveFakeImport(ChildB));
-    assertLog(['B', 'Did mount: B']);
+    await resolveFakeImport(ChildB);
+    await waitForAll(['B', 'Did mount: B']);
     expect(container.innerHTML).toBe('B');
   });
 
@@ -299,8 +299,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Did mount: A']);
+    await resolveFakeImport(ChildA);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
@@ -366,8 +366,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Ref mount: A']);
+    await resolveFakeImport(ChildA);
+    await waitForAll(['A', 'Ref mount: A']);
     expect(container.innerHTML).toBe('<span>A</span>');
 
     // Swap the position of A and B
@@ -429,8 +429,8 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     });
     assertLog(['Loading...']);
 
-    await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Did mount: A']);
+    await resolveFakeImport(ChildA);
+    await waitForAll(['A', 'Did mount: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
@@ -495,83 +495,5 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     // Delete the tree and unmount the effect
     ReactDOM.render(null, container);
     assertLog(['Unmount']);
-  });
-
-  it('does not call cleanup effects twice after a bailout', async () => {
-    const never = new Promise(resolve => {});
-    function Never() {
-      throw never;
-    }
-
-    let setSuspended;
-    let setLetter;
-
-    function App() {
-      const [suspended, _setSuspended] = React.useState(false);
-      setSuspended = _setSuspended;
-      const [letter, _setLetter] = React.useState('A');
-      setLetter = _setLetter;
-
-      return (
-        <React.Suspense fallback="Loading...">
-          <Child letter={letter} />
-          {suspended && <Never />}
-        </React.Suspense>
-      );
-    }
-
-    let nextId = 0;
-    const freed = new Set();
-    let setStep;
-
-    function Child({letter}) {
-      const [, _setStep] = React.useState(0);
-      setStep = _setStep;
-
-      React.useLayoutEffect(() => {
-        const localId = nextId++;
-        Scheduler.log('Did mount: ' + letter + localId);
-        return () => {
-          if (freed.has(localId)) {
-            throw Error('Double free: ' + letter + localId);
-          }
-          freed.add(localId);
-          Scheduler.log('Will unmount: ' + letter + localId);
-        };
-      }, [letter]);
-    }
-
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<App />);
-    });
-    assertLog(['Did mount: A0']);
-
-    await act(() => {
-      setStep(1);
-      setSuspended(false);
-    });
-    assertLog([]);
-
-    await act(() => {
-      setStep(1);
-    });
-    assertLog([]);
-
-    await act(() => {
-      setSuspended(true);
-    });
-    assertLog(['Will unmount: A0']);
-
-    await act(() => {
-      setSuspended(false);
-      setLetter('B');
-    });
-    assertLog(['Did mount: B1']);
-
-    await act(() => {
-      root.unmount();
-    });
-    assertLog(['Will unmount: B1']);
   });
 });

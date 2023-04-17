@@ -141,18 +141,10 @@ export async function waitForThrow(expectedError: mixed): mixed {
         typeof expectedError === 'string' &&
         typeof x === 'object' &&
         x !== null &&
-        typeof x.message === 'string'
+        typeof x.message === 'string' &&
+        x.message.includes(expectedError)
       ) {
-        if (x.message.includes(expectedError)) {
-          return x;
-        } else {
-          error.message = `
-Expected error was not thrown.
-
-${diff(expectedError, x.message)}
-`;
-          throw error;
-        }
+        return x;
       }
       error.message = `
 Expected error was not thrown.

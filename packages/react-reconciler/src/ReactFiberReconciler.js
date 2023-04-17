@@ -20,7 +20,7 @@ import type {
   Container,
   PublicInstance,
   RendererInspectionConfig,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
@@ -41,7 +41,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
@@ -56,6 +56,7 @@ import {
   onScheduleRoot,
 } from './ReactFiberDevToolsHook';
 import {
+  requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
   scheduleInitialHydrationOnRoot,
@@ -83,6 +84,7 @@ import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   SyncLane,
   SelectiveHydrationLane,
+  NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
 } from './ReactFiberLane';
@@ -309,8 +311,9 @@ export function createHydrationContainer(
   const update = createUpdate(lane);
   update.callback =
     callback !== undefined && callback !== null ? callback : null;
+  const eventTime = requestEventTime();
   enqueueUpdate(current, update, lane);
-  scheduleInitialHydrationOnRoot(root, lane);
+  scheduleInitialHydrationOnRoot(root, lane, eventTime);
 
   return root;
 }
@@ -376,7 +379,8 @@ export function updateContainer(
 
   const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, current, lane);
+    const eventTime = requestEventTime();
+    scheduleUpdateOnFiber(root, current, lane, eventTime);
     entangleTransitions(root, current, lane);
   }
 
@@ -423,7 +427,8 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       flushSync(() => {
         const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
         if (root !== null) {
-          scheduleUpdateOnFiber(root, fiber, SyncLane);
+          const eventTime = requestEventTime();
+          scheduleUpdateOnFiber(root, fiber, SyncLane, eventTime);
         }
       });
       // If we're still blocked after this, we need to increase
@@ -466,7 +471,8 @@ export function attemptContinuousHydration(fiber: Fiber): void {
   const lane = SelectiveHydrationLane;
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, lane);
+    const eventTime = requestEventTime();
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
@@ -480,7 +486,8 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   const lane = requestUpdateLane(fiber);
   const root = enqueueConcurrentRenderForLane(fiber, lane);
   if (root !== null) {
-    scheduleUpdateOnFiber(root, fiber, lane);
+    const eventTime = requestEventTime();
+    scheduleUpdateOnFiber(root, fiber, lane, eventTime);
   }
   markRetryLaneIfNotHydrated(fiber, lane);
 }
@@ -659,7 +666,7 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane);
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
   };
@@ -683,7 +690,7 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane);
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
   };
@@ -708,7 +715,7 @@ if (__DEV__) {
 
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane);
+        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
       }
     }
   };
@@ -721,7 +728,7 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
   };
   overridePropsDeletePath = (fiber: Fiber, path: Array<string | number>) => {
@@ -731,7 +738,7 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
   };
   overridePropsRenamePath = (
@@ -745,14 +752,14 @@ if (__DEV__) {
     }
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
   };
 
   scheduleUpdate = (fiber: Fiber) => {
     const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
     }
   };
 

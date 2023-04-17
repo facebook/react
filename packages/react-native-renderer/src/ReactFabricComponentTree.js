@@ -12,9 +12,9 @@ import type {
   Instance,
   Props,
   TextInstance,
-} from './ReactFiberConfigFabric';
+} from './ReactFabricHostConfig';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import {getPublicInstance} from './ReactFiberConfigFabric';
+import {getPublicInstance} from './ReactFabricHostConfig';
 
 // `node` is typed incorrectly here. The proper type should be `PublicInstance`.
 // This is ok in DOM because they types are interchangeable, but in React Native

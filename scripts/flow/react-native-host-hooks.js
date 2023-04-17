@@ -145,7 +145,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ...
   };
   declare export opaque type PublicInstance;
-  declare export opaque type PublicTextInstance;
   declare export function getNodeFromPublicInstance(
     publicInstance: PublicInstance,
   ): Object;
@@ -157,9 +156,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     viewConfig: __ViewConfig,
     internalInstanceHandle: mixed,
   ): PublicInstance;
-  declare export function createPublicTextInstance(
-    internalInstanceHandle: mixed,
-  ): PublicTextInstance;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {

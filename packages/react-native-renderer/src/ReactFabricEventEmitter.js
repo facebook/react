@@ -29,7 +29,7 @@ import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
 import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import {getPublicInstance} from './ReactFiberConfigFabric';
+import {getPublicInstance} from './ReactFabricHostConfig';
 
 export {getListener, registrationNameModules as registrationNames};
 

@@ -33,13 +33,6 @@ const immutable = Immutable.fromJS({
 });
 const bigInt = BigInt(123); // eslint-disable-line no-undef
 
-class Foo {
-  flag = false;
-  object: Object = {
-    a: {b: {c: {d: 1}}},
-  };
-}
-
 export default function UnserializableProps(): React.Node {
   return (
     <ChildComponent
@@ -52,7 +45,6 @@ export default function UnserializableProps(): React.Node {
       typedArray={typedArray}
       immutable={immutable}
       bigInt={bigInt}
-      classInstance={new Foo()}
     />
   );
 }

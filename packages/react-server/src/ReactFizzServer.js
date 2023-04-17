@@ -27,7 +27,7 @@ import type {
   FormatContext,
   Resources,
   BoundaryResources,
-} from './ReactFizzConfig';
+} from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
@@ -76,7 +76,7 @@ import {
   setCurrentlyRenderingBoundaryResourcesTarget,
   createResources,
   createBoundaryResources,
-} from './ReactFizzConfig';
+} from './ReactServerFormatConfig';
 import {
   constructClassInstance,
   mountClassInstance,
@@ -1224,6 +1224,7 @@ function renderElement(
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
     }
+    // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
       if (
         enableSuspenseAvoidThisFallbackFizz &&
@@ -1378,6 +1379,7 @@ function renderNodeDestructiveImpl(
           'Portals are not currently supported by the server renderer. ' +
             'Render them conditionally so that they only appear on the client render.',
         );
+      // eslint-disable-next-line-no-fallthrough
       case REACT_LAZY_TYPE: {
         const lazyNode: LazyComponentType<any, any> = (node: any);
         const payload = lazyNode._payload;

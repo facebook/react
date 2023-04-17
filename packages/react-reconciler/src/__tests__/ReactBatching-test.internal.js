@@ -7,7 +7,6 @@ let assertLog;
 let ReactCache;
 let Suspense;
 let TextResource;
-let act;
 
 describe('ReactBlockingMode', () => {
   beforeEach(() => {
@@ -24,7 +23,6 @@ describe('ReactBlockingMode', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
-    act = InternalTestUtils.act;
 
     TextResource = ReactCache.unstable_createResource(
       ([text, ms = 0]) => {
@@ -119,8 +117,9 @@ describe('ReactBlockingMode', () => {
     // fallback should mount immediately.
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await act(() => jest.advanceTimersByTime(1000));
-    assertLog(['Promise resolved [B]', 'A', 'B', 'C']);
+    await jest.advanceTimersByTime(1000);
+    assertLog(['Promise resolved [B]']);
+    await waitForAll(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>A</span>

@@ -89,7 +89,7 @@ export default function getComponentNameFromType(type: mixed): string | null {
       if (enableCache) {
         return 'Cache';
       }
-    // Fall through
+    // eslint-disable-next-line no-fallthrough
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
         return 'TracingMarker';
@@ -126,6 +126,7 @@ export default function getComponentNameFromType(type: mixed): string | null {
           const context2 = ((type: any): ReactContext<any>);
           return (context2.displayName || context2._globalName) + '.Provider';
         }
+      // eslint-disable-next-line no-fallthrough
     }
   }
   return null;

@@ -34,12 +34,14 @@ describe('ReactPersistentUpdatesMinimalism', () => {
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => ReactNoopPersistent.render(<Parent />));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => ReactNoopPersistent.render(<Parent />));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      hostDiffCounter: 1,
       hostCloneCounter: 1,
     });
   });
@@ -72,12 +74,14 @@ describe('ReactPersistentUpdatesMinimalism', () => {
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => ReactNoopPersistent.render(<Parent />));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => ReactNoopPersistent.render(<Parent />));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
   });
@@ -123,12 +127,17 @@ describe('ReactPersistentUpdatesMinimalism', () => {
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => ReactNoopPersistent.render(<Parent />));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      hostDiffCounter: 0,
       hostCloneCounter: 0,
     });
 
     ReactNoopPersistent.startTrackingHostCounters();
     await act(() => childInst.setState({name: 'Robin'}));
     expect(ReactNoopPersistent.stopTrackingHostCounters()).toEqual({
+      // section > div > Child > div
+      // section > div > Child > Leaf > span
+      // section > div > Child > Leaf > span > b
+      hostDiffCounter: 3,
       // section
       // section > div
       // section > div > Child > div
@@ -150,6 +159,7 @@ describe('ReactPersistentUpdatesMinimalism', () => {
       // Parent > section > div > hr
       // Parent > section > div > Leaf > span
       // Parent > section > div > Leaf > span > b
+      hostDiffCounter: 10,
       hostCloneCounter: 10,
     });
   });

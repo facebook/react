@@ -10,11 +10,11 @@
 import type {
   Container,
   PublicInstance,
-} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
+} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
+import {clearContainer} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
 import {
   getInstanceFromNode,
   isContainerMarkedAsRoot,

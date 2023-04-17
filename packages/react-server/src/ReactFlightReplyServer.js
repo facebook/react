@@ -16,13 +16,13 @@ import type {
   ServerReferenceId,
   ServerManifest,
   ClientReference as ServerReference,
-} from 'react-client/src/ReactFlightClientConfig';
+} from 'react-client/src/ReactFlightClientHostConfig';
 
 import {
   resolveServerReference,
   preloadModule,
   requireModule,
-} from 'react-client/src/ReactFlightClientConfig';
+} from 'react-client/src/ReactFlightClientHostConfig';
 
 export type JSONValue =
   | number
@@ -396,22 +396,6 @@ function parseModelString(
           parentObject,
           key,
         );
-      }
-      case 'I': {
-        // $Infinity
-        return Infinity;
-      }
-      case '-': {
-        // $-0 or $-Infinity
-        if (value === '$-0') {
-          return -0;
-        } else {
-          return -Infinity;
-        }
-      }
-      case 'N': {
-        // $NaN
-        return NaN;
       }
       case 'u': {
         // matches "$undefined"

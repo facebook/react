@@ -52,6 +52,11 @@ exports.clientModuleError = function clientModuleError(moduleError) {
     chunks: [],
     name: '*',
   };
+  webpackClientMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
+  };
   const mod = {exports: {}};
   nodeCompile.call(mod, '"use client"', idx);
   return mod.exports;
@@ -66,14 +71,11 @@ exports.clientExports = function clientExports(moduleExports) {
     chunks: [],
     name: '*',
   };
-  // We only add this if this test is testing ESM compat.
-  if ('__esModule' in moduleExports) {
-    webpackClientMap[path + '#'] = {
-      id: idx,
-      chunks: [],
-      name: '',
-    };
-  }
+  webpackClientMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
+  };
   if (typeof moduleExports.then === 'function') {
     moduleExports.then(
       asyncModuleExports => {
@@ -88,16 +90,11 @@ exports.clientExports = function clientExports(moduleExports) {
       () => {},
     );
   }
-  if ('split' in moduleExports) {
-    // If we're testing module splitting, we encode this name in a separate module id.
-    const splitIdx = '' + webpackModuleIdx++;
-    webpackClientModules[splitIdx] = {
-      s: moduleExports.split,
-    };
-    webpackClientMap[path + '#split'] = {
-      id: splitIdx,
+  for (const name in moduleExports) {
+    webpackClientMap[path + '#' + name] = {
+      id: idx,
       chunks: [],
-      name: 's',
+      name: name,
     };
   }
   const mod = {exports: {}};
@@ -115,24 +112,16 @@ exports.serverExports = function serverExports(moduleExports) {
     chunks: [],
     name: '*',
   };
-  // We only add this if this test is testing ESM compat.
-  if ('__esModule' in moduleExports) {
-    webpackServerMap[path + '#'] = {
+  webpackServerMap[path + '#'] = {
+    id: idx,
+    chunks: [],
+    name: '',
+  };
+  for (const name in moduleExports) {
+    webpackServerMap[path + '#' + name] = {
       id: idx,
       chunks: [],
-      name: '',
-    };
-  }
-  if ('split' in moduleExports) {
-    // If we're testing module splitting, we encode this name in a separate module id.
-    const splitIdx = '' + webpackModuleIdx++;
-    webpackServerModules[splitIdx] = {
-      s: moduleExports.split,
-    };
-    webpackServerMap[path + '#split'] = {
-      id: splitIdx,
-      chunks: [],
-      name: 's',
+      name: name,
     };
   }
   const mod = {exports: moduleExports};

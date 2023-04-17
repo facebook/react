@@ -8,8 +8,8 @@
  */
 
 import type {CallServerCallback} from './ReactFlightClient';
-import type {Response} from './ReactFlightClientConfigStream';
-import type {SSRManifest} from './ReactFlightClientConfig';
+import type {Response} from './ReactFlightClientHostConfigStream';
+import type {SSRManifest} from './ReactFlightClientHostConfig';
 
 import {
   resolveModule,
@@ -26,7 +26,7 @@ import {
   readFinalStringChunk,
   supportsBinaryStreams,
   createStringDecoder,
-} from './ReactFlightClientConfig';
+} from './ReactFlightClientHostConfig';
 
 export type {Response};
 

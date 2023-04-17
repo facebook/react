@@ -16,7 +16,7 @@ import type {
   INativeMethods,
   ViewConfig,
 } from './ReactNativeTypes';
-import type {Instance} from './ReactFiberConfigNative';
+import type {Instance} from './ReactNativeHostConfig';
 
 // Modules provided by RN:
 import {

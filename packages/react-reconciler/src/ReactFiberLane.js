@@ -319,6 +319,25 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   return nextLanes;
 }
 
+export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
+  const eventTimes = root.eventTimes;
+
+  let mostRecentEventTime = NoTimestamp;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+
+    const eventTime = eventTimes[index];
+    if (eventTime > mostRecentEventTime) {
+      mostRecentEventTime = eventTime;
+    }
+
+    lanes &= ~lane;
+  }
+
+  return mostRecentEventTime;
+}
+
 function computeExpirationTime(lane: Lane, currentTime: number) {
   switch (lane) {
     case SyncHydrationLane:
@@ -580,7 +599,11 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
   return laneMap;
 }
 
-export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
+export function markRootUpdated(
+  root: FiberRoot,
+  updateLane: Lane,
+  eventTime: number,
+) {
   root.pendingLanes |= updateLane;
 
   // If there are any suspended transitions, it's possible this new update
@@ -599,6 +622,12 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
     root.suspendedLanes = NoLanes;
     root.pingedLanes = NoLanes;
   }
+
+  const eventTimes = root.eventTimes;
+  const index = laneToIndex(updateLane);
+  // We can always overwrite an existing timestamp because we prefer the most
+  // recent event, and we assume time is monotonically increasing.
+  eventTimes[index] = eventTime;
 }
 
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
@@ -643,6 +672,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.errorRecoveryDisabledLanes &= remainingLanes;
 
   const entanglements = root.entanglements;
+  const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
   const hiddenUpdates = root.hiddenUpdates;
 
@@ -653,6 +683,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     const lane = 1 << index;
 
     entanglements[index] = NoLanes;
+    eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
 
     const hiddenUpdatesForLane = hiddenUpdates[index];

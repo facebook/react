@@ -464,13 +464,9 @@ describe('ReactIncrementalSideEffects', () => {
       </div>,
     );
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="World" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="World" />);
-    }
+    });
 
     // Flush some of the work without committing
     await waitFor(['Foo', 'Bar']);
@@ -703,13 +699,9 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.log('Foo ' + props.step);
       return <span prop={props.step} />;
     }
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={1} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     await waitFor(['Foo 1']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -718,26 +710,18 @@ describe('ReactIncrementalSideEffects', () => {
     await waitForPaint([]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={2} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={2} />);
-    }
+    });
     // This should be just enough to complete the tree without committing it
     await waitFor(['Foo 2']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo step={3} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo step={3} />);
-    }
+    });
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.

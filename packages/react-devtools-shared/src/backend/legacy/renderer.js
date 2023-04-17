@@ -17,10 +17,10 @@ import {
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
+  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
-  serializeToString,
 } from '../utils';
 import {
   deletePathInObject,
@@ -701,15 +701,10 @@ export function attach(
     }
   }
 
-  function getSerializedElementValueByPath(
-    id: number,
-    path: Array<string | number>,
-  ): ?string {
+  function copyElementPath(id: number, path: Array<string | number>): void {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      const valueToCopy = getInObject(inspectedElement, path);
-
-      return serializeToString(valueToCopy);
+      copyToClipboard(getInObject(inspectedElement, path));
     }
   }
 
@@ -1110,7 +1105,7 @@ export function attach(
     clearErrorsForFiberID,
     clearWarningsForFiberID,
     cleanup,
-    getSerializedElementValueByPath,
+    copyElementPath,
     deletePath,
     flushInitialOperations,
     getBestMatchForTrackedPath,

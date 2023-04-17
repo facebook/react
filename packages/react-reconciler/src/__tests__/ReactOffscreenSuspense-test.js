@@ -9,7 +9,6 @@ let useState;
 let useEffect;
 let startTransition;
 let textCache;
-let waitFor;
 let waitForPaint;
 let assertLog;
 
@@ -29,7 +28,6 @@ describe('ReactOffscreen', () => {
     startTransition = React.startTransition;
 
     const InternalTestUtils = require('internal-test-utils');
-    waitFor = InternalTestUtils.waitFor;
     waitForPaint = InternalTestUtils.waitForPaint;
     assertLog = InternalTestUtils.assertLog;
 
@@ -409,6 +407,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
+  // Only works in new reconciler
   // @gate enableOffscreen
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
@@ -443,17 +442,17 @@ describe('ReactOffscreen', () => {
       setOuter = _setOuter;
       return (
         <>
+          <span>
+            <Text text={'Outer: ' + outer} />
+          </span>
           <Offscreen mode={show ? 'visible' : 'hidden'}>
             <span>
               <Child outer={outer} />
             </span>
           </Offscreen>
-          <span>
-            <Text text={'Outer: ' + outer} />
-          </span>
           <Suspense fallback={<Text text="Loading..." />}>
             <span>
-              <Text text={'Sibling: ' + outer} />
+              <AsyncText text={'Async: ' + outer} />
             </span>
           </Suspense>
         </>
@@ -467,41 +466,50 @@ describe('ReactOffscreen', () => {
       root.render(<App show={true} />);
     });
     assertLog([
-      'Inner: 0',
       'Outer: 0',
-      'Sibling: 0',
+      'Inner: 0',
+      'Async: 0',
       'Inner and outer are consistent',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
-        <span>Inner: 0</span>
         <span>Outer: 0</span>
-        <span>Sibling: 0</span>
+        <span>Inner: 0</span>
+        <span>Async: 0</span>
       </>,
     );
 
     await act(async () => {
       // Update a value both inside and outside the hidden tree. These values
       // must always be consistent.
-      startTransition(() => {
-        setOuter(1);
-        setInner(1);
-        // In the same render, also hide the offscreen tree.
-        root.render(<App show={false} />);
-      });
+      setOuter(1);
+      setInner(1);
+      // In the same render, also hide the offscreen tree.
+      root.render(<App show={false} />);
 
-      await waitFor([
+      await waitForPaint([
         // The outer update will commit, but the inner update is deferred until
         // a later render.
         'Outer: 1',
+
+        // Something suspended. This means we won't commit immediately; there
+        // will be an async gap between render and commit. In this test, we will
+        // use this property to schedule a concurrent update. The fact that
+        // we're using Suspense to schedule a concurrent update is not directly
+        // relevant to the test — we could also use time slicing, but I've
+        // chosen to use Suspense the because implementation details of time
+        // slicing are more volatile.
+        'Suspend! [Async: 1]',
+
+        'Loading...',
       ]);
 
       // Assert that we haven't committed quite yet
       expect(root).toMatchRenderedOutput(
         <>
-          <span>Inner: 0</span>
           <span>Outer: 0</span>
-          <span>Sibling: 0</span>
+          <span>Inner: 0</span>
+          <span>Async: 0</span>
         </>,
       );
 
@@ -512,13 +520,14 @@ describe('ReactOffscreen', () => {
         setInner(2);
       });
 
-      // Finish rendering and commit the in-progress render.
-      await waitForPaint(['Sibling: 1']);
+      // Commit the previous render.
+      jest.runAllTimers();
       expect(root).toMatchRenderedOutput(
         <>
-          <span hidden={true}>Inner: 0</span>
           <span>Outer: 1</span>
-          <span>Sibling: 1</span>
+          <span hidden={true}>Inner: 0</span>
+          <span hidden={true}>Async: 0</span>
+          Loading...
         </>,
       );
 
@@ -527,27 +536,32 @@ describe('ReactOffscreen', () => {
         root.render(<App show={true} />);
       });
       assertLog([
+        'Outer: 1',
+
         // There are two pending updates on Inner, but only the first one
         // is processed, even though they share the same lane. If the second
         // update were erroneously processed, then Inner would be inconsistent
         // with Outer.
         'Inner: 1',
-        'Outer: 1',
-        'Sibling: 1',
+
+        'Suspend! [Async: 1]',
+        'Loading...',
         'Inner and outer are consistent',
       ]);
     });
     assertLog([
-      'Inner: 2',
       'Outer: 2',
-      'Sibling: 2',
+      'Inner: 2',
+      'Suspend! [Async: 2]',
+      'Loading...',
       'Inner and outer are consistent',
     ]);
     expect(root).toMatchRenderedOutput(
       <>
-        <span>Inner: 2</span>
         <span>Outer: 2</span>
-        <span>Sibling: 2</span>
+        <span>Inner: 2</span>
+        <span hidden={true}>Async: 0</span>
+        Loading...
       </>,
     );
   });

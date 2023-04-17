@@ -10,79 +10,81 @@
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-const unitlessNumbers = new Set([
-  'animationIterationCount',
-  'aspectRatio',
-  'borderImageOutset',
-  'borderImageSlice',
-  'borderImageWidth',
-  'boxFlex',
-  'boxFlexGroup',
-  'boxOrdinalGroup',
-  'columnCount',
-  'columns',
-  'flex',
-  'flexGrow',
-  'flexPositive',
-  'flexShrink',
-  'flexNegative',
-  'flexOrder',
-  'gridArea',
-  'gridRow',
-  'gridRowEnd',
-  'gridRowSpan',
-  'gridRowStart',
-  'gridColumn',
-  'gridColumnEnd',
-  'gridColumnSpan',
-  'gridColumnStart',
-  'fontWeight',
-  'lineClamp',
-  'lineHeight',
-  'opacity',
-  'order',
-  'orphans',
-  'scale',
-  'tabSize',
-  'widows',
-  'zIndex',
-  'zoom',
-  'fillOpacity', // SVG-related properties
-  'floodOpacity',
-  'stopOpacity',
-  'strokeDasharray',
-  'strokeDashoffset',
-  'strokeMiterlimit',
-  'strokeOpacity',
-  'strokeWidth',
-  'MozAnimationIterationCount', // Known Prefixed Properties
-  'MozBoxFlex', // TODO: Remove these since they shouldn't be used in modern code
-  'MozBoxFlexGroup',
-  'MozLineClamp',
-  'msAnimationIterationCount',
-  'msFlex',
-  'msZoom',
-  'msFlexGrow',
-  'msFlexNegative',
-  'msFlexOrder',
-  'msFlexPositive',
-  'msFlexShrink',
-  'msGridColumn',
-  'msGridColumnSpan',
-  'msGridRow',
-  'msGridRowSpan',
-  'WebkitAnimationIterationCount',
-  'WebkitBoxFlex',
-  'WebKitBoxFlexGroup',
-  'WebkitBoxOrdinalGroup',
-  'WebkitColumnCount',
-  'WebkitColumns',
-  'WebkitFlex',
-  'WebkitFlexGrow',
-  'WebkitFlexPositive',
-  'WebkitFlexShrink',
-  'WebkitLineClamp',
-]);
 export default function (name: string): boolean {
-  return unitlessNumbers.has(name);
+  switch (name) {
+    case 'animationIterationCount':
+    case 'aspectRatio':
+    case 'borderImageOutset':
+    case 'borderImageSlice':
+    case 'borderImageWidth':
+    case 'boxFlex':
+    case 'boxFlexGroup':
+    case 'boxOrdinalGroup':
+    case 'columnCount':
+    case 'columns':
+    case 'flex':
+    case 'flexGrow':
+    case 'flexPositive':
+    case 'flexShrink':
+    case 'flexNegative':
+    case 'flexOrder':
+    case 'gridArea':
+    case 'gridRow':
+    case 'gridRowEnd':
+    case 'gridRowSpan':
+    case 'gridRowStart':
+    case 'gridColumn':
+    case 'gridColumnEnd':
+    case 'gridColumnSpan':
+    case 'gridColumnStart':
+    case 'fontWeight':
+    case 'lineClamp':
+    case 'lineHeight':
+    case 'opacity':
+    case 'order':
+    case 'orphans':
+    case 'scale':
+    case 'tabSize':
+    case 'widows':
+    case 'zIndex':
+    case 'zoom':
+    case 'fillOpacity': // SVG-related properties
+    case 'floodOpacity':
+    case 'stopOpacity':
+    case 'strokeDasharray':
+    case 'strokeDashoffset':
+    case 'strokeMiterlimit':
+    case 'strokeOpacity':
+    case 'strokeWidth':
+    case 'MozAnimationIterationCount': // Known Prefixed Properties
+    case 'MozBoxFlex': // TODO: Remove these since they shouldn't be used in modern code
+    case 'MozBoxFlexGroup':
+    case 'MozLineClamp':
+    case 'msAnimationIterationCount':
+    case 'msFlex':
+    case 'msZoom':
+    case 'msFlexGrow':
+    case 'msFlexNegative':
+    case 'msFlexOrder':
+    case 'msFlexPositive':
+    case 'msFlexShrink':
+    case 'msGridColumn':
+    case 'msGridColumnSpan':
+    case 'msGridRow':
+    case 'msGridRowSpan':
+    case 'WebkitAnimationIterationCount':
+    case 'WebkitBoxFlex':
+    case 'WebKitBoxFlexGroup':
+    case 'WebkitBoxOrdinalGroup':
+    case 'WebkitColumnCount':
+    case 'WebkitColumns':
+    case 'WebkitFlex':
+    case 'WebkitFlexGrow':
+    case 'WebkitFlexPositive':
+    case 'WebkitFlexShrink':
+    case 'WebkitLineClamp':
+      return true;
+    default:
+      return false;
+  }
 }

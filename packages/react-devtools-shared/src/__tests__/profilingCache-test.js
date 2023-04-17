@@ -963,7 +963,7 @@ describe('ProfilingCache', () => {
             2 => 0,
           },
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": [
             {

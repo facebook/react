@@ -15,9 +15,9 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent';
-import type {Container} from './ReactFiberConfig';
+import type {Container} from './ReactFiberHostConfig';
 
-import {noTimeout, supportsHydration} from './ReactFiberConfig';
+import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {
   NoLane,
@@ -63,9 +63,9 @@ function FiberRootNode(
   this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
-  this.next = null;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
+  this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;

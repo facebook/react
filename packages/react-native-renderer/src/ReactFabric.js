@@ -40,7 +40,7 @@ import {
   sendAccessibilityEvent,
   getNodeFromInternalInstanceHandle,
 } from './ReactNativePublicCompat';
-import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFabric';
+import {getPublicInstanceFromInternalInstanceHandle} from './ReactFabricHostConfig';
 
 // $FlowFixMe[missing-local-annot]
 function onRecoverableError(error) {
