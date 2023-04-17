@@ -21,7 +21,6 @@ let textResourceShouldFail;
 let waitForAll;
 let assertLog;
 let waitForThrow;
-let act;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -41,7 +40,6 @@ describe('ReactCache', () => {
     waitForAll = InternalTestUtils.waitForAll;
     assertLog = InternalTestUtils.assertLog;
     waitForThrow = InternalTestUtils.waitForThrow;
-    act = InternalTestUtils.act;
 
     TextResource = createResource(
       ([text, ms = 0]) => {
@@ -147,14 +145,11 @@ describe('ReactCache', () => {
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
 
     textResourceShouldFail = true;
-    let error;
-    try {
-      await act(() => jest.advanceTimersByTime(100));
-    } catch (e) {
-      error = e;
-    }
-    expect(error.message).toMatch('Failed to load: Hi');
-    assertLog(['Promise rejected [Hi]', 'Error! [Hi]', 'Error! [Hi]']);
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise rejected [Hi]']);
+
+    await waitForThrow('Failed to load: Hi');
+    assertLog(['Error! [Hi]', 'Error! [Hi]']);
 
     // Should throw again on a subsequent read
     root.update(<App />);
@@ -222,8 +217,9 @@ describe('ReactCache', () => {
     assertLog(['Promise resolved [2]']);
     await waitForAll([1, 2, 'Suspend! [3]']);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog(['Promise resolved [3]', 1, 2, 3]);
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [3]']);
+    await waitForAll([1, 2, 3]);
 
     expect(root).toMatchRenderedOutput('123');
 
@@ -238,17 +234,13 @@ describe('ReactCache', () => {
 
     await waitForAll([1, 'Suspend! [4]', 'Loading...']);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [4]',
-      1,
-      4,
-      'Suspend! [5]',
-      'Promise resolved [5]',
-      1,
-      4,
-      5,
-    ]);
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [4]']);
+    await waitForAll([1, 4, 'Suspend! [5]']);
+
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [5]']);
+    await waitForAll([1, 4, 5]);
 
     expect(root).toMatchRenderedOutput('145');
 
@@ -270,18 +262,13 @@ describe('ReactCache', () => {
       'Suspend! [2]',
       'Loading...',
     ]);
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [2]']);
+    await waitForAll([1, 2, 'Suspend! [3]']);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [2]',
-      1,
-      2,
-      'Suspend! [3]',
-      'Promise resolved [3]',
-      1,
-      2,
-      3,
-    ]);
+    jest.advanceTimersByTime(100);
+    assertLog(['Promise resolved [3]']);
+    await waitForAll([1, 2, 3]);
     expect(root).toMatchRenderedOutput('123');
   });
 
@@ -304,8 +291,9 @@ describe('ReactCache', () => {
 
     await waitForAll(['Loading...']);
 
-    await act(() => jest.advanceTimersByTime(1000));
-    assertLog(['Promise resolved [B]', 'Promise resolved [A]', 'Result']);
+    jest.advanceTimersByTime(1000);
+    assertLog(['Promise resolved [B]', 'Promise resolved [A]']);
+    await waitForAll(['Result']);
     expect(root).toMatchRenderedOutput('Result');
   });
 

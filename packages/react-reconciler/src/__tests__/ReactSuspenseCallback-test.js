@@ -12,7 +12,6 @@
 let React;
 let ReactNoop;
 let waitForAll;
-let act;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
@@ -23,7 +22,6 @@ describe('ReactSuspense', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
-    act = InternalTestUtils.act;
   });
 
   function createThenable() {
@@ -92,7 +90,7 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise])]);
     ops = [];
 
-    await act(() => resolve());
+    await resolve();
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Done');
     expect(ops).toEqual([]);
@@ -131,14 +129,14 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise1])]);
     ops = [];
 
-    await act(() => resolve1());
+    await resolve1();
     ReactNoop.render(element);
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 1');
     expect(ops).toEqual([new Set([promise2])]);
     ops = [];
 
-    await act(() => resolve2());
+    await resolve2();
     ReactNoop.render(element);
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('DoneDone');
@@ -220,14 +218,23 @@ describe('ReactSuspense', () => {
     ops1 = [];
     ops2 = [];
 
-    await act(() => resolve1());
+    await resolve1();
+    ReactNoop.render(element);
+    await waitForAll([]);
+
+    // Force fallback to commit.
+    // TODO: Should be able to use `act` here.
+    jest.runAllTimers();
+
     expect(ReactNoop).toMatchRenderedOutput('Waiting Tier 2Done');
     expect(ops1).toEqual([]);
     expect(ops2).toEqual([new Set([promise2])]);
     ops1 = [];
     ops2 = [];
 
-    await act(() => resolve2());
+    await resolve2();
+    ReactNoop.render(element);
+    await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('DoneDone');
     expect(ops1).toEqual([]);
     expect(ops2).toEqual([]);
