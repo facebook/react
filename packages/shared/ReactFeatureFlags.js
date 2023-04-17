@@ -48,10 +48,6 @@ export const enableSchedulerDebugging = false;
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// This will break some internal tests at Meta so we need to gate this until
-// those can be fixed.
-export const enableDeferRootSchedulingToMicrotask = true;
-
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
 //

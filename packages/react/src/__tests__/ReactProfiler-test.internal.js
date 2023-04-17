@@ -258,22 +258,13 @@ describe(`onRender`, () => {
 
     // TODO: unstable_now is called by more places than just the profiler.
     // Rewrite this test so it's less fragile.
-    if (gate(flags => flags.enableDeferRootSchedulingToMicrotask)) {
-      assertLog([
-        'read current time',
-        'read current time',
-        'read current time',
-      ]);
-    } else {
-      assertLog([
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-      ]);
-    }
+    assertLog([
+      'read current time',
+      'read current time',
+      'read current time',
+      'read current time',
+      'read current time',
+    ]);
 
     // Restore original mock
     jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));

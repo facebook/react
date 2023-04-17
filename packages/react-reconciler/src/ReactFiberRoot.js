@@ -63,7 +63,6 @@ function FiberRootNode(
   this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
-  this.next = null;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
   this.eventTimes = createLaneMap(NoLanes);

@@ -3,6 +3,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
+let waitForThrow;
 
 let overrideQueueMicrotask;
 let flushFakeMicrotasks;
@@ -42,6 +43,7 @@ describe('ReactFlushSync (AggregateError not available)', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    waitForThrow = InternalTestUtils.waitForThrow;
   });
 
   function Text({text}) {
@@ -93,6 +95,15 @@ describe('ReactFlushSync (AggregateError not available)', () => {
     // AggregateError is not available, React throws the first error, then
     // throws the remaining errors in separate tasks.
     expect(error).toBe(aahh);
-    expect(flushFakeMicrotasks).toThrow(nooo);
+
+    // TODO: Currently the remaining error is rethrown in an Immediate Scheduler
+    // task, but this may change to a timer or microtask in the future. The
+    // exact mechanism is an implementation detail; they just need to be logged
+    // in the order the occurred.
+
+    // This will start throwing if we change it to rethrow in a microtask.
+    flushFakeMicrotasks();
+
+    await waitForThrow(nooo);
   });
 });
