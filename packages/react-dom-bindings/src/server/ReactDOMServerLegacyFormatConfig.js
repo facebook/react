@@ -12,7 +12,7 @@ import type {
   FormatContext,
   StreamingFormat,
   InstructionState,
-} from './ReactFizzConfigDOM';
+} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -23,7 +23,7 @@ import {
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
   HTML_MODE,
-} from './ReactFizzConfigDOM';
+} from './ReactDOMServerFormatConfig';
 
 import type {
   Destination,
@@ -34,7 +34,7 @@ import type {
 export const isPrimaryRenderer = false;
 
 export type ResponseState = {
-  // Keep this in sync with ReactFizzConfigDOM
+  // Keep this in sync with ReactDOMServerFormatConfig
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
@@ -71,7 +71,7 @@ export function createResponseState(
     externalRuntimeConfig,
   );
   return {
-    // Keep this in sync with ReactFizzConfigDOM
+    // Keep this in sync with ReactDOMServerFormatConfig
     bootstrapChunks: responseState.bootstrapChunks,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
@@ -109,7 +109,7 @@ export type {
   BoundaryResources,
   FormatContext,
   SuspenseBoundaryID,
-} from './ReactFizzConfigDOM';
+} from './ReactDOMServerFormatConfig';
 
 export {
   getChildFormatContext,
@@ -139,7 +139,7 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareToRender,
   cleanupAfterRender,
-} from './ReactFizzConfigDOM';
+} from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
 

@@ -10,7 +10,7 @@
 import ReactVersion from 'shared/ReactVersion';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
 
 import {
   createRequest,
@@ -22,7 +22,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
+} from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
 
 type ServerOptions = {
   identifierPrefix?: string,
