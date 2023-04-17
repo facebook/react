@@ -36,7 +36,6 @@ import {loadModule} from 'react-devtools-shared/src/dynamicImportCache';
 import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {SettingsContext} from '../Settings/SettingsContext';
-import {enableNamedHooksFeature} from 'react-devtools-feature-flags';
 
 import type {HookNames} from 'react-devtools-shared/src/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -128,28 +127,26 @@ export function InspectedElementContextController({
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (enableNamedHooksFeature) {
-      if (typeof hookNamesModuleLoader === 'function') {
-        if (parseHookNames || alreadyLoadedHookNames) {
-          const hookNamesModule = loadModule(hookNamesModuleLoader);
-          if (hookNamesModule !== null) {
-            const {parseHookNames: loadHookNamesFunction, purgeCachedMetadata} =
-              hookNamesModule;
+    if (typeof hookNamesModuleLoader === 'function') {
+      if (parseHookNames || alreadyLoadedHookNames) {
+        const hookNamesModule = loadModule(hookNamesModuleLoader);
+        if (hookNamesModule !== null) {
+          const {parseHookNames: loadHookNamesFunction, purgeCachedMetadata} =
+            hookNamesModule;
 
-            purgeCachedMetadataRef.current = purgeCachedMetadata;
+          purgeCachedMetadataRef.current = purgeCachedMetadata;
 
-            if (
-              inspectedElement !== null &&
-              inspectedElement.hooks !== null &&
-              loadHookNamesFunction !== null
-            ) {
-              hookNames = loadHookNames(
-                element,
-                inspectedElement.hooks,
-                loadHookNamesFunction,
-                fetchFileWithCaching,
-              );
-            }
+          if (
+            inspectedElement !== null &&
+            inspectedElement.hooks !== null &&
+            loadHookNamesFunction !== null
+          ) {
+            hookNames = loadHookNames(
+              element,
+              inspectedElement.hooks,
+              loadHookNamesFunction,
+              fetchFileWithCaching,
+            );
           }
         }
       }

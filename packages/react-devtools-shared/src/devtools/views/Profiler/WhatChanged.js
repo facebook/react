@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import {useContext} from 'react';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
@@ -103,7 +102,7 @@ export default function WhatChanged({fiberID}: Props): React.Node {
   }
 
   if (didHooksChange) {
-    if (enableProfilerChangedHookIndices && Array.isArray(hooks)) {
+    if (Array.isArray(hooks)) {
       changes.push(
         <div key="hooks" className={styles.Item}>
           • {hookIndicesToString(hooks)}
