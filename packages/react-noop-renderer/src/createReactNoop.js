@@ -526,10 +526,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
-    shouldAttemptEagerTransition(): boolean {
-      return false;
-    },
-
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,

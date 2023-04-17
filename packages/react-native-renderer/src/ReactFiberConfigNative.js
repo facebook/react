@@ -265,10 +265,6 @@ export function getCurrentEventPriority(): * {
   return DefaultEventPriority;
 }
 
-export function shouldAttemptEagerTransition(): boolean {
-  return false;
-}
-
 // -------------------
 //     Mutation
 // -------------------

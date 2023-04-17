@@ -213,9 +213,6 @@ export function createTextInstance(
 export function getCurrentEventPriority(): * {
   return DefaultEventPriority;
 }
-export function shouldAttemptEagerTransition(): boolean {
-  return false;
-}
 
 export const isPrimaryRenderer = false;
 export const warnsIfNotActing = true;

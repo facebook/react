@@ -334,10 +334,6 @@ export function getCurrentEventPriority(): * {
   return DefaultEventPriority;
 }
 
-export function shouldAttemptEagerTransition(): boolean {
-  return false;
-}
-
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 
