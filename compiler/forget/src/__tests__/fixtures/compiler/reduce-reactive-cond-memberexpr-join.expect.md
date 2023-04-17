@@ -25,7 +25,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// To preserve the nullthrows behavior and reactive deps of this code,
+import * as React from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a.b` or a subpath as a dependency.
 //
 // (1) Since the reactive block producing x unconditionally read props.a.<...>,

@@ -14,7 +14,7 @@ function Component() {
 ## Code
 
 ```javascript
-// Forget should call the original x (x = foo()) to compute result
+import * as React from "react"; // Forget should call the original x (x = foo()) to compute result
 function Component() {
   const $ = React.unstable_useMemoCache(3);
   let t0;

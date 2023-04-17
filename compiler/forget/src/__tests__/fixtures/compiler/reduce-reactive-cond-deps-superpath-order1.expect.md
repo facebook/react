@@ -20,7 +20,7 @@ function TestConditionalSuperpath1(props, other) {
 ## Code
 
 ```javascript
-// When an unconditional dependency `props.a` is the subpath of a conditional
+import * as React from "react"; // When an unconditional dependency `props.a` is the subpath of a conditional
 // dependency `props.a.b`, we can safely overestimate and only track `props.a`
 // as a dependency
 // ordering of accesses should not matter

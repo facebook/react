@@ -13,6 +13,7 @@ function component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function component(props) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== props;

@@ -23,6 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function Component(props) {
   const $ = React.unstable_useMemoCache(2);
   let x = 0;

@@ -43,7 +43,7 @@ function foo(props) {
 ## Code
 
 ```javascript
-// note: comments are for the ideal scopes, not what is currently
+import * as React from "react"; // note: comments are for the ideal scopes, not what is currently
 // emitted
 function foo(props) {
   const $ = React.unstable_useMemoCache(16);

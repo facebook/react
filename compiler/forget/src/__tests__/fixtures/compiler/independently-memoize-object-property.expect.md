@@ -15,6 +15,7 @@ function foo(a, b, c) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function foo(a, b, c) {
   const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== a;

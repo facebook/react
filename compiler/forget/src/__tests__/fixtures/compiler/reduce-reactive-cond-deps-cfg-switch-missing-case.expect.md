@@ -26,7 +26,7 @@ function TestCondDepInSwitchMissingCase(props, other) {
 ## Code
 
 ```javascript
-// props.a.b should NOT be added as a unconditional dependency to the reactive
+import * as React from "react"; // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in every path
 
 function TestCondDepInSwitchMissingCase(props, other) {

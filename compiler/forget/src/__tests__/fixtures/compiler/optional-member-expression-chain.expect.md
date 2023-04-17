@@ -15,7 +15,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// Note that `a?.b.c` is semantically different from `(a?.b).c`
+import * as React from "react"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
 // We should codegen the correct member expressions
 function Component(props) {
   const $ = React.unstable_useMemoCache(3);

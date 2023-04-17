@@ -21,7 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// Check that we correctly resolve type and effect lookups on the javascript
+import * as React from "react"; // Check that we correctly resolve type and effect lookups on the javascript
 // global object.
 function Component(props) {
   const $ = React.unstable_useMemoCache(7);

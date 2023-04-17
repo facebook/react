@@ -17,6 +17,7 @@ function foo() {
 ## Code
 
 ```javascript
+import * as React from "react";
 function foo() {
   const $ = React.unstable_useMemoCache(3);
   let x;

@@ -19,6 +19,7 @@ function foo() {
 ## Code
 
 ```javascript
+import * as React from "react";
 function mutate() {
   return undefined;
 }

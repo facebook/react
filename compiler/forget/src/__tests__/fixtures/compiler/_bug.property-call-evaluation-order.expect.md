@@ -22,7 +22,7 @@ function Component() {
 ## Code
 
 ```javascript
-// Should print A, arg, original
+import * as React from "react"; // Should print A, arg, original
 
 function changeF(o) {
   o.f = () => console.log("new");

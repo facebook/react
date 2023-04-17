@@ -20,7 +20,7 @@ function PrimitiveAsDepNested(props) {
 ## Code
 
 ```javascript
-// props.b + 1 is an non-allocating expression, which means Forget can
+import * as React from "react"; // props.b + 1 is an non-allocating expression, which means Forget can
 // emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
 // separately from props.b)
 // Correctness:

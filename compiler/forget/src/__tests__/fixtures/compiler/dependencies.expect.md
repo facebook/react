@@ -23,6 +23,7 @@ function foo(x, y, z) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function foo(x, y, z) {
   const $ = React.unstable_useMemoCache(3);
   const items = [z];

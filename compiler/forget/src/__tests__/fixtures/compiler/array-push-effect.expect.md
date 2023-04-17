@@ -19,7 +19,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// arrayInstance.push should have the following effects:
+import * as React from "react"; // arrayInstance.push should have the following effects:
 //  - read on all args (rest parameter)
 //  - mutate on receiver
 function Component(props) {

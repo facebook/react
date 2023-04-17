@@ -22,7 +22,8 @@ export function Foo(props) {
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating @forgetDirective
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import * as React from "react"; // @gating @forgetDirective
 function Bar_uncompiled(props) {
   "use forget";
   return <div>{props.bar}</div>;

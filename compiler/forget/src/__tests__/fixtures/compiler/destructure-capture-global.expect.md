@@ -13,6 +13,7 @@ function component(a) {
 ## Code
 
 ```javascript
+import * as React from "react";
 let someGlobal = {};
 function component(a) {
   const $ = React.unstable_useMemoCache(2);

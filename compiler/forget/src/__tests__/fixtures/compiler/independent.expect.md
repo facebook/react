@@ -27,6 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
+import * as React from "react";
 /**
  * Should produce 3 scopes:
  *

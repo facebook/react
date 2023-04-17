@@ -13,6 +13,7 @@ function component(t) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function component(t) {
   const $ = React.unstable_useMemoCache(2);
   const { a } = t;

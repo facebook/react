@@ -34,7 +34,7 @@ function TestJoinCondDepsInUncondScopes(props) {
 ## Code
 
 ```javascript
-// This tests an optimization, NOT a correctness property.
+import * as React from "react"; // This tests an optimization, NOT a correctness property.
 // When propagating reactive dependencies of an inner scope up to its parent,
 // we prefer to retain granularity.
 //

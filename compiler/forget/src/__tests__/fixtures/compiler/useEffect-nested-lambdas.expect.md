@@ -30,6 +30,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function Component(props) {
   const $ = React.unstable_useMemoCache(3);
   const item = useMutable(props.itemId);

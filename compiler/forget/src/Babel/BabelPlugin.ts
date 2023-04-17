@@ -191,11 +191,55 @@ export default function ReactForgetBabelPlugin(
             opts: { ...pass.opts, ...options },
           });
 
-          if (options.gating != null && hasForgetCompiledCode) {
-            path.unshiftContainer(
-              "body",
-              buildImportForGatingModule(options.gating)
-            );
+          // If there isn't already an import of * as React, insert it so React.useMemoCache doesn't
+          // throw
+          if (hasForgetCompiledCode) {
+            let didInsertUseMemoCache = false;
+            let hasExistingReactImport = false;
+            path.traverse({
+              MemberExpression(memberExprPath) {
+                const obj = memberExprPath.get("object");
+                const prop = memberExprPath.get("property");
+                if (
+                  obj.isIdentifier() &&
+                  obj.node.name === "React" &&
+                  prop.isIdentifier() &&
+                  prop.node.name === "unstable_useMemoCache"
+                ) {
+                  didInsertUseMemoCache = true;
+                  memberExprPath.stop();
+                }
+              },
+              ImportDeclaration(importDeclPath) {
+                if (
+                  importDeclPath.get("source").node.value === "react" &&
+                  importDeclPath.get("specifiers").length === 1 &&
+                  importDeclPath
+                    .get("specifiers")[0]
+                    .isImportNamespaceSpecifier() &&
+                  importDeclPath.get("specifiers")[0].get("local").node.name ===
+                    "React"
+                ) {
+                  hasExistingReactImport = true;
+                  importDeclPath.stop();
+                }
+              },
+            });
+            if (didInsertUseMemoCache && !hasExistingReactImport) {
+              path.unshiftContainer(
+                "body",
+                t.importDeclaration(
+                  [t.importNamespaceSpecifier(t.identifier("React"))],
+                  t.stringLiteral("react")
+                )
+              );
+            }
+            if (options.gating != null) {
+              path.unshiftContainer(
+                "body",
+                buildImportForGatingModule(options.gating)
+              );
+            }
           }
         } catch (err) {
           if (options.logger && err) {

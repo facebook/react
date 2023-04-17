@@ -22,6 +22,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function useFreeze() {
   return undefined;
 }

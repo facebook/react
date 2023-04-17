@@ -25,6 +25,7 @@ function call(x) {}
 ## Code
 
 ```javascript
+import * as React from "react";
 function Component(props) {
   const $ = React.unstable_useMemoCache(1);
   const cond = props.cond;

@@ -36,6 +36,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function compute() {
   return undefined;
 }

@@ -34,6 +34,7 @@ function mayMutate() {}
 ## Code
 
 ```javascript
+import * as React from "react";
 function ComponentA(props) {
   const $ = React.unstable_useMemoCache(6);
   const c_0 = $[0] !== props;

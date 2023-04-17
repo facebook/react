@@ -16,7 +16,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @flow
+import * as React from "react"; // @flow
 type Foo = { bar: string };
 function Component(props) {
   const $ = React.unstable_useMemoCache(2);

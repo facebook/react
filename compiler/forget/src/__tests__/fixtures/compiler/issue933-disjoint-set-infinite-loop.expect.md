@@ -16,7 +16,7 @@ function MyApp(props) {
 ## Code
 
 ```javascript
-// This caused an infinite loop in the compiler
+import * as React from "react"; // This caused an infinite loop in the compiler
 function MyApp(props) {
   const $ = React.unstable_useMemoCache(1);
   let y;

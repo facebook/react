@@ -17,6 +17,7 @@ function bar(a) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function bar(a) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;

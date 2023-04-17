@@ -61,6 +61,7 @@ function ComponentD(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 /**
  * props.b does *not* influence `a`
  */

@@ -22,6 +22,7 @@ function component(a, b) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function component(a, b) {
   const $ = React.unstable_useMemoCache(7);
   const c_0 = $[0] !== a;

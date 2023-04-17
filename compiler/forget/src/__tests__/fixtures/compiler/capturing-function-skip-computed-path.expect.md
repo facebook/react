@@ -12,6 +12,7 @@ function StoreLandingUnseenGiftModalContainer(a) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function StoreLandingUnseenGiftModalContainer(a) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== a;

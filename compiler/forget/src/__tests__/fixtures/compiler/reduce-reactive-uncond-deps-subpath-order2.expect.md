@@ -17,7 +17,7 @@ function TestDepsSubpathOrder2(props) {
 ## Code
 
 ```javascript
-// Determine that we only need to track p.a here
+import * as React from "react"; // Determine that we only need to track p.a here
 // Ordering of access should not matter
 function TestDepsSubpathOrder2(props) {
   const $ = React.unstable_useMemoCache(2);

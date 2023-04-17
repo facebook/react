@@ -23,6 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 /**
  * props.b *does* influence `a`
  */

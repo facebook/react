@@ -24,6 +24,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function Component(props) {
   const $ = React.unstable_useMemoCache(7);
   const dispatch = useDispatch();

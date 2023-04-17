@@ -15,6 +15,7 @@ function foo(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function foo(props) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== props.bar;

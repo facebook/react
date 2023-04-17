@@ -34,7 +34,7 @@ function TestReactiveDepsInCondScope(props) {
 ## Code
 
 ```javascript
-// Some reactive scopes are created within a conditional. If a child scope
+import * as React from "react"; // Some reactive scopes are created within a conditional. If a child scope
 // is within a conditional, its reactive dependencies should be propagated
 // as conditionals
 //

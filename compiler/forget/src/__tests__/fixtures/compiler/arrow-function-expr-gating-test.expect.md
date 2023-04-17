@@ -12,7 +12,8 @@ export default ErrorView;
 ## Code
 
 ```javascript
-import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag"; // @gating
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
+import * as React from "react"; // @gating
 function ErrorView_uncompiled(error, _retry) {
   return <MessageBox error={error}></MessageBox>;
 }

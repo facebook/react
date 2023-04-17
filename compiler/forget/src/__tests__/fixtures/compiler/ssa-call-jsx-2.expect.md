@@ -21,7 +21,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @Pass runMutableRangeAnalysis
+import * as React from "react"; // @Pass runMutableRangeAnalysis
 function foo() {
   return undefined;
 }

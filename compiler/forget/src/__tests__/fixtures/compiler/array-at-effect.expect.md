@@ -17,7 +17,7 @@ function ArrayAtTest(props) {
 ## Code
 
 ```javascript
-// arrayInstance.at should have the following effects:
+import * as React from "react"; // arrayInstance.at should have the following effects:
 //  - read on arg0
 //  - read on receiver
 //  - mutate on lvalue

@@ -14,6 +14,7 @@ function component() {
 ## Code
 
 ```javascript
+import * as React from "react";
 function component() {
   const $ = React.unstable_useMemoCache(5);
   const [count, setCount] = useState(0);

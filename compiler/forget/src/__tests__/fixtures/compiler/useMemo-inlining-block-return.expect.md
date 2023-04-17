@@ -17,7 +17,7 @@ function component(a, b) {
 ## Code
 
 ```javascript
-// @inlineUseMemo
+import * as React from "react"; // @inlineUseMemo
 function component(a, b) {
   const $ = React.unstable_useMemoCache(2);
   let t14 = undefined;

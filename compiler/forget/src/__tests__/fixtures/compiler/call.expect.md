@@ -18,6 +18,7 @@ function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 function foo() {
   return undefined;
 }

@@ -16,6 +16,7 @@ export function Component(props) {
 ## Code
 
 ```javascript
+import * as React from "react";
 export function Component(props) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== props.a;

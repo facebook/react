@@ -18,7 +18,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @inlineUseMemo
+import * as React from "react"; // @inlineUseMemo
 function Component(props) {
   const $ = React.unstable_useMemoCache(10);
   const c_0 = $[0] !== props.a;

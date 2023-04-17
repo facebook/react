@@ -16,7 +16,7 @@ function AllocatingPrimitiveAsDep(props) {
 ## Code
 
 ```javascript
-// bar(props.b) is an allocating expression that produces a primitive, which means
+import * as React from "react"; // bar(props.b) is an allocating expression that produces a primitive, which means
 // that Forget should memoize it.
 // Correctness:
 //   - y depends on either bar(props.b) or bar(props.b) + 1

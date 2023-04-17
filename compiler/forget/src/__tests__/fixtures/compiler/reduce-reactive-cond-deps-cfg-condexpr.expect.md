@@ -16,7 +16,7 @@ function TestCondDepInConditionalExpr(props, other) {
 ## Code
 
 ```javascript
-// props.a.b should be added as a unconditional dependency to the reactive
+import * as React from "react"; // props.a.b should be added as a unconditional dependency to the reactive
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 

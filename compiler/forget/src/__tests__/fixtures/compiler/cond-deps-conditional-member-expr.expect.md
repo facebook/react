@@ -17,7 +17,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// To preserve the nullthrows behavior and reactive deps of this code,
+import * as React from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a` as a dependency (since `props.a.b` is
 // a conditional dependency, i.e. gated behind control flow)
 

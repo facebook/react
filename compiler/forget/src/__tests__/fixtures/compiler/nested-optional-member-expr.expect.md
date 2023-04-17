@@ -14,7 +14,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-// We should codegen nested optional properties correctly
+import * as React from "react"; // We should codegen nested optional properties correctly
 // (i.e. placing `?` in the correct PropertyLoad)
 function Component(props) {
   const $ = React.unstable_useMemoCache(2);
