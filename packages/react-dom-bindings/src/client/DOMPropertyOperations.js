@@ -140,33 +140,6 @@ export function setValueForAttribute(
   }
 }
 
-export function setValueForKnownAttribute(
-  node: Element,
-  name: string,
-  value: mixed,
-) {
-  if (value === null) {
-    node.removeAttribute(name);
-    return;
-  }
-  switch (typeof value) {
-    case 'undefined':
-    case 'function':
-    case 'symbol':
-    case 'boolean': {
-      node.removeAttribute(name);
-      return;
-    }
-  }
-  if (__DEV__) {
-    checkAttributeStringCoercion(value, name);
-  }
-  node.setAttribute(
-    name,
-    enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-  );
-}
-
 export function setValueForNamespacedAttribute(
   node: Element,
   namespace: string,
