@@ -32,7 +32,7 @@ import {
   updateInput,
   restoreControlledInputState,
 } from './ReactDOMInput';
-import {validateOptionProps} from './ReactDOMOption';
+import {initOption, validateOptionProps} from './ReactDOMOption';
 import {
   validateSelectProps,
   initSelect,
@@ -995,6 +995,7 @@ export function setInitialProperties(
           }
         }
       }
+      initOption(domElement, props);
       return;
     }
     case 'dialog': {
