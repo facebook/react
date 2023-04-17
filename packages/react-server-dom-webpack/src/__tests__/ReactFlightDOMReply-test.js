@@ -30,6 +30,20 @@ describe('ReactFlightDOMReply', () => {
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
 
+  // This method should exist on File but is not implemented in JSDOM
+  async function arrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function () {
+        return resolve(reader.result);
+      };
+      reader.onerror = function () {
+        return reject(reader.error);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
   it('can pass undefined as a reply', async () => {
     const body = await ReactServerDOMClient.encodeReply(undefined);
     const missing = await ReactServerDOMServer.decodeReply(
@@ -93,5 +107,85 @@ describe('ReactFlightDOMReply', () => {
     const n = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
 
     expect(n).toEqual(90071992547409910000n);
+  });
+
+  it('can pass FormData as a reply', async () => {
+    const formData = new FormData();
+    formData.set('hello', 'world');
+    formData.append('list', '1');
+    formData.append('list', '2');
+    formData.append('list', '3');
+    const typedArray = new Uint8Array([0, 1, 2, 3]);
+    const blob = new Blob([typedArray]);
+    formData.append('blob', blob, 'filename.blob');
+
+    const body = await ReactServerDOMClient.encodeReply(formData);
+    const formData2 = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    expect(formData2).not.toBe(formData);
+    expect(Array.from(formData2).length).toBe(5);
+    expect(formData2.get('hello')).toBe('world');
+    expect(formData2.getAll('list')).toEqual(['1', '2', '3']);
+    const blob2 = formData.get('blob');
+    expect(blob2.size).toBe(4);
+    expect(blob2.name).toBe('filename.blob');
+    expect(blob2.type).toBe('');
+    const typedArray2 = new Uint8Array(await arrayBuffer(blob2));
+    expect(typedArray2).toEqual(typedArray);
+  });
+
+  it('can pass multiple Files in FormData', async () => {
+    const typedArrayA = new Uint8Array([0, 1, 2, 3]);
+    const typedArrayB = new Uint8Array([4, 5]);
+    const blobA = new Blob([typedArrayA]);
+    const blobB = new Blob([typedArrayB]);
+    const formData = new FormData();
+    formData.append('filelist', 'string');
+    formData.append('filelist', blobA);
+    formData.append('filelist', blobB);
+
+    const body = await ReactServerDOMClient.encodeReply(formData);
+    const formData2 = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    const filelist2 = formData2.getAll('filelist');
+    expect(filelist2.length).toBe(3);
+    expect(filelist2[0]).toBe('string');
+    const blobA2 = filelist2[1];
+    expect(blobA2.size).toBe(4);
+    expect(blobA2.name).toBe('blob');
+    expect(blobA2.type).toBe('');
+    const typedArrayA2 = new Uint8Array(await arrayBuffer(blobA2));
+    expect(typedArrayA2).toEqual(typedArrayA);
+    const blobB2 = filelist2[2];
+    expect(blobB2.size).toBe(2);
+    expect(blobB2.name).toBe('blob');
+    expect(blobB2.type).toBe('');
+    const typedArrayB2 = new Uint8Array(await arrayBuffer(blobB2));
+    expect(typedArrayB2).toEqual(typedArrayB);
+  });
+
+  it('can pass two independent FormData with same keys', async () => {
+    const formDataA = new FormData();
+    formDataA.set('greeting', 'hello');
+    const formDataB = new FormData();
+    formDataB.set('greeting', 'hi');
+
+    const body = await ReactServerDOMClient.encodeReply({
+      a: formDataA,
+      b: formDataB,
+    });
+    const {a: formDataA2, b: formDataB2} =
+      await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(Array.from(formDataA2).length).toBe(1);
+    expect(Array.from(formDataB2).length).toBe(1);
+    expect(formDataA2.get('greeting')).toBe('hello');
+    expect(formDataB2.get('greeting')).toBe('hi');
   });
 });

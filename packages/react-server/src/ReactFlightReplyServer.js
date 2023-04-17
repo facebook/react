@@ -409,6 +409,23 @@ function parseModelString(
           key,
         );
       }
+      case 'K': {
+        // FormData
+        const stringId = value.substring(2);
+        const formPrefix = response._prefix + stringId + '_';
+        const data = new FormData();
+        const backingFormData = response._formData;
+        // We assume that the reference to FormData always comes after each
+        // entry that it references so we can assume they all exist in the
+        // backing store already.
+        // $FlowFixMe[prop-missing] FormData has forEach on it.
+        backingFormData.forEach((entry: File | string, entryKey: string) => {
+          if (entryKey.startsWith(formPrefix)) {
+            data.append(entryKey.substr(formPrefix.length), entry);
+          }
+        });
+        return data;
+      }
       case 'I': {
         // $Infinity
         return Infinity;
@@ -506,10 +523,15 @@ export function resolveField(
 }
 
 export function resolveFile(response: Response, key: string, file: File): void {
-  throw new Error('Not implemented.');
+  // Add this field to the backing store.
+  response._formData.append(key, file);
 }
 
-export opaque type FileHandle = {};
+export opaque type FileHandle = {
+  chunks: Array<Uint8Array>,
+  filename: string,
+  mime: string,
+};
 
 export function resolveFileInfo(
   response: Response,
@@ -517,7 +539,11 @@ export function resolveFileInfo(
   filename: string,
   mime: string,
 ): FileHandle {
-  throw new Error('Not implemented.');
+  return {
+    chunks: [],
+    filename,
+    mime,
+  };
 }
 
 export function resolveFileChunk(
@@ -525,14 +551,17 @@ export function resolveFileChunk(
   handle: FileHandle,
   chunk: Uint8Array,
 ): void {
-  throw new Error('Not implemented.');
+  handle.chunks.push(chunk);
 }
 
 export function resolveFileComplete(
   response: Response,
+  key: string,
   handle: FileHandle,
 ): void {
-  throw new Error('Not implemented.');
+  // Add this file to the backing store.
+  const file = new File(handle.chunks, handle.filename, {type: handle.mime});
+  response._formData.append(key, file);
 }
 
 export function close(response: Response): void {

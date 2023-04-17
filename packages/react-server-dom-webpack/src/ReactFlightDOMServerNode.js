@@ -104,7 +104,7 @@ function decodeReplyFromBusboy<T>(
       resolveFileChunk(response, file, chunk);
     });
     value.on('end', () => {
-      resolveFileComplete(response, file);
+      resolveFileComplete(response, name, file);
     });
   });
   busboyStream.on('finish', () => {
