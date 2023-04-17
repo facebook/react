@@ -27,24 +27,25 @@ function Component(props) {
 function Component(props) {
   const $ = React.unstable_useMemoCache(2);
   const c_0 = $[0] !== props;
-  let t0;
+  let t25;
   if (c_0) {
     const y = [];
     if (props.cond) {
       y.push(props.a);
     }
+    t25 = undefined;
     if (props.cond2) {
-      t0 = y;
+      t25 = y;
     } else {
       y.push(props.b);
-      t0 = y;
+      t25 = y;
     }
     $[0] = props;
-    $[1] = t0;
+    $[1] = t25;
   } else {
-    t0 = $[1];
+    t25 = $[1];
   }
-  const x = t0;
+  const x = t25;
   return x;
 }
 

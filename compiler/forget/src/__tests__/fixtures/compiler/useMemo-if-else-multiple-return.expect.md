@@ -20,7 +20,8 @@ function Component(props) {
 ```javascript
 // @inlineUseMemo
 function Component(props) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = React.unstable_useMemoCache(4);
+  let t16 = undefined;
   if (props.cond) {
     const c_0 = $[0] !== props.a;
     let t0;
@@ -31,26 +32,20 @@ function Component(props) {
     } else {
       t0 = $[1];
     }
-    let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = t0;
-      $[2] = t1;
-    } else {
-      t1 = $[2];
-    }
+    t16 = t0;
   } else {
-    const c_3 = $[3] !== props.b;
-    let t2;
-    if (c_3) {
-      t2 = makeObject(props.b);
-      $[3] = props.b;
-      $[4] = t2;
+    const c_2 = $[2] !== props.b;
+    let t1;
+    if (c_2) {
+      t1 = makeObject(props.b);
+      $[2] = props.b;
+      $[3] = t1;
     } else {
-      t2 = $[4];
+      t1 = $[3];
     }
-    t1 = t2;
+    t16 = t1;
   }
-  const x = t1;
+  const x = t16;
   return x;
 }
 

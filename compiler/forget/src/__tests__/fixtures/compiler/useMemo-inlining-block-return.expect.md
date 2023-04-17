@@ -19,7 +19,8 @@ function component(a, b) {
 ```javascript
 // @inlineUseMemo
 function component(a, b) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = React.unstable_useMemoCache(2);
+  let t13;
   if (a) {
     const c_0 = $[0] !== b;
     let t0;
@@ -30,15 +31,9 @@ function component(a, b) {
     } else {
       t0 = $[1];
     }
-    let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = t0;
-      $[2] = t1;
-    } else {
-      t1 = $[2];
-    }
+    t13 = t0;
   }
-  const x = t1;
+  const x = t13;
   return x;
 }
 

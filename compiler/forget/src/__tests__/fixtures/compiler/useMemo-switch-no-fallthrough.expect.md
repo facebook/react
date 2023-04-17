@@ -24,16 +24,17 @@ function Component(props) {
 ```javascript
 // @inlineUseMemo
 function Component(props) {
+  let t13 = undefined;
   bb8: switch (props.key) {
     case "key": {
-      const t28 = props.value;
+      t13 = props.value;
       break bb8;
     }
     default: {
-      const t28 = props.defaultValue;
+      t13 = props.defaultValue;
     }
   }
-  const x = t28;
+  const x = t13;
   return x;
 }
 

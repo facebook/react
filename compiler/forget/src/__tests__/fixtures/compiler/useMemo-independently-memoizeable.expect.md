@@ -52,8 +52,8 @@ function Component(props) {
   } else {
     t2 = $[6];
   }
-  const t54 = t2;
-  const [a_0, b_0] = t54;
+  const t24 = t2;
+  const [a_0, b_0] = t24;
   const c_7 = $[7] !== a_0;
   const c_8 = $[8] !== b_0;
   let t3;

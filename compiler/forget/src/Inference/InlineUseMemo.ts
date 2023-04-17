@@ -12,11 +12,13 @@ import {
   Effect,
   Environment,
   FunctionExpression,
+  GeneratedSource,
   GotoTerminal,
   GotoVariant,
   HIR,
   HIRFunction,
   IdentifierId,
+  Identifier,
   InstructionKind,
   makeInstructionId,
   makeType,
@@ -198,11 +200,20 @@ export function inlineUseMemo(fn: HIRFunction): void {
               }
             }
 
+            // We store the result in the useMemo temporary
+            const result = instr.lvalue;
+
+            // Declare the useMemo temporary
+            declareTemporary(fn.env, block, result);
+
+            // Promote the temporary with a name as we require this to persist
+            promoteTemporary(result.identifier);
+
             // Rewrite blocks from the lambda to replace any `return` with a
-            // store the useMemo temporary and `goto` the continuation block
+            // store to the result and `goto` the continuation block
             for (const [id, block] of body.loweredFunc.body.blocks) {
               block.preds.clear();
-              rewriteBlock(fn.env, block, continuationBlockId, instr.lvalue);
+              rewriteBlock(fn.env, block, continuationBlockId, result);
               fn.body.blocks.set(id, block);
             }
 
@@ -342,7 +353,7 @@ function rewriteBlock(
       },
       value: {
         kind: "StoreLocal",
-        lvalue: { kind: InstructionKind.Const, place: { ...returnValue } },
+        lvalue: { kind: InstructionKind.Reassign, place: { ...returnValue } },
         value: terminal.value,
         loc: terminal.loc,
       },
@@ -355,4 +366,42 @@ function rewriteBlock(
     variant: GotoVariant.Break,
     loc: block.terminal.loc,
   };
+}
+
+function declareTemporary(
+  env: Environment,
+  block: BasicBlock,
+  result: Place
+): void {
+  block.instructions.push({
+    id: makeInstructionId(0),
+    loc: GeneratedSource,
+    lvalue: {
+      effect: Effect.Unknown,
+      identifier: {
+        id: env.nextIdentifierId,
+        mutableRange: {
+          start: makeInstructionId(0),
+          end: makeInstructionId(0),
+        },
+        name: null,
+        scope: null,
+        type: makeType(),
+      },
+      kind: "Identifier",
+      loc: GeneratedSource,
+    },
+    value: {
+      kind: "DeclareLocal",
+      lvalue: {
+        place: result,
+        kind: InstructionKind.Let,
+      },
+      loc: result.loc,
+    },
+  });
+}
+
+function promoteTemporary(temp: Identifier): void {
+  temp.name = `t${temp.id}`;
 }
