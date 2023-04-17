@@ -28,6 +28,7 @@ function foo(a, b, c, d) {
   }
 
   d();
+  return undefined;
 }
 
 ```

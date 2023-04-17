@@ -58,8 +58,8 @@ function foo(a, b, c) {
     g = $[6];
   }
   const { f } = t2;
-  const { l: t51, p } = b;
-  const { m: t3 } = t51;
+  const { l: t52, p } = b;
+  const { m: t3 } = t52;
   const c_7 = $[7] !== t3;
   let t4;
   let o;

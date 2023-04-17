@@ -20,7 +20,9 @@ function Foo(cond) {
 ## Code
 
 ```javascript
-function log() {}
+function log() {
+  return undefined;
+}
 
 function Foo(cond) {
   let str = "";
@@ -31,6 +33,7 @@ function Foo(cond) {
   }
 
   log(str);
+  return undefined;
 }
 
 ```

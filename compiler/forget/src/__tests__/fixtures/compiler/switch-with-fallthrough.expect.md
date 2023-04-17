@@ -55,6 +55,7 @@ function foo(x) {
     default: {
     }
   }
+  return undefined;
 }
 
 ```

@@ -26,6 +26,7 @@ function Component() {
 
 function changeF(o) {
   o.f = () => console.log("new");
+  return undefined;
 }
 
 function Component() {

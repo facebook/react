@@ -15,8 +15,8 @@ function Component(props) {
 ```javascript
 // @inlineUseMemo
 function Component(props) {
-  const t14 = props.a && props.b;
-  const x = t14;
+  const t15 = props.a && props.b;
+  const x = t15;
   return x;
 }
 

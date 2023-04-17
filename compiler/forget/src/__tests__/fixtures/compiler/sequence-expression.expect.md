@@ -41,7 +41,9 @@ function sequence(props) {
   return x;
 }
 
-function foo() {}
+function foo() {
+  return undefined;
+}
 
 ```
       

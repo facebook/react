@@ -26,6 +26,7 @@ function Component() {
 // Should print A, B, arg, original
 function changeF(o) {
   o.f = () => console.log("new");
+  return undefined;
 }
 
 function Component() {

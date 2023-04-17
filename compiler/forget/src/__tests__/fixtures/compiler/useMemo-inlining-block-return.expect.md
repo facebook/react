@@ -20,7 +20,7 @@ function component(a, b) {
 // @inlineUseMemo
 function component(a, b) {
   const $ = React.unstable_useMemoCache(2);
-  let t13;
+  let t14 = undefined;
   if (a) {
     const c_0 = $[0] !== b;
     let t0;
@@ -31,9 +31,11 @@ function component(a, b) {
     } else {
       t0 = $[1];
     }
-    t13 = t0;
+    t14 = t0;
+  } else {
+    t14 = undefined;
   }
-  const x = t13;
+  const x = t14;
   return x;
 }
 

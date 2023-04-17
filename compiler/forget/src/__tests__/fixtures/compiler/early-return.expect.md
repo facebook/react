@@ -18,9 +18,9 @@ function MyApp(props) {
 ```javascript
 function MyApp(props) {
   if (props.cond) {
-    return;
+    return undefined;
   } else {
-    return;
+    return undefined;
   }
 }
 

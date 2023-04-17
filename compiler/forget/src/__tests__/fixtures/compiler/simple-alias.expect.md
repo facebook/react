@@ -19,7 +19,9 @@ function foo() {
 ## Code
 
 ```javascript
-function mutate() {}
+function mutate() {
+  return undefined;
+}
 function foo() {
   const $ = React.unstable_useMemoCache(1);
   let c;

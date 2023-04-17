@@ -15,8 +15,9 @@ function Component(props) {
 ```javascript
 function Component(props) {
   for (const i = 0; 0 < props.count; ) {
-    return;
+    return undefined;
   }
+  return undefined;
 }
 
 ```

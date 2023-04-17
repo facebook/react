@@ -11,9 +11,9 @@ function Component(x = "default", y = [{}]) {
 ## Code
 
 ```javascript
-function Component(t23, t0) {
+function Component(t24, t0) {
   const $ = React.unstable_useMemoCache(5);
-  const x = t23 === undefined ? "default" : t23;
+  const x = t24 === undefined ? "default" : t24;
   const c_0 = $[0] !== t0;
   let t1;
   if (c_0) {

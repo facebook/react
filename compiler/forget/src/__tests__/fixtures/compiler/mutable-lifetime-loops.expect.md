@@ -42,8 +42,12 @@ function Component(props) {
 ## Code
 
 ```javascript
-function mutate(x, y) {}
-function cond(x) {}
+function mutate(x, y) {
+  return undefined;
+}
+function cond(x) {
+  return undefined;
+}
 
 function Component(props) {
   let a = {};
@@ -71,6 +75,7 @@ function Component(props) {
   }
 
   mutate(d, null);
+  return undefined;
 }
 
 ```

@@ -12,11 +12,14 @@ function component(a) {
 
 ```
 
+## Code
 
-## Error
+```javascript
+// @inlineUseMemo
+function component(a) {
+  mutate(a);
+  return undefined;
+}
 
 ```
-Expected value for identifier `9` to be initialized.
-```
-          
       

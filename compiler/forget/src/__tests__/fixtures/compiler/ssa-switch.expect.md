@@ -38,6 +38,7 @@ function foo() {
     default: {
     }
   }
+  return undefined;
 }
 
 ```

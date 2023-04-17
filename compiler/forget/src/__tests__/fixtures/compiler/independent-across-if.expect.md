@@ -36,10 +36,18 @@ function Component(props) {
 ## Code
 
 ```javascript
-function compute() {}
-function mutate() {}
-function foo() {}
-function Foo() {}
+function compute() {
+  return undefined;
+}
+function mutate() {
+  return undefined;
+}
+function foo() {
+  return undefined;
+}
+function Foo() {
+  return undefined;
+}
 
 /**
  * Should produce 3 scopes:

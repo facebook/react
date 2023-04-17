@@ -16,6 +16,7 @@ function component(a, b) {
 function component(a, b) {
   if (a > b) {
   }
+  return undefined;
 }
 
 ```

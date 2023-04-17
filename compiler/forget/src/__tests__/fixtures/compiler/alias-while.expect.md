@@ -49,7 +49,9 @@ function foo(cond) {
   return a;
 }
 
-function mutate(x, y) {}
+function mutate(x, y) {
+  return undefined;
+}
 
 ```
       

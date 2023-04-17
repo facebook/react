@@ -157,7 +157,11 @@ export function lower(
     {
       kind: "return",
       loc: GeneratedSource,
-      value: null,
+      value: lowerValueToTemporary(builder, {
+        kind: "Primitive",
+        value: undefined,
+        loc: GeneratedSource,
+      }),
       id: makeInstructionId(0),
     },
     null
@@ -200,13 +204,19 @@ function lowerStatement(
     case "ReturnStatement": {
       const stmt = stmtPath as NodePath<t.ReturnStatement>;
       const argument = stmt.get("argument");
-      const value =
-        argument.node != null
-          ? lowerExpressionToTemporary(
-              builder,
-              argument as NodePath<t.Expression>
-            )
-          : null;
+      let value;
+      if (argument.node === null) {
+        value = lowerValueToTemporary(builder, {
+          kind: "Primitive",
+          value: undefined,
+          loc: GeneratedSource,
+        });
+      } else {
+        value = lowerExpressionToTemporary(
+          builder,
+          argument as NodePath<t.Expression>
+        );
+      }
       const terminal: ReturnTerminal = {
         kind: "return",
         loc: stmt.node.loc ?? GeneratedSource,

@@ -18,7 +18,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-function foo() {}
+function foo() {
+  return undefined;
+}
 
 function Component(props) {
   const $ = React.unstable_useMemoCache(3);

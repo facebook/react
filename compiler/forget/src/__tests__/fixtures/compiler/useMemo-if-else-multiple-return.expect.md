@@ -21,7 +21,7 @@ function Component(props) {
 // @inlineUseMemo
 function Component(props) {
   const $ = React.unstable_useMemoCache(4);
-  let t16 = undefined;
+  let t17 = undefined;
   if (props.cond) {
     const c_0 = $[0] !== props.a;
     let t0;
@@ -32,7 +32,7 @@ function Component(props) {
     } else {
       t0 = $[1];
     }
-    t16 = t0;
+    t17 = t0;
   } else {
     const c_2 = $[2] !== props.b;
     let t1;
@@ -43,9 +43,9 @@ function Component(props) {
     } else {
       t1 = $[3];
     }
-    t16 = t1;
+    t17 = t1;
   }
-  const x = t16;
+  const x = t17;
   return x;
 }
 

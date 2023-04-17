@@ -19,6 +19,7 @@ function foo(a, b) {
   const y = [];
   y.push(b);
   x.push(a);
+  return undefined;
 }
 
 ```

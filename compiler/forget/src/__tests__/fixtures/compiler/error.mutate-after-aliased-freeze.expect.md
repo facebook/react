@@ -25,7 +25,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: InferReferenceEffects: inferred mutation of known immutable value. Found mutation of $42:TObject<BuiltInArray> (frozen) (13:13)
+[ReactForget] InvalidInput: InferReferenceEffects: inferred mutation of known immutable value. Found mutation of $43:TObject<BuiltInArray> (frozen) (13:13)
 ```
           
       

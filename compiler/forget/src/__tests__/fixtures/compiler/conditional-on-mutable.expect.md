@@ -104,8 +104,12 @@ function ComponentB(props) {
   return t0;
 }
 
-function Foo() {}
-function mayMutate() {}
+function Foo() {
+  return undefined;
+}
+function mayMutate() {
+  return undefined;
+}
 
 ```
       

@@ -18,7 +18,9 @@ function foo() {
 ## Code
 
 ```javascript
-function foo() {}
+function foo() {
+  return undefined;
+}
 
 ```
       

@@ -23,6 +23,7 @@ function foo(a, b, c) {
     y.push(b);
     x.push(a);
   }
+  return undefined;
 }
 
 ```
