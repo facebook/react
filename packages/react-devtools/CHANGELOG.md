@@ -4,6 +4,19 @@
 
 ---
 
+### 4.27.5
+April 17, 2023
+
+#### Bugfixes
+* Fixed copying to clipboard from context menu on Chrome ([hoxyq](https://github.com/hoxyq) in [#26604](https://github.com/facebook/react/pull/26604))
+* Fixed external link behavior in the standalone app ([Willie-Boy](https://github.com/Willie-Boy) in [#26559](https://github.com/facebook/react/pull/26559))
+
+#### Other
+* Provide icon to edge devtools. ([harrygz889](https://github.com/harrygz889) in [#26543](https://github.com/facebook/react/pull/26543))
+* Forbid editing class instances in props ([hoxyq](https://github.com/hoxyq) in [#26522](https://github.com/facebook/react/pull/26522))
+* Improved script injection logic in browser extension ([mondaychen](https://github.com/mondaychen) in [#26492](https://github.com/facebook/react/pull/26492))
+---
+
 ### 4.27.4
 March 24, 2023
 
