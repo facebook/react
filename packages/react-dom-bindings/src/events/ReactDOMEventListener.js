@@ -155,7 +155,12 @@ export function dispatchEvent(
     return;
   }
 
-  let blockedOn = findInstanceBlockingEvent(nativeEvent);
+  let blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
   if (blockedOn === null) {
     dispatchEventForPluginEventSystem(
       domEventName,
@@ -193,7 +198,12 @@ export function dispatchEvent(
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
-      const nextBlockedOn = findInstanceBlockingEvent(nativeEvent);
+      const nextBlockedOn = findInstanceBlockingEvent(
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
       if (nextBlockedOn === null) {
         dispatchEventForPluginEventSystem(
           domEventName,
@@ -230,6 +240,9 @@ export let return_targetInst: null | Fiber = null;
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
 export function findInstanceBlockingEvent(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.

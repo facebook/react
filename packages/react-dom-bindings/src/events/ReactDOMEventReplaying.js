@@ -376,7 +376,13 @@ function attemptReplayContinuousQueuedEvent(
   }
   const targetContainers = queuedEvent.targetContainers;
   while (targetContainers.length > 0) {
-    const nextBlockedOn = findInstanceBlockingEvent(queuedEvent.nativeEvent);
+    const targetContainer = targetContainers[0];
+    const nextBlockedOn = findInstanceBlockingEvent(
+      queuedEvent.domEventName,
+      queuedEvent.eventSystemFlags,
+      targetContainer,
+      queuedEvent.nativeEvent,
+    );
     if (nextBlockedOn === null) {
       const nativeEvent = queuedEvent.nativeEvent;
       const nativeEventClone = new nativeEvent.constructor(
