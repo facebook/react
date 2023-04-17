@@ -693,6 +693,7 @@ function pushAttribute(
         }
       }
     // Fall through to the last case which shouldn't remove empty strings.
+    // eslint-disable-next-line no-fallthrough
     case 'formAction': {
       if (
         value == null ||
@@ -1122,9 +1123,11 @@ function pushStartOption(
         case 'dangerouslySetInnerHTML':
           innerHTML = propValue;
           break;
+        // eslint-disable-next-line-no-fallthrough
         case 'value':
           value = propValue;
         // We intentionally fallthrough to also set the attribute on the node.
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1245,6 +1248,7 @@ function pushInput(
             `${'input'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
           defaultChecked = propValue;
           break;
@@ -1326,6 +1330,7 @@ function pushStartTextArea(
           throw new Error(
             '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1672,6 +1677,7 @@ function pushLinkImpl(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1900,6 +1906,7 @@ function pushSelfClosing(
             `${tag} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -1929,6 +1936,7 @@ function pushStartMenuItem(
           throw new Error(
             'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -2080,6 +2088,7 @@ function pushStartTitle(
           throw new Error(
             '`dangerouslySetInnerHTML` does not make sense on <title>.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, propKey, propValue);
           break;
@@ -2778,12 +2787,11 @@ export function pushEndInstance(
       if (!enableFloat) {
         break;
       }
-      // Fall through
     }
-
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
     // That would require returning a tuple. Which might be ok if it gets inlined.
+    // eslint-disable-next-line-no-fallthrough
     case 'area':
     case 'base':
     case 'br':
@@ -4036,6 +4044,7 @@ function writeStyleResourceDependencyInJS(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           writeStyleResourceAttributeInJS(destination, propKey, propValue);
           break;
@@ -4231,6 +4240,7 @@ function writeStyleResourceDependencyInAttr(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
           );
+        // eslint-disable-next-line-no-fallthrough
         default:
           writeStyleResourceAttributeInAttr(destination, propKey, propValue);
           break;

@@ -1172,8 +1172,8 @@ function completeWork(
           }
         }
       }
-      // Fall through
     }
+    // eslint-disable-next-line-no-fallthrough
     case HostSingleton: {
       if (enableHostSingletons && supportsSingletons) {
         popHostContext(workInProgress);
@@ -1234,8 +1234,8 @@ function completeWork(
         bubbleProperties(workInProgress);
         return null;
       }
-      // Fall through
     }
+    // eslint-disable-next-line-no-fallthrough
     case HostComponent: {
       popHostContext(workInProgress);
       const type = workInProgress.type;
