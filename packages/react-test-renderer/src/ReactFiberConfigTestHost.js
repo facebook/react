@@ -230,7 +230,7 @@ export const supportsMutation = true;
 
 export function commitUpdate(
   instance: Instance,
-  updatePayload: null | {...},
+  updatePayload: {...},
   type: string,
   oldProps: Props,
   newProps: Props,

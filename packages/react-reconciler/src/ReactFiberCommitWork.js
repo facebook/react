@@ -54,7 +54,6 @@ import {
   enableFloat,
   enableLegacyHidden,
   enableHostSingletons,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2775,7 +2774,7 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
+            if (updatePayload !== null) {
               try {
                 commitUpdate(
                   instance,
