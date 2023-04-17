@@ -339,7 +339,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
       // The hydration validation calls it one extra time.
       // TODO: It would be good if we only called toString once for
       // consistency but the code structure makes that hard right now.
-      expectedToStringCalls = 4;
+      expectedToStringCalls = 5;
     } else if (__DEV__) {
       // Checking for string coercion problems results in double the
       // toString calls in DEV
