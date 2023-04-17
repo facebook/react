@@ -57,7 +57,7 @@ import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
-let _enabled: boolean = true;
+export let _enabled: boolean = true;
 
 // This is exported in FB builds for use by legacy FB layer infra.
 // We'd like to remove this but it's not clear if this is safe.

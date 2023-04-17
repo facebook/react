@@ -60,6 +60,11 @@ type QueuedReplayableEvent = {
 
 let hasScheduledReplayAttempt = false;
 
+// The queue of discrete events to be replayed.
+const queuedDiscreteEvents: Array<QueuedReplayableEvent> = [];
+
+// Indicates if any continuous event targets are non-null for early bailout.
+const hasAnyQueuedContinuousEvents: boolean = false;
 // The last of each continuous event type. We only need to replay the last one
 // if the last target was dehydrated.
 let queuedFocus: null | QueuedReplayableEvent = null;
@@ -76,6 +81,14 @@ type QueuedHydrationTarget = {
   priority: EventPriority,
 };
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
+
+export function hasQueuedDiscreteEvents(): boolean {
+  return queuedDiscreteEvents.length > 0;
+}
+
+export function hasQueuedContinuousEvents(): boolean {
+  return hasAnyQueuedContinuousEvents;
+}
 
 const discreteReplayableEvents: Array<DOMEventName> = [
   'mousedown',
@@ -433,6 +446,21 @@ function scheduleCallbackIfUnblocked(
 export function retryIfBlockedOn(
   unblocked: Container | SuspenseInstance,
 ): void {
+  // Mark anything that was blocked on this as no longer blocked
+  // and eligible for a replay.
+  if (queuedDiscreteEvents.length > 0) {
+    scheduleCallbackIfUnblocked(queuedDiscreteEvents[0], unblocked);
+    // This is a exponential search for each boundary that commits. I think it's
+    // worth it because we expect very few discrete events to queue up and once
+    // we are actually fully unblocked it will be fast to replay them.
+    for (let i = 1; i < queuedDiscreteEvents.length; i++) {
+      const queuedEvent = queuedDiscreteEvents[i];
+      if (queuedEvent.blockedOn === unblocked) {
+        queuedEvent.blockedOn = null;
+      }
+    }
+  }
+
   if (queuedFocus !== null) {
     scheduleCallbackIfUnblocked(queuedFocus, unblocked);
   }
