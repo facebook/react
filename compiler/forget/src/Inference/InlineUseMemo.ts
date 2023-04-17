@@ -332,33 +332,31 @@ function rewriteBlock(
   if (terminal.kind !== "return") {
     return;
   }
-  if (terminal.value !== null) {
-    block.instructions.push({
-      id: makeInstructionId(0),
-      loc: terminal.loc,
-      lvalue: {
-        effect: Effect.Unknown,
-        identifier: {
-          id: env.nextIdentifierId,
-          mutableRange: {
-            start: makeInstructionId(0),
-            end: makeInstructionId(0),
-          },
-          name: null,
-          scope: null,
-          type: makeType(),
+  block.instructions.push({
+    id: makeInstructionId(0),
+    loc: terminal.loc,
+    lvalue: {
+      effect: Effect.Unknown,
+      identifier: {
+        id: env.nextIdentifierId,
+        mutableRange: {
+          start: makeInstructionId(0),
+          end: makeInstructionId(0),
         },
-        kind: "Identifier",
-        loc: terminal.loc,
+        name: null,
+        scope: null,
+        type: makeType(),
       },
-      value: {
-        kind: "StoreLocal",
-        lvalue: { kind: InstructionKind.Reassign, place: { ...returnValue } },
-        value: terminal.value,
-        loc: terminal.loc,
-      },
-    });
-  }
+      kind: "Identifier",
+      loc: terminal.loc,
+    },
+    value: {
+      kind: "StoreLocal",
+      lvalue: { kind: InstructionKind.Reassign, place: { ...returnValue } },
+      value: terminal.value,
+      loc: terminal.loc,
+    },
+  });
   block.terminal = {
     kind: "goto",
     block: returnTarget,

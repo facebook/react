@@ -313,7 +313,7 @@ export type Case = { test: Place | null; block: BlockId };
 export type ReturnTerminal = {
   kind: "return";
   loc: SourceLocation;
-  value: Place | null;
+  value: Place;
   id: InstructionId;
 };
 
