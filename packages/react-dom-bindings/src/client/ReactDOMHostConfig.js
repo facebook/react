@@ -3333,32 +3333,26 @@ export function waitForCommitToBeReady(): null | (Function => Function) {
   // tasks to wait on.
   if (state.count > 0) {
     return commit => {
-      // We almost never want to show content before its styles have loaded. But
-      // eventually we will give up and allow unstyled content. So this number is
-      // somewhat arbitrary — big enough that you'd only reach it under
-      // extreme circumstances.
-      // TODO: Figure out what the browser engines do during initial page load and
-      // consider aligning our behavior with that.
-      const stylesheetTimer = setTimeout(() => {
-        if (state.stylesheets) {
-          insertSuspendedStylesheets(state, state.stylesheets);
-        }
-        if (state.unsuspend) {
-          const unsuspend = state.unsuspend;
-          state.unsuspend = null;
-          unsuspend();
-        }
-      }, 60000); // one minute
-
+      unsuspendAfterTimeout(state);
       state.unsuspend = commit;
 
-      return () => {
-        state.unsuspend = null;
-        clearTimeout(stylesheetTimer);
-      };
+      return () => (state.unsuspend = null);
     };
   }
   return null;
+}
+
+function unsuspendAfterTimeout(state: SuspendedState) {
+  setTimeout(() => {
+    if (state.stylesheets) {
+      insertSuspendedStylesheets(state, state.stylesheets);
+    }
+    if (state.unsuspend) {
+      const unsuspend = state.unsuspend;
+      state.unsuspend = null;
+      unsuspend();
+    }
+  }, 500);
 }
 
 function onUnsuspend(this: SuspendedState) {
