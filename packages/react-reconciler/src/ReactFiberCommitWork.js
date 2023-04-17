@@ -15,7 +15,7 @@ import type {
   ChildSet,
   UpdatePayload,
   HoistableRoot,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import {NoTimestamp, SyncLane} from './ReactFiberLane';
@@ -162,7 +162,7 @@ import {
   prepareToCommitHoistables,
   suspendInstance,
   suspendResource,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
   resolveRetryWakeable,

@@ -20,7 +20,7 @@ import type {
   Container,
   PublicInstance,
   RendererInspectionConfig,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
@@ -41,7 +41,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,

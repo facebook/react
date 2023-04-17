@@ -10,7 +10,7 @@
 import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 
-import {isPrimaryRenderer} from './ReactFiberConfig';
+import {isPrimaryRenderer} from './ReactFiberHostConfig';
 
 // Work in progress version numbers only apply to a single render,
 // and should be reset before starting a new render.

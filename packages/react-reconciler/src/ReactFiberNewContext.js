@@ -17,7 +17,7 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
 import type {SharedQueue} from './ReactFiberClassUpdateQueue';
 
-import {isPrimaryRenderer} from './ReactFiberConfig';
+import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
   ContextProvider,

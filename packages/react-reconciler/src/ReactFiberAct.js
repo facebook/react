@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {warnsIfNotActing} from './ReactFiberConfig';
+import {warnsIfNotActing} from './ReactFiberHostConfig';
 
 const {ReactCurrentActQueue} = ReactSharedInternals;
 

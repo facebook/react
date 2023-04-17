@@ -11,7 +11,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Instance} from './ReactFiberConfig';
+import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
@@ -41,7 +41,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {supportsSingletons} from './ReactFiberConfig';
+import {supportsSingletons} from './ReactFiberHostConfig';
 
 export type Family = {
   current: any,

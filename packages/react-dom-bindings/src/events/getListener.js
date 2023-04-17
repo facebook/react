@@ -7,7 +7,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {Props} from '../client/ReactFiberConfigDOM';
+import type {Props} from '../client/ReactDOMHostConfig';
 
 import {getFiberCurrentPropsFromNode} from '../client/ReactDOMComponentTree';
 

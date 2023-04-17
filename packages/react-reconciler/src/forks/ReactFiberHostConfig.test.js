@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-test-renderer/src/ReactFiberConfigTestHost';
+export * from 'react-test-renderer/src/ReactTestHostConfig';

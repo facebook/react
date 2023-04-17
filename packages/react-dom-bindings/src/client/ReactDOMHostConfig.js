@@ -179,7 +179,7 @@ const STYLE = 'style';
 let eventsEnabled: ?boolean = null;
 let selectionInformation: null | SelectionInformation = null;
 
-export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 
 function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document | DocumentFragment,

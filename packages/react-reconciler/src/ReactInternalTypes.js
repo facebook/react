@@ -29,7 +29,7 @@ import type {
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
-} from './ReactFiberConfig';
+} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {
   TracingMarkerInstance,
