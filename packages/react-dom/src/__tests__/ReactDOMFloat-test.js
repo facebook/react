@@ -3216,7 +3216,7 @@ body {
     );
   });
 
-  it('can interrupt a suspended commit with a new transition', async () => {
+  it('can start a new suspended commit after a previous one finishes', async () => {
     function App({children}) {
       return (
         <html>
@@ -3225,66 +3225,81 @@ body {
       );
     }
     const root = ReactDOMClient.createRoot(document);
-    root.render(<App>(empty)</App>);
-
-    // Start a transition to "A"
+    root.render(<App />);
     React.startTransition(() => {
       root.render(
         <App>
-          A
-          <link rel="stylesheet" href="A" precedence="default" />
+          hello
+          <link rel="stylesheet" href="foo" precedence="default" />
         </App>,
       );
     });
     await waitForAll([]);
-
-    // "A" hasn't loaded yet, so we remain on the initial UI. Its preload
-    // has been inserted into the head, though.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="A" as="style" />
+          <link rel="preload" href="foo" as="style" />
         </head>
-        <body>(empty)</body>
+        <body />
       </html>,
     );
 
-    // Interrupt the "A" transition with a new one, "B"
     React.startTransition(() => {
       root.render(
         <App>
-          B
-          <link rel="stylesheet" href="B" precedence="default" />
+          hello2
+          {null}
+          <link rel="stylesheet" href="bar" precedence="default" />
         </App>,
       );
     });
     await waitForAll([]);
-
-    // Still on the initial UI because "B" hasn't loaded, but its preload
-    // is now in the head, too.
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="A" as="style" />
-          <link rel="preload" href="B" as="style" />
+          <link rel="preload" href="foo" as="style" />
         </head>
-        <body>(empty)</body>
+        <body />
       </html>,
     );
 
-    // Finish loading
     loadPreloads();
     loadStylesheets();
-    assertLog(['load preload: A', 'load preload: B', 'load stylesheet: B']);
-    // The "B" transition has finished.
+    assertLog(['load preload: foo', 'load stylesheet: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="stylesheet" href="B" data-precedence="default" />
-          <link rel="preload" href="A" as="style" />
-          <link rel="preload" href="B" as="style" />
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
         </head>
-        <body>B</body>
+        <body>hello</body>
+      </html>,
+    );
+
+    // The second update should process now
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+    loadPreloads();
+    loadStylesheets();
+    assertLog(['load preload: bar', 'load stylesheet: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>hello2</body>
       </html>,
     );
   });

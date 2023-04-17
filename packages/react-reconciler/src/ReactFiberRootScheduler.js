@@ -18,6 +18,7 @@ import {
   SyncLane,
   getHighestPriorityLane,
   getNextLanes,
+  includesOnlyNonUrgentLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
 } from './ReactFiberLane';
@@ -291,16 +292,14 @@ function scheduleTaskForRootDuringMicrotask(
 
   const existingCallbackNode = root.callbackNode;
   if (
-    // Check if there's nothing to work on
     nextLanes === NoLanes ||
     // If this root is currently suspended and waiting for data to resolve, don't
     // schedule a task to render it. We'll either wait for a ping, or wait to
     // receive an update.
-    //
-    // Suspended render phase
-    (root === workInProgressRoot && isWorkLoopSuspendedOnData()) ||
-    // Suspended commit phase
-    root.cancelPendingCommit !== null
+    (isWorkLoopSuspendedOnData() && root === workInProgressRoot) ||
+    // We should only interrupt a pending commit if the new update
+    // is urgent.
+    (root.cancelPendingCommit !== null && includesOnlyNonUrgentLanes(nextLanes))
   ) {
     // Fast path: There's nothing to work on.
     if (existingCallbackNode !== null) {
