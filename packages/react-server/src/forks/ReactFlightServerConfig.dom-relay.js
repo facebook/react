@@ -8,4 +8,3 @@
  */
 
 export * from 'react-server-dom-relay/src/ReactFlightServerConfigDOMRelay';
-export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';

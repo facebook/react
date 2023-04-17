@@ -9,4 +9,3 @@
 
 export * from '../ReactFlightServerConfigStream';
 export * from '../ReactFlightServerConfigBundlerCustom';
-export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
