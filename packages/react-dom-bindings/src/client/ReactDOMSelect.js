@@ -142,39 +142,35 @@ export function validateSelectProps(element: Element, props: Object) {
   }
 }
 
-export function initSelect(
-  element: Element,
-  value: ?string,
-  defaultValue: ?string,
-  multiple: ?boolean,
-) {
+export function initSelect(element: Element, props: Object) {
   const node: HTMLSelectElement = (element: any);
-  node.multiple = !!multiple;
+  node.multiple = !!props.multiple;
+  const value = props.value;
   if (value != null) {
-    updateOptions(node, !!multiple, value, false);
-  } else if (defaultValue != null) {
-    updateOptions(node, !!multiple, defaultValue, true);
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (props.defaultValue != null) {
+    updateOptions(node, !!props.multiple, props.defaultValue, true);
   }
 }
 
 export function updateSelect(
   element: Element,
-  value: ?string,
-  defaultValue: ?string,
-  multiple: ?boolean,
-  wasMultiple: ?boolean,
+  prevProps: Object,
+  props: Object,
 ) {
   const node: HTMLSelectElement = (element: any);
+  const wasMultiple = !!prevProps.multiple;
 
+  const value = props.value;
   if (value != null) {
-    updateOptions(node, !!multiple, value, false);
-  } else if (!!wasMultiple !== !!multiple) {
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (wasMultiple !== !!props.multiple) {
     // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-    if (defaultValue != null) {
-      updateOptions(node, !!multiple, defaultValue, true);
+    if (props.defaultValue != null) {
+      updateOptions(node, !!props.multiple, props.defaultValue, true);
     } else {
       // Revert the select back to its default unselected state.
-      updateOptions(node, !!multiple, multiple ? [] : '', false);
+      updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
     }
   }
 }
