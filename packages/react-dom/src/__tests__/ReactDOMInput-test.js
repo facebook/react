@@ -26,6 +26,16 @@ describe('ReactDOMInput', () => {
     node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
   }
 
+  function isValueDirty(node) {
+    // Return the "dirty value flag" as defined in the HTML spec. Cast to text
+    // input to sidestep complicated value sanitization behaviors.
+    const copy = node.cloneNode();
+    copy.type = 'text';
+    // If modifying the attribute now doesn't change the value, the value was already detached.
+    copy.defaultValue += Math.random();
+    return copy.value === node.value;
+  }
+
   beforeEach(() => {
     jest.resetModules();
 
@@ -128,6 +138,7 @@ describe('ReactDOMInput', () => {
     }).toErrorDev(
       'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
+    expect(isValueDirty(node)).toBe(true);
 
     setUntrackedValue.call(node, 'giraffe');
 
@@ -136,6 +147,7 @@ describe('ReactDOMInput', () => {
     dispatchEventOnNode(node, 'input');
 
     expect(node.value).toBe('lion');
+    expect(isValueDirty(node)).toBe(true);
   });
 
   it('should control a value in reentrant events', () => {
@@ -438,15 +450,22 @@ describe('ReactDOMInput', () => {
 
     expect(node.value).toBe('0');
     expect(node.defaultValue).toBe('0');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(node)).toBe(false);
+    } else {
+      expect(isValueDirty(node)).toBe(true);
+    }
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
     if (disableInputAttributeSyncing) {
       expect(node.value).toBe('1');
       expect(node.defaultValue).toBe('1');
+      expect(isValueDirty(node)).toBe(false);
     } else {
       expect(node.value).toBe('0');
       expect(node.defaultValue).toBe('1');
+      expect(isValueDirty(node)).toBe(true);
     }
   });
 
@@ -478,12 +497,14 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
     expect(() =>
       ReactDOM.render(<input type="text" defaultValue="1" />, container),
     ).toErrorDev(
       'A component is changing a controlled input to be uncontrolled.',
     );
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
   });
 
   it('should render defaultValue for SSR', () => {
@@ -794,13 +815,16 @@ describe('ReactDOMInput', () => {
       <input type="text" value="" onChange={emptyFunction} />,
       container,
     );
+    const node = container.firstChild;
+    expect(isValueDirty(node)).toBe(false);
+
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
     );
 
-    const node = container.firstChild;
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
 
     if (disableInputAttributeSyncing) {
       expect(node.hasAttribute('value')).toBe(false);
@@ -814,15 +838,17 @@ describe('ReactDOMInput', () => {
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
     );
+    const node = container.firstChild;
+    expect(isValueDirty(node)).toBe(true);
+
     ReactDOM.render(
       <input type="text" value="" onChange={emptyFunction} />,
       container,
     );
 
-    const node = container.firstChild;
-
     expect(node.value).toBe('');
     expect(node.defaultValue).toBe('');
+    expect(isValueDirty(node)).toBe(true);
   });
 
   it('should properly transition a text input from 0 to an empty 0.0', function () {
@@ -911,10 +937,16 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(inputRef.current.value).toBe('default1');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(inputRef.current)).toBe(false);
+    } else {
+      expect(isValueDirty(inputRef.current)).toBe(true);
+    }
 
     setUntrackedValue.call(inputRef.current, 'changed');
     dispatchEventOnNode(inputRef.current, 'input');
     expect(inputRef.current.value).toBe('changed');
+    expect(isValueDirty(inputRef.current)).toBe(true);
 
     ReactDOM.render(
       <form>
@@ -924,12 +956,14 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(inputRef.current.value).toBe('changed');
+    expect(isValueDirty(inputRef.current)).toBe(true);
 
     container.firstChild.reset();
     // Note: I don't know if we want to always support this.
     // But it's current behavior so worth being intentional if we break it.
     // https://github.com/facebook/react/issues/4618
     expect(inputRef.current.value).toBe('default2');
+    expect(isValueDirty(inputRef.current)).toBe(false);
   });
 
   it('should not set a value for submit buttons unnecessarily', () => {
@@ -1300,8 +1334,18 @@ describe('ReactDOMInput', () => {
 
   it('should update defaultValue to empty string', () => {
     ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(container.firstChild)).toBe(false);
+    } else {
+      expect(isValueDirty(container.firstChild)).toBe(true);
+    }
     ReactDOM.render(<input type="text" defaultValue={''} />, container);
     expect(container.firstChild.defaultValue).toBe('');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(container.firstChild)).toBe(false);
+    } else {
+      expect(isValueDirty(container.firstChild)).toBe(true);
+    }
   });
 
   it('should warn if value is null', () => {
@@ -1838,10 +1882,12 @@ describe('ReactDOMInput', () => {
       const Input = getTestInput();
       const stub = ReactDOM.render(<Input type="text" />, container);
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(false);
 
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.hasAttribute('value')).toBe(false);
       } else {
@@ -1856,12 +1902,14 @@ describe('ReactDOMInput', () => {
         container,
       );
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(true);
 
       node.focus();
 
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.hasAttribute('value')).toBe(false);
       } else {
@@ -1876,12 +1924,14 @@ describe('ReactDOMInput', () => {
         container,
       );
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(true);
 
       node.focus();
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
       node.blur();
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.value).toBe('2');
         expect(node.hasAttribute('value')).toBe(false);
@@ -1896,12 +1946,18 @@ describe('ReactDOMInput', () => {
         <input type="number" defaultValue="1" />,
         container,
       );
+      if (disableInputAttributeSyncing) {
+        expect(isValueDirty(node)).toBe(false);
+      } else {
+        expect(isValueDirty(node)).toBe(true);
+      }
 
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
       node.blur();
 
+      expect(isValueDirty(node)).toBe(true);
       expect(node.getAttribute('value')).toBe('1');
     });
 
@@ -1910,12 +1966,18 @@ describe('ReactDOMInput', () => {
         <input type="text" defaultValue="1" />,
         container,
       );
+      if (disableInputAttributeSyncing) {
+        expect(isValueDirty(node)).toBe(false);
+      } else {
+        expect(isValueDirty(node)).toBe(true);
+      }
 
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
       node.blur();
 
+      expect(isValueDirty(node)).toBe(true);
       expect(node.getAttribute('value')).toBe('1');
     });
   });
