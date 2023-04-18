@@ -13,6 +13,10 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import {preloadModuleForSSR} from 'react-client/src/ReactFlightClientConfig';
+
+type ChunkFiles = Array<string>;
+
 export type SSRManifest = {
   [clientId: string]: {
     [clientExportName: string]: ClientReference<any>,
@@ -31,6 +35,7 @@ export opaque type ClientReferenceMetadata = {
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
+  ssrChunks: null | Array<string>,
   specifier: string,
   name: string,
 };
@@ -59,6 +64,7 @@ export function resolveClientReference<T>(
     name = metadata.name;
   }
   return {
+    ssrChunks: resolvedModuleData.ssrChunks,
     specifier: resolvedModuleData.specifier,
     name: name,
   };
@@ -71,7 +77,7 @@ export function resolveServerReference<T>(
   const idx = id.lastIndexOf('#');
   const specifier = id.slice(0, idx);
   const name = id.slice(idx + 1);
-  return {specifier, name};
+  return {specifier, name, ssrChunks: null};
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
@@ -79,6 +85,13 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
+  const ssrChunks = metadata.ssrChunks;
+  if (ssrChunks) {
+    for (let i = 0; i < ssrChunks.length; i++) {
+      const href = ssrChunks[i];
+      preloadModuleForSSR(href);
+    }
+  }
   const existingPromise = asyncModuleCache.get(metadata.specifier);
   if (existingPromise) {
     if (existingPromise.status === 'fulfilled') {

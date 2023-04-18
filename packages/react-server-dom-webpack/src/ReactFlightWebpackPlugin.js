@@ -230,12 +230,25 @@ export default class ReactFlightWebpackPlugin {
           } = {};
           const ssrManifest: {
             [string]: {
-              [string]: {specifier: string, name: string},
+              [string]: {
+                ssrChunks: Array<string>,
+                specifier: string,
+                name: string,
+              },
             },
           } = {};
+          const buildTimePublicPath =
+            compilation.outputOptions.publicPath || '';
           compilation.chunkGroups.forEach(function (chunkGroup) {
-            const chunkIds = chunkGroup.chunks.map(function (c) {
-              return c.id;
+            let chunkIds = [];
+            let chunkFiles = [];
+            chunkGroup.chunks.forEach(function (c) {
+              chunkIds.push(c.id);
+              c.files.forEach(fileName => {
+                if (fileName.endsWith('.js')) {
+                  chunkFiles.push(buildTimePublicPath + fileName);
+                }
+              });
             });
 
             // $FlowFixMe[missing-local-annot]
@@ -251,7 +264,11 @@ export default class ReactFlightWebpackPlugin {
 
               if (href !== undefined) {
                 const ssrExports: {
-                  [string]: {specifier: string, name: string},
+                  [string]: {
+                    ssrChunks: Array<string>,
+                    specifier: string,
+                    name: string,
+                  },
                 } = {};
 
                 clientManifest[href] = {
@@ -260,6 +277,7 @@ export default class ReactFlightWebpackPlugin {
                   name: '*',
                 };
                 ssrExports['*'] = {
+                  ssrChunks: chunkFiles,
                   specifier: href,
                   name: '*',
                 };
@@ -276,6 +294,7 @@ export default class ReactFlightWebpackPlugin {
                   name: '',
                 };
                 ssrExports[''] = {
+                  ssrChunks: chunkFiles,
                   specifier: href,
                   name: '',
                 };
@@ -292,6 +311,7 @@ export default class ReactFlightWebpackPlugin {
                       name: name,
                     };
                     ssrExports[name] = {
+                      ssrChunks: chunkFiles,
                       specifier: href,
                       name: name,
                     };

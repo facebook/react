@@ -34,3 +34,10 @@ export function dispatchDirective(directive: Directive): void {
     }
   }
 }
+
+export function preloadModuleForSSR(href: string) {
+  const dispatcher = ReactDOMCurrentDispatcher.current;
+  if (dispatcher) {
+    dispatcher.preload(href, {as: 'script'});
+  }
+}

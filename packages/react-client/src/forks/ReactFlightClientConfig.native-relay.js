@@ -8,4 +8,4 @@
  */
 
 export * from 'react-server-native-relay/src/ReactFlightClientConfigNativeRelay';
-export * from '../ReactFlightClientConfigNoStream';
+export * from 'react-client/src/ReactFlightClientConfigNoStream';

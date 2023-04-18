@@ -13,6 +13,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import {preloadModuleForSSR} from 'react-client/src/ReactFlightClientConfig';
+
 export type SSRManifest = null | {
   [clientId: string]: {
     [clientExportName: string]: ClientReferenceMetadata,
@@ -30,6 +32,7 @@ export opaque type ClientReferenceMetadata = {
   chunks: Array<string>,
   name: string,
   async: boolean,
+  ssrChunks: null | Array<string>,
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -64,6 +67,7 @@ export function resolveClientReference<T>(
       chunks: resolvedModuleData.chunks,
       name: name,
       async: !!metadata.async,
+      ssrChunks: resolvedModuleData.ssrChunks,
     };
   }
   return metadata;
@@ -103,6 +107,7 @@ export function resolveServerReference<T>(
     chunks: resolvedModuleData.chunks,
     name: name,
     async: false,
+    ssrChunks: null,
   };
 }
 
@@ -121,6 +126,13 @@ function ignoreReject() {
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
+  const ssrChunks = metadata.ssrChunks;
+  if (ssrChunks) {
+    for (let i = 0; i < ssrChunks.length; i++) {
+      const href = ssrChunks[i];
+      preloadModuleForSSR(href);
+    }
+  }
   const chunks = metadata.chunks;
   const promises = [];
   for (let i = 0; i < chunks.length; i++) {
