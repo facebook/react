@@ -361,9 +361,7 @@ function visit(context: Context, block: ReactiveBlock): void {
             break;
           }
           case "return": {
-            if (terminal.value !== null) {
-              context.visitOperand(terminal.value);
-            }
+            context.visitOperand(terminal.value);
             break;
           }
           case "throw": {

@@ -387,9 +387,8 @@ function codegenTerminal(
       );
     }
     case "return": {
-      return t.returnStatement(
-        terminal.value !== null ? codegenPlace(cx, terminal.value) : null
-      );
+      const value = codegenPlace(cx, terminal.value);
+      return t.returnStatement(value);
     }
     case "switch": {
       return t.switchStatement(

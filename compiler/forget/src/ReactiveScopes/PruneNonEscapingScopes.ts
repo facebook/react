@@ -673,7 +673,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
   ): void {
     this.traverseTerminal(stmt, state);
 
-    if (stmt.terminal.kind === "return" && stmt.terminal.value !== null) {
+    if (stmt.terminal.kind === "return") {
       state.escapingValues.add(stmt.terminal.value.identifier.id);
     }
   }

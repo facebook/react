@@ -782,9 +782,7 @@ export function mapTerminalOperands(
     }
     case "return":
     case "throw": {
-      if (terminal.value !== null) {
-        terminal.value = fn(terminal.value);
-      }
+      terminal.value = fn(terminal.value);
       break;
     }
     case "label":
@@ -831,9 +829,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     }
     case "return":
     case "throw": {
-      if (terminal.value !== null) {
-        yield terminal.value;
-      }
+      yield terminal.value;
       break;
     }
     case "label":

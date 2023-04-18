@@ -152,7 +152,7 @@ export type ReactiveContinueTerminal = {
 };
 export type ReactiveReturnTerminal = {
   kind: "return";
-  value: Place | null;
+  value: Place;
   id: InstructionId;
 };
 export type ReactiveThrowTerminal = {

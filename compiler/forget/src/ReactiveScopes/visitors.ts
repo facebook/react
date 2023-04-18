@@ -96,9 +96,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         break;
       }
       case "return": {
-        if (terminal.value !== null) {
-          this.visitPlace(terminal.id, terminal.value, state);
-        }
+        this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
       case "throw": {

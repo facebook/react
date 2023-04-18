@@ -249,13 +249,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       break;
     }
     case "return": {
-      if (terminal.value !== null) {
-        writer.writeLine(
-          `[${terminal.id}] return ${printPlace(terminal.value)}`
-        );
-      } else {
-        writer.writeLine(`[${terminal.id}] return`);
-      }
+      writer.writeLine(`[${terminal.id}] return ${printPlace(terminal.value)}`);
       break;
     }
     case "label": {
