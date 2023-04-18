@@ -191,7 +191,7 @@ export function processReply(
         );
         return serializePromiseID(promiseId);
       }
-      // TODO: Should we the Object.prototype.toString.call() to test for cross-real objects?
+      // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
       if (value instanceof FormData) {
         if (formData === null) {
           // Upgrade to use FormData to allow us to use rich objects as its values.
