@@ -131,6 +131,8 @@ Chunk.prototype.then = function <T>(
 
 export type Response = {
   _bundlerConfig: ServerManifest,
+  _prefix: string,
+  _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
 };
@@ -309,7 +311,17 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    const prefix = response._prefix;
+    const key = prefix + id;
+    // Check if we have this field in the backing store already.
+    const backingEntry = response._formData.get(key);
+    if (backingEntry != null) {
+      // We assume that this is a string entry for now.
+      chunk = createResolvedModelChunk(response, (backingEntry: any));
+    } else {
+      // We're still waiting on this entry to stream in.
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -452,10 +464,16 @@ function parseModelString(
   return value;
 }
 
-export function createResponse(bundlerConfig: ServerManifest): Response {
+export function createResponse(
+  bundlerConfig: ServerManifest,
+  formFieldPrefix: string,
+  backingFormData?: FormData = new FormData(),
+): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _prefix: formFieldPrefix,
+    _formData: backingFormData,
     _chunks: chunks,
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {
@@ -470,19 +488,24 @@ export function createResponse(bundlerConfig: ServerManifest): Response {
 
 export function resolveField(
   response: Response,
-  id: number,
-  model: string,
+  key: string,
+  value: string,
 ): void {
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
-  } else {
-    resolveModelChunk(chunk, model);
+  // Add this field to the backing store.
+  response._formData.append(key, value);
+  const prefix = response._prefix;
+  if (key.startsWith(prefix)) {
+    const chunks = response._chunks;
+    const id = +key.substr(prefix.length);
+    const chunk = chunks.get(id);
+    if (chunk) {
+      // We were waiting on this key so now we can resolve it.
+      resolveModelChunk(chunk, value);
+    }
   }
 }
 
-export function resolveFile(response: Response, id: number, file: File): void {
+export function resolveFile(response: Response, key: string, file: File): void {
   throw new Error('Not implemented.');
 }
 
@@ -490,7 +513,7 @@ export opaque type FileHandle = {};
 
 export function resolveFileInfo(
   response: Response,
-  id: number,
+  key: string,
   filename: string,
   mime: string,
 ): FileHandle {

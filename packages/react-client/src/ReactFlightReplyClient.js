@@ -112,6 +112,7 @@ function escapeStringValue(value: string): string {
 
 export function processReply(
   root: ReactServerValue,
+  formFieldPrefix: string,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
 ): void {
@@ -171,7 +172,7 @@ export function processReply(
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
             // eslint-disable-next-line react-internal/safe-string-coercion
-            data.append('' + promiseId, partJSON);
+            data.append(formFieldPrefix + promiseId, partJSON);
             pendingParts--;
             if (pendingParts === 0) {
               resolve(data);
@@ -268,7 +269,7 @@ export function processReply(
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
         // eslint-disable-next-line react-internal/safe-string-coercion
-        formData.set('' + refId, metaDataJSON);
+        formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
       throw new Error(
@@ -308,7 +309,7 @@ export function processReply(
     resolve(json);
   } else {
     // Otherwise, we use FormData to let us stream in the result.
-    formData.set('0', json);
+    formData.set(formFieldPrefix + '0', json);
     if (pendingParts === 0) {
       // $FlowFixMe[incompatible-call] this has already been refined.
       resolve(formData);
