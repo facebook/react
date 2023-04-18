@@ -124,7 +124,7 @@ function encodeReply(
   string | URLSearchParams | FormData,
 > /* We don't use URLSearchParams yet but maybe */ {
   return new Promise((resolve, reject) => {
-    processReply(value, resolve, reject);
+    processReply(value, '', resolve, reject);
   });
 }
 

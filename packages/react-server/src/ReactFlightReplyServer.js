@@ -131,6 +131,8 @@ Chunk.prototype.then = function <T>(
 
 export type Response = {
   _bundlerConfig: ServerManifest,
+  _prefix: string,
+  _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
 };
@@ -309,7 +311,17 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    const prefix = response._prefix;
+    const key = prefix + id;
+    // Check if we have this field in the backing store already.
+    const backingEntry = response._formData.get(key);
+    if (backingEntry != null) {
+      // We assume that this is a string entry for now.
+      chunk = createResolvedModelChunk(response, (backingEntry: any));
+    } else {
+      // We're still waiting on this entry to stream in.
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -397,6 +409,23 @@ function parseModelString(
           key,
         );
       }
+      case 'K': {
+        // FormData
+        const stringId = value.substring(2);
+        const formPrefix = response._prefix + stringId + '_';
+        const data = new FormData();
+        const backingFormData = response._formData;
+        // We assume that the reference to FormData always comes after each
+        // entry that it references so we can assume they all exist in the
+        // backing store already.
+        // $FlowFixMe[prop-missing] FormData has forEach on it.
+        backingFormData.forEach((entry: File | string, entryKey: string) => {
+          if (entryKey.startsWith(formPrefix)) {
+            data.append(entryKey.substr(formPrefix.length), entry);
+          }
+        });
+        return data;
+      }
       case 'I': {
         // $Infinity
         return Infinity;
@@ -452,10 +481,16 @@ function parseModelString(
   return value;
 }
 
-export function createResponse(bundlerConfig: ServerManifest): Response {
+export function createResponse(
+  bundlerConfig: ServerManifest,
+  formFieldPrefix: string,
+  backingFormData?: FormData = new FormData(),
+): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _prefix: formFieldPrefix,
+    _formData: backingFormData,
     _chunks: chunks,
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {
@@ -470,31 +505,45 @@ export function createResponse(bundlerConfig: ServerManifest): Response {
 
 export function resolveField(
   response: Response,
-  id: number,
-  model: string,
+  key: string,
+  value: string,
 ): void {
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
-  } else {
-    resolveModelChunk(chunk, model);
+  // Add this field to the backing store.
+  response._formData.append(key, value);
+  const prefix = response._prefix;
+  if (key.startsWith(prefix)) {
+    const chunks = response._chunks;
+    const id = +key.substr(prefix.length);
+    const chunk = chunks.get(id);
+    if (chunk) {
+      // We were waiting on this key so now we can resolve it.
+      resolveModelChunk(chunk, value);
+    }
   }
 }
 
-export function resolveFile(response: Response, id: number, file: File): void {
-  throw new Error('Not implemented.');
+export function resolveFile(response: Response, key: string, file: File): void {
+  // Add this field to the backing store.
+  response._formData.append(key, file);
 }
 
-export opaque type FileHandle = {};
+export opaque type FileHandle = {
+  chunks: Array<Uint8Array>,
+  filename: string,
+  mime: string,
+};
 
 export function resolveFileInfo(
   response: Response,
-  id: number,
+  key: string,
   filename: string,
   mime: string,
 ): FileHandle {
-  throw new Error('Not implemented.');
+  return {
+    chunks: [],
+    filename,
+    mime,
+  };
 }
 
 export function resolveFileChunk(
@@ -502,14 +551,17 @@ export function resolveFileChunk(
   handle: FileHandle,
   chunk: Uint8Array,
 ): void {
-  throw new Error('Not implemented.');
+  handle.chunks.push(chunk);
 }
 
 export function resolveFileComplete(
   response: Response,
+  key: string,
   handle: FileHandle,
 ): void {
-  throw new Error('Not implemented.');
+  // Add this file to the backing store.
+  const file = new File(handle.chunks, handle.filename, {type: handle.mime});
+  response._formData.append(key, file);
 }
 
 export function close(response: Response): void {
