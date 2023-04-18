@@ -15,6 +15,7 @@ export {
   reversePostorderBlocks,
   shrink,
 } from "./HIRBuilder";
+export { Hook } from "./Hooks";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
 export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";

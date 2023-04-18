@@ -9,9 +9,12 @@ import { parse, ParserPlugin } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import {
+  Effect,
+  Hook,
   printHIR,
   printReactiveFunction,
   run,
+  ValueKind,
 } from "babel-plugin-react-forget";
 import clsx from "clsx";
 import invariant from "invariant";
@@ -67,6 +70,54 @@ function parseFunctions(
   return items;
 }
 
+const COMMON_HOOKS: Array<[string, Hook]> = [
+  [
+    "useFragment",
+    {
+      name: "useFragment",
+      kind: "Custom",
+      valueKind: ValueKind.Frozen,
+      effectKind: Effect.Freeze,
+    },
+  ],
+  [
+    "usePaginationFragment",
+    {
+      name: "usePaginationFragment",
+      kind: "Custom",
+      valueKind: ValueKind.Frozen,
+      effectKind: Effect.Freeze,
+    },
+  ],
+  [
+    "useRefetchableFragment",
+    {
+      name: "useRefetchableFragment",
+      kind: "Custom",
+      valueKind: ValueKind.Frozen,
+      effectKind: Effect.Freeze,
+    },
+  ],
+  [
+    "useLazyLoadQuery",
+    {
+      name: "useLazyLoadQuery",
+      kind: "Custom",
+      valueKind: ValueKind.Frozen,
+      effectKind: Effect.Freeze,
+    },
+  ],
+  [
+    "usePreloadedQuery",
+    {
+      name: "usePreloadedQuery",
+      kind: "Custom",
+      valueKind: ValueKind.Frozen,
+      effectKind: Effect.Freeze,
+    },
+  ],
+];
+
 function compile(source: string): CompilerOutput {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
   const upsert = (result: PrintedCompilerPipelineValue) => {
@@ -79,7 +130,9 @@ function compile(source: string): CompilerOutput {
   };
   try {
     for (const fn of parseFunctions(source)) {
-      for (const result of run(fn)) {
+      for (const result of run(fn, {
+        customHooks: new Map([...COMMON_HOOKS]),
+      })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
           case "ast": {

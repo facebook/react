@@ -11,8 +11,8 @@ export {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "./CompilerError";
-export { compile, CompilerPipelineValue, run } from "./CompilerPipeline";
-export { Effect, printHIR, ValueKind } from "./HIR";
+export { CompilerPipelineValue, compile, run } from "./CompilerPipeline";
+export { Effect, Hook, ValueKind, printHIR } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
 declare global {
