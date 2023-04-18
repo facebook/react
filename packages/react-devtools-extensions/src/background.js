@@ -2,7 +2,7 @@
 
 'use strict';
 
-import {IS_FIREFOX} from './utils';
+import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from './utils';
 
 const ports = {};
 
@@ -179,26 +179,50 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     if (request.hasDetectedReact) {
       setIconAndPopup(request.reactBuildType, id);
     } else {
+      const devtools = ports[id]?.devtools;
       switch (request.payload?.type) {
         case 'fetch-file-with-cache-complete':
         case 'fetch-file-with-cache-error':
           // Forward the result of fetch-in-page requests back to the extension.
-          const devtools = ports[id]?.devtools;
-          if (devtools) {
-            devtools.postMessage(request);
-          }
+          devtools?.postMessage(request);
+          break;
+        // This is sent from the backend manager running on a page
+        case 'react-devtools-required-backends':
+          const backendsToDownload = [];
+          request.payload.versions.forEach(version => {
+            if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
+              if (!IS_FIREFOX) {
+                // equivalent logic for Firefox is in prepareInjection.js
+                chrome.scripting.executeScript({
+                  target: {tabId: id},
+                  files: [`/build/react_devtools_backend_${version}.js`],
+                  world: chrome.scripting.ExecutionWorld.MAIN,
+                });
+              }
+            } else {
+              backendsToDownload.push(version);
+            }
+          });
+          // Request the necessary backends in the extension DevTools UI
+          // TODO: handle this message in main.js to build the UI
+          devtools?.postMessage({
+            payload: {
+              type: 'react-devtools-additional-backends',
+              versions: backendsToDownload,
+            },
+          });
           break;
       }
     }
   } else if (request.payload?.tabId) {
     const tabId = request.payload?.tabId;
     // This is sent from the devtools page when it is ready for injecting the backend
-    if (request.payload.type === 'react-devtools-inject-backend') {
+    if (request.payload.type === 'react-devtools-inject-backend-manager') {
       if (!IS_FIREFOX) {
         // equivalent logic for Firefox is in prepareInjection.js
         chrome.scripting.executeScript({
           target: {tabId},
-          files: ['/build/react_devtools_backend.js'],
+          files: ['/build/backendManager.js'],
           world: chrome.scripting.ExecutionWorld.MAIN,
         });
       }

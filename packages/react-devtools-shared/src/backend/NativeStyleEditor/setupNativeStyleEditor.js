@@ -16,6 +16,7 @@ import type {RendererID} from '../types';
 import type {StyleAndLayout} from './types';
 
 export type ResolveNativeStyle = (stylesheetID: any) => ?Object;
+export type SetupNativeStyleEditor = typeof setupNativeStyleEditor;
 
 export default function setupNativeStyleEditor(
   bridge: BackendBridge,
