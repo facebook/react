@@ -3613,11 +3613,32 @@ function updateInput(
   element,
   value,
   defaultValue,
+  lastDefaultValue,
   checked,
   defaultChecked,
   type
 ) {
   var node = element;
+
+  if (value != null) {
+    if (type === "number") {
+      if (
+        // $FlowFixMe[incompatible-type]
+        (value === 0 && node.value === "") || // We explicitly want to coerce to number here if possible.
+        // eslint-disable-next-line
+        node.value != value
+      ) {
+        node.value = toString(getToStringValue(value));
+      }
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
+    }
+  } else if (type === "submit" || type === "reset") {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute("value");
+    return;
+  }
 
   if (disableInputAttributeSyncing) {
     // When not syncing the value attribute, React only assigns a new value
@@ -3625,7 +3646,7 @@ function updateInput(
     // React does nothing
     if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute("value");
     }
   } else {
@@ -3638,7 +3659,7 @@ function updateInput(
       setDefaultValue(node, type, getToStringValue(value));
     } else if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute("value");
     }
   }
@@ -3662,26 +3683,6 @@ function updateInput(
 
   if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
-  }
-
-  if (value != null) {
-    if (type === "number") {
-      if (
-        // $FlowFixMe[incompatible-type]
-        (value === 0 && node.value === "") || // We explicitly want to coerce to number here if possible.
-        // eslint-disable-next-line
-        node.value != value
-      ) {
-        node.value = toString(getToStringValue(value));
-      }
-    } else if (node.value !== toString(getToStringValue(value))) {
-      node.value = toString(getToStringValue(value));
-    }
-  } else if (type === "submit" || type === "reset") {
-    // Submit/reset inputs need the attribute removed completely to avoid
-    // blank-text buttons.
-    node.removeAttribute("value");
-    return;
   }
 }
 function initInput(
@@ -3808,6 +3809,7 @@ function restoreControlledInputState(element, props) {
     rootNode,
     props.value,
     props.defaultValue,
+    props.defaultValue,
     props.checked,
     props.defaultChecked,
     props.type
@@ -3862,6 +3864,7 @@ function restoreControlledInputState(element, props) {
       updateInput(
         otherNode,
         otherProps.value,
+        otherProps.defaultValue,
         otherProps.defaultValue,
         otherProps.checked,
         otherProps.defaultChecked,
@@ -33573,7 +33576,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-342727fc";
+var ReactVersion = "18.3.0-www-modern-294eaa58";
 
 function createPortal$1(
   children,
@@ -39853,25 +39856,25 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
       var type = null;
       var value = null;
       var defaultValue = null;
+      var lastDefaultValue = null;
       var checked = null;
       var defaultChecked = null;
 
       for (var propKey in lastProps) {
         var lastProp = lastProps[propKey];
 
-        if (
-          lastProps.hasOwnProperty(propKey) &&
-          lastProp != null &&
-          !nextProps.hasOwnProperty(propKey)
-        ) {
+        if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case "checked": {
-              var checkedValue = nextProps.defaultChecked;
-              var inputElement = domElement;
-              inputElement.checked =
-                !!checkedValue &&
-                typeof checkedValue !== "function" &&
-                checkedValue !== "symbol";
+              if (!nextProps.hasOwnProperty(propKey)) {
+                var checkedValue = nextProps.defaultChecked;
+                var inputElement = domElement;
+                inputElement.checked =
+                  !!checkedValue &&
+                  typeof checkedValue !== "function" &&
+                  checkedValue !== "symbol";
+              }
+
               break;
             }
 
@@ -39879,10 +39882,16 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
               // This is handled by updateWrapper below.
               break;
             }
+
+            case "defaultValue": {
+              lastDefaultValue = lastProp;
+            }
             // defaultChecked and defaultValue are ignored by setProp
+            // Fallthrough
 
             default: {
-              setProp(domElement, tag, propKey, null, nextProps, lastProp);
+              if (!nextProps.hasOwnProperty(propKey))
+                setProp(domElement, tag, propKey, null, nextProps, lastProp);
             }
           }
         }
@@ -40051,6 +40060,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         domElement,
         value,
         defaultValue,
+        lastDefaultValue,
         checked,
         defaultChecked,
         type
@@ -40452,6 +40462,7 @@ function updatePropertiesWithDiff(
       var type = nextProps.type;
       var value = nextProps.value;
       var defaultValue = nextProps.defaultValue;
+      var lastDefaultValue = lastProps.defaultValue;
       var checked = nextProps.checked;
       var defaultChecked = nextProps.defaultChecked;
 
@@ -40592,6 +40603,7 @@ function updatePropertiesWithDiff(
         domElement,
         value,
         defaultValue,
+        lastDefaultValue,
         checked,
         defaultChecked,
         type
