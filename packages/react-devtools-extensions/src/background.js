@@ -172,6 +172,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 chrome.runtime.onMessage.addListener((request, sender) => {
   const tab = sender.tab;
+  // sender.tab.id from content script points to the tab that injected the content script
   if (tab) {
     const id = tab.id;
     // This is sent from the hook content script.
@@ -214,7 +215,10 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           break;
       }
     }
-  } else if (request.payload?.tabId) {
+  }
+  // sender.tab.id from devtools page may not exist, or point to the undocked devtools window
+  // so we use the payload to get the tab id
+  if (request.payload?.tabId) {
     const tabId = request.payload?.tabId;
     // This is sent from the devtools page when it is ready for injecting the backend
     if (request.payload.type === 'react-devtools-inject-backend-manager') {
