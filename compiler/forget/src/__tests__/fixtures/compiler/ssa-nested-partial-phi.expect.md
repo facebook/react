@@ -26,7 +26,6 @@ function foo(a, b, c) {
     }
     return x;
   }
-  return undefined;
 }
 
 ```

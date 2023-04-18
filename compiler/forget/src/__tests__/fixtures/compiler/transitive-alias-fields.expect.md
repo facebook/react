@@ -31,7 +31,6 @@ function component() {
   q.y = p.y;
 
   mutate(q);
-  return undefined;
 }
 
 ```

@@ -37,18 +37,10 @@ function Component(props) {
 
 ```javascript
 import * as React from "react";
-function compute() {
-  return undefined;
-}
-function mutate() {
-  return undefined;
-}
-function foo() {
-  return undefined;
-}
-function Foo() {
-  return undefined;
-}
+function compute() {}
+function mutate() {}
+function foo() {}
+function Foo() {}
 
 /**
  * Should produce 3 scopes:

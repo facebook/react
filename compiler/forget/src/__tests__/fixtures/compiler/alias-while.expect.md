@@ -50,9 +50,7 @@ function foo(cond) {
   return a;
 }
 
-function mutate(x, y) {
-  return undefined;
-}
+function mutate(x, y) {}
 
 ```
       

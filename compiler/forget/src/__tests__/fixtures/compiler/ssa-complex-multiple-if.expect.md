@@ -20,9 +20,7 @@ function foo() {
 ## Code
 
 ```javascript
-function foo() {
-  return undefined;
-}
+function foo() {}
 
 ```
       

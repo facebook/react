@@ -105,12 +105,8 @@ function ComponentB(props) {
   return t0;
 }
 
-function Foo() {
-  return undefined;
-}
-function mayMutate() {
-  return undefined;
-}
+function Foo() {}
+function mayMutate() {}
 
 ```
       

@@ -26,7 +26,6 @@ import * as React from "react"; // Should print A, arg, original
 
 function changeF(o) {
   o.f = () => console.log("new");
-  return undefined;
 }
 
 function Component() {

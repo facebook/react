@@ -26,7 +26,6 @@ function foo(a, b, c) {
 
   y.push(a);
   x.push(b);
-  return undefined;
 }
 
 ```

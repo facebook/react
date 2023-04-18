@@ -20,7 +20,6 @@ function component() {
   const b = someOther();
   if (a > b) {
   }
-  return undefined;
 }
 
 ```

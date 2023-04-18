@@ -388,6 +388,10 @@ function codegenTerminal(
     }
     case "return": {
       const value = codegenPlace(cx, terminal.value);
+      if (value.type === "Identifier" && value.name === "undefined") {
+        // Use implicit undefined
+        return t.returnStatement();
+      }
       return t.returnStatement(value);
     }
     case "switch": {

@@ -27,9 +27,7 @@ function foo(a, b, c, d) {
 ## Code
 
 ```javascript
-function foo(a, b, c, d) {
-  return undefined;
-}
+function foo(a, b, c, d) {}
 
 ```
       

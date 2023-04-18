@@ -23,12 +23,8 @@ function Component(props) {
 
 ```javascript
 import * as React from "react";
-function useFreeze() {
-  return undefined;
-}
-function foo() {
-  return undefined;
-}
+function useFreeze() {}
+function foo() {}
 
 function Component(props) {
   const $ = React.unstable_useMemoCache(3);

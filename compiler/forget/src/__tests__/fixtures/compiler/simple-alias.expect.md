@@ -20,9 +20,7 @@ function foo() {
 
 ```javascript
 import * as React from "react";
-function mutate() {
-  return undefined;
-}
+function mutate() {}
 function foo() {
   const $ = React.unstable_useMemoCache(1);
   let c;

@@ -54,7 +54,6 @@ function Component(props) {
     } else {
     }
   }
-  return undefined;
 }
 
 ```

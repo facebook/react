@@ -3,9 +3,10 @@
 
 ```javascript
 function Component(props) {
-  for (let i = 0; i < props.count; i++) {
-    return;
+  if (props.cond) {
+    return undefined;
   }
+  return props.value;
 }
 
 ```
@@ -14,9 +15,10 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  for (const i = 0; 0 < props.count; ) {
+  if (props.cond) {
     return;
   }
+  return props.value;
 }
 
 ```

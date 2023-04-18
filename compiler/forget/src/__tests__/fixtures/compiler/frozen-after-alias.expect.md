@@ -35,12 +35,8 @@ function Component() {
   return b;
 }
 
-function useFreeze() {
-  return undefined;
-}
-function foo(x) {
-  return undefined;
-}
+function useFreeze() {}
+function foo(x) {}
 
 ```
       

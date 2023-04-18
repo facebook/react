@@ -42,9 +42,7 @@ function sequence(props) {
   return x;
 }
 
-function foo() {
-  return undefined;
-}
+function foo() {}
 
 ```
       

@@ -18,7 +18,6 @@ function component(a) {
 // @inlineUseMemo
 function component(a) {
   mutate(a);
-  return undefined;
 }
 
 ```

@@ -15,7 +15,6 @@ function foo(a, b, c) {
 function foo(a, b, c) {
   a[b] = c[b];
   a[3] = c[b * 4];
-  return undefined;
 }
 
 ```

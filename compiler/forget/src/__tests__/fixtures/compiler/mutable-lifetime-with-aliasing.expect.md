@@ -38,9 +38,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-function mutate(x, y) {
-  return undefined;
-}
+function mutate(x, y) {}
 
 function Component(props) {
   const a = {};
@@ -63,7 +61,6 @@ function Component(props) {
   }
 
   mutate(x, null);
-  return undefined;
 }
 
 ```

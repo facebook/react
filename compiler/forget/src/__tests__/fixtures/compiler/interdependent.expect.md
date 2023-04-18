@@ -69,15 +69,9 @@ function Component(props) {
   return t0;
 }
 
-function compute() {
-  return undefined;
-}
-function foo() {
-  return undefined;
-}
-function Foo() {
-  return undefined;
-}
+function compute() {}
+function foo() {}
+function Foo() {}
 
 ```
       
