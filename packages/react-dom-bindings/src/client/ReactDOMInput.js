@@ -89,8 +89,29 @@ export function updateInput(
   checked: ?boolean,
   defaultChecked: ?boolean,
   type: ?string,
+  name: ?string,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  // Temporarily disconnect the input from any radio buttons.
+  // Changing the type or name as the same time as changing the checked value
+  // needs to be atomically applied. We can only ensure that by disconnecting
+  // the name while do the mutations and then reapply the name after that's done.
+  node.name = '';
+
+  if (
+    type != null &&
+    typeof type !== 'function' &&
+    typeof type !== 'symbol' &&
+    typeof type !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(type, 'type');
+    }
+    node.type = type;
+  } else {
+    node.removeAttribute('type');
+  }
 
   if (value != null) {
     if (type === 'number') {
@@ -157,6 +178,20 @@ export function updateInput(
   if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
   }
+
+  if (
+    name != null &&
+    typeof name !== 'function' &&
+    typeof name !== 'symbol' &&
+    typeof name !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
+    node.name = name;
+  } else {
+    node.removeAttribute('name');
+  }
 }
 
 export function initInput(
@@ -166,9 +201,22 @@ export function initInput(
   checked: ?boolean,
   defaultChecked: ?boolean,
   type: ?string,
+  name: ?string,
   isHydrating: boolean,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  if (
+    type != null &&
+    typeof type !== 'function' &&
+    typeof type !== 'symbol' &&
+    typeof type !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(type, 'type');
+    }
+    node.type = type;
+  }
 
   if (value != null || defaultValue != null) {
     const isButton = type === 'submit' || type === 'reset';
@@ -235,10 +283,6 @@ export function initInput(
   // will sometimes influence the value of checked (even after detachment).
   // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
   // We need to temporarily unset name to avoid disrupting radio button groups.
-  const name = node.name;
-  if (name !== '') {
-    node.name = '';
-  }
 
   const checkedOrDefault = checked != null ? checked : defaultChecked;
   // TODO: This 'function' or 'symbol' check isn't replicated in other places
@@ -276,7 +320,16 @@ export function initInput(
     node.defaultChecked = !!initialChecked;
   }
 
-  if (name !== '') {
+  // Name needs to be set at the end so that it applies atomically to connected radio buttons.
+  if (
+    name != null &&
+    typeof name !== 'function' &&
+    typeof name !== 'symbol' &&
+    typeof name !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
     node.name = name;
   }
 }
@@ -291,6 +344,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
     props.checked,
     props.defaultChecked,
     props.type,
+    props.name,
   );
   const name = props.name;
   if (props.type === 'radio' && name != null) {
@@ -347,6 +401,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
         otherProps.checked,
         otherProps.defaultChecked,
         otherProps.type,
+        otherProps.name,
       );
     }
   }

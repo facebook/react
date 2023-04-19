@@ -834,6 +834,7 @@ export function setInitialProperties(
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
 
+      let name = null;
       let type = null;
       let value = null;
       let defaultValue = null;
@@ -848,31 +849,16 @@ export function setInitialProperties(
           continue;
         }
         switch (propKey) {
+          case 'name': {
+            name = propValue;
+            break;
+          }
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              type = propValue;
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            }
+            type = propValue;
             break;
           }
           case 'checked': {
             checked = propValue;
-            const checkedValue =
-              propValue != null ? propValue : props.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
@@ -904,7 +890,6 @@ export function setInitialProperties(
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       initInput(
         domElement,
@@ -913,8 +898,10 @@ export function setInitialProperties(
         checked,
         defaultChecked,
         type,
+        name,
         false,
       );
+      track((domElement: any));
       return;
     }
     case 'select': {
@@ -1010,9 +997,9 @@ export function setInitialProperties(
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
+      track((domElement: any));
       return;
     }
     case 'option': {
@@ -1305,14 +1292,6 @@ export function updateProperties(
         if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case 'checked': {
-              if (!nextProps.hasOwnProperty(propKey)) {
-                const checkedValue = nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'value': {
@@ -1341,22 +1320,6 @@ export function updateProperties(
           switch (propKey) {
             case 'type': {
               type = nextProp;
-              // Fast path since 'type' is very common on inputs
-              if (nextProp !== lastProp) {
-                if (
-                  nextProp != null &&
-                  typeof nextProp !== 'function' &&
-                  typeof nextProp !== 'symbol' &&
-                  typeof nextProp !== 'boolean'
-                ) {
-                  if (__DEV__) {
-                    checkAttributeStringCoercion(nextProp, propKey);
-                  }
-                  domElement.setAttribute(propKey, nextProp);
-                } else {
-                  domElement.removeAttribute(propKey);
-                }
-              }
               break;
             }
             case 'name': {
@@ -1365,15 +1328,6 @@ export function updateProperties(
             }
             case 'checked': {
               checked = nextProp;
-              if (nextProp !== lastProp) {
-                const checkedValue =
-                  nextProp != null ? nextProp : nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'defaultChecked': {
@@ -1453,23 +1407,6 @@ export function updateProperties(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1481,6 +1418,7 @@ export function updateProperties(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -1822,33 +1760,12 @@ export function updatePropertiesWithDiff(
         const propValue = updatePayload[i + 1];
         switch (propKey) {
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            } else {
-              domElement.removeAttribute(propKey);
-            }
             break;
           }
           case 'name': {
             break;
           }
           case 'checked': {
-            const checkedValue =
-              propValue != null ? propValue : nextProps.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
@@ -1916,23 +1833,6 @@ export function updatePropertiesWithDiff(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1944,6 +1844,7 @@ export function updatePropertiesWithDiff(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -2970,7 +2871,6 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
@@ -2984,8 +2884,10 @@ export function diffHydratedProperties(
         props.checked,
         props.defaultChecked,
         props.type,
+        props.name,
         true,
       );
+      track((domElement: any));
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -3008,9 +2910,9 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, props.value, props.defaultValue, props.children);
+      track((domElement: any));
       break;
   }
 

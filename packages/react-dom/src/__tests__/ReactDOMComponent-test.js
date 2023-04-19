@@ -1143,7 +1143,8 @@ describe('ReactDOMComponent', () => {
           'the value changing from a defined to undefined, which should not happen. Decide between ' +
           'using a controlled or uncontrolled input element for the lifetime of the component.',
       );
-      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
+      // This leaves the current checked value in place, just like text inputs.
+      expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
       expect(() => {
         ReactDOM.render(
@@ -1156,13 +1157,13 @@ describe('ReactDOMComponent', () => {
           'using a controlled or uncontrolled input element for the lifetime of the component.',
       );
 
-      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(
         <input type="checkbox" onChange={onChange} checked={true} />,
         container,
       );
-      expect(nodeValueSetter).toHaveBeenCalledTimes(3);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
     it('should ignore attribute list for elements with the "is" attribute', () => {
