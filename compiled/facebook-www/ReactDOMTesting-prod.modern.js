@@ -964,8 +964,16 @@ function updateInput(
   lastDefaultValue,
   checked,
   defaultChecked,
-  type
+  type,
+  name
 ) {
+  element.name = "";
+  null != type &&
+  "function" !== typeof type &&
+  "symbol" !== typeof type &&
+  "boolean" !== typeof type
+    ? (element.type = type)
+    : element.removeAttribute("type");
   if (null != value)
     if ("number" === type) {
       if ((0 === value && "" === element.value) || element.value != value)
@@ -996,6 +1004,12 @@ function updateInput(
   null != checked &&
     element.checked !== !!checked &&
     (element.checked = checked);
+  null != name &&
+  "function" !== typeof name &&
+  "symbol" !== typeof name &&
+  "boolean" !== typeof name
+    ? (element.name = name)
+    : element.removeAttribute("name");
 }
 function initInput(
   element,
@@ -1004,8 +1018,14 @@ function initInput(
   checked,
   defaultChecked,
   type,
+  name,
   isHydrating
 ) {
+  null != type &&
+    "function" !== typeof type &&
+    "symbol" !== typeof type &&
+    "boolean" !== typeof type &&
+    (element.type = type);
   if (null != value || null != defaultValue) {
     if (
       (type = "submit" === type || "reset" === type) &&
@@ -1026,16 +1046,17 @@ function initInput(
       ? null != defaultValue && (element.defaultValue = defaultValueStr)
       : (element.defaultValue = initialValue);
   }
-  value = element.name;
-  "" !== value && (element.name = "");
-  checked = null != checked ? checked : defaultChecked;
-  checked =
-    "function" !== typeof checked && "symbol" !== typeof checked && !!checked;
-  isHydrating || (element.checked = !!checked);
+  value = null != checked ? checked : defaultChecked;
+  value = "function" !== typeof value && "symbol" !== typeof value && !!value;
+  isHydrating || (element.checked = !!value);
   disableInputAttributeSyncing
     ? null != defaultChecked && (element.defaultChecked = !!defaultChecked)
-    : (element.defaultChecked = !!checked);
-  "" !== value && (element.name = value);
+    : (element.defaultChecked = !!value);
+  null != name &&
+    "function" !== typeof name &&
+    "symbol" !== typeof name &&
+    "boolean" !== typeof name &&
+    (element.name = name);
 }
 function setDefaultValue(node, type, value) {
   ("number" === type && getActiveElement(node.ownerDocument) === node) ||
@@ -1327,7 +1348,8 @@ function restoreStateOfTarget(target) {
           props.defaultValue,
           props.checked,
           props.defaultChecked,
-          props.type
+          props.type,
+          props.name
         );
         internalInstance = props.name;
         if ("radio" === props.type && null != internalInstance) {
@@ -1354,7 +1376,8 @@ function restoreStateOfTarget(target) {
                 otherProps.defaultValue,
                 otherProps.checked,
                 otherProps.defaultChecked,
-                otherProps.type
+                otherProps.type,
+                otherProps.name
               );
             }
           }
@@ -1718,7 +1741,6 @@ function prepareToHydrateHostInstance(fiber) {
       break;
     case "input":
       listenToNonDelegatedEvent("invalid", instance);
-      track(instance);
       initInput(
         instance,
         props.value,
@@ -1726,16 +1748,18 @@ function prepareToHydrateHostInstance(fiber) {
         props.checked,
         props.defaultChecked,
         props.type,
+        props.name,
         !0
       );
+      track(instance);
       break;
     case "select":
       listenToNonDelegatedEvent("invalid", instance);
       break;
     case "textarea":
       listenToNonDelegatedEvent("invalid", instance),
-        track(instance),
-        initTextarea(instance, props.value, props.defaultValue);
+        initTextarea(instance, props.value, props.defaultValue),
+        track(instance);
   }
   i = null;
   var children = props.children;
@@ -13082,19 +13106,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$378;
+  var JSCompiler_inline_result$jscomp$376;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1635 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1635) {
-      var element$jscomp$inline_1636 = document.createElement("div");
-      element$jscomp$inline_1636.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1635 =
-        "function" === typeof element$jscomp$inline_1636.oninput;
+    var isSupported$jscomp$inline_1633 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1633) {
+      var element$jscomp$inline_1634 = document.createElement("div");
+      element$jscomp$inline_1634.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1633 =
+        "function" === typeof element$jscomp$inline_1634.oninput;
     }
-    JSCompiler_inline_result$jscomp$378 = isSupported$jscomp$inline_1635;
-  } else JSCompiler_inline_result$jscomp$378 = !1;
+    JSCompiler_inline_result$jscomp$376 = isSupported$jscomp$inline_1633;
+  } else JSCompiler_inline_result$jscomp$376 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$378 &&
+    JSCompiler_inline_result$jscomp$376 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13403,20 +13427,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1676 = 0;
-  i$jscomp$inline_1676 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1676++
+  var i$jscomp$inline_1674 = 0;
+  i$jscomp$inline_1674 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1674++
 ) {
-  var eventName$jscomp$inline_1677 =
-      simpleEventPluginEvents[i$jscomp$inline_1676],
-    domEventName$jscomp$inline_1678 =
-      eventName$jscomp$inline_1677.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1679 =
-      eventName$jscomp$inline_1677[0].toUpperCase() +
-      eventName$jscomp$inline_1677.slice(1);
+  var eventName$jscomp$inline_1675 =
+      simpleEventPluginEvents[i$jscomp$inline_1674],
+    domEventName$jscomp$inline_1676 =
+      eventName$jscomp$inline_1675.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1677 =
+      eventName$jscomp$inline_1675[0].toUpperCase() +
+      eventName$jscomp$inline_1675.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1678,
-    "on" + capitalizedEvent$jscomp$inline_1679
+    domEventName$jscomp$inline_1676,
+    "on" + capitalizedEvent$jscomp$inline_1677
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14590,7 +14614,8 @@ function setInitialProperties(domElement, tag, props) {
       break;
     case "input":
       listenToNonDelegatedEvent("invalid", domElement);
-      var type = null,
+      var name = null,
+        type = null,
         value = null,
         defaultValue = null,
         checked = null,
@@ -14600,22 +14625,14 @@ function setInitialProperties(domElement, tag, props) {
           var propValue = props[propKey];
           if (null != propValue)
             switch (propKey) {
+              case "name":
+                name = propValue;
+                break;
               case "type":
-                null != propValue &&
-                  "function" !== typeof propValue &&
-                  "symbol" !== typeof propValue &&
-                  "boolean" !== typeof propValue &&
-                  ((type = propValue),
-                  domElement.setAttribute(propKey, propValue));
+                type = propValue;
                 break;
               case "checked":
                 checked = propValue;
-                propValue =
-                  null != propValue ? propValue : props.defaultChecked;
-                domElement.checked =
-                  !!propValue &&
-                  "function" !== typeof propValue &&
-                  "symbol" !== propValue;
                 break;
               case "defaultChecked":
                 defaultChecked = propValue;
@@ -14635,7 +14652,6 @@ function setInitialProperties(domElement, tag, props) {
                 setProp(domElement, tag, propKey, propValue, props, null);
             }
         }
-      track(domElement);
       initInput(
         domElement,
         value,
@@ -14643,31 +14659,33 @@ function setInitialProperties(domElement, tag, props) {
         checked,
         defaultChecked,
         type,
+        name,
         !1
       );
+      track(domElement);
       return;
     case "select":
       listenToNonDelegatedEvent("invalid", domElement);
-      var propKey = (value = defaultValue = null);
-      for (type in props)
+      var propKey = (type = value = null);
+      for (name in props)
         if (
-          props.hasOwnProperty(type) &&
-          ((checked = props[type]), null != checked)
+          props.hasOwnProperty(name) &&
+          ((defaultValue = props[name]), null != defaultValue)
         )
-          switch (type) {
+          switch (name) {
             case "value":
-              defaultValue = checked;
+              value = defaultValue;
               break;
             case "defaultValue":
-              value = checked;
+              type = defaultValue;
               break;
             case "multiple":
-              propKey = checked;
+              propKey = defaultValue;
             default:
-              setProp(domElement, tag, type, checked, props, null);
+              setProp(domElement, tag, name, defaultValue, props, null);
           }
-      tag = defaultValue;
-      props = value;
+      tag = value;
+      props = type;
       domElement.multiple = !!propKey;
       null != tag
         ? updateOptions(domElement, !!propKey, tag, !1)
@@ -14675,37 +14693,37 @@ function setInitialProperties(domElement, tag, props) {
       return;
     case "textarea":
       listenToNonDelegatedEvent("invalid", domElement);
-      type = propKey = null;
-      for (value in props)
+      name = propKey = null;
+      for (type in props)
         if (
-          props.hasOwnProperty(value) &&
-          ((defaultValue = props[value]), null != defaultValue)
+          props.hasOwnProperty(type) &&
+          ((value = props[type]), null != value)
         )
-          switch (value) {
+          switch (type) {
             case "value":
-              propKey = defaultValue;
+              propKey = value;
               break;
             case "defaultValue":
-              type = defaultValue;
+              name = value;
               break;
             case "children":
               break;
             case "dangerouslySetInnerHTML":
-              if (null != defaultValue) throw Error(formatProdErrorMessage(91));
+              if (null != value) throw Error(formatProdErrorMessage(91));
               break;
             default:
-              setProp(domElement, tag, value, defaultValue, props);
+              setProp(domElement, tag, type, value, props);
           }
+      initTextarea(domElement, propKey, name);
       track(domElement);
-      initTextarea(domElement, propKey, type);
       return;
     case "option":
-      for (checked in props)
+      for (defaultValue in props)
         if (
-          props.hasOwnProperty(checked) &&
-          ((propKey = props[checked]), null != propKey)
+          props.hasOwnProperty(defaultValue) &&
+          ((propKey = props[defaultValue]), null != propKey)
         )
-          switch (checked) {
+          switch (defaultValue) {
             case "selected":
               domElement.selected =
                 propKey &&
@@ -14713,7 +14731,7 @@ function setInitialProperties(domElement, tag, props) {
                 "symbol" !== typeof propKey;
               break;
             default:
-              setProp(domElement, tag, checked, propKey, props);
+              setProp(domElement, tag, defaultValue, propKey, props);
           }
       return;
     case "dialog":
@@ -14753,29 +14771,29 @@ function setInitialProperties(domElement, tag, props) {
     case "track":
     case "wbr":
     case "menuitem":
-      for (defaultChecked in props)
+      for (checked in props)
         if (
-          props.hasOwnProperty(defaultChecked) &&
-          ((propKey = props[defaultChecked]), null != propKey)
+          props.hasOwnProperty(checked) &&
+          ((propKey = props[checked]), null != propKey)
         )
-          switch (defaultChecked) {
+          switch (checked) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(137, tag));
             default:
-              setProp(domElement, tag, defaultChecked, propKey, props, null);
+              setProp(domElement, tag, checked, propKey, props, null);
           }
       return;
     default:
       if (isCustomElement(tag)) {
-        for (propValue in props)
-          props.hasOwnProperty(propValue) &&
-            ((propKey = props[propValue]),
+        for (defaultChecked in props)
+          props.hasOwnProperty(defaultChecked) &&
+            ((propKey = props[defaultChecked]),
             null != propKey &&
               setPropOnCustomElement(
                 domElement,
                 tag,
-                propValue,
+                defaultChecked,
                 propKey,
                 props,
                 null
@@ -14783,11 +14801,10 @@ function setInitialProperties(domElement, tag, props) {
         return;
       }
   }
-  for (defaultValue in props)
-    props.hasOwnProperty(defaultValue) &&
-      ((propKey = props[defaultValue]),
-      null != propKey &&
-        setProp(domElement, tag, defaultValue, propKey, props, null));
+  for (value in props)
+    props.hasOwnProperty(value) &&
+      ((propKey = props[value]),
+      null != propKey && setProp(domElement, tag, value, propKey, props, null));
 }
 function updateProperties(domElement, tag, lastProps, nextProps) {
   switch (tag) {
@@ -14813,12 +14830,6 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         if (lastProps.hasOwnProperty(propKey) && null != lastProp)
           switch (propKey) {
             case "checked":
-              nextProps.hasOwnProperty(propKey) ||
-                ((lastProp = nextProps.defaultChecked),
-                (domElement.checked =
-                  !!lastProp &&
-                  "function" !== typeof lastProp &&
-                  "symbol" !== lastProp));
               break;
             case "value":
               break;
@@ -14839,26 +14850,12 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
           switch (propKey$218) {
             case "type":
               type = propKey;
-              propKey !== lastProp &&
-                (null != propKey &&
-                "function" !== typeof propKey &&
-                "symbol" !== typeof propKey &&
-                "boolean" !== typeof propKey
-                  ? domElement.setAttribute(propKey$218, propKey)
-                  : domElement.removeAttribute(propKey$218));
               break;
             case "name":
               name = propKey;
               break;
             case "checked":
               checked = propKey;
-              propKey !== lastProp &&
-                ((propKey =
-                  null != propKey ? propKey : nextProps.defaultChecked),
-                (domElement.checked =
-                  !!propKey &&
-                  "function" !== typeof propKey &&
-                  "symbol" !== propKey));
               break;
             case "defaultChecked":
               defaultChecked = propKey;
@@ -14886,12 +14883,6 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
                 );
           }
       }
-      null != name &&
-      "function" !== typeof name &&
-      "symbol" !== typeof name &&
-      "boolean" !== typeof name
-        ? domElement.setAttribute("name", name)
-        : domElement.removeAttribute("name");
       updateInput(
         domElement,
         value,
@@ -14899,7 +14890,8 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         lastDefaultValue,
         checked,
         defaultChecked,
-        type
+        type,
+        name
       );
       return;
     case "select":
@@ -14996,14 +14988,14 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
       updateTextarea(domElement, propKey$218, propKey);
       return;
     case "option":
-      for (var propKey$236 in lastProps)
+      for (var propKey$234 in lastProps)
         if (
-          ((propKey$218 = lastProps[propKey$236]),
-          lastProps.hasOwnProperty(propKey$236) &&
+          ((propKey$218 = lastProps[propKey$234]),
+          lastProps.hasOwnProperty(propKey$234) &&
             null != propKey$218 &&
-            !nextProps.hasOwnProperty(propKey$236))
+            !nextProps.hasOwnProperty(propKey$234))
         )
-          switch (propKey$236) {
+          switch (propKey$234) {
             case "selected":
               domElement.selected = !1;
               break;
@@ -15011,7 +15003,7 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
               setProp(
                 domElement,
                 tag,
-                propKey$236,
+                propKey$234,
                 null,
                 nextProps,
                 propKey$218
@@ -15058,12 +15050,12 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
     case "track":
     case "wbr":
     case "menuitem":
-      for (var propKey$241 in lastProps)
-        (propKey$218 = lastProps[propKey$241]),
-          lastProps.hasOwnProperty(propKey$241) &&
+      for (var propKey$239 in lastProps)
+        (propKey$218 = lastProps[propKey$239]),
+          lastProps.hasOwnProperty(propKey$239) &&
             null != propKey$218 &&
-            !nextProps.hasOwnProperty(propKey$241) &&
-            setProp(domElement, tag, propKey$241, null, nextProps, propKey$218);
+            !nextProps.hasOwnProperty(propKey$239) &&
+            setProp(domElement, tag, propKey$239, null, nextProps, propKey$218);
       for (checked in nextProps)
         if (
           ((propKey$218 = nextProps[checked]),
@@ -15091,15 +15083,15 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
       return;
     default:
       if (isCustomElement(tag)) {
-        for (var propKey$246 in lastProps)
-          (propKey$218 = lastProps[propKey$246]),
-            lastProps.hasOwnProperty(propKey$246) &&
+        for (var propKey$244 in lastProps)
+          (propKey$218 = lastProps[propKey$244]),
+            lastProps.hasOwnProperty(propKey$244) &&
               null != propKey$218 &&
-              !nextProps.hasOwnProperty(propKey$246) &&
+              !nextProps.hasOwnProperty(propKey$244) &&
               setPropOnCustomElement(
                 domElement,
                 tag,
-                propKey$246,
+                propKey$244,
                 null,
                 nextProps,
                 propKey$218
@@ -15121,12 +15113,12 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
         return;
       }
   }
-  for (var propKey$251 in lastProps)
-    (propKey$218 = lastProps[propKey$251]),
-      lastProps.hasOwnProperty(propKey$251) &&
+  for (var propKey$249 in lastProps)
+    (propKey$218 = lastProps[propKey$249]),
+      lastProps.hasOwnProperty(propKey$249) &&
         null != propKey$218 &&
-        !nextProps.hasOwnProperty(propKey$251) &&
-        setProp(domElement, tag, propKey$251, null, nextProps, propKey$218);
+        !nextProps.hasOwnProperty(propKey$249) &&
+        setProp(domElement, tag, propKey$249, null, nextProps, propKey$218);
   for (lastProp in nextProps)
     (propKey$218 = nextProps[lastProp]),
       (propKey = lastProps[lastProp]),
@@ -15169,21 +15161,10 @@ function updatePropertiesWithDiff(
           propValue = updatePayload[i + 1];
         switch (propKey) {
           case "type":
-            null != propValue &&
-            "function" !== typeof propValue &&
-            "symbol" !== typeof propValue &&
-            "boolean" !== typeof propValue
-              ? domElement.setAttribute(propKey, propValue)
-              : domElement.removeAttribute(propKey);
             break;
           case "name":
             break;
           case "checked":
-            propKey = null != propValue ? propValue : nextProps.defaultChecked;
-            domElement.checked =
-              !!propKey &&
-              "function" !== typeof propKey &&
-              "symbol" !== propKey;
             break;
           case "defaultChecked":
             break;
@@ -15200,12 +15181,6 @@ function updatePropertiesWithDiff(
             setProp(domElement, tag, propKey, propValue, nextProps, null);
         }
       }
-      null != name &&
-      "function" !== typeof name &&
-      "symbol" !== typeof name &&
-      "boolean" !== typeof name
-        ? domElement.setAttribute("name", name)
-        : domElement.removeAttribute("name");
       updateInput(
         domElement,
         value,
@@ -15213,7 +15188,8 @@ function updatePropertiesWithDiff(
         lastProps,
         checked,
         defaultChecked,
-        type
+        type,
+        name
       );
       return;
     case "select":
@@ -15694,14 +15670,14 @@ function preinit$1(href, options) {
       switch (as) {
         case "style":
           as = getResourcesFromRoot(resourceRoot).hoistableStyles;
-          var key$279 = getStyleKey(href),
+          var key$277 = getStyleKey(href),
             precedence = options.precedence || "default",
-            resource = as.get(key$279);
+            resource = as.get(key$277);
           if (resource) break;
           var state = { loading: 0, preload: null };
           if (
             (resource = resourceRoot.querySelector(
-              getStylesheetSelectorFromKey(key$279)
+              getStylesheetSelectorFromKey(key$277)
             ))
           )
             state.loading = 1;
@@ -15712,7 +15688,7 @@ function preinit$1(href, options) {
               "data-precedence": precedence,
               crossOrigin: options.crossOrigin
             };
-            (options = preloadPropsMap.get(key$279)) &&
+            (options = preloadPropsMap.get(key$277)) &&
               adoptPreloadPropsForStylesheet(href, options);
             var link = (resource = (
               resourceRoot.ownerDocument || resourceRoot
@@ -15738,15 +15714,15 @@ function preinit$1(href, options) {
             count: 1,
             state: state
           };
-          as.set(key$279, resource);
+          as.set(key$277, resource);
           break;
         case "script":
           (as = getResourcesFromRoot(resourceRoot).hoistableScripts),
-            (key$279 = getScriptKey(href)),
-            (precedence = as.get(key$279)),
+            (key$277 = getScriptKey(href)),
+            (precedence = as.get(key$277)),
             precedence ||
               ((precedence = resourceRoot.querySelector(
-                "script[async]" + key$279
+                "script[async]" + key$277
               )),
               precedence ||
                 ((href = {
@@ -15755,7 +15731,7 @@ function preinit$1(href, options) {
                   crossOrigin: options.crossOrigin,
                   integrity: options.integrity
                 }),
-                (options = preloadPropsMap.get(key$279)) &&
+                (options = preloadPropsMap.get(key$277)) &&
                   adoptPreloadPropsForScript(href, options),
                 (options = resourceRoot.ownerDocument || resourceRoot),
                 (precedence = options.createElement("script")),
@@ -15768,13 +15744,13 @@ function preinit$1(href, options) {
                 count: 1,
                 state: null
               }),
-              as.set(key$279, precedence));
+              as.set(key$277, precedence));
       }
     else if ("style" === as || "script" === as)
       if ((resourceRoot = getDocumentForPreloads())) {
-        key$279 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-        precedence = key$279 =
-          'link[rel="preload"][as="' + as + '"][href="' + key$279 + '"]';
+        key$277 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+        precedence = key$277 =
+          'link[rel="preload"][as="' + as + '"][href="' + key$277 + '"]';
         switch (as) {
           case "style":
             precedence = getStyleKey(href);
@@ -15791,7 +15767,7 @@ function preinit$1(href, options) {
             integrity: options.integrity
           }),
           preloadPropsMap.set(precedence, href),
-          null === resourceRoot.querySelector(key$279) &&
+          null === resourceRoot.querySelector(key$277) &&
             ((options = resourceRoot.createElement("link")),
             setInitialProperties(options, "link", href),
             markNodeAsHoistable(options),
@@ -15824,17 +15800,17 @@ function getResource(type, currentProps, pendingProps) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$288 = getResourcesFromRoot(currentProps).hoistableStyles,
-          resource$289 = styles$288.get(type);
-        resource$289 ||
+        var styles$286 = getResourcesFromRoot(currentProps).hoistableStyles,
+          resource$287 = styles$286.get(type);
+        resource$287 ||
           ((currentProps = currentProps.ownerDocument || currentProps),
-          (resource$289 = {
+          (resource$287 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$288.set(type, resource$289),
+          styles$286.set(type, resource$287),
           preloadPropsMap.has(type) ||
             preloadStylesheet(
               currentProps,
@@ -15849,9 +15825,9 @@ function getResource(type, currentProps, pendingProps) {
                 hrefLang: pendingProps.hrefLang,
                 referrerPolicy: pendingProps.referrerPolicy
               },
-              resource$289.state
+              resource$287.state
             ));
-        return resource$289;
+        return resource$287;
       }
       return null;
     case "script":
@@ -15923,36 +15899,36 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = key);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$294 = hoistableRoot.querySelector(
+        var instance$292 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$294)
+        if (instance$292)
           return (
-            (resource.instance = instance$294),
-            markNodeAsHoistable(instance$294),
-            instance$294
+            (resource.instance = instance$292),
+            markNodeAsHoistable(instance$292),
+            instance$292
           );
         key = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(key, styleProps);
-        instance$294 = (
+        instance$292 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$294);
-        var linkInstance = instance$294;
+        markNodeAsHoistable(instance$292);
+        var linkInstance = instance$292;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$294, "link", key);
+        setInitialProperties(instance$292, "link", key);
         resource.state.loading |= 4;
-        insertStylesheet(instance$294, props.precedence, hoistableRoot);
-        return (resource.instance = instance$294);
+        insertStylesheet(instance$292, props.precedence, hoistableRoot);
+        return (resource.instance = instance$292);
       case "script":
-        instance$294 = getScriptKey(props.src);
+        instance$292 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            "script[async]" + instance$294
+            "script[async]" + instance$292
           ))
         )
           return (
@@ -15961,7 +15937,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         key = props;
-        if ((styleProps = preloadPropsMap.get(instance$294)))
+        if ((styleProps = preloadPropsMap.get(instance$292)))
           (key = assign({}, props)),
             adoptPreloadPropsForScript(key, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -16331,17 +16307,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1844 = {
+var devToolsConfig$jscomp$inline_1842 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-edf301ed",
+  version: "18.3.0-www-modern-1cb1de96",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2220 = {
-  bundleType: devToolsConfig$jscomp$inline_1844.bundleType,
-  version: devToolsConfig$jscomp$inline_1844.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1844.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1844.rendererConfig,
+var internals$jscomp$inline_2218 = {
+  bundleType: devToolsConfig$jscomp$inline_1842.bundleType,
+  version: devToolsConfig$jscomp$inline_1842.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1842.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1842.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16358,26 +16334,26 @@ var internals$jscomp$inline_2220 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1844.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1842.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-edf301ed"
+  reconcilerVersion: "18.3.0-www-modern-1cb1de96"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2221 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2219 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2221.isDisabled &&
-    hook$jscomp$inline_2221.supportsFiber
+    !hook$jscomp$inline_2219.isDisabled &&
+    hook$jscomp$inline_2219.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2221.inject(
-        internals$jscomp$inline_2220
+      (rendererID = hook$jscomp$inline_2219.inject(
+        internals$jscomp$inline_2218
       )),
-        (injectedHook = hook$jscomp$inline_2221);
+        (injectedHook = hook$jscomp$inline_2219);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16684,4 +16660,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-edf301ed";
+exports.version = "18.3.0-www-modern-1cb1de96";
