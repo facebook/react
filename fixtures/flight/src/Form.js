@@ -7,11 +7,9 @@ export default function Form({action, children}) {
 
   return (
     <form
-      onSubmit={async e => {
-        e.preventDefault();
+      action={async formData => {
         setIsPending(true);
         try {
-          const formData = new FormData(e.target);
           const result = await action(formData);
           alert(result);
         } catch (error) {
