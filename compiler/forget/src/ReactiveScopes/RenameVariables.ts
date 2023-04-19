@@ -17,8 +17,8 @@ import {
   ReactiveScopeBlock,
 } from "../HIR/HIR";
 import {
-  eachReactiveValueOperand,
   ReactiveFunctionVisitor,
+  eachReactiveValueOperand,
   visitReactiveFunction,
 } from "./visitors";
 

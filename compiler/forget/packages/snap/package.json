@@ -1,0 +1,39 @@
+{
+  "name": "snap",
+  "version": "0.0.1",
+  "public": false,
+  "description": "Snapshot testing CLI tool",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "test": "tsc && jest",
+    "lint": "yarn eslint src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react-forget.git"
+  },
+  "dependencies": {
+    "@parcel/watcher": "^2.1.0",
+    "chalk": "4",
+    "readline": "^1.3.0",
+    "typescript": "^4.8.3",
+    "yargs": "^17.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.18",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "rimraf": "^3.0.2"
+  },
+  "resolutions": {
+    "./**/@babel/parser": "7.7.4",
+    "./**/@babel/types": "7.7.4",
+    "@babel/core": "7.2.0",
+    "@babel/traverse": "7.1.6"
+  }
+}

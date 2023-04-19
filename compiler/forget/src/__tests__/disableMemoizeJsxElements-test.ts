@@ -8,9 +8,9 @@
 "use strict";
 
 import path from "path";
-import runReactForgetBabelPlugin from "../Babel/RunReactForgetBabelPlugin";
-import { Effect, ValueKind } from "../index";
+import { runReactForgetBabelPlugin } from "../Babel/RunReactForgetBabelPlugin";
 import { toggleLogging } from "../Utils/logger";
+import { Effect, ValueKind } from "../index";
 import generateTestsFromFixtures from "./test-utils/generateTestsFromFixtures";
 
 type TestOutput = {
