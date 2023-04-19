@@ -100,7 +100,7 @@ function binSearch<T>(
 
   while (count > 0) {
     index = firstElementIndex;
-    step = Math.floor(count / 2);
+    step = count >> 1;
     index += step;
 
     const comparison = compare(location, items, index);

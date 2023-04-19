@@ -204,7 +204,7 @@ export class SnapshotsView extends View {
     let startIndex = 0;
     let stopIndex = snapshots.length - 1;
     while (startIndex <= stopIndex) {
-      const currentIndex = Math.floor((startIndex + stopIndex) / 2);
+      const currentIndex = (startIndex + stopIndex) >> 1;
       const snapshot = snapshots[currentIndex];
       const {timestamp} = snapshot;
 

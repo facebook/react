@@ -231,7 +231,7 @@ class FlamechartStackLayerView extends View {
     let startIndex = 0;
     let stopIndex = _stackLayer.length - 1;
     while (startIndex <= stopIndex) {
-      const currentIndex = Math.floor((startIndex + stopIndex) / 2);
+      const currentIndex = (startIndex + stopIndex) >> 1;
       const flamechartStackFrame = _stackLayer[currentIndex];
       const {timestamp, duration} = flamechartStackFrame;
 
