@@ -659,8 +659,8 @@ function pushFormActionAttribute(
       if (name !== null && !didWarnFormActionName) {
         didWarnFormActionName = true;
         console.error(
-          'Cannot specify a "name" prop for a button that specifies a function as a formAction ' +
-            'because React needs it to encode which action to be invoke. It will get overridden.',
+          'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
+            'React needs it to encode which action should be invoked. It will get overridden.',
         );
       }
       if (
@@ -677,7 +677,7 @@ function pushFormActionAttribute(
         didWarnFormActionTarget = true;
         console.error(
           'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
-            'The function will always be executed in the same scope.',
+            'The function will always be executed in the same window.',
         );
       }
     }
@@ -1329,7 +1329,7 @@ function pushStartForm(
         didWarnFormActionTarget = true;
         console.error(
           'Cannot specify a target for a form that specifies a function as the action. ' +
-            'The function will always be executed in the same scope.',
+            'The function will always be executed in the same window.',
         );
       }
     }
