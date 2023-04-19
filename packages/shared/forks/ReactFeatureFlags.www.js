@@ -73,6 +73,8 @@ export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 
+export const enableFormActions = true;
+
 export const disableJavaScriptURLs = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.

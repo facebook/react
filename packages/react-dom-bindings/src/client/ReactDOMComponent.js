@@ -65,6 +65,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
+  enableFormActions,
   enableHostSingletons,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
@@ -79,6 +80,10 @@ import {
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
 let didWarnInvalidHydration = false;
+let didWarnFormActionType = false;
+let didWarnFormActionName = false;
+let didWarnFormActionTarget = false;
+let didWarnFormActionMethod = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   // IE 11 parses & normalizes the style attribute as opposed to other
@@ -112,6 +117,102 @@ function validatePropertiesInDevelopment(type: string, props: any) {
           'those nodes are unexpectedly modified or duplicated. This is ' +
           'probably not intentional.',
       );
+    }
+  }
+}
+
+function validateFormActionInDevelopment(
+  tag: string,
+  key: string,
+  value: mixed,
+  props: any,
+) {
+  if (__DEV__) {
+    if (tag === 'form') {
+      if (key === 'formAction') {
+        console.error(
+          'You can only pass the formAction prop to <input> or <button>. Use the action prop on <form>.',
+        );
+      } else if (typeof value === 'function') {
+        if (
+          (props.encType != null || props.method != null) &&
+          !didWarnFormActionMethod
+        ) {
+          didWarnFormActionMethod = true;
+          console.error(
+            'Cannot specify a encType or method for a form that specifies a ' +
+              'function as the action. React provides those automatically. ' +
+              'They will get overridden.',
+          );
+        }
+        if (props.target != null && !didWarnFormActionTarget) {
+          didWarnFormActionTarget = true;
+          console.error(
+            'Cannot specify a target for a form that specifies a function as the action. ' +
+              'The function will always be executed in the same window.',
+          );
+        }
+      }
+    } else if (tag === 'input' || tag === 'button') {
+      if (key === 'action') {
+        console.error(
+          'You can only pass the action prop to <form>. Use the formAction prop on <input> or <button>.',
+        );
+      } else if (
+        tag === 'input' &&
+        props.type !== 'submit' &&
+        props.type !== 'image' &&
+        !didWarnFormActionType
+      ) {
+        didWarnFormActionType = true;
+        console.error(
+          'An input can only specify a formAction along with type="submit" or type="image".',
+        );
+      } else if (
+        tag === 'button' &&
+        props.type != null &&
+        props.type !== 'submit' &&
+        !didWarnFormActionType
+      ) {
+        didWarnFormActionType = true;
+        console.error(
+          'A button can only specify a formAction along with type="submit" or no type.',
+        );
+      } else if (typeof value === 'function') {
+        // Function form actions cannot control the form properties
+        if (props.name != null && !didWarnFormActionName) {
+          didWarnFormActionName = true;
+          console.error(
+            'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
+              'React needs it to encode which action should be invoked. It will get overridden.',
+          );
+        }
+        if (
+          (props.formEncType != null || props.formMethod != null) &&
+          !didWarnFormActionMethod
+        ) {
+          didWarnFormActionMethod = true;
+          console.error(
+            'Cannot specify a formEncType or formMethod for a button that specifies a ' +
+              'function as a formAction. React provides those automatically. They will get overridden.',
+          );
+        }
+        if (props.formTarget != null && !didWarnFormActionTarget) {
+          didWarnFormActionTarget = true;
+          console.error(
+            'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
+              'The function will always be executed in the same window.',
+          );
+        }
+      }
+    } else {
+      if (key === 'action') {
+        console.error('You can only pass the action prop to <form>.');
+      } else {
+        console.error(
+          'You can only pass the formAction prop to <input> or <button>.',
+        );
+      }
     }
   }
 }
@@ -327,8 +428,7 @@ function setProp(
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
     case 'src':
-    case 'href':
-    case 'action':
+    case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
         if (value === '') {
           if (__DEV__) {
@@ -355,8 +455,6 @@ function setProp(
           break;
         }
       }
-    // Fall through to the last case which shouldn't remove empty strings.
-    case 'formAction': {
       if (
         value == null ||
         typeof value === 'function' ||
@@ -364,6 +462,50 @@ function setProp(
         typeof value === 'boolean'
       ) {
         domElement.removeAttribute(key);
+        break;
+      }
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, key);
+      }
+      const sanitizedValue = (sanitizeURL(
+        enableTrustedTypesIntegration ? value : '' + (value: any),
+      ): any);
+      domElement.setAttribute(key, sanitizedValue);
+      break;
+    }
+    case 'action':
+    case 'formAction': {
+      // TODO: Consider moving these special cases to the form, input and button tags.
+      if (
+        value == null ||
+        (!enableFormActions && typeof value === 'function') ||
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+      ) {
+        domElement.removeAttribute(key);
+        break;
+      }
+      if (__DEV__) {
+        validateFormActionInDevelopment(tag, key, value, props);
+      }
+      if (enableFormActions && typeof value === 'function') {
+        // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
+        // because we'll preventDefault, but it can happen if a form is manually submitted or
+        // if someone calls stopPropagation before React gets the event.
+        // If CSP is used to block javascript: URLs that's fine too. It just won't show this
+        // error message but the URL will be logged.
+        domElement.setAttribute(
+          key,
+          // eslint-disable-next-line no-script-url
+          "javascript:throw new Error('" +
+            'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
+            "consider using form.requestSubmit() instead. If you're trying to use " +
+            'event.stopPropagation() in a submit event handler, consider also calling ' +
+            'event.preventDefault().' +
+            "')",
+        );
         break;
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
@@ -2423,6 +2565,13 @@ function diffHydratedCustomComponent(
   }
 }
 
+// This is the exact URL string we expect that Fizz renders if we provide a function action.
+// We use this for hydration warnings. It needs to be in sync with Fizz. Maybe makes sense
+// as a shared module for that reason.
+const EXPECTED_FORM_ACTION_URL =
+  // eslint-disable-next-line no-script-url
+  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+
 function diffHydratedGenericElement(
   domElement: Element,
   tag: string,
@@ -2505,7 +2654,6 @@ function diffHydratedGenericElement(
       }
       case 'src':
       case 'href':
-      case 'action':
         if (enableFilterEmptyStringAttributesDOM) {
           if (value === '') {
             if (__DEV__) {
@@ -2546,11 +2694,29 @@ function diffHydratedGenericElement(
           extraAttributes,
         );
         continue;
+      case 'action':
       case 'formAction':
+        if (enableFormActions) {
+          const serverValue = domElement.getAttribute(propKey);
+          const hasFormActionURL = serverValue === EXPECTED_FORM_ACTION_URL;
+          if (typeof value === 'function') {
+            extraAttributes.delete(propKey.toLowerCase());
+            if (hasFormActionURL) {
+              // Expected
+              continue;
+            }
+            warnForPropDifference(propKey, serverValue, value);
+            continue;
+          } else if (hasFormActionURL) {
+            extraAttributes.delete(propKey.toLowerCase());
+            warnForPropDifference(propKey, 'function', value);
+            continue;
+          }
+        }
         hydrateSanitizedAttribute(
           domElement,
           propKey,
-          'formaction',
+          propKey.toLowerCase(),
           value,
           extraAttributes,
         );
