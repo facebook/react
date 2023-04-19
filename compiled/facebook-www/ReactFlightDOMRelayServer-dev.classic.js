@@ -1464,6 +1464,12 @@ function serializeUndefined() {
   return "$undefined";
 }
 
+function serializeDateFromDateJSON(dateJSON) {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return "$D" + dateJSON;
+}
+
 function serializeBigInt(n) {
   return "$n" + n.toString(10);
 }
@@ -1536,11 +1542,16 @@ function escapeStringValue(value) {
 var insideContextProps = null;
 var isInsideContextValue = false;
 function resolveModelToJSON(request, parent, key, value) {
+  // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
   {
     // $FlowFixMe[incompatible-use]
     var originalValue = parent[key];
 
-    if (typeof originalValue === "object" && originalValue !== value) {
+    if (
+      typeof originalValue === "object" &&
+      originalValue !== value &&
+      !(originalValue instanceof Date)
+    ) {
       if (objectName(originalValue) !== "Object") {
         var jsxParentType = jsxChildrenParents.get(parent);
 
@@ -1748,6 +1759,17 @@ function resolveModelToJSON(request, parent, key, value) {
   }
 
   if (typeof value === "string") {
+    // TODO: Maybe too clever. If we support URL there's no similar trick.
+    if (value[value.length - 1] === "Z") {
+      // Possibly a Date, whose toJSON automatically calls toISOString
+      // $FlowFixMe[incompatible-use]
+      var _originalValue = parent[key]; // $FlowFixMe[method-unbinding]
+
+      if (_originalValue instanceof Date) {
+        return serializeDateFromDateJSON(value);
+      }
+    }
+
     return escapeStringValue(value);
   }
 

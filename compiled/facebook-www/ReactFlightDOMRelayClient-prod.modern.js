@@ -293,6 +293,8 @@ function parseModelString(response, parentObject, key, value) {
         return NaN;
       case "u":
         return;
+      case "D":
+        return new Date(Date.parse(value.substring(2)));
       case "n":
         return BigInt(value.substring(2));
       default:

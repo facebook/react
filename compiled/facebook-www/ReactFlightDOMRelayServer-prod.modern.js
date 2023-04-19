@@ -751,8 +751,12 @@ function resolveModelToJSON(request, parent, key, value) {
       ? Array.from(value)
       : value;
   }
-  if ("string" === typeof value)
-    return (request = "$" === value[0] ? "$" + value : value), request;
+  if ("string" === typeof value) {
+    if ("Z" === value[value.length - 1] && parent[key] instanceof Date)
+      return "$D" + value;
+    request = "$" === value[0] ? "$" + value : value;
+    return request;
+  }
   if ("boolean" === typeof value) return value;
   if ("number" === typeof value)
     return (
