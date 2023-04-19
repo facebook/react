@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactFeatureFlags;
 let Scheduler;
 let act;
 let waitForAll;
@@ -39,7 +38,6 @@ describe('ChangeEventPlugin', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in schedule:
     // - calling 'window.postMessage' should actually fire postmessage handlers
@@ -100,13 +98,8 @@ describe('ChangeEventPlugin', () => {
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
-    if (ReactFeatureFlags.disableInputAttributeSyncing) {
-      // TODO: figure out why. This might be a bug.
-      expect(called).toBe(1);
-    } else {
-      // There should be no React change events because the value stayed the same.
-      expect(called).toBe(0);
-    }
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
   });
 
   it('should consider initial text value to be current (capture)', () => {
@@ -124,13 +117,8 @@ describe('ChangeEventPlugin', () => {
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
-    if (ReactFeatureFlags.disableInputAttributeSyncing) {
-      // TODO: figure out why. This might be a bug.
-      expect(called).toBe(1);
-    } else {
-      // There should be no React change events because the value stayed the same.
-      expect(called).toBe(0);
-    }
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
   });
 
   it('should not invoke a change event for textarea same value', () => {

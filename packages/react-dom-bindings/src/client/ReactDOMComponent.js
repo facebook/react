@@ -890,7 +890,6 @@ export function setInitialProperties(
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       initInput(
         domElement,
@@ -902,6 +901,7 @@ export function setInitialProperties(
         name,
         false,
       );
+      track((domElement: any));
       return;
     }
     case 'select': {
@@ -997,9 +997,9 @@ export function setInitialProperties(
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
+      track((domElement: any));
       return;
     }
     case 'option': {
@@ -2871,7 +2871,6 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
@@ -2888,6 +2887,7 @@ export function diffHydratedProperties(
         props.name,
         true,
       );
+      track((domElement: any));
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -2910,9 +2910,9 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, props.value, props.defaultValue, props.children);
+      track((domElement: any));
       break;
   }
 
