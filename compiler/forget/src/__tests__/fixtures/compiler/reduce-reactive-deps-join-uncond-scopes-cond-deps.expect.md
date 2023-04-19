@@ -52,40 +52,42 @@ import * as React from "react"; // This tests an optimization, NOT a correctness
 //  }
 
 function TestJoinCondDepsInUncondScopes(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = React.unstable_useMemoCache(8);
   const c_0 = $[0] !== props.a.b;
+  let x;
   let y;
   if (c_0) {
     y = {};
-    const c_2 = $[2] !== props;
-    let x;
-    if (c_2) {
+    const c_3 = $[3] !== props;
+    if (c_3) {
       x = {};
       if (foo) {
         mutate1(x, props.a.b);
       }
-      $[2] = props;
-      $[3] = x;
+      $[3] = props;
+      $[4] = x;
     } else {
-      x = $[3];
+      x = $[4];
     }
 
     mutate2(y, props.a.b);
     $[0] = props.a.b;
-    $[1] = y;
+    $[1] = x;
+    $[2] = y;
   } else {
-    y = $[1];
+    x = $[1];
+    y = $[2];
   }
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== y;
+  const c_5 = $[5] !== x;
+  const c_6 = $[6] !== y;
   let t0;
-  if (c_4 || c_5) {
+  if (c_5 || c_6) {
     t0 = [x, y];
-    $[4] = x;
-    $[5] = y;
-    $[6] = t0;
+    $[5] = x;
+    $[6] = y;
+    $[7] = t0;
   } else {
-    t0 = $[6];
+    t0 = $[7];
   }
   return t0;
 }

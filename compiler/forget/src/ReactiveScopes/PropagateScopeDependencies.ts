@@ -23,6 +23,7 @@ import {
   eachInstructionValueOperand,
   eachPatternOperand,
 } from "../HIR/visitors";
+import { empty, Stack } from "../Utils/Stack";
 import { assertExhaustive } from "../Utils/utils";
 import {
   ReactiveScopeDependencyTree,
@@ -40,13 +41,13 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   if (fn.id !== null) {
     context.declare(fn.id, {
       id: makeInstructionId(0),
-      scope: null,
+      scope: empty(),
     });
   }
   for (const param of fn.params) {
     context.declare(param.identifier, {
       id: makeInstructionId(0),
-      scope: null,
+      scope: empty(),
     });
   }
   visit(context, fn.body);
@@ -55,10 +56,8 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
 type DeclMap = Map<IdentifierId, Decl>;
 type Decl = {
   id: InstructionId;
-  scope: ReactiveScope | null;
+  scope: Stack<ReactiveScope>;
 };
-
-type Scopes = Array<ReactiveScope>;
 
 class Context {
   #declarations: DeclMap = new Map();
@@ -80,7 +79,7 @@ class Context {
   //  - accessed by all cfg branches (added through promoteDeps)
   #depsInCurrentConditional: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
-  #scopes: Scopes = [];
+  #scopes: Stack<ReactiveScope> = empty();
 
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
     // Save context of previous scope
@@ -94,12 +93,12 @@ class Context {
     const scopedDependencies = new ReactiveScopeDependencyTree();
     this.#inConditionalWithinScope = false;
     this.#dependencies = scopedDependencies;
-    this.#scopes.push(scope);
+    this.#scopes = this.#scopes.push(scope);
 
     fn();
 
     // Restore context of previous scope
-    this.#scopes.pop();
+    this.#scopes = this.#scopes.pop();
     this.#dependencies = previousDependencies;
     this.#inConditionalWithinScope = prevInConditional;
 
@@ -246,22 +245,25 @@ class Context {
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
       this.#declarations.get(identifier.id);
-    const currentScope = this.currentScope;
+    const currentScope = this.#scopes !== null ? this.#scopes.value : null;
     return (
       currentScope != null &&
       currentDeclaration !== undefined &&
       currentDeclaration.id < currentScope.range.start &&
       (currentDeclaration.scope == null ||
-        currentDeclaration.scope !== currentScope)
+        currentDeclaration.scope.value !== currentScope)
     );
   }
 
   #isScopeActive(scope: ReactiveScope): boolean {
-    return this.#scopes.indexOf(scope) !== -1;
+    if (this.#scopes === null) {
+      return false;
+    }
+    return this.#scopes.contains(scope);
   }
 
-  get currentScope(): ReactiveScope | null {
-    return this.#scopes.at(-1) ?? null;
+  get currentScope(): Stack<ReactiveScope> {
+    return this.#scopes;
   }
 
   visitOperand(place: Place): void {
@@ -300,15 +302,15 @@ class Context {
     const originalDeclaration = this.#declarations.get(
       maybeDependency.identifier.id
     );
-    if (
-      originalDeclaration !== undefined &&
-      originalDeclaration.scope !== null &&
-      !this.#isScopeActive(originalDeclaration.scope)
-    ) {
-      originalDeclaration.scope.declarations.set(
-        maybeDependency.identifier.id,
-        maybeDependency.identifier
-      );
+    if (originalDeclaration !== undefined) {
+      originalDeclaration.scope.each((scope) => {
+        if (!this.#isScopeActive(scope)) {
+          scope.declarations.set(
+            maybeDependency.identifier.id,
+            maybeDependency.identifier
+          );
+        }
+      });
     }
 
     if (this.#checkValidDependencyId(maybeDependency.identifier)) {
@@ -326,15 +328,15 @@ class Context {
   visitReassignment(place: Place): void {
     const declaration = this.#declarations.get(place.identifier.id);
     if (
-      this.currentScope != null &&
+      this.currentScope.value != null &&
       place.identifier.scope != null &&
       declaration !== undefined &&
-      declaration.scope !== place.identifier.scope &&
-      !Array.from(this.currentScope.reassignments).some(
+      declaration.scope.value !== place.identifier.scope &&
+      !Array.from(this.currentScope.value.reassignments).some(
         (ident) => ident.id === place.identifier.id
       )
     ) {
-      this.currentScope.reassignments.add(place.identifier);
+      this.currentScope.value.reassignments.add(place.identifier);
     }
   }
 }
