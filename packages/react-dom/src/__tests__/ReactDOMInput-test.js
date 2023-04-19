@@ -1191,7 +1191,7 @@ describe('ReactDOMInput', () => {
         updated: false,
       };
       onClick = () => {
-        this.setState({updated: true});
+        this.setState({updated: !this.state.updated});
       };
       render() {
         const {updated} = this.state;
@@ -1222,6 +1222,8 @@ describe('ReactDOMInput', () => {
     expect(firstRadioNode.checked).toBe(false);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(true);
+    dispatchEventOnNode(buttonNode, 'click');
+    expect(firstRadioNode.checked).toBe(false);
   });
 
   it('should control radio buttons if the tree updates during render', () => {
@@ -1720,8 +1722,18 @@ describe('ReactDOMInput', () => {
     ) {
       const el = originalCreateElement.apply(this, arguments);
       let value = '';
+      let typeProp = '';
 
       if (type === 'input') {
+        Object.defineProperty(el, 'type', {
+          get: function () {
+            return typeProp;
+          },
+          set: function (val) {
+            typeProp = String(val);
+            log.push('set property type');
+          },
+        });
         Object.defineProperty(el, 'value', {
           get: function () {
             return value;
@@ -1751,10 +1763,10 @@ describe('ReactDOMInput', () => {
     );
 
     expect(log).toEqual([
-      'set attribute type',
       'set attribute min',
       'set attribute max',
       'set attribute step',
+      'set property type',
       'set property value',
     ]);
   });
@@ -1810,6 +1822,14 @@ describe('ReactDOMInput', () => {
         HTMLInputElement.prototype,
         'value',
       ).set;
+      const getType = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'type',
+      ).get;
+      const setType = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'type',
+      ).set;
       if (type === 'input') {
         Object.defineProperty(el, 'defaultValue', {
           get: function () {
@@ -1829,6 +1849,15 @@ describe('ReactDOMInput', () => {
             setValue.call(this, val);
           },
         });
+        Object.defineProperty(el, 'type', {
+          get: function () {
+            return getType.call(this);
+          },
+          set: function (val) {
+            log.push(`node.type = ${strify(val)}`);
+            setType.call(this, val);
+          },
+        });
         spyOnDevAndProd(el, 'setAttribute').mockImplementation(function (
           name,
           val,
@@ -1843,14 +1872,14 @@ describe('ReactDOMInput', () => {
 
     if (disableInputAttributeSyncing) {
       expect(log).toEqual([
-        'node.setAttribute("type", "date")',
+        'node.type = "date"',
         'node.defaultValue = "1980-01-01"',
         // TODO: it's possible this reintroduces the bug because we don't assign `value` at all.
         // Need to check this on mobile Safari and Chrome.
       ]);
     } else {
       expect(log).toEqual([
-        'node.setAttribute("type", "date")',
+        'node.type = "date"',
         // value must be assigned before defaultValue. This fixes an issue where the
         // visually displayed value of date inputs disappears on mobile Safari and Chrome:
         // https://github.com/facebook/react/issues/7233

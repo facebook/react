@@ -834,6 +834,7 @@ export function setInitialProperties(
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
 
+      let name = null;
       let type = null;
       let value = null;
       let defaultValue = null;
@@ -848,20 +849,12 @@ export function setInitialProperties(
           continue;
         }
         switch (propKey) {
+          case 'name': {
+            name = propValue;
+            break;
+          }
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              type = propValue;
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            }
+            type = propValue;
             break;
           }
           case 'checked': {
@@ -906,6 +899,7 @@ export function setInitialProperties(
         checked,
         defaultChecked,
         type,
+        name,
         false,
       );
       return;
@@ -1326,22 +1320,6 @@ export function updateProperties(
           switch (propKey) {
             case 'type': {
               type = nextProp;
-              // Fast path since 'type' is very common on inputs
-              if (nextProp !== lastProp) {
-                if (
-                  nextProp != null &&
-                  typeof nextProp !== 'function' &&
-                  typeof nextProp !== 'symbol' &&
-                  typeof nextProp !== 'boolean'
-                ) {
-                  if (__DEV__) {
-                    checkAttributeStringCoercion(nextProp, propKey);
-                  }
-                  domElement.setAttribute(propKey, nextProp);
-                } else {
-                  domElement.removeAttribute(propKey);
-                }
-              }
               break;
             }
             case 'name': {
@@ -1429,23 +1407,6 @@ export function updateProperties(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1457,6 +1418,7 @@ export function updateProperties(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -1798,20 +1760,6 @@ export function updatePropertiesWithDiff(
         const propValue = updatePayload[i + 1];
         switch (propKey) {
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            } else {
-              domElement.removeAttribute(propKey);
-            }
             break;
           }
           case 'name': {
@@ -1885,23 +1833,6 @@ export function updatePropertiesWithDiff(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1913,6 +1844,7 @@ export function updatePropertiesWithDiff(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -2953,6 +2885,7 @@ export function diffHydratedProperties(
         props.checked,
         props.defaultChecked,
         props.type,
+        props.name,
         true,
       );
       break;
