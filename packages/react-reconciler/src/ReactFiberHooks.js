@@ -15,6 +15,7 @@ import type {
   StartTransitionOptions,
   Usable,
   Thenable,
+  RejectedThenable,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -41,6 +42,7 @@ import {
   enableUseEffectEventHook,
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -143,6 +145,7 @@ import {
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
+import {requestAsyncActionContext} from './ReactFiberAsyncAction';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -947,38 +950,40 @@ if (enableUseMemoCacheHook) {
   };
 }
 
+function useThenable<T>(thenable: Thenable<T>): T {
+  // Track the position of the thenable within this fiber.
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    thenableState = createThenableState();
+  }
+  const result = trackUsedThenable(thenableState, thenable, index);
+  if (
+    currentlyRenderingFiber.alternate === null &&
+    (workInProgressHook === null
+      ? currentlyRenderingFiber.memoizedState === null
+      : workInProgressHook.next === null)
+  ) {
+    // Initial render, and either this is the first time the component is
+    // called, or there were no Hooks called after this use() the previous
+    // time (perhaps because it threw). Subsequent Hook calls should use the
+    // mount dispatcher.
+    if (__DEV__) {
+      ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
+    } else {
+      ReactCurrentDispatcher.current = HooksDispatcherOnMount;
+    }
+  }
+  return result;
+}
+
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
-
-      // Track the position of the thenable within this fiber.
-      const index = thenableIndexCounter;
-      thenableIndexCounter += 1;
-
-      if (thenableState === null) {
-        thenableState = createThenableState();
-      }
-      const result = trackUsedThenable(thenableState, thenable, index);
-      if (
-        currentlyRenderingFiber.alternate === null &&
-        (workInProgressHook === null
-          ? currentlyRenderingFiber.memoizedState === null
-          : workInProgressHook.next === null)
-      ) {
-        // Initial render, and either this is the first time the component is
-        // called, or there were no Hooks called after this use() the previous
-        // time (perhaps because it threw). Subsequent Hook calls should use the
-        // mount dispatcher.
-        if (__DEV__) {
-          ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
-        } else {
-          ReactCurrentDispatcher.current = HooksDispatcherOnMount;
-        }
-      }
-      return result;
+      return useThenable(thenable);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -2400,8 +2405,8 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
 }
 
 function startTransition(
-  setPending: boolean => void,
-  callback: () => void,
+  setPending: (Thenable<boolean> | boolean) => void,
+  callback: () => mixed,
   options?: StartTransitionOptions,
 ): void {
   const previousPriority = getCurrentUpdatePriority();
@@ -2427,8 +2432,36 @@ function startTransition(
   }
 
   try {
-    setPending(false);
-    callback();
+    if (enableAsyncActions) {
+      const returnValue = callback();
+
+      // `isPending` is either `false` or a thenable that resolves to `false`,
+      // depending on whether the action scope is an async function. In the
+      // async case, the resulting render will suspend until the async action
+      // scope has finished.
+      const isPending = requestAsyncActionContext(returnValue);
+      setPending(isPending);
+    } else {
+      // Async actions are not enabled.
+      setPending(false);
+      callback();
+    }
+  } catch (error) {
+    if (enableAsyncActions) {
+      // This is a trick to get the `useTransition` hook to rethrow the error.
+      // When it unwraps the thenable with the `use` algorithm, the error
+      // will be thrown.
+      const rejectedThenable: RejectedThenable<boolean> = {
+        then() {},
+        status: 'rejected',
+        reason: error,
+      };
+      setPending(rejectedThenable);
+    } else {
+      // The error rethrowing behavior is only enabled when the async actions
+      // feature is on, even for sync actions.
+      throw error;
+    }
   } finally {
     setCurrentUpdatePriority(previousPriority);
 
@@ -2454,21 +2487,26 @@ function mountTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const [isPending, setPending] = mountState(false);
+  const [, setPending] = mountState((false: Thenable<boolean> | boolean));
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
-  return [isPending, start];
+  return [false, start];
 }
 
 function updateTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const [isPending] = updateState(false);
+  const [booleanOrThenable] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
+  const isPending =
+    typeof booleanOrThenable === 'boolean'
+      ? booleanOrThenable
+      : // This will suspend until the async action scope has finished.
+        useThenable(booleanOrThenable);
   return [isPending, start];
 }
 
@@ -2476,9 +2514,14 @@ function rerenderTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const [isPending] = rerenderState(false);
+  const [booleanOrThenable] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
+  const isPending =
+    typeof booleanOrThenable === 'boolean'
+      ? booleanOrThenable
+      : // This will suspend until the async action scope has finished.
+        useThenable(booleanOrThenable);
   return [isPending, start];
 }
 

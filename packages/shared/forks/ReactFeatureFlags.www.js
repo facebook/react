@@ -29,6 +29,7 @@ export const {
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
   diffInCommitPhase,
+  enableAsyncActions,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
