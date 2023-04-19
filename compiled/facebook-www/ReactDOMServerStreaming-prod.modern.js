@@ -38,92 +38,133 @@ function isAttributeNameSafe(attributeName) {
   illegalAttributeNameCache[attributeName] = !0;
   return !1;
 }
-var unitlessNumbers = new Set(
-    "animationIterationCount aspectRatio borderImageOutset borderImageSlice borderImageWidth boxFlex boxFlexGroup boxOrdinalGroup columnCount columns flex flexGrow flexPositive flexShrink flexNegative flexOrder gridArea gridRow gridRowEnd gridRowSpan gridRowStart gridColumn gridColumnEnd gridColumnSpan gridColumnStart fontWeight lineClamp lineHeight opacity order orphans scale tabSize widows zIndex zoom fillOpacity floodOpacity stopOpacity strokeDasharray strokeDashoffset strokeMiterlimit strokeOpacity strokeWidth MozAnimationIterationCount MozBoxFlex MozBoxFlexGroup MozLineClamp msAnimationIterationCount msFlex msZoom msFlexGrow msFlexNegative msFlexOrder msFlexPositive msFlexShrink msGridColumn msGridColumnSpan msGridRow msGridRowSpan WebkitAnimationIterationCount WebkitBoxFlex WebKitBoxFlexGroup WebkitBoxOrdinalGroup WebkitColumnCount WebkitColumns WebkitFlex WebkitFlexGrow WebkitFlexPositive WebkitFlexShrink WebkitLineClamp".split(
-      " "
-    )
-  ),
-  aliases = new Map([
-    ["acceptCharset", "accept-charset"],
-    ["htmlFor", "for"],
-    ["httpEquiv", "http-equiv"],
-    ["crossOrigin", "crossorigin"],
-    ["accentHeight", "accent-height"],
-    ["alignmentBaseline", "alignment-baseline"],
-    ["arabicForm", "arabic-form"],
-    ["baselineShift", "baseline-shift"],
-    ["capHeight", "cap-height"],
-    ["clipPath", "clip-path"],
-    ["clipRule", "clip-rule"],
-    ["colorInterpolation", "color-interpolation"],
-    ["colorInterpolationFilters", "color-interpolation-filters"],
-    ["colorProfile", "color-profile"],
-    ["colorRendering", "color-rendering"],
-    ["dominantBaseline", "dominant-baseline"],
-    ["enableBackground", "enable-background"],
-    ["fillOpacity", "fill-opacity"],
-    ["fillRule", "fill-rule"],
-    ["floodColor", "flood-color"],
-    ["floodOpacity", "flood-opacity"],
-    ["fontFamily", "font-family"],
-    ["fontSize", "font-size"],
-    ["fontSizeAdjust", "font-size-adjust"],
-    ["fontStretch", "font-stretch"],
-    ["fontStyle", "font-style"],
-    ["fontVariant", "font-variant"],
-    ["fontWeight", "font-weight"],
-    ["glyphName", "glyph-name"],
-    ["glyphOrientationHorizontal", "glyph-orientation-horizontal"],
-    ["glyphOrientationVertical", "glyph-orientation-vertical"],
-    ["horizAdvX", "horiz-adv-x"],
-    ["horizOriginX", "horiz-origin-x"],
-    ["imageRendering", "image-rendering"],
-    ["letterSpacing", "letter-spacing"],
-    ["lightingColor", "lighting-color"],
-    ["markerEnd", "marker-end"],
-    ["markerMid", "marker-mid"],
-    ["markerStart", "marker-start"],
-    ["overlinePosition", "overline-position"],
-    ["overlineThickness", "overline-thickness"],
-    ["paintOrder", "paint-order"],
-    ["panose-1", "panose-1"],
-    ["pointerEvents", "pointer-events"],
-    ["renderingIntent", "rendering-intent"],
-    ["shapeRendering", "shape-rendering"],
-    ["stopColor", "stop-color"],
-    ["stopOpacity", "stop-opacity"],
-    ["strikethroughPosition", "strikethrough-position"],
-    ["strikethroughThickness", "strikethrough-thickness"],
-    ["strokeDasharray", "stroke-dasharray"],
-    ["strokeDashoffset", "stroke-dashoffset"],
-    ["strokeLinecap", "stroke-linecap"],
-    ["strokeLinejoin", "stroke-linejoin"],
-    ["strokeMiterlimit", "stroke-miterlimit"],
-    ["strokeOpacity", "stroke-opacity"],
-    ["strokeWidth", "stroke-width"],
-    ["textAnchor", "text-anchor"],
-    ["textDecoration", "text-decoration"],
-    ["textRendering", "text-rendering"],
-    ["transformOrigin", "transform-origin"],
-    ["underlinePosition", "underline-position"],
-    ["underlineThickness", "underline-thickness"],
-    ["unicodeBidi", "unicode-bidi"],
-    ["unicodeRange", "unicode-range"],
-    ["unitsPerEm", "units-per-em"],
-    ["vAlphabetic", "v-alphabetic"],
-    ["vHanging", "v-hanging"],
-    ["vIdeographic", "v-ideographic"],
-    ["vMathematical", "v-mathematical"],
-    ["vectorEffect", "vector-effect"],
-    ["vertAdvY", "vert-adv-y"],
-    ["vertOriginX", "vert-origin-x"],
-    ["vertOriginY", "vert-origin-y"],
-    ["wordSpacing", "word-spacing"],
-    ["writingMode", "writing-mode"],
-    ["xmlnsXlink", "xmlns:xlink"],
-    ["xHeight", "x-height"]
-  ]),
-  matchHtmlRegExp = /["'&<>]/;
+function PropertyInfoRecord(
+  type,
+  attributeName,
+  attributeNamespace,
+  sanitizeURL,
+  removeEmptyString
+) {
+  this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
+  this.attributeName = attributeName;
+  this.attributeNamespace = attributeNamespace;
+  this.type = type;
+  this.sanitizeURL = sanitizeURL;
+  this.removeEmptyString = removeEmptyString;
+}
+var properties = {};
+[
+  ["acceptCharset", "accept-charset"],
+  ["className", "class"],
+  ["htmlFor", "for"],
+  ["httpEquiv", "http-equiv"]
+].forEach(function (_ref) {
+  properties[_ref[0]] = new PropertyInfoRecord(1, _ref[1], null, !1, !1);
+});
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
+  properties[name] = new PropertyInfoRecord(
+    2,
+    name.toLowerCase(),
+    null,
+    !1,
+    !1
+  );
+});
+[
+  "autoReverse",
+  "externalResourcesRequired",
+  "focusable",
+  "preserveAlpha"
+].forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(2, name, null, !1, !1);
+});
+"allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
+  .split(" ")
+  .forEach(function (name) {
+    properties[name] = new PropertyInfoRecord(
+      3,
+      name.toLowerCase(),
+      null,
+      !1,
+      !1
+    );
+  });
+["capture", "download"].forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(4, name, null, !1, !1);
+});
+["cols", "rows", "size", "span"].forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(6, name, null, !1, !1);
+});
+["rowSpan", "start"].forEach(function (name) {
+  properties[name] = new PropertyInfoRecord(
+    5,
+    name.toLowerCase(),
+    null,
+    !1,
+    !1
+  );
+});
+var CAMELIZE = /[\-:]([a-z])/g;
+function capitalize(token) {
+  return token[1].toUpperCase();
+}
+"accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering transform-origin underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
+  .split(" ")
+  .forEach(function (attributeName) {
+    var name = attributeName.replace(CAMELIZE, capitalize);
+    properties[name] = new PropertyInfoRecord(1, attributeName, null, !1, !1);
+  });
+"xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
+  .split(" ")
+  .forEach(function (attributeName) {
+    var name = attributeName.replace(CAMELIZE, capitalize);
+    properties[name] = new PropertyInfoRecord(
+      1,
+      attributeName,
+      "http://www.w3.org/1999/xlink",
+      !1,
+      !1
+    );
+  });
+["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
+  var name = attributeName.replace(CAMELIZE, capitalize);
+  properties[name] = new PropertyInfoRecord(
+    1,
+    attributeName,
+    "http://www.w3.org/XML/1998/namespace",
+    !1,
+    !1
+  );
+});
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
+  properties[attributeName] = new PropertyInfoRecord(
+    1,
+    attributeName.toLowerCase(),
+    null,
+    !1,
+    !1
+  );
+});
+properties.xlinkHref = new PropertyInfoRecord(
+  1,
+  "xlink:href",
+  "http://www.w3.org/1999/xlink",
+  !0,
+  !1
+);
+properties.formAction = new PropertyInfoRecord(1, "formaction", null, !0, !1);
+["src", "href", "action"].forEach(function (attributeName) {
+  properties[attributeName] = new PropertyInfoRecord(
+    1,
+    attributeName.toLowerCase(),
+    null,
+    !0,
+    !0
+  );
+});
+var matchHtmlRegExp = /["'&<>]/;
 function escapeTextForBrowser(text) {
   if ("boolean" === typeof text || "number" === typeof text) return "" + text;
   text = "" + text;
@@ -253,22 +294,101 @@ function pushStyleAttribute(target, style) {
         if (0 === styleName.indexOf("--")) {
           var nameChunk = escapeTextForBrowser(styleName);
           styleValue = escapeTextForBrowser(("" + styleValue).trim());
-        } else
-          (nameChunk = styleNameCache.get(styleName)),
-            void 0 === nameChunk &&
-              ((nameChunk = escapeTextForBrowser(
-                styleName
-                  .replace(uppercasePattern, "-$1")
-                  .toLowerCase()
-                  .replace(msPattern, "-ms-")
-              )),
-              styleNameCache.set(styleName, nameChunk)),
-            (styleValue =
-              "number" === typeof styleValue
-                ? 0 === styleValue || unitlessNumbers.has(styleName)
-                  ? "" + styleValue
-                  : styleValue + "px"
-                : escapeTextForBrowser(("" + styleValue).trim()));
+        } else if (
+          ((nameChunk = styleNameCache.get(styleName)),
+          void 0 === nameChunk &&
+            ((nameChunk = escapeTextForBrowser(
+              styleName
+                .replace(uppercasePattern, "-$1")
+                .toLowerCase()
+                .replace(msPattern, "-ms-")
+            )),
+            styleNameCache.set(styleName, nameChunk)),
+          "number" === typeof styleValue)
+        ) {
+          var JSCompiler_temp;
+          if ((JSCompiler_temp = 0 !== styleValue)) {
+            a: switch (styleName) {
+              case "animationIterationCount":
+              case "aspectRatio":
+              case "borderImageOutset":
+              case "borderImageSlice":
+              case "borderImageWidth":
+              case "boxFlex":
+              case "boxFlexGroup":
+              case "boxOrdinalGroup":
+              case "columnCount":
+              case "columns":
+              case "flex":
+              case "flexGrow":
+              case "flexPositive":
+              case "flexShrink":
+              case "flexNegative":
+              case "flexOrder":
+              case "gridArea":
+              case "gridRow":
+              case "gridRowEnd":
+              case "gridRowSpan":
+              case "gridRowStart":
+              case "gridColumn":
+              case "gridColumnEnd":
+              case "gridColumnSpan":
+              case "gridColumnStart":
+              case "fontWeight":
+              case "lineClamp":
+              case "lineHeight":
+              case "opacity":
+              case "order":
+              case "orphans":
+              case "scale":
+              case "tabSize":
+              case "widows":
+              case "zIndex":
+              case "zoom":
+              case "fillOpacity":
+              case "floodOpacity":
+              case "stopOpacity":
+              case "strokeDasharray":
+              case "strokeDashoffset":
+              case "strokeMiterlimit":
+              case "strokeOpacity":
+              case "strokeWidth":
+              case "MozAnimationIterationCount":
+              case "MozBoxFlex":
+              case "MozBoxFlexGroup":
+              case "MozLineClamp":
+              case "msAnimationIterationCount":
+              case "msFlex":
+              case "msZoom":
+              case "msFlexGrow":
+              case "msFlexNegative":
+              case "msFlexOrder":
+              case "msFlexPositive":
+              case "msFlexShrink":
+              case "msGridColumn":
+              case "msGridColumnSpan":
+              case "msGridRow":
+              case "msGridRowSpan":
+              case "WebkitAnimationIterationCount":
+              case "WebkitBoxFlex":
+              case "WebKitBoxFlexGroup":
+              case "WebkitBoxOrdinalGroup":
+              case "WebkitColumnCount":
+              case "WebkitColumns":
+              case "WebkitFlex":
+              case "WebkitFlexGrow":
+              case "WebkitFlexPositive":
+              case "WebkitFlexShrink":
+              case "WebkitLineClamp":
+                JSCompiler_temp = !0;
+                break a;
+              default:
+                JSCompiler_temp = !1;
+            }
+            JSCompiler_temp = !JSCompiler_temp;
+          }
+          styleValue = JSCompiler_temp ? styleValue + "px" : "" + styleValue;
+        } else styleValue = escapeTextForBrowser(("" + styleValue).trim());
         isFirst
           ? ((isFirst = !1),
             target.push(' style="', nameChunk, ":", styleValue))
@@ -283,175 +403,81 @@ function pushBooleanAttribute(target, name, value) {
     "symbol" !== typeof value &&
     target.push(" ", name, '=""');
 }
-function pushStringAttribute(target, name, value) {
-  "function" !== typeof value &&
-    "symbol" !== typeof value &&
-    "boolean" !== typeof value &&
-    target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-}
 function pushAttribute(target, name, value) {
   switch (name) {
-    case "className":
-      pushStringAttribute(target, "class", value);
-      break;
-    case "tabIndex":
-      pushStringAttribute(target, "tabindex", value);
-      break;
-    case "dir":
-    case "role":
-    case "viewBox":
-    case "width":
-    case "height":
-      pushStringAttribute(target, name, value);
-      break;
     case "style":
       pushStyleAttribute(target, value);
-      break;
-    case "src":
-    case "href":
-    case "action":
-      if ("" === value) break;
-    case "formAction":
-      if (
-        null == value ||
-        "function" === typeof value ||
-        "symbol" === typeof value ||
-        "boolean" === typeof value
-      )
-        break;
-      value = sanitizeURL("" + value);
-      target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      break;
+      return;
     case "defaultValue":
     case "defaultChecked":
     case "innerHTML":
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
-      break;
-    case "autoFocus":
+      return;
     case "multiple":
     case "muted":
-      pushBooleanAttribute(target, name.toLowerCase(), value);
-      break;
-    case "xlinkHref":
-      if (
-        "function" === typeof value ||
-        "symbol" === typeof value ||
-        "boolean" === typeof value
-      )
-        break;
-      value = sanitizeURL("" + value);
-      target.push(" ", "xlink:href", '="', escapeTextForBrowser(value), '"');
-      break;
-    case "contentEditable":
-    case "spellCheck":
-    case "draggable":
-    case "value":
-    case "autoReverse":
-    case "externalResourcesRequired":
-    case "focusable":
-    case "preserveAlpha":
-      "function" !== typeof value &&
-        "symbol" !== typeof value &&
-        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      break;
-    case "allowFullScreen":
-    case "async":
-    case "autoPlay":
-    case "controls":
-    case "default":
-    case "defer":
-    case "disabled":
-    case "disablePictureInPicture":
-    case "disableRemotePlayback":
-    case "formNoValidate":
-    case "hidden":
-    case "loop":
-    case "noModule":
-    case "noValidate":
-    case "open":
-    case "playsInline":
-    case "readOnly":
-    case "required":
-    case "reversed":
-    case "scoped":
-    case "seamless":
-    case "itemScope":
-      value &&
-        "function" !== typeof value &&
-        "symbol" !== typeof value &&
-        target.push(" ", name, '=""');
-      break;
-    case "capture":
-    case "download":
-      !0 === value
-        ? target.push(" ", name, '=""')
-        : !1 !== value &&
-          "function" !== typeof value &&
-          "symbol" !== typeof value &&
-          target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      break;
-    case "cols":
-    case "rows":
-    case "size":
-    case "span":
-      "function" !== typeof value &&
-        "symbol" !== typeof value &&
-        !isNaN(value) &&
-        1 <= value &&
-        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      break;
-    case "rowSpan":
-    case "start":
-      "function" === typeof value ||
-        "symbol" === typeof value ||
-        isNaN(value) ||
-        target.push(" ", name, '="', escapeTextForBrowser(value), '"');
-      break;
-    case "xlinkActuate":
-      pushStringAttribute(target, "xlink:actuate", value);
-      break;
-    case "xlinkArcrole":
-      pushStringAttribute(target, "xlink:arcrole", value);
-      break;
-    case "xlinkRole":
-      pushStringAttribute(target, "xlink:role", value);
-      break;
-    case "xlinkShow":
-      pushStringAttribute(target, "xlink:show", value);
-      break;
-    case "xlinkTitle":
-      pushStringAttribute(target, "xlink:title", value);
-      break;
-    case "xlinkType":
-      pushStringAttribute(target, "xlink:type", value);
-      break;
-    case "xmlBase":
-      pushStringAttribute(target, "xml:base", value);
-      break;
-    case "xmlLang":
-      pushStringAttribute(target, "xml:lang", value);
-      break;
-    case "xmlSpace":
-      pushStringAttribute(target, "xml:space", value);
-      break;
-    default:
-      if (
-        !(2 < name.length) ||
-        ("o" !== name[0] && "O" !== name[0]) ||
-        ("n" !== name[1] && "N" !== name[1])
-      )
-        if (((name = aliases.get(name) || name), isAttributeNameSafe(name))) {
-          switch (typeof value) {
-            case "function":
-            case "symbol":
-              return;
-            case "boolean":
-              var prefix = name.toLowerCase().slice(0, 5);
-              if ("data-" !== prefix && "aria-" !== prefix) return;
-          }
-          target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+      pushBooleanAttribute(target, name, value);
+      return;
+  }
+  if (
+    !(2 < name.length) ||
+    ("o" !== name[0] && "O" !== name[0]) ||
+    ("n" !== name[1] && "N" !== name[1])
+  ) {
+    var JSCompiler_inline_result = properties.hasOwnProperty(name)
+      ? properties[name]
+      : null;
+    if (null !== JSCompiler_inline_result) {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+          return;
+        case "boolean":
+          if (!JSCompiler_inline_result.acceptsBooleans) return;
+      }
+      if (!JSCompiler_inline_result.removeEmptyString || "" !== value)
+        switch (
+          ((name = JSCompiler_inline_result.attributeName),
+          JSCompiler_inline_result.type)
+        ) {
+          case 3:
+            value && target.push(" ", name, '=""');
+            break;
+          case 4:
+            !0 === value
+              ? target.push(" ", name, '=""')
+              : !1 !== value &&
+                target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+            break;
+          case 5:
+            isNaN(value) ||
+              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+            break;
+          case 6:
+            !isNaN(value) &&
+              1 <= value &&
+              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+            break;
+          default:
+            JSCompiler_inline_result.sanitizeURL &&
+              (value = sanitizeURL("" + value)),
+              target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
+    } else if (isAttributeNameSafe(name)) {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+          return;
+        case "boolean":
+          if (
+            ((JSCompiler_inline_result = name.toLowerCase().slice(0, 5)),
+            "data-" !== JSCompiler_inline_result &&
+              "aria-" !== JSCompiler_inline_result)
+          )
+            return;
+      }
+      target.push(" ", name, '="', escapeTextForBrowser(value), '"');
+    }
   }
 }
 function pushInnerHTML(target, innerHTML, children) {
@@ -707,15 +733,6 @@ function pushStartInstance(
   textEmbedded
 ) {
   switch (type) {
-    case "div":
-    case "span":
-    case "svg":
-    case "path":
-    case "a":
-    case "g":
-    case "p":
-    case "li":
-      break;
     case "select":
       target.push(startChunkForTag("select"));
       resources = textEmbedded = null;
@@ -1138,7 +1155,7 @@ function pushStartInstance(
     case "font-face-format":
     case "font-face-name":
     case "missing-glyph":
-      break;
+      return pushStartGenericElement(target, props, type);
     case "head":
       return (
         2 > formatContext.insertionMode && null === responseState.headChunks
@@ -1164,60 +1181,59 @@ function pushStartInstance(
         target
       );
     default:
-      if (-1 !== type.indexOf("-")) {
-        target.push(startChunkForTag(type));
-        resources = textEmbedded = null;
-        for (var propKey$jscomp$3 in props)
-          if (
-            hasOwnProperty.call(props, propKey$jscomp$3) &&
-            ((propValue = props[propKey$jscomp$3]),
-            !(
-              null == propValue ||
-              (enableCustomElementPropertySupport &&
-                ("function" === typeof propValue ||
-                  "object" === typeof propValue)) ||
-              (enableCustomElementPropertySupport && !1 === propValue)
-            ))
-          )
-            switch (
-              (enableCustomElementPropertySupport &&
-                !0 === propValue &&
-                (propValue = ""),
-              enableCustomElementPropertySupport &&
-                "className" === propKey$jscomp$3 &&
-                (propKey$jscomp$3 = "class"),
-              propKey$jscomp$3)
-            ) {
-              case "children":
-                textEmbedded = propValue;
-                break;
-              case "dangerouslySetInnerHTML":
-                resources = propValue;
-                break;
-              case "style":
-                pushStyleAttribute(target, propValue);
-                break;
-              case "suppressContentEditableWarning":
-              case "suppressHydrationWarning":
-                break;
-              default:
-                isAttributeNameSafe(propKey$jscomp$3) &&
-                  "function" !== typeof propValue &&
-                  "symbol" !== typeof propValue &&
-                  target.push(
-                    " ",
-                    propKey$jscomp$3,
-                    '="',
-                    escapeTextForBrowser(propValue),
-                    '"'
-                  );
-            }
-        target.push(">");
-        pushInnerHTML(target, resources, textEmbedded);
-        return textEmbedded;
-      }
+      if (-1 === type.indexOf("-"))
+        return pushStartGenericElement(target, props, type);
+      target.push(startChunkForTag(type));
+      resources = textEmbedded = null;
+      for (var propKey$jscomp$3 in props)
+        if (
+          hasOwnProperty.call(props, propKey$jscomp$3) &&
+          ((propValue = props[propKey$jscomp$3]),
+          !(
+            null == propValue ||
+            (enableCustomElementPropertySupport &&
+              ("function" === typeof propValue ||
+                "object" === typeof propValue)) ||
+            (enableCustomElementPropertySupport && !1 === propValue)
+          ))
+        )
+          switch (
+            (enableCustomElementPropertySupport &&
+              !0 === propValue &&
+              (propValue = ""),
+            enableCustomElementPropertySupport &&
+              "className" === propKey$jscomp$3 &&
+              (propKey$jscomp$3 = "class"),
+            propKey$jscomp$3)
+          ) {
+            case "children":
+              textEmbedded = propValue;
+              break;
+            case "dangerouslySetInnerHTML":
+              resources = propValue;
+              break;
+            case "style":
+              pushStyleAttribute(target, propValue);
+              break;
+            case "suppressContentEditableWarning":
+            case "suppressHydrationWarning":
+              break;
+            default:
+              isAttributeNameSafe(propKey$jscomp$3) &&
+                "function" !== typeof propValue &&
+                "symbol" !== typeof propValue &&
+                target.push(
+                  " ",
+                  propKey$jscomp$3,
+                  '="',
+                  escapeTextForBrowser(propValue),
+                  '"'
+                );
+          }
+      target.push(">");
+      pushInnerHTML(target, resources, textEmbedded);
+      return textEmbedded;
   }
-  return pushStartGenericElement(target, props, type);
 }
 function writeStartPendingSuspenseBoundary(destination, responseState, id) {
   destination.buffer += '\x3c!--$?--\x3e<template id="';
@@ -1673,33 +1689,29 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
-      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
-      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
-      name = "" + value;
       break;
     default:
-      if (
-        (2 < name.length &&
-          ("o" === name[0] || "O" === name[0]) &&
-          ("n" === name[1] || "N" === name[1])) ||
-        !isAttributeNameSafe(name)
-      )
-        return;
-      name = "" + value;
+      if (!isAttributeNameSafe(name)) return;
   }
-  destination.buffer += ",";
-  attributeName = escapeJSObjectForInstructionScripts(attributeName);
-  destination.buffer += attributeName;
-  destination.buffer += ",";
-  attributeName = escapeJSObjectForInstructionScripts(name);
-  destination.buffer += attributeName;
+  if (
+    !(2 < name.length) ||
+    ("o" !== name[0] && "O" !== name[0]) ||
+    ("n" !== name[1] && "N" !== name[1])
+  )
+    (name = "" + value),
+      (destination.buffer += ","),
+      (attributeName = escapeJSObjectForInstructionScripts(attributeName)),
+      (destination.buffer += attributeName),
+      (destination.buffer += ","),
+      (attributeName = escapeJSObjectForInstructionScripts(name)),
+      (destination.buffer += attributeName);
 }
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
@@ -1775,33 +1787,29 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
-      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
-      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
-      name = "" + value;
       break;
     default:
-      if (
-        (2 < name.length &&
-          ("o" === name[0] || "O" === name[0]) &&
-          ("n" === name[1] || "N" === name[1])) ||
-        !isAttributeNameSafe(name)
-      )
-        return;
-      name = "" + value;
+      if (!isAttributeNameSafe(name)) return;
   }
-  destination.buffer += ",";
-  attributeName = escapeTextForBrowser(JSON.stringify(attributeName));
-  destination.buffer += attributeName;
-  destination.buffer += ",";
-  attributeName = escapeTextForBrowser(JSON.stringify(name));
-  destination.buffer += attributeName;
+  if (
+    !(2 < name.length) ||
+    ("o" !== name[0] && "O" !== name[0]) ||
+    ("n" !== name[1] && "N" !== name[1])
+  )
+    (name = "" + value),
+      (destination.buffer += ","),
+      (attributeName = escapeTextForBrowser(JSON.stringify(attributeName))),
+      (destination.buffer += attributeName),
+      (destination.buffer += ","),
+      (attributeName = escapeTextForBrowser(JSON.stringify(name))),
+      (destination.buffer += attributeName);
 }
 function prefetchDNS(href) {
   if (currentResources) {
@@ -2949,7 +2957,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$14 = getThenableStateAfterSuspending(),
+      var thenableState$13 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -2963,7 +2971,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$14,
+        thenableState$13,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -3381,13 +3389,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$16 = partialBoundaries[i];
+      var boundary$15 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$16.resources;
-        var completedSegments = boundary$16.completedSegments;
+          boundary$15.resources;
+        var completedSegments = boundary$15.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3397,7 +3405,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$16,
+              boundary$15,
               completedSegments[responseState]
             )
           ) {
@@ -3409,7 +3417,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$16.resources,
+          boundary$15.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3462,8 +3470,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$18) {
-    logRecoverableError(request, error$18), fatalError(request, error$18);
+  } catch (error$17) {
+    logRecoverableError(request, error$17), fatalError(request, error$17);
   }
 }
 exports.abortStream = function (stream) {

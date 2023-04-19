@@ -60,8 +60,59 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
     "react.default_value"
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-  currentActiveSnapshot = null;
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+require("ReactFeatureFlags");
+function PropertyInfoRecord(
+  type,
+  attributeName,
+  attributeNamespace,
+  sanitizeURL,
+  removeEmptyString
+) {
+  this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
+  this.attributeName = attributeName;
+  this.attributeNamespace = attributeNamespace;
+  this.type = type;
+  this.sanitizeURL = sanitizeURL;
+  this.removeEmptyString = removeEmptyString;
+}
+["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
+  name
+) {
+  new PropertyInfoRecord(2, name.toLowerCase(), null, !1, !1);
+});
+"allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
+  .split(" ")
+  .forEach(function (name) {
+    new PropertyInfoRecord(3, name.toLowerCase(), null, !1, !1);
+  });
+["rowSpan", "start"].forEach(function (name) {
+  new PropertyInfoRecord(5, name.toLowerCase(), null, !1, !1);
+});
+var CAMELIZE = /[\-:]([a-z])/g;
+function capitalize(token) {
+  return token[1].toUpperCase();
+}
+"accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering transform-origin underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
+  .split(" ")
+  .forEach(function (attributeName) {
+    attributeName.replace(CAMELIZE, capitalize);
+  });
+"xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
+  .split(" ")
+  .forEach(function (attributeName) {
+    attributeName.replace(CAMELIZE, capitalize);
+  });
+["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
+  attributeName.replace(CAMELIZE, capitalize);
+});
+["tabIndex", "crossOrigin"].forEach(function (attributeName) {
+  new PropertyInfoRecord(1, attributeName.toLowerCase(), null, !1, !1);
+});
+["src", "href", "action"].forEach(function (attributeName) {
+  new PropertyInfoRecord(1, attributeName.toLowerCase(), null, !0, !0);
+});
+var currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {
   if (prev !== next) {
     prev.context._currentValue = prev.parentValue;
@@ -141,7 +192,6 @@ function pushProvider(context, nextValue) {
       value: nextValue
     });
 }
-require("ReactFeatureFlags");
 var SuspenseException = Error(
   "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
 );
@@ -751,26 +801,9 @@ function resolveModelToJSON(request, parent, key, value) {
       ? Array.from(value)
       : value;
   }
-  if ("string" === typeof value) {
-    if ("Z" === value[value.length - 1] && parent[key] instanceof Date)
-      return "$D" + value;
-    request = "$" === value[0] ? "$" + value : value;
-    return request;
-  }
-  if ("boolean" === typeof value) return value;
-  if ("number" === typeof value)
-    return (
-      (request = value),
-      Number.isFinite(request)
-        ? 0 === request && -Infinity === 1 / request
-          ? "$-0"
-          : request
-        : Infinity === request
-        ? "$Infinity"
-        : -Infinity === request
-        ? "$-Infinity"
-        : "$NaN"
-    );
+  if ("string" === typeof value)
+    return (request = "$" === value[0] ? "$" + value : value), request;
+  if ("boolean" === typeof value || "number" === typeof value) return value;
   if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)

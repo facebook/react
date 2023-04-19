@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-1cb1de96";
+var ReactVersion = "18.3.0-www-modern-0aab03f8";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -543,7 +543,7 @@ function getComponentNameFromType(type) {
       return "Cache";
     }
 
-    // Fall through
+    // eslint-disable-next-line no-fallthrough
 
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -589,6 +589,8 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
+
+      // eslint-disable-next-line no-fallthrough
     }
   }
 

@@ -285,16 +285,8 @@ function parseModelString(response, parentObject, key, value) {
           default:
             throw parentObject.reason;
         }
-      case "I":
-        return Infinity;
-      case "-":
-        return "$-0" === value ? -0 : -Infinity;
-      case "N":
-        return NaN;
       case "u":
         return;
-      case "D":
-        return new Date(Date.parse(value.substring(2)));
       case "n":
         return BigInt(value.substring(2));
       default:

@@ -214,7 +214,7 @@ function getComponentNameFromType(type) {
       return "Cache";
     }
 
-    // Fall through
+    // eslint-disable-next-line no-fallthrough
 
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -260,6 +260,8 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
+
+      // eslint-disable-next-line no-fallthrough
     }
   }
 
