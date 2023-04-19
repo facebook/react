@@ -43,7 +43,7 @@ You can improve it by sending pull requests to [this repository](https://github.
 
 ## Examples
 
-We have several examples [on the website](https://react.dev/). Here is the one to get you started:
+We have several examples [on the website](https://react.dev/). Here is one to get you started:
 
 ```jsx
 import { createRoot } from 'react-dom/client';
