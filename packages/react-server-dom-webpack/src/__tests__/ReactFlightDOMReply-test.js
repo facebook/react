@@ -188,4 +188,13 @@ describe('ReactFlightDOMReply', () => {
     expect(formDataA2.get('greeting')).toBe('hello');
     expect(formDataB2.get('greeting')).toBe('hi');
   });
+
+  it('can pass a Date as a reply', async () => {
+    const d = new Date(1234567890123);
+    const body = await ReactServerDOMClient.encodeReply(d);
+    const d2 = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(d).toEqual(d2);
+    expect(d % 1000).toEqual(123); // double-check the milliseconds made it through
+  });
 });
