@@ -513,10 +513,10 @@ function parseCustomHookName(functionName: void | string): string {
   if (startIndex === -1) {
     startIndex = 0;
   }
-  if (functionName.substr(startIndex, 3) === 'use') {
+  if (functionName.slice(startIndex, startIndex + 3) === 'use') {
     startIndex += 3;
   }
-  return functionName.substr(startIndex);
+  return functionName.slice(startIndex);
 }
 
 function buildTree(

@@ -87,8 +87,8 @@ describe('ReactFlightDOMBrowser', () => {
       // probably go back to encoding path and name separately on the client reference.
       const idx = ref.lastIndexOf('#');
       if (idx !== -1) {
-        name = ref.substr(idx + 1);
-        resolvedModuleData = webpackServerMap[ref.substr(0, idx)];
+        name = ref.slice(idx + 1);
+        resolvedModuleData = webpackServerMap[ref.slice(0, idx)];
       }
       if (!resolvedModuleData) {
         throw new Error(

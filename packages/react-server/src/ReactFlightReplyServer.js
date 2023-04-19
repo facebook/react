@@ -374,21 +374,21 @@ function parseModelString(
     switch (value[1]) {
       case '$': {
         // This was an escaped string value.
-        return value.substring(1);
+        return value.slice(1);
       }
       case '@': {
         // Promise
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
       }
       case 'S': {
         // Symbol
-        return Symbol.for(value.substring(2));
+        return Symbol.for(value.slice(2));
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (chunk.status === RESOLVED_MODEL) {
           initializeModelChunk(chunk);
@@ -411,7 +411,7 @@ function parseModelString(
       }
       case 'K': {
         // FormData
-        const stringId = value.substring(2);
+        const stringId = value.slice(2);
         const formPrefix = response._prefix + stringId + '_';
         const data = new FormData();
         const backingFormData = response._formData;
@@ -421,7 +421,7 @@ function parseModelString(
         // $FlowFixMe[prop-missing] FormData has forEach on it.
         backingFormData.forEach((entry: File | string, entryKey: string) => {
           if (entryKey.startsWith(formPrefix)) {
-            data.append(entryKey.substr(formPrefix.length), entry);
+            data.append(entryKey.slice(formPrefix.length), entry);
           }
         });
         return data;
@@ -449,15 +449,15 @@ function parseModelString(
       }
       case 'D': {
         // Date
-        return new Date(Date.parse(value.substring(2)));
+        return new Date(Date.parse(value.slice(2)));
       }
       case 'n': {
         // BigInt
-        return BigInt(value.substring(2));
+        return BigInt(value.slice(2));
       }
       default: {
         // We assume that anything else is a reference ID.
-        const id = parseInt(value.substring(1), 16);
+        const id = parseInt(value.slice(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
           case RESOLVED_MODEL:
@@ -517,7 +517,7 @@ export function resolveField(
   const prefix = response._prefix;
   if (key.startsWith(prefix)) {
     const chunks = response._chunks;
-    const id = +key.substr(prefix.length);
+    const id = +key.slice(prefix.length);
     const chunk = chunks.get(id);
     if (chunk) {
       // We were waiting on this key so now we can resolve it.

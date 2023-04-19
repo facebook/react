@@ -35,7 +35,7 @@ function processFullRow(response: Response, row: string): void {
     return;
   }
   const colon = row.indexOf(':', 0);
-  const id = parseInt(row.substring(0, colon), 16);
+  const id = parseInt(row.slice(0, colon), 16);
   const tag = row[colon + 1];
   // When tags that are not text are added, check them here before
   // parsing the row as text.
@@ -43,11 +43,11 @@ function processFullRow(response: Response, row: string): void {
   // }
   switch (tag) {
     case 'I': {
-      resolveModule(response, id, row.substring(colon + 2));
+      resolveModule(response, id, row.slice(colon + 2));
       return;
     }
     case 'E': {
-      const errorInfo = JSON.parse(row.substring(colon + 2));
+      const errorInfo = JSON.parse(row.slice(colon + 2));
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -63,7 +63,7 @@ function processFullRow(response: Response, row: string): void {
     }
     default: {
       // We assume anything else is JSON.
-      resolveModel(response, id, row.substring(colon + 1));
+      resolveModel(response, id, row.slice(colon + 1));
       return;
     }
   }
@@ -76,13 +76,13 @@ export function processStringChunk(
 ): void {
   let linebreak = chunk.indexOf('\n', offset);
   while (linebreak > -1) {
-    const fullrow = response._partialRow + chunk.substring(offset, linebreak);
+    const fullrow = response._partialRow + chunk.slice(offset, linebreak);
     processFullRow(response, fullrow);
     response._partialRow = '';
     offset = linebreak + 1;
     linebreak = chunk.indexOf('\n', offset);
   }
-  response._partialRow += chunk.substring(offset);
+  response._partialRow += chunk.slice(offset);
 }
 
 export function processBinaryChunk(
