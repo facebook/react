@@ -44,7 +44,10 @@ function extractEvents(
     (nativeEvent: any).submitter;
   let submitterAction;
   if (submitter) {
-    submitterAction = (getFiberCurrentPropsFromNode(submitter): any).formAction;
+    const submitterProps = getFiberCurrentPropsFromNode(submitter);
+    submitterAction = submitterProps
+      ? (submitterProps: any).formAction
+      : submitter.getAttribute('formAction');
     if (submitterAction != null) {
       // The submitter overrides the form action.
       action = submitterAction;

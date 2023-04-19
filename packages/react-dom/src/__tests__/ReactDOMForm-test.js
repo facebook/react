@@ -414,4 +414,40 @@ describe('ReactDOMForm', () => {
     expect(nav).toBe('Navigate to: http://example.com/submit');
     expect(actionCalled).toBe(false);
   });
+
+  // @gate enableFormActions || !__DEV__
+  it('allows a non-react html formaction to be invoked', async () => {
+    let actionCalled = false;
+
+    function action(formData) {
+      actionCalled = true;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <form
+          action={action}
+          dangerouslySetInnerHTML={{
+            __html: `
+            <input
+              type="submit"
+              formAction="http://example.com/submit"
+            />
+          `,
+          }}
+        />,
+      );
+    });
+
+    const node = container.getElementsByTagName('input')[0];
+    let nav;
+    try {
+      submit(node);
+    } catch (x) {
+      nav = x.message;
+    }
+    expect(nav).toBe('Navigate to: http://example.com/submit');
+    expect(actionCalled).toBe(false);
+  });
 });
