@@ -231,7 +231,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, true is used for a new modern build.
+    dynamicFeatureFlags.enableCustomElementPropertySupport;
+// On WWW, true is used for a new modern build.
 var enableFloat = true;
 
 // $FlowFixMe[method-unbinding]

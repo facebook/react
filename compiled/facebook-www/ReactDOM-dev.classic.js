@@ -141,7 +141,9 @@ var disableInputAttributeSyncing =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport; // On WWW, false is used for a new modern build.
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask =
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask; // On WWW, false is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -1104,7 +1106,7 @@ function popHostContext(fiber) {
 }
 
 // This module only exists as an ESM wrapper around the external CommonJS
-var scheduleCallback$2 = Scheduler.unstable_scheduleCallback;
+var scheduleCallback$3 = Scheduler.unstable_scheduleCallback;
 var cancelCallback$1 = Scheduler.unstable_cancelCallback;
 var shouldYield = Scheduler.unstable_shouldYield;
 var requestPaint = Scheduler.unstable_requestPaint;
@@ -7439,102 +7441,6 @@ function is(x, y) {
 
 var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[method-unbinding]
 
-var syncQueue = null;
-var includesLegacySyncCallbacks = false;
-var isFlushingSyncQueue = false;
-function scheduleSyncCallback(callback) {
-  // Push this callback into an internal queue. We'll flush these either in
-  // the next tick, or earlier if something calls `flushSyncCallbackQueue`.
-  if (syncQueue === null) {
-    syncQueue = [callback];
-  } else {
-    // Push onto existing queue. Don't need to schedule a callback because
-    // we already scheduled one when we created the queue.
-    syncQueue.push(callback);
-  }
-}
-function scheduleLegacySyncCallback(callback) {
-  includesLegacySyncCallbacks = true;
-  scheduleSyncCallback(callback);
-}
-function flushSyncCallbacksOnlyInLegacyMode() {
-  // Only flushes the queue if there's a legacy sync callback scheduled.
-  // TODO: There's only a single type of callback: performSyncOnWorkOnRoot. So
-  // it might make more sense for the queue to be a list of roots instead of a
-  // list of generic callbacks. Then we can have two: one for legacy roots, one
-  // for concurrent roots. And this method would only flush the legacy ones.
-  if (includesLegacySyncCallbacks) {
-    flushSyncCallbacks();
-  }
-}
-function flushSyncCallbacks() {
-  if (!isFlushingSyncQueue && syncQueue !== null) {
-    // Prevent re-entrance.
-    isFlushingSyncQueue = true; // Set the event priority to discrete
-    // TODO: Is this necessary anymore? The only user code that runs in this
-    // queue is in the render or commit phases, which already set the
-    // event priority. Should be able to remove.
-
-    var previousUpdatePriority = getCurrentUpdatePriority();
-    setCurrentUpdatePriority(DiscreteEventPriority);
-    var errors = null;
-    var queue = syncQueue; // $FlowFixMe[incompatible-use] found when upgrading Flow
-
-    for (var i = 0; i < queue.length; i++) {
-      // $FlowFixMe[incompatible-use] found when upgrading Flow
-      var callback = queue[i];
-
-      try {
-        do {
-          var isSync = true; // $FlowFixMe[incompatible-type] we bail out when we get a null
-
-          callback = callback(isSync);
-        } while (callback !== null);
-      } catch (error) {
-        // Collect errors so we can rethrow them at the end
-        if (errors === null) {
-          errors = [error];
-        } else {
-          errors.push(error);
-        }
-      }
-    }
-
-    syncQueue = null;
-    includesLegacySyncCallbacks = false;
-    setCurrentUpdatePriority(previousUpdatePriority);
-    isFlushingSyncQueue = false;
-
-    if (errors !== null) {
-      if (errors.length > 1) {
-        if (typeof AggregateError === "function") {
-          // eslint-disable-next-line no-undef
-          throw new AggregateError(errors);
-        } else {
-          for (var _i = 1; _i < errors.length; _i++) {
-            scheduleCallback$2(
-              ImmediatePriority,
-              throwError.bind(null, errors[_i])
-            );
-          }
-
-          var firstError = errors[0];
-          throw firstError;
-        }
-      } else {
-        var error = errors[0];
-        throw error;
-      }
-    }
-  }
-
-  return null;
-}
-
-function throwError(error) {
-  throw error;
-}
-
 var nativeConsole = console;
 var nativeConsoleLog = null;
 var pendingGroupArgs = [];
@@ -9923,7 +9829,7 @@ var ReactStrictModeWarnings = {
   };
 }
 
-var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
 
 var SuspenseException = new Error(
@@ -9959,8 +9865,8 @@ function isThenableResolved(thenable) {
 function noop$2() {}
 
 function trackUsedThenable(thenableState, thenable, index) {
-  if (ReactCurrentActQueue$2.current !== null) {
-    ReactCurrentActQueue$2.didUsePromise = true;
+  if (ReactCurrentActQueue$3.current !== null) {
+    ReactCurrentActQueue$3.didUsePromise = true;
   }
 
   var previous = thenableState[index];
@@ -22096,7 +22002,7 @@ var AbortControllerLocal =
       }; // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
 
-var scheduleCallback$1 = Scheduler.unstable_scheduleCallback,
+var scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   NormalPriority = Scheduler.unstable_NormalPriority;
 var CacheContext = {
   $$typeof: REACT_CONTEXT_TYPE,
@@ -22152,7 +22058,7 @@ function releaseCache(cache) {
   }
 
   if (cache.refCount === 0) {
-    scheduleCallback$1(NormalPriority, function () {
+    scheduleCallback$2(NormalPriority, function () {
       cache.controller.abort();
     });
   }
@@ -28663,7 +28569,7 @@ function onCommitRoot() {
   }
 }
 
-var ReactCurrentActQueue$1 = ReactSharedInternals.ReactCurrentActQueue;
+var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue;
 function isLegacyActEnvironment(fiber) {
   {
     // Legacy mode. We preserve the behavior of React 17's act. It assumes an
@@ -28688,7 +28594,7 @@ function isConcurrentActEnvironment() {
 
     if (
       !isReactActEnvironmentGlobal &&
-      ReactCurrentActQueue$1.current !== null
+      ReactCurrentActQueue$2.current !== null
     ) {
       // TODO: Include link to relevant documentation page.
       error(
@@ -28715,6 +28621,399 @@ function schedulePostPaintCallback(callback) {
 
       postPaintCallbackScheduled = false;
       callbacks = [];
+    });
+  }
+}
+
+var ReactCurrentActQueue$1 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
+// there's only a single root, but we do support multi root apps, hence this
+// extra complexity. But this module is optimized for the single root case.
+
+var firstScheduledRoot = null;
+var lastScheduledRoot = null; // Used to prevent redundant mircotasks from being scheduled.
+
+var didScheduleMicrotask = false; // `act` "microtasks" are scheduled on the `act` queue instead of an actual
+// microtask, so we have to dedupe those separately. This wouldn't be an issue
+// if we required all `act` calls to be awaited, which we might in the future.
+
+var didScheduleMicrotask_act = false; // Used to quickly bail out of flushSync if there's no sync work to do.
+
+var mightHavePendingSyncWork = false;
+var isFlushingWork = false;
+function ensureRootIsScheduled(root) {
+  // This function is called whenever a root receives an update. It does two
+  // things 1) it ensures the root is in the root schedule, and 2) it ensures
+  // there's a pending microtask to process the root schedule.
+  //
+  // Most of the actual scheduling logic does not happen until
+  // `scheduleTaskForRootDuringMicrotask` runs.
+  // Add the root to the schedule
+  if (root === lastScheduledRoot || root.next !== null);
+  else {
+    if (lastScheduledRoot === null) {
+      firstScheduledRoot = lastScheduledRoot = root;
+    } else {
+      lastScheduledRoot.next = root;
+      lastScheduledRoot = root;
+    }
+  } // Any time a root received an update, we set this to true until the next time
+  // we process the schedule. If it's false, then we can quickly exit flushSync
+  // without consulting the schedule.
+
+  mightHavePendingSyncWork = true; // At the end of the current event, go through each of the roots and ensure
+  // there's a task scheduled for each one at the correct priority.
+
+  if (ReactCurrentActQueue$1.current !== null) {
+    // We're inside an `act` scope.
+    if (!didScheduleMicrotask_act) {
+      didScheduleMicrotask_act = true;
+      scheduleImmediateTask(processRootScheduleInMicrotask);
+    }
+  } else {
+    if (!didScheduleMicrotask) {
+      didScheduleMicrotask = true;
+      scheduleImmediateTask(processRootScheduleInMicrotask);
+    }
+  }
+
+  if (!enableDeferRootSchedulingToMicrotask) {
+    // While this flag is disabled, we schedule the render task immediately
+    // instead of waiting a microtask.
+    // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
+    // unblock additional features we have planned.
+    scheduleTaskForRootDuringMicrotask(root, now$1());
+  }
+
+  if (ReactCurrentActQueue$1.isBatchingLegacy && root.tag === LegacyRoot) {
+    // Special `act` case: Record whenever a legacy update is scheduled.
+    ReactCurrentActQueue$1.didScheduleLegacyUpdate = true;
+  }
+}
+function flushSyncWorkOnAllRoots() {
+  // This is allowed to be called synchronously, but the caller should check
+  // the execution context first.
+  flushSyncWorkAcrossRoots_impl(false);
+}
+function flushSyncWorkOnLegacyRootsOnly() {
+  // This is allowed to be called synchronously, but the caller should check
+  // the execution context first.
+  flushSyncWorkAcrossRoots_impl(true);
+}
+
+function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
+  if (isFlushingWork) {
+    // Prevent reentrancy.
+    // TODO: Is this overly defensive? The callers must check the execution
+    // context first regardless.
+    return;
+  }
+
+  if (!mightHavePendingSyncWork) {
+    // Fast path. There's no sync work to do.
+    return;
+  }
+
+  var workInProgressRoot = getWorkInProgressRoot();
+  var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes(); // There may or may not be synchronous work scheduled. Let's check.
+
+  var didPerformSomeWork;
+  var errors = null;
+  isFlushingWork = true;
+
+  do {
+    didPerformSomeWork = false;
+    var root = firstScheduledRoot;
+
+    while (root !== null) {
+      if (onlyLegacy && root.tag !== LegacyRoot);
+      else {
+        var nextLanes = getNextLanes(
+          root,
+          root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
+        );
+
+        if (includesSyncLane(nextLanes)) {
+          // This root has pending sync work. Flush it now.
+          try {
+            // TODO: Pass nextLanes as an argument instead of computing it again
+            // inside performSyncWorkOnRoot.
+            didPerformSomeWork = true;
+            performSyncWorkOnRoot(root);
+          } catch (error) {
+            // Collect errors so we can rethrow them at the end
+            if (errors === null) {
+              errors = [error];
+            } else {
+              errors.push(error);
+            }
+          }
+        }
+      }
+
+      root = root.next;
+    }
+  } while (didPerformSomeWork);
+
+  isFlushingWork = false; // If any errors were thrown, rethrow them right before exiting.
+  // TODO: Consider returning these to the caller, to allow them to decide
+  // how/when to rethrow.
+
+  if (errors !== null) {
+    if (errors.length > 1) {
+      if (typeof AggregateError === "function") {
+        // eslint-disable-next-line no-undef
+        throw new AggregateError(errors);
+      } else {
+        for (var i = 1; i < errors.length; i++) {
+          scheduleImmediateTask(throwError.bind(null, errors[i]));
+        }
+
+        var firstError = errors[0];
+        throw firstError;
+      }
+    } else {
+      var error = errors[0];
+      throw error;
+    }
+  }
+}
+
+function throwError(error) {
+  throw error;
+}
+
+function processRootScheduleInMicrotask() {
+  // This function is always called inside a microtask. It should never be
+  // called synchronously.
+  didScheduleMicrotask = false;
+
+  {
+    didScheduleMicrotask_act = false;
+  } // We'll recompute this as we iterate through all the roots and schedule them.
+
+  mightHavePendingSyncWork = false;
+  var currentTime = now$1();
+  var prev = null;
+  var root = firstScheduledRoot;
+
+  while (root !== null) {
+    var next = root.next;
+    var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
+
+    if (nextLanes === NoLane) {
+      // This root has no more pending work. Remove it from the schedule. To
+      // guard against subtle reentrancy bugs, this microtask is the only place
+      // we do this — you can add roots to the schedule whenever, but you can
+      // only remove them here.
+      // Null this out so we know it's been removed from the schedule.
+      root.next = null;
+
+      if (prev === null) {
+        // This is the new head of the list
+        firstScheduledRoot = next;
+      } else {
+        prev.next = next;
+      }
+
+      if (next === null) {
+        // This is the new tail of the list
+        lastScheduledRoot = prev;
+      }
+    } else {
+      // This root still has work. Keep it in the list.
+      prev = root;
+
+      if (includesSyncLane(nextLanes)) {
+        mightHavePendingSyncWork = true;
+      }
+    }
+
+    root = next;
+  } // At the end of the microtask, flush any pending synchronous work. This has
+  // to come at the end, because it does actual rendering work that might throw.
+
+  flushSyncWorkOnAllRoots();
+}
+
+function scheduleTaskForRootDuringMicrotask(root, currentTime) {
+  // This function is always called inside a microtask, or at the very end of a
+  // rendering task right before we yield to the main thread. It should never be
+  // called synchronously.
+  //
+  // TODO: Unless enableDeferRootSchedulingToMicrotask is off. We need to land
+  // that ASAP to unblock additional features we have planned.
+  //
+  // This function also never performs React work synchronously; it should
+  // only schedule work to be performed later, in a separate task or microtask.
+  // Check if any lanes are being starved by other work. If so, mark them as
+  // expired so we know to work on those next.
+  markStarvedLanesAsExpired(root, currentTime); // Determine the next lanes to work on, and their priority.
+
+  var workInProgressRoot = getWorkInProgressRoot();
+  var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+  var nextLanes = getNextLanes(
+    root,
+    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
+  );
+  var existingCallbackNode = root.callbackNode;
+
+  if (
+    nextLanes === NoLanes || // If this root is currently suspended and waiting for data to resolve, don't
+    // schedule a task to render it. We'll either wait for a ping, or wait to
+    // receive an update.
+    (isWorkLoopSuspendedOnData() && root === workInProgressRoot) || // We should only interrupt a pending commit if the new update
+    // is urgent.
+    (root.cancelPendingCommit !== null && includesOnlyNonUrgentLanes(nextLanes))
+  ) {
+    // Fast path: There's nothing to work on.
+    if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+    }
+
+    root.callbackNode = null;
+    root.callbackPriority = NoLane;
+    return NoLane;
+  } // Schedule a new callback in the host environment.
+
+  if (includesSyncLane(nextLanes)) {
+    // Synchronous work is always flushed at the end of the microtask, so we
+    // don't need to schedule an additional task.
+    if (existingCallbackNode !== null) {
+      cancelCallback(existingCallbackNode);
+    }
+
+    root.callbackPriority = SyncLane;
+    root.callbackNode = null;
+    return SyncLane;
+  } else {
+    // We use the highest priority lane to represent the priority of the callback.
+    var existingCallbackPriority = root.callbackPriority;
+    var newCallbackPriority = getHighestPriorityLane(nextLanes);
+
+    if (
+      newCallbackPriority === existingCallbackPriority && // Special case related to `act`. If the currently scheduled task is a
+      // Scheduler task, rather than an `act` task, cancel it and re-schedule
+      // on the `act` queue.
+      !(
+        ReactCurrentActQueue$1.current !== null &&
+        existingCallbackNode !== fakeActCallbackNode$1
+      )
+    ) {
+      // The priority hasn't changed. We can reuse the existing task.
+      return newCallbackPriority;
+    } else {
+      // Cancel the existing callback. We'll schedule a new one below.
+      cancelCallback(existingCallbackNode);
+    }
+
+    var schedulerPriorityLevel;
+
+    switch (lanesToEventPriority(nextLanes)) {
+      case DiscreteEventPriority:
+        schedulerPriorityLevel = ImmediatePriority;
+        break;
+
+      case ContinuousEventPriority:
+        schedulerPriorityLevel = UserBlockingPriority;
+        break;
+
+      case DefaultEventPriority:
+        schedulerPriorityLevel = NormalPriority$1;
+        break;
+
+      case IdleEventPriority:
+        schedulerPriorityLevel = IdlePriority;
+        break;
+
+      default:
+        schedulerPriorityLevel = NormalPriority$1;
+        break;
+    }
+
+    var newCallbackNode = scheduleCallback$1(
+      schedulerPriorityLevel,
+      performConcurrentWorkOnRoot.bind(null, root)
+    );
+    root.callbackPriority = newCallbackPriority;
+    root.callbackNode = newCallbackNode;
+    return newCallbackPriority;
+  }
+}
+
+function getContinuationForRoot(root, originalCallbackNode) {
+  // This is called at the end of `performConcurrentWorkOnRoot` to determine
+  // if we need to schedule a continuation task.
+  //
+  // Usually `scheduleTaskForRootDuringMicrotask` only runs inside a microtask;
+  // however, since most of the logic for determining if we need a continuation
+  // versus a new task is the same, we cheat a bit and call it here. This is
+  // only safe to do because we know we're at the end of the browser task.
+  // So although it's not an actual microtask, it might as well be.
+  scheduleTaskForRootDuringMicrotask(root, now$1());
+
+  if (root.callbackNode === originalCallbackNode) {
+    // The task node scheduled for this root is the same one that's
+    // currently executed. Need to return a continuation.
+    return performConcurrentWorkOnRoot.bind(null, root);
+  }
+
+  return null;
+}
+var fakeActCallbackNode$1 = {};
+
+function scheduleCallback$1(priorityLevel, callback) {
+  if (ReactCurrentActQueue$1.current !== null) {
+    // Special case: We're inside an `act` scope (a testing utility).
+    // Instead of scheduling work in the host environment, add it to a
+    // fake internal queue that's managed by the `act` implementation.
+    ReactCurrentActQueue$1.current.push(callback);
+    return fakeActCallbackNode$1;
+  } else {
+    return scheduleCallback$3(priorityLevel, callback);
+  }
+}
+
+function cancelCallback(callbackNode) {
+  if (callbackNode === fakeActCallbackNode$1);
+  else if (callbackNode !== null) {
+    cancelCallback$1(callbackNode);
+  }
+}
+
+function scheduleImmediateTask(cb) {
+  if (ReactCurrentActQueue$1.current !== null) {
+    // Special case: Inside an `act` scope, we push microtasks to the fake `act`
+    // callback queue. This is because we currently support calling `act`
+    // without awaiting the result. The plan is to deprecate that, and require
+    // that you always await the result so that the microtasks have a chance to
+    // run. But it hasn't happened yet.
+    ReactCurrentActQueue$1.current.push(function () {
+      cb();
+      return null;
+    });
+  } // TODO: Can we land supportsMicrotasks? Which environments don't support it?
+  // Alternatively, can we move this check to the host config?
+
+  {
+    scheduleMicrotask(function () {
+      // In Safari, appending an iframe forces microtasks to run.
+      // https://github.com/facebook/react/issues/22459
+      // We don't support running callbacks in the middle of render
+      // or commit so we need to check against that.
+      var executionContext = getExecutionContext();
+
+      if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+        // Note that this would still prematurely flush the callbacks
+        // if this happens outside render or commit phase (e.g. in an event).
+        // Intentionally using a macrotask instead of a microtask here. This is
+        // wrong semantically but it prevents an infinite loop. The bug is
+        // Safari's, not ours, so we just do our best to not crash even though
+        // the behavior isn't completely correct.
+        scheduleCallback$3(ImmediatePriority, cb);
+        return;
+      }
+
+      cb();
     });
   }
 }
@@ -28997,6 +29296,9 @@ function getWorkInProgressRoot() {
 function getWorkInProgressRootRenderLanes() {
   return workInProgressRootRenderLanes;
 }
+function isWorkLoopSuspendedOnData() {
+  return workInProgressSuspendedReason === SuspendedOnData;
+}
 function requestEventTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
@@ -29200,21 +29502,23 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
       }
     }
 
-    ensureRootIsScheduled(root, eventTime);
+    ensureRootIsScheduled(root);
 
     if (
       lane === SyncLane &&
       executionContext === NoContext &&
-      (fiber.mode & ConcurrentMode) === NoMode && // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-      !ReactCurrentActQueue.isBatchingLegacy
+      (fiber.mode & ConcurrentMode) === NoMode
     ) {
-      // Flush the synchronous work now, unless we're already working or inside
-      // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
-      // scheduleCallbackForFiber to preserve the ability to schedule a callback
-      // without immediately flushing it. We only do this for user-initiated
-      // updates, to preserve historical behavior of legacy mode.
-      resetRenderTimer();
-      flushSyncCallbacksOnlyInLegacyMode();
+      if (ReactCurrentActQueue.isBatchingLegacy);
+      else {
+        // Flush the synchronous work now, unless we're already working or inside
+        // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+        // scheduleCallbackForFiber to preserve the ability to schedule a callback
+        // without immediately flushing it. We only do this for user-initiated
+        // updates, to preserve historical behavior of legacy mode.
+        resetRenderTimer();
+        flushSyncWorkOnLegacyRootsOnly();
+      }
     }
   }
 }
@@ -29231,173 +29535,12 @@ function scheduleInitialHydrationOnRoot(root, lane, eventTime) {
   var current = root.current;
   current.lanes = lane;
   markRootUpdated(root, lane, eventTime);
-  ensureRootIsScheduled(root, eventTime);
+  ensureRootIsScheduled(root);
 }
 function isUnsafeClassRenderPhaseUpdate(fiber) {
   // Check if this is a render phase update. Only called by class components,
   // which special (deprecated) behavior for UNSAFE_componentWillReceive props.
   return (executionContext & RenderContext) !== NoContext;
-} // Use this function to schedule a task for a root. There's only one task per
-// root; if a task was already scheduled, we'll check to make sure the priority
-// of the existing task is the same as the priority of the next level that the
-// root has work on. This function is called on every update, and right before
-// exiting a task.
-
-function ensureRootIsScheduled(root, currentTime) {
-  var existingCallbackNode = root.callbackNode; // Check if any lanes are being starved by other work. If so, mark them as
-  // expired so we know to work on those next.
-
-  markStarvedLanesAsExpired(root, currentTime); // Determine the next lanes to work on, and their priority.
-
-  var nextLanes = getNextLanes(
-    root,
-    root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
-  );
-
-  if (nextLanes === NoLanes) {
-    // Special case: There's nothing to work on.
-    if (existingCallbackNode !== null) {
-      cancelCallback(existingCallbackNode);
-    }
-
-    root.callbackNode = null;
-    root.callbackPriority = NoLane;
-    return;
-  } // If this root is currently suspended and waiting for data to resolve, don't
-  // schedule a task to render it. We'll either wait for a ping, or wait to
-  // receive an update.
-
-  if (
-    workInProgressSuspendedReason === SuspendedOnData &&
-    workInProgressRoot === root
-  ) {
-    root.callbackPriority = NoLane;
-    root.callbackNode = null;
-    return;
-  }
-
-  var cancelPendingCommit = root.cancelPendingCommit;
-
-  if (cancelPendingCommit !== null) {
-    // We should only interrupt a pending commit if the new update
-    // is urgent.
-    if (includesOnlyNonUrgentLanes(nextLanes)) {
-      // The new update is not urgent. Don't interrupt the pending commit.
-      root.callbackPriority = NoLane;
-      root.callbackNode = null;
-      return;
-    }
-  } // We use the highest priority lane to represent the priority of the callback.
-
-  var newCallbackPriority = getHighestPriorityLane(nextLanes); // Check if there's an existing task. We may be able to reuse it.
-
-  var existingCallbackPriority = root.callbackPriority;
-
-  if (
-    existingCallbackPriority === newCallbackPriority && // Special case related to `act`. If the currently scheduled task is a
-    // Scheduler task, rather than an `act` task, cancel it and re-scheduled
-    // on the `act` queue.
-    !(
-      ReactCurrentActQueue.current !== null &&
-      existingCallbackNode !== fakeActCallbackNode
-    )
-  ) {
-    {
-      // If we're going to re-use an existing task, it needs to exist.
-      // Assume that discrete update microtasks are non-cancellable and null.
-      // TODO: Temporary until we confirm this warning is not fired.
-      if (
-        existingCallbackNode == null &&
-        !includesSyncLane(existingCallbackPriority)
-      ) {
-        error(
-          "Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue."
-        );
-      }
-    } // The priority hasn't changed. We can reuse the existing task. Exit.
-
-    return;
-  }
-
-  if (existingCallbackNode != null) {
-    // Cancel the existing callback. We'll schedule a new one below.
-    cancelCallback(existingCallbackNode);
-  } // Schedule a new callback.
-
-  var newCallbackNode;
-
-  if (includesSyncLane(newCallbackPriority)) {
-    // Special case: Sync React callbacks are scheduled on a special
-    // internal queue
-    if (root.tag === LegacyRoot) {
-      if (ReactCurrentActQueue.isBatchingLegacy !== null) {
-        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
-      }
-
-      scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
-    } else {
-      scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
-    }
-
-    {
-      // Flush the queue in a microtask.
-      if (ReactCurrentActQueue.current !== null) {
-        // Inside `act`, use our internal `act` queue so that these get flushed
-        // at the end of the current scope even when using the sync version
-        // of `act`.
-        ReactCurrentActQueue.current.push(flushSyncCallbacks);
-      } else {
-        scheduleMicrotask(function () {
-          // In Safari, appending an iframe forces microtasks to run.
-          // https://github.com/facebook/react/issues/22459
-          // We don't support running callbacks in the middle of render
-          // or commit so we need to check against that.
-          if (
-            (executionContext & (RenderContext | CommitContext)) ===
-            NoContext
-          ) {
-            // Note that this would still prematurely flush the callbacks
-            // if this happens outside render or commit phase (e.g. in an event).
-            flushSyncCallbacks();
-          }
-        });
-      }
-    }
-
-    newCallbackNode = null;
-  } else {
-    var schedulerPriorityLevel;
-
-    switch (lanesToEventPriority(nextLanes)) {
-      case DiscreteEventPriority:
-        schedulerPriorityLevel = ImmediatePriority;
-        break;
-
-      case ContinuousEventPriority:
-        schedulerPriorityLevel = UserBlockingPriority;
-        break;
-
-      case DefaultEventPriority:
-        schedulerPriorityLevel = NormalPriority$1;
-        break;
-
-      case IdleEventPriority:
-        schedulerPriorityLevel = IdlePriority;
-        break;
-
-      default:
-        schedulerPriorityLevel = NormalPriority$1;
-        break;
-    }
-
-    newCallbackNode = scheduleCallback(
-      schedulerPriorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root)
-    );
-  }
-
-  root.callbackPriority = newCallbackPriority;
-  root.callbackNode = newCallbackNode;
 } // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
 
@@ -29429,6 +29572,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     }
   } // Determine the next lanes to work on, using the fields stored
   // on the root.
+  // TODO: This was already computed in the caller. Pass it as an argument.
 
   var lanes = getNextLanes(
     root,
@@ -29479,7 +29623,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       var fatalError = workInProgressRootFatalError;
       prepareFreshStack(root, NoLanes);
       markRootSuspended(root, lanes);
-      ensureRootIsScheduled(root, now$1());
+      ensureRootIsScheduled(root);
       throw fatalError;
     }
 
@@ -29529,7 +29673,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           var _fatalError = workInProgressRootFatalError;
           prepareFreshStack(root, NoLanes);
           markRootSuspended(root, lanes);
-          ensureRootIsScheduled(root, now$1());
+          ensureRootIsScheduled(root);
           throw _fatalError;
         } // FIXME: Need to check for RootDidNotComplete again. The factoring here
         // isn't ideal.
@@ -29542,15 +29686,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     }
   }
 
-  ensureRootIsScheduled(root, now$1());
-
-  if (root.callbackNode === originalCallbackNode) {
-    // The task node scheduled for this root is the same one that's
-    // currently executed. Need to return a continuation.
-    return performConcurrentWorkOnRoot.bind(null, root);
-  }
-
-  return null;
+  ensureRootIsScheduled(root);
+  return getContinuationForRoot(root, originalCallbackNode);
 }
 
 function recoverFromConcurrentError(
@@ -29911,12 +30048,13 @@ function performSyncWorkOnRoot(root) {
     throw new Error("Should not already be working.");
   }
 
-  flushPassiveEffects();
+  flushPassiveEffects(); // TODO: This was already computed in the caller. Pass it as an argument.
+
   var lanes = getNextLanes(root, NoLanes);
 
   if (!includesSyncLane(lanes)) {
     // There's no remaining sync work left.
-    ensureRootIsScheduled(root, now$1());
+    ensureRootIsScheduled(root);
     return null;
   }
 
@@ -29947,7 +30085,7 @@ function performSyncWorkOnRoot(root) {
     var fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, NoLanes);
     markRootSuspended(root, lanes);
-    ensureRootIsScheduled(root, now$1());
+    ensureRootIsScheduled(root);
     throw fatalError;
   }
 
@@ -29956,7 +30094,7 @@ function performSyncWorkOnRoot(root) {
     // cases where need to exit the current render without producing a
     // consistent tree or committing.
     markRootSuspended(root, lanes);
-    ensureRootIsScheduled(root, now$1());
+    ensureRootIsScheduled(root);
     return null;
   } // We now have a consistent tree. Because this is a sync render, we
   // will commit it even if something suspended.
@@ -29971,18 +30109,20 @@ function performSyncWorkOnRoot(root) {
   ); // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
 
-  ensureRootIsScheduled(root, now$1());
+  ensureRootIsScheduled(root);
   return null;
 }
-
 function flushRoot(root, lanes) {
   if (lanes !== NoLanes) {
     markRootEntangled(root, mergeLanes(lanes, SyncLane));
-    ensureRootIsScheduled(root, now$1());
+    ensureRootIsScheduled(root);
 
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-      resetRenderTimer();
-      flushSyncCallbacks();
+      resetRenderTimer(); // TODO: For historical reasons this flushes all sync work across all
+      // roots. It shouldn't really matter either way, but we could change this
+      // to only flush the given root.
+
+      flushSyncWorkOnAllRoots();
     }
   }
 }
@@ -30004,7 +30144,7 @@ function batchedUpdates$1(fn, a) {
       !ReactCurrentActQueue.isBatchingLegacy
     ) {
       resetRenderTimer();
-      flushSyncCallbacksOnlyInLegacyMode();
+      flushSyncWorkOnLegacyRootsOnly();
     }
   }
 }
@@ -30046,7 +30186,7 @@ function flushSync$1(fn) {
     // the stack.
 
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-      flushSyncCallbacks();
+      flushSyncWorkOnAllRoots();
     }
   }
 }
@@ -30604,7 +30744,7 @@ function renderRootConcurrent(root, lanes) {
               // currently working on a different root, so that we resume
               // rendering later.
 
-              ensureRootIsScheduled(root, now$1());
+              ensureRootIsScheduled(root);
             };
 
             thenable.then(onResolution, onResolution);
@@ -31431,7 +31571,7 @@ function commitRootImpl(
   } // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
 
-  ensureRootIsScheduled(root, now$1());
+  ensureRootIsScheduled(root);
 
   if (recoverableErrors !== null) {
     // There were errors during this render, but recovered from them without
@@ -31484,7 +31624,7 @@ function commitRootImpl(
     nestedUpdateCount = 0;
   } // If layout work was scheduled, flush it now.
 
-  flushSyncCallbacks();
+  flushSyncWorkOnAllRoots();
 
   {
     if (enableDebugTracing) {
@@ -31684,7 +31824,7 @@ function flushPassiveEffectsImpl() {
   }
 
   executionContext = prevExecutionContext;
-  flushSyncCallbacks();
+  flushSyncWorkOnAllRoots();
 
   if (enableTransitionTracing) {
     var prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
@@ -31768,7 +31908,7 @@ function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
 
   if (root !== null) {
     markRootUpdated(root, SyncLane, eventTime);
-    ensureRootIsScheduled(root, eventTime);
+    ensureRootIsScheduled(root);
   }
 }
 
@@ -31807,7 +31947,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error$1) {
 
         if (root !== null) {
           markRootUpdated(root, SyncLane, eventTime);
-          ensureRootIsScheduled(root, eventTime);
+          ensureRootIsScheduled(root);
         }
 
         return;
@@ -31883,7 +32023,6 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     pingCache.delete(wakeable);
   }
 
-  var eventTime = requestEventTime();
   markRootPinged(root, pingedLanes);
   warnIfSuspenseResolutionNotWrappedWithActDEV(root);
 
@@ -31919,7 +32058,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     }
   }
 
-  ensureRootIsScheduled(root, eventTime);
+  ensureRootIsScheduled(root);
 }
 
 function retryTimedOutBoundary(boundaryFiber, retryLane) {
@@ -31938,7 +32077,7 @@ function retryTimedOutBoundary(boundaryFiber, retryLane) {
 
   if (root !== null) {
     markRootUpdated(root, retryLane, eventTime);
-    ensureRootIsScheduled(root, eventTime);
+    ensureRootIsScheduled(root);
   }
 }
 
@@ -32326,17 +32465,9 @@ function scheduleCallback(priorityLevel, callback) {
       actQueue.push(callback);
       return fakeActCallbackNode;
     } else {
-      return scheduleCallback$2(priorityLevel, callback);
+      return scheduleCallback$3(priorityLevel, callback);
     }
   }
-}
-
-function cancelCallback(callbackNode) {
-  if (callbackNode === fakeActCallbackNode) {
-    return;
-  } // In production, always call Scheduler. This function will be stripped out.
-
-  return cancelCallback$1(callbackNode);
 }
 
 function shouldForceFlushFallbacksInDEV() {
@@ -33614,6 +33745,7 @@ function FiberRootNode(
   this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
+  this.next = null;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
   this.eventTimes = createLaneMap(NoLanes);
@@ -33747,7 +33879,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-6cf00fe7";
+var ReactVersion = "18.3.0-www-classic-9ad44702";
 
 function createPortal$1(
   children,
