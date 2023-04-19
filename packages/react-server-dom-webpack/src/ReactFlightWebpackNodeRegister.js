@@ -55,6 +55,10 @@ module.exports = function register() {
         // reference.
         case 'defaultProps':
           return undefined;
+        // You should be able to pass a client export to Promise.resolve() or
+        // return it from an async function as a noop.
+        case 'then':
+          return undefined;
         // Avoid this attempting to be serialized.
         case 'toJSON':
           return undefined;

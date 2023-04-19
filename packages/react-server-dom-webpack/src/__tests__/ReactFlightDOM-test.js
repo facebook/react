@@ -505,6 +505,14 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('allows passing client exports through Promise.resolve()', async () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    const c2 = await Promise.resolve(ClientModule.Component);
+    expect(c2).toBe(ClientModule.Component);
+  });
+
   it('does not throw when React inspects any deep props', () => {
     const ClientModule = clientExports({
       Component: function () {},
