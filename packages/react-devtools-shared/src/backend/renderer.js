@@ -92,10 +92,7 @@ import {
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {
-  enableProfilerChangedHookIndices,
-  enableStyleXFeatures,
-} from 'react-devtools-feature-flags';
+import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
@@ -1265,19 +1262,12 @@ export function attach(
           };
 
           // Only traverse the hooks list once, depending on what info we're returning.
-          if (enableProfilerChangedHookIndices) {
-            const indices = getChangedHooksIndices(
-              prevFiber.memoizedState,
-              nextFiber.memoizedState,
-            );
-            data.hooks = indices;
-            data.didHooksChange = indices !== null && indices.length > 0;
-          } else {
-            data.didHooksChange = didHooksChange(
-              prevFiber.memoizedState,
-              nextFiber.memoizedState,
-            );
-          }
+          const indices = getChangedHooksIndices(
+            prevFiber.memoizedState,
+            nextFiber.memoizedState,
+          );
+          data.hooks = indices;
+          data.didHooksChange = indices !== null && indices.length > 0;
 
           return data;
         }
@@ -1458,12 +1448,13 @@ export function attach(
     return false;
   }
 
-  function didHooksChange(prev: any, next: any): boolean {
+  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
     if (prev == null || next == null) {
-      return false;
+      return null;
     }
 
-    // We can't report anything meaningful for hooks changes.
+    const indices = [];
+    let index = 0;
     if (
       next.hasOwnProperty('baseState') &&
       next.hasOwnProperty('memoizedState') &&
@@ -1472,45 +1463,15 @@ export function attach(
     ) {
       while (next !== null) {
         if (didStatefulHookChange(prev, next)) {
-          return true;
-        } else {
-          next = next.next;
-          prev = prev.next;
+          indices.push(index);
         }
+        next = next.next;
+        prev = prev.next;
+        index++;
       }
     }
 
-    return false;
-  }
-
-  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
-    if (enableProfilerChangedHookIndices) {
-      if (prev == null || next == null) {
-        return null;
-      }
-
-      const indices = [];
-      let index = 0;
-      if (
-        next.hasOwnProperty('baseState') &&
-        next.hasOwnProperty('memoizedState') &&
-        next.hasOwnProperty('next') &&
-        next.hasOwnProperty('queue')
-      ) {
-        while (next !== null) {
-          if (didStatefulHookChange(prev, next)) {
-            indices.push(index);
-          }
-          next = next.next;
-          prev = prev.next;
-          index++;
-        }
-      }
-
-      return indices;
-    }
-
-    return null;
+    return indices;
   }
 
   function getChangedKeys(prev: any, next: any): null | Array<string> {
