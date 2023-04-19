@@ -331,8 +331,6 @@ export function initInput(
       checkAttributeStringCoercion(name, 'name');
     }
     node.name = name;
-  } else {
-    node.removeAttribute('name');
   }
 }
 
