@@ -135,7 +135,7 @@ function validateFormActionInDevelopment(
         );
       } else if (typeof value === 'function') {
         if (
-          (props.formEncType != null || props.formMethod != null) &&
+          (props.encType != null || props.method != null) &&
           !didWarnFormActionMethod
         ) {
           didWarnFormActionMethod = true;
@@ -145,7 +145,7 @@ function validateFormActionInDevelopment(
               'They will get overridden.',
           );
         }
-        if (props.formTarget != null && !didWarnFormActionTarget) {
+        if (props.target != null && !didWarnFormActionTarget) {
           didWarnFormActionTarget = true;
           console.error(
             'Cannot specify a target for a form that specifies a function as the action. ' +
