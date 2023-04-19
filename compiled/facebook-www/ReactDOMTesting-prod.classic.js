@@ -10184,8 +10184,8 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   pingedLanes = root.callbackNode;
   if (
     0 === suspendedLanes ||
-    (2 === workInProgressSuspendedReason && root === currentTime) ||
-    (null !== root.cancelPendingCommit && 0 === (suspendedLanes & 42))
+    (root === currentTime && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
   )
     return (
       null !== pingedLanes &&
@@ -10358,10 +10358,12 @@ function requestUpdateLane(fiber) {
   return fiber;
 }
 function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
-  2 === workInProgressSuspendedReason &&
-    root === workInProgressRoot &&
-    (prepareFreshStack(root, 0),
-    markRootSuspended(root, workInProgressRootRenderLanes));
+  if (
+    (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
+    null !== root.cancelPendingCommit
+  )
+    prepareFreshStack(root, 0),
+      markRootSuspended(root, workInProgressRootRenderLanes);
   markRootUpdated(root, lane, eventTime);
   if (0 === (executionContext & 2) || root !== workInProgressRoot) {
     if (
@@ -14643,7 +14645,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1b01c793",
+  version: "18.3.0-www-classic-a86bcc37",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2236 = {
@@ -14673,7 +14675,7 @@ var internals$jscomp$inline_2236 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-1b01c793"
+  reconcilerVersion: "18.3.0-www-classic-a86bcc37"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2237 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16706,4 +16708,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-1b01c793";
+exports.version = "18.3.0-www-classic-a86bcc37";

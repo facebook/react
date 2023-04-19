@@ -28858,12 +28858,14 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   var existingCallbackNode = root.callbackNode;
 
   if (
+    // Check if there's nothing to work on
     nextLanes === NoLanes || // If this root is currently suspended and waiting for data to resolve, don't
     // schedule a task to render it. We'll either wait for a ping, or wait to
     // receive an update.
-    (isWorkLoopSuspendedOnData() && root === workInProgressRoot) || // We should only interrupt a pending commit if the new update
-    // is urgent.
-    (root.cancelPendingCommit !== null && includesOnlyNonUrgentLanes(nextLanes))
+    //
+    // Suspended render phase
+    (root === workInProgressRoot && isWorkLoopSuspendedOnData()) || // Suspended commit phase
+    root.cancelPendingCommit !== null
   ) {
     // Fast path: There's nothing to work on.
     if (existingCallbackNode !== null) {
@@ -29411,8 +29413,10 @@ function scheduleUpdateOnFiber(root, fiber, lane, eventTime) {
   // finish loading.
 
   if (
-    workInProgressSuspendedReason === SuspendedOnData &&
-    root === workInProgressRoot
+    // Suspended render phase
+    (root === workInProgressRoot &&
+      workInProgressSuspendedReason === SuspendedOnData) || // Suspended commit phase
+    root.cancelPendingCommit !== null
   ) {
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
@@ -33879,7 +33883,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-9ad44702";
+var ReactVersion = "18.3.0-www-classic-000b299c";
 
 function createPortal$1(
   children,
