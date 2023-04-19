@@ -15703,23 +15703,22 @@ function waitForCommitToBeReady() {
     insertSuspendedStylesheets(state, state.stylesheets);
   return 0 < state.count
     ? function (commit) {
-        unsuspendAfterTimeout(state);
+        var stylesheetTimer = setTimeout(function () {
+          state.stylesheets &&
+            insertSuspendedStylesheets(state, state.stylesheets);
+          if (state.unsuspend) {
+            var unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }, 6e4);
         state.unsuspend = commit;
         return function () {
-          return (state.unsuspend = null);
+          state.unsuspend = null;
+          clearTimeout(stylesheetTimer);
         };
       }
     : null;
-}
-function unsuspendAfterTimeout(state) {
-  setTimeout(function () {
-    state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
-    if (state.unsuspend) {
-      var unsuspend = state.unsuspend;
-      state.unsuspend = null;
-      unsuspend();
-    }
-  }, 500);
 }
 function onUnsuspend() {
   this.count--;
@@ -15869,7 +15868,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1797 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-8b241311",
+  version: "18.3.0-www-modern-3b6fb960",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2203 = {
@@ -15900,7 +15899,7 @@ var internals$jscomp$inline_2203 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-8b241311"
+  reconcilerVersion: "18.3.0-www-modern-3b6fb960"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2204 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16220,4 +16219,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-8b241311";
+exports.version = "18.3.0-www-modern-3b6fb960";

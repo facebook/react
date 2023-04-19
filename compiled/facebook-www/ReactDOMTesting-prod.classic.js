@@ -14645,7 +14645,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a86bcc37",
+  version: "18.3.0-www-classic-8960db8a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2236 = {
@@ -14675,7 +14675,7 @@ var internals$jscomp$inline_2236 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a86bcc37"
+  reconcilerVersion: "18.3.0-www-classic-8960db8a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2237 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -15636,23 +15636,22 @@ function waitForCommitToBeReady() {
     insertSuspendedStylesheets(state, state.stylesheets);
   return 0 < state.count
     ? function (commit) {
-        unsuspendAfterTimeout(state);
+        var stylesheetTimer = setTimeout(function () {
+          state.stylesheets &&
+            insertSuspendedStylesheets(state, state.stylesheets);
+          if (state.unsuspend) {
+            var unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }, 6e4);
         state.unsuspend = commit;
         return function () {
-          return (state.unsuspend = null);
+          state.unsuspend = null;
+          clearTimeout(stylesheetTimer);
         };
       }
     : null;
-}
-function unsuspendAfterTimeout(state) {
-  setTimeout(function () {
-    state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
-    if (state.unsuspend) {
-      var unsuspend = state.unsuspend;
-      state.unsuspend = null;
-      unsuspend();
-    }
-  }, 500);
 }
 function onUnsuspend() {
   this.count--;
@@ -16708,4 +16707,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-a86bcc37";
+exports.version = "18.3.0-www-classic-8960db8a";

@@ -16087,23 +16087,22 @@ function waitForCommitToBeReady() {
     insertSuspendedStylesheets(state, state.stylesheets);
   return 0 < state.count
     ? function (commit) {
-        unsuspendAfterTimeout(state);
+        var stylesheetTimer = setTimeout(function () {
+          state.stylesheets &&
+            insertSuspendedStylesheets(state, state.stylesheets);
+          if (state.unsuspend) {
+            var unsuspend = state.unsuspend;
+            state.unsuspend = null;
+            unsuspend();
+          }
+        }, 6e4);
         state.unsuspend = commit;
         return function () {
-          return (state.unsuspend = null);
+          state.unsuspend = null;
+          clearTimeout(stylesheetTimer);
         };
       }
     : null;
-}
-function unsuspendAfterTimeout(state) {
-  setTimeout(function () {
-    state.stylesheets && insertSuspendedStylesheets(state, state.stylesheets);
-    if (state.unsuspend) {
-      var unsuspend = state.unsuspend;
-      state.unsuspend = null;
-      unsuspend();
-    }
-  }, 500);
 }
 function onUnsuspend() {
   this.count--;
@@ -16253,7 +16252,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1847 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-ee95a7ff",
+  version: "18.3.0-www-modern-b6e8e2d5",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16298,7 +16297,7 @@ var devToolsConfig$jscomp$inline_1847 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ee95a7ff"
+  reconcilerVersion: "18.3.0-www-modern-b6e8e2d5"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16454,7 +16453,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-ee95a7ff";
+exports.version = "18.3.0-www-modern-b6e8e2d5";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
