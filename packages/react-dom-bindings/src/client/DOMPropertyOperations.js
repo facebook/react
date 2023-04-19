@@ -203,7 +203,7 @@ export function setValueForPropertyOnCustomComponent(
 ) {
   if (name[0] === 'o' && name[1] === 'n') {
     const useCapture = name.endsWith('Capture');
-    const eventName = name.substr(2, useCapture ? name.length - 9 : undefined);
+    const eventName = name.slice(2, useCapture ? name.length - 7 : undefined);
 
     const prevProps = getFiberCurrentPropsFromNode(node);
     const prevValue = prevProps != null ? prevProps[name] : null;

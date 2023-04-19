@@ -36,10 +36,10 @@ export function createRegExp(string: string): RegExp {
   // Allow /regex/ syntax with optional last /
   if (string[0] === '/') {
     // Cut off first slash
-    string = string.substring(1);
+    string = string.slice(1);
     // Cut off last slash, but only if it's there
     if (string[string.length - 1] === '/') {
-      string = string.substring(0, string.length - 1);
+      string = string.slice(0, string.length - 1);
     }
     try {
       return new RegExp(string, 'i');
@@ -186,9 +186,9 @@ export function truncateText(text: string, maxLength: number): string {
   const {length} = text;
   if (length > maxLength) {
     return (
-      text.substr(0, Math.floor(maxLength / 2)) +
+      text.slice(0, Math.floor(maxLength / 2)) +
       '…' +
-      text.substr(length - Math.ceil(maxLength / 2) - 1)
+      text.slice(length - Math.ceil(maxLength / 2) - 1)
     );
   } else {
     return text;

@@ -69,8 +69,8 @@ export function resolveServerReference<T>(
   id: ServerReferenceId,
 ): ClientReference<T> {
   const idx = id.lastIndexOf('#');
-  const specifier = id.substr(0, idx);
-  const name = id.substr(idx + 1);
+  const specifier = id.slice(0, idx);
+  const name = id.slice(idx + 1);
   return {specifier, name};
 }
 

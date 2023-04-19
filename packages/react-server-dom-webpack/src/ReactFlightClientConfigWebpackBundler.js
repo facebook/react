@@ -85,8 +85,8 @@ export function resolveServerReference<T>(
     // probably go back to encoding path and name separately on the client reference.
     const idx = id.lastIndexOf('#');
     if (idx !== -1) {
-      name = id.substr(idx + 1);
-      resolvedModuleData = bundlerConfig[id.substr(0, idx)];
+      name = id.slice(idx + 1);
+      resolvedModuleData = bundlerConfig[id.slice(0, idx)];
     }
     if (!resolvedModuleData) {
       throw new Error(

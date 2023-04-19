@@ -74,7 +74,7 @@ function transform(babel) {
         continue;
       }
 
-      const next3 = code.substring(i, i + 3);
+      const next3 = code.slice(i, i + 3);
       if (next3 === '===') {
         tokens.push({type: '=='});
         i += 3;
@@ -86,7 +86,7 @@ function transform(babel) {
         continue;
       }
 
-      const next2 = code.substring(i, i + 2);
+      const next2 = code.slice(i, i + 2);
       switch (next2) {
         case '&&':
         case '||':

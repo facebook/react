@@ -869,7 +869,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const Suspense = React.Suspense;
 
     function Foo(props) {
-      const [value] = React.useState(props.defaultValue.substr(0, 3));
+      const [value] = React.useState(props.defaultValue.slice(0, 3));
       return <div>{value}</div>;
     }
     Foo.defaultProps = {

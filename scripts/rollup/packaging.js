@@ -172,7 +172,7 @@ function getTarOptions(tgzName, packageName) {
       entries: [CONTENTS_FOLDER],
       map(header) {
         if (header.name.indexOf(CONTENTS_FOLDER + '/') === 0) {
-          header.name = header.name.substring(CONTENTS_FOLDER.length + 1);
+          header.name = header.name.slice(CONTENTS_FOLDER.length + 1);
         }
       },
     },

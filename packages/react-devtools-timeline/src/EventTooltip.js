@@ -249,7 +249,7 @@ const TooltipNetworkMeasure = ({
   let urlToDisplay = url;
   if (urlToDisplay.length > MAX_TOOLTIP_TEXT_LENGTH) {
     const half = Math.floor(MAX_TOOLTIP_TEXT_LENGTH / 2);
-    urlToDisplay = url.substr(0, half) + '…' + url.substr(url.length - half);
+    urlToDisplay = url.slice(0, half) + '…' + url.slice(url.length - half);
   }
 
   const timestampBegin = sendRequestTimestamp;
