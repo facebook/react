@@ -866,13 +866,6 @@ export function setInitialProperties(
           }
           case 'checked': {
             checked = propValue;
-            const checkedValue =
-              propValue != null ? propValue : props.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
@@ -1305,14 +1298,6 @@ export function updateProperties(
         if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case 'checked': {
-              if (!nextProps.hasOwnProperty(propKey)) {
-                const checkedValue = nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'value': {
@@ -1365,15 +1350,6 @@ export function updateProperties(
             }
             case 'checked': {
               checked = nextProp;
-              if (nextProp !== lastProp) {
-                const checkedValue =
-                  nextProp != null ? nextProp : nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'defaultChecked': {
@@ -1842,13 +1818,6 @@ export function updatePropertiesWithDiff(
             break;
           }
           case 'checked': {
-            const checkedValue =
-              propValue != null ? propValue : nextProps.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
