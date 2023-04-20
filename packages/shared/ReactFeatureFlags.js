@@ -124,6 +124,8 @@ export const diffInCommitPhase = __EXPERIMENTAL__;
 
 export const enableAsyncActions = __EXPERIMENTAL__;
 
+export const alwaysThrottleRetries = true;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

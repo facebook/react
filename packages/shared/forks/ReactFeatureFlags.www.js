@@ -30,6 +30,7 @@ export const {
   enableDeferRootSchedulingToMicrotask,
   diffInCommitPhase,
   enableAsyncActions,
+  alwaysThrottleRetries,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

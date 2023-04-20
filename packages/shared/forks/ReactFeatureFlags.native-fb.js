@@ -17,8 +17,11 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
-export const {enableUseRefAccessWarning, enableDeferRootSchedulingToMicrotask} =
-  dynamicFlags;
+export const {
+  enableUseRefAccessWarning,
+  enableDeferRootSchedulingToMicrotask,
+  alwaysThrottleRetries,
+} = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;

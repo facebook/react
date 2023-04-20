@@ -39,6 +39,7 @@ import {
   enableTransitionTracing,
   useModernStrictMode,
   disableLegacyContext,
+  alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -1115,7 +1116,10 @@ function finishConcurrentRender(
       workInProgressTransitions,
     );
   } else {
-    if (includesOnlyRetries(lanes)) {
+    if (
+      includesOnlyRetries(lanes) &&
+      (alwaysThrottleRetries || exitStatus === RootSuspended)
+    ) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
       const msUntilTimeout =
