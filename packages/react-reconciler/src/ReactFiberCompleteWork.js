@@ -769,6 +769,7 @@ function bubbleProperties(completedWork: Fiber) {
   let newChildLanes = NoLanes;
   let subtreeFlags = NoFlags;
 
+  let child = completedWork.child;
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
     // In profiling mode, resetChildExpirationTime is also used to reset
@@ -776,7 +777,6 @@ function bubbleProperties(completedWork: Fiber) {
     let actualDuration = completedWork.actualDuration;
     let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
 
-    let child = completedWork.child;
     while (child !== null) {
       newChildLanes = mergeLanes(
         newChildLanes,
@@ -796,13 +796,12 @@ function bubbleProperties(completedWork: Fiber) {
       // render. In that case it should not bubble. We determine whether it was
       // cloned by comparing the child pointer.
       // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-      if (!didBailout && actualDuration) {
+      if (!didBailout) {
         actualDuration += child.actualDuration;
       }
 
       // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
       treeBaseDuration += child.treeBaseDuration;
-
       child = child.sibling;
     }
 
@@ -811,12 +810,12 @@ function bubbleProperties(completedWork: Fiber) {
     }
     completedWork.treeBaseDuration = treeBaseDuration;
   } else {
-    let child = completedWork.child;
     while (child !== null) {
       newChildLanes = mergeLanes(
         newChildLanes,
         mergeLanes(child.lanes, child.childLanes),
       );
+
       // "Static" flags share the lifetime of the fiber/hook they belong to,
       // so we should bubble those up even during a bailout. All the other
       // flags have a lifetime only of a single render + commit, so we should
@@ -825,10 +824,12 @@ function bubbleProperties(completedWork: Fiber) {
         ? child.subtreeFlags
         : child.subtreeFlags & StaticMask;
       subtreeFlags |= !didBailout ? child.flags : child.flags & StaticMask;
+
       // Update the return pointer so the tree is consistent. This is a code
       // smell because it assumes the commit phase is never concurrent with
       // the render phase. Will address during refactor to alternate model.
       child.return = completedWork;
+
       child = child.sibling;
     }
   }
