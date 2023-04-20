@@ -774,7 +774,10 @@ function bubbleProperties(completedWork: Fiber) {
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
     // In profiling mode, resetChildExpirationTime is also used to reset
     // profiler durations.
-    let actualDuration = completedWork.actualDuration;
+
+    // It is reset to 0 each time we render and only updated when we don't bailout.
+    // So temporarily set it to 0.
+    let actualDuration = completedWork.actualDuration ?? 0;
     let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
 
     while (child !== null) {
@@ -797,7 +800,7 @@ function bubbleProperties(completedWork: Fiber) {
       // cloned by comparing the child pointer.
       // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
       if (!didBailout) {
-        actualDuration += child.actualDuration;
+        actualDuration += child.actualDuration ?? 0;
       }
 
       // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
