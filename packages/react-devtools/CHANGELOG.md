@@ -4,6 +4,17 @@
 
 ---
 
+### 4.27.6
+April 20, 2023
+
+#### Bugfixes
+* Fixed backend injection logic for undocked devtools window ([mondaychen](https://github.com/mondaychen) in [#26665](https://github.com/facebook/react/pull/26665))
+
+#### Other
+* Use backend manager to support multiple backends in extension ([mondaychen](https://github.com/mondaychen) in [#26615](https://github.com/facebook/react/pull/26615))
+
+---
+
 ### 4.27.5
 April 17, 2023
 
