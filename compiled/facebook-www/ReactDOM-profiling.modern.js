@@ -701,6 +701,20 @@ function setValueForAttribute(node, name, value) {
       );
     }
 }
+function setValueForKnownAttribute(node, name, value) {
+  if (null === value) node.removeAttribute(name);
+  else {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        node.removeAttribute(name);
+        return;
+    }
+    node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
+  }
+}
 function setValueForNamespacedAttribute(node, namespace, name, value) {
   if (null === value) node.removeAttribute(name);
   else {
@@ -1153,6 +1167,11 @@ function setTextContent(node, text) {
   }
   node.textContent = text;
 }
+var unitlessNumbers = new Set(
+  "animationIterationCount aspectRatio borderImageOutset borderImageSlice borderImageWidth boxFlex boxFlexGroup boxOrdinalGroup columnCount columns flex flexGrow flexPositive flexShrink flexNegative flexOrder gridArea gridRow gridRowEnd gridRowSpan gridRowStart gridColumn gridColumnEnd gridColumnSpan gridColumnStart fontWeight lineClamp lineHeight opacity order orphans scale tabSize widows zIndex zoom fillOpacity floodOpacity stopOpacity strokeDasharray strokeDashoffset strokeMiterlimit strokeOpacity strokeWidth MozAnimationIterationCount MozBoxFlex MozBoxFlexGroup MozLineClamp msAnimationIterationCount msFlex msZoom msFlexGrow msFlexNegative msFlexOrder msFlexPositive msFlexShrink msGridColumn msGridColumnSpan msGridRow msGridRowSpan WebkitAnimationIterationCount WebkitBoxFlex WebKitBoxFlexGroup WebkitBoxOrdinalGroup WebkitColumnCount WebkitColumns WebkitFlex WebkitFlexGrow WebkitFlexPositive WebkitFlexShrink WebkitLineClamp".split(
+    " "
+  )
+);
 function setValueForStyles(node, styles) {
   if (null != styles && "object" !== typeof styles)
     throw Error(formatProdErrorMessage(62));
@@ -1161,100 +1180,21 @@ function setValueForStyles(node, styles) {
     if (styles.hasOwnProperty(styleName)) {
       var value = styles[styleName],
         isCustomProperty = 0 === styleName.indexOf("--");
-      if (null == value || "boolean" === typeof value || "" === value)
-        isCustomProperty
+      null == value || "boolean" === typeof value || "" === value
+        ? isCustomProperty
           ? node.setProperty(styleName, "")
           : "float" === styleName
           ? (node.cssFloat = "")
-          : (node[styleName] = "");
-      else if (isCustomProperty) node.setProperty(styleName, value);
-      else {
-        if ((isCustomProperty = "number" === typeof value && 0 !== value)) {
-          a: switch (styleName) {
-            case "animationIterationCount":
-            case "aspectRatio":
-            case "borderImageOutset":
-            case "borderImageSlice":
-            case "borderImageWidth":
-            case "boxFlex":
-            case "boxFlexGroup":
-            case "boxOrdinalGroup":
-            case "columnCount":
-            case "columns":
-            case "flex":
-            case "flexGrow":
-            case "flexPositive":
-            case "flexShrink":
-            case "flexNegative":
-            case "flexOrder":
-            case "gridArea":
-            case "gridRow":
-            case "gridRowEnd":
-            case "gridRowSpan":
-            case "gridRowStart":
-            case "gridColumn":
-            case "gridColumnEnd":
-            case "gridColumnSpan":
-            case "gridColumnStart":
-            case "fontWeight":
-            case "lineClamp":
-            case "lineHeight":
-            case "opacity":
-            case "order":
-            case "orphans":
-            case "scale":
-            case "tabSize":
-            case "widows":
-            case "zIndex":
-            case "zoom":
-            case "fillOpacity":
-            case "floodOpacity":
-            case "stopOpacity":
-            case "strokeDasharray":
-            case "strokeDashoffset":
-            case "strokeMiterlimit":
-            case "strokeOpacity":
-            case "strokeWidth":
-            case "MozAnimationIterationCount":
-            case "MozBoxFlex":
-            case "MozBoxFlexGroup":
-            case "MozLineClamp":
-            case "msAnimationIterationCount":
-            case "msFlex":
-            case "msZoom":
-            case "msFlexGrow":
-            case "msFlexNegative":
-            case "msFlexOrder":
-            case "msFlexPositive":
-            case "msFlexShrink":
-            case "msGridColumn":
-            case "msGridColumnSpan":
-            case "msGridRow":
-            case "msGridRowSpan":
-            case "WebkitAnimationIterationCount":
-            case "WebkitBoxFlex":
-            case "WebKitBoxFlexGroup":
-            case "WebkitBoxOrdinalGroup":
-            case "WebkitColumnCount":
-            case "WebkitColumns":
-            case "WebkitFlex":
-            case "WebkitFlexGrow":
-            case "WebkitFlexPositive":
-            case "WebkitFlexShrink":
-            case "WebkitLineClamp":
-              isCustomProperty = !0;
-              break a;
-            default:
-              isCustomProperty = !1;
-          }
-          isCustomProperty = !isCustomProperty;
-        }
-        isCustomProperty
-          ? (node[styleName] = value + "px")
-          : "float" === styleName
+          : (node[styleName] = "")
+        : isCustomProperty
+        ? node.setProperty(styleName, value)
+        : "number" !== typeof value ||
+          0 === value ||
+          unitlessNumbers.has(styleName)
+        ? "float" === styleName
           ? (node.cssFloat = value)
-          : (node[styleName] = ("" + value).trim());
-      }
+          : (node[styleName] = ("" + value).trim())
+        : (node[styleName] = value + "px");
     }
 }
 function isCustomElement(tagName) {
@@ -1273,8 +1213,88 @@ function isCustomElement(tagName) {
       return !0;
   }
 }
-var isJavaScriptProtocol =
-  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+var aliases = new Map([
+    ["acceptCharset", "accept-charset"],
+    ["htmlFor", "for"],
+    ["httpEquiv", "http-equiv"],
+    ["crossOrigin", "crossorigin"],
+    ["accentHeight", "accent-height"],
+    ["alignmentBaseline", "alignment-baseline"],
+    ["arabicForm", "arabic-form"],
+    ["baselineShift", "baseline-shift"],
+    ["capHeight", "cap-height"],
+    ["clipPath", "clip-path"],
+    ["clipRule", "clip-rule"],
+    ["colorInterpolation", "color-interpolation"],
+    ["colorInterpolationFilters", "color-interpolation-filters"],
+    ["colorProfile", "color-profile"],
+    ["colorRendering", "color-rendering"],
+    ["dominantBaseline", "dominant-baseline"],
+    ["enableBackground", "enable-background"],
+    ["fillOpacity", "fill-opacity"],
+    ["fillRule", "fill-rule"],
+    ["floodColor", "flood-color"],
+    ["floodOpacity", "flood-opacity"],
+    ["fontFamily", "font-family"],
+    ["fontSize", "font-size"],
+    ["fontSizeAdjust", "font-size-adjust"],
+    ["fontStretch", "font-stretch"],
+    ["fontStyle", "font-style"],
+    ["fontVariant", "font-variant"],
+    ["fontWeight", "font-weight"],
+    ["glyphName", "glyph-name"],
+    ["glyphOrientationHorizontal", "glyph-orientation-horizontal"],
+    ["glyphOrientationVertical", "glyph-orientation-vertical"],
+    ["horizAdvX", "horiz-adv-x"],
+    ["horizOriginX", "horiz-origin-x"],
+    ["imageRendering", "image-rendering"],
+    ["letterSpacing", "letter-spacing"],
+    ["lightingColor", "lighting-color"],
+    ["markerEnd", "marker-end"],
+    ["markerMid", "marker-mid"],
+    ["markerStart", "marker-start"],
+    ["overlinePosition", "overline-position"],
+    ["overlineThickness", "overline-thickness"],
+    ["paintOrder", "paint-order"],
+    ["panose-1", "panose-1"],
+    ["pointerEvents", "pointer-events"],
+    ["renderingIntent", "rendering-intent"],
+    ["shapeRendering", "shape-rendering"],
+    ["stopColor", "stop-color"],
+    ["stopOpacity", "stop-opacity"],
+    ["strikethroughPosition", "strikethrough-position"],
+    ["strikethroughThickness", "strikethrough-thickness"],
+    ["strokeDasharray", "stroke-dasharray"],
+    ["strokeDashoffset", "stroke-dashoffset"],
+    ["strokeLinecap", "stroke-linecap"],
+    ["strokeLinejoin", "stroke-linejoin"],
+    ["strokeMiterlimit", "stroke-miterlimit"],
+    ["strokeOpacity", "stroke-opacity"],
+    ["strokeWidth", "stroke-width"],
+    ["textAnchor", "text-anchor"],
+    ["textDecoration", "text-decoration"],
+    ["textRendering", "text-rendering"],
+    ["transformOrigin", "transform-origin"],
+    ["underlinePosition", "underline-position"],
+    ["underlineThickness", "underline-thickness"],
+    ["unicodeBidi", "unicode-bidi"],
+    ["unicodeRange", "unicode-range"],
+    ["unitsPerEm", "units-per-em"],
+    ["vAlphabetic", "v-alphabetic"],
+    ["vHanging", "v-hanging"],
+    ["vIdeographic", "v-ideographic"],
+    ["vMathematical", "v-mathematical"],
+    ["vectorEffect", "vector-effect"],
+    ["vertAdvY", "vert-adv-y"],
+    ["vertOriginX", "vert-origin-x"],
+    ["vertOriginY", "vert-origin-y"],
+    ["wordSpacing", "word-spacing"],
+    ["writingMode", "writing-mode"],
+    ["xmlnsXlink", "xmlns:xlink"],
+    ["xHeight", "x-height"]
+  ]),
+  isJavaScriptProtocol =
+    /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
 function sanitizeURL(url) {
   return isJavaScriptProtocol.test("" + url)
     ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
@@ -13566,19 +13586,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$354;
+  var JSCompiler_inline_result$jscomp$353;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1637 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1637) {
-      var element$jscomp$inline_1638 = document.createElement("div");
-      element$jscomp$inline_1638.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1637 =
-        "function" === typeof element$jscomp$inline_1638.oninput;
+    var isSupported$jscomp$inline_1639 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1639) {
+      var element$jscomp$inline_1640 = document.createElement("div");
+      element$jscomp$inline_1640.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1639 =
+        "function" === typeof element$jscomp$inline_1640.oninput;
     }
-    JSCompiler_inline_result$jscomp$354 = isSupported$jscomp$inline_1637;
-  } else JSCompiler_inline_result$jscomp$354 = !1;
+    JSCompiler_inline_result$jscomp$353 = isSupported$jscomp$inline_1639;
+  } else JSCompiler_inline_result$jscomp$353 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$354 &&
+    JSCompiler_inline_result$jscomp$353 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13887,20 +13907,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1678 = 0;
-  i$jscomp$inline_1678 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1678++
+  var i$jscomp$inline_1680 = 0;
+  i$jscomp$inline_1680 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1680++
 ) {
-  var eventName$jscomp$inline_1679 =
-      simpleEventPluginEvents[i$jscomp$inline_1678],
-    domEventName$jscomp$inline_1680 =
-      eventName$jscomp$inline_1679.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1681 =
-      eventName$jscomp$inline_1679[0].toUpperCase() +
-      eventName$jscomp$inline_1679.slice(1);
+  var eventName$jscomp$inline_1681 =
+      simpleEventPluginEvents[i$jscomp$inline_1680],
+    domEventName$jscomp$inline_1682 =
+      eventName$jscomp$inline_1681.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1683 =
+      eventName$jscomp$inline_1681[0].toUpperCase() +
+      eventName$jscomp$inline_1681.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1680,
-    "on" + capitalizedEvent$jscomp$inline_1681
+    domEventName$jscomp$inline_1682,
+    "on" + capitalizedEvent$jscomp$inline_1683
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -14734,22 +14754,6 @@ function normalizeMarkupForTextOrAttribute(markup) {
 function noop$1() {}
 function setProp(domElement, tag, key, value, props) {
   switch (key) {
-    case "style":
-      setValueForStyles(domElement, value);
-      break;
-    case "dangerouslySetInnerHTML":
-      if (null != value) {
-        if ("object" !== typeof value || !("__html" in value))
-          throw Error(formatProdErrorMessage(61));
-        key = value.__html;
-        if (null != key) {
-          if (null != props.children) throw Error(formatProdErrorMessage(60));
-          disableIEWorkarounds
-            ? (domElement.innerHTML = key)
-            : setInnerHTML$1(domElement, key);
-        }
-      }
-      break;
     case "children":
       "string" === typeof value
         ? "body" === tag ||
@@ -14759,27 +14763,21 @@ function setProp(domElement, tag, key, value, props) {
           "body" !== tag &&
           setTextContent(domElement, "" + value);
       break;
-    case "onScroll":
-      null != value && listenToNonDelegatedEvent("scroll", domElement);
+    case "className":
+      setValueForKnownAttribute(domElement, "class", value);
       break;
-    case "onClick":
-      null != value && (domElement.onclick = noop$1);
+    case "tabIndex":
+      setValueForKnownAttribute(domElement, "tabindex", value);
       break;
-    case "multiple":
-      domElement.multiple =
-        value && "function" !== typeof value && "symbol" !== typeof value;
+    case "dir":
+    case "role":
+    case "viewBox":
+    case "width":
+    case "height":
+      setValueForKnownAttribute(domElement, key, value);
       break;
-    case "muted":
-      domElement.muted =
-        value && "function" !== typeof value && "symbol" !== typeof value;
-      break;
-    case "suppressContentEditableWarning":
-    case "suppressHydrationWarning":
-    case "defaultValue":
-    case "defaultChecked":
-    case "innerHTML":
-      break;
-    case "autoFocus":
+    case "style":
+      setValueForStyles(domElement, value);
       break;
     case "src":
     case "href":
@@ -14798,8 +14796,43 @@ function setProp(domElement, tag, key, value, props) {
         domElement.removeAttribute(key);
         break;
       }
-      props = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
-      domElement.setAttribute(key, props);
+      value = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      domElement.setAttribute(key, value);
+      break;
+    case "onClick":
+      null != value && (domElement.onclick = noop$1);
+      break;
+    case "onScroll":
+      null != value && listenToNonDelegatedEvent("scroll", domElement);
+      break;
+    case "dangerouslySetInnerHTML":
+      if (null != value) {
+        if ("object" !== typeof value || !("__html" in value))
+          throw Error(formatProdErrorMessage(61));
+        key = value.__html;
+        if (null != key) {
+          if (null != props.children) throw Error(formatProdErrorMessage(60));
+          disableIEWorkarounds
+            ? (domElement.innerHTML = key)
+            : setInnerHTML$1(domElement, key);
+        }
+      }
+      break;
+    case "multiple":
+      domElement.multiple =
+        value && "function" !== typeof value && "symbol" !== typeof value;
+      break;
+    case "muted":
+      domElement.muted =
+        value && "function" !== typeof value && "symbol" !== typeof value;
+      break;
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "defaultValue":
+    case "defaultChecked":
+    case "innerHTML":
+      break;
+    case "autoFocus":
       break;
     case "xlinkHref":
       if (
@@ -14888,246 +14921,6 @@ function setProp(domElement, tag, key, value, props) {
         ? domElement.removeAttribute(key)
         : domElement.setAttribute(key, value);
       break;
-    case "acceptCharset":
-      setValueForAttribute(domElement, "accept-charset", value);
-      break;
-    case "className":
-      setValueForAttribute(domElement, "class", value);
-      break;
-    case "htmlFor":
-      setValueForAttribute(domElement, "for", value);
-      break;
-    case "httpEquiv":
-      setValueForAttribute(domElement, "http-equiv", value);
-      break;
-    case "tabIndex":
-      setValueForAttribute(domElement, "tabindex", value);
-      break;
-    case "crossOrigin":
-      setValueForAttribute(domElement, "crossorigin", value);
-      break;
-    case "accentHeight":
-      setValueForAttribute(domElement, "accent-height", value);
-      break;
-    case "alignmentBaseline":
-      setValueForAttribute(domElement, "alignment-baseline", value);
-      break;
-    case "arabicForm":
-      setValueForAttribute(domElement, "arabic-form", value);
-      break;
-    case "baselineShift":
-      setValueForAttribute(domElement, "baseline-shift", value);
-      break;
-    case "capHeight":
-      setValueForAttribute(domElement, "cap-height", value);
-      break;
-    case "clipPath":
-      setValueForAttribute(domElement, "clip-path", value);
-      break;
-    case "clipRule":
-      setValueForAttribute(domElement, "clip-rule", value);
-      break;
-    case "colorInterpolation":
-      setValueForAttribute(domElement, "color-interpolation", value);
-      break;
-    case "colorInterpolationFilters":
-      setValueForAttribute(domElement, "color-interpolation-filters", value);
-      break;
-    case "colorProfile":
-      setValueForAttribute(domElement, "color-profile", value);
-      break;
-    case "colorRendering":
-      setValueForAttribute(domElement, "color-rendering", value);
-      break;
-    case "dominantBaseline":
-      setValueForAttribute(domElement, "dominant-baseline", value);
-      break;
-    case "enableBackground":
-      setValueForAttribute(domElement, "enable-background", value);
-      break;
-    case "fillOpacity":
-      setValueForAttribute(domElement, "fill-opacity", value);
-      break;
-    case "fillRule":
-      setValueForAttribute(domElement, "fill-rule", value);
-      break;
-    case "floodColor":
-      setValueForAttribute(domElement, "flood-color", value);
-      break;
-    case "floodOpacity":
-      setValueForAttribute(domElement, "flood-opacity", value);
-      break;
-    case "fontFamily":
-      setValueForAttribute(domElement, "font-family", value);
-      break;
-    case "fontSize":
-      setValueForAttribute(domElement, "font-size", value);
-      break;
-    case "fontSizeAdjust":
-      setValueForAttribute(domElement, "font-size-adjust", value);
-      break;
-    case "fontStretch":
-      setValueForAttribute(domElement, "font-stretch", value);
-      break;
-    case "fontStyle":
-      setValueForAttribute(domElement, "font-style", value);
-      break;
-    case "fontVariant":
-      setValueForAttribute(domElement, "font-variant", value);
-      break;
-    case "fontWeight":
-      setValueForAttribute(domElement, "font-weight", value);
-      break;
-    case "glyphName":
-      setValueForAttribute(domElement, "glyph-name", value);
-      break;
-    case "glyphOrientationHorizontal":
-      setValueForAttribute(domElement, "glyph-orientation-horizontal", value);
-      break;
-    case "glyphOrientationVertical":
-      setValueForAttribute(domElement, "glyph-orientation-vertical", value);
-      break;
-    case "horizAdvX":
-      setValueForAttribute(domElement, "horiz-adv-x", value);
-      break;
-    case "horizOriginX":
-      setValueForAttribute(domElement, "horiz-origin-x", value);
-      break;
-    case "imageRendering":
-      setValueForAttribute(domElement, "image-rendering", value);
-      break;
-    case "letterSpacing":
-      setValueForAttribute(domElement, "letter-spacing", value);
-      break;
-    case "lightingColor":
-      setValueForAttribute(domElement, "lighting-color", value);
-      break;
-    case "markerEnd":
-      setValueForAttribute(domElement, "marker-end", value);
-      break;
-    case "markerMid":
-      setValueForAttribute(domElement, "marker-mid", value);
-      break;
-    case "markerStart":
-      setValueForAttribute(domElement, "marker-start", value);
-      break;
-    case "overlinePosition":
-      setValueForAttribute(domElement, "overline-position", value);
-      break;
-    case "overlineThickness":
-      setValueForAttribute(domElement, "overline-thickness", value);
-      break;
-    case "paintOrder":
-      setValueForAttribute(domElement, "paint-order", value);
-      break;
-    case "panose-1":
-      setValueForAttribute(domElement, "panose-1", value);
-      break;
-    case "pointerEvents":
-      setValueForAttribute(domElement, "pointer-events", value);
-      break;
-    case "renderingIntent":
-      setValueForAttribute(domElement, "rendering-intent", value);
-      break;
-    case "shapeRendering":
-      setValueForAttribute(domElement, "shape-rendering", value);
-      break;
-    case "stopColor":
-      setValueForAttribute(domElement, "stop-color", value);
-      break;
-    case "stopOpacity":
-      setValueForAttribute(domElement, "stop-opacity", value);
-      break;
-    case "strikethroughPosition":
-      setValueForAttribute(domElement, "strikethrough-position", value);
-      break;
-    case "strikethroughThickness":
-      setValueForAttribute(domElement, "strikethrough-thickness", value);
-      break;
-    case "strokeDasharray":
-      setValueForAttribute(domElement, "stroke-dasharray", value);
-      break;
-    case "strokeDashoffset":
-      setValueForAttribute(domElement, "stroke-dashoffset", value);
-      break;
-    case "strokeLinecap":
-      setValueForAttribute(domElement, "stroke-linecap", value);
-      break;
-    case "strokeLinejoin":
-      setValueForAttribute(domElement, "stroke-linejoin", value);
-      break;
-    case "strokeMiterlimit":
-      setValueForAttribute(domElement, "stroke-miterlimit", value);
-      break;
-    case "strokeOpacity":
-      setValueForAttribute(domElement, "stroke-opacity", value);
-      break;
-    case "strokeWidth":
-      setValueForAttribute(domElement, "stroke-width", value);
-      break;
-    case "textAnchor":
-      setValueForAttribute(domElement, "text-anchor", value);
-      break;
-    case "textDecoration":
-      setValueForAttribute(domElement, "text-decoration", value);
-      break;
-    case "textRendering":
-      setValueForAttribute(domElement, "text-rendering", value);
-      break;
-    case "transformOrigin":
-      setValueForAttribute(domElement, "transform-origin", value);
-      break;
-    case "underlinePosition":
-      setValueForAttribute(domElement, "underline-position", value);
-      break;
-    case "underlineThickness":
-      setValueForAttribute(domElement, "underline-thickness", value);
-      break;
-    case "unicodeBidi":
-      setValueForAttribute(domElement, "unicode-bidi", value);
-      break;
-    case "unicodeRange":
-      setValueForAttribute(domElement, "unicode-range", value);
-      break;
-    case "unitsPerEm":
-      setValueForAttribute(domElement, "units-per-em", value);
-      break;
-    case "vAlphabetic":
-      setValueForAttribute(domElement, "v-alphabetic", value);
-      break;
-    case "vHanging":
-      setValueForAttribute(domElement, "v-hanging", value);
-      break;
-    case "vIdeographic":
-      setValueForAttribute(domElement, "v-ideographic", value);
-      break;
-    case "vMathematical":
-      setValueForAttribute(domElement, "v-mathematical", value);
-      break;
-    case "vectorEffect":
-      setValueForAttribute(domElement, "vector-effect", value);
-      break;
-    case "vertAdvY":
-      setValueForAttribute(domElement, "vert-adv-y", value);
-      break;
-    case "vertOriginX":
-      setValueForAttribute(domElement, "vert-origin-x", value);
-      break;
-    case "vertOriginY":
-      setValueForAttribute(domElement, "vert-origin-y", value);
-      break;
-    case "wordSpacing":
-      setValueForAttribute(domElement, "word-spacing", value);
-      break;
-    case "writingMode":
-      setValueForAttribute(domElement, "writing-mode", value);
-      break;
-    case "xmlnsXlink":
-      setValueForAttribute(domElement, "xmlns:xlink", value);
-      break;
-    case "xHeight":
-      setValueForAttribute(domElement, "x-height", value);
-      break;
     case "xlinkActuate":
       setValueForNamespacedAttribute(
         domElement,
@@ -15204,10 +14997,13 @@ function setProp(domElement, tag, key, value, props) {
     case "textContent":
       if (enableCustomElementPropertySupport) break;
     default:
-      (!(2 < key.length) ||
+      if (
+        !(2 < key.length) ||
         ("o" !== key[0] && "O" !== key[0]) ||
-        ("n" !== key[1] && "N" !== key[1])) &&
-        setValueForAttribute(domElement, key, value);
+        ("n" !== key[1] && "N" !== key[1])
+      )
+        (key = aliases.get(key) || key),
+          setValueForAttribute(domElement, key, value);
   }
 }
 function setPropOnCustomElement(domElement, tag, key, value, props) {
@@ -15282,6 +15078,15 @@ function setPropOnCustomElement(domElement, tag, key, value, props) {
 }
 function setInitialProperties(domElement, tag, props) {
   switch (tag) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li":
+      break;
     case "input":
       initWrapperState$2(domElement, props);
       listenToNonDelegatedEvent("invalid", domElement);
@@ -15290,6 +15095,13 @@ function setInitialProperties(domElement, tag, props) {
           var propValue = props[propKey];
           if (null != propValue)
             switch (propKey) {
+              case "type":
+                null != propValue &&
+                  "function" !== typeof propValue &&
+                  "symbol" !== typeof propValue &&
+                  "boolean" !== typeof propValue &&
+                  domElement.setAttribute(propKey, propValue);
+                break;
               case "checked":
                 var node = domElement;
                 propValue =
@@ -15318,16 +15130,16 @@ function setInitialProperties(domElement, tag, props) {
     case "select":
       domElement._wrapperState = { wasMultiple: !!props.multiple };
       listenToNonDelegatedEvent("invalid", domElement);
-      for (var propKey$222 in props)
+      for (propValue in props)
         if (
-          props.hasOwnProperty(propKey$222) &&
-          ((propKey = props[propKey$222]), null != propKey)
+          props.hasOwnProperty(propValue) &&
+          ((propKey = props[propValue]), null != propKey)
         )
-          switch (propKey$222) {
+          switch (propValue) {
             case "value":
               break;
             default:
-              setProp(domElement, tag, propKey$222, propKey, props);
+              setProp(domElement, tag, propValue, propKey, props);
           }
       domElement.multiple = !!props.multiple;
       tag = props.value;
@@ -15427,18 +15239,26 @@ function setInitialProperties(domElement, tag, props) {
               setProp(domElement, tag, propKey$228, propKey, props);
           }
       return;
+    default:
+      if (isCustomElement(tag)) {
+        for (var propKey$230 in props)
+          props.hasOwnProperty(propKey$230) &&
+            ((propKey = props[propKey$230]),
+            null != propKey &&
+              setPropOnCustomElement(
+                domElement,
+                tag,
+                propKey$230,
+                propKey,
+                props
+              ));
+        return;
+      }
   }
-  if (isCustomElement(tag))
-    for (node in props)
-      props.hasOwnProperty(node) &&
-        ((propKey = props[node]),
-        null != propKey &&
-          setPropOnCustomElement(domElement, tag, node, propKey, props));
-  else
-    for (propValue in props)
-      props.hasOwnProperty(propValue) &&
-        ((propKey = props[propValue]),
-        null != propKey && setProp(domElement, tag, propValue, propKey, props));
+  for (node in props)
+    props.hasOwnProperty(node) &&
+      ((propKey = props[node]),
+      null != propKey && setProp(domElement, tag, node, propKey, props));
 }
 function updateProperties(
   domElement,
@@ -15448,6 +15268,15 @@ function updateProperties(
   nextProps
 ) {
   switch (tag) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li":
+      break;
     case "input":
       "radio" === nextProps.type &&
         null != nextProps.name &&
@@ -15578,25 +15407,27 @@ function updateProperties(
             setProp(domElement, tag, propValue, propKey, nextProps);
         }
       return;
+    default:
+      if (isCustomElement(tag)) {
+        for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
+          setPropOnCustomElement(
+            domElement,
+            tag,
+            updatePayload[lastProps],
+            updatePayload[lastProps + 1],
+            nextProps
+          );
+        return;
+      }
   }
-  if (isCustomElement(tag))
-    for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
-      setPropOnCustomElement(
-        domElement,
-        tag,
-        updatePayload[lastProps],
-        updatePayload[lastProps + 1],
-        nextProps
-      );
-  else
-    for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
-      setProp(
-        domElement,
-        tag,
-        updatePayload[lastProps],
-        updatePayload[lastProps + 1],
-        nextProps
-      );
+  for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
+    setProp(
+      domElement,
+      tag,
+      updatePayload[lastProps],
+      updatePayload[lastProps + 1],
+      nextProps
+    );
 }
 var Dispatcher$1 = Internals.Dispatcher,
   eventsEnabled = null,
@@ -16549,10 +16380,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1849 = {
+var devToolsConfig$jscomp$inline_1864 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-e957d901",
+  version: "18.3.0-www-modern-b3a052f6",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16570,10 +16401,10 @@ var devToolsConfig$jscomp$inline_1849 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1849.bundleType,
-  version: devToolsConfig$jscomp$inline_1849.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1849.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1849.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1864.bundleType,
+  version: devToolsConfig$jscomp$inline_1864.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1864.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1864.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16590,14 +16421,14 @@ var devToolsConfig$jscomp$inline_1849 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1849.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1864.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-e957d901"
+  reconcilerVersion: "18.3.0-www-modern-b3a052f6"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16753,7 +16584,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-e957d901";
+exports.version = "18.3.0-www-modern-b3a052f6";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
