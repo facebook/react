@@ -698,137 +698,11 @@ function registerDirectEvent(registrationName, dependencies) {
     allNativeEvents.add(dependencies[registrationName]);
 }
 var canUseDOM = !(
-  "undefined" === typeof window ||
-  "undefined" === typeof window.document ||
-  "undefined" === typeof window.document.createElement
-);
-function PropertyInfoRecord(
-  type,
-  attributeName,
-  attributeNamespace,
-  sanitizeURL,
-  removeEmptyString
-) {
-  this.acceptsBooleans = 2 === type || 3 === type || 4 === type;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
-}
-var properties = {};
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  properties[_ref[0]] = new PropertyInfoRecord(1, _ref[1], null, !1, !1);
-});
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
-  name
-) {
-  properties[name] = new PropertyInfoRecord(
-    2,
-    name.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(2, name, null, !1, !1);
-});
-"allowFullScreen async autoFocus autoPlay controls default defer disabled disablePictureInPicture disableRemotePlayback formNoValidate hidden loop noModule noValidate open playsInline readOnly required reversed scoped seamless itemScope"
-  .split(" ")
-  .forEach(function (name) {
-    properties[name] = new PropertyInfoRecord(
-      3,
-      name.toLowerCase(),
-      null,
-      !1,
-      !1
-    );
-  });
-["capture", "download"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(4, name, null, !1, !1);
-});
-["cols", "rows", "size", "span"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(6, name, null, !1, !1);
-});
-["rowSpan", "start"].forEach(function (name) {
-  properties[name] = new PropertyInfoRecord(
-    5,
-    name.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-var CAMELIZE = /[\-:]([a-z])/g;
-function capitalize(token) {
-  return token[1].toUpperCase();
-}
-"accent-height alignment-baseline arabic-form baseline-shift cap-height clip-path clip-rule color-interpolation color-interpolation-filters color-profile color-rendering dominant-baseline enable-background fill-opacity fill-rule flood-color flood-opacity font-family font-size font-size-adjust font-stretch font-style font-variant font-weight glyph-name glyph-orientation-horizontal glyph-orientation-vertical horiz-adv-x horiz-origin-x image-rendering letter-spacing lighting-color marker-end marker-mid marker-start overline-position overline-thickness paint-order panose-1 pointer-events rendering-intent shape-rendering stop-color stop-opacity strikethrough-position strikethrough-thickness stroke-dasharray stroke-dashoffset stroke-linecap stroke-linejoin stroke-miterlimit stroke-opacity stroke-width text-anchor text-decoration text-rendering transform-origin underline-position underline-thickness unicode-bidi unicode-range units-per-em v-alphabetic v-hanging v-ideographic v-mathematical vector-effect vert-adv-y vert-origin-x vert-origin-y word-spacing writing-mode xmlns:xlink x-height"
-  .split(" ")
-  .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(1, attributeName, null, !1, !1);
-  });
-"xlink:actuate xlink:arcrole xlink:role xlink:show xlink:title xlink:type"
-  .split(" ")
-  .forEach(function (attributeName) {
-    var name = attributeName.replace(CAMELIZE, capitalize);
-    properties[name] = new PropertyInfoRecord(
-      1,
-      attributeName,
-      "http://www.w3.org/1999/xlink",
-      !1,
-      !1
-    );
-  });
-["xml:base", "xml:lang", "xml:space"].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize);
-  properties[name] = new PropertyInfoRecord(
-    1,
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    !1,
-    !1
-  );
-});
-["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  properties[attributeName] = new PropertyInfoRecord(
-    1,
-    attributeName.toLowerCase(),
-    null,
-    !1,
-    !1
-  );
-});
-properties.xlinkHref = new PropertyInfoRecord(
-  1,
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  !0,
-  !1
-);
-properties.formAction = new PropertyInfoRecord(1, "formaction", null, !0, !1);
-["src", "href", "action"].forEach(function (attributeName) {
-  properties[attributeName] = new PropertyInfoRecord(
-    1,
-    attributeName.toLowerCase(),
-    null,
-    !0,
-    !0
-  );
-});
-var VALID_ATTRIBUTE_NAME_REGEX = RegExp(
+    "undefined" === typeof window ||
+    "undefined" === typeof window.document ||
+    "undefined" === typeof window.document.createElement
+  ),
+  VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
   ),
   illegalAttributeNameCache = {},
@@ -841,13 +715,6 @@ function isAttributeNameSafe(attributeName) {
     return (validatedAttributeNameCache[attributeName] = !0);
   illegalAttributeNameCache[attributeName] = !0;
   return !1;
-}
-var isJavaScriptProtocol =
-  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
-function sanitizeURL(url) {
-  return isJavaScriptProtocol.test("" + url)
-    ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
-    : url;
 }
 function setValueForAttribute(node, name, value) {
   if (isAttributeNameSafe(name))
@@ -871,6 +738,24 @@ function setValueForAttribute(node, name, value) {
         enableTrustedTypesIntegration ? value : "" + value
       );
     }
+}
+function setValueForNamespacedAttribute(node, namespace, name, value) {
+  if (null === value) node.removeAttribute(name);
+  else {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        node.removeAttribute(name);
+        return;
+    }
+    node.setAttributeNS(
+      namespace,
+      name,
+      enableTrustedTypesIntegration ? value : "" + value
+    );
+  }
 }
 var prefix;
 function describeBuiltInComponentFrame(name) {
@@ -1285,6 +1170,110 @@ function setTextContent(node, text) {
   }
   node.textContent = text;
 }
+function setValueForStyles(node, styles) {
+  if (null != styles && "object" !== typeof styles)
+    throw Error(formatProdErrorMessage(62));
+  node = node.style;
+  for (var styleName in styles)
+    if (styles.hasOwnProperty(styleName)) {
+      var value = styles[styleName],
+        isCustomProperty = 0 === styleName.indexOf("--");
+      if (null == value || "boolean" === typeof value || "" === value)
+        isCustomProperty
+          ? node.setProperty(styleName, "")
+          : "float" === styleName
+          ? (node.cssFloat = "")
+          : (node[styleName] = "");
+      else if (isCustomProperty) node.setProperty(styleName, value);
+      else {
+        if ((isCustomProperty = "number" === typeof value && 0 !== value)) {
+          a: switch (styleName) {
+            case "animationIterationCount":
+            case "aspectRatio":
+            case "borderImageOutset":
+            case "borderImageSlice":
+            case "borderImageWidth":
+            case "boxFlex":
+            case "boxFlexGroup":
+            case "boxOrdinalGroup":
+            case "columnCount":
+            case "columns":
+            case "flex":
+            case "flexGrow":
+            case "flexPositive":
+            case "flexShrink":
+            case "flexNegative":
+            case "flexOrder":
+            case "gridArea":
+            case "gridRow":
+            case "gridRowEnd":
+            case "gridRowSpan":
+            case "gridRowStart":
+            case "gridColumn":
+            case "gridColumnEnd":
+            case "gridColumnSpan":
+            case "gridColumnStart":
+            case "fontWeight":
+            case "lineClamp":
+            case "lineHeight":
+            case "opacity":
+            case "order":
+            case "orphans":
+            case "scale":
+            case "tabSize":
+            case "widows":
+            case "zIndex":
+            case "zoom":
+            case "fillOpacity":
+            case "floodOpacity":
+            case "stopOpacity":
+            case "strokeDasharray":
+            case "strokeDashoffset":
+            case "strokeMiterlimit":
+            case "strokeOpacity":
+            case "strokeWidth":
+            case "MozAnimationIterationCount":
+            case "MozBoxFlex":
+            case "MozBoxFlexGroup":
+            case "MozLineClamp":
+            case "msAnimationIterationCount":
+            case "msFlex":
+            case "msZoom":
+            case "msFlexGrow":
+            case "msFlexNegative":
+            case "msFlexOrder":
+            case "msFlexPositive":
+            case "msFlexShrink":
+            case "msGridColumn":
+            case "msGridColumnSpan":
+            case "msGridRow":
+            case "msGridRowSpan":
+            case "WebkitAnimationIterationCount":
+            case "WebkitBoxFlex":
+            case "WebKitBoxFlexGroup":
+            case "WebkitBoxOrdinalGroup":
+            case "WebkitColumnCount":
+            case "WebkitColumns":
+            case "WebkitFlex":
+            case "WebkitFlexGrow":
+            case "WebkitFlexPositive":
+            case "WebkitFlexShrink":
+            case "WebkitLineClamp":
+              isCustomProperty = !0;
+              break a;
+            default:
+              isCustomProperty = !1;
+          }
+          isCustomProperty = !isCustomProperty;
+        }
+        isCustomProperty
+          ? (node[styleName] = value + "px")
+          : "float" === styleName
+          ? (node.cssFloat = value)
+          : (node[styleName] = ("" + value).trim());
+      }
+    }
+}
 function isCustomElement(tagName) {
   if (-1 === tagName.indexOf("-")) return !1;
   switch (tagName) {
@@ -1300,6 +1289,13 @@ function isCustomElement(tagName) {
     default:
       return !0;
   }
+}
+var isJavaScriptProtocol =
+  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*:/i;
+function sanitizeURL(url) {
+  return isJavaScriptProtocol.test("" + url)
+    ? "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')"
+    : url;
 }
 function getEventTarget(nativeEvent) {
   nativeEvent = nativeEvent.target || nativeEvent.srcElement || window;
@@ -12559,19 +12555,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$329;
+  var JSCompiler_inline_result$jscomp$336;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1557 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1557) {
-      var element$jscomp$inline_1558 = document.createElement("div");
-      element$jscomp$inline_1558.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1557 =
-        "function" === typeof element$jscomp$inline_1558.oninput;
+    var isSupported$jscomp$inline_1566 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1566) {
+      var element$jscomp$inline_1567 = document.createElement("div");
+      element$jscomp$inline_1567.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1566 =
+        "function" === typeof element$jscomp$inline_1567.oninput;
     }
-    JSCompiler_inline_result$jscomp$329 = isSupported$jscomp$inline_1557;
-  } else JSCompiler_inline_result$jscomp$329 = !1;
+    JSCompiler_inline_result$jscomp$336 = isSupported$jscomp$inline_1566;
+  } else JSCompiler_inline_result$jscomp$336 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$329 &&
+    JSCompiler_inline_result$jscomp$336 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -12880,20 +12876,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1598 = 0;
-  i$jscomp$inline_1598 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1598++
+  var i$jscomp$inline_1607 = 0;
+  i$jscomp$inline_1607 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1607++
 ) {
-  var eventName$jscomp$inline_1599 =
-      simpleEventPluginEvents[i$jscomp$inline_1598],
-    domEventName$jscomp$inline_1600 =
-      eventName$jscomp$inline_1599.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1601 =
-      eventName$jscomp$inline_1599[0].toUpperCase() +
-      eventName$jscomp$inline_1599.slice(1);
+  var eventName$jscomp$inline_1608 =
+      simpleEventPluginEvents[i$jscomp$inline_1607],
+    domEventName$jscomp$inline_1609 =
+      eventName$jscomp$inline_1608.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1610 =
+      eventName$jscomp$inline_1608[0].toUpperCase() +
+      eventName$jscomp$inline_1608.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1600,
-    "on" + capitalizedEvent$jscomp$inline_1601
+    domEventName$jscomp$inline_1609,
+    "on" + capitalizedEvent$jscomp$inline_1610
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -13725,111 +13721,10 @@ function normalizeMarkupForTextOrAttribute(markup) {
     .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, "");
 }
 function noop$1() {}
-function setProp(domElement, tag, key, value, isCustomElementTag, props) {
+function setProp(domElement, tag, key, value, props) {
   switch (key) {
     case "style":
-      if (null != value && "object" !== typeof value)
-        throw Error(formatProdErrorMessage(62));
-      key = value;
-      domElement = domElement.style;
-      for (var styleName in key)
-        if (key.hasOwnProperty(styleName))
-          if (
-            ((value = key[styleName]),
-            (props = 0 === styleName.indexOf("--")),
-            null == value || "boolean" === typeof value || "" === value)
-          )
-            props
-              ? domElement.setProperty(styleName, "")
-              : "float" === styleName
-              ? (domElement.cssFloat = "")
-              : (domElement[styleName] = "");
-          else if (props) domElement.setProperty(styleName, value);
-          else {
-            if (!(props = "number" !== typeof value || 0 === value))
-              a: switch (styleName) {
-                case "animationIterationCount":
-                case "aspectRatio":
-                case "borderImageOutset":
-                case "borderImageSlice":
-                case "borderImageWidth":
-                case "boxFlex":
-                case "boxFlexGroup":
-                case "boxOrdinalGroup":
-                case "columnCount":
-                case "columns":
-                case "flex":
-                case "flexGrow":
-                case "flexPositive":
-                case "flexShrink":
-                case "flexNegative":
-                case "flexOrder":
-                case "gridArea":
-                case "gridRow":
-                case "gridRowEnd":
-                case "gridRowSpan":
-                case "gridRowStart":
-                case "gridColumn":
-                case "gridColumnEnd":
-                case "gridColumnSpan":
-                case "gridColumnStart":
-                case "fontWeight":
-                case "lineClamp":
-                case "lineHeight":
-                case "opacity":
-                case "order":
-                case "orphans":
-                case "scale":
-                case "tabSize":
-                case "widows":
-                case "zIndex":
-                case "zoom":
-                case "fillOpacity":
-                case "floodOpacity":
-                case "stopOpacity":
-                case "strokeDasharray":
-                case "strokeDashoffset":
-                case "strokeMiterlimit":
-                case "strokeOpacity":
-                case "strokeWidth":
-                case "MozAnimationIterationCount":
-                case "MozBoxFlex":
-                case "MozBoxFlexGroup":
-                case "MozLineClamp":
-                case "msAnimationIterationCount":
-                case "msFlex":
-                case "msZoom":
-                case "msFlexGrow":
-                case "msFlexNegative":
-                case "msFlexOrder":
-                case "msFlexPositive":
-                case "msFlexShrink":
-                case "msGridColumn":
-                case "msGridColumnSpan":
-                case "msGridRow":
-                case "msGridRowSpan":
-                case "WebkitAnimationIterationCount":
-                case "WebkitBoxFlex":
-                case "WebKitBoxFlexGroup":
-                case "WebkitBoxOrdinalGroup":
-                case "WebkitColumnCount":
-                case "WebkitColumns":
-                case "WebkitFlex":
-                case "WebkitFlexGrow":
-                case "WebkitFlexPositive":
-                case "WebkitFlexShrink":
-                case "WebkitLineClamp":
-                  props = !0;
-                  break a;
-                default:
-                  props = !1;
-              }
-            props
-              ? "float" === styleName
-                ? (domElement.cssFloat = value)
-                : (domElement[styleName] = ("" + value).trim())
-              : (domElement[styleName] = value + "px");
-          }
+      setValueForStyles(domElement, value);
       break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
@@ -13875,109 +13770,503 @@ function setProp(domElement, tag, key, value, isCustomElementTag, props) {
       break;
     case "autoFocus":
       break;
+    case "src":
+    case "href":
+    case "action":
+      if ("" === value) {
+        domElement.removeAttribute(key);
+        break;
+      }
+    case "formAction":
+      if (
+        null == value ||
+        "function" === typeof value ||
+        "symbol" === typeof value ||
+        "boolean" === typeof value
+      ) {
+        domElement.removeAttribute(key);
+        break;
+      }
+      props = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      domElement.setAttribute(key, props);
+      break;
+    case "xlinkHref":
+      if (
+        null == value ||
+        "function" === typeof value ||
+        "boolean" === typeof value ||
+        "symbol" === typeof value
+      ) {
+        domElement.removeAttribute("xlink:href");
+        break;
+      }
+      key = sanitizeURL(enableTrustedTypesIntegration ? value : "" + value);
+      domElement.setAttributeNS(
+        "http://www.w3.org/1999/xlink",
+        "xlink:href",
+        key
+      );
+      break;
+    case "contentEditable":
+    case "spellCheck":
+    case "draggable":
+    case "value":
+    case "autoReverse":
+    case "externalResourcesRequired":
+    case "focusable":
+    case "preserveAlpha":
+      null != value && "function" !== typeof value && "symbol" !== typeof value
+        ? domElement.setAttribute(key, value)
+        : domElement.removeAttribute(key);
+      break;
+    case "allowFullScreen":
+    case "async":
+    case "autoPlay":
+    case "controls":
+    case "default":
+    case "defer":
+    case "disabled":
+    case "disablePictureInPicture":
+    case "disableRemotePlayback":
+    case "formNoValidate":
+    case "hidden":
+    case "loop":
+    case "noModule":
+    case "noValidate":
+    case "open":
+    case "playsInline":
+    case "readOnly":
+    case "required":
+    case "reversed":
+    case "scoped":
+    case "seamless":
+    case "itemScope":
+      value && "function" !== typeof value && "symbol" !== typeof value
+        ? domElement.setAttribute(key, "")
+        : domElement.removeAttribute(key);
+      break;
+    case "capture":
+    case "download":
+      !0 === value
+        ? domElement.setAttribute(key, "")
+        : !1 !== value &&
+          null != value &&
+          "function" !== typeof value &&
+          "symbol" !== typeof value
+        ? domElement.setAttribute(key, value)
+        : domElement.removeAttribute(key);
+      break;
+    case "cols":
+    case "rows":
+    case "size":
+    case "span":
+      null != value &&
+      "function" !== typeof value &&
+      "symbol" !== typeof value &&
+      !isNaN(value) &&
+      1 <= value
+        ? domElement.setAttribute(key, value)
+        : domElement.removeAttribute(key);
+      break;
+    case "rowSpan":
+    case "start":
+      null == value ||
+      "function" === typeof value ||
+      "symbol" === typeof value ||
+      isNaN(value)
+        ? domElement.removeAttribute(key)
+        : domElement.setAttribute(key, value);
+      break;
+    case "acceptCharset":
+      setValueForAttribute(domElement, "accept-charset", value);
+      break;
+    case "className":
+      setValueForAttribute(domElement, "class", value);
+      break;
+    case "htmlFor":
+      setValueForAttribute(domElement, "for", value);
+      break;
+    case "httpEquiv":
+      setValueForAttribute(domElement, "http-equiv", value);
+      break;
+    case "tabIndex":
+      setValueForAttribute(domElement, "tabindex", value);
+      break;
+    case "crossOrigin":
+      setValueForAttribute(domElement, "crossorigin", value);
+      break;
+    case "accentHeight":
+      setValueForAttribute(domElement, "accent-height", value);
+      break;
+    case "alignmentBaseline":
+      setValueForAttribute(domElement, "alignment-baseline", value);
+      break;
+    case "arabicForm":
+      setValueForAttribute(domElement, "arabic-form", value);
+      break;
+    case "baselineShift":
+      setValueForAttribute(domElement, "baseline-shift", value);
+      break;
+    case "capHeight":
+      setValueForAttribute(domElement, "cap-height", value);
+      break;
+    case "clipPath":
+      setValueForAttribute(domElement, "clip-path", value);
+      break;
+    case "clipRule":
+      setValueForAttribute(domElement, "clip-rule", value);
+      break;
+    case "colorInterpolation":
+      setValueForAttribute(domElement, "color-interpolation", value);
+      break;
+    case "colorInterpolationFilters":
+      setValueForAttribute(domElement, "color-interpolation-filters", value);
+      break;
+    case "colorProfile":
+      setValueForAttribute(domElement, "color-profile", value);
+      break;
+    case "colorRendering":
+      setValueForAttribute(domElement, "color-rendering", value);
+      break;
+    case "dominantBaseline":
+      setValueForAttribute(domElement, "dominant-baseline", value);
+      break;
+    case "enableBackground":
+      setValueForAttribute(domElement, "enable-background", value);
+      break;
+    case "fillOpacity":
+      setValueForAttribute(domElement, "fill-opacity", value);
+      break;
+    case "fillRule":
+      setValueForAttribute(domElement, "fill-rule", value);
+      break;
+    case "floodColor":
+      setValueForAttribute(domElement, "flood-color", value);
+      break;
+    case "floodOpacity":
+      setValueForAttribute(domElement, "flood-opacity", value);
+      break;
+    case "fontFamily":
+      setValueForAttribute(domElement, "font-family", value);
+      break;
+    case "fontSize":
+      setValueForAttribute(domElement, "font-size", value);
+      break;
+    case "fontSizeAdjust":
+      setValueForAttribute(domElement, "font-size-adjust", value);
+      break;
+    case "fontStretch":
+      setValueForAttribute(domElement, "font-stretch", value);
+      break;
+    case "fontStyle":
+      setValueForAttribute(domElement, "font-style", value);
+      break;
+    case "fontVariant":
+      setValueForAttribute(domElement, "font-variant", value);
+      break;
+    case "fontWeight":
+      setValueForAttribute(domElement, "font-weight", value);
+      break;
+    case "glyphName":
+      setValueForAttribute(domElement, "glyph-name", value);
+      break;
+    case "glyphOrientationHorizontal":
+      setValueForAttribute(domElement, "glyph-orientation-horizontal", value);
+      break;
+    case "glyphOrientationVertical":
+      setValueForAttribute(domElement, "glyph-orientation-vertical", value);
+      break;
+    case "horizAdvX":
+      setValueForAttribute(domElement, "horiz-adv-x", value);
+      break;
+    case "horizOriginX":
+      setValueForAttribute(domElement, "horiz-origin-x", value);
+      break;
+    case "imageRendering":
+      setValueForAttribute(domElement, "image-rendering", value);
+      break;
+    case "letterSpacing":
+      setValueForAttribute(domElement, "letter-spacing", value);
+      break;
+    case "lightingColor":
+      setValueForAttribute(domElement, "lighting-color", value);
+      break;
+    case "markerEnd":
+      setValueForAttribute(domElement, "marker-end", value);
+      break;
+    case "markerMid":
+      setValueForAttribute(domElement, "marker-mid", value);
+      break;
+    case "markerStart":
+      setValueForAttribute(domElement, "marker-start", value);
+      break;
+    case "overlinePosition":
+      setValueForAttribute(domElement, "overline-position", value);
+      break;
+    case "overlineThickness":
+      setValueForAttribute(domElement, "overline-thickness", value);
+      break;
+    case "paintOrder":
+      setValueForAttribute(domElement, "paint-order", value);
+      break;
+    case "panose-1":
+      setValueForAttribute(domElement, "panose-1", value);
+      break;
+    case "pointerEvents":
+      setValueForAttribute(domElement, "pointer-events", value);
+      break;
+    case "renderingIntent":
+      setValueForAttribute(domElement, "rendering-intent", value);
+      break;
+    case "shapeRendering":
+      setValueForAttribute(domElement, "shape-rendering", value);
+      break;
+    case "stopColor":
+      setValueForAttribute(domElement, "stop-color", value);
+      break;
+    case "stopOpacity":
+      setValueForAttribute(domElement, "stop-opacity", value);
+      break;
+    case "strikethroughPosition":
+      setValueForAttribute(domElement, "strikethrough-position", value);
+      break;
+    case "strikethroughThickness":
+      setValueForAttribute(domElement, "strikethrough-thickness", value);
+      break;
+    case "strokeDasharray":
+      setValueForAttribute(domElement, "stroke-dasharray", value);
+      break;
+    case "strokeDashoffset":
+      setValueForAttribute(domElement, "stroke-dashoffset", value);
+      break;
+    case "strokeLinecap":
+      setValueForAttribute(domElement, "stroke-linecap", value);
+      break;
+    case "strokeLinejoin":
+      setValueForAttribute(domElement, "stroke-linejoin", value);
+      break;
+    case "strokeMiterlimit":
+      setValueForAttribute(domElement, "stroke-miterlimit", value);
+      break;
+    case "strokeOpacity":
+      setValueForAttribute(domElement, "stroke-opacity", value);
+      break;
+    case "strokeWidth":
+      setValueForAttribute(domElement, "stroke-width", value);
+      break;
+    case "textAnchor":
+      setValueForAttribute(domElement, "text-anchor", value);
+      break;
+    case "textDecoration":
+      setValueForAttribute(domElement, "text-decoration", value);
+      break;
+    case "textRendering":
+      setValueForAttribute(domElement, "text-rendering", value);
+      break;
+    case "transformOrigin":
+      setValueForAttribute(domElement, "transform-origin", value);
+      break;
+    case "underlinePosition":
+      setValueForAttribute(domElement, "underline-position", value);
+      break;
+    case "underlineThickness":
+      setValueForAttribute(domElement, "underline-thickness", value);
+      break;
+    case "unicodeBidi":
+      setValueForAttribute(domElement, "unicode-bidi", value);
+      break;
+    case "unicodeRange":
+      setValueForAttribute(domElement, "unicode-range", value);
+      break;
+    case "unitsPerEm":
+      setValueForAttribute(domElement, "units-per-em", value);
+      break;
+    case "vAlphabetic":
+      setValueForAttribute(domElement, "v-alphabetic", value);
+      break;
+    case "vHanging":
+      setValueForAttribute(domElement, "v-hanging", value);
+      break;
+    case "vIdeographic":
+      setValueForAttribute(domElement, "v-ideographic", value);
+      break;
+    case "vMathematical":
+      setValueForAttribute(domElement, "v-mathematical", value);
+      break;
+    case "vectorEffect":
+      setValueForAttribute(domElement, "vector-effect", value);
+      break;
+    case "vertAdvY":
+      setValueForAttribute(domElement, "vert-adv-y", value);
+      break;
+    case "vertOriginX":
+      setValueForAttribute(domElement, "vert-origin-x", value);
+      break;
+    case "vertOriginY":
+      setValueForAttribute(domElement, "vert-origin-y", value);
+      break;
+    case "wordSpacing":
+      setValueForAttribute(domElement, "word-spacing", value);
+      break;
+    case "writingMode":
+      setValueForAttribute(domElement, "writing-mode", value);
+      break;
+    case "xmlnsXlink":
+      setValueForAttribute(domElement, "xmlns:xlink", value);
+      break;
+    case "xHeight":
+      setValueForAttribute(domElement, "x-height", value);
+      break;
+    case "xlinkActuate":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:actuate",
+        value
+      );
+      break;
+    case "xlinkArcrole":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:arcrole",
+        value
+      );
+      break;
+    case "xlinkRole":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:role",
+        value
+      );
+      break;
+    case "xlinkShow":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:show",
+        value
+      );
+      break;
+    case "xlinkTitle":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:title",
+        value
+      );
+      break;
+    case "xlinkType":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/1999/xlink",
+        "xlink:type",
+        value
+      );
+      break;
+    case "xmlBase":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/XML/1998/namespace",
+        "xml:base",
+        value
+      );
+      break;
+    case "xmlLang":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/XML/1998/namespace",
+        "xml:lang",
+        value
+      );
+      break;
+    case "xmlSpace":
+      setValueForNamespacedAttribute(
+        domElement,
+        "http://www.w3.org/XML/1998/namespace",
+        "xml:space",
+        value
+      );
+      break;
+    case "innerText":
+    case "textContent":
+      if (enableCustomElementPropertySupport) break;
+    default:
+      (!(2 < key.length) ||
+        ("o" !== key[0] && "O" !== key[0]) ||
+        ("n" !== key[1] && "N" !== key[1])) &&
+        setValueForAttribute(domElement, key, value);
+  }
+}
+function setPropOnCustomElement(domElement, tag, key, value, props) {
+  switch (key) {
+    case "style":
+      setValueForStyles(domElement, value);
+      break;
+    case "dangerouslySetInnerHTML":
+      if (null != value) {
+        if ("object" !== typeof value || !("__html" in value))
+          throw Error(formatProdErrorMessage(61));
+        key = value.__html;
+        if (null != key) {
+          if (null != props.children) throw Error(formatProdErrorMessage(60));
+          disableIEWorkarounds
+            ? (domElement.innerHTML = key)
+            : setInnerHTML$1(domElement, key);
+        }
+      }
+      break;
+    case "children":
+      "string" === typeof value
+        ? setTextContent(domElement, value)
+        : "number" === typeof value && setTextContent(domElement, "" + value);
+      break;
+    case "onScroll":
+      null != value && listenToNonDelegatedEvent("scroll", domElement);
+      break;
+    case "onClick":
+      null != value && (domElement.onclick = noop$1);
+      break;
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "innerHTML":
+      break;
     case "innerText":
     case "textContent":
       if (enableCustomElementPropertySupport) break;
     default:
       if (!registrationNameDependencies.hasOwnProperty(key))
-        if (isCustomElementTag)
-          if (enableCustomElementPropertySupport)
-            a: {
-              styleName = value;
-              if (
-                "o" === key[0] &&
-                "n" === key[1] &&
-                ((value = key.endsWith("Capture")),
-                (props = key.substr(2, value ? key.length - 9 : void 0)),
-                (tag = getFiberCurrentPropsFromNode(domElement)),
-                (tag = null != tag ? tag[key] : null),
-                "function" === typeof tag &&
-                  domElement.removeEventListener(props, tag, value),
-                "function" === typeof styleName)
-              ) {
-                "function" !== typeof tag &&
-                  null !== tag &&
+        if (enableCustomElementPropertySupport)
+          a: {
+            props = value;
+            if ("o" === key[0] && "n" === key[1]) {
+              tag = key.endsWith("Capture");
+              value = key.substr(2, tag ? key.length - 9 : void 0);
+              var prevProps = getFiberCurrentPropsFromNode(domElement);
+              prevProps = null != prevProps ? prevProps[key] : null;
+              "function" === typeof prevProps &&
+                domElement.removeEventListener(value, prevProps, tag);
+              if ("function" === typeof props) {
+                "function" !== typeof prevProps &&
+                  null !== prevProps &&
                   (key in domElement
                     ? (domElement[key] = null)
                     : domElement.hasAttribute(key) &&
                       domElement.removeAttribute(key));
-                domElement.addEventListener(props, styleName, value);
+                domElement.addEventListener(value, props, tag);
                 break a;
               }
-              key in domElement
-                ? (domElement[key] = styleName)
-                : !0 === styleName
-                ? domElement.setAttribute(key, "")
-                : setValueForAttribute(domElement, key, styleName);
             }
-          else
-            "boolean" === typeof value && (value = "" + value),
-              setValueForAttribute(domElement, key, value);
-        else if (
-          !(2 < key.length) ||
-          ("o" !== key[0] && "O" !== key[0]) ||
-          ("n" !== key[1] && "N" !== key[1])
-        )
-          if (
-            ((styleName = properties.hasOwnProperty(key)
-              ? properties[key]
-              : null),
-            null !== styleName)
-          )
-            a: if (((key = styleName.attributeName), null === value))
-              domElement.removeAttribute(key);
-            else {
-              switch (typeof value) {
-                case "undefined":
-                case "function":
-                case "symbol":
-                  domElement.removeAttribute(key);
-                  break a;
-                case "boolean":
-                  if (!styleName.acceptsBooleans) {
-                    domElement.removeAttribute(key);
-                    break a;
-                  }
-              }
-              if (styleName.removeEmptyString && "" === value)
-                domElement.removeAttribute(key);
-              else
-                switch (styleName.type) {
-                  case 3:
-                    value
-                      ? domElement.setAttribute(key, "")
-                      : domElement.removeAttribute(key);
-                    break;
-                  case 4:
-                    !0 === value
-                      ? domElement.setAttribute(key, "")
-                      : !1 === value
-                      ? domElement.removeAttribute(key)
-                      : domElement.setAttribute(key, value);
-                    break;
-                  case 5:
-                    isNaN(value)
-                      ? domElement.removeAttribute(key)
-                      : domElement.setAttribute(key, value);
-                    break;
-                  case 6:
-                    !isNaN(value) && 1 <= value
-                      ? domElement.setAttribute(key, value)
-                      : domElement.removeAttribute(key);
-                    break;
-                  default:
-                    enableTrustedTypesIntegration
-                      ? (value = styleName.sanitizeURL
-                          ? sanitizeURL(value)
-                          : value)
-                      : ((value = "" + value),
-                        styleName.sanitizeURL && (value = sanitizeURL(value))),
-                      (styleName = styleName.attributeNamespace)
-                        ? domElement.setAttributeNS(styleName, key, value)
-                        : domElement.setAttribute(key, value);
-                }
-            }
-          else setValueForAttribute(domElement, key, value);
+            key in domElement
+              ? (domElement[key] = props)
+              : !0 === props
+              ? domElement.setAttribute(key, "")
+              : setValueForAttribute(domElement, key, props);
+          }
+        else
+          "boolean" === typeof value && (value = "" + value),
+            setValueForAttribute(domElement, key, value);
   }
 }
 function setInitialProperties(domElement, tag, props) {
@@ -14009,7 +14298,7 @@ function setInitialProperties(domElement, tag, props) {
                   throw Error(formatProdErrorMessage(137, tag));
                 break;
               default:
-                setProp(domElement, tag, propKey, propValue, !1, props);
+                setProp(domElement, tag, propKey, propValue, props);
             }
         }
       track(domElement);
@@ -14018,16 +14307,16 @@ function setInitialProperties(domElement, tag, props) {
     case "select":
       domElement._wrapperState = { wasMultiple: !!props.multiple };
       listenToNonDelegatedEvent("invalid", domElement);
-      for (propValue in props)
+      for (var propKey$196 in props)
         if (
-          props.hasOwnProperty(propValue) &&
-          ((propKey = props[propValue]), null != propKey)
+          props.hasOwnProperty(propKey$196) &&
+          ((propKey = props[propKey$196]), null != propKey)
         )
-          switch (propValue) {
+          switch (propKey$196) {
             case "value":
               break;
             default:
-              setProp(domElement, tag, propValue, propKey, !1, props);
+              setProp(domElement, tag, propKey$196, propKey, props);
           }
       domElement.multiple = !!props.multiple;
       tag = props.value;
@@ -14039,12 +14328,12 @@ function setInitialProperties(domElement, tag, props) {
     case "textarea":
       initWrapperState(domElement, props);
       listenToNonDelegatedEvent("invalid", domElement);
-      for (var propKey$197 in props)
+      for (var propKey$198 in props)
         if (
-          props.hasOwnProperty(propKey$197) &&
-          ((propKey = props[propKey$197]), null != propKey)
+          props.hasOwnProperty(propKey$198) &&
+          ((propKey = props[propKey$198]), null != propKey)
         )
-          switch (propKey$197) {
+          switch (propKey$198) {
             case "value":
               break;
             case "children":
@@ -14053,18 +14342,18 @@ function setInitialProperties(domElement, tag, props) {
               if (null != propKey) throw Error(formatProdErrorMessage(91));
               break;
             default:
-              setProp(domElement, tag, propKey$197, propKey, !1, props);
+              setProp(domElement, tag, propKey$198, propKey, props);
           }
       track(domElement);
       postMountWrapper(domElement);
       return;
     case "option":
-      for (var propKey$199 in props)
+      for (var propKey$200 in props)
         if (
-          props.hasOwnProperty(propKey$199) &&
-          ((propKey = props[propKey$199]), null != propKey)
+          props.hasOwnProperty(propKey$200) &&
+          ((propKey = props[propKey$200]), null != propKey)
         )
-          switch (propKey$199) {
+          switch (propKey$200) {
             case "selected":
               domElement.selected =
                 propKey &&
@@ -14072,7 +14361,7 @@ function setInitialProperties(domElement, tag, props) {
                 "symbol" !== typeof propKey;
               break;
             default:
-              setProp(domElement, tag, propKey$199, propKey, !1, props);
+              setProp(domElement, tag, propKey$200, propKey, props);
           }
       null != props.value &&
         domElement.setAttribute("value", "" + getToStringValue(props.value));
@@ -14114,26 +14403,31 @@ function setInitialProperties(domElement, tag, props) {
     case "track":
     case "wbr":
     case "menuitem":
-      for (var propKey$201 in props)
+      for (var propKey$202 in props)
         if (
-          props.hasOwnProperty(propKey$201) &&
-          ((propKey = props[propKey$201]), null != propKey)
+          props.hasOwnProperty(propKey$202) &&
+          ((propKey = props[propKey$202]), null != propKey)
         )
-          switch (propKey$201) {
+          switch (propKey$202) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(137, tag));
             default:
-              setProp(domElement, tag, propKey$201, propKey, !1, props);
+              setProp(domElement, tag, propKey$202, propKey, props);
           }
       return;
   }
-  propKey = isCustomElement(tag);
-  for (node in props)
-    props.hasOwnProperty(node) &&
-      ((propValue = props[node]),
-      null != propValue &&
-        setProp(domElement, tag, node, propValue, propKey, props));
+  if (isCustomElement(tag))
+    for (node in props)
+      props.hasOwnProperty(node) &&
+        ((propKey = props[node]),
+        null != propKey &&
+          setPropOnCustomElement(domElement, tag, node, propKey, props));
+  else
+    for (propValue in props)
+      props.hasOwnProperty(propValue) &&
+        ((propKey = props[propValue]),
+        null != propKey && setProp(domElement, tag, propValue, propKey, props));
 }
 function updateProperties(
   domElement,
@@ -14171,7 +14465,7 @@ function updateProperties(
               throw Error(formatProdErrorMessage(137, tag));
             break;
           default:
-            setProp(domElement, tag, propKey, propValue, !1, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
         }
       }
       updateWrapper$1(domElement, nextProps);
@@ -14186,7 +14480,7 @@ function updateProperties(
           case "value":
             break;
           default:
-            setProp(domElement, tag, propValue, propKey, !1, nextProps);
+            setProp(domElement, tag, propValue, propKey, nextProps);
         }
       updatePayload = domElement._wrapperState.wasMultiple;
       domElement._wrapperState.wasMultiple = !!nextProps.multiple;
@@ -14223,7 +14517,7 @@ function updateProperties(
             if (null != propKey) throw Error(formatProdErrorMessage(91));
             break;
           default:
-            setProp(domElement, tag, propValue, propKey, !1, nextProps);
+            setProp(domElement, tag, propValue, propKey, nextProps);
         }
       updateWrapper(domElement, nextProps);
       return;
@@ -14241,7 +14535,7 @@ function updateProperties(
               "symbol" !== typeof propKey;
             break;
           default:
-            setProp(domElement, tag, propValue, propKey, !1, nextProps);
+            setProp(domElement, tag, propValue, propKey, nextProps);
         }
       return;
     case "img":
@@ -14270,20 +14564,28 @@ function updateProperties(
             if (null != propKey) throw Error(formatProdErrorMessage(137, tag));
             break;
           default:
-            setProp(domElement, tag, propValue, propKey, !1, nextProps);
+            setProp(domElement, tag, propValue, propKey, nextProps);
         }
       return;
   }
-  lastProps = isCustomElement(tag);
-  for (propValue = 0; propValue < updatePayload.length; propValue += 2)
-    setProp(
-      domElement,
-      tag,
-      updatePayload[propValue],
-      updatePayload[propValue + 1],
-      lastProps,
-      nextProps
-    );
+  if (isCustomElement(tag))
+    for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
+      setPropOnCustomElement(
+        domElement,
+        tag,
+        updatePayload[lastProps],
+        updatePayload[lastProps + 1],
+        nextProps
+      );
+  else
+    for (lastProps = 0; lastProps < updatePayload.length; lastProps += 2)
+      setProp(
+        domElement,
+        tag,
+        updatePayload[lastProps],
+        updatePayload[lastProps + 1],
+        nextProps
+      );
 }
 var Dispatcher$1 = Internals.Dispatcher,
   eventsEnabled = null,
@@ -14613,14 +14915,14 @@ function preinit$1(href, options) {
       switch (as) {
         case "style":
           as = getResourcesFromRoot(resourceRoot).hoistableStyles;
-          var key$221 = getStyleKey(href),
+          var key$227 = getStyleKey(href),
             precedence = options.precedence || "default",
-            resource = as.get(key$221);
+            resource = as.get(key$227);
           if (resource) break;
           var state = { loading: 0, preload: null };
           if (
             (resource = resourceRoot.querySelector(
-              getStylesheetSelectorFromKey(key$221)
+              getStylesheetSelectorFromKey(key$227)
             ))
           )
             state.loading = 1;
@@ -14631,7 +14933,7 @@ function preinit$1(href, options) {
               "data-precedence": precedence,
               crossOrigin: options.crossOrigin
             };
-            (options = preloadPropsMap.get(key$221)) &&
+            (options = preloadPropsMap.get(key$227)) &&
               adoptPreloadPropsForStylesheet(href, options);
             var link = (resource = (
               resourceRoot.ownerDocument || resourceRoot
@@ -14657,15 +14959,15 @@ function preinit$1(href, options) {
             count: 1,
             state: state
           };
-          as.set(key$221, resource);
+          as.set(key$227, resource);
           break;
         case "script":
           (as = getResourcesFromRoot(resourceRoot).hoistableScripts),
-            (key$221 = getScriptKey(href)),
-            (precedence = as.get(key$221)),
+            (key$227 = getScriptKey(href)),
+            (precedence = as.get(key$227)),
             precedence ||
               ((precedence = resourceRoot.querySelector(
-                "script[async]" + key$221
+                "script[async]" + key$227
               )),
               precedence ||
                 ((href = {
@@ -14674,7 +14976,7 @@ function preinit$1(href, options) {
                   crossOrigin: options.crossOrigin,
                   integrity: options.integrity
                 }),
-                (options = preloadPropsMap.get(key$221)) &&
+                (options = preloadPropsMap.get(key$227)) &&
                   adoptPreloadPropsForScript(href, options),
                 (options = resourceRoot.ownerDocument || resourceRoot),
                 (precedence = options.createElement("script")),
@@ -14687,13 +14989,13 @@ function preinit$1(href, options) {
                 count: 1,
                 state: null
               }),
-              as.set(key$221, precedence));
+              as.set(key$227, precedence));
       }
     else if ("style" === as || "script" === as)
       if ((resourceRoot = getDocumentForPreloads())) {
-        key$221 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
-        precedence = key$221 =
-          'link[rel="preload"][as="' + as + '"][href="' + key$221 + '"]';
+        key$227 = escapeSelectorAttributeValueInsideDoubleQuotes(href);
+        precedence = key$227 =
+          'link[rel="preload"][as="' + as + '"][href="' + key$227 + '"]';
         switch (as) {
           case "style":
             precedence = getStyleKey(href);
@@ -14710,7 +15012,7 @@ function preinit$1(href, options) {
             integrity: options.integrity
           }),
           preloadPropsMap.set(precedence, href),
-          null === resourceRoot.querySelector(key$221) &&
+          null === resourceRoot.querySelector(key$227) &&
             ((options = resourceRoot.createElement("link")),
             setInitialProperties(options, "link", href),
             markNodeAsHoistable(options),
@@ -14743,17 +15045,17 @@ function getResource(type, currentProps, pendingProps) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$230 = getResourcesFromRoot(currentProps).hoistableStyles,
-          resource$231 = styles$230.get(type);
-        resource$231 ||
+        var styles$236 = getResourcesFromRoot(currentProps).hoistableStyles,
+          resource$237 = styles$236.get(type);
+        resource$237 ||
           ((currentProps = currentProps.ownerDocument || currentProps),
-          (resource$231 = {
+          (resource$237 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$230.set(type, resource$231),
+          styles$236.set(type, resource$237),
           preloadPropsMap.has(type) ||
             preloadStylesheet(
               currentProps,
@@ -14768,9 +15070,9 @@ function getResource(type, currentProps, pendingProps) {
                 hrefLang: pendingProps.hrefLang,
                 referrerPolicy: pendingProps.referrerPolicy
               },
-              resource$231.state
+              resource$237.state
             ));
-        return resource$231;
+        return resource$237;
       }
       return null;
     case "script":
@@ -14842,36 +15144,36 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = key);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$236 = hoistableRoot.querySelector(
+        var instance$242 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$236)
+        if (instance$242)
           return (
-            (resource.instance = instance$236),
-            markNodeAsHoistable(instance$236),
-            instance$236
+            (resource.instance = instance$242),
+            markNodeAsHoistable(instance$242),
+            instance$242
           );
         key = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(key, styleProps);
-        instance$236 = (
+        instance$242 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$236);
-        var linkInstance = instance$236;
+        markNodeAsHoistable(instance$242);
+        var linkInstance = instance$242;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$236, "link", key);
+        setInitialProperties(instance$242, "link", key);
         resource.state.loading |= 4;
-        insertStylesheet(instance$236, props.precedence, hoistableRoot);
-        return (resource.instance = instance$236);
+        insertStylesheet(instance$242, props.precedence, hoistableRoot);
+        return (resource.instance = instance$242);
       case "script":
-        instance$236 = getScriptKey(props.src);
+        instance$242 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            "script[async]" + instance$236
+            "script[async]" + instance$242
           ))
         )
           return (
@@ -14880,7 +15182,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         key = props;
-        if ((styleProps = preloadPropsMap.get(instance$236)))
+        if ((styleProps = preloadPropsMap.get(instance$242)))
           (key = assign({}, props)),
             adoptPreloadPropsForScript(key, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -15861,11 +16163,11 @@ function legacyCreateRootFromDOMContainer(
     if ("function" === typeof callback) {
       var originalCallback = callback;
       callback = function () {
-        var instance = getPublicRootInstance(root$257);
+        var instance = getPublicRootInstance(root$263);
         originalCallback.call(instance);
       };
     }
-    var root$257 = createHydrationContainer(
+    var root$263 = createHydrationContainer(
       initialChildren,
       callback,
       container,
@@ -15877,23 +16179,23 @@ function legacyCreateRootFromDOMContainer(
       noopOnRecoverableError,
       null
     );
-    container._reactRootContainer = root$257;
-    container[internalContainerInstanceKey] = root$257.current;
+    container._reactRootContainer = root$263;
+    container[internalContainerInstanceKey] = root$263.current;
     listenToAllSupportedEvents(
       8 === container.nodeType ? container.parentNode : container
     );
     flushSync$1();
-    return root$257;
+    return root$263;
   }
   clearContainer(container);
   if ("function" === typeof callback) {
-    var originalCallback$258 = callback;
+    var originalCallback$264 = callback;
     callback = function () {
-      var instance = getPublicRootInstance(root$259);
-      originalCallback$258.call(instance);
+      var instance = getPublicRootInstance(root$265);
+      originalCallback$264.call(instance);
     };
   }
-  var root$259 = createFiberRoot(
+  var root$265 = createFiberRoot(
     container,
     0,
     !1,
@@ -15905,15 +16207,15 @@ function legacyCreateRootFromDOMContainer(
     noopOnRecoverableError,
     null
   );
-  container._reactRootContainer = root$259;
-  container[internalContainerInstanceKey] = root$259.current;
+  container._reactRootContainer = root$265;
+  container[internalContainerInstanceKey] = root$265.current;
   listenToAllSupportedEvents(
     8 === container.nodeType ? container.parentNode : container
   );
   flushSync$1(function () {
-    updateContainer(initialChildren, root$259, parentComponent, callback);
+    updateContainer(initialChildren, root$265, parentComponent, callback);
   });
-  return root$259;
+  return root$265;
 }
 function legacyRenderSubtreeIntoContainer(
   parentComponent,
@@ -15975,10 +16277,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1812 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-0cb76979",
+  version: "18.3.0-www-classic-ea906405",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2208 = {
+var internals$jscomp$inline_2195 = {
   bundleType: devToolsConfig$jscomp$inline_1812.bundleType,
   version: devToolsConfig$jscomp$inline_1812.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1812.rendererPackageName,
@@ -16005,19 +16307,19 @@ var internals$jscomp$inline_2208 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-0cb76979"
+  reconcilerVersion: "18.3.0-www-classic-ea906405"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2209 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2196 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2209.isDisabled &&
-    hook$jscomp$inline_2209.supportsFiber
+    !hook$jscomp$inline_2196.isDisabled &&
+    hook$jscomp$inline_2196.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2209.inject(
-        internals$jscomp$inline_2208
+      (rendererID = hook$jscomp$inline_2196.inject(
+        internals$jscomp$inline_2195
       )),
-        (injectedHook = hook$jscomp$inline_2209);
+        (injectedHook = hook$jscomp$inline_2196);
     } catch (err) {}
 }
 assign(Internals, {
@@ -16245,4 +16547,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-0cb76979";
+exports.version = "18.3.0-www-classic-ea906405";

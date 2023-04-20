@@ -2468,370 +2468,6 @@ var canUseDOM = !!(
   typeof window.document.createElement !== "undefined"
 );
 
-// A simple string attribute.
-// Attributes that aren't in the filter are presumed to have this type.
-var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
-// "enumerated" attributes with "true" and "false" as possible values.
-// When true, it should be set to a "true" string.
-// When false, it should be set to a "false" string.
-
-var BOOLEANISH_STRING = 2; // A real boolean attribute.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-
-var BOOLEAN = 3; // An attribute that can be used as a flag as well as with a value.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-// For any other value, should be present with that value.
-
-var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a numeric.
-// When falsy, it should be removed.
-
-var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
-// When falsy, it should be removed.
-
-var POSITIVE_NUMERIC = 6;
-function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
-} // $FlowFixMe[missing-this-annot]
-
-function PropertyInfoRecord(
-  type,
-  attributeName,
-  attributeNamespace,
-  sanitizeURL,
-  removeEmptyString
-) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
-} // When adding attributes to this list, be sure to also add them to
-// the `possibleStandardNames` module to ensure casing and incorrect
-// name warnings.
-
-var properties = {}; // A few React string attributes have a different name.
-// This is a mapping from React prop names to the attribute names.
-
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  var name = _ref[0],
-    attributeName = _ref[1];
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" HTML attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
-  name
-) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML boolean attributes.
-
-[
-  "allowFullScreen",
-  "async", // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  "autoFocus",
-  "autoPlay",
-  "controls",
-  "default",
-  "defer",
-  "disabled",
-  "disablePictureInPicture",
-  "disableRemotePlayback",
-  "formNoValidate",
-  "hidden",
-  "loop",
-  "noModule",
-  "noValidate",
-  "open",
-  "playsInline",
-  "readOnly",
-  "required",
-  "reversed",
-  "scoped",
-  "seamless", // Microdata
-  "itemScope"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEAN,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that are "overloaded booleans": they behave like
-// booleans, but can also accept a string value.
-
-[
-  "capture",
-  "download" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    OVERLOADED_BOOLEAN,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be positive numbers.
-
-[
-  "cols",
-  "rows",
-  "size",
-  "span" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    POSITIVE_NUMERIC,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be numbers.
-
-["rowSpan", "start"].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    NUMERIC,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-});
-var CAMELIZE = /[\-\:]([a-z])/g;
-
-var capitalize = function (token) {
-  return token[1].toUpperCase();
-}; // This is a list of all SVG attributes that need special casing, namespacing,
-// or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML attribute filter.
-// Some of these attributes can be hard to find. This list was created by
-// scraping the MDN documentation.
-
-[
-  "accent-height",
-  "alignment-baseline",
-  "arabic-form",
-  "baseline-shift",
-  "cap-height",
-  "clip-path",
-  "clip-rule",
-  "color-interpolation",
-  "color-interpolation-filters",
-  "color-profile",
-  "color-rendering",
-  "dominant-baseline",
-  "enable-background",
-  "fill-opacity",
-  "fill-rule",
-  "flood-color",
-  "flood-opacity",
-  "font-family",
-  "font-size",
-  "font-size-adjust",
-  "font-stretch",
-  "font-style",
-  "font-variant",
-  "font-weight",
-  "glyph-name",
-  "glyph-orientation-horizontal",
-  "glyph-orientation-vertical",
-  "horiz-adv-x",
-  "horiz-origin-x",
-  "image-rendering",
-  "letter-spacing",
-  "lighting-color",
-  "marker-end",
-  "marker-mid",
-  "marker-start",
-  "overline-position",
-  "overline-thickness",
-  "paint-order",
-  "panose-1",
-  "pointer-events",
-  "rendering-intent",
-  "shape-rendering",
-  "stop-color",
-  "stop-opacity",
-  "strikethrough-position",
-  "strikethrough-thickness",
-  "stroke-dasharray",
-  "stroke-dashoffset",
-  "stroke-linecap",
-  "stroke-linejoin",
-  "stroke-miterlimit",
-  "stroke-opacity",
-  "stroke-width",
-  "text-anchor",
-  "text-decoration",
-  "text-rendering",
-  "transform-origin",
-  "underline-position",
-  "underline-thickness",
-  "unicode-bidi",
-  "unicode-range",
-  "units-per-em",
-  "v-alphabetic",
-  "v-hanging",
-  "v-ideographic",
-  "v-mathematical",
-  "vector-effect",
-  "vert-adv-y",
-  "vert-origin-x",
-  "vert-origin-y",
-  "word-spacing",
-  "writing-mode",
-  "xmlns:xlink",
-  "x-height" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xlink namespace.
-
-[
-  "xlink:actuate",
-  "xlink:arcrole",
-  "xlink:role",
-  "xlink:show",
-  "xlink:title",
-  "xlink:type" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    "http://www.w3.org/1999/xlink",
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xml namespace.
-
-[
-  "xml:base",
-  "xml:lang",
-  "xml:space" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    false, // sanitizeURL
-    false
-  );
-}); // These attribute exists both in HTML and SVG.
-// The attribute name is case-sensitive in SVG so we can't just use
-// the React name like we do for attributes that exist only in HTML.
-
-["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
-
-var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[xlinkHref] = new PropertyInfoRecord(
-  STRING,
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  true, // sanitizeURL
-  false
-);
-var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[formAction] = new PropertyInfoRecord(
-  STRING,
-  "formaction", // attributeName
-  null, // attributeNamespace
-  true, // sanitizeURL
-  false
-);
-["src", "href", "action"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    true, // sanitizeURL
-    true
-  );
-});
-
 /* eslint-disable max-len */
 
 var ATTRIBUTE_NAME_START_CHAR =
@@ -2868,212 +2504,6 @@ function isAttributeNameSafe(attributeName) {
   return false;
 }
 
-// and any newline or tab are filtered out as if they're not part of the URL.
-// https://url.spec.whatwg.org/#url-parsing
-// Tab or newline are defined as \r\n\t:
-// https://infra.spec.whatwg.org/#ascii-tab-or-newline
-// A C0 control is a code point in the range \u0000 NULL to \u001F
-// INFORMATION SEPARATOR ONE, inclusive:
-// https://infra.spec.whatwg.org/#c0-control-or-space
-
-/* eslint-disable max-len */
-
-var isJavaScriptProtocol =
-  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
-
-function sanitizeURL(url) {
-  // We should never have symbols here because they get filtered out elsewhere.
-  // eslint-disable-next-line react-internal/safe-string-coercion
-  var stringifiedURL = "" + url;
-
-  {
-    if (isJavaScriptProtocol.test(stringifiedURL)) {
-      // Return a different javascript: url that doesn't cause any side-effects and just
-      // throws if ever visited.
-      // eslint-disable-next-line no-script-url
-      return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
-    }
-  }
-
-  return url;
-}
-
-/**
- * Get the value for a property on a node. Only used in DEV for SSR validation.
- * The "expected" argument is used as a hint of what the expected value is.
- * Some properties have multiple equivalent values.
- */
-
-function getValueForProperty(node, name, expected, propertyInfo) {
-  {
-    var attributeName = propertyInfo.attributeName;
-
-    if (!node.hasAttribute(attributeName)) {
-      // shouldRemoveAttribute
-      switch (typeof expected) {
-        case "function":
-        case "symbol":
-          // eslint-disable-line
-          return expected;
-
-        case "boolean": {
-          if (!propertyInfo.acceptsBooleans) {
-            return expected;
-          }
-        }
-      }
-
-      switch (propertyInfo.type) {
-        case BOOLEAN: {
-          if (!expected) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case OVERLOADED_BOOLEAN: {
-          if (expected === false) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case NUMERIC: {
-          if (isNaN(expected)) {
-            return expected;
-          }
-
-          break;
-        }
-
-        case POSITIVE_NUMERIC: {
-          if (isNaN(expected) || expected < 1) {
-            return expected;
-          }
-
-          break;
-        }
-      }
-
-      {
-        if (propertyInfo.removeEmptyString && expected === "") {
-          {
-            if (name === "src") {
-              error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  "This may cause the browser to download the whole page again over the network. " +
-                  "To fix this, either do not render the element at all " +
-                  "or pass null to %s instead of an empty string.",
-                name,
-                name
-              );
-            } else {
-              error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  "To fix this, either do not render the element at all " +
-                  "or pass null to %s instead of an empty string.",
-                name,
-                name
-              );
-            }
-          }
-
-          return expected;
-        }
-      }
-
-      return expected === undefined ? undefined : null;
-    } // Even if this property uses a namespace we use getAttribute
-    // because we assume its namespaced name is the same as our config.
-    // To use getAttributeNS we need the local name which we don't have
-    // in our config atm.
-
-    var value = node.getAttribute(attributeName);
-
-    if (expected == null) {
-      // We had an attribute but shouldn't have had one, so read it
-      // for the error message.
-      return value;
-    } // shouldRemoveAttribute
-
-    switch (typeof expected) {
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        return value;
-    }
-
-    switch (propertyInfo.type) {
-      case BOOLEAN: {
-        if (expected) {
-          // If this was a boolean, it doesn't matter what the value is
-          // the fact that we have it is the same as the expected.
-          // As long as it's positive.
-          return expected;
-        }
-
-        return value;
-      }
-
-      case OVERLOADED_BOOLEAN: {
-        if (value === "") {
-          return true;
-        }
-
-        if (expected === false) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-
-      case NUMERIC: {
-        if (isNaN(expected)) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-
-      case POSITIVE_NUMERIC: {
-        if (isNaN(expected) || expected < 1) {
-          // We had an attribute but shouldn't have had one, so read it
-          // for the error message.
-          return value;
-        }
-
-        break;
-      }
-    }
-
-    {
-      checkAttributeStringCoercion(expected, name);
-    }
-
-    if (propertyInfo.sanitizeURL) {
-      // We have already verified this above.
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      if (value === "" + sanitizeURL(expected)) {
-        return expected;
-      }
-
-      return value;
-    } // We have already verified this above.
-    // eslint-disable-next-line react-internal/safe-string-coercion
-
-    if (value === "" + expected) {
-      return expected;
-    }
-
-    return value;
-  }
-}
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
  * The third argument is used as a hint of what the expected value is. Some
@@ -3171,152 +2601,6 @@ function getValueForAttributeOnCustomComponent(node, name, expected) {
     return value;
   }
 }
-/**
- * Sets the value for a property on a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- * @param {*} value
- */
-
-function setValueForProperty(node, propertyInfo, value) {
-  var attributeName = propertyInfo.attributeName;
-
-  if (value === null) {
-    node.removeAttribute(attributeName);
-    return;
-  } // shouldRemoveAttribute
-
-  switch (typeof value) {
-    case "undefined":
-    case "function":
-    case "symbol":
-      // eslint-disable-line
-      node.removeAttribute(attributeName);
-      return;
-
-    case "boolean": {
-      if (!propertyInfo.acceptsBooleans) {
-        node.removeAttribute(attributeName);
-        return;
-      }
-    }
-  }
-
-  {
-    if (propertyInfo.removeEmptyString && value === "") {
-      {
-        if (attributeName === "src") {
-          error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              "This may cause the browser to download the whole page again over the network. " +
-              "To fix this, either do not render the element at all " +
-              "or pass null to %s instead of an empty string.",
-            attributeName,
-            attributeName
-          );
-        } else {
-          error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              "To fix this, either do not render the element at all " +
-              "or pass null to %s instead of an empty string.",
-            attributeName,
-            attributeName
-          );
-        }
-      }
-
-      node.removeAttribute(attributeName);
-      return;
-    }
-  }
-
-  switch (propertyInfo.type) {
-    case BOOLEAN:
-      if (value) {
-        node.setAttribute(attributeName, "");
-      } else {
-        node.removeAttribute(attributeName);
-        return;
-      }
-
-      break;
-
-    case OVERLOADED_BOOLEAN:
-      if (value === true) {
-        node.setAttribute(attributeName, "");
-      } else if (value === false) {
-        node.removeAttribute(attributeName);
-      } else {
-        {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-
-        node.setAttribute(attributeName, value);
-      }
-
-      return;
-
-    case NUMERIC:
-      if (!isNaN(value)) {
-        {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-
-        node.setAttribute(attributeName, value);
-      } else {
-        node.removeAttribute(attributeName);
-      }
-
-      break;
-
-    case POSITIVE_NUMERIC:
-      if (!isNaN(value) && value >= 1) {
-        {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-
-        node.setAttribute(attributeName, value);
-      } else {
-        node.removeAttribute(attributeName);
-      }
-
-      break;
-
-    default: {
-      {
-        checkAttributeStringCoercion(value, attributeName);
-      }
-
-      var attributeValue; // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-
-      if (enableTrustedTypesIntegration) {
-        if (propertyInfo.sanitizeURL) {
-          attributeValue = sanitizeURL(value);
-        } else {
-          attributeValue = value;
-        }
-      } else {
-        // We have already verified this above.
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        attributeValue = "" + value;
-
-        if (propertyInfo.sanitizeURL) {
-          attributeValue = sanitizeURL(attributeValue);
-        }
-      }
-
-      var attributeNamespace = propertyInfo.attributeNamespace;
-
-      if (attributeNamespace) {
-        node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
-      } else {
-        node.setAttribute(attributeName, attributeValue);
-      }
-    }
-  }
-}
 function setValueForAttribute(node, name, value) {
   if (isAttributeNameSafe(name)) {
     // If the prop isn't in the special list, treat it as a simple attribute.
@@ -3350,6 +2634,32 @@ function setValueForAttribute(node, name, value) {
 
     node.setAttribute(name, enableTrustedTypesIntegration ? value : "" + value);
   }
+}
+function setValueForNamespacedAttribute(node, namespace, name, value) {
+  if (value === null) {
+    node.removeAttribute(name);
+    return;
+  }
+
+  switch (typeof value) {
+    case "undefined":
+    case "function":
+    case "symbol":
+    case "boolean": {
+      node.removeAttribute(name);
+      return;
+    }
+  }
+
+  {
+    checkAttributeStringCoercion(value, name);
+  }
+
+  node.setAttributeNS(
+    namespace,
+    name,
+    enableTrustedTypesIntegration ? value : "" + value
+  );
 }
 function setValueForPropertyOnCustomComponent(node, name, value) {
   if (name[0] === "o" && name[1] === "n") {
@@ -5594,6 +4904,22 @@ function createDangerousStringForStyles(styles) {
  */
 
 function setValueForStyles(node, styles) {
+  if (styles != null && typeof styles !== "object") {
+    throw new Error(
+      "The `style` prop expects a mapping from style properties to values, " +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        "using JSX."
+    );
+  }
+
+  {
+    if (styles) {
+      // Freeze the next style object so that we can assume it won't be
+      // mutated. We have already warned for this in the past.
+      Object.freeze(styles);
+    }
+  }
+
   var style = node.style;
 
   for (var styleName in styles) {
@@ -6556,9 +5882,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
 
       warnedProperties[name] = true;
       return true;
-    }
-
-    var propertyInfo = getPropertyInfo(name); // Known attributes should match the casing specified in the property config.
+    } // Known attributes should match the casing specified in the property config.
 
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];
@@ -6615,22 +5939,51 @@ function validateProperty(tagName, name, value, eventRegistry) {
     switch (typeof value) {
       case "boolean": {
         switch (name) {
+          case "autoFocus":
           case "checked":
-          case "selected":
           case "multiple":
-          case "muted": {
+          case "muted":
+          case "selected":
+          case "contentEditable":
+          case "spellCheck":
+          case "draggable":
+          case "value":
+          case "autoReverse":
+          case "externalResourcesRequired":
+          case "focusable":
+          case "preserveAlpha":
+          case "allowFullScreen":
+          case "async":
+          case "autoPlay":
+          case "controls":
+          case "default":
+          case "defer":
+          case "disabled":
+          case "disablePictureInPicture":
+          case "disableRemotePlayback":
+          case "formNoValidate":
+          case "hidden":
+          case "loop":
+          case "noModule":
+          case "noValidate":
+          case "open":
+          case "playsInline":
+          case "readOnly":
+          case "required":
+          case "reversed":
+          case "scoped":
+          case "seamless":
+          case "itemScope":
+          case "capture":
+          case "download": {
             // Boolean properties can accept boolean values
             return true;
           }
 
           default: {
-            if (propertyInfo === null) {
-              var prefix = name.toLowerCase().slice(0, 5);
+            var prefix = name.toLowerCase().slice(0, 5);
 
-              if (prefix === "data-" || prefix === "aria-") {
-                return true;
-              }
-            } else if (propertyInfo.acceptsBooleans) {
+            if (prefix === "data-" || prefix === "aria-") {
               return true;
             }
 
@@ -6682,14 +6035,34 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case "checked":
             case "selected":
             case "multiple":
-            case "muted": {
+            case "muted":
+            case "allowFullScreen":
+            case "async":
+            case "autoPlay":
+            case "controls":
+            case "default":
+            case "defer":
+            case "disabled":
+            case "disablePictureInPicture":
+            case "disableRemotePlayback":
+            case "formNoValidate":
+            case "hidden":
+            case "loop":
+            case "noModule":
+            case "noValidate":
+            case "open":
+            case "playsInline":
+            case "readOnly":
+            case "required":
+            case "reversed":
+            case "scoped":
+            case "seamless":
+            case "itemScope": {
               break;
             }
 
             default: {
-              if (propertyInfo === null || propertyInfo.type !== BOOLEAN) {
-                return true;
-              }
+              return true;
             }
           }
 
@@ -6760,6 +6133,36 @@ function validateProperties(type, props, eventRegistry) {
   }
 
   warnUnknownProperties(type, props, eventRegistry);
+}
+
+// and any newline or tab are filtered out as if they're not part of the URL.
+// https://url.spec.whatwg.org/#url-parsing
+// Tab or newline are defined as \r\n\t:
+// https://infra.spec.whatwg.org/#ascii-tab-or-newline
+// A C0 control is a code point in the range \u0000 NULL to \u001F
+// INFORMATION SEPARATOR ONE, inclusive:
+// https://infra.spec.whatwg.org/#c0-control-or-space
+
+/* eslint-disable max-len */
+
+var isJavaScriptProtocol =
+  /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
+
+function sanitizeURL(url) {
+  // We should never have symbols here because they get filtered out elsewhere.
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  var stringifiedURL = "" + url;
+
+  {
+    if (isJavaScriptProtocol.test(stringifiedURL)) {
+      // Return a different javascript: url that doesn't cause any side-effects and just
+      // throws if ever visited.
+      // eslint-disable-next-line no-script-url
+      return "javascript:throw new Error('React has blocked a javascript: URL as a security precaution.')";
+    }
+  }
+
+  return url;
 }
 
 var IS_EVENT_HANDLE_NON_MANAGED_NODE = 1;
@@ -33762,7 +33165,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-01a8837f";
+var ReactVersion = "18.3.0-www-modern-35aa2c7f";
 
 function createPortal$1(
   children,
@@ -38791,6 +38194,10 @@ function warnForPropDifference(propName, serverValue, clientValue) {
       return;
     }
 
+    if (serverValue === clientValue) {
+      return;
+    }
+
     var normalizedClientValue = normalizeMarkupForTextOrAttribute(clientValue);
     var normalizedServerValue = normalizeMarkupForTextOrAttribute(serverValue);
 
@@ -38931,26 +38338,12 @@ function trapClickOnNonInteractiveElement(node) {
   // TODO: Only do this for the relevant Safaris maybe?
   node.onclick = noop$1;
 }
+var xlinkNamespace = "http://www.w3.org/1999/xlink";
+var xmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
-function setProp(domElement, tag, key, value, isCustomElementTag, props) {
+function setProp(domElement, tag, key, value, props) {
   switch (key) {
     case "style": {
-      if (value != null && typeof value !== "object") {
-        throw new Error(
-          "The `style` prop expects a mapping from style properties to values, " +
-            "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-            "using JSX."
-        );
-      }
-
-      {
-        if (value) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(value);
-        }
-      } // Relies on `updateStylesByID` not mutating `styleUpdates`.
-
       setValueForStyles(domElement, value);
       break;
     }
@@ -39064,6 +38457,736 @@ function setProp(domElement, tag, key, value, isCustomElementTag, props) {
       // on server rendering (but we *do* want to emit it in SSR).
       break;
     }
+    // These attributes accept URLs. These must not allow javascript: URLS.
+
+    case "src":
+    case "href":
+    case "action": {
+      if (value === "") {
+        {
+          if (key === "src") {
+            error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                "This may cause the browser to download the whole page again over the network. " +
+                "To fix this, either do not render the element at all " +
+                "or pass null to %s instead of an empty string.",
+              key,
+              key
+            );
+          } else {
+            error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                "To fix this, either do not render the element at all " +
+                "or pass null to %s instead of an empty string.",
+              key,
+              key
+            );
+          }
+        }
+
+        domElement.removeAttribute(key);
+        break;
+      }
+    }
+
+    // Fall through to the last case which shouldn't remove empty strings.
+    // eslint-disable-next-line no-fallthrough
+
+    case "formAction": {
+      if (
+        value == null ||
+        typeof value === "function" ||
+        typeof value === "symbol" ||
+        typeof value === "boolean"
+      ) {
+        domElement.removeAttribute(key);
+        break;
+      } // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+
+      {
+        checkAttributeStringCoercion(value, key);
+      }
+
+      var sanitizedValue = sanitizeURL(
+        enableTrustedTypesIntegration ? value : "" + value
+      );
+      domElement.setAttribute(key, sanitizedValue);
+      break;
+    }
+
+    case "xlinkHref": {
+      if (
+        value == null ||
+        typeof value === "function" ||
+        typeof value === "boolean" ||
+        typeof value === "symbol"
+      ) {
+        domElement.removeAttribute("xlink:href");
+        break;
+      } // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+
+      {
+        checkAttributeStringCoercion(value, key);
+      }
+
+      var _sanitizedValue = sanitizeURL(
+        enableTrustedTypesIntegration ? value : "" + value
+      );
+
+      domElement.setAttributeNS(xlinkNamespace, "xlink:href", _sanitizedValue);
+      break;
+    }
+
+    case "contentEditable":
+    case "spellCheck":
+    case "draggable":
+    case "value":
+    case "autoReverse":
+    case "externalResourcesRequired":
+    case "focusable":
+    case "preserveAlpha": {
+      // Booleanish String
+      // These are "enumerated" attributes that accept "true" and "false".
+      // In React, we let users pass `true` and `false` even though technically
+      // these aren't boolean attributes (they are coerced to strings).
+      // The SVG attributes are case-sensitive. Since the HTML attributes are
+      // insensitive they also work even though we canonically use lower case.
+      if (
+        value != null &&
+        typeof value !== "function" &&
+        typeof value !== "symbol"
+      ) {
+        {
+          checkAttributeStringCoercion(value, key);
+        }
+
+        domElement.setAttribute(key, value);
+      } else {
+        domElement.removeAttribute(key);
+      }
+
+      break;
+    }
+    // Boolean
+
+    case "allowFullScreen":
+    case "async":
+    case "autoPlay":
+    case "controls":
+    case "default":
+    case "defer":
+    case "disabled":
+    case "disablePictureInPicture":
+    case "disableRemotePlayback":
+    case "formNoValidate":
+    case "hidden":
+    case "loop":
+    case "noModule":
+    case "noValidate":
+    case "open":
+    case "playsInline":
+    case "readOnly":
+    case "required":
+    case "reversed":
+    case "scoped":
+    case "seamless":
+    case "itemScope": {
+      if (value && typeof value !== "function" && typeof value !== "symbol") {
+        domElement.setAttribute(key, "");
+      } else {
+        domElement.removeAttribute(key);
+      }
+
+      break;
+    }
+    // Overloaded Boolean
+
+    case "capture":
+    case "download": {
+      // An attribute that can be used as a flag as well as with a value.
+      // When true, it should be present (set either to an empty string or its name).
+      // When false, it should be omitted.
+      // For any other value, should be present with that value.
+      if (value === true) {
+        domElement.setAttribute(key, "");
+      } else if (
+        value !== false &&
+        value != null &&
+        typeof value !== "function" &&
+        typeof value !== "symbol"
+      ) {
+        {
+          checkAttributeStringCoercion(value, key);
+        }
+
+        domElement.setAttribute(key, value);
+      } else {
+        domElement.removeAttribute(key);
+      }
+
+      break;
+    }
+
+    case "cols":
+    case "rows":
+    case "size":
+    case "span": {
+      // These are HTML attributes that must be positive numbers.
+      if (
+        value != null &&
+        typeof value !== "function" &&
+        typeof value !== "symbol" &&
+        !isNaN(value) &&
+        value >= 1
+      ) {
+        {
+          checkAttributeStringCoercion(value, key);
+        }
+
+        domElement.setAttribute(key, value);
+      } else {
+        domElement.removeAttribute(key);
+      }
+
+      break;
+    }
+
+    case "rowSpan":
+    case "start": {
+      // These are HTML attributes that must be numbers.
+      if (
+        value != null &&
+        typeof value !== "function" &&
+        typeof value !== "symbol" &&
+        !isNaN(value)
+      ) {
+        {
+          checkAttributeStringCoercion(value, key);
+        }
+
+        domElement.setAttribute(key, value);
+      } else {
+        domElement.removeAttribute(key);
+      }
+
+      break;
+    }
+    // A few React string attributes have a different name.
+    // This is a mapping from React prop names to the attribute names.
+
+    case "acceptCharset":
+      setValueForAttribute(domElement, "accept-charset", value);
+      break;
+
+    case "className":
+      setValueForAttribute(domElement, "class", value);
+      break;
+
+    case "htmlFor":
+      setValueForAttribute(domElement, "for", value);
+      break;
+
+    case "httpEquiv":
+      setValueForAttribute(domElement, "http-equiv", value);
+      break;
+    // HTML and SVG attributes, but the SVG attribute is case sensitive.
+
+    case "tabIndex":
+      setValueForAttribute(domElement, "tabindex", value);
+      break;
+
+    case "crossOrigin":
+      setValueForAttribute(domElement, "crossorigin", value);
+      break;
+    // This is a list of all SVG attributes that need special casing.
+    // Regular attributes that just accept strings.
+
+    case "accentHeight":
+      setValueForAttribute(domElement, "accent-height", value);
+      break;
+
+    case "alignmentBaseline":
+      setValueForAttribute(domElement, "alignment-baseline", value);
+      break;
+
+    case "arabicForm":
+      setValueForAttribute(domElement, "arabic-form", value);
+      break;
+
+    case "baselineShift":
+      setValueForAttribute(domElement, "baseline-shift", value);
+      break;
+
+    case "capHeight":
+      setValueForAttribute(domElement, "cap-height", value);
+      break;
+
+    case "clipPath":
+      setValueForAttribute(domElement, "clip-path", value);
+      break;
+
+    case "clipRule":
+      setValueForAttribute(domElement, "clip-rule", value);
+      break;
+
+    case "colorInterpolation":
+      setValueForAttribute(domElement, "color-interpolation", value);
+      break;
+
+    case "colorInterpolationFilters":
+      setValueForAttribute(domElement, "color-interpolation-filters", value);
+      break;
+
+    case "colorProfile":
+      setValueForAttribute(domElement, "color-profile", value);
+      break;
+
+    case "colorRendering":
+      setValueForAttribute(domElement, "color-rendering", value);
+      break;
+
+    case "dominantBaseline":
+      setValueForAttribute(domElement, "dominant-baseline", value);
+      break;
+
+    case "enableBackground":
+      setValueForAttribute(domElement, "enable-background", value);
+      break;
+
+    case "fillOpacity":
+      setValueForAttribute(domElement, "fill-opacity", value);
+      break;
+
+    case "fillRule":
+      setValueForAttribute(domElement, "fill-rule", value);
+      break;
+
+    case "floodColor":
+      setValueForAttribute(domElement, "flood-color", value);
+      break;
+
+    case "floodOpacity":
+      setValueForAttribute(domElement, "flood-opacity", value);
+      break;
+
+    case "fontFamily":
+      setValueForAttribute(domElement, "font-family", value);
+      break;
+
+    case "fontSize":
+      setValueForAttribute(domElement, "font-size", value);
+      break;
+
+    case "fontSizeAdjust":
+      setValueForAttribute(domElement, "font-size-adjust", value);
+      break;
+
+    case "fontStretch":
+      setValueForAttribute(domElement, "font-stretch", value);
+      break;
+
+    case "fontStyle":
+      setValueForAttribute(domElement, "font-style", value);
+      break;
+
+    case "fontVariant":
+      setValueForAttribute(domElement, "font-variant", value);
+      break;
+
+    case "fontWeight":
+      setValueForAttribute(domElement, "font-weight", value);
+      break;
+
+    case "glyphName":
+      setValueForAttribute(domElement, "glyph-name", value);
+      break;
+
+    case "glyphOrientationHorizontal":
+      setValueForAttribute(domElement, "glyph-orientation-horizontal", value);
+      break;
+
+    case "glyphOrientationVertical":
+      setValueForAttribute(domElement, "glyph-orientation-vertical", value);
+      break;
+
+    case "horizAdvX":
+      setValueForAttribute(domElement, "horiz-adv-x", value);
+      break;
+
+    case "horizOriginX":
+      setValueForAttribute(domElement, "horiz-origin-x", value);
+      break;
+
+    case "imageRendering":
+      setValueForAttribute(domElement, "image-rendering", value);
+      break;
+
+    case "letterSpacing":
+      setValueForAttribute(domElement, "letter-spacing", value);
+      break;
+
+    case "lightingColor":
+      setValueForAttribute(domElement, "lighting-color", value);
+      break;
+
+    case "markerEnd":
+      setValueForAttribute(domElement, "marker-end", value);
+      break;
+
+    case "markerMid":
+      setValueForAttribute(domElement, "marker-mid", value);
+      break;
+
+    case "markerStart":
+      setValueForAttribute(domElement, "marker-start", value);
+      break;
+
+    case "overlinePosition":
+      setValueForAttribute(domElement, "overline-position", value);
+      break;
+
+    case "overlineThickness":
+      setValueForAttribute(domElement, "overline-thickness", value);
+      break;
+
+    case "paintOrder":
+      setValueForAttribute(domElement, "paint-order", value);
+      break;
+
+    case "panose-1":
+      setValueForAttribute(domElement, "panose-1", value);
+      break;
+
+    case "pointerEvents":
+      setValueForAttribute(domElement, "pointer-events", value);
+      break;
+
+    case "renderingIntent":
+      setValueForAttribute(domElement, "rendering-intent", value);
+      break;
+
+    case "shapeRendering":
+      setValueForAttribute(domElement, "shape-rendering", value);
+      break;
+
+    case "stopColor":
+      setValueForAttribute(domElement, "stop-color", value);
+      break;
+
+    case "stopOpacity":
+      setValueForAttribute(domElement, "stop-opacity", value);
+      break;
+
+    case "strikethroughPosition":
+      setValueForAttribute(domElement, "strikethrough-position", value);
+      break;
+
+    case "strikethroughThickness":
+      setValueForAttribute(domElement, "strikethrough-thickness", value);
+      break;
+
+    case "strokeDasharray":
+      setValueForAttribute(domElement, "stroke-dasharray", value);
+      break;
+
+    case "strokeDashoffset":
+      setValueForAttribute(domElement, "stroke-dashoffset", value);
+      break;
+
+    case "strokeLinecap":
+      setValueForAttribute(domElement, "stroke-linecap", value);
+      break;
+
+    case "strokeLinejoin":
+      setValueForAttribute(domElement, "stroke-linejoin", value);
+      break;
+
+    case "strokeMiterlimit":
+      setValueForAttribute(domElement, "stroke-miterlimit", value);
+      break;
+
+    case "strokeOpacity":
+      setValueForAttribute(domElement, "stroke-opacity", value);
+      break;
+
+    case "strokeWidth":
+      setValueForAttribute(domElement, "stroke-width", value);
+      break;
+
+    case "textAnchor":
+      setValueForAttribute(domElement, "text-anchor", value);
+      break;
+
+    case "textDecoration":
+      setValueForAttribute(domElement, "text-decoration", value);
+      break;
+
+    case "textRendering":
+      setValueForAttribute(domElement, "text-rendering", value);
+      break;
+
+    case "transformOrigin":
+      setValueForAttribute(domElement, "transform-origin", value);
+      break;
+
+    case "underlinePosition":
+      setValueForAttribute(domElement, "underline-position", value);
+      break;
+
+    case "underlineThickness":
+      setValueForAttribute(domElement, "underline-thickness", value);
+      break;
+
+    case "unicodeBidi":
+      setValueForAttribute(domElement, "unicode-bidi", value);
+      break;
+
+    case "unicodeRange":
+      setValueForAttribute(domElement, "unicode-range", value);
+      break;
+
+    case "unitsPerEm":
+      setValueForAttribute(domElement, "units-per-em", value);
+      break;
+
+    case "vAlphabetic":
+      setValueForAttribute(domElement, "v-alphabetic", value);
+      break;
+
+    case "vHanging":
+      setValueForAttribute(domElement, "v-hanging", value);
+      break;
+
+    case "vIdeographic":
+      setValueForAttribute(domElement, "v-ideographic", value);
+      break;
+
+    case "vMathematical":
+      setValueForAttribute(domElement, "v-mathematical", value);
+      break;
+
+    case "vectorEffect":
+      setValueForAttribute(domElement, "vector-effect", value);
+      break;
+
+    case "vertAdvY":
+      setValueForAttribute(domElement, "vert-adv-y", value);
+      break;
+
+    case "vertOriginX":
+      setValueForAttribute(domElement, "vert-origin-x", value);
+      break;
+
+    case "vertOriginY":
+      setValueForAttribute(domElement, "vert-origin-y", value);
+      break;
+
+    case "wordSpacing":
+      setValueForAttribute(domElement, "word-spacing", value);
+      break;
+
+    case "writingMode":
+      setValueForAttribute(domElement, "writing-mode", value);
+      break;
+
+    case "xmlnsXlink":
+      setValueForAttribute(domElement, "xmlns:xlink", value);
+      break;
+
+    case "xHeight":
+      setValueForAttribute(domElement, "x-height", value);
+      break;
+
+    case "xlinkActuate":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:actuate",
+        value
+      );
+      break;
+
+    case "xlinkArcrole":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:arcrole",
+        value
+      );
+      break;
+
+    case "xlinkRole":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:role",
+        value
+      );
+      break;
+
+    case "xlinkShow":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:show",
+        value
+      );
+      break;
+
+    case "xlinkTitle":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:title",
+        value
+      );
+      break;
+
+    case "xlinkType":
+      setValueForNamespacedAttribute(
+        domElement,
+        xlinkNamespace,
+        "xlink:type",
+        value
+      );
+      break;
+
+    case "xmlBase":
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        "xml:base",
+        value
+      );
+      break;
+
+    case "xmlLang":
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        "xml:lang",
+        value
+      );
+      break;
+
+    case "xmlSpace":
+      setValueForNamespacedAttribute(
+        domElement,
+        xmlNamespace,
+        "xml:space",
+        value
+      );
+      break;
+    // Properties that should not be allowed on custom elements.
+
+    case "innerText":
+    case "textContent":
+      if (enableCustomElementPropertySupport) {
+        break;
+      }
+
+    // eslint-disable-next-line no-fallthrough
+
+    default: {
+      if (
+        key.length > 2 &&
+        (key[0] === "o" || key[0] === "O") &&
+        (key[1] === "n" || key[1] === "N")
+      ) {
+        if (
+          registrationNameDependencies.hasOwnProperty(key) &&
+          value != null &&
+          typeof value !== "function"
+        ) {
+          warnForInvalidEventListener(key, value);
+        }
+      } else {
+        setValueForAttribute(domElement, key, value);
+      }
+    }
+  }
+}
+
+function setPropOnCustomElement(domElement, tag, key, value, props) {
+  switch (key) {
+    case "style": {
+      setValueForStyles(domElement, value);
+      break;
+    }
+
+    case "dangerouslySetInnerHTML": {
+      if (value != null) {
+        if (typeof value !== "object" || !("__html" in value)) {
+          throw new Error(
+            "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. " +
+              "Please visit https://reactjs.org/link/dangerously-set-inner-html " +
+              "for more information."
+          );
+        }
+
+        var nextHtml = value.__html;
+
+        if (nextHtml != null) {
+          if (props.children != null) {
+            throw new Error(
+              "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
+            );
+          }
+
+          if (disableIEWorkarounds) {
+            domElement.innerHTML = nextHtml;
+          } else {
+            setInnerHTML$1(domElement, nextHtml);
+          }
+        }
+      }
+
+      break;
+    }
+
+    case "children": {
+      if (typeof value === "string") {
+        setTextContent(domElement, value);
+      } else if (typeof value === "number") {
+        setTextContent(domElement, "" + value);
+      }
+
+      break;
+    }
+
+    case "onScroll": {
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+
+        listenToNonDelegatedEvent("scroll", domElement);
+      }
+
+      break;
+    }
+
+    case "onClick": {
+      // TODO: This cast may not be sound for SVG, MathML or custom elements.
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+
+        trapClickOnNonInteractiveElement(domElement);
+      }
+
+      break;
+    }
+
+    case "suppressContentEditableWarning":
+    case "suppressHydrationWarning":
+    case "innerHTML": {
+      // Noop
+      break;
+    }
 
     case "innerText": // Properties
 
@@ -39080,35 +39203,15 @@ function setProp(domElement, tag, key, value, isCustomElementTag, props) {
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (isCustomElementTag) {
-          if (enableCustomElementPropertySupport) {
-            setValueForPropertyOnCustomComponent(domElement, key, value);
-          } else {
-            if (typeof value === "boolean") {
-              // Special case before the new flag is on
-              value = "" + value;
-            }
-
-            setValueForAttribute(domElement, key, value);
-          }
+        if (enableCustomElementPropertySupport) {
+          setValueForPropertyOnCustomComponent(domElement, key, value);
         } else {
-          if (
-            // shouldIgnoreAttribute
-            // We have already filtered out reserved words.
-            key.length > 2 &&
-            (key[0] === "o" || key[0] === "O") &&
-            (key[1] === "n" || key[1] === "N")
-          ) {
-            return;
+          if (typeof value === "boolean") {
+            // Special case before the new flag is on
+            value = "" + value;
           }
 
-          var propertyInfo = getPropertyInfo(key);
-
-          if (propertyInfo !== null) {
-            setValueForProperty(domElement, propertyInfo, value);
-          } else {
-            setValueForAttribute(domElement, key, value);
-          }
+          setValueForAttribute(domElement, key, value);
         }
       }
     }
@@ -39170,7 +39273,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, propKey, propValue, false, props);
+            setProp(domElement, tag, propKey, propValue, props);
           }
         }
       } // TODO: Make sure we check if this is still unmounted or do any clean
@@ -39206,7 +39309,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey, _propValue, false, props);
+            setProp(domElement, tag, _propKey, _propValue, props);
           }
         }
       }
@@ -39256,7 +39359,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultValue is ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey2, _propValue2, false, props);
+            setProp(domElement, tag, _propKey2, _propValue2, props);
           }
         }
       } // TODO: Make sure we check if this is still unmounted or do any clean
@@ -39292,7 +39395,7 @@ function setInitialProperties(domElement, tag, props) {
           }
 
           default: {
-            setProp(domElement, tag, _propKey3, _propValue3, false, props);
+            setProp(domElement, tag, _propKey3, _propValue3, props);
           }
         }
       }
@@ -39387,7 +39490,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey4, _propValue4, false, props);
+            setProp(domElement, tag, _propKey4, _propValue4, props);
           }
         }
       }
@@ -39396,20 +39499,34 @@ function setInitialProperties(domElement, tag, props) {
     }
   }
 
-  var isCustomElementTag = isCustomElement(tag);
+  if (isCustomElement(tag)) {
+    for (var _propKey5 in props) {
+      if (!props.hasOwnProperty(_propKey5)) {
+        continue;
+      }
 
-  for (var _propKey5 in props) {
-    if (!props.hasOwnProperty(_propKey5)) {
-      continue;
+      var _propValue5 = props[_propKey5];
+
+      if (_propValue5 == null) {
+        continue;
+      }
+
+      setPropOnCustomElement(domElement, tag, _propKey5, _propValue5, props);
     }
+  } else {
+    for (var _propKey6 in props) {
+      if (!props.hasOwnProperty(_propKey6)) {
+        continue;
+      }
 
-    var _propValue5 = props[_propKey5];
+      var _propValue6 = props[_propKey6];
 
-    if (_propValue5 == null) {
-      continue;
+      if (_propValue6 == null) {
+        continue;
+      }
+
+      setProp(domElement, tag, _propKey6, _propValue6, props);
     }
-
-    setProp(domElement, tag, _propKey5, _propValue5, isCustomElementTag, props);
   }
 } // Calculate the diff between the two objects.
 
@@ -39587,7 +39704,7 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, propKey, propValue, false, nextProps);
+            setProp(domElement, tag, propKey, propValue, nextProps);
           }
         }
       } // Update the wrapper around inputs *after* updating props. This has to
@@ -39600,10 +39717,10 @@ function updateProperties(
 
     case "select": {
       for (var _i = 0; _i < updatePayload.length; _i += 2) {
-        var _propKey6 = updatePayload[_i];
-        var _propValue6 = updatePayload[_i + 1];
+        var _propKey7 = updatePayload[_i];
+        var _propValue7 = updatePayload[_i + 1];
 
-        switch (_propKey6) {
+        switch (_propKey7) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -39611,7 +39728,7 @@ function updateProperties(
           // defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey6, _propValue6, false, nextProps);
+            setProp(domElement, tag, _propKey7, _propValue7, nextProps);
           }
         }
       } // <select> value update needs to occur after <option> children
@@ -39623,10 +39740,10 @@ function updateProperties(
 
     case "textarea": {
       for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
-        var _propKey7 = updatePayload[_i2];
-        var _propValue7 = updatePayload[_i2 + 1];
+        var _propKey8 = updatePayload[_i2];
+        var _propValue8 = updatePayload[_i2 + 1];
 
-        switch (_propKey7) {
+        switch (_propKey8) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -39638,7 +39755,7 @@ function updateProperties(
           }
 
           case "dangerouslySetInnerHTML": {
-            if (_propValue7 != null) {
+            if (_propValue8 != null) {
               // TODO: Do we really need a special error message for this. It's also pretty blunt.
               throw new Error(
                 "`dangerouslySetInnerHTML` does not make sense on <textarea>."
@@ -39650,7 +39767,7 @@ function updateProperties(
           // defaultValue is ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey7, _propValue7, false, nextProps);
+            setProp(domElement, tag, _propKey8, _propValue8, nextProps);
           }
         }
       }
@@ -39661,21 +39778,21 @@ function updateProperties(
 
     case "option": {
       for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
-        var _propKey8 = updatePayload[_i3];
-        var _propValue8 = updatePayload[_i3 + 1];
+        var _propKey9 = updatePayload[_i3];
+        var _propValue9 = updatePayload[_i3 + 1];
 
-        switch (_propKey8) {
+        switch (_propKey9) {
           case "selected": {
             // TODO: Remove support for selected on option.
             domElement.selected =
-              _propValue8 &&
-              typeof _propValue8 !== "function" &&
-              typeof _propValue8 !== "symbol";
+              _propValue9 &&
+              typeof _propValue9 !== "function" &&
+              typeof _propValue9 !== "symbol";
             break;
           }
 
           default: {
-            setProp(domElement, tag, _propKey8, _propValue8, false, nextProps);
+            setProp(domElement, tag, _propKey9, _propValue9, nextProps);
           }
         }
       }
@@ -39700,13 +39817,13 @@ function updateProperties(
     case "menuitem": {
       // Void elements
       for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
-        var _propKey9 = updatePayload[_i4];
-        var _propValue9 = updatePayload[_i4 + 1];
+        var _propKey10 = updatePayload[_i4];
+        var _propValue10 = updatePayload[_i4 + 1];
 
-        switch (_propKey9) {
+        switch (_propKey10) {
           case "children":
           case "dangerouslySetInnerHTML": {
-            if (_propValue9 != null) {
+            if (_propValue10 != null) {
               // TODO: Can we make this a DEV warning to avoid this deny list?
               throw new Error(
                 tag +
@@ -39720,28 +39837,33 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey9, _propValue9, false, nextProps);
+            setProp(domElement, tag, _propKey10, _propValue10, nextProps);
           }
         }
       }
 
       return;
     }
-  }
+  } // Apply the diff.
 
-  var isCustomElementTag = isCustomElement(tag); // Apply the diff.
-
-  for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
-    var _propKey10 = updatePayload[_i5];
-    var _propValue10 = updatePayload[_i5 + 1];
-    setProp(
-      domElement,
-      tag,
-      _propKey10,
-      _propValue10,
-      isCustomElementTag,
-      nextProps
-    );
+  if (isCustomElement(tag)) {
+    for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
+      var _propKey11 = updatePayload[_i5];
+      var _propValue11 = updatePayload[_i5 + 1];
+      setPropOnCustomElement(
+        domElement,
+        tag,
+        _propKey11,
+        _propValue11,
+        nextProps
+      );
+    }
+  } else {
+    for (var _i6 = 0; _i6 < updatePayload.length; _i6 += 2) {
+      var _propKey12 = updatePayload[_i6];
+      var _propValue12 = updatePayload[_i6 + 1];
+      setProp(domElement, tag, _propKey12, _propValue12, nextProps);
+    }
   }
 }
 
@@ -39769,11 +39891,338 @@ function diffHydratedStyles(domElement, value) {
   if (canDiffStyleForHydrationWarning) {
     var expectedStyle = createDangerousStringForStyles(value);
     var serverValue = domElement.getAttribute("style");
+    warnForPropDifference("style", serverValue, expectedStyle);
+  }
+}
 
-    if (expectedStyle !== serverValue) {
-      warnForPropDifference("style", serverValue, expectedStyle);
+function hydrateAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        return;
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+        case "boolean":
+          break;
+
+        default: {
+          {
+            checkAttributeStringCoercion(value, propKey);
+          }
+
+          if (serverValue === "" + value) {
+            return;
+          }
+        }
+      }
     }
   }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateBooleanAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "function":
+      case "symbol":
+        return;
+    }
+
+    if (!value) {
+      return;
+    }
+  } else {
+    switch (typeof value) {
+      case "function":
+      case "symbol":
+        break;
+
+      default: {
+        if (value) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          // As long as it's positive.
+          return;
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateOverloadedBooleanAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+        return;
+
+      default:
+        if (value === false) {
+          return;
+        }
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+          break;
+
+        case "boolean":
+          if (value === true && serverValue === "") {
+            return;
+          }
+
+          break;
+
+        default: {
+          {
+            checkAttributeStringCoercion(value, propKey);
+          }
+
+          if (serverValue === "" + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateBooleanishAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+        return;
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+          break;
+
+        default: {
+          {
+            checkAttributeStringCoercion(value, attributeName);
+          }
+
+          if (serverValue === "" + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateNumericAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        return;
+
+      default:
+        if (isNaN(value)) {
+          return;
+        }
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+        case "boolean":
+          break;
+
+        default: {
+          if (isNaN(value)) {
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            break;
+          }
+
+          {
+            checkAttributeStringCoercion(value, propKey);
+          }
+
+          if (serverValue === "" + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydratePositiveNumericAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        return;
+
+      default:
+        if (isNaN(value) || value < 1) {
+          return;
+        }
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+        case "boolean":
+          break;
+
+        default: {
+          if (isNaN(value) || value < 1) {
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            break;
+          }
+
+          {
+            checkAttributeStringCoercion(value, propKey);
+          }
+
+          if (serverValue === "" + value) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
+}
+
+function hydrateSanitizedAttribute(
+  domElement,
+  propKey,
+  attributeName,
+  value,
+  extraAttributes
+) {
+  extraAttributes.delete(attributeName);
+  var serverValue = domElement.getAttribute(attributeName);
+
+  if (serverValue === null) {
+    switch (typeof value) {
+      case "undefined":
+      case "function":
+      case "symbol":
+      case "boolean":
+        return;
+    }
+  } else {
+    if (value == null);
+    else {
+      switch (typeof value) {
+        case "function":
+        case "symbol":
+        case "boolean":
+          break;
+
+        default: {
+          {
+            checkAttributeStringCoercion(value, propKey);
+          }
+
+          var sanitizedValue = sanitizeURL("" + value);
+
+          if (serverValue === sanitizedValue) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  warnForPropDifference(propKey, serverValue, value);
 }
 
 function diffHydratedCustomComponent(
@@ -39781,22 +40230,22 @@ function diffHydratedCustomComponent(
   tag,
   props,
   parentNamespaceDev,
-  extraAttributeNames
+  extraAttributes
 ) {
   for (var propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
     }
 
-    var nextProp = props[propKey];
+    var value = props[propKey];
 
-    if (nextProp == null) {
+    if (value == null) {
       continue;
     }
 
     if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== "function") {
-        warnForInvalidEventListener(propKey, nextProp);
+      if (typeof value !== "function") {
+        warnForInvalidEventListener(propKey, value);
       }
 
       continue;
@@ -39820,21 +40269,18 @@ function diffHydratedCustomComponent(
 
       case "dangerouslySetInnerHTML":
         var serverHTML = domElement.innerHTML;
-        var nextHtml = nextProp ? nextProp.__html : undefined;
+        var nextHtml = value ? value.__html : undefined;
 
         if (nextHtml != null) {
           var expectedHTML = normalizeHTML(domElement, nextHtml);
-
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
 
         continue;
 
       case "style":
-        extraAttributeNames.delete(propKey);
-        diffHydratedStyles(domElement, nextProp);
+        extraAttributes.delete(propKey);
+        diffHydratedStyles(domElement, value);
         continue;
 
       case "offsetParent":
@@ -39846,7 +40292,7 @@ function diffHydratedCustomComponent(
       case "outerText":
       case "outerHTML":
         if (enableCustomElementPropertySupport) {
-          extraAttributeNames.delete(propKey.toLowerCase());
+          extraAttributes.delete(propKey.toLowerCase());
 
           {
             error(
@@ -39863,17 +40309,13 @@ function diffHydratedCustomComponent(
       case "className":
         if (enableCustomElementPropertySupport) {
           // className is a special cased property on the server to render as an attribute.
-          extraAttributeNames.delete("class");
+          extraAttributes.delete("class");
           var serverValue = getValueForAttributeOnCustomComponent(
             domElement,
             "class",
-            nextProp
+            value
           );
-
-          if (nextProp !== serverValue) {
-            warnForPropDifference("className", serverValue, nextProp);
-          }
-
+          warnForPropDifference("className", serverValue, value);
           continue;
         }
 
@@ -39887,20 +40329,18 @@ function diffHydratedCustomComponent(
         }
 
         if (ownNamespaceDev === HTML_NAMESPACE) {
-          extraAttributeNames.delete(propKey.toLowerCase());
+          extraAttributes.delete(propKey.toLowerCase());
         } else {
-          extraAttributeNames.delete(propKey);
+          extraAttributes.delete(propKey);
         }
 
         var _serverValue = getValueForAttributeOnCustomComponent(
           domElement,
           propKey,
-          nextProp
+          value
         );
 
-        if (nextProp !== _serverValue) {
-          warnForPropDifference(propKey, _serverValue, nextProp);
-        }
+        warnForPropDifference(propKey, _serverValue, value);
       }
     }
   }
@@ -39911,22 +40351,22 @@ function diffHydratedGenericElement(
   tag,
   props,
   parentNamespaceDev,
-  extraAttributeNames
+  extraAttributes
 ) {
   for (var propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
     }
 
-    var nextProp = props[propKey];
+    var value = props[propKey];
 
-    if (nextProp == null) {
+    if (value == null) {
       continue;
     }
 
     if (registrationNameDependencies.hasOwnProperty(propKey)) {
-      if (typeof nextProp !== "function") {
-        warnForInvalidEventListener(propKey, nextProp);
+      if (typeof value !== "function") {
+        warnForInvalidEventListener(propKey, value);
       }
 
       continue;
@@ -39955,46 +40395,1109 @@ function diffHydratedGenericElement(
 
       case "dangerouslySetInnerHTML":
         var serverHTML = domElement.innerHTML;
-        var nextHtml = nextProp ? nextProp.__html : undefined;
+        var nextHtml = value ? value.__html : undefined;
 
         if (nextHtml != null) {
           var expectedHTML = normalizeHTML(domElement, nextHtml);
-
-          if (expectedHTML !== serverHTML) {
-            warnForPropDifference(propKey, serverHTML, expectedHTML);
-          }
+          warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
 
         continue;
 
       case "style":
-        extraAttributeNames.delete(propKey);
-        diffHydratedStyles(domElement, nextProp);
+        extraAttributes.delete(propKey);
+        diffHydratedStyles(domElement, value);
         continue;
 
       case "multiple": {
-        extraAttributeNames.delete(propKey);
-        var _serverValue2 = domElement.multiple;
-
-        if (nextProp !== _serverValue2) {
-          warnForPropDifference("multiple", _serverValue2, nextProp);
-        }
-
+        extraAttributes.delete(propKey);
+        var serverValue = domElement.multiple;
+        warnForPropDifference(propKey, serverValue, value);
         continue;
       }
 
       case "muted": {
-        extraAttributeNames.delete(propKey);
-        var _serverValue3 = domElement.muted;
-
-        if (nextProp !== _serverValue3) {
-          warnForPropDifference("muted", _serverValue3, nextProp);
-        }
-
+        extraAttributes.delete(propKey);
+        var _serverValue2 = domElement.muted;
+        warnForPropDifference(propKey, _serverValue2, value);
         continue;
       }
 
-      default:
+      case "autoFocus": {
+        extraAttributes.delete("autofocus");
+        var _serverValue3 = domElement.autofocus;
+        warnForPropDifference(propKey, _serverValue3, value);
+        continue;
+      }
+
+      case "src":
+      case "href":
+      case "action":
+        {
+          if (value === "") {
+            {
+              if (propKey === "src") {
+                error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    "This may cause the browser to download the whole page again over the network. " +
+                    "To fix this, either do not render the element at all " +
+                    "or pass null to %s instead of an empty string.",
+                  propKey,
+                  propKey
+                );
+              } else {
+                error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    "To fix this, either do not render the element at all " +
+                    "or pass null to %s instead of an empty string.",
+                  propKey,
+                  propKey
+                );
+              }
+            }
+
+            hydrateSanitizedAttribute(
+              domElement,
+              propKey,
+              propKey,
+              null,
+              extraAttributes
+            );
+            continue;
+          }
+        }
+
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "formAction":
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          "formaction",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkHref":
+        hydrateSanitizedAttribute(
+          domElement,
+          propKey,
+          "xlink:href",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "contentEditable": {
+        // Lower-case Booleanish String
+        hydrateBooleanishAttribute(
+          domElement,
+          propKey,
+          "contenteditable",
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "spellCheck": {
+        // Lower-case Booleanish String
+        hydrateBooleanishAttribute(
+          domElement,
+          propKey,
+          "spellcheck",
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "draggable":
+      case "autoReverse":
+      case "externalResourcesRequired":
+      case "focusable":
+      case "preserveAlpha": {
+        // Case-sensitive Booleanish String
+        hydrateBooleanishAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "allowFullScreen":
+      case "async":
+      case "autoPlay":
+      case "controls":
+      case "default":
+      case "defer":
+      case "disabled":
+      case "disablePictureInPicture":
+      case "disableRemotePlayback":
+      case "formNoValidate":
+      case "hidden":
+      case "loop":
+      case "noModule":
+      case "noValidate":
+      case "open":
+      case "playsInline":
+      case "readOnly":
+      case "required":
+      case "reversed":
+      case "scoped":
+      case "seamless":
+      case "itemScope": {
+        // Some of these need to be lower case to remove them from the extraAttributes list.
+        hydrateBooleanAttribute(
+          domElement,
+          propKey,
+          propKey.toLowerCase(),
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "capture":
+      case "download": {
+        hydrateOverloadedBooleanAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "cols":
+      case "rows":
+      case "size":
+      case "span": {
+        hydratePositiveNumericAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "rowSpan": {
+        hydrateNumericAttribute(
+          domElement,
+          propKey,
+          "rowspan",
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+
+      case "start": {
+        hydrateNumericAttribute(
+          domElement,
+          propKey,
+          propKey,
+          value,
+          extraAttributes
+        );
+        continue;
+      }
+      // A few React string attributes have a different name.
+      // This is a mapping from React prop names to the attribute names.
+
+      case "acceptCharset":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "accept-charset",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "className":
+        hydrateAttribute(domElement, propKey, "class", value, extraAttributes);
+        continue;
+
+      case "htmlFor":
+        hydrateAttribute(domElement, propKey, "for", value, extraAttributes);
+        continue;
+
+      case "httpEquiv":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "http-equiv",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "tabIndex":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "tabindex",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "crossOrigin":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "crossorigin",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "accentHeight":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "accent-height",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "alignmentBaseline":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "alignment-baseline",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "arabicForm":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "arabic-form",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "baselineShift":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "baseline-shift",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "capHeight":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "cap-height",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "clipPath":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "clip-path",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "clipRule":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "clip-rule",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "colorInterpolation":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "color-interpolation",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "colorInterpolationFilters":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "color-interpolation-filters",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "colorProfile":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "color-profile",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "colorRendering":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "color-rendering",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "dominantBaseline":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "dominant-baseline",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "enableBackground":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "enable-background",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fillOpacity":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "fill-opacity",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fillRule":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "fill-rule",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "floodColor":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "flood-color",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "floodOpacity":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "flood-opacity",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontFamily":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-family",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontSize":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-size",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontSizeAdjust":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-size-adjust",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontStretch":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-stretch",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontStyle":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-style",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontVariant":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-variant",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "fontWeight":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "font-weight",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "glyphName":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "glyph-name",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "glyphOrientationHorizontal":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "glyph-orientation-horizontal",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "glyphOrientationVertical":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "glyph-orientation-vertical",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "horizAdvX":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "horiz-adv-x",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "horizOriginX":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "horiz-origin-x",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "imageRendering":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "image-rendering",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "letterSpacing":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "letter-spacing",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "lightingColor":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "lighting-color",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "markerEnd":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "marker-end",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "markerMid":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "marker-mid",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "markerStart":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "marker-start",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "overlinePosition":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "overline-position",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "overlineThickness":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "overline-thickness",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "paintOrder":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "paint-order",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "panose-1":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "panose-1",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "pointerEvents":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "pointer-events",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "renderingIntent":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "rendering-intent",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "shapeRendering":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "shape-rendering",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "stopColor":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stop-color",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "stopOpacity":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stop-opacity",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strikethroughPosition":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "strikethrough-position",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strikethroughThickness":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "strikethrough-thickness",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeDasharray":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-dasharray",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeDashoffset":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-dashoffset",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeLinecap":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-linecap",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeLinejoin":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-linejoin",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeMiterlimit":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-miterlimit",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeOpacity":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-opacity",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "strokeWidth":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "stroke-width",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "textAnchor":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "text-anchor",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "textDecoration":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "text-decoration",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "textRendering":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "text-rendering",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "transformOrigin":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "transform-origin",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "underlinePosition":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "underline-position",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "underlineThickness":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "underline-thickness",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "unicodeBidi":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "unicode-bidi",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "unicodeRange":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "unicode-range",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "unitsPerEm":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "units-per-em",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vAlphabetic":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "v-alphabetic",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vHanging":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "v-hanging",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vIdeographic":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "v-ideographic",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vMathematical":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "v-mathematical",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vectorEffect":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "vector-effect",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vertAdvY":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "vert-adv-y",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vertOriginX":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "vert-origin-x",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "vertOriginY":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "vert-origin-y",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "wordSpacing":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "word-spacing",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "writingMode":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "writing-mode",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xmlnsXlink":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xmlns:xlink",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xHeight":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "x-height",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkActuate":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:actuate",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkArcrole":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:arcrole",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkRole":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:role",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkShow":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:show",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkTitle":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:title",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xlinkType":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xlink:type",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xmlBase":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xml:base",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xmlLang":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xml:lang",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      case "xmlSpace":
+        hydrateAttribute(
+          domElement,
+          propKey,
+          "xml:space",
+          value,
+          extraAttributes
+        );
+        continue;
+
+      default: {
         if (
           // shouldIgnoreAttribute
           // We have already filtered out null/undefined and reserved words.
@@ -40005,49 +41508,37 @@ function diffHydratedGenericElement(
           continue;
         }
 
-        var propertyInfo = getPropertyInfo(propKey);
         var isMismatchDueToBadCasing = false;
-        var serverValue = void 0;
+        var ownNamespaceDev = parentNamespaceDev;
 
-        if (propertyInfo !== null) {
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-            propertyInfo
-          );
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          ownNamespaceDev = getIntrinsicNamespace(tag);
+        }
+
+        if (ownNamespaceDev === HTML_NAMESPACE) {
+          extraAttributes.delete(propKey.toLowerCase());
         } else {
-          var ownNamespaceDev = parentNamespaceDev;
+          var standardName = getPossibleStandardName(propKey);
 
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            ownNamespaceDev = getIntrinsicNamespace(tag);
+          if (standardName !== null && standardName !== propKey) {
+            // If an SVG prop is supplied with bad casing, it will
+            // be successfully parsed from HTML, but will produce a mismatch
+            // (and would be incorrectly rendered on the client).
+            // However, we already warn about bad casing elsewhere.
+            // So we'll skip the misleading extra mismatch warning in this case.
+            isMismatchDueToBadCasing = true;
+            extraAttributes.delete(standardName);
           }
 
-          if (ownNamespaceDev === HTML_NAMESPACE) {
-            extraAttributeNames.delete(propKey.toLowerCase());
-          } else {
-            var standardName = getPossibleStandardName(propKey);
-
-            if (standardName !== null && standardName !== propKey) {
-              // If an SVG prop is supplied with bad casing, it will
-              // be successfully parsed from HTML, but will produce a mismatch
-              // (and would be incorrectly rendered on the client).
-              // However, we already warn about bad casing elsewhere.
-              // So we'll skip the misleading extra mismatch warning in this case.
-              isMismatchDueToBadCasing = true;
-              extraAttributeNames.delete(standardName);
-            }
-
-            extraAttributeNames.delete(propKey);
-          }
-
-          serverValue = getValueForAttribute(domElement, propKey, nextProp);
+          extraAttributes.delete(propKey);
         }
 
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+        var _serverValue4 = getValueForAttribute(domElement, propKey, value);
+
+        if (!isMismatchDueToBadCasing) {
+          warnForPropDifference(propKey, _serverValue4, value);
         }
+      }
     }
   }
 }
@@ -40186,11 +41677,11 @@ function diffHydratedProperties(
   }
 
   if (shouldWarnDev) {
-    var extraAttributeNames = new Set();
+    var extraAttributes = new Set();
     var attributes = domElement.attributes;
 
-    for (var _i6 = 0; _i6 < attributes.length; _i6++) {
-      var name = attributes[_i6].name.toLowerCase();
+    for (var _i7 = 0; _i7 < attributes.length; _i7++) {
+      var name = attributes[_i7].name.toLowerCase();
 
       switch (name) {
         // Controlled attributes are not validated
@@ -40207,7 +41698,7 @@ function diffHydratedProperties(
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributeNames.add(attributes[_i6].name);
+          extraAttributes.add(attributes[_i7].name);
       }
     }
 
@@ -40217,7 +41708,7 @@ function diffHydratedProperties(
         tag,
         props,
         parentNamespaceDev,
-        extraAttributeNames
+        extraAttributes
       );
     } else {
       diffHydratedGenericElement(
@@ -40225,15 +41716,12 @@ function diffHydratedProperties(
         tag,
         props,
         parentNamespaceDev,
-        extraAttributeNames
+        extraAttributes
       );
     }
 
-    if (
-      extraAttributeNames.size > 0 &&
-      props.suppressHydrationWarning !== true
-    ) {
-      warnForExtraAttributes(extraAttributeNames);
+    if (extraAttributes.size > 0 && props.suppressHydrationWarning !== true) {
+      warnForExtraAttributes(extraAttributes);
     }
   }
 

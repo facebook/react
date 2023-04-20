@@ -274,370 +274,6 @@ function isAttributeNameSafe(attributeName) {
   return false;
 }
 
-// A simple string attribute.
-// Attributes that aren't in the filter are presumed to have this type.
-var STRING = 1; // A string attribute that accepts booleans in React. In HTML, these are called
-// "enumerated" attributes with "true" and "false" as possible values.
-// When true, it should be set to a "true" string.
-// When false, it should be set to a "false" string.
-
-var BOOLEANISH_STRING = 2; // A real boolean attribute.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-
-var BOOLEAN = 3; // An attribute that can be used as a flag as well as with a value.
-// When true, it should be present (set either to an empty string or its name).
-// When false, it should be omitted.
-// For any other value, should be present with that value.
-
-var OVERLOADED_BOOLEAN = 4; // An attribute that must be numeric or parse as a numeric.
-// When falsy, it should be removed.
-
-var NUMERIC = 5; // An attribute that must be positive numeric or parse as a positive numeric.
-// When falsy, it should be removed.
-
-var POSITIVE_NUMERIC = 6;
-function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
-} // $FlowFixMe[missing-this-annot]
-
-function PropertyInfoRecord(
-  type,
-  attributeName,
-  attributeNamespace,
-  sanitizeURL,
-  removeEmptyString
-) {
-  this.acceptsBooleans =
-    type === BOOLEANISH_STRING ||
-    type === BOOLEAN ||
-    type === OVERLOADED_BOOLEAN;
-  this.attributeName = attributeName;
-  this.attributeNamespace = attributeNamespace;
-  this.type = type;
-  this.sanitizeURL = sanitizeURL;
-  this.removeEmptyString = removeEmptyString;
-} // When adding attributes to this list, be sure to also add them to
-// the `possibleStandardNames` module to ensure casing and incorrect
-// name warnings.
-
-var properties = {}; // A few React string attributes have a different name.
-// This is a mapping from React prop names to the attribute names.
-
-[
-  ["acceptCharset", "accept-charset"],
-  ["className", "class"],
-  ["htmlFor", "for"],
-  ["httpEquiv", "http-equiv"]
-].forEach(function (_ref) {
-  var name = _ref[0],
-    attributeName = _ref[1];
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" HTML attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-
-["contentEditable", "draggable", "spellCheck", "value"].forEach(function (
-  name
-) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are "enumerated" SVG attributes that accept "true" and "false".
-// In React, we let users pass `true` and `false` even though technically
-// these aren't boolean attributes (they are coerced to strings).
-// Since these are SVG attributes, their attribute names are case-sensitive.
-
-[
-  "autoReverse",
-  "externalResourcesRequired",
-  "focusable",
-  "preserveAlpha"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEANISH_STRING,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML boolean attributes.
-
-[
-  "allowFullScreen",
-  "async", // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  "autoFocus",
-  "autoPlay",
-  "controls",
-  "default",
-  "defer",
-  "disabled",
-  "disablePictureInPicture",
-  "disableRemotePlayback",
-  "formNoValidate",
-  "hidden",
-  "loop",
-  "noModule",
-  "noValidate",
-  "open",
-  "playsInline",
-  "readOnly",
-  "required",
-  "reversed",
-  "scoped",
-  "seamless", // Microdata
-  "itemScope"
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    BOOLEAN,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that are "overloaded booleans": they behave like
-// booleans, but can also accept a string value.
-
-[
-  "capture",
-  "download" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    OVERLOADED_BOOLEAN,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be positive numbers.
-
-[
-  "cols",
-  "rows",
-  "size",
-  "span" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    POSITIVE_NUMERIC,
-    name, // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These are HTML attributes that must be numbers.
-
-["rowSpan", "start"].forEach(function (name) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[name] = new PropertyInfoRecord(
-    NUMERIC,
-    name.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-});
-var CAMELIZE = /[\-\:]([a-z])/g;
-
-var capitalize = function (token) {
-  return token[1].toUpperCase();
-}; // This is a list of all SVG attributes that need special casing, namespacing,
-// or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML attribute filter.
-// Some of these attributes can be hard to find. This list was created by
-// scraping the MDN documentation.
-
-[
-  "accent-height",
-  "alignment-baseline",
-  "arabic-form",
-  "baseline-shift",
-  "cap-height",
-  "clip-path",
-  "clip-rule",
-  "color-interpolation",
-  "color-interpolation-filters",
-  "color-profile",
-  "color-rendering",
-  "dominant-baseline",
-  "enable-background",
-  "fill-opacity",
-  "fill-rule",
-  "flood-color",
-  "flood-opacity",
-  "font-family",
-  "font-size",
-  "font-size-adjust",
-  "font-stretch",
-  "font-style",
-  "font-variant",
-  "font-weight",
-  "glyph-name",
-  "glyph-orientation-horizontal",
-  "glyph-orientation-vertical",
-  "horiz-adv-x",
-  "horiz-origin-x",
-  "image-rendering",
-  "letter-spacing",
-  "lighting-color",
-  "marker-end",
-  "marker-mid",
-  "marker-start",
-  "overline-position",
-  "overline-thickness",
-  "paint-order",
-  "panose-1",
-  "pointer-events",
-  "rendering-intent",
-  "shape-rendering",
-  "stop-color",
-  "stop-opacity",
-  "strikethrough-position",
-  "strikethrough-thickness",
-  "stroke-dasharray",
-  "stroke-dashoffset",
-  "stroke-linecap",
-  "stroke-linejoin",
-  "stroke-miterlimit",
-  "stroke-opacity",
-  "stroke-width",
-  "text-anchor",
-  "text-decoration",
-  "text-rendering",
-  "transform-origin",
-  "underline-position",
-  "underline-thickness",
-  "unicode-bidi",
-  "unicode-range",
-  "units-per-em",
-  "v-alphabetic",
-  "v-hanging",
-  "v-ideographic",
-  "v-mathematical",
-  "vector-effect",
-  "vert-adv-y",
-  "vert-origin-x",
-  "vert-origin-y",
-  "word-spacing",
-  "writing-mode",
-  "xmlns:xlink",
-  "x-height" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xlink namespace.
-
-[
-  "xlink:actuate",
-  "xlink:arcrole",
-  "xlink:role",
-  "xlink:show",
-  "xlink:title",
-  "xlink:type" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    "http://www.w3.org/1999/xlink",
-    false, // sanitizeURL
-    false
-  );
-}); // String SVG attributes with the xml namespace.
-
-[
-  "xml:base",
-  "xml:lang",
-  "xml:space" // NOTE: if you add a camelCased prop to this list,
-  // you'll need to set attributeName to name.toLowerCase()
-  // instead in the assignment below.
-].forEach(function (attributeName) {
-  var name = attributeName.replace(CAMELIZE, capitalize); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-  properties[name] = new PropertyInfoRecord(
-    STRING,
-    attributeName,
-    "http://www.w3.org/XML/1998/namespace",
-    false, // sanitizeURL
-    false
-  );
-}); // These attribute exists both in HTML and SVG.
-// The attribute name is case-sensitive in SVG so we can't just use
-// the React name like we do for attributes that exist only in HTML.
-
-["tabIndex", "crossOrigin"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    false, // sanitizeURL
-    false
-  );
-}); // These attributes accept URLs. These must not allow javascript: URLS.
-// These will also need to accept Trusted Types object in the future.
-
-var xlinkHref = "xlinkHref"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[xlinkHref] = new PropertyInfoRecord(
-  STRING,
-  "xlink:href",
-  "http://www.w3.org/1999/xlink",
-  true, // sanitizeURL
-  false
-);
-var formAction = "formAction"; // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-
-properties[formAction] = new PropertyInfoRecord(
-  STRING,
-  "formaction", // attributeName
-  null, // attributeNamespace
-  true, // sanitizeURL
-  false
-);
-["src", "href", "action"].forEach(function (attributeName) {
-  // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
-  properties[attributeName] = new PropertyInfoRecord(
-    STRING,
-    attributeName.toLowerCase(), // attributeName
-    null, // attributeNamespace
-    true, // sanitizeURL
-    true
-  );
-});
-
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
@@ -1609,9 +1245,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
 
       warnedProperties[name] = true;
       return true;
-    }
-
-    var propertyInfo = getPropertyInfo(name); // Known attributes should match the casing specified in the property config.
+    } // Known attributes should match the casing specified in the property config.
 
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];
@@ -1668,22 +1302,51 @@ function validateProperty(tagName, name, value, eventRegistry) {
     switch (typeof value) {
       case "boolean": {
         switch (name) {
+          case "autoFocus":
           case "checked":
-          case "selected":
           case "multiple":
-          case "muted": {
+          case "muted":
+          case "selected":
+          case "contentEditable":
+          case "spellCheck":
+          case "draggable":
+          case "value":
+          case "autoReverse":
+          case "externalResourcesRequired":
+          case "focusable":
+          case "preserveAlpha":
+          case "allowFullScreen":
+          case "async":
+          case "autoPlay":
+          case "controls":
+          case "default":
+          case "defer":
+          case "disabled":
+          case "disablePictureInPicture":
+          case "disableRemotePlayback":
+          case "formNoValidate":
+          case "hidden":
+          case "loop":
+          case "noModule":
+          case "noValidate":
+          case "open":
+          case "playsInline":
+          case "readOnly":
+          case "required":
+          case "reversed":
+          case "scoped":
+          case "seamless":
+          case "itemScope":
+          case "capture":
+          case "download": {
             // Boolean properties can accept boolean values
             return true;
           }
 
           default: {
-            if (propertyInfo === null) {
-              var prefix = name.toLowerCase().slice(0, 5);
+            var prefix = name.toLowerCase().slice(0, 5);
 
-              if (prefix === "data-" || prefix === "aria-") {
-                return true;
-              }
-            } else if (propertyInfo.acceptsBooleans) {
+            if (prefix === "data-" || prefix === "aria-") {
               return true;
             }
 
@@ -1735,14 +1398,34 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case "checked":
             case "selected":
             case "multiple":
-            case "muted": {
+            case "muted":
+            case "allowFullScreen":
+            case "async":
+            case "autoPlay":
+            case "controls":
+            case "default":
+            case "defer":
+            case "disabled":
+            case "disablePictureInPicture":
+            case "disableRemotePlayback":
+            case "formNoValidate":
+            case "hidden":
+            case "loop":
+            case "noModule":
+            case "noValidate":
+            case "open":
+            case "playsInline":
+            case "readOnly":
+            case "required":
+            case "reversed":
+            case "scoped":
+            case "seamless":
+            case "itemScope": {
               break;
             }
 
             default: {
-              if (propertyInfo === null || propertyInfo.type !== BOOLEAN) {
-                return true;
-              }
+              return true;
             }
           }
 
@@ -3045,6 +2728,23 @@ function pushBooleanAttribute(target, name, value) {
   }
 }
 
+function pushStringAttribute(target, name, value) {
+  // not null or undefined
+  if (
+    typeof value !== "function" &&
+    typeof value !== "symbol" &&
+    typeof value !== "boolean"
+  ) {
+    target.push(
+      attributeSeparator,
+      stringToChunk(name),
+      attributeAssign,
+      stringToChunk(escapeTextForBrowser(value)),
+      attributeEnd
+    );
+  }
+}
+
 function pushAttribute(target, name, value) {
   // not null or undefined
   switch (name) {
@@ -3063,41 +2763,17 @@ function pushAttribute(target, name, value) {
       // Ignored. These are built-in to React on the client.
       return;
 
+    case "autoFocus":
     case "multiple":
-    case "muted":
-      pushBooleanAttribute(target, name, value);
+    case "muted": {
+      pushBooleanAttribute(target, name.toLowerCase(), value);
       return;
-  }
-
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === "o" || name[0] === "O") &&
-    (name[1] === "n" || name[1] === "N")
-  ) {
-    return;
-  }
-
-  var propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo !== null) {
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        return;
-
-      case "boolean": {
-        if (!propertyInfo.acceptsBooleans) {
-          return;
-        }
-      }
     }
 
-    {
-      if (propertyInfo.removeEmptyString && value === "") {
+    case "src":
+    case "href":
+    case "action": {
+      if (value === "") {
         {
           if (name === "src") {
             error(
@@ -3123,110 +2799,581 @@ function pushAttribute(target, name, value) {
       }
     }
 
-    var attributeName = propertyInfo.attributeName;
-    var attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
+    // Fall through to the last case which shouldn't remove empty strings.
+    // eslint-disable-next-line no-fallthrough
 
-    switch (propertyInfo.type) {
-      case BOOLEAN:
-        if (value) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeEmptyString
-          );
-        }
-
+    case "formAction": {
+      if (
+        value == null ||
+        typeof value === "function" ||
+        typeof value === "symbol" ||
+        typeof value === "boolean"
+      ) {
         return;
+      }
 
-      case OVERLOADED_BOOLEAN:
-        if (value === true) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeEmptyString
-          );
-        } else if (value === false);
-        else {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd
-          );
-        }
+      {
+        checkAttributeStringCoercion(value, name);
+      }
 
+      var sanitizedValue = sanitizeURL("" + value);
+      target.push(
+        attributeSeparator,
+        stringToChunk(name),
+        attributeAssign,
+        stringToChunk(escapeTextForBrowser(sanitizedValue)),
+        attributeEnd
+      );
+      return;
+    }
+
+    case "xlinkHref": {
+      if (
+        typeof value === "function" ||
+        typeof value === "symbol" ||
+        typeof value === "boolean"
+      ) {
         return;
+      }
 
-      case NUMERIC:
-        if (!isNaN(value)) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd
-          );
-        }
+      {
+        checkAttributeStringCoercion(value, name);
+      }
 
-        break;
+      var _sanitizedValue = sanitizeURL("" + value);
 
-      case POSITIVE_NUMERIC:
-        if (!isNaN(value) && value >= 1) {
-          target.push(
-            attributeSeparator,
-            attributeNameChunk,
-            attributeAssign,
-            stringToChunk(escapeTextForBrowser(value)),
-            attributeEnd
-          );
-        }
+      target.push(
+        attributeSeparator,
+        stringToChunk("xlink:href"),
+        attributeAssign,
+        stringToChunk(escapeTextForBrowser(_sanitizedValue)),
+        attributeEnd
+      );
+      return;
+    }
 
-        break;
-
-      default:
-        {
-          checkAttributeStringCoercion(value, attributeName);
-        }
-
-        if (propertyInfo.sanitizeURL) {
-          // We've already checked above.
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          value = sanitizeURL("" + value);
-        }
-
+    case "contentEditable":
+    case "spellCheck":
+    case "draggable":
+    case "value":
+    case "autoReverse":
+    case "externalResourcesRequired":
+    case "focusable":
+    case "preserveAlpha": {
+      // Booleanish String
+      // These are "enumerated" attributes that accept "true" and "false".
+      // In React, we let users pass `true` and `false` even though technically
+      // these aren't boolean attributes (they are coerced to strings).
+      if (typeof value !== "function" && typeof value !== "symbol") {
         target.push(
           attributeSeparator,
-          attributeNameChunk,
+          stringToChunk(name),
           attributeAssign,
           stringToChunk(escapeTextForBrowser(value)),
           attributeEnd
         );
-    }
-  } else if (isAttributeNameSafe(name)) {
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case "function":
-      case "symbol":
-        // eslint-disable-line
-        return;
-
-      case "boolean": {
-        var prefix = name.toLowerCase().slice(0, 5);
-
-        if (prefix !== "data-" && prefix !== "aria-") {
-          return;
-        }
       }
+
+      return;
     }
 
-    target.push(
-      attributeSeparator,
-      stringToChunk(name),
-      attributeAssign,
-      stringToChunk(escapeTextForBrowser(value)),
-      attributeEnd
-    );
+    case "allowFullScreen":
+    case "async":
+    case "autoPlay":
+    case "controls":
+    case "default":
+    case "defer":
+    case "disabled":
+    case "disablePictureInPicture":
+    case "disableRemotePlayback":
+    case "formNoValidate":
+    case "hidden":
+    case "loop":
+    case "noModule":
+    case "noValidate":
+    case "open":
+    case "playsInline":
+    case "readOnly":
+    case "required":
+    case "reversed":
+    case "scoped":
+    case "seamless":
+    case "itemScope": {
+      // Boolean
+      if (value && typeof value !== "function" && typeof value !== "symbol") {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeEmptyString
+        );
+      }
+
+      return;
+    }
+
+    case "capture":
+    case "download": {
+      // Overloaded Boolean
+      if (value === true) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeEmptyString
+        );
+      } else if (value === false);
+      else if (typeof value !== "function" && typeof value !== "symbol") {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd
+        );
+      }
+
+      return;
+    }
+
+    case "cols":
+    case "rows":
+    case "size":
+    case "span": {
+      // These are HTML attributes that must be positive numbers.
+      if (
+        typeof value !== "function" &&
+        typeof value !== "symbol" &&
+        !isNaN(value) &&
+        value >= 1
+      ) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd
+        );
+      }
+
+      return;
+    }
+
+    case "rowSpan":
+    case "start": {
+      // These are HTML attributes that must be numbers.
+      if (
+        typeof value !== "function" &&
+        typeof value !== "symbol" &&
+        !isNaN(value)
+      ) {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd
+        );
+      }
+
+      return;
+    }
+    // A few React string attributes have a different name.
+    // This is a mapping from React prop names to the attribute names.
+
+    case "acceptCharset":
+      pushStringAttribute(target, "accept-charset", value);
+      return;
+
+    case "className":
+      pushStringAttribute(target, "class", value);
+      return;
+
+    case "htmlFor":
+      pushStringAttribute(target, "for", value);
+      return;
+
+    case "httpEquiv":
+      pushStringAttribute(target, "http-equiv", value);
+      return;
+    // HTML and SVG attributes, but the SVG attribute is case sensitive.
+
+    case "tabIndex":
+      pushStringAttribute(target, "tabindex", value);
+      return;
+
+    case "crossOrigin":
+      pushStringAttribute(target, "crossorigin", value);
+      return;
+    // This is a list of all SVG attributes that need special casing.
+    // Regular attributes that just accept strings.
+
+    case "accentHeight":
+      pushStringAttribute(target, "accent-height", value);
+      return;
+
+    case "alignmentBaseline":
+      pushStringAttribute(target, "alignment-baseline", value);
+      return;
+
+    case "arabicForm":
+      pushStringAttribute(target, "arabic-form", value);
+      return;
+
+    case "baselineShift":
+      pushStringAttribute(target, "baseline-shift", value);
+      return;
+
+    case "capHeight":
+      pushStringAttribute(target, "cap-height", value);
+      return;
+
+    case "clipPath":
+      pushStringAttribute(target, "clip-path", value);
+      return;
+
+    case "clipRule":
+      pushStringAttribute(target, "clip-rule", value);
+      return;
+
+    case "colorInterpolation":
+      pushStringAttribute(target, "color-interpolation", value);
+      return;
+
+    case "colorInterpolationFilters":
+      pushStringAttribute(target, "color-interpolation-filters", value);
+      return;
+
+    case "colorProfile":
+      pushStringAttribute(target, "color-profile", value);
+      return;
+
+    case "colorRendering":
+      pushStringAttribute(target, "color-rendering", value);
+      return;
+
+    case "dominantBaseline":
+      pushStringAttribute(target, "dominant-baseline", value);
+      return;
+
+    case "enableBackground":
+      pushStringAttribute(target, "enable-background", value);
+      return;
+
+    case "fillOpacity":
+      pushStringAttribute(target, "fill-opacity", value);
+      return;
+
+    case "fillRule":
+      pushStringAttribute(target, "fill-rule", value);
+      return;
+
+    case "floodColor":
+      pushStringAttribute(target, "flood-color", value);
+      return;
+
+    case "floodOpacity":
+      pushStringAttribute(target, "flood-opacity", value);
+      return;
+
+    case "fontFamily":
+      pushStringAttribute(target, "font-family", value);
+      return;
+
+    case "fontSize":
+      pushStringAttribute(target, "font-size", value);
+      return;
+
+    case "fontSizeAdjust":
+      pushStringAttribute(target, "font-size-adjust", value);
+      return;
+
+    case "fontStretch":
+      pushStringAttribute(target, "font-stretch", value);
+      return;
+
+    case "fontStyle":
+      pushStringAttribute(target, "font-style", value);
+      return;
+
+    case "fontVariant":
+      pushStringAttribute(target, "font-variant", value);
+      return;
+
+    case "fontWeight":
+      pushStringAttribute(target, "font-weight", value);
+      return;
+
+    case "glyphName":
+      pushStringAttribute(target, "glyph-name", value);
+      return;
+
+    case "glyphOrientationHorizontal":
+      pushStringAttribute(target, "glyph-orientation-horizontal", value);
+      return;
+
+    case "glyphOrientationVertical":
+      pushStringAttribute(target, "glyph-orientation-vertical", value);
+      return;
+
+    case "horizAdvX":
+      pushStringAttribute(target, "horiz-adv-x", value);
+      return;
+
+    case "horizOriginX":
+      pushStringAttribute(target, "horiz-origin-x", value);
+      return;
+
+    case "imageRendering":
+      pushStringAttribute(target, "image-rendering", value);
+      return;
+
+    case "letterSpacing":
+      pushStringAttribute(target, "letter-spacing", value);
+      return;
+
+    case "lightingColor":
+      pushStringAttribute(target, "lighting-color", value);
+      return;
+
+    case "markerEnd":
+      pushStringAttribute(target, "marker-end", value);
+      return;
+
+    case "markerMid":
+      pushStringAttribute(target, "marker-mid", value);
+      return;
+
+    case "markerStart":
+      pushStringAttribute(target, "marker-start", value);
+      return;
+
+    case "overlinePosition":
+      pushStringAttribute(target, "overline-position", value);
+      return;
+
+    case "overlineThickness":
+      pushStringAttribute(target, "overline-thickness", value);
+      return;
+
+    case "paintOrder":
+      pushStringAttribute(target, "paint-order", value);
+      return;
+
+    case "panose-1":
+      pushStringAttribute(target, "panose-1", value);
+      return;
+
+    case "pointerEvents":
+      pushStringAttribute(target, "pointer-events", value);
+      return;
+
+    case "renderingIntent":
+      pushStringAttribute(target, "rendering-intent", value);
+      return;
+
+    case "shapeRendering":
+      pushStringAttribute(target, "shape-rendering", value);
+      return;
+
+    case "stopColor":
+      pushStringAttribute(target, "stop-color", value);
+      return;
+
+    case "stopOpacity":
+      pushStringAttribute(target, "stop-opacity", value);
+      return;
+
+    case "strikethroughPosition":
+      pushStringAttribute(target, "strikethrough-position", value);
+      return;
+
+    case "strikethroughThickness":
+      pushStringAttribute(target, "strikethrough-thickness", value);
+      return;
+
+    case "strokeDasharray":
+      pushStringAttribute(target, "stroke-dasharray", value);
+      return;
+
+    case "strokeDashoffset":
+      pushStringAttribute(target, "stroke-dashoffset", value);
+      return;
+
+    case "strokeLinecap":
+      pushStringAttribute(target, "stroke-linecap", value);
+      return;
+
+    case "strokeLinejoin":
+      pushStringAttribute(target, "stroke-linejoin", value);
+      return;
+
+    case "strokeMiterlimit":
+      pushStringAttribute(target, "stroke-miterlimit", value);
+      return;
+
+    case "strokeOpacity":
+      pushStringAttribute(target, "stroke-opacity", value);
+      return;
+
+    case "strokeWidth":
+      pushStringAttribute(target, "stroke-width", value);
+      return;
+
+    case "textAnchor":
+      pushStringAttribute(target, "text-anchor", value);
+      return;
+
+    case "textDecoration":
+      pushStringAttribute(target, "text-decoration", value);
+      return;
+
+    case "textRendering":
+      pushStringAttribute(target, "text-rendering", value);
+      return;
+
+    case "transformOrigin":
+      pushStringAttribute(target, "transform-origin", value);
+      return;
+
+    case "underlinePosition":
+      pushStringAttribute(target, "underline-position", value);
+      return;
+
+    case "underlineThickness":
+      pushStringAttribute(target, "underline-thickness", value);
+      return;
+
+    case "unicodeBidi":
+      pushStringAttribute(target, "unicode-bidi", value);
+      return;
+
+    case "unicodeRange":
+      pushStringAttribute(target, "unicode-range", value);
+      return;
+
+    case "unitsPerEm":
+      pushStringAttribute(target, "units-per-em", value);
+      return;
+
+    case "vAlphabetic":
+      pushStringAttribute(target, "v-alphabetic", value);
+      return;
+
+    case "vHanging":
+      pushStringAttribute(target, "v-hanging", value);
+      return;
+
+    case "vIdeographic":
+      pushStringAttribute(target, "v-ideographic", value);
+      return;
+
+    case "vMathematical":
+      pushStringAttribute(target, "v-mathematical", value);
+      return;
+
+    case "vectorEffect":
+      pushStringAttribute(target, "vector-effect", value);
+      return;
+
+    case "vertAdvY":
+      pushStringAttribute(target, "vert-adv-y", value);
+      return;
+
+    case "vertOriginX":
+      pushStringAttribute(target, "vert-origin-x", value);
+      return;
+
+    case "vertOriginY":
+      pushStringAttribute(target, "vert-origin-y", value);
+      return;
+
+    case "wordSpacing":
+      pushStringAttribute(target, "word-spacing", value);
+      return;
+
+    case "writingMode":
+      pushStringAttribute(target, "writing-mode", value);
+      return;
+
+    case "xmlnsXlink":
+      pushStringAttribute(target, "xmlns:xlink", value);
+      return;
+
+    case "xHeight":
+      pushStringAttribute(target, "x-height", value);
+      return;
+
+    case "xlinkActuate":
+      pushStringAttribute(target, "xlink:actuate", value);
+      break;
+
+    case "xlinkArcrole":
+      pushStringAttribute(target, "xlink:arcrole", value);
+      break;
+
+    case "xlinkRole":
+      pushStringAttribute(target, "xlink:role", value);
+      break;
+
+    case "xlinkShow":
+      pushStringAttribute(target, "xlink:show", value);
+      break;
+
+    case "xlinkTitle":
+      pushStringAttribute(target, "xlink:title", value);
+      break;
+
+    case "xlinkType":
+      pushStringAttribute(target, "xlink:type", value);
+      break;
+
+    case "xmlBase":
+      pushStringAttribute(target, "xml:base", value);
+      break;
+
+    case "xmlLang":
+      pushStringAttribute(target, "xml:lang", value);
+      break;
+
+    case "xmlSpace":
+      pushStringAttribute(target, "xml:space", value);
+      break;
+
+    default:
+      if (
+        // shouldIgnoreAttribute
+        // We have already filtered out null/undefined and reserved words.
+        name.length > 2 &&
+        (name[0] === "o" || name[0] === "O") &&
+        (name[1] === "n" || name[1] === "N")
+      ) {
+        return;
+      }
+
+      if (isAttributeNameSafe(name)) {
+        // shouldRemoveAttribute
+        switch (typeof value) {
+          case "function":
+          case "symbol":
+            // eslint-disable-line
+            return;
+
+          case "boolean": {
+            var prefix = name.toLowerCase().slice(0, 5);
+
+            if (prefix !== "data-" && prefix !== "aria-") {
+              return;
+            }
+          }
+        }
+
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd
+        );
+      }
   }
 }
 
