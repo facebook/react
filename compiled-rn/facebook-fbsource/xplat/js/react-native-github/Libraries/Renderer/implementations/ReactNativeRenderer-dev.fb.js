@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c436afb62033d99c29aa548e109fdbde>>
+ * @generated SignedSource<<36dfe2e6840704492b6fbf0d00f5b91a>>
  */
 
 'use strict';
@@ -100,71 +100,40 @@ function printWarning(level, format, args) {
   }
 }
 
-// $FlowFixMe[missing-this-annot]
-function invokeGuardedCallbackProd(name, func, context) {
-  // $FlowFixMe[method-unbinding]
-  var funcArgs = Array.prototype.slice.call(arguments, 3);
-
-  try {
-    // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
-    func.apply(context, funcArgs);
-  } catch (error) {
-    this.onError(error);
-  }
-}
-
-var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
+var fakeNode = null;
 
 {
-  // In DEV mode, we swap out invokeGuardedCallback for a special version
-  // that plays more nicely with the browser's DevTools. The idea is to preserve
-  // "Pause on exceptions" behavior. Because React wraps all user-provided
-  // functions in invokeGuardedCallback, and the production version of
-  // invokeGuardedCallback uses a try-catch, all user exceptions are treated
-  // like caught exceptions, and the DevTools won't pause unless the developer
-  // takes the extra step of enabling pause on caught exceptions. This is
-  // unintuitive, though, because even though React has caught the error, from
-  // the developer's perspective, the error is uncaught.
-  //
-  // To preserve the expected "Pause on exceptions" behavior, we don't use a
-  // try-catch in DEV. Instead, we synchronously dispatch a fake event to a fake
-  // DOM node, and call the user-provided callback from inside an event handler
-  // for that fake event. If the callback throws, the error is "captured" using
-  // a global event handler. But because the error happens in a different
-  // event loop context, it does not interrupt the normal program flow.
-  // Effectively, this gives us try-catch behavior without actually using
-  // try-catch. Neat!
-  // Check that the browser supports the APIs we need to implement our special
-  // DEV version of invokeGuardedCallback
   if (
     typeof window !== "undefined" &&
     typeof window.dispatchEvent === "function" &&
     typeof document !== "undefined" && // $FlowFixMe[method-unbinding]
     typeof document.createEvent === "function"
   ) {
-    var fakeNode = document.createElement("react");
+    fakeNode = document.createElement("react");
+  }
+}
 
-    invokeGuardedCallbackImpl = function invokeGuardedCallbackDev(
-      name,
-      func,
-      context
-    ) {
-      // If document doesn't exist we know for sure we will crash in this method
-      // when we call document.createEvent(). However this can cause confusing
-      // errors: https://github.com/facebook/create-react-app/issues/3482
-      // So we preemptively throw with a better message instead.
-      if (typeof document === "undefined" || document === null) {
-        throw new Error(
-          "The `document` global was defined when React was initialized, but is not " +
-            "defined anymore. This can happen in a test environment if a component " +
-            "schedules an update from an asynchronous callback, but the test has already " +
-            "finished running. To solve this, you can either unmount the component at " +
-            "the end of your test (and ensure that any asynchronous operations get " +
-            "canceled in `componentWillUnmount`), or you can change the test itself " +
-            "to be asynchronous."
-        );
-      }
-
+function invokeGuardedCallbackImpl(name, func, context) {
+  {
+    // In DEV mode, we use a special version
+    // that plays more nicely with the browser's DevTools. The idea is to preserve
+    // "Pause on exceptions" behavior. Because React wraps all user-provided
+    // functions in invokeGuardedCallback, and the production version of
+    // invokeGuardedCallback uses a try-catch, all user exceptions are treated
+    // like caught exceptions, and the DevTools won't pause unless the developer
+    // takes the extra step of enabling pause on caught exceptions. This is
+    // unintuitive, though, because even though React has caught the error, from
+    // the developer's perspective, the error is uncaught.
+    //
+    // To preserve the expected "Pause on exceptions" behavior, we don't use a
+    // try-catch in DEV. Instead, we synchronously dispatch a fake event to a fake
+    // DOM node, and call the user-provided callback from inside an event handler
+    // for that fake event. If the callback throws, the error is "captured" using
+    // event loop context, it does not interrupt the normal program flow.
+    // Effectively, this gives us try-catch behavior without actually using
+    // try-catch. Neat!
+    // fakeNode signifies we are in an environment with a document and window object
+    if (fakeNode) {
       var evt = document.createEvent("Event");
       var didCall = false; // Keeps track of whether the user-provided callback threw an error. We
       // set this to true at the beginning, then set it to false right after
@@ -185,7 +154,7 @@ var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
         "event"
       );
 
-      function restoreAfterDispatch() {
+      var restoreAfterDispatch = function () {
         // We immediately remove the callback from event listeners so that
         // nested `invokeGuardedCallback` calls do not clash. Otherwise, a
         // nested call would trigger the fake event handlers of any call higher
@@ -201,20 +170,20 @@ var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
         ) {
           window.event = windowEvent;
         }
-      } // Create an event handler for our fake event. We will synchronously
+      }; // Create an event handler for our fake event. We will synchronously
       // dispatch our fake event using `dispatchEvent`. Inside the handler, we
       // call the user-provided callback.
       // $FlowFixMe[method-unbinding]
 
-      var funcArgs = Array.prototype.slice.call(arguments, 3);
+      var _funcArgs = Array.prototype.slice.call(arguments, 3);
 
-      function callCallback() {
+      var callCallback = function () {
         didCall = true;
         restoreAfterDispatch(); // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
 
-        func.apply(context, funcArgs);
+        func.apply(context, _funcArgs);
         didError = false;
-      } // Create a global error event handler. We use this to capture the value
+      }; // Create a global error event handler. We use this to capture the value
       // that was thrown. It's possible that this error handler will fire more
       // than once; for example, if non-React code also calls `dispatchEvent`
       // and a handler for that event throws. We should be resilient to most of
@@ -229,9 +198,9 @@ var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
       var error; // Use this to track whether the error event is ever called.
 
       var didSetError = false;
-      var isCrossOriginError = false; // $FlowFixMe[missing-local-annot]
+      var isCrossOriginError = false;
 
-      function handleWindowError(event) {
+      var handleWindowError = function (event) {
         error = event.error;
         didSetError = true;
 
@@ -251,7 +220,7 @@ var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
             }
           }
         }
-      } // Create a fake event type.
+      }; // Create a fake event type.
 
       var evtType = "react-" + (name ? name : "invokeguardedcallback"); // Attach our event handlers
 
@@ -294,19 +263,29 @@ var invokeGuardedCallbackImpl = invokeGuardedCallbackProd;
 
       window.removeEventListener("error", handleWindowError);
 
-      if (!didCall) {
+      if (didCall) {
+        return;
+      } else {
         // Something went really wrong, and our event was not dispatched.
         // https://github.com/facebook/react/issues/16734
         // https://github.com/facebook/react/issues/16585
         // Fall back to the production implementation.
-        restoreAfterDispatch();
-        return invokeGuardedCallbackProd.apply(this, arguments);
+        restoreAfterDispatch(); // we fall through and call the prod version instead
       }
-    };
+    } // We only get here if we are in an environment that either does not support the browser
+    // variant or we had trouble getting the browser to emit the error.
+    // $FlowFixMe[method-unbinding]
+
+    var funcArgs = Array.prototype.slice.call(arguments, 3);
+
+    try {
+      // $FlowFixMe[incompatible-call] Flow doesn't understand the arguments splicing.
+      func.apply(context, funcArgs);
+    } catch (error) {
+      this.onError(error);
+    }
   }
 }
-
-var invokeGuardedCallbackImpl$1 = invokeGuardedCallbackImpl;
 
 var hasError = false;
 var caughtError = null; // Used by event system to capture/rethrow the first error.
@@ -336,7 +315,7 @@ var reporter = {
 function invokeGuardedCallback(name, func, context, a, b, c, d, e, f) {
   hasError = false;
   caughtError = null;
-  invokeGuardedCallbackImpl$1.apply(reporter, arguments);
+  invokeGuardedCallbackImpl.apply(reporter, arguments);
 }
 /**
  * Same as invokeGuardedCallback, but instead of returning an error, it stores
@@ -27682,7 +27661,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-fdad813ac-20230420";
+var ReactVersion = "18.3.0-next-cc93a8533-20230420";
 
 function createPortal$1(
   children,
