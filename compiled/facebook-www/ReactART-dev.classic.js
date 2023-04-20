@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-ccedb28a";
+var ReactVersion = "18.3.0-www-classic-cd98b4c3";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -7343,7 +7343,21 @@ var didWarnAboutUseWrappedInTryCatch;
 {
   didWarnAboutMismatchedHooksForComponent = new Set();
   didWarnAboutUseWrappedInTryCatch = new Set();
-} // These are set right before calling the component.
+} // The effect "instance" is a shared object that remains the same for the entire
+// lifetime of an effect. In Rust terms, a RefCell. We use it to store the
+// "destroy" function that is returned from an effect, because that is stateful.
+// The field is `undefined` if the effect is unmounted, or if the effect ran
+// but is not stateful. We don't explicitly track whether the effect is mounted
+// or unmounted because that can be inferred by the hiddenness of the fiber in
+// the tree, i.e. whether there is a hidden Offscreen fiber above it.
+//
+// It's unfortunate that this is stored on a separate object, because it adds
+// more memory per effect instance, but it's conceptually sound. I think there's
+// likely a better data structure we could use for effects; perhaps just one
+// array of effect instances per fiber. But I think this is OK for now despite
+// the additional memory and we can follow up with performance
+// optimizations later.
+// These are set right before calling the component.
 
 var renderLanes$1 = NoLanes; // The work-in-progress fiber. I've named it differently to distinguish it from
 // the work-in-progress hook.
@@ -8652,7 +8666,7 @@ function mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   pushEffect(
     HasEffect | Passive,
     updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
-    undefined,
+    createEffectInstance(),
     null
   );
   return nextSnapshot;
@@ -8707,7 +8721,7 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
     pushEffect(
       HasEffect | Passive,
       updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
-      undefined,
+      createEffectInstance(),
       null
     ); // Unless we're rendering a blocking lane, schedule a consistency check.
     // Right before committing, we will walk the tree and check if any of the
@@ -8832,11 +8846,11 @@ function rerenderState(initialState) {
   return rerenderReducer(basicStateReducer);
 }
 
-function pushEffect(tag, create, destroy, deps) {
+function pushEffect(tag, create, inst, deps) {
   var effect = {
     tag: tag,
     create: create,
-    destroy: destroy,
+    inst: inst,
     deps: deps,
     // Circular
     next: null
@@ -8861,6 +8875,12 @@ function pushEffect(tag, create, destroy, deps) {
   }
 
   return effect;
+}
+
+function createEffectInstance() {
+  return {
+    destroy: undefined
+  };
 }
 
 var stackContainsErrorMessage = null;
@@ -8963,7 +8983,7 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
   hook.memoizedState = pushEffect(
     HasEffect | hookFlags,
     create,
-    undefined,
+    createEffectInstance(),
     nextDeps
   );
 }
@@ -8971,17 +8991,16 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   var nextDeps = deps === undefined ? null : deps;
-  var destroy = undefined; // currentHook is null when rerendering after a render phase state update.
+  var effect = hook.memoizedState;
+  var inst = effect.inst; // currentHook is null when rerendering after a render phase state update.
 
   if (currentHook !== null) {
-    var prevEffect = currentHook.memoizedState;
-    destroy = prevEffect.destroy;
-
     if (nextDeps !== null) {
+      var prevEffect = currentHook.memoizedState;
       var prevDeps = prevEffect.deps;
 
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        hook.memoizedState = pushEffect(hookFlags, create, destroy, nextDeps);
+        hook.memoizedState = pushEffect(hookFlags, create, inst, nextDeps);
         return;
       }
     }
@@ -8991,7 +9010,7 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   hook.memoizedState = pushEffect(
     HasEffect | hookFlags,
     create,
-    destroy,
+    inst,
     nextDeps
   );
 }
@@ -19298,10 +19317,12 @@ function commitHookEffectListUnmount(
     do {
       if ((effect.tag & flags) === flags) {
         // Unmount
-        var destroy = effect.destroy;
-        effect.destroy = undefined;
+        var inst = effect.inst;
+        var destroy = inst.destroy;
 
         if (destroy !== undefined) {
+          inst.destroy = undefined;
+
           if (enableSchedulingProfiler) {
             if ((flags & Passive) !== NoFlags) {
               markComponentPassiveEffectUnmountStarted(finishedWork);
@@ -19365,7 +19386,9 @@ function commitHookEffectListMount(flags, finishedWork) {
           }
         }
 
-        effect.destroy = create();
+        var inst = effect.inst;
+        var destroy = create();
+        inst.destroy = destroy;
 
         {
           if ((flags & Insertion) !== NoFlags) {
@@ -19382,8 +19405,6 @@ function commitHookEffectListMount(flags, finishedWork) {
         }
 
         {
-          var destroy = effect.destroy;
-
           if (destroy !== undefined && typeof destroy !== "function") {
             var hookName = void 0;
 
@@ -20767,12 +20788,13 @@ function commitDeletionEffectsOnFiber(
             var effect = firstEffect;
 
             do {
-              var _effect = effect,
-                destroy = _effect.destroy,
-                tag = _effect.tag;
+              var tag = effect.tag;
+              var inst = effect.inst;
+              var destroy = inst.destroy;
 
               if (destroy !== undefined) {
                 if ((tag & Insertion) !== NoFlags) {
+                  inst.destroy = undefined;
                   safelyCallDestroy(
                     deletedFiber,
                     nearestMountedAncestor,
@@ -20785,6 +20807,7 @@ function commitDeletionEffectsOnFiber(
 
                   if (shouldProfile(deletedFiber)) {
                     startLayoutEffectTimer();
+                    inst.destroy = undefined;
                     safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,
@@ -20792,6 +20815,7 @@ function commitDeletionEffectsOnFiber(
                     );
                     recordLayoutEffectDuration(deletedFiber);
                   } else {
+                    inst.destroy = undefined;
                     safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,

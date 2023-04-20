@@ -3445,7 +3445,7 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
     pushEffect(
       9,
       updateStoreInstance.bind(null, fiber, hook, nextSnapshot, getSnapshot),
-      void 0,
+      { destroy: void 0 },
       null
     );
     subscribe = workInProgressRoot;
@@ -3511,18 +3511,18 @@ function mountState(initialState) {
   );
   return [hook.memoizedState, initialState];
 }
-function pushEffect(tag, create, destroy, deps) {
-  tag = { tag: tag, create: create, destroy: destroy, deps: deps, next: null };
+function pushEffect(tag, create, inst, deps) {
+  tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
   create = currentlyRenderingFiber$1.updateQueue;
   null === create
     ? ((create = createFunctionComponentUpdateQueue()),
       (currentlyRenderingFiber$1.updateQueue = create),
       (create.lastEffect = tag.next = tag))
-    : ((destroy = create.lastEffect),
-      null === destroy
+    : ((inst = create.lastEffect),
+      null === inst
         ? (create.lastEffect = tag.next = tag)
-        : ((deps = destroy.next),
-          (destroy.next = tag),
+        : ((deps = inst.next),
+          (inst.next = tag),
           (tag.next = deps),
           (create.lastEffect = tag)));
   return tag;
@@ -3536,24 +3536,20 @@ function mountEffectImpl(fiberFlags, hookFlags, create, deps) {
   hook.memoizedState = pushEffect(
     1 | hookFlags,
     create,
-    void 0,
+    { destroy: void 0 },
     void 0 === deps ? null : deps
   );
 }
 function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   deps = void 0 === deps ? null : deps;
-  var destroy = void 0;
-  if (null !== currentHook) {
-    var prevEffect = currentHook.memoizedState;
-    destroy = prevEffect.destroy;
-    if (null !== deps && areHookInputsEqual(deps, prevEffect.deps)) {
-      hook.memoizedState = pushEffect(hookFlags, create, destroy, deps);
-      return;
-    }
-  }
-  currentlyRenderingFiber$1.flags |= fiberFlags;
-  hook.memoizedState = pushEffect(1 | hookFlags, create, destroy, deps);
+  var inst = hook.memoizedState.inst;
+  null !== currentHook &&
+  null !== deps &&
+  areHookInputsEqual(deps, currentHook.memoizedState.deps)
+    ? (hook.memoizedState = pushEffect(hookFlags, create, inst, deps))
+    : ((currentlyRenderingFiber$1.flags |= fiberFlags),
+      (hook.memoizedState = pushEffect(1 | hookFlags, create, inst, deps)));
 }
 function mountEffect(create, deps) {
   mountEffectImpl(8390656, 8, create, deps);
@@ -3917,7 +3913,7 @@ var HooksDispatcherOnMount = {
         getServerSnapshot,
         getSnapshot
       ),
-      void 0,
+      { destroy: void 0 },
       null
     );
     return getServerSnapshot;
@@ -7382,10 +7378,11 @@ function commitHookEffectListUnmount(
     var effect = (updateQueue = updateQueue.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var destroy = effect.destroy;
-        effect.destroy = void 0;
+        var inst = effect.inst,
+          destroy = inst.destroy;
         void 0 !== destroy &&
-          (enableSchedulingProfiler &&
+          ((inst.destroy = void 0),
+          enableSchedulingProfiler &&
             (0 !== (flags & 8)
               ? enableSchedulingProfiler &&
                 null !== injectedProfilingHooks &&
@@ -7435,8 +7432,10 @@ function commitHookEffectListMount(flags, finishedWork) {
               injectedProfilingHooks.markComponentLayoutEffectMountStarted(
                 finishedWork
               ));
-        var create = effect.create;
-        effect.destroy = create();
+        var create = effect.create,
+          inst = effect.inst;
+        create = create();
+        inst.destroy = create;
         enableSchedulingProfiler &&
           (0 !== (flags & 8)
             ? enableSchedulingProfiler &&
@@ -8103,28 +8102,35 @@ function commitDeletionEffectsOnFiber(
       ) {
         prevHostParentIsContainer = prevHostParent = prevHostParent.next;
         do {
-          var _effect = prevHostParentIsContainer,
-            destroy = _effect.destroy;
-          _effect = _effect.tag;
+          var tag = prevHostParentIsContainer.tag,
+            inst = prevHostParentIsContainer.inst,
+            destroy = inst.destroy;
           void 0 !== destroy &&
-            (0 !== (_effect & 2)
-              ? safelyCallDestroy(deletedFiber, nearestMountedAncestor, destroy)
-              : 0 !== (_effect & 4) &&
+            (0 !== (tag & 2)
+              ? ((inst.destroy = void 0),
+                safelyCallDestroy(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  destroy
+                ))
+              : 0 !== (tag & 4) &&
                 (enableSchedulingProfiler &&
                   markComponentLayoutEffectUnmountStarted(deletedFiber),
                 shouldProfile(deletedFiber)
                   ? (startLayoutEffectTimer(),
+                    (inst.destroy = void 0),
                     safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,
                       destroy
                     ),
                     recordLayoutEffectDuration(deletedFiber))
-                  : safelyCallDestroy(
+                  : ((inst.destroy = void 0),
+                    safelyCallDestroy(
                       deletedFiber,
                       nearestMountedAncestor,
                       destroy
-                    ),
+                    )),
                 enableSchedulingProfiler &&
                   markComponentLayoutEffectUnmountStopped()));
           prevHostParentIsContainer = prevHostParentIsContainer.next;
@@ -16265,7 +16271,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1849 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-2e9b50ad",
+  version: "18.3.0-www-modern-5bd76b04",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16310,7 +16316,7 @@ var devToolsConfig$jscomp$inline_1849 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-2e9b50ad"
+  reconcilerVersion: "18.3.0-www-modern-5bd76b04"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16466,7 +16472,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-2e9b50ad";
+exports.version = "18.3.0-www-modern-5bd76b04";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
