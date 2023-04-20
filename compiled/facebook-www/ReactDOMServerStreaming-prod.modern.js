@@ -1689,29 +1689,33 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
+      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
+      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
+      name = "" + value;
       break;
     default:
-      if (!isAttributeNameSafe(name)) return;
+      if (
+        (2 < name.length &&
+          ("o" === name[0] || "O" === name[0]) &&
+          ("n" === name[1] || "N" === name[1])) ||
+        !isAttributeNameSafe(name)
+      )
+        return;
+      name = "" + value;
   }
-  if (
-    !(2 < name.length) ||
-    ("o" !== name[0] && "O" !== name[0]) ||
-    ("n" !== name[1] && "N" !== name[1])
-  )
-    (name = "" + value),
-      (destination.buffer += ","),
-      (attributeName = escapeJSObjectForInstructionScripts(attributeName)),
-      (destination.buffer += attributeName),
-      (destination.buffer += ","),
-      (attributeName = escapeJSObjectForInstructionScripts(name)),
-      (destination.buffer += attributeName);
+  destination.buffer += ",";
+  attributeName = escapeJSObjectForInstructionScripts(attributeName);
+  destination.buffer += attributeName;
+  destination.buffer += ",";
+  attributeName = escapeJSObjectForInstructionScripts(name);
+  destination.buffer += attributeName;
 }
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
@@ -1787,29 +1791,33 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
       return;
     case "className":
       attributeName = "class";
+      name = "" + value;
       break;
     case "hidden":
       if (!1 === value) return;
+      name = "";
       break;
     case "src":
     case "href":
       value = sanitizeURL(value);
+      name = "" + value;
       break;
     default:
-      if (!isAttributeNameSafe(name)) return;
+      if (
+        (2 < name.length &&
+          ("o" === name[0] || "O" === name[0]) &&
+          ("n" === name[1] || "N" === name[1])) ||
+        !isAttributeNameSafe(name)
+      )
+        return;
+      name = "" + value;
   }
-  if (
-    !(2 < name.length) ||
-    ("o" !== name[0] && "O" !== name[0]) ||
-    ("n" !== name[1] && "N" !== name[1])
-  )
-    (name = "" + value),
-      (destination.buffer += ","),
-      (attributeName = escapeTextForBrowser(JSON.stringify(attributeName))),
-      (destination.buffer += attributeName),
-      (destination.buffer += ","),
-      (attributeName = escapeTextForBrowser(JSON.stringify(name))),
-      (destination.buffer += attributeName);
+  destination.buffer += ",";
+  attributeName = escapeTextForBrowser(JSON.stringify(attributeName));
+  destination.buffer += attributeName;
+  destination.buffer += ",";
+  attributeName = escapeTextForBrowser(JSON.stringify(name));
+  destination.buffer += attributeName;
 }
 function prefetchDNS(href) {
   if (currentResources) {
