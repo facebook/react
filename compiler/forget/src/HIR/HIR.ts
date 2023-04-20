@@ -678,7 +678,7 @@ export type InstructionValue =
       property: Place;
       loc: SourceLocation;
     }
-  | { kind: "LoadGlobal"; name: string; loc: SourceLocation }
+  | LoadGlobal
   | FunctionExpression
   | {
       kind: "TaggedTemplateExpression";
@@ -743,6 +743,12 @@ export type Place = {
 export type Primitive = {
   kind: "Primitive";
   value: number | boolean | string | null | undefined;
+  loc: SourceLocation;
+};
+
+export type LoadGlobal = {
+  kind: "LoadGlobal";
+  name: string;
   loc: SourceLocation;
 };
 

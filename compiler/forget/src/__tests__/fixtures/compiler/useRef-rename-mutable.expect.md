@@ -14,8 +14,7 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const x = useRef;
-  const ref = x(null);
+  const ref = useRef(null);
   return ref.current;
 }
 

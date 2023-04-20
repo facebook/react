@@ -13,6 +13,7 @@ import {
   IdentifierId,
   Instruction,
   InstructionValue,
+  LoadGlobal,
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
@@ -91,7 +92,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
     // Note that this analysis uses a single-pass only, so it will never fill in
     // phi values for blocks that have a back-edge.
     for (const phi of block.phis) {
-      let value: Primitive | null = null;
+      let value: Primitive | LoadGlobal | null = null;
       for (const [, operand] of phi.operands) {
         const operandValue = constants.get(operand.id) ?? null;
         if (operandValue === null) {
@@ -100,7 +101,12 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
         }
         if (value === null) {
           value = operandValue;
-        } else if (operandValue.value !== value.value) {
+        } else if (
+          operandValue.kind !== value.kind ||
+          (operandValue.kind === "Primitive" &&
+            value.kind === "Primitive" &&
+            operandValue.value !== value.value)
+        ) {
           value = null;
           break;
         }
@@ -125,7 +131,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
     switch (terminal.kind) {
       case "if": {
         const testValue = read(constants, terminal.test);
-        if (testValue !== null) {
+        if (testValue !== null && testValue.kind === "Primitive") {
           hasChanges = true;
           const targetBlockId = testValue.value
             ? terminal.consequent
@@ -158,10 +164,14 @@ function evaluateInstruction(
     case "Primitive": {
       return value;
     }
+    case "LoadGlobal": {
+      return value;
+    }
     case "ComputedLoad": {
       const property = read(constants, value.property);
       if (
         property !== null &&
+        property.kind === "Primitive" &&
         typeof property.value === "string" &&
         isValidIdentifier(property.value)
       ) {
@@ -188,6 +198,7 @@ function evaluateInstruction(
       const property = read(constants, value.property);
       if (
         property !== null &&
+        property.kind === "Primitive" &&
         typeof property.value === "string" &&
         isValidIdentifier(property.value)
       ) {
@@ -205,7 +216,12 @@ function evaluateInstruction(
     case "BinaryExpression": {
       const lhsValue = read(constants, value.left);
       const rhsValue = read(constants, value.right);
-      if (lhsValue !== null && rhsValue !== null) {
+      if (
+        lhsValue !== null &&
+        rhsValue !== null &&
+        lhsValue.kind === "Primitive" &&
+        rhsValue.kind === "Primitive"
+      ) {
         const lhs = lhsValue.value;
         const rhs = rhsValue.value;
         let result: Primitive | null = null;
@@ -289,6 +305,7 @@ function evaluateInstruction(
       const objectValue = read(constants, value.object);
       if (objectValue !== null) {
         if (
+          objectValue.kind === "Primitive" &&
           typeof objectValue.value === "string" &&
           value.property === "length"
         ) {
@@ -332,5 +349,5 @@ function read(constants: Constants, place: Place): Constant | null {
   return constants.get(place.identifier.id) ?? null;
 }
 
-type Constant = Primitive;
+type Constant = Primitive | LoadGlobal;
 type Constants = Map<IdentifierId, Constant>;

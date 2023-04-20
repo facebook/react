@@ -47,14 +47,14 @@ function Component(props) {
     t1 = $[4];
   }
   const primitiveVal1 = t1;
-  const primitiveVal2 = Infinity;
+
   const primitiveVal3 = globaThis.globalThis.NaN;
 
-  foo(primitiveVal1, primitiveVal2, primitiveVal3);
+  foo(primitiveVal1, Infinity, primitiveVal3);
   const c_5 = $[5] !== primitiveVal1;
   let t2;
   if (c_5) {
-    t2 = { primitiveVal1, primitiveVal2, primitiveVal3 };
+    t2 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
     $[5] = primitiveVal1;
     $[6] = t2;
   } else {
