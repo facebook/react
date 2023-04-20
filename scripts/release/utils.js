@@ -124,7 +124,7 @@ const getDateStringForCommit = async commit => {
   return dateString;
 };
 
-const getCommitFromCurrentBuild = async () => {
+const getCommitFromBuild12345 = async () => {
   const cwd = join(__dirname, '..', '..');
 
   // If this build includes a build-info.json file, extract the commit from it.
