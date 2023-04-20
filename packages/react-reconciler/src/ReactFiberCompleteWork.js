@@ -771,63 +771,67 @@ function bubbleProperties(completedWork: Fiber) {
 
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-     // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let actualDuration = completedWork.actualDuration;
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
+    // In profiling mode, resetChildExpirationTime is also used to reset
+    // profiler durations.
+    let actualDuration = completedWork.actualDuration;
+    let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
 
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
+    let child = completedWork.child;
+    while (child !== null) {
+      newChildLanes = mergeLanes(
+        newChildLanes,
+        mergeLanes(child.lanes, child.childLanes),
+      );
 
-        subtreeFlags |= !didBailout ? child.subtreeFlags : child.subtreeFlags & StaticMask;
-        subtreeFlags |= !didBailout ? child.flags : child.flags & StaticMask;
+      subtreeFlags |= !didBailout
+        ? child.subtreeFlags
+        : child.subtreeFlags & StaticMask;
+      subtreeFlags |= !didBailout ? child.flags : child.flags & StaticMask;
 
-        // When a fiber is cloned, its actualDuration is reset to 0. This value will
-        // only be updated if work is done on the fiber (i.e. it doesn't bailout).
-        // When work is done, it should bubble to the parent's actualDuration. If
-        // the fiber has not been cloned though, (meaning no work was done), then
-        // this value will reflect the amount of time spent working on a previous
-        // render. In that case it should not bubble. We determine whether it was
-        // cloned by comparing the child pointer.
-        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-        if (!didBailout) {
-          actualDuration += child.actualDuration;
-        }
-
-        // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
-        treeBaseDuration += child.treeBaseDuration;
-
-        child.return = completedWork;
-        child = child.sibling;
+      // When a fiber is cloned, its actualDuration is reset to 0. This value will
+      // only be updated if work is done on the fiber (i.e. it doesn't bailout).
+      // When work is done, it should bubble to the parent's actualDuration. If
+      // the fiber has not been cloned though, (meaning no work was done), then
+      // this value will reflect the amount of time spent working on a previous
+      // render. In that case it should not bubble. We determine whether it was
+      // cloned by comparing the child pointer.
+      // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
+      if (!didBailout && actualDuration) {
+        actualDuration += child.actualDuration;
       }
 
-      if (!didBailout) {
-        completedWork.actualDuration = actualDuration;
-      }
-      completedWork.treeBaseDuration = treeBaseDuration;
+      // $FlowFixMe[unsafe-addition] addition with possible null/undefined value
+      treeBaseDuration += child.treeBaseDuration;
+
+      child.return = completedWork;
+      child = child.sibling;
+    }
+
+    if (!didBailout) {
+      completedWork.actualDuration = actualDuration;
+    }
+    completedWork.treeBaseDuration = treeBaseDuration;
   } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= !didBailout ? child.subtreeFlags : child.subtreeFlags & StaticMask;
-        subtreeFlags |= !didBailout ? child.flags : child.flags & StaticMask;
-        // Update the return pointer so the tree is consistent. This is a code
-        // smell because it assumes the commit phase is never concurrent with
-        // the render phase. Will address during refactor to alternate model.
-        child.return = completedWork;
-        child = child.sibling;
-      }
+    let child = completedWork.child;
+    while (child !== null) {
+      newChildLanes = mergeLanes(
+        newChildLanes,
+        mergeLanes(child.lanes, child.childLanes),
+      );
+      // "Static" flags share the lifetime of the fiber/hook they belong to,
+      // so we should bubble those up even during a bailout. All the other
+      // flags have a lifetime only of a single render + commit, so we should
+      // ignore them.
+      subtreeFlags |= !didBailout
+        ? child.subtreeFlags
+        : child.subtreeFlags & StaticMask;
+      subtreeFlags |= !didBailout ? child.flags : child.flags & StaticMask;
+      // Update the return pointer so the tree is consistent. This is a code
+      // smell because it assumes the commit phase is never concurrent with
+      // the render phase. Will address during refactor to alternate model.
+      child.return = completedWork;
+      child = child.sibling;
+    }
   }
 
   completedWork.subtreeFlags |= subtreeFlags;
