@@ -284,7 +284,7 @@ function getComponentNameFromType(type) {
       return "Cache";
     }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -330,8 +330,6 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
-
-      // eslint-disable-next-line no-fallthrough
     }
   }
 
@@ -6750,7 +6748,6 @@ function setProp(domElement, tag, key, value, props) {
     }
 
     // Fall through to the last case which shouldn't remove empty strings.
-    // eslint-disable-next-line no-fallthrough
 
     case "formAction": {
       if (
@@ -7109,7 +7106,7 @@ function setProp(domElement, tag, key, value, props) {
         break;
       }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     default: {
       if (
@@ -7218,7 +7215,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props) {
         break;
       }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
@@ -7505,7 +7502,6 @@ function setInitialProperties(domElement, tag, props) {
       listenToNonDelegatedEvent("error", domElement);
       listenToNonDelegatedEvent("load", domElement); // We fallthrough to the return of the void elements
     }
-    // eslint-disable-next-line no-fallthrough
 
     case "area":
     case "base":
@@ -7695,7 +7691,7 @@ function diffProperties(domElement, tag, lastProps, nextProps) {
           error('Cannot update the "is" prop after it has been initialized.');
         }
 
-        // eslint-disable-next-line no-fallthrough
+        // Fall through
 
         default: {
           (updatePayload = updatePayload || []).push(propKey, nextProp);
@@ -8383,7 +8379,7 @@ function diffHydratedCustomComponent(
           continue;
         }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       case "className":
         if (enableCustomElementPropertySupport) {
@@ -8398,7 +8394,7 @@ function diffHydratedCustomComponent(
           continue;
         }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       default: {
         var ownNamespaceDev = parentNamespaceDev;
@@ -19347,9 +19343,8 @@ function throwException(
             }
 
             break;
-          }
+          } // Fall through
         }
-        // eslint-disable-next-line no-fallthrough
 
         default: {
           throw new Error(
@@ -23340,13 +23335,13 @@ function beginWork$1(current, workInProgress, renderLanes) {
       return updateHostHoistable(current, workInProgress);
     }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     case HostSingleton: {
       return updateHostSingleton(current, workInProgress, renderLanes);
     }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     case HostComponent:
       return updateHostComponent$1(current, workInProgress, renderLanes);
@@ -25237,9 +25232,8 @@ function completeWork(current, workInProgress, renderLanes) {
             return null;
           }
         }
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton: {
       {
@@ -25298,9 +25292,8 @@ function completeWork(current, workInProgress, renderLanes) {
 
         bubbleProperties(workInProgress);
         return null;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostComponent: {
       popHostContext(workInProgress);
@@ -27218,9 +27211,8 @@ function commitLayoutEffectOnFiber(
         }
 
         break;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton:
     case HostComponent: {
@@ -27889,9 +27881,8 @@ function commitPlacement(finishedWork) {
 
         insertOrAppendPlacementNode(finishedWork, before, parent);
         break;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line no-fallthrough
 
     case HostComponent: {
       var _parent = parentFiber.stateNode;
@@ -27923,7 +27914,6 @@ function commitPlacement(finishedWork) {
       );
       break;
     }
-    // eslint-disable-next-line-no-fallthrough
 
     default:
       throw new Error(
@@ -28097,9 +28087,8 @@ function commitDeletionEffectsOnFiber(
         }
 
         return;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line no-fallthrough
 
     case HostSingleton: {
       {
@@ -28124,16 +28113,14 @@ function commitDeletionEffectsOnFiber(
         hostParent = prevHostParent;
         hostParentIsContainer = prevHostParentIsContainer;
         return;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line no-fallthrough
 
     case HostComponent: {
       if (!offscreenSubtreeWasHidden) {
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
       } // Intentional fallthrough to next branch
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostText: {
       // We only need to remove the nearest host child. Set the host parent
@@ -28763,9 +28750,8 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         }
 
         return;
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostSingleton: {
       {
@@ -28785,9 +28771,8 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             );
           }
         }
-      }
+      } // Fall through
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case HostComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -29831,7 +29816,6 @@ function commitPassiveMountOnFiber(
         break;
       } // Intentional fallthrough to next branch
     }
-    // eslint-disable-next-line-no-fallthrough
 
     default: {
       recursivelyTraversePassiveMountEffects(
@@ -30031,7 +30015,6 @@ function reconnectPassiveEffects(
         break;
       } // Intentional fallthrough to next branch
     }
-    // eslint-disable-next-line-no-fallthrough
 
     default: {
       recursivelyTraverseReconnectPassiveEffects(
@@ -30106,7 +30089,6 @@ function commitAtomicPassiveEffects(
 
       break;
     }
-    // eslint-disable-next-line-no-fallthrough
 
     default: {
       recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
@@ -32440,9 +32422,6 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
     case RootFatalErrored: {
       throw new Error("Root did not complete. This is a bug in React.");
     }
-    // Flow knows about invariant, so it complains if I add a break
-    // statement, but eslint doesn't know about invariant, so it complains
-    // if I do. eslint-disable-next-line no-fallthrough
 
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
@@ -33640,7 +33619,6 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       // function component.
       unitOfWork.tag = FunctionComponent; // Fallthrough to the next branch.
     }
-    // eslint-disable-next-line no-fallthrough
 
     case SimpleMemoComponent:
     case FunctionComponent: {
@@ -36086,26 +36064,26 @@ function createFiberFromTypeAndProps(
         return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
       }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       case REACT_SCOPE_TYPE: {
         return createFiberFromScope(type, pendingProps, mode, lanes, key);
       }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       case REACT_CACHE_TYPE: {
         return createFiberFromCache(pendingProps, mode, lanes, key);
       }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing) {
           return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
         }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
@@ -36114,7 +36092,7 @@ function createFiberFromTypeAndProps(
           break;
         }
 
-      // eslint-disable-next-line no-fallthrough
+      // Fall through
 
       default: {
         if (typeof type === "object" && type !== null) {
@@ -36558,7 +36536,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-47bc9d74";
+var ReactVersion = "18.3.0-www-classic-5fa88aed";
 
 function createPortal$1(
   children,
@@ -46548,20 +46526,17 @@ function getEventPriority(domEventName) {
     case "touchcancel":
     case "touchend":
     case "touchstart":
-    case "volumechange": // Used by polyfills:
-    // eslint-disable-next-line no-fallthrough
+    case "volumechange": // Used by polyfills: (fall through)
 
     case "change":
     case "selectionchange":
     case "textInput":
     case "compositionstart":
     case "compositionend":
-    case "compositionupdate": // Only enableCreateEventHandleAPI:
-    // eslint-disable-next-line no-fallthrough
+    case "compositionupdate": // Only enableCreateEventHandleAPI: (fall through)
 
     case "beforeblur":
-    case "afterblur": // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
+    case "afterblur": // Not used by React but could be by user code: (fall through)
 
     case "beforeinput":
     case "blur":
@@ -46587,8 +46562,7 @@ function getEventPriority(domEventName) {
     case "scroll":
     case "toggle":
     case "touchmove":
-    case "wheel": // Not used by React but could be by user code:
-    // eslint-disable-next-line no-fallthrough
+    case "wheel": // Not used by React but could be by user code: (fall through)
 
     case "mouseenter":
     case "mouseleave":

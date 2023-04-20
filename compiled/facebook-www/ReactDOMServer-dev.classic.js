@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-1fceba31";
+var ReactVersion = "18.3.0-www-classic-0673a8a9";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2877,7 +2877,6 @@ function pushAttribute(target, name, value) {
     }
 
     // Fall through to the last case which shouldn't remove empty strings.
-    // eslint-disable-next-line no-fallthrough
 
     case "formAction": {
       if (
@@ -3348,12 +3347,10 @@ function pushStartOption(target, props, formatContext) {
         case "dangerouslySetInnerHTML":
           innerHTML = propValue;
           break;
-        // eslint-disable-next-line-no-fallthrough
 
         case "value":
           value = propValue;
         // We intentionally fallthrough to also set the attribute on the node.
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -3485,7 +3482,6 @@ function pushInput(target, props) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         case "defaultChecked":
           defaultChecked = propValue;
@@ -3577,7 +3573,6 @@ function pushStartTextArea(target, props) {
           throw new Error(
             "`dangerouslySetInnerHTML` does not make sense on <textarea>."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -3952,7 +3947,6 @@ function pushLinkImpl(target, props) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -4193,7 +4187,6 @@ function pushSelfClosing(target, props, tag) {
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -4223,7 +4216,6 @@ function pushStartMenuItem(target, props) {
           throw new Error(
             "menuitems cannot have `children` nor `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           pushAttribute(target, propKey, propValue);
@@ -5018,7 +5010,6 @@ function pushEndInstance(target, type, props, responseState, formatContext) {
     // Omitted close tags
     // TODO: Instead of repeating this switch we could try to pass a flag from above.
     // That would require returning a tuple. Which might be ok if it gets inlined.
-    // eslint-disable-next-line-no-fallthrough
 
     case "area":
     case "base":
@@ -6212,7 +6203,6 @@ function writeStyleResourceDependencyInJS(
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           writeStyleResourceAttributeInJS(destination, propKey, propValue);
@@ -6414,7 +6404,6 @@ function writeStyleResourceDependencyInAttr(
               " is a self-closing tag and must neither have `children` nor " +
               "use `dangerouslySetInnerHTML`."
           );
-        // eslint-disable-next-line-no-fallthrough
 
         default:
           writeStyleResourceAttributeInAttr(destination, propKey, propValue);
@@ -7510,7 +7499,7 @@ function getComponentNameFromType(type) {
       return "Cache";
     }
 
-    // eslint-disable-next-line no-fallthrough
+    // Fall through
 
     case REACT_TRACING_MARKER_TYPE:
       if (enableTransitionTracing) {
@@ -7556,8 +7545,6 @@ function getComponentNameFromType(type) {
         var context2 = type;
         return (context2.displayName || context2._globalName) + ".Provider";
       }
-
-      // eslint-disable-next-line no-fallthrough
     }
   }
 
@@ -10828,7 +10815,6 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         return;
       }
     }
-    // eslint-disable-next-line-no-fallthrough
 
     case REACT_SUSPENSE_TYPE: {
       {
@@ -10975,7 +10961,6 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
           "Portals are not currently supported by the server renderer. " +
             "Render them conditionally so that they only appear on the client render."
         );
-      // eslint-disable-next-line-no-fallthrough
 
       case REACT_LAZY_TYPE: {
         var lazyNode = node;
