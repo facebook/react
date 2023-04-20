@@ -1779,10 +1779,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await resolveText('B');
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
-      // Restart and render the complete content. The tree will finish but we
-      // won't commit the result yet because the fallback appeared recently.
+      // Restart and render the complete content.
       await waitForAll(['A', 'B']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
+
+      if (gate(flags => flags.alwaysThrottleRetries)) {
+        // Correct behavior:
+        //
+        // The tree will finish but we won't commit the result yet because the fallback appeared recently.
+        expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
+      } else {
+        // Old behavior, gated until this rolls out at Meta:
+        //
+        // TODO: Because this render was the result of a retry, and a fallback
+        // was shown recently, we should suspend and remain on the fallback for
+        // little bit longer. We currently only do this if there's still
+        // remaining fallbacks in the tree, but we should do it for all retries.
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="A" />
+            <span prop="B" />
+          </>,
+        );
+      }
     });
     assertLog([]);
     expect(ReactNoop).toMatchRenderedOutput(
