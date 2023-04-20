@@ -247,11 +247,8 @@ export function createRoot(
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
+  Dispatcher.current = ReactDOMClientDispatcher;
 
-  if (enableFloat) {
-    // Set the default dispatcher to the client dispatcher
-    Dispatcher.current = ReactDOMClientDispatcher;
-  }
   const rootContainerElement: Document | Element | DocumentFragment =
     container.nodeType === COMMENT_NODE
       ? (container.parentNode: any)
@@ -339,10 +336,7 @@ export function hydrateRoot(
     transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
-  if (enableFloat) {
-    // Set the default dispatcher to the client dispatcher
-    Dispatcher.current = ReactDOMClientDispatcher;
-  }
+  Dispatcher.current = ReactDOMClientDispatcher;
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
 
