@@ -49,6 +49,8 @@ export type PluginOptions = {
    *  var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
   gating: GatingOptions | null;
+
+  panicOnBailout: boolean;
 };
 
 export type Logger = {
@@ -57,6 +59,7 @@ export type Logger = {
 
 export const defaultOptions: PluginOptions = {
   enableOnlyOnUseForgetDirective: false,
+  panicOnBailout: true,
   environment: null,
   logger: null,
   gating: null,

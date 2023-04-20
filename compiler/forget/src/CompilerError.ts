@@ -12,8 +12,24 @@ import { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
+  /**
+   * Unexpected syntax or input that may not be safe to compile.
+   */
   InvalidInput = "InvalidInput",
+  /**
+   * User code contains unsafe React patterns that might not be safe to compile, but does not mean
+   * the compiler has bugs. This typically means we can skip over the affected files, but other
+   * files without these errors can still be compiled.
+   */
+  UnsafeInput = "UnsafeInput",
+  /**
+   * Unhandled syntax that we don't support yet.
+   */
   Todo = "Todo",
+  /**
+   * An unexpected internal error in the compiler that indicates critical issues that can panic
+   * the compiler.
+   */
   Invariant = "Invariant",
 }
 
@@ -35,6 +51,8 @@ function mapSeverityToErrorCtor(severity: ErrorSeverity): CompilerErrorKind {
       return TodoError;
     case ErrorSeverity.Invariant:
       return InvariantError;
+    case ErrorSeverity.UnsafeInput:
+      return UnsafeInputError;
     default:
       assertExhaustive(severity, `Unhandled severity level: ${severity}`);
   }
@@ -55,6 +73,12 @@ class InvariantError extends Error {
   constructor(message: string) {
     super(message);
     this.name = `${ErrorSeverity.Invariant}Error`;
+  }
+}
+class UnsafeInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = `${ErrorSeverity.UnsafeInput}Error`;
   }
 }
 
@@ -202,5 +226,25 @@ export class CompilerError extends Error {
 
   hasErrors(): boolean {
     return this.details.length > 0;
+  }
+
+  /**
+   * An error is critical if it means the compiler has entered into a broken state and cannot
+   * continue safely. Other expected errors such as Todos mean that we can skip over that component
+   * but otherwise continue compiling the rest of the app.
+   */
+  isCritical(): boolean {
+    return this.details.some((detail) => {
+      switch (detail.severity) {
+        case ErrorSeverity.Invariant:
+          return true;
+        case ErrorSeverity.InvalidInput:
+        case ErrorSeverity.Todo:
+        case ErrorSeverity.UnsafeInput:
+          return false;
+        default:
+          assertExhaustive(detail.severity, "Unhandled error severity");
+      }
+    });
   }
 }

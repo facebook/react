@@ -54,6 +54,7 @@ describe("React Forget (Disable memoization of JSX elements)", () => {
             },
             logger: null,
             gating: options.gating,
+            panicOnBailout: true,
           }).code,
         });
       } catch (e) {

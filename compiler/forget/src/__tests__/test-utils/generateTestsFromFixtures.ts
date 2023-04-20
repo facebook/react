@@ -127,6 +127,7 @@ export default function generateTestsFromFixtures(
               enableOnlyOnUseForgetDirective,
               gating,
               language: parseLanguage(input),
+              panicOnBailout: true,
             });
           } else {
             receivedOutput = "<<input deleted>>";

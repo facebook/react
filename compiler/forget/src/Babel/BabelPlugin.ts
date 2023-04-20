@@ -54,7 +54,6 @@ export default function ReactForgetBabelPlugin(
     fn: BabelCore.NodePath<t.FunctionDeclaration>,
     pass: BabelPluginPass
   ): void {
-    hasForgetCompiledCode = true;
     const compiled = compile(fn, pass.opts.environment);
 
     if (pass.opts.gating != null) {
@@ -91,6 +90,8 @@ export default function ReactForgetBabelPlugin(
     } else {
       fn.replaceWith(compiled);
     }
+
+    hasForgetCompiledCode = true;
 
     // We are generating a new FunctionDeclaration node, so we must skip over it or this
     // traversal will loop infinitely.
@@ -171,7 +172,7 @@ export default function ReactForgetBabelPlugin(
               new CompilerErrorDetail({
                 reason,
                 description: violation.value.trim(),
-                severity: ErrorSeverity.InvalidInput,
+                severity: ErrorSeverity.UnsafeInput,
                 codeframe: null,
                 loc: violation.loc ?? null,
               })
@@ -179,7 +180,11 @@ export default function ReactForgetBabelPlugin(
           }
 
           if (fileHasUseForgetDirective) {
-            throw error;
+            if (options.panicOnBailout || error.isCritical()) {
+              throw error;
+            } else {
+              console.error(error);
+            }
           }
 
           return;
@@ -245,7 +250,19 @@ export default function ReactForgetBabelPlugin(
           if (options.logger && err) {
             options.logger.logEvent("err", err);
           }
-          throw err;
+          /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
+           * (eg an invariant is broken, meaning the compiler may be buggy). See
+           * {@link CompilerError.isCritical} for mappings.
+           * */
+          if (
+            options.panicOnBailout ||
+            !(err instanceof CompilerError) ||
+            (err instanceof CompilerError && err.isCritical())
+          ) {
+            throw err;
+          } else {
+            console.error(err);
+          }
         }
       },
     },

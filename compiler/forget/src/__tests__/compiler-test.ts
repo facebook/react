@@ -58,6 +58,7 @@ describe("React Forget", () => {
             },
             logger: null,
             gating: options.gating,
+            panicOnBailout: true,
           }).code,
         });
       } catch (e) {
