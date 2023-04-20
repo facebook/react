@@ -117,7 +117,9 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
         break;
       }
       case "scope": {
+        const temp = new Map(cx.temp);
         codegenReactiveScope(cx, statements, item.scope, item.instructions);
+        cx.temp = temp;
         break;
       }
       case "terminal": {
