@@ -4,5 +4,10 @@ function Component(props) {
   // NOTE: the order of evaluation in the lowering is incorrect:
   // the jsx element's tag observes `Tag` after reassignment, but should observe
   // it before the reassignment.
-  return <Tag>{((Tag = HScroll), maybeMutae(maybeMutable))}</Tag>;
+  return (
+    <Tag>
+      {((Tag = HScroll), maybeMutate(maybeMutable))}
+      <Tag />
+    </Tag>
+  );
 }

@@ -27,6 +27,7 @@ import {
   SourceLocation,
   SpreadPattern,
 } from "../HIR/HIR";
+import { printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
@@ -35,6 +36,13 @@ export function codegenReactiveFunction(
   fn: ReactiveFunction
 ): Result<t.FunctionDeclaration, CompilerError> {
   const cx = new Context();
+  if (fn.id !== null) {
+    cx.temp.set(fn.id.id, null);
+  }
+  for (const param of fn.params) {
+    cx.temp.set(param.identifier.id, null);
+  }
+
   const params = fn.params.map((param) => convertIdentifier(param.identifier));
   const body = codegenBlock(cx, fn.body);
   const statements = body.body;
@@ -457,6 +465,12 @@ function codegenInstructionNullable(
     } else {
       lvalue = instr.value.lvalue.pattern;
       for (const place of eachPatternOperand(lvalue)) {
+        if (
+          kind !== InstructionKind.Reassign &&
+          place.identifier.name === null
+        ) {
+          cx.temp.set(place.identifier.id, null);
+        }
         if (cx.hasDeclared(place.identifier)) {
           kind = InstructionKind.Reassign;
           break;
@@ -586,7 +600,7 @@ const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
 const createStringLiteral = withLoc(t.stringLiteral);
 
-type Temporaries = Map<IdentifierId, t.Expression>;
+type Temporaries = Map<IdentifierId, t.Expression | null>;
 
 function codegenLabel(id: BlockId): string {
   return `bb${id}`;
@@ -1162,6 +1176,13 @@ function codegenPlace(cx: Context, place: Place): t.Expression {
   let tmp = cx.temp.get(place.identifier.id);
   if (tmp != null) {
     return tmp;
+  }
+  if (place.identifier.name === null && tmp === undefined) {
+    CompilerError.invariant(
+      `[Codegen] No value found for temporary`,
+      place.loc,
+      `Value for '${printPlace(place)}' was not set in the codegen context`
+    );
   }
   const identifier = convertIdentifier(place.identifier);
   identifier.loc = place.loc as any;

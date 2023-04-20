@@ -293,7 +293,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "JSXText":
     case "Primitive": {
-      value = JSON.stringify(instrValue.value);
+      if (instrValue.value === undefined) {
+        value = "<undefined>";
+      } else {
+        value = JSON.stringify(instrValue.value);
+      }
       break;
     }
     case "TypeCastExpression": {
