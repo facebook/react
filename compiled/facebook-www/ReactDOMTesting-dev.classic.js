@@ -127,6 +127,7 @@ var disableInputAttributeSyncing =
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
+  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -35382,7 +35383,9 @@ function createHostRootFiber(
     }
 
     if (
-      // Only for internal experiments.
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
+      !enableSyncDefaultUpdates || // Only for internal experiments.
       concurrentUpdatesByDefaultOverride
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
@@ -35937,7 +35940,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ec050b8e";
+var ReactVersion = "18.3.0-www-classic-83bb419e";
 
 function createPortal$1(
   children,

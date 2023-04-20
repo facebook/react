@@ -116,6 +116,7 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
+  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -12388,11 +12389,14 @@ function createFiberRoot(
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
-  1 === tag
-    ? ((tag = 1),
+  if (1 === tag) {
+    if (
+      ((tag = 1),
       !0 === isStrictMode && (tag |= 24),
-      concurrentUpdatesByDefaultOverride && (tag |= 32))
-    : (tag = 0);
+      !enableSyncDefaultUpdates || concurrentUpdatesByDefaultOverride)
+    )
+      tag |= 32;
+  } else tag = 0;
   isDevToolsPresent && (tag |= 2);
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
@@ -16252,7 +16256,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1847 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-b6e8e2d5",
+  version: "18.3.0-www-modern-e4ad6703",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16297,7 +16301,7 @@ var devToolsConfig$jscomp$inline_1847 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b6e8e2d5"
+  reconcilerVersion: "18.3.0-www-modern-e4ad6703"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16453,7 +16457,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-b6e8e2d5";
+exports.version = "18.3.0-www-modern-e4ad6703";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
