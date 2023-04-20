@@ -27,7 +27,6 @@ import {
   InstructionKind,
   InstructionValue,
   JsxAttribute,
-  makeInstructionId,
   ObjectPattern,
   ObjectProperty,
   Place,
@@ -35,6 +34,7 @@ import {
   SourceLocation,
   SpreadPattern,
   ThrowTerminal,
+  makeInstructionId,
 } from "./HIR";
 import HIRBuilder, { Bindings } from "./HIRBuilder";
 
@@ -2041,7 +2041,11 @@ function lowerJsxElementName(
   if (exprPath.isJSXIdentifier()) {
     const tag: string = exprPath.node.name;
     if (tag.match(/^[A-Z]/)) {
-      return lowerIdentifier(builder, exprPath);
+      return lowerValueToTemporary(builder, {
+        kind: "LoadLocal",
+        place: lowerIdentifier(builder, exprPath),
+        loc: exprLoc,
+      });
     } else {
       if (tag.indexOf(":") !== -1) {
         builder.errors.push({
