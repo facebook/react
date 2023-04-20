@@ -29,14 +29,20 @@ wasmFolder(
 );
 
 describe("React Forget", () => {
+  const originalConsoleError = console.error;
   generateTestsFromFixtures(
     path.join(__dirname, "fixtures", "compiler"),
     (input, file, options) => {
+      const seenConsoleErrors: Array<string> = [];
       let items: Array<TestOutput> = [];
       let error: Error | null = null;
       if (options.debug) {
         toggleLogging(options.debug);
       }
+      // Mock console.error so we can record it in test output
+      console.error = jest.fn((...messages: Array<string>) => {
+        seenConsoleErrors.push(...messages);
+      });
       try {
         items.push({
           js: runReactForgetBabelPlugin(input, file, options.language, {
@@ -58,12 +64,23 @@ describe("React Forget", () => {
             },
             logger: null,
             gating: options.gating,
-            panicOnBailout: true,
+            panicOnBailout: options.panicOnBailout,
           }).code,
         });
       } catch (e) {
         error = e;
       }
+
+      // Promote console errors so they can be recorded in fixture output
+      for (const consoleError of seenConsoleErrors) {
+        if (error != null) {
+          error.message = `${error.message}\n\n${consoleError}`;
+        } else {
+          error = new Error(consoleError);
+          error.name = "ConsoleError";
+        }
+      }
+
       let outputs: Array<string>;
 
       const expectError = file.startsWith("error.");
@@ -73,7 +90,7 @@ describe("React Forget", () => {
             `Expected an error to be thrown for fixture: '${file}', remove the 'error.' prefix if an error is not expected.`
           );
         } else {
-          outputs = [formatErrorOutput(error)];
+          outputs = [...formatOutput(items), formatErrorOutput(error)];
         }
       } else {
         if (error !== null) {
@@ -94,6 +111,7 @@ ${outputs.join("\n")}
       `;
     }
   );
+  console.error = originalConsoleError;
 });
 
 function formatErrorOutput(error: Error): string {

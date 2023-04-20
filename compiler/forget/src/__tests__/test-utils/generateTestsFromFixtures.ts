@@ -92,6 +92,7 @@ export default function generateTestsFromFixtures(
         let enableOnlyOnUseForgetDirective = false;
         let gating: GatingOptions | null = null;
         let inlineUseMemo = true;
+        let panicOnBailout = true;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -115,6 +116,9 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@inlineUseMemo") !== -1) {
             inlineUseMemo = true;
           }
+          if (lines[0]!.indexOf("@panicOnBailout false") !== -1) {
+            panicOnBailout = false;
+          }
         }
 
         testCommand(basename, () => {
@@ -127,7 +131,7 @@ export default function generateTestsFromFixtures(
               enableOnlyOnUseForgetDirective,
               gating,
               language: parseLanguage(input),
-              panicOnBailout: true,
+              panicOnBailout,
             });
           } else {
             receivedOutput = "<<input deleted>>";

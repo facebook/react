@@ -54,48 +54,67 @@ export default function ReactForgetBabelPlugin(
     fn: BabelCore.NodePath<t.FunctionDeclaration>,
     pass: BabelPluginPass
   ): void {
-    const compiled = compile(fn, pass.opts.environment);
+    try {
+      const compiled = compile(fn, pass.opts.environment);
 
-    if (pass.opts.gating != null) {
-      // Rename existing function
-      if (fn.node.id == null) {
-        CompilerError.invariant(
-          "FunctionDeclaration must have a name",
-          fn.node.loc ?? GeneratedSource
+      if (pass.opts.gating != null) {
+        // Rename existing function
+        if (fn.node.id == null) {
+          CompilerError.invariant(
+            "FunctionDeclaration must have a name",
+            fn.node.loc ?? GeneratedSource
+          );
+        }
+        const original = fn.node.id;
+        fn.node.id = addSuffix(fn.node.id, "_uncompiled");
+
+        // Rename and append compiled function
+        if (compiled.id == null) {
+          CompilerError.invariant(
+            "FunctionDeclaration must produce a name",
+            fn.node.loc ?? GeneratedSource
+          );
+        }
+        compiled.id = addSuffix(compiled.id, "_forget");
+        const compiledFn = fn.insertAfter(compiled)[0];
+        compiledFn.skip();
+
+        // Build and append gating test
+        compiledFn.insertAfter(
+          buildGatingTest({
+            originalFnDecl: fn,
+            compiledIdent: compiled.id,
+            originalIdent: original,
+            gating: pass.opts.gating,
+          })
         );
+      } else {
+        fn.replaceWith(compiled);
       }
-      const original = fn.node.id;
-      fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
-      // Rename and append compiled function
-      if (compiled.id == null) {
-        CompilerError.invariant(
-          "FunctionDeclaration must produce a name",
-          fn.node.loc ?? GeneratedSource
-        );
+      hasForgetCompiledCode = true;
+    } catch (err) {
+      if (pass.opts.logger && err) {
+        pass.opts.logger.logEvent("err", err);
       }
-      compiled.id = addSuffix(compiled.id, "_forget");
-      const compiledFn = fn.insertAfter(compiled)[0];
-      compiledFn.skip();
-
-      // Build and append gating test
-      compiledFn.insertAfter(
-        buildGatingTest({
-          originalFnDecl: fn,
-          compiledIdent: compiled.id,
-          originalIdent: original,
-          gating: pass.opts.gating,
-        })
-      );
-    } else {
-      fn.replaceWith(compiled);
+      /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
+       * (eg an invariant is broken, meaning the compiler may be buggy). See
+       * {@link CompilerError.isCritical} for mappings.
+       * */
+      if (
+        pass.opts.panicOnBailout ||
+        !(err instanceof CompilerError) ||
+        (err instanceof CompilerError && err.isCritical())
+      ) {
+        throw err;
+      } else {
+        console.error(err);
+      }
+    } finally {
+      // We are generating a new FunctionDeclaration node, so we must skip over it or this
+      // traversal will loop infinitely.
+      fn.skip();
     }
-
-    hasForgetCompiledCode = true;
-
-    // We are generating a new FunctionDeclaration node, so we must skip over it or this
-    // traversal will loop infinitely.
-    fn.skip();
   }
 
   const visitor = {
@@ -190,78 +209,59 @@ export default function ReactForgetBabelPlugin(
           return;
         }
 
-        try {
-          path.traverse(visitor, {
-            ...pass,
-            opts: { ...pass.opts, ...options },
-          });
+        path.traverse(visitor, {
+          ...pass,
+          opts: { ...pass.opts, ...options },
+        });
 
-          // If there isn't already an import of * as React, insert it so React.useMemoCache doesn't
-          // throw
-          if (hasForgetCompiledCode) {
-            let didInsertUseMemoCache = false;
-            let hasExistingReactImport = false;
-            path.traverse({
-              MemberExpression(memberExprPath) {
-                const obj = memberExprPath.get("object");
-                const prop = memberExprPath.get("property");
-                if (
-                  obj.isIdentifier() &&
-                  obj.node.name === "React" &&
-                  prop.isIdentifier() &&
-                  prop.node.name === "unstable_useMemoCache"
-                ) {
-                  didInsertUseMemoCache = true;
-                  memberExprPath.stop();
-                }
-              },
-              ImportDeclaration(importDeclPath) {
-                if (
-                  importDeclPath.get("source").node.value === "react" &&
-                  importDeclPath.get("specifiers").length === 1 &&
-                  importDeclPath
-                    .get("specifiers")[0]
-                    .isImportNamespaceSpecifier() &&
-                  importDeclPath.get("specifiers")[0].get("local").node.name ===
-                    "React"
-                ) {
-                  hasExistingReactImport = true;
-                  importDeclPath.stop();
-                }
-              },
-            });
-            if (didInsertUseMemoCache && !hasExistingReactImport) {
-              path.unshiftContainer(
-                "body",
-                t.importDeclaration(
-                  [t.importNamespaceSpecifier(t.identifier("React"))],
-                  t.stringLiteral("react")
-                )
-              );
-            }
-            if (options.gating != null) {
-              path.unshiftContainer(
-                "body",
-                buildImportForGatingModule(options.gating)
-              );
-            }
+        // If there isn't already an import of * as React, insert it so React.useMemoCache doesn't
+        // throw
+        if (hasForgetCompiledCode) {
+          let didInsertUseMemoCache = false;
+          let hasExistingReactImport = false;
+          path.traverse({
+            MemberExpression(memberExprPath) {
+              const obj = memberExprPath.get("object");
+              const prop = memberExprPath.get("property");
+              if (
+                obj.isIdentifier() &&
+                obj.node.name === "React" &&
+                prop.isIdentifier() &&
+                prop.node.name === "unstable_useMemoCache"
+              ) {
+                didInsertUseMemoCache = true;
+                memberExprPath.stop();
+              }
+            },
+            ImportDeclaration(importDeclPath) {
+              if (
+                importDeclPath.get("source").node.value === "react" &&
+                importDeclPath.get("specifiers").length === 1 &&
+                importDeclPath
+                  .get("specifiers")[0]
+                  .isImportNamespaceSpecifier() &&
+                importDeclPath.get("specifiers")[0].get("local").node.name ===
+                  "React"
+              ) {
+                hasExistingReactImport = true;
+                importDeclPath.stop();
+              }
+            },
+          });
+          if (didInsertUseMemoCache && !hasExistingReactImport) {
+            path.unshiftContainer(
+              "body",
+              t.importDeclaration(
+                [t.importNamespaceSpecifier(t.identifier("React"))],
+                t.stringLiteral("react")
+              )
+            );
           }
-        } catch (err) {
-          if (options.logger && err) {
-            options.logger.logEvent("err", err);
-          }
-          /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
-           * (eg an invariant is broken, meaning the compiler may be buggy). See
-           * {@link CompilerError.isCritical} for mappings.
-           * */
-          if (
-            options.panicOnBailout ||
-            !(err instanceof CompilerError) ||
-            (err instanceof CompilerError && err.isCritical())
-          ) {
-            throw err;
-          } else {
-            console.error(err);
+          if (options.gating != null) {
+            path.unshiftContainer(
+              "body",
+              buildImportForGatingModule(options.gating)
+            );
           }
         }
       },
