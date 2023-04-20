@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<83f90ff98709415fa3ab035afd4a2821>>
+ * @generated SignedSource<<54d01cff9e9c78ffba08f73a6631a077>>
  */
 
 "use strict";
@@ -1162,6 +1162,7 @@ var ReactSharedInternals =
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -7819,28 +7820,28 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : 0
   );
   if (0 === lanes) return null;
-  didTimeout =
+  var exitStatus =
     includesBlockingLane(root, lanes) ||
     0 !== (lanes & root.expiredLanes) ||
     didTimeout
       ? renderRootSync(root, lanes)
       : renderRootConcurrent(root, lanes);
-  if (0 !== didTimeout) {
-    if (2 === didTimeout) {
-      var originallyAttemptedLanes = lanes,
-        errorRetryLanes = getLanesToRetrySynchronouslyOnError(
-          root,
-          originallyAttemptedLanes
-        );
+  if (0 !== exitStatus) {
+    if (2 === exitStatus) {
+      didTimeout = lanes;
+      var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
+        root,
+        didTimeout
+      );
       0 !== errorRetryLanes &&
         ((lanes = errorRetryLanes),
-        (didTimeout = recoverFromConcurrentError(
+        (exitStatus = recoverFromConcurrentError(
           root,
-          originallyAttemptedLanes,
+          didTimeout,
           errorRetryLanes
         )));
     }
-    if (1 === didTimeout)
+    if (1 === exitStatus)
       throw (
         ((originalCallbackNode = workInProgressRootFatalError),
         prepareFreshStack(root, 0),
@@ -7848,16 +7849,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         ensureRootIsScheduled(root),
         originalCallbackNode)
       );
-    if (6 === didTimeout) markRootSuspended(root, lanes);
+    if (6 === exitStatus) markRootSuspended(root, lanes);
     else {
       errorRetryLanes = !includesBlockingLane(root, lanes);
-      originallyAttemptedLanes = root.current.alternate;
+      didTimeout = root.current.alternate;
       if (
         errorRetryLanes &&
-        !isRenderConsistentWithExternalStores(originallyAttemptedLanes)
+        !isRenderConsistentWithExternalStores(didTimeout)
       ) {
-        didTimeout = renderRootSync(root, lanes);
-        if (2 === didTimeout) {
+        exitStatus = renderRootSync(root, lanes);
+        if (2 === exitStatus) {
           errorRetryLanes = lanes;
           var errorRetryLanes$102 = getLanesToRetrySynchronouslyOnError(
             root,
@@ -7865,13 +7866,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           );
           0 !== errorRetryLanes$102 &&
             ((lanes = errorRetryLanes$102),
-            (didTimeout = recoverFromConcurrentError(
+            (exitStatus = recoverFromConcurrentError(
               root,
               errorRetryLanes,
               errorRetryLanes$102
             )));
         }
-        if (1 === didTimeout)
+        if (1 === exitStatus)
           throw (
             ((originalCallbackNode = workInProgressRootFatalError),
             prepareFreshStack(root, 0),
@@ -7880,10 +7881,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             originalCallbackNode)
           );
       }
-      root.finishedWork = originallyAttemptedLanes;
+      root.finishedWork = didTimeout;
       root.finishedLanes = lanes;
       a: {
-        switch (didTimeout) {
+        switch (exitStatus) {
           case 0:
           case 1:
             throw Error("Root did not complete. This is a bug in React.");
@@ -7902,8 +7903,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         }
         if (
           (lanes & 125829120) === lanes &&
-          ((didTimeout = globalMostRecentFallbackTime + 500 - now()),
-          10 < didTimeout)
+          (alwaysThrottleRetries || 3 === exitStatus) &&
+          ((exitStatus = globalMostRecentFallbackTime + 500 - now()),
+          10 < exitStatus)
         ) {
           markRootSuspended(root, lanes);
           if (0 !== getNextLanes(root, 0)) break a;
@@ -7911,18 +7913,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             commitRootWhenReady.bind(
               null,
               root,
-              originallyAttemptedLanes,
+              didTimeout,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
               lanes
             ),
-            didTimeout
+            exitStatus
           );
           break a;
         }
         commitRootWhenReady(
           root,
-          originallyAttemptedLanes,
+          didTimeout,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
           lanes
@@ -9727,7 +9729,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1100 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-7f8c501f6-20230420",
+    version: "18.3.0-next-d73d7d590-20230420",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9769,7 +9771,7 @@ var internals$jscomp$inline_1345 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-7f8c501f6-20230420"
+  reconcilerVersion: "18.3.0-next-d73d7d590-20230420"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1346 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

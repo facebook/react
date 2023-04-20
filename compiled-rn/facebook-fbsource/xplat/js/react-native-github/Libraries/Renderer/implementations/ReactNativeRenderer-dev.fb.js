@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<de572b61915ca2d3507aad4b1b3a285e>>
+ * @generated SignedSource<<c436afb62033d99c29aa548e109fdbde>>
  */
 
 'use strict';
@@ -2917,7 +2917,8 @@ function set(key, value) {
 
 var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
-    dynamicFlags.enableDeferRootSchedulingToMicrotask; // The rest of the flags are static for better dead code elimination.
+    dynamicFlags.enableDeferRootSchedulingToMicrotask,
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries; // The rest of the flags are static for better dead code elimination.
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -24049,7 +24050,10 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
       workInProgressTransitions
     );
   } else {
-    if (includesOnlyRetries(lanes)) {
+    if (
+      includesOnlyRetries(lanes) &&
+      (alwaysThrottleRetries || exitStatus === RootSuspended)
+    ) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
       var msUntilTimeout =
@@ -27678,7 +27682,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-7f8c501f6-20230420";
+var ReactVersion = "18.3.0-next-d73d7d590-20230420";
 
 function createPortal$1(
   children,

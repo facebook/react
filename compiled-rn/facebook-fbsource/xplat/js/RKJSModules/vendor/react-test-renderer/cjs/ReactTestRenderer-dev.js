@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fb35677e465a0575f9b39e24b8b35767>>
+ * @generated SignedSource<<43355784ad4a055ab0a02e5c5e648c88>>
  */
 
 'use strict';
@@ -145,7 +145,8 @@ var createRootStrictEffectsByDefault = false;
 var enableLazyContextPropagation = false;
 var enableLegacyHidden = false;
 var diffInCommitPhase = true;
-var enableAsyncActions = false; // Flow magic to verify the exports of this file match the original version.
+var enableAsyncActions = false;
+var alwaysThrottleRetries = true; // Flow magic to verify the exports of this file match the original version.
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -20431,7 +20432,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
       workInProgressTransitions
     );
   } else {
-    if (includesOnlyRetries(lanes)) {
+    if (includesOnlyRetries(lanes) && alwaysThrottleRetries) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
       var msUntilTimeout =
@@ -23858,7 +23859,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-7f8c501f6-20230420";
+var ReactVersion = "18.3.0-next-d73d7d590-20230420";
 
 // Might add PROFILE later.
 
