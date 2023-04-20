@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-83a1ba88";
+var ReactVersion = "18.3.0-www-classic-8238abee";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -7366,7 +7366,7 @@ function createResponseState(
     externalRuntimeConfig
   );
   return {
-    // Keep this in sync with ReactDOMServerFormatConfig
+    // Keep this in sync with ReactFizzConfigDOM
     bootstrapChunks: responseState.bootstrapChunks,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
