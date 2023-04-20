@@ -43,6 +43,7 @@ import {
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -2481,6 +2482,21 @@ function startTransition(
       }
     }
   }
+}
+
+export function startFormAction<F>(callback: F => mixed, formData: F): void {
+  if (!enableFormActions) {
+    // Not implemented.
+    return;
+  }
+  // TODO: Implement pending and error states.
+  const setPending = () => {};
+  startTransition(
+    setPending,
+    // TODO: We can avoid this extra wrapper, somehow. Figure out layering
+    // once more of this function is implemented.
+    () => callback(formData),
+  );
 }
 
 function mountTransition(): [

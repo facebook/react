@@ -14,6 +14,7 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {getFiberCurrentPropsFromNode} from '../../client/ReactDOMComponentTree';
+import {startFormAction} from 'react-reconciler/src/ReactFiberReconciler';
 
 import {SyntheticEvent} from '../SyntheticEvent';
 
@@ -94,8 +95,8 @@ function extractEvents(
     } else {
       formData = new FormData(form);
     }
-    // TODO: Deal with errors and pending state.
-    action(formData);
+
+    startFormAction(action, formData);
   }
 
   dispatchQueue.push({

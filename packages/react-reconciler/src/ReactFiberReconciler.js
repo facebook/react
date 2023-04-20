@@ -111,6 +111,7 @@ export {
   focusWithin,
   observeVisibleRects,
 } from './ReactTestSelectors';
+export {startFormAction} from './ReactFiberHooks';
 
 type OpaqueRoot = FiberRoot;
 
