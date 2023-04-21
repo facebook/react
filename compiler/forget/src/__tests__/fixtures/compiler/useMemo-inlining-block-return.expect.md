@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function component(a, b) {
   let x = useMemo(() => {
     if (a) {
@@ -17,7 +16,7 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import * as React from "react"; // @inlineUseMemo
+import * as React from "react";
 function component(a, b) {
   const $ = React.unstable_useMemoCache(2);
   let t14 = undefined;

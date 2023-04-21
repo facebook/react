@@ -1,4 +1,3 @@
-// @inlineUseMemo
 function Component(props) {
   const x = useMemo(() => {
     label: {

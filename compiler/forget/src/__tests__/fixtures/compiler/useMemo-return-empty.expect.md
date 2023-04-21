@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function component(a) {
   let x = useMemo(() => {
     mutate(a);
@@ -15,7 +14,6 @@ function component(a) {
 ## Code
 
 ```javascript
-// @inlineUseMemo
 function component(a) {
   mutate(a);
 }

@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function Component(props) {
   const x = useMemo(() => {
     label: {
@@ -17,7 +16,6 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @inlineUseMemo
 function Component(props) {
   const t9 = props.value;
   const x = t9;

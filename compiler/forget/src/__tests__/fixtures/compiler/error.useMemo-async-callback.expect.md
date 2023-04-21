@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function component(a, b) {
   let x = useMemo(async () => {
     await a;
@@ -16,7 +15,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] Invariant: Did not expect useMemo callback to be async or a generator (3:5)
+[ReactForget] Invariant: Did not expect useMemo callback to be async or a generator (2:4)
 ```
           
       

@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function component(a, b) {
   let x = useMemo((c) => a, []);
   return x;
@@ -14,7 +13,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] Invariant: Did not expect any arguments to useMemo callback (3:3)
+[ReactForget] Invariant: Did not expect any arguments to useMemo callback (2:2)
 ```
           
       

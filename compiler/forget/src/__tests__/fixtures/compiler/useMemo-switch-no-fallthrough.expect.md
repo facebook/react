@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function Component(props) {
   const x = useMemo(() => {
     switch (props.key) {
@@ -22,7 +21,6 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @inlineUseMemo
 function Component(props) {
   let t14 = undefined;
   bb8: switch (props.key) {

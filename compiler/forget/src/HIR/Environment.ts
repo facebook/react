@@ -40,7 +40,6 @@ const HOOK_PATTERN = /^_?use/;
 export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
   memoizeJsxElements: boolean;
-  inlineUseMemo: boolean;
 }>;
 
 export class Environment {

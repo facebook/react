@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function component(a) {
   let x = useMemo(() => [a], [a]);
   return <Foo x={x}></Foo>;
@@ -13,7 +12,7 @@ function component(a) {
 ## Code
 
 ```javascript
-import * as React from "react"; // @inlineUseMemo
+import * as React from "react";
 function component(a) {
   const $ = React.unstable_useMemoCache(4);
   const c_0 = $[0] !== a;

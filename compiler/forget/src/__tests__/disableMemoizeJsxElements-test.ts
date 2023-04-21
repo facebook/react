@@ -50,7 +50,6 @@ describe("React Forget (Disable memoization of JSX elements)", () => {
                   },
                 ],
               ]),
-              inlineUseMemo: options.environment?.inlineUseMemo ?? false,
             },
             logger: null,
             gating: options.gating,

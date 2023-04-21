@@ -91,7 +91,6 @@ export default function generateTestsFromFixtures(
         let debug = false;
         let enableOnlyOnUseForgetDirective = false;
         let gating: GatingOptions | null = null;
-        let inlineUseMemo = true;
         let panicOnBailout = true;
 
         if (inputFile != null) {
@@ -113,9 +112,6 @@ export default function generateTestsFromFixtures(
               importSpecifierName: "isForgetEnabled_Fixtures",
             };
           }
-          if (lines[0]!.indexOf("@inlineUseMemo") !== -1) {
-            inlineUseMemo = true;
-          }
           if (lines[0]!.indexOf("@panicOnBailout false") !== -1) {
             panicOnBailout = false;
           }
@@ -125,7 +121,7 @@ export default function generateTestsFromFixtures(
           let receivedOutput;
           if (input !== null) {
             receivedOutput = transform(input, basename, {
-              environment: { inlineUseMemo },
+              environment: {},
               logger: null,
               debug,
               enableOnlyOnUseForgetDirective,

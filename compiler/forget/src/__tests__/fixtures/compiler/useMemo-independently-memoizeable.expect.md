@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @inlineUseMemo
 function Component(props) {
   const [a, b] = useMemo(() => {
     const items = [];
@@ -18,7 +17,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // @inlineUseMemo
+import * as React from "react";
 function Component(props) {
   const $ = React.unstable_useMemoCache(10);
   const c_0 = $[0] !== props.a;
