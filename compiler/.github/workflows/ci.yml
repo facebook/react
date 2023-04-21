@@ -25,3 +25,7 @@ jobs:
         working-directory: forget
       - run: yarn test
         working-directory: forget
+      - run: yarn install --immutable --immutable-cache
+        working-directory: forget/packages/snap
+      - run: yarn snap:build && yarn snap
+        working-directory: forget
