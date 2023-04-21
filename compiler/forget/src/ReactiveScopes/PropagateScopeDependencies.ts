@@ -317,13 +317,16 @@ class Context {
     const originalDeclaration = this.#declarations.get(
       maybeDependency.identifier.id
     );
-    if (originalDeclaration !== undefined) {
+    if (
+      originalDeclaration !== undefined &&
+      originalDeclaration.scope.value !== null
+    ) {
       originalDeclaration.scope.each((scope) => {
         if (!this.#isScopeActive(scope)) {
-          scope.declarations.set(
-            maybeDependency.identifier.id,
-            maybeDependency.identifier
-          );
+          scope.declarations.set(maybeDependency.identifier.id, {
+            identifier: maybeDependency.identifier,
+            scope: originalDeclaration.scope.value!, // checked above
+          });
         }
       });
     }

@@ -47,7 +47,9 @@ export function printReactiveBlock(
     }] dependencies=[${Array.from(block.scope.dependencies)
       .map((dep) => printDependency(dep))
       .join(", ")}] declarations=[${Array.from(block.scope.declarations)
-      .map(([, decl]) => printIdentifier(decl))
+      .map(([, decl]) =>
+        printIdentifier({ ...decl.identifier, scope: decl.scope })
+      )
       .join(", ")}] reassignments=[${Array.from(block.scope.reassignments).map(
       (reassign) => printIdentifier(reassign)
     )}] {`

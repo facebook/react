@@ -827,8 +827,13 @@ export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
   dependencies: Set<ReactiveScopeDependency>;
-  declarations: Map<IdentifierId, Identifier>;
+  declarations: Map<IdentifierId, ReactiveScopeDeclaration>;
   reassignments: Set<Identifier>;
+};
+
+export type ReactiveScopeDeclaration = {
+  identifier: Identifier;
+  scope: ReactiveScope; // the scope in which the variable was originally declared
 };
 
 export type ReactiveScopeDependency = {

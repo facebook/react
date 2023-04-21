@@ -191,20 +191,20 @@ function codegenReactiveScope(
     );
   }
   let firstOutputIndex: number | null = null;
-  for (const [, declaration] of scope.declarations) {
+  for (const [, { identifier }] of scope.declarations) {
     const index = cx.nextCacheIndex;
     if (firstOutputIndex === null) {
       firstOutputIndex = index;
     }
 
     invariant(
-      declaration.name != null,
+      identifier.name != null,
       "Expected identifier '@%s' to be named",
-      declaration.id
+      identifier.id
     );
 
-    const name = convertIdentifier(declaration);
-    if (!cx.hasDeclared(declaration)) {
+    const name = convertIdentifier(identifier);
+    if (!cx.hasDeclared(identifier)) {
       statements.push(
         t.variableDeclaration("let", [t.variableDeclarator(name)])
       );
@@ -227,7 +227,7 @@ function codegenReactiveScope(
         )
       )
     );
-    cx.declare(declaration);
+    cx.declare(identifier);
   }
   for (const reassignment of scope.reassignments) {
     const index = cx.nextCacheIndex;
