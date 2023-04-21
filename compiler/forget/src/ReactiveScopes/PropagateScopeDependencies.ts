@@ -71,7 +71,8 @@ class Context {
   //    ReactiveScope (B) that uses the produced temporary.
   //  - codegen will inline these PropertyLoads back into scope (B)
   #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
-  #temporaries: Map<Identifier, Place> = new Map();
+  #temporaries: Map<Identifier, { place: Place; scope: ReactiveScope | null }> =
+    new Map();
   #inConditionalWithinScope: boolean = false;
   // Reactive dependencies used unconditionally in the current conditional.
   // Composed of dependencies:
@@ -184,8 +185,22 @@ class Context {
     this.#reassignments.set(identifier, decl);
   }
 
-  declareTemporary(lvalue: Place, value: Place): void {
-    this.#temporaries.set(lvalue.identifier, value);
+  declareTemporary(lvalue: Place, place: Place): void {
+    this.#temporaries.set(lvalue.identifier, {
+      place,
+      scope: this.currentScope.value,
+    });
+  }
+
+  resolveTemporary(place: Place): Place {
+    const temporary = this.#temporaries.get(place.identifier);
+    if (
+      temporary !== undefined &&
+      (temporary.scope === null || this.#isScopeActive(temporary.scope))
+    ) {
+      return temporary.place;
+    }
+    return place;
   }
 
   #getProperty(
@@ -193,7 +208,7 @@ class Context {
     property: string,
     isConditional: boolean
   ): ReactiveScopePropertyDependency {
-    const resolvedObject = this.#temporaries.get(object.identifier) ?? object;
+    const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
     let objectDependency: ReactiveScopePropertyDependency;
     // (1) Create the base property dependency as either a LoadLocal (from a temporary)
@@ -267,7 +282,7 @@ class Context {
   }
 
   visitOperand(place: Place): void {
-    const resolved = this.#temporaries.get(place.identifier) ?? place;
+    const resolved = this.resolveTemporary(place);
     // if this operand is a temporary created for a property load, try to resolve it to
     // the expanded Place. Fall back to using the operand as-is.
 
