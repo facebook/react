@@ -43,6 +43,7 @@ import {
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -80,7 +81,7 @@ import {
   higherEventPriority,
 } from './ReactEventPriorities';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
-import {HostRoot, CacheComponent} from './ReactWorkTags';
+import {HostRoot, CacheComponent, HostComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
   Passive as PassiveEffect,
@@ -751,6 +752,33 @@ function renderWithHooksAgain<Props, SecondArg>(
     children = Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
+}
+
+export function renderTransitionAwareHostComponentWithHooks(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  lanes: Lanes,
+): boolean {
+  if (!(enableFormActions && enableAsyncActions)) {
+    return false;
+  }
+  return renderWithHooks(
+    current,
+    workInProgress,
+    TransitionAwareHostComponent,
+    null,
+    null,
+    lanes,
+  );
+}
+
+export function TransitionAwareHostComponent(): boolean {
+  if (!(enableFormActions && enableAsyncActions)) {
+    return false;
+  }
+  const dispatcher = ReactCurrentDispatcher.current;
+  const [isPending] = dispatcher.useTransition();
+  return isPending;
 }
 
 export function checkDidRenderIdHook(): boolean {
@@ -2481,6 +2509,97 @@ function startTransition(
       }
     }
   }
+}
+
+export function startHostTransition<F>(
+  formFiber: Fiber,
+  callback: F => mixed,
+  formData: F,
+): void {
+  if (!enableFormActions) {
+    // Not implemented.
+    return;
+  }
+
+  if (!enableAsyncActions) {
+    // Form actions are enabled, but async actions are not. Call the function,
+    // but don't handle any pending or error states.
+    callback(formData);
+    return;
+  }
+
+  if (formFiber.tag !== HostComponent) {
+    throw new Error(
+      'Expected the form instance to be a HostComponent. This ' +
+        'is a bug in React.',
+    );
+  }
+
+  let setPending;
+  if (formFiber.memoizedState === null) {
+    // Upgrade this host component fiber to be stateful. We're going to pretend
+    // it was stateful all along so we can reuse most of the implementation
+    // for function components and useTransition.
+    //
+    // Create the initial hooks used by useTransition. This is essentially an
+    // inlined version of mountTransition.
+    const queue: UpdateQueue<
+      Thenable<boolean> | boolean,
+      Thenable<boolean> | boolean,
+    > = {
+      pending: null,
+      lanes: NoLanes,
+      dispatch: null,
+      lastRenderedReducer: basicStateReducer,
+      lastRenderedState: false,
+    };
+    const stateHook: Hook = {
+      memoizedState: false,
+      baseState: false,
+      baseQueue: null,
+      queue: queue,
+      next: null,
+    };
+
+    const dispatch: (Thenable<boolean> | boolean) => void =
+      (dispatchSetState.bind(null, formFiber, queue): any);
+    setPending = queue.dispatch = dispatch;
+
+    // TODO: The only reason this second hook exists is to save a reference to
+    // the `dispatch` function. But we already store this on the state hook. So
+    // we can cheat and read it from there. Need to make this change to the
+    // regular `useTransition` implementation, too.
+    const transitionHook: Hook = {
+      memoizedState: dispatch,
+      baseState: null,
+      baseQueue: null,
+      queue: null,
+      next: null,
+    };
+
+    stateHook.next = transitionHook;
+
+    // Add the initial list of hooks to both fiber alternates. The idea is that
+    // the fiber had these hooks all along.
+    formFiber.memoizedState = stateHook;
+    const alternate = formFiber.alternate;
+    if (alternate !== null) {
+      alternate.memoizedState = stateHook;
+    }
+  } else {
+    // This fiber was already upgraded to be stateful.
+    const transitionHook: Hook = formFiber.memoizedState.next;
+    const dispatch: (Thenable<boolean> | boolean) => void =
+      transitionHook.memoizedState;
+    setPending = dispatch;
+  }
+
+  startTransition(
+    setPending,
+    // TODO: We can avoid this extra wrapper, somehow. Figure out layering
+    // once more of this function is implemented.
+    () => callback(formData),
+  );
 }
 
 function mountTransition(): [

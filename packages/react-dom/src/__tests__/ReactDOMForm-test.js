@@ -33,37 +33,163 @@ describe('ReactDOMForm', () => {
   let React;
   let ReactDOM;
   let ReactDOMClient;
+  let Scheduler;
+  let assertLog;
+  let useState;
+  let Suspense;
+  let startTransition;
+  let textCache;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
+    useState = React.useState;
+    Suspense = React.Suspense;
+    startTransition = React.startTransition;
     container = document.createElement('div');
     document.body.appendChild(container);
+
+    textCache = new Map();
   });
+
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
+  }
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
+  }
+
+  function readText(text) {
+    const record = textCache.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          Scheduler.log(`Suspend! [${text}]`);
+          throw record.value;
+        case 'rejected':
+          throw record.value;
+        case 'resolved':
+          return record.value;
+      }
+    } else {
+      Scheduler.log(`Suspend! [${text}]`);
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+
+      throw thenable;
+    }
+  }
+
+  function getText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+      return thenable;
+    } else {
+      switch (record.status) {
+        case 'pending':
+          return record.value;
+        case 'rejected':
+          return Promise.reject(record.value);
+        case 'resolved':
+          return Promise.resolve(record.value);
+      }
+    }
+  }
+
+  function Text({text}) {
+    Scheduler.log(text);
+    return text;
+  }
+
+  function AsyncText({text}) {
+    readText(text);
+    Scheduler.log(text);
+    return text;
+  }
 
   afterEach(() => {
     document.body.removeChild(container);
   });
 
-  function submit(submitter) {
-    const form = submitter.form || submitter;
-    if (!submitter.form) {
-      submitter = undefined;
-    }
-    const submitEvent = new Event('submit', {bubbles: true, cancelable: true});
-    submitEvent.submitter = submitter;
-    const returnValue = form.dispatchEvent(submitEvent);
-    if (!returnValue) {
-      return;
-    }
-    const action =
-      (submitter && submitter.getAttribute('formaction')) || form.action;
-    if (!/\s*javascript:/i.test(action)) {
-      throw new Error('Navigate to: ' + action);
-    }
+  async function submit(submitter) {
+    await act(() => {
+      const form = submitter.form || submitter;
+      if (!submitter.form) {
+        submitter = undefined;
+      }
+      const submitEvent = new Event('submit', {
+        bubbles: true,
+        cancelable: true,
+      });
+      submitEvent.submitter = submitter;
+      const returnValue = form.dispatchEvent(submitEvent);
+      if (!returnValue) {
+        return;
+      }
+      const action =
+        (submitter && submitter.getAttribute('formaction')) || form.action;
+      if (!/\s*javascript:/i.test(action)) {
+        throw new Error('Navigate to: ' + action);
+      }
+    });
   }
 
   // @gate enableFormActions
@@ -84,7 +210,7 @@ describe('ReactDOMForm', () => {
       );
     });
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(foo).toBe('bar');
 
@@ -102,7 +228,7 @@ describe('ReactDOMForm', () => {
       );
     });
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(foo).toBe('bar2');
   });
@@ -148,12 +274,12 @@ describe('ReactDOMForm', () => {
     expect(savedTitle).toBe(null);
     expect(deletedTitle).toBe(null);
 
-    submit(inputRef.current);
+    await submit(inputRef.current);
     expect(savedTitle).toBe('Hello');
     expect(deletedTitle).toBe(null);
     savedTitle = null;
 
-    submit(buttonRef.current);
+    await submit(buttonRef.current);
     expect(savedTitle).toBe(null);
     expect(deletedTitle).toBe('Hello');
     deletedTitle = null;
@@ -188,12 +314,12 @@ describe('ReactDOMForm', () => {
     expect(savedTitle).toBe(null);
     expect(deletedTitle).toBe(null);
 
-    submit(inputRef.current);
+    await submit(inputRef.current);
     expect(savedTitle).toBe('Hello2');
     expect(deletedTitle).toBe(null);
     savedTitle = null;
 
-    submit(buttonRef.current);
+    await submit(buttonRef.current);
     expect(savedTitle).toBe(null);
     expect(deletedTitle).toBe('Hello2');
 
@@ -218,7 +344,7 @@ describe('ReactDOMForm', () => {
       );
     });
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(actionCalled).toBe(false);
   });
@@ -254,7 +380,7 @@ describe('ReactDOMForm', () => {
         '\n    in form (at **)',
     ]);
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(data).toBe('innerinner');
   });
@@ -296,7 +422,7 @@ describe('ReactDOMForm', () => {
       );
     });
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(bubbledSubmit).toBe(true);
     expect(outerCalled).toBe(0);
@@ -340,7 +466,7 @@ describe('ReactDOMForm', () => {
 
     innerContainerRef.current.appendChild(innerContainer);
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(bubbledSubmit).toBe(true);
     expect(outerCalled).toBe(0);
@@ -377,7 +503,7 @@ describe('ReactDOMForm', () => {
       }
     });
 
-    submit(ref.current);
+    await submit(ref.current);
 
     expect(button).toBe('delete');
     expect(title).toBe(null);
@@ -407,7 +533,7 @@ describe('ReactDOMForm', () => {
 
     let nav;
     try {
-      submit(ref.current);
+      await submit(ref.current);
     } catch (x) {
       nav = x.message;
     }
@@ -443,11 +569,218 @@ describe('ReactDOMForm', () => {
     const node = container.getElementsByTagName('input')[0];
     let nav;
     try {
-      submit(node);
+      await submit(node);
     } catch (x) {
       nav = x.message;
     }
     expect(nav).toBe('Navigate to: http://example.com/submit');
     expect(actionCalled).toBe(false);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('form actions are transitions', async () => {
+    const formRef = React.createRef();
+
+    function App() {
+      const [state, setState] = useState('Initial');
+      return (
+        <form action={() => setState('Updated')} ref={formRef}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={state} />
+          </Suspense>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await resolveText('Initial');
+    await act(() => root.render(<App />));
+    assertLog(['Initial']);
+    expect(container.textContent).toBe('Initial');
+
+    // This should suspend because form actions are implicitly wrapped
+    // in startTransition.
+    await submit(formRef.current);
+    assertLog(['Suspend! [Updated]', 'Loading...']);
+    expect(container.textContent).toBe('Initial');
+
+    await act(() => resolveText('Updated'));
+    assertLog(['Updated']);
+    expect(container.textContent).toBe('Updated');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('multiple form actions', async () => {
+    const formRef = React.createRef();
+
+    function App() {
+      const [state, setState] = useState(0);
+      return (
+        <form action={() => setState(n => n + 1)} ref={formRef}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={'Count: ' + state} />
+          </Suspense>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await resolveText('Count: 0');
+    await act(() => root.render(<App />));
+    assertLog(['Count: 0']);
+    expect(container.textContent).toBe('Count: 0');
+
+    // Update
+    await submit(formRef.current);
+    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 0');
+
+    await act(() => resolveText('Count: 1'));
+    assertLog(['Count: 1']);
+    expect(container.textContent).toBe('Count: 1');
+
+    // Update again
+    await submit(formRef.current);
+    assertLog(['Suspend! [Count: 2]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 1');
+
+    await act(() => resolveText('Count: 2'));
+    assertLog(['Count: 2']);
+    expect(container.textContent).toBe('Count: 2');
+  });
+
+  // @gate enableFormActions
+  it('form actions can be asynchronous', async () => {
+    const formRef = React.createRef();
+
+    function App() {
+      const [state, setState] = useState('Initial');
+      return (
+        <form
+          action={async () => {
+            Scheduler.log('Async action started');
+            await getText('Wait');
+            startTransition(() => setState('Updated'));
+          }}
+          ref={formRef}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={state} />
+          </Suspense>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await resolveText('Initial');
+    await act(() => root.render(<App />));
+    assertLog(['Initial']);
+    expect(container.textContent).toBe('Initial');
+
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Suspend! [Updated]', 'Loading...']);
+    expect(container.textContent).toBe('Initial');
+  });
+
+  it('sync errors in form actions can be captured by an error boundary', async () => {
+    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
+      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
+      // so don't work with the `gate` mechanism.
+      return;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const formRef = React.createRef();
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <form
+            action={() => {
+              throw new Error('Oh no!');
+            }}
+            ref={formRef}>
+            <Text text="Everything is fine" />
+          </form>
+        </ErrorBoundary>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Everything is fine']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await submit(formRef.current);
+    assertLog(['Oh no!', 'Oh no!']);
+    expect(container.textContent).toBe('Oh no!');
+  });
+
+  it('async errors in form actions can be captured by an error boundary', async () => {
+    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
+      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
+      // so don't work with the `gate` mechanism.
+      return;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const formRef = React.createRef();
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <form
+            action={async () => {
+              Scheduler.log('Async action started');
+              await getText('Wait');
+              throw new Error('Oh no!');
+            }}
+            ref={formRef}>
+            <Text text="Everything is fine" />
+          </form>
+        </ErrorBoundary>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Everything is fine']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Oh no!', 'Oh no!']);
+    expect(container.textContent).toBe('Oh no!');
   });
 });
