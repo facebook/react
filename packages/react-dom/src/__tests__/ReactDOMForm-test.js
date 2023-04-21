@@ -37,6 +37,7 @@ describe('ReactDOMForm', () => {
   let assertLog;
   let useState;
   let Suspense;
+  let startTransition;
   let textCache;
 
   beforeEach(() => {
@@ -49,6 +50,7 @@ describe('ReactDOMForm', () => {
     assertLog = require('internal-test-utils').assertLog;
     useState = React.useState;
     Suspense = React.Suspense;
+    startTransition = React.startTransition;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -121,6 +123,37 @@ describe('ReactDOMForm', () => {
     }
   }
 
+  function getText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+      return thenable;
+    } else {
+      switch (record.status) {
+        case 'pending':
+          return record.value;
+        case 'rejected':
+          return Promise.reject(record.value);
+        case 'resolved':
+          return Promise.resolve(record.value);
+      }
+    }
+  }
+
   function Text({text}) {
     Scheduler.log(text);
     return text;
@@ -138,24 +171,24 @@ describe('ReactDOMForm', () => {
 
   async function submit(submitter) {
     await act(() => {
-    const form = submitter.form || submitter;
-    if (!submitter.form) {
-      submitter = undefined;
-    }
+      const form = submitter.form || submitter;
+      if (!submitter.form) {
+        submitter = undefined;
+      }
       const submitEvent = new Event('submit', {
         bubbles: true,
         cancelable: true,
       });
-    submitEvent.submitter = submitter;
-    const returnValue = form.dispatchEvent(submitEvent);
-    if (!returnValue) {
-      return;
-    }
-    const action =
-      (submitter && submitter.getAttribute('formaction')) || form.action;
-    if (!/\s*javascript:/i.test(action)) {
-      throw new Error('Navigate to: ' + action);
-    }
+      submitEvent.submitter = submitter;
+      const returnValue = form.dispatchEvent(submitEvent);
+      if (!returnValue) {
+        return;
+      }
+      const action =
+        (submitter && submitter.getAttribute('formaction')) || form.action;
+      if (!/\s*javascript:/i.test(action)) {
+        throw new Error('Navigate to: ' + action);
+      }
     });
   }
 
@@ -545,6 +578,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableFormActions
+  // @gate enableAsyncActions
   it('form actions are transitions', async () => {
     const formRef = React.createRef();
 
@@ -565,16 +599,188 @@ describe('ReactDOMForm', () => {
     assertLog(['Initial']);
     expect(container.textContent).toBe('Initial');
 
-    await submit(formRef.current);
-    expect(container.textContent).toBe('Initial');
-
     // This should suspend because form actions are implicitly wrapped
     // in startTransition.
+    await submit(formRef.current);
     assertLog(['Suspend! [Updated]', 'Loading...']);
     expect(container.textContent).toBe('Initial');
 
     await act(() => resolveText('Updated'));
     assertLog(['Updated']);
     expect(container.textContent).toBe('Updated');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('multiple form actions', async () => {
+    const formRef = React.createRef();
+
+    function App() {
+      const [state, setState] = useState(0);
+      return (
+        <form action={() => setState(n => n + 1)} ref={formRef}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={'Count: ' + state} />
+          </Suspense>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await resolveText('Count: 0');
+    await act(() => root.render(<App />));
+    assertLog(['Count: 0']);
+    expect(container.textContent).toBe('Count: 0');
+
+    // Update
+    await submit(formRef.current);
+    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 0');
+
+    await act(() => resolveText('Count: 1'));
+    assertLog(['Count: 1']);
+    expect(container.textContent).toBe('Count: 1');
+
+    // Update again
+    await submit(formRef.current);
+    assertLog(['Suspend! [Count: 2]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 1');
+
+    await act(() => resolveText('Count: 2'));
+    assertLog(['Count: 2']);
+    expect(container.textContent).toBe('Count: 2');
+  });
+
+  // @gate enableFormActions
+  it('form actions can be asynchronous', async () => {
+    const formRef = React.createRef();
+
+    function App() {
+      const [state, setState] = useState('Initial');
+      return (
+        <form
+          action={async () => {
+            Scheduler.log('Async action started');
+            await getText('Wait');
+            startTransition(() => setState('Updated'));
+          }}
+          ref={formRef}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={state} />
+          </Suspense>
+        </form>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await resolveText('Initial');
+    await act(() => root.render(<App />));
+    assertLog(['Initial']);
+    expect(container.textContent).toBe('Initial');
+
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Suspend! [Updated]', 'Loading...']);
+    expect(container.textContent).toBe('Initial');
+  });
+
+  it('sync errors in form actions can be captured by an error boundary', async () => {
+    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
+      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
+      // so don't work with the `gate` mechanism.
+      return;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const formRef = React.createRef();
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <form
+            action={() => {
+              throw new Error('Oh no!');
+            }}
+            ref={formRef}>
+            <Text text="Everything is fine" />
+          </form>
+        </ErrorBoundary>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Everything is fine']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await submit(formRef.current);
+    assertLog(['Oh no!', 'Oh no!']);
+    expect(container.textContent).toBe('Oh no!');
+  });
+
+  it('async errors in form actions can be captured by an error boundary', async () => {
+    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
+      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
+      // so don't work with the `gate` mechanism.
+      return;
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const formRef = React.createRef();
+
+    function App() {
+      return (
+        <ErrorBoundary>
+          <form
+            action={async () => {
+              Scheduler.log('Async action started');
+              await getText('Wait');
+              throw new Error('Oh no!');
+            }}
+            ref={formRef}>
+            <Text text="Everything is fine" />
+          </form>
+        </ErrorBoundary>
+      );
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Everything is fine']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await submit(formRef.current);
+    assertLog(['Async action started']);
+    expect(container.textContent).toBe('Everything is fine');
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Oh no!', 'Oh no!']);
+    expect(container.textContent).toBe('Oh no!');
   });
 });

@@ -14,7 +14,7 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {getFiberCurrentPropsFromNode} from '../../client/ReactDOMComponentTree';
-import {startFormAction} from 'react-reconciler/src/ReactFiberReconciler';
+import {startHostTransition} from 'react-reconciler/src/ReactFiberReconciler';
 
 import {SyntheticEvent} from '../SyntheticEvent';
 
@@ -25,7 +25,7 @@ import {SyntheticEvent} from '../SyntheticEvent';
 function extractEvents(
   dispatchQueue: DispatchQueue,
   domEventName: DOMEventName,
-  targetInst: null | Fiber,
+  maybeTargetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
@@ -34,11 +34,12 @@ function extractEvents(
   if (domEventName !== 'submit') {
     return;
   }
-  if (!targetInst || targetInst.stateNode !== nativeEventTarget) {
+  if (!maybeTargetInst || maybeTargetInst.stateNode !== nativeEventTarget) {
     // If we're inside a parent root that itself is a parent of this root, then
     // its deepest target won't be the actual form that's being submitted.
     return;
   }
+  const formInst = maybeTargetInst;
   const form: HTMLFormElement = (nativeEventTarget: any);
   let action = (getFiberCurrentPropsFromNode(form): any).action;
   const submitter: null | HTMLInputElement | HTMLButtonElement =
@@ -96,7 +97,7 @@ function extractEvents(
       formData = new FormData(form);
     }
 
-    startFormAction(action, formData);
+    startHostTransition(formInst, action, formData);
   }
 
   dispatchQueue.push({

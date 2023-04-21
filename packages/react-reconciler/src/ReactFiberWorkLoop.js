@@ -2330,6 +2330,16 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       );
       break;
     }
+    case HostComponent: {
+      // Some host components are stateful (that's how we implement form
+      // actions) but we don't bother to reuse the memoized state because it's
+      // not worth the extra code. The main reason to reuse the previous hooks
+      // is to reuse uncached promises, but we happen to know that the only
+      // promises that a host component might suspend on are definitely cached
+      // because they are controlled by us. So don't bother.
+      resetHooksOnUnwind();
+      // Fallthrough to the next branch.
+    }
     default: {
       // Other types besides function components are reset completely before
       // being replayed. Currently this only happens when a Usable type is
