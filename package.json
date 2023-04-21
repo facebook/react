@@ -102,7 +102,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "16.x || 18.x || 19.x"
+    "node": "16.x || 18.x || 19.x || 20.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
