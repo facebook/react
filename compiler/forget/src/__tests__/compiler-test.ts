@@ -7,7 +7,6 @@
 
 "use strict";
 
-import { wasmFolder } from "@hpcc-js/wasm";
 import path from "path";
 import { runReactForgetBabelPlugin } from "../Babel/RunReactForgetBabelPlugin";
 import { toggleLogging } from "../Utils/logger";
@@ -23,10 +22,6 @@ function wrapWithTripleBackticks(s: string, ext?: string) {
 ${s}
 \`\`\``;
 }
-
-wasmFolder(
-  path.join(__dirname, "..", "..", "node_modules", "@hpcc-js", "wasm", "dist")
-);
 
 describe("React Forget", () => {
   const originalConsoleError = console.error;

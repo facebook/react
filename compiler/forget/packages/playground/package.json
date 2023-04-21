@@ -20,7 +20,6 @@
     "@babel/traverse": "^7.19.1",
     "@babel/types": "^7.19.0",
     "@heroicons/react": "^1.0.6",
-    "@hpcc-js/wasm": "^1.15.0",
     "@monaco-editor/react": "^4.4.6",
     "@use-gesture/react": "^10.2.22",
     "hermes-eslint": "^0.9.0",
