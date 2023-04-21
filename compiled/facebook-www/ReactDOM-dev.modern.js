@@ -261,7 +261,8 @@ var disableInputAttributeSyncing =
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask; // On WWW, true is used for a new modern build.
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -3636,61 +3637,16 @@ function validateInputProps(element, props) {
     }
   }
 }
-function updateInputChecked(element, props) {
+function updateInput(
+  element,
+  value,
+  defaultValue,
+  lastDefaultValue,
+  checked,
+  defaultChecked,
+  type
+) {
   var node = element;
-  var checked = props.checked;
-
-  if (checked != null) {
-    node.checked = checked;
-  }
-}
-function updateInput(element, props) {
-  var node = element;
-  var value = getToStringValue(props.value);
-  var type = props.type;
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the value attribute, React only assigns a new value
-    // whenever the defaultValue React prop has changed. When not present,
-    // React does nothing
-    if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    } else {
-      node.removeAttribute("value");
-    }
-  } else {
-    // When syncing the value attribute, the value comes from a cascade of
-    // properties:
-    //  1. The value React property
-    //  2. The defaultValue React property
-    //  3. Otherwise there should be no change
-    if (props.value != null) {
-      setDefaultValue(node, props.type, value);
-    } else if (props.defaultValue != null) {
-      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
-    } else {
-      node.removeAttribute("value");
-    }
-  }
-
-  if (disableInputAttributeSyncing) {
-    // When not syncing the checked attribute, the attribute is directly
-    // controllable from the defaultValue React property. It needs to be
-    // updated as new props come in.
-    if (props.defaultChecked == null) {
-      node.removeAttribute("checked");
-    } else {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  } else {
-    // When syncing the checked attribute, it only changes when it needs
-    // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
-  }
-
-  updateInputChecked(element, props);
 
   if (value != null) {
     if (type === "number") {
@@ -3700,10 +3656,10 @@ function updateInput(element, props) {
         // eslint-disable-next-line
         node.value != value
       ) {
-        node.value = toString(value);
+        node.value = toString(getToStringValue(value));
       }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
     }
   } else if (type === "submit" || type === "reset") {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -3711,34 +3667,81 @@ function updateInput(element, props) {
     node.removeAttribute("value");
     return;
   }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the value attribute, React only assigns a new value
+    // whenever the defaultValue React prop has changed. When not present,
+    // React does nothing
+    if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
+    } else if (lastDefaultValue != null) {
+      node.removeAttribute("value");
+    }
+  } else {
+    // When syncing the value attribute, the value comes from a cascade of
+    // properties:
+    //  1. The value React property
+    //  2. The defaultValue React property
+    //  3. Otherwise there should be no change
+    if (value != null) {
+      setDefaultValue(node, type, getToStringValue(value));
+    } else if (defaultValue != null) {
+      setDefaultValue(node, type, getToStringValue(defaultValue));
+    } else if (lastDefaultValue != null) {
+      node.removeAttribute("value");
+    }
+  }
+
+  if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the attribute is directly
+    // controllable from the defaultValue React property. It needs to be
+    // updated as new props come in.
+    if (defaultChecked == null) {
+      node.removeAttribute("checked");
+    } else {
+      node.defaultChecked = !!defaultChecked;
+    }
+  } else {
+    // When syncing the checked attribute, it only changes when it needs
+    // to be removed, such as transitioning from a checkbox into a text input
+    if (checked == null && defaultChecked != null) {
+      node.defaultChecked = !!defaultChecked;
+    }
+  }
+
+  if (checked != null && node.checked !== !!checked) {
+    node.checked = checked;
+  }
 }
-function initInput(element, props, isHydrating) {
+function initInput(
+  element,
+  value,
+  defaultValue,
+  checked,
+  defaultChecked,
+  type,
+  isHydrating
+) {
   var node = element;
 
-  if (props.value != null || props.defaultValue != null) {
-    var type = props.type;
+  if (value != null || defaultValue != null) {
     var isButton = type === "submit" || type === "reset"; // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
 
-    if (isButton && (props.value === undefined || props.value === null)) {
+    if (isButton && (value === undefined || value === null)) {
       return;
     }
 
-    var defaultValue =
-      props.defaultValue != null
-        ? toString(getToStringValue(props.defaultValue))
-        : "";
+    var defaultValueStr =
+      defaultValue != null ? toString(getToStringValue(defaultValue)) : "";
     var initialValue =
-      props.value != null
-        ? toString(getToStringValue(props.value))
-        : defaultValue; // Do not assign value if it is already set. This prevents user text input
+      value != null ? toString(getToStringValue(value)) : defaultValueStr; // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
 
     if (!isHydrating) {
       if (disableInputAttributeSyncing) {
-        var value = getToStringValue(props.value); // When not syncing the value attribute, the value property points
+        // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
-
         if (value != null) {
           // Always assign on buttons so that it is possible to assign an
           // empty string to clear button text.
@@ -3748,8 +3751,8 @@ function initInput(element, props, isHydrating) {
           // prematurely marking required inputs as invalid. Equality is compared
           // to the current value in case the browser provided value is not an
           // empty string.
-          if (isButton || value !== node.value) {
-            node.value = toString(value);
+          if (isButton || toString(getToStringValue(value)) !== node.value) {
+            node.value = toString(getToStringValue(value));
           }
         }
       } else {
@@ -3768,8 +3771,8 @@ function initInput(element, props, isHydrating) {
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      if (props.defaultValue != null) {
-        node.defaultValue = defaultValue;
+      if (defaultValue != null) {
+        node.defaultValue = defaultValueStr;
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
@@ -3789,12 +3792,13 @@ function initInput(element, props, isHydrating) {
     node.name = "";
   }
 
-  var defaultChecked =
-    props.checked != null ? props.checked : props.defaultChecked;
+  var checkedOrDefault = checked != null ? checked : defaultChecked; // TODO: This 'function' or 'symbol' check isn't replicated in other places
+  // so this semantic is inconsistent.
+
   var initialChecked =
-    typeof defaultChecked !== "function" &&
-    typeof defaultChecked !== "symbol" &&
-    !!defaultChecked; // The checked property never gets assigned. It must be manually set.
+    typeof checkedOrDefault !== "function" &&
+    typeof checkedOrDefault !== "symbol" &&
+    !!checkedOrDefault; // The checked property never gets assigned. It must be manually set.
   // We don't want to do this when hydrating so that existing user input isn't
   // modified
   // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
@@ -3808,9 +3812,9 @@ function initInput(element, props, isHydrating) {
     // Only assign the checked attribute if it is defined. This saves
     // a DOM write when controlling the checked attribute isn't needed
     // (text inputs, submit/reset)
-    if (props.defaultChecked != null) {
+    if (defaultChecked != null) {
       node.defaultChecked = !node.defaultChecked;
-      node.defaultChecked = !!props.defaultChecked;
+      node.defaultChecked = !!defaultChecked;
     }
   } else {
     // When syncing the checked attribute, both the checked property and
@@ -3828,12 +3832,16 @@ function initInput(element, props, isHydrating) {
   }
 }
 function restoreControlledInputState(element, props) {
-  var node = element;
-  updateInput(node, props);
-  updateNamedCousins(node, props);
-}
-
-function updateNamedCousins(rootNode, props) {
+  var rootNode = element;
+  updateInput(
+    rootNode,
+    props.value,
+    props.defaultValue,
+    props.defaultValue,
+    props.checked,
+    props.defaultChecked,
+    props.type
+  );
   var name = props.name;
 
   if (props.type === "radio" && name != null) {
@@ -3881,7 +3889,15 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
 
-      updateInput(otherNode, otherProps);
+      updateInput(
+        otherNode,
+        otherProps.value,
+        otherProps.defaultValue,
+        otherProps.defaultValue,
+        otherProps.checked,
+        otherProps.defaultChecked,
+        otherProps.type
+      );
     }
   }
 } // In Chrome, assigning defaultValue to certain input types triggers input validation.
@@ -3955,12 +3971,6 @@ function validateOptionProps(element, props) {
 
       didWarnSelectedSetOnOption = true;
     }
-  }
-}
-function initOption(element, props) {
-  // value="" should make a value attribute (#6219)
-  if (props.value != null) {
-    element.setAttribute("value", toString(getToStringValue(props.value)));
   }
 }
 
@@ -4109,31 +4119,28 @@ function validateSelectProps(element, props) {
     }
   }
 }
-function initSelect(element, props) {
+function initSelect(element, value, defaultValue, multiple) {
   var node = element;
-  node.multiple = !!props.multiple;
-  var value = props.value;
+  node.multiple = !!multiple;
 
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (props.defaultValue != null) {
-    updateOptions(node, !!props.multiple, props.defaultValue, true);
+    updateOptions(node, !!multiple, value, false);
+  } else if (defaultValue != null) {
+    updateOptions(node, !!multiple, defaultValue, true);
   }
 }
-function updateSelect(element, prevProps, props) {
+function updateSelect(element, value, defaultValue, multiple, wasMultiple) {
   var node = element;
-  var wasMultiple = !!prevProps.multiple;
-  var value = props.value;
 
   if (value != null) {
-    updateOptions(node, !!props.multiple, value, false);
-  } else if (wasMultiple !== !!props.multiple) {
+    updateOptions(node, !!multiple, value, false);
+  } else if (!!wasMultiple !== !!multiple) {
     // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-    if (props.defaultValue != null) {
-      updateOptions(node, !!props.multiple, props.defaultValue, true);
+    if (defaultValue != null) {
+      updateOptions(node, !!multiple, defaultValue, true);
     } else {
       // Revert the select back to its default unselected state.
-      updateOptions(node, !!props.multiple, props.multiple ? [] : "", false);
+      updateOptions(node, !!multiple, multiple ? [] : "", false);
     }
   }
 }
@@ -4191,38 +4198,38 @@ function validateTextareaProps(element, props) {
     }
   }
 }
-function updateTextarea(element, props) {
+function updateTextarea(element, value, defaultValue) {
   var node = element;
-  var value = getToStringValue(props.value);
-  var defaultValue = getToStringValue(props.defaultValue);
-
-  if (defaultValue != null) {
-    node.defaultValue = toString(defaultValue);
-  } else {
-    node.defaultValue = "";
-  }
 
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    var newValue = toString(value); // To avoid side effects (such as losing text selection), only set value if changed
+    var newValue = toString(getToStringValue(value)); // To avoid side effects (such as losing text selection), only set value if changed
 
     if (newValue !== node.value) {
       node.value = newValue;
     } // TOOO: This should respect disableInputAttributeSyncing flag.
 
-    if (props.defaultValue == null && node.defaultValue !== newValue) {
-      node.defaultValue = newValue;
+    if (defaultValue == null) {
+      if (node.defaultValue !== newValue) {
+        node.defaultValue = newValue;
+      }
+
+      return;
     }
   }
+
+  if (defaultValue != null) {
+    node.defaultValue = toString(getToStringValue(defaultValue));
+  } else {
+    node.defaultValue = "";
+  }
 }
-function initTextarea(element, props) {
+function initTextarea(element, value, defaultValue, children) {
   var node = element;
-  var initialValue = props.value; // Only bother fetching default value if we're going to use it
+  var initialValue = value; // Only bother fetching default value if we're going to use it
 
   if (initialValue == null) {
-    var defaultValue = props.defaultValue;
-
     if (defaultValue == null) {
       defaultValue = "";
     }
@@ -4248,7 +4255,490 @@ function initTextarea(element, props) {
 }
 function restoreControlledTextareaState(element, props) {
   // DOM component is still mounted; update
-  updateTextarea(element, props);
+  updateTextarea(element, props.value, props.defaultValue);
+}
+
+// This validation code was written based on the HTML5 parsing spec:
+// https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+//
+// Note: this does not catch all invalid nesting, nor does it try to (as it's
+// not clear what practical benefit doing so provides); instead, we warn only
+// for cases where the parser will give a parse tree differing from what React
+// intended. For example, <b><div></div></b> is invalid but we don't warn
+// because it still parses correctly; we do warn for other cases like nested
+// <p> tags where the beginning of the second element implicitly closes the
+// first, causing a confusing mess.
+// https://html.spec.whatwg.org/multipage/syntax.html#special
+var specialTags = [
+  "address",
+  "applet",
+  "area",
+  "article",
+  "aside",
+  "base",
+  "basefont",
+  "bgsound",
+  "blockquote",
+  "body",
+  "br",
+  "button",
+  "caption",
+  "center",
+  "col",
+  "colgroup",
+  "dd",
+  "details",
+  "dir",
+  "div",
+  "dl",
+  "dt",
+  "embed",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "footer",
+  "form",
+  "frame",
+  "frameset",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "head",
+  "header",
+  "hgroup",
+  "hr",
+  "html",
+  "iframe",
+  "img",
+  "input",
+  "isindex",
+  "li",
+  "link",
+  "listing",
+  "main",
+  "marquee",
+  "menu",
+  "menuitem",
+  "meta",
+  "nav",
+  "noembed",
+  "noframes",
+  "noscript",
+  "object",
+  "ol",
+  "p",
+  "param",
+  "plaintext",
+  "pre",
+  "script",
+  "section",
+  "select",
+  "source",
+  "style",
+  "summary",
+  "table",
+  "tbody",
+  "td",
+  "template",
+  "textarea",
+  "tfoot",
+  "th",
+  "thead",
+  "title",
+  "tr",
+  "track",
+  "ul",
+  "wbr",
+  "xmp"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
+
+var inScopeTags = [
+  "applet",
+  "caption",
+  "html",
+  "table",
+  "td",
+  "th",
+  "marquee",
+  "object",
+  "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
+  // TODO: Distinguish by namespace here -- for <title>, including it here
+  // errs on the side of fewer warnings
+  "foreignObject",
+  "desc",
+  "title"
+]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
+
+var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
+
+var impliedEndTags = ["dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"];
+var emptyAncestorInfoDev = {
+  current: null,
+  formTag: null,
+  aTagInScope: null,
+  buttonTagInScope: null,
+  nobrTagInScope: null,
+  pTagInButtonScope: null,
+  listItemTagAutoclosing: null,
+  dlItemTagAutoclosing: null,
+  containerTagInScope: null
+};
+
+function updatedAncestorInfoDev(oldInfo, tag) {
+  {
+    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev);
+
+    var info = {
+      tag: tag
+    };
+
+    if (inScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.aTagInScope = null;
+      ancestorInfo.buttonTagInScope = null;
+      ancestorInfo.nobrTagInScope = null;
+    }
+
+    if (buttonScopeTags.indexOf(tag) !== -1) {
+      ancestorInfo.pTagInButtonScope = null;
+    } // See rules for 'li', 'dd', 'dt' start tags in
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+
+    if (
+      specialTags.indexOf(tag) !== -1 &&
+      tag !== "address" &&
+      tag !== "div" &&
+      tag !== "p"
+    ) {
+      ancestorInfo.listItemTagAutoclosing = null;
+      ancestorInfo.dlItemTagAutoclosing = null;
+    }
+
+    ancestorInfo.current = info;
+
+    if (tag === "form") {
+      ancestorInfo.formTag = info;
+    }
+
+    if (tag === "a") {
+      ancestorInfo.aTagInScope = info;
+    }
+
+    if (tag === "button") {
+      ancestorInfo.buttonTagInScope = info;
+    }
+
+    if (tag === "nobr") {
+      ancestorInfo.nobrTagInScope = info;
+    }
+
+    if (tag === "p") {
+      ancestorInfo.pTagInButtonScope = info;
+    }
+
+    if (tag === "li") {
+      ancestorInfo.listItemTagAutoclosing = info;
+    }
+
+    if (tag === "dd" || tag === "dt") {
+      ancestorInfo.dlItemTagAutoclosing = info;
+    }
+
+    if (tag === "#document" || tag === "html") {
+      ancestorInfo.containerTagInScope = null;
+    } else if (!ancestorInfo.containerTagInScope) {
+      ancestorInfo.containerTagInScope = info;
+    }
+
+    return ancestorInfo;
+  }
+}
+/**
+ * Returns whether
+ */
+
+function isTagValidWithParent(tag, parentTag) {
+  // First, let's check if we're in an unusual parsing mode...
+  switch (parentTag) {
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
+    case "select":
+      return tag === "option" || tag === "optgroup" || tag === "#text";
+
+    case "optgroup":
+      return tag === "option" || tag === "#text";
+    // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
+    // but
+
+    case "option":
+      return tag === "#text";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
+    // No special behavior since these rules fall back to "in body" mode for
+    // all except special table nodes which cause bad parsing behavior anyway.
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
+
+    case "tr":
+      return (
+        tag === "th" ||
+        tag === "td" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
+
+    case "tbody":
+    case "thead":
+    case "tfoot":
+      return (
+        tag === "tr" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
+
+    case "colgroup":
+      return tag === "col" || tag === "template";
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
+
+    case "table":
+      return (
+        tag === "caption" ||
+        tag === "colgroup" ||
+        tag === "tbody" ||
+        tag === "tfoot" ||
+        tag === "thead" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
+
+    case "head":
+      return (
+        tag === "base" ||
+        tag === "basefont" ||
+        tag === "bgsound" ||
+        tag === "link" ||
+        tag === "meta" ||
+        tag === "title" ||
+        tag === "noscript" ||
+        tag === "noframes" ||
+        tag === "style" ||
+        tag === "script" ||
+        tag === "template"
+      );
+    // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
+
+    case "html":
+      return tag === "head" || tag === "body" || tag === "frameset";
+
+    case "frameset":
+      return tag === "frame";
+
+    case "#document":
+      return tag === "html";
+  } // Probably in the "in body" parsing mode, so we outlaw only tag combos
+  // where the parsing rules cause implicit opens or closes to be added.
+  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+
+  switch (tag) {
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return (
+        parentTag !== "h1" &&
+        parentTag !== "h2" &&
+        parentTag !== "h3" &&
+        parentTag !== "h4" &&
+        parentTag !== "h5" &&
+        parentTag !== "h6"
+      );
+
+    case "rp":
+    case "rt":
+      return impliedEndTags.indexOf(parentTag) === -1;
+
+    case "body":
+    case "caption":
+    case "col":
+    case "colgroup":
+    case "frameset":
+    case "frame":
+    case "head":
+    case "html":
+    case "tbody":
+    case "td":
+    case "tfoot":
+    case "th":
+    case "thead":
+    case "tr":
+      // These tags are only valid with a few parents that have special child
+      // parsing rules -- if we're down here, then none of those matched and
+      // so we allow it only if we don't know what the parent is, as all other
+      // cases are invalid.
+      return parentTag == null;
+  }
+
+  return true;
+}
+/**
+ * Returns whether
+ */
+
+function findInvalidAncestorForTag(tag, ancestorInfo) {
+  switch (tag) {
+    case "address":
+    case "article":
+    case "aside":
+    case "blockquote":
+    case "center":
+    case "details":
+    case "dialog":
+    case "dir":
+    case "div":
+    case "dl":
+    case "fieldset":
+    case "figcaption":
+    case "figure":
+    case "footer":
+    case "header":
+    case "hgroup":
+    case "main":
+    case "menu":
+    case "nav":
+    case "ol":
+    case "p":
+    case "section":
+    case "summary":
+    case "ul":
+    case "pre":
+    case "listing":
+    case "table":
+    case "hr":
+    case "xmp":
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return ancestorInfo.pTagInButtonScope;
+
+    case "form":
+      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+
+    case "li":
+      return ancestorInfo.listItemTagAutoclosing;
+
+    case "dd":
+    case "dt":
+      return ancestorInfo.dlItemTagAutoclosing;
+
+    case "button":
+      return ancestorInfo.buttonTagInScope;
+
+    case "a":
+      // Spec says something about storing a list of markers, but it sounds
+      // equivalent to this check.
+      return ancestorInfo.aTagInScope;
+
+    case "nobr":
+      return ancestorInfo.nobrTagInScope;
+  }
+
+  return null;
+}
+
+var didWarn = {};
+
+function validateDOMNesting(childTag, ancestorInfo) {
+  {
+    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
+    var parentInfo = ancestorInfo.current;
+    var parentTag = parentInfo && parentInfo.tag;
+    var invalidParent = isTagValidWithParent(childTag, parentTag)
+      ? null
+      : parentInfo;
+    var invalidAncestor = invalidParent
+      ? null
+      : findInvalidAncestorForTag(childTag, ancestorInfo);
+    var invalidParentOrAncestor = invalidParent || invalidAncestor;
+
+    if (!invalidParentOrAncestor) {
+      return;
+    }
+
+    var ancestorTag = invalidParentOrAncestor.tag;
+    var warnKey = String(!!invalidParent) + "|" + childTag + "|" + ancestorTag; // eslint-disable-next-line react-internal/safe-string-coercion
+
+    if (didWarn[warnKey]) {
+      return;
+    }
+
+    didWarn[warnKey] = true;
+    var tagDisplayName = "<" + childTag + ">";
+
+    if (invalidParent) {
+      var info = "";
+
+      if (ancestorTag === "table" && childTag === "tr") {
+        info +=
+          " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by " +
+          "the browser.";
+      }
+
+      error(
+        "validateDOMNesting(...): %s cannot appear as a child of <%s>.%s",
+        tagDisplayName,
+        ancestorTag,
+        info
+      );
+    } else {
+      error(
+        "validateDOMNesting(...): %s cannot appear as a descendant of " +
+          "<%s>.",
+        tagDisplayName,
+        ancestorTag
+      );
+    }
+  }
+}
+
+function validateTextNesting(childText, parentTag) {
+  {
+    if (isTagValidWithParent("#text", parentTag)) {
+      return;
+    } // eslint-disable-next-line react-internal/safe-string-coercion
+
+    var warnKey = "#text|" + parentTag;
+
+    if (didWarn[warnKey]) {
+      return;
+    }
+
+    didWarn[warnKey] = true;
+
+    if (/\S/.test(childText)) {
+      error(
+        "validateDOMNesting(...): Text nodes cannot appear as a child of <%s>.",
+        parentTag
+      );
+    } else {
+      error(
+        "validateDOMNesting(...): Whitespace text nodes cannot appear as a child of <%s>. " +
+          "Make sure you don't have any extra whitespace between tags on " +
+          "each line of your source code.",
+        parentTag
+      );
+    }
+  }
 }
 
 var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
@@ -4845,6 +5335,44 @@ function createDangerousStringForStyles(styles) {
     return serialized || null;
   }
 }
+
+function setValueForStyle(style, styleName, value) {
+  var isCustomProperty = styleName.indexOf("--") === 0;
+
+  {
+    if (!isCustomProperty) {
+      warnValidStyle(styleName, value);
+    }
+  }
+
+  if (value == null || typeof value === "boolean" || value === "") {
+    if (isCustomProperty) {
+      style.setProperty(styleName, "");
+    } else if (styleName === "float") {
+      style.cssFloat = "";
+    } else {
+      style[styleName] = "";
+    }
+  } else if (isCustomProperty) {
+    style.setProperty(styleName, value);
+  } else if (
+    typeof value === "number" &&
+    value !== 0 &&
+    !isUnitlessNumber(styleName)
+  ) {
+    style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
+  } else {
+    if (styleName === "float") {
+      style.cssFloat = value;
+    } else {
+      {
+        checkCSSPropertyStringCoercion(value, styleName);
+      }
+
+      style[styleName] = ("" + value).trim();
+    }
+  }
+}
 /**
  * Sets the value for multiple styles on a node.  If a value is specified as
  * '' (empty string), the corresponding style property will be unset.
@@ -4853,7 +5381,7 @@ function createDangerousStringForStyles(styles) {
  * @param {object} styles
  */
 
-function setValueForStyles(node, styles) {
+function setValueForStyles(node, styles, prevStyles) {
   if (styles != null && typeof styles !== "object") {
     throw new Error(
       "The `style` prop expects a mapping from style properties to values, " +
@@ -4872,45 +5400,44 @@ function setValueForStyles(node, styles) {
 
   var style = node.style;
 
-  for (var styleName in styles) {
-    if (!styles.hasOwnProperty(styleName)) {
-      continue;
-    }
-
-    var value = styles[styleName];
-    var isCustomProperty = styleName.indexOf("--") === 0;
-
+  if (diffInCommitPhase && prevStyles != null) {
     {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, value);
+      validateShorthandPropertyCollisionInDev(prevStyles, styles);
+    }
+
+    for (var styleName in prevStyles) {
+      if (
+        prevStyles.hasOwnProperty(styleName) &&
+        (styles == null || !styles.hasOwnProperty(styleName))
+      ) {
+        // Clear style
+        var isCustomProperty = styleName.indexOf("--") === 0;
+
+        if (isCustomProperty) {
+          style.setProperty(styleName, "");
+        } else if (styleName === "float") {
+          style.cssFloat = "";
+        } else {
+          style[styleName] = "";
+        }
       }
     }
 
-    if (value == null || typeof value === "boolean" || value === "") {
-      if (isCustomProperty) {
-        style.setProperty(styleName, "");
-      } else if (styleName === "float") {
-        style.cssFloat = "";
-      } else {
-        style[styleName] = "";
-      }
-    } else if (isCustomProperty) {
-      style.setProperty(styleName, value);
-    } else if (
-      typeof value === "number" &&
-      value !== 0 &&
-      !isUnitlessNumber(styleName)
-    ) {
-      style[styleName] = value + "px"; // Presumes implicit 'px' suffix for unitless numbers
-    } else {
-      if (styleName === "float") {
-        style.cssFloat = value;
-      } else {
-        {
-          checkCSSPropertyStringCoercion(value, styleName);
-        }
+    for (var _styleName in styles) {
+      var value = styles[_styleName];
 
-        style[styleName] = ("" + value).trim();
+      if (
+        styles.hasOwnProperty(_styleName) &&
+        prevStyles[_styleName] !== value
+      ) {
+        setValueForStyle(style, _styleName, value);
+      }
+    }
+  } else {
+    for (var _styleName2 in styles) {
+      if (styles.hasOwnProperty(_styleName2)) {
+        var _value = styles[_styleName2];
+        setValueForStyle(style, _styleName2, _value);
       }
     }
   }
@@ -4956,19 +5483,45 @@ function expandShorthandMap(styles) {
  *   becomes .style.fontVariant = ''
  */
 
-function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
+function validateShorthandPropertyCollisionInDev(prevStyles, nextStyles) {
   {
     if (!nextStyles) {
       return;
+    } // Compute the diff as it would happen elsewhere.
+
+    var expandedUpdates = {};
+
+    if (prevStyles) {
+      for (var key in prevStyles) {
+        if (prevStyles.hasOwnProperty(key) && !nextStyles.hasOwnProperty(key)) {
+          var longhands = shorthandToLonghand[key] || [key];
+
+          for (var i = 0; i < longhands.length; i++) {
+            expandedUpdates[longhands[i]] = key;
+          }
+        }
+      }
     }
 
-    var expandedUpdates = expandShorthandMap(styleUpdates);
+    for (var _key in nextStyles) {
+      if (
+        nextStyles.hasOwnProperty(_key) &&
+        (!prevStyles || prevStyles[_key] !== nextStyles[_key])
+      ) {
+        var _longhands = shorthandToLonghand[_key] || [_key];
+
+        for (var _i = 0; _i < _longhands.length; _i++) {
+          expandedUpdates[_longhands[_i]] = _key;
+        }
+      }
+    }
+
     var expandedStyles = expandShorthandMap(nextStyles);
     var warnedAbout = {};
 
-    for (var key in expandedUpdates) {
-      var originalKey = expandedUpdates[key];
-      var correctOriginalKey = expandedStyles[key];
+    for (var _key2 in expandedUpdates) {
+      var originalKey = expandedUpdates[_key2];
+      var correctOriginalKey = expandedStyles[_key2];
 
       if (correctOriginalKey && originalKey !== correctOriginalKey) {
         var warningKey = originalKey + "," + correctOriginalKey;
@@ -4985,7 +5538,7 @@ function validateShorthandPropertyCollisionInDev(styleUpdates, nextStyles) {
             "avoid this, don't mix shorthand and non-shorthand properties " +
             "for the same value; instead, replace the shorthand with " +
             "separate values.",
-          isValueEmpty(styleUpdates[originalKey]) ? "Removing" : "Updating",
+          isValueEmpty(nextStyles[originalKey]) ? "Removing" : "Updating",
           originalKey,
           correctOriginalKey
         );
@@ -7804,11 +8357,13 @@ function prepareToHydrateHostInstance(fiber, hostContext) {
     shouldWarnIfMismatchDev
   ); // TODO: Type this specific to this type of component.
 
-  fiber.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-  // is a new ref we mark this as an update.
+  if (!diffInCommitPhase) {
+    fiber.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
 
-  if (updatePayload !== null) {
-    return true;
+    if (updatePayload !== null) {
+      return true;
+    }
   }
 
   return false;
@@ -21797,29 +22352,28 @@ function updateHostComponent(
       // In mutation mode, this is sufficient for a bailout because
       // we won't touch this node even if children changed.
       return;
-    } // If we get updated because one of our children updated, we don't
-    // have newProps so we'll have to reuse them.
-    // TODO: Split the update API as separate for the props vs. children.
-    // Even better would be if children weren't special cased at all tho.
+    }
 
-    var instance = workInProgress.stateNode;
-    var currentHostContext = getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
-    // component is hitting the resume path. Figure out why. Possibly
-    // related to `hidden`.
-
-    var updatePayload = prepareUpdate(
-      instance,
-      type,
-      oldProps,
-      newProps,
-      currentHostContext
-    ); // TODO: Type this specific to this type of component.
-
-    workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update. All the work is done in commitWork.
-
-    if (updatePayload) {
+    if (diffInCommitPhase) {
       markUpdate(workInProgress);
+    } else {
+      // If we get updated because one of our children updated, we don't
+      // have newProps so we'll have to reuse them.
+      // TODO: Split the update API as separate for the props vs. children.
+      // Even better would be if children weren't special cased at all tho.
+      var instance = workInProgress.stateNode; // TODO: Experiencing an error where oldProps is null. Suggests a host
+      // component is hitting the resume path. Figure out why. Possibly
+      // related to `hidden`.
+
+      getHostContext();
+      var updatePayload = prepareUpdate(instance, type, oldProps, newProps); // TODO: Type this specific to this type of component.
+
+      workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
+      // is a new ref we mark this as an update. All the work is done in commitWork.
+
+      if (updatePayload) {
+        markUpdate(workInProgress);
+      }
     }
   }
 } // This function must be called at the very end of the complete phase, because
@@ -25950,7 +26504,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null) {
+            if (_updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   _instance2,
@@ -33182,7 +33736,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-5a04a0b8";
+var ReactVersion = "18.3.0-www-modern-52157a92";
 
 function createPortal$1(
   children,
@@ -38323,14 +38877,17 @@ function trapClickOnNonInteractiveElement(node) {
 var xlinkNamespace = "http://www.w3.org/1999/xlink";
 var xmlNamespace = "http://www.w3.org/XML/1998/namespace";
 
-function setProp(domElement, tag, key, value, props) {
+function setProp(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "children": {
       if (typeof value === "string") {
-        // Avoid setting initial textContent when the text is empty. In IE11 setting
+        {
+          validateTextNesting(value, tag);
+        } // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+
         var canSetTextContent =
           tag !== "body" && (tag !== "textarea" || value !== "");
 
@@ -38338,6 +38895,10 @@ function setProp(domElement, tag, key, value, props) {
           setTextContent(domElement, value);
         }
       } else if (typeof value === "number") {
+        {
+          validateTextNesting("" + value, tag);
+        }
+
         var _canSetTextContent = tag !== "body";
 
         if (_canSetTextContent) {
@@ -38370,7 +38931,7 @@ function setProp(domElement, tag, key, value, props) {
     }
 
     case "style": {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
@@ -38758,6 +39319,20 @@ function setProp(domElement, tag, key, value, props) {
       break;
     // Properties that should not be allowed on custom elements.
 
+    case "is": {
+      {
+        if (prevValue != null) {
+          error('Cannot update the "is" prop after it has been initialized.');
+        }
+      } // TODO: We shouldn't actually set this attribute, because we've already
+      // passed it to createElement. We don't also need the attribute.
+      // However, our tests currently query for it so it's plausible someone
+      // else does too so it's break.
+
+      setValueForAttribute(domElement, "is", value);
+      break;
+    }
+
     case "innerText":
     case "textContent":
       if (enableCustomElementPropertySupport) {
@@ -38787,10 +39362,10 @@ function setProp(domElement, tag, key, value, props) {
   }
 }
 
-function setPropOnCustomElement(domElement, tag, key, value, props) {
+function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
   switch (key) {
     case "style": {
-      setValueForStyles(domElement, value);
+      setValueForStyles(domElement, value, prevValue);
       break;
     }
 
@@ -38921,6 +39496,11 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var type = null;
+      var value = null;
+      var defaultValue = null;
+      var checked = null;
+      var defaultChecked = null;
 
       for (var propKey in props) {
         if (!props.hasOwnProperty(propKey)) {
@@ -38942,6 +39522,8 @@ function setInitialProperties(domElement, tag, props) {
               typeof propValue !== "symbol" &&
               typeof propValue !== "boolean"
             ) {
+              type = propValue;
+
               {
                 checkAttributeStringCoercion(propValue, propKey);
               }
@@ -38953,17 +39535,29 @@ function setInitialProperties(domElement, tag, props) {
           }
 
           case "checked": {
-            var checked = propValue != null ? propValue : props.defaultChecked;
+            checked = propValue;
+            var checkedValue =
+              propValue != null ? propValue : props.defaultChecked;
             var inputElement = domElement;
             inputElement.checked =
-              !!checked &&
-              typeof checked !== "function" &&
-              checked !== "symbol";
+              !!checkedValue &&
+              typeof checkedValue !== "function" &&
+              checkedValue !== "symbol";
+            break;
+          }
+
+          case "defaultChecked": {
+            defaultChecked = propValue;
             break;
           }
 
           case "value": {
-            // This is handled by updateWrapper below.
+            value = propValue;
+            break;
+          }
+
+          case "defaultValue": {
+            defaultValue = propValue;
             break;
           }
 
@@ -38979,10 +39573,9 @@ function setInitialProperties(domElement, tag, props) {
 
             break;
           }
-          // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       } // TODO: Make sure we check if this is still unmounted or do any clean
@@ -38990,7 +39583,15 @@ function setInitialProperties(domElement, tag, props) {
 
       track(domElement);
       validateInputProps(domElement, props);
-      initInput(domElement, props, false);
+      initInput(
+        domElement,
+        value,
+        defaultValue,
+        checked,
+        defaultChecked,
+        type,
+        false
+      );
       return;
     }
 
@@ -39001,6 +39602,9 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var _value = null;
+      var _defaultValue = null;
+      var multiple = null;
 
       for (var _propKey in props) {
         if (!props.hasOwnProperty(_propKey)) {
@@ -39015,19 +39619,31 @@ function setInitialProperties(domElement, tag, props) {
 
         switch (_propKey) {
           case "value": {
-            // This is handled by updateWrapper below.
+            _value = _propValue; // This is handled by initSelect below.
+
             break;
           }
-          // defaultValue are ignored by setProp
+
+          case "defaultValue": {
+            _defaultValue = _propValue; // This is handled by initSelect below.
+
+            break;
+          }
+
+          case "multiple": {
+            multiple = _propValue; // TODO: We don't actually have to fall through here because we set it
+            // in initSelect anyway. We can remove the special case in setProp.
+          }
+          // Fallthrough
 
           default: {
-            setProp(domElement, tag, _propKey, _propValue, props);
+            setProp(domElement, tag, _propKey, _propValue, props, null);
           }
         }
       }
 
       validateSelectProps(domElement, props);
-      initSelect(domElement, props);
+      initSelect(domElement, _value, _defaultValue, multiple);
       return;
     }
 
@@ -39038,6 +39654,8 @@ function setInitialProperties(domElement, tag, props) {
       // listeners still fire for the invalid event.
 
       listenToNonDelegatedEvent("invalid", domElement);
+      var _value2 = null;
+      var _defaultValue2 = null;
 
       for (var _propKey2 in props) {
         if (!props.hasOwnProperty(_propKey2)) {
@@ -39052,12 +39670,17 @@ function setInitialProperties(domElement, tag, props) {
 
         switch (_propKey2) {
           case "value": {
-            // This is handled by updateWrapper below.
+            _value2 = _propValue2; // This is handled by initTextarea below.
+
+            break;
+          }
+
+          case "defaultValue": {
+            _defaultValue2 = _propValue2;
             break;
           }
 
           case "children": {
-            // TODO: Handled by initWrapperState above.
             break;
           }
 
@@ -39071,7 +39694,6 @@ function setInitialProperties(domElement, tag, props) {
 
             break;
           }
-          // defaultValue is ignored by setProp
 
           default: {
             setProp(domElement, tag, _propKey2, _propValue2, props);
@@ -39082,7 +39704,7 @@ function setInitialProperties(domElement, tag, props) {
 
       track(domElement);
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, _value2, _defaultValue2);
       return;
     }
 
@@ -39116,7 +39738,6 @@ function setInitialProperties(domElement, tag, props) {
         }
       }
 
-      initOption(domElement, props);
       return;
     }
 
@@ -39205,7 +39826,7 @@ function setInitialProperties(domElement, tag, props) {
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey4, _propValue4, props);
+            setProp(domElement, tag, _propKey4, _propValue4, props, null);
           }
         }
       }
@@ -39231,7 +39852,8 @@ function setInitialProperties(domElement, tag, props) {
             tag,
             _propKey5,
             _propValue5,
-            props
+            props,
+            null
           );
         }
 
@@ -39251,7 +39873,7 @@ function setInitialProperties(domElement, tag, props) {
       continue;
     }
 
-    setProp(domElement, tag, _propKey6, _propValue6, props);
+    setProp(domElement, tag, _propKey6, _propValue6, props, null);
   }
 } // Calculate the diff between the two objects.
 
@@ -39368,22 +39990,19 @@ function diffProperties(domElement, tag, lastProps, nextProps) {
 
   if (styleUpdates) {
     {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps.style);
+      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
     }
 
     (updatePayload = updatePayload || []).push("style", styleUpdates);
   }
 
   return updatePayload;
-} // Apply the diff.
+}
+function updateProperties(domElement, tag, lastProps, nextProps) {
+  {
+    validatePropertiesInDevelopment(tag, nextProps);
+  }
 
-function updateProperties(
-  domElement,
-  updatePayload,
-  tag,
-  lastProps,
-  nextProps
-) {
   switch (tag) {
     case "div":
     case "span":
@@ -39398,50 +40017,144 @@ function updateProperties(
     }
 
     case "input": {
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (nextProps.type === "radio" && nextProps.name != null) {
-        updateInputChecked(domElement, nextProps);
-      }
+      var name = null;
+      var type = null;
+      var value = null;
+      var defaultValue = null;
+      var lastDefaultValue = null;
+      var checked = null;
+      var defaultChecked = null;
 
-      for (var i = 0; i < updatePayload.length; i += 2) {
-        var propKey = updatePayload[i];
-        var propValue = updatePayload[i + 1];
+      for (var propKey in lastProps) {
+        var lastProp = lastProps[propKey];
 
-        switch (propKey) {
-          case "checked": {
-            var checked =
-              propValue != null ? propValue : nextProps.defaultChecked;
-            var inputElement = domElement;
-            inputElement.checked =
-              !!checked &&
-              typeof checked !== "function" &&
-              checked !== "symbol";
-            break;
-          }
+        if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
+          switch (propKey) {
+            case "checked": {
+              if (!nextProps.hasOwnProperty(propKey)) {
+                var checkedValue = nextProps.defaultChecked;
+                var inputElement = domElement;
+                inputElement.checked =
+                  !!checkedValue &&
+                  typeof checkedValue !== "function" &&
+                  checkedValue !== "symbol";
+              }
 
-          case "value": {
-            // This is handled by updateWrapper below.
-            break;
-          }
-
-          case "children":
-          case "dangerouslySetInnerHTML": {
-            if (propValue != null) {
-              throw new Error(
-                tag +
-                  " is a void element tag and must neither have `children` nor " +
-                  "use `dangerouslySetInnerHTML`."
-              );
+              break;
             }
 
-            break;
-          }
-          // defaultChecked and defaultValue are ignored by setProp
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
 
-          default: {
-            setProp(domElement, tag, propKey, propValue, nextProps);
+            case "defaultValue": {
+              lastDefaultValue = lastProp;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+            // Fallthrough
+
+            default: {
+              if (!nextProps.hasOwnProperty(propKey))
+                setProp(domElement, tag, propKey, null, nextProps, lastProp);
+            }
+          }
+        }
+      }
+
+      for (var _propKey7 in nextProps) {
+        var nextProp = nextProps[_propKey7];
+        var _lastProp = lastProps[_propKey7];
+
+        if (
+          nextProps.hasOwnProperty(_propKey7) &&
+          (nextProp != null || _lastProp != null)
+        ) {
+          switch (_propKey7) {
+            case "type": {
+              type = nextProp; // Fast path since 'type' is very common on inputs
+
+              if (nextProp !== _lastProp) {
+                if (
+                  nextProp != null &&
+                  typeof nextProp !== "function" &&
+                  typeof nextProp !== "symbol" &&
+                  typeof nextProp !== "boolean"
+                ) {
+                  {
+                    checkAttributeStringCoercion(nextProp, _propKey7);
+                  }
+
+                  domElement.setAttribute(_propKey7, nextProp);
+                } else {
+                  domElement.removeAttribute(_propKey7);
+                }
+              }
+
+              break;
+            }
+
+            case "name": {
+              name = nextProp;
+              break;
+            }
+
+            case "checked": {
+              checked = nextProp;
+
+              if (nextProp !== _lastProp) {
+                var _checkedValue =
+                  nextProp != null ? nextProp : nextProps.defaultChecked;
+
+                var _inputElement = domElement;
+                _inputElement.checked =
+                  !!_checkedValue &&
+                  typeof _checkedValue !== "function" &&
+                  _checkedValue !== "symbol";
+              }
+
+              break;
+            }
+
+            case "defaultChecked": {
+              defaultChecked = nextProp;
+              break;
+            }
+
+            case "value": {
+              value = nextProp;
+              break;
+            }
+
+            case "defaultValue": {
+              defaultValue = nextProp;
+              break;
+            }
+
+            case "children":
+            case "dangerouslySetInnerHTML": {
+              if (nextProp != null) {
+                throw new Error(
+                  tag +
+                    " is a void element tag and must neither have `children` nor " +
+                    "use `dangerouslySetInnerHTML`."
+                );
+              }
+
+              break;
+            }
+
+            default: {
+              if (nextProp !== _lastProp)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey7,
+                  nextProp,
+                  nextProps,
+                  _lastProp
+                );
+            }
           }
         }
       }
@@ -39487,20 +40200,593 @@ function updateProperties(
 
           didWarnControlledToUncontrolled = true;
         }
+      } // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+
+      if (
+        name != null &&
+        typeof name !== "function" &&
+        typeof name !== "symbol" &&
+        typeof name !== "boolean"
+      ) {
+        {
+          checkAttributeStringCoercion(name, "name");
+        }
+
+        domElement.setAttribute("name", name);
+      } else {
+        domElement.removeAttribute("name");
       } // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
 
-      updateInput(domElement, nextProps);
+      updateInput(
+        domElement,
+        value,
+        defaultValue,
+        lastDefaultValue,
+        checked,
+        defaultChecked,
+        type
+      );
       return;
     }
 
     case "select": {
+      var _value3 = null;
+      var _defaultValue3 = null;
+      var multiple = null;
+      var wasMultiple = null;
+
+      for (var _propKey8 in lastProps) {
+        var _lastProp2 = lastProps[_propKey8];
+
+        if (lastProps.hasOwnProperty(_propKey8) && _lastProp2 != null) {
+          switch (_propKey8) {
+            case "value": {
+              // This is handled by updateWrapper below.
+              break;
+            }
+            // defaultValue are ignored by setProp
+
+            case "multiple": {
+              wasMultiple = _lastProp2; // TODO: Move special case in here from setProp.
+            }
+            // Fallthrough
+
+            default: {
+              if (!nextProps.hasOwnProperty(_propKey8))
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey8,
+                  null,
+                  nextProps,
+                  _lastProp2
+                );
+            }
+          }
+        }
+      }
+
+      for (var _propKey9 in nextProps) {
+        var _nextProp = nextProps[_propKey9];
+        var _lastProp3 = lastProps[_propKey9];
+
+        if (
+          nextProps.hasOwnProperty(_propKey9) &&
+          (_nextProp != null || _lastProp3 != null)
+        ) {
+          switch (_propKey9) {
+            case "value": {
+              _value3 = _nextProp; // This is handled by updateSelect below.
+
+              break;
+            }
+
+            case "defaultValue": {
+              _defaultValue3 = _nextProp;
+              break;
+            }
+
+            case "multiple": {
+              multiple = _nextProp; // TODO: Just move the special case in here from setProp.
+            }
+            // Fallthrough
+
+            default: {
+              if (_nextProp !== _lastProp3)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey9,
+                  _nextProp,
+                  nextProps,
+                  _lastProp3
+                );
+            }
+          }
+        }
+      } // <select> value update needs to occur after <option> children
+      // reconciliation
+
+      updateSelect(domElement, _value3, _defaultValue3, multiple, wasMultiple);
+      return;
+    }
+
+    case "textarea": {
+      var _value4 = null;
+      var _defaultValue4 = null;
+
+      for (var _propKey10 in lastProps) {
+        var _lastProp4 = lastProps[_propKey10];
+
+        if (
+          lastProps.hasOwnProperty(_propKey10) &&
+          _lastProp4 != null &&
+          !nextProps.hasOwnProperty(_propKey10)
+        ) {
+          switch (_propKey10) {
+            case "value": {
+              // This is handled by updateTextarea below.
+              break;
+            }
+
+            case "children": {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+            // defaultValue is ignored by setProp
+
+            default: {
+              setProp(domElement, tag, _propKey10, null, nextProps, _lastProp4);
+            }
+          }
+        }
+      }
+
+      for (var _propKey11 in nextProps) {
+        var _nextProp2 = nextProps[_propKey11];
+        var _lastProp5 = lastProps[_propKey11];
+
+        if (
+          nextProps.hasOwnProperty(_propKey11) &&
+          (_nextProp2 != null || _lastProp5 != null)
+        ) {
+          switch (_propKey11) {
+            case "value": {
+              _value4 = _nextProp2; // This is handled by updateTextarea below.
+
+              break;
+            }
+
+            case "defaultValue": {
+              _defaultValue4 = _nextProp2;
+              break;
+            }
+
+            case "children": {
+              // TODO: This doesn't actually do anything if it updates.
+              break;
+            }
+
+            case "dangerouslySetInnerHTML": {
+              if (_nextProp2 != null) {
+                // TODO: Do we really need a special error message for this. It's also pretty blunt.
+                throw new Error(
+                  "`dangerouslySetInnerHTML` does not make sense on <textarea>."
+                );
+              }
+
+              break;
+            }
+
+            default: {
+              if (_nextProp2 !== _lastProp5)
+                setProp(
+                  domElement,
+                  tag,
+                  _propKey11,
+                  _nextProp2,
+                  nextProps,
+                  _lastProp5
+                );
+            }
+          }
+        }
+      }
+
+      updateTextarea(domElement, _value4, _defaultValue4);
+      return;
+    }
+
+    case "option": {
+      for (var _propKey12 in lastProps) {
+        var _lastProp6 = lastProps[_propKey12];
+
+        if (
+          lastProps.hasOwnProperty(_propKey12) &&
+          _lastProp6 != null &&
+          !nextProps.hasOwnProperty(_propKey12)
+        ) {
+          switch (_propKey12) {
+            case "selected": {
+              // TODO: Remove support for selected on option.
+              domElement.selected = false;
+              break;
+            }
+
+            default: {
+              setProp(domElement, tag, _propKey12, null, nextProps, _lastProp6);
+            }
+          }
+        }
+      }
+
+      for (var _propKey13 in nextProps) {
+        var _nextProp3 = nextProps[_propKey13];
+        var _lastProp7 = lastProps[_propKey13];
+
+        if (
+          nextProps.hasOwnProperty(_propKey13) &&
+          _nextProp3 !== _lastProp7 &&
+          (_nextProp3 != null || _lastProp7 != null)
+        ) {
+          switch (_propKey13) {
+            case "selected": {
+              // TODO: Remove support for selected on option.
+              domElement.selected =
+                _nextProp3 &&
+                typeof _nextProp3 !== "function" &&
+                typeof _nextProp3 !== "symbol";
+              break;
+            }
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey13,
+                _nextProp3,
+                nextProps,
+                _lastProp7
+              );
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    case "img":
+    case "link":
+    case "area":
+    case "base":
+    case "br":
+    case "col":
+    case "embed":
+    case "hr":
+    case "keygen":
+    case "meta":
+    case "param":
+    case "source":
+    case "track":
+    case "wbr":
+    case "menuitem": {
+      // Void elements
+      for (var _propKey14 in lastProps) {
+        var _lastProp8 = lastProps[_propKey14];
+
+        if (
+          lastProps.hasOwnProperty(_propKey14) &&
+          _lastProp8 != null &&
+          !nextProps.hasOwnProperty(_propKey14)
+        ) {
+          setProp(domElement, tag, _propKey14, null, nextProps, _lastProp8);
+        }
+      }
+
+      for (var _propKey15 in nextProps) {
+        var _nextProp4 = nextProps[_propKey15];
+        var _lastProp9 = lastProps[_propKey15];
+
+        if (
+          nextProps.hasOwnProperty(_propKey15) &&
+          _nextProp4 !== _lastProp9 &&
+          (_nextProp4 != null || _lastProp9 != null)
+        ) {
+          switch (_propKey15) {
+            case "children":
+            case "dangerouslySetInnerHTML": {
+              if (_nextProp4 != null) {
+                // TODO: Can we make this a DEV warning to avoid this deny list?
+                throw new Error(
+                  tag +
+                    " is a void element tag and must neither have `children` nor " +
+                    "use `dangerouslySetInnerHTML`."
+                );
+              }
+
+              break;
+            }
+            // defaultChecked and defaultValue are ignored by setProp
+
+            default: {
+              setProp(
+                domElement,
+                tag,
+                _propKey15,
+                _nextProp4,
+                nextProps,
+                _lastProp9
+              );
+            }
+          }
+        }
+      }
+
+      return;
+    }
+
+    default: {
+      if (isCustomElement(tag)) {
+        for (var _propKey16 in lastProps) {
+          var _lastProp10 = lastProps[_propKey16];
+
+          if (
+            lastProps.hasOwnProperty(_propKey16) &&
+            _lastProp10 != null &&
+            !nextProps.hasOwnProperty(_propKey16)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              _propKey16,
+              null,
+              nextProps,
+              _lastProp10
+            );
+          }
+        }
+
+        for (var _propKey17 in nextProps) {
+          var _nextProp5 = nextProps[_propKey17];
+          var _lastProp11 = lastProps[_propKey17];
+
+          if (
+            nextProps.hasOwnProperty(_propKey17) &&
+            _nextProp5 !== _lastProp11 &&
+            (_nextProp5 != null || _lastProp11 != null)
+          ) {
+            setPropOnCustomElement(
+              domElement,
+              tag,
+              _propKey17,
+              _nextProp5,
+              nextProps,
+              _lastProp11
+            );
+          }
+        }
+
+        return;
+      }
+    }
+  }
+
+  for (var _propKey18 in lastProps) {
+    var _lastProp12 = lastProps[_propKey18];
+
+    if (
+      lastProps.hasOwnProperty(_propKey18) &&
+      _lastProp12 != null &&
+      !nextProps.hasOwnProperty(_propKey18)
+    ) {
+      setProp(domElement, tag, _propKey18, null, nextProps, _lastProp12);
+    }
+  }
+
+  for (var _propKey19 in nextProps) {
+    var _nextProp6 = nextProps[_propKey19];
+    var _lastProp13 = lastProps[_propKey19];
+
+    if (
+      nextProps.hasOwnProperty(_propKey19) &&
+      _nextProp6 !== _lastProp13 &&
+      (_nextProp6 != null || _lastProp13 != null)
+    ) {
+      setProp(domElement, tag, _propKey19, _nextProp6, nextProps, _lastProp13);
+    }
+  }
+} // Apply the diff.
+
+function updatePropertiesWithDiff(
+  domElement,
+  updatePayload,
+  tag,
+  lastProps,
+  nextProps
+) {
+  switch (tag) {
+    case "div":
+    case "span":
+    case "svg":
+    case "path":
+    case "a":
+    case "g":
+    case "p":
+    case "li": {
+      // Fast track the most common tag types
+      break;
+    }
+
+    case "input": {
+      var name = nextProps.name;
+      var type = nextProps.type;
+      var value = nextProps.value;
+      var defaultValue = nextProps.defaultValue;
+      var lastDefaultValue = lastProps.defaultValue;
+      var checked = nextProps.checked;
+      var defaultChecked = nextProps.defaultChecked;
+
+      for (var i = 0; i < updatePayload.length; i += 2) {
+        var propKey = updatePayload[i];
+        var propValue = updatePayload[i + 1];
+
+        switch (propKey) {
+          case "type": {
+            // Fast path since 'type' is very common on inputs
+            if (
+              propValue != null &&
+              typeof propValue !== "function" &&
+              typeof propValue !== "symbol" &&
+              typeof propValue !== "boolean"
+            ) {
+              {
+                checkAttributeStringCoercion(propValue, propKey);
+              }
+
+              domElement.setAttribute(propKey, propValue);
+            } else {
+              domElement.removeAttribute(propKey);
+            }
+
+            break;
+          }
+
+          case "name": {
+            break;
+          }
+
+          case "checked": {
+            var checkedValue =
+              propValue != null ? propValue : nextProps.defaultChecked;
+            var inputElement = domElement;
+            inputElement.checked =
+              !!checkedValue &&
+              typeof checkedValue !== "function" &&
+              checkedValue !== "symbol";
+            break;
+          }
+
+          case "defaultChecked": {
+            break;
+          }
+
+          case "value": {
+            break;
+          }
+
+          case "defaultValue": {
+            break;
+          }
+
+          case "children":
+          case "dangerouslySetInnerHTML": {
+            if (propValue != null) {
+              throw new Error(
+                tag +
+                  " is a void element tag and must neither have `children` nor " +
+                  "use `dangerouslySetInnerHTML`."
+              );
+            }
+
+            break;
+          }
+
+          default: {
+            setProp(domElement, tag, propKey, propValue, nextProps, null);
+          }
+        }
+      }
+
+      {
+        var wasControlled =
+          lastProps.type === "checkbox" || lastProps.type === "radio"
+            ? lastProps.checked != null
+            : lastProps.value != null;
+        var isControlled =
+          nextProps.type === "checkbox" || nextProps.type === "radio"
+            ? nextProps.checked != null
+            : nextProps.value != null;
+
+        if (
+          !wasControlled &&
+          isControlled &&
+          !didWarnUncontrolledToControlled
+        ) {
+          error(
+            "A component is changing an uncontrolled input to be controlled. " +
+              "This is likely caused by the value changing from undefined to " +
+              "a defined value, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnUncontrolledToControlled = true;
+        }
+
+        if (
+          wasControlled &&
+          !isControlled &&
+          !didWarnControlledToUncontrolled
+        ) {
+          error(
+            "A component is changing a controlled input to be uncontrolled. " +
+              "This is likely caused by the value changing from a defined to " +
+              "undefined, which should not happen. " +
+              "Decide between using a controlled or uncontrolled input " +
+              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
+          );
+
+          didWarnControlledToUncontrolled = true;
+        }
+      } // Update checked *before* name.
+      // In the middle of an update, it is possible to have multiple checked.
+      // When a checked radio tries to change name, browser makes another radio's checked false.
+
+      if (
+        name != null &&
+        typeof name !== "function" &&
+        typeof name !== "symbol" &&
+        typeof name !== "boolean"
+      ) {
+        {
+          checkAttributeStringCoercion(name, "name");
+        }
+
+        domElement.setAttribute("name", name);
+      } else {
+        domElement.removeAttribute("name");
+      } // Update the wrapper around inputs *after* updating props. This has to
+      // happen after updating the rest of props. Otherwise HTML5 input validations
+      // raise warnings and prevent the new value from being assigned.
+
+      updateInput(
+        domElement,
+        value,
+        defaultValue,
+        lastDefaultValue,
+        checked,
+        defaultChecked,
+        type
+      );
+      return;
+    }
+
+    case "select": {
+      var _value5 = nextProps.value;
+      var _defaultValue5 = nextProps.defaultValue;
+      var multiple = nextProps.multiple;
+      var wasMultiple = lastProps.multiple;
+
       for (var _i = 0; _i < updatePayload.length; _i += 2) {
-        var _propKey7 = updatePayload[_i];
+        var _propKey20 = updatePayload[_i];
         var _propValue7 = updatePayload[_i + 1];
 
-        switch (_propKey7) {
+        switch (_propKey20) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -39508,22 +40794,25 @@ function updateProperties(
           // defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey7, _propValue7, nextProps);
+            setProp(domElement, tag, _propKey20, _propValue7, nextProps, null);
           }
         }
       } // <select> value update needs to occur after <option> children
       // reconciliation
 
-      updateSelect(domElement, lastProps, nextProps);
+      updateSelect(domElement, _value5, _defaultValue5, multiple, wasMultiple);
       return;
     }
 
     case "textarea": {
+      var _value6 = nextProps.value;
+      var _defaultValue6 = nextProps.defaultValue;
+
       for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
-        var _propKey8 = updatePayload[_i2];
+        var _propKey21 = updatePayload[_i2];
         var _propValue8 = updatePayload[_i2 + 1];
 
-        switch (_propKey8) {
+        switch (_propKey21) {
           case "value": {
             // This is handled by updateWrapper below.
             break;
@@ -39547,21 +40836,21 @@ function updateProperties(
           // defaultValue is ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey8, _propValue8, nextProps);
+            setProp(domElement, tag, _propKey21, _propValue8, nextProps, null);
           }
         }
       }
 
-      updateTextarea(domElement, nextProps);
+      updateTextarea(domElement, _value6, _defaultValue6);
       return;
     }
 
     case "option": {
       for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
-        var _propKey9 = updatePayload[_i3];
+        var _propKey22 = updatePayload[_i3];
         var _propValue9 = updatePayload[_i3 + 1];
 
-        switch (_propKey9) {
+        switch (_propKey22) {
           case "selected": {
             // TODO: Remove support for selected on option.
             domElement.selected =
@@ -39572,7 +40861,7 @@ function updateProperties(
           }
 
           default: {
-            setProp(domElement, tag, _propKey9, _propValue9, nextProps);
+            setProp(domElement, tag, _propKey22, _propValue9, nextProps, null);
           }
         }
       }
@@ -39597,10 +40886,10 @@ function updateProperties(
     case "menuitem": {
       // Void elements
       for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
-        var _propKey10 = updatePayload[_i4];
+        var _propKey23 = updatePayload[_i4];
         var _propValue10 = updatePayload[_i4 + 1];
 
-        switch (_propKey10) {
+        switch (_propKey23) {
           case "children":
           case "dangerouslySetInnerHTML": {
             if (_propValue10 != null) {
@@ -39617,7 +40906,7 @@ function updateProperties(
           // defaultChecked and defaultValue are ignored by setProp
 
           default: {
-            setProp(domElement, tag, _propKey10, _propValue10, nextProps);
+            setProp(domElement, tag, _propKey23, _propValue10, nextProps, null);
           }
         }
       }
@@ -39628,14 +40917,15 @@ function updateProperties(
     default: {
       if (isCustomElement(tag)) {
         for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
-          var _propKey11 = updatePayload[_i5];
+          var _propKey24 = updatePayload[_i5];
           var _propValue11 = updatePayload[_i5 + 1];
           setPropOnCustomElement(
             domElement,
             tag,
-            _propKey11,
+            _propKey24,
             _propValue11,
-            nextProps
+            nextProps,
+            null
           );
         }
 
@@ -39645,9 +40935,9 @@ function updateProperties(
   } // Apply the diff.
 
   for (var _i6 = 0; _i6 < updatePayload.length; _i6 += 2) {
-    var _propKey12 = updatePayload[_i6];
+    var _propKey25 = updatePayload[_i6];
     var _propValue12 = updatePayload[_i6 + 1];
-    setProp(domElement, tag, _propKey12, _propValue12, nextProps);
+    setProp(domElement, tag, _propKey25, _propValue12, nextProps, null);
   }
 }
 
@@ -40639,7 +41929,15 @@ function diffHydratedProperties(
       // is not resilient to the DOM state changing so we don't do that here.
       // TODO: Consider not doing this for input and textarea.
 
-      initInput(domElement, props, true);
+      initInput(
+        domElement,
+        props.value,
+        props.defaultValue,
+        props.checked,
+        props.defaultChecked,
+        props.type,
+        true
+      );
       break;
 
     case "option":
@@ -40667,7 +41965,7 @@ function diffHydratedProperties(
 
       track(domElement);
       validateTextareaProps(domElement, props);
-      initTextarea(domElement, props);
+      initTextarea(domElement, props.value, props.defaultValue);
       break;
   }
 
@@ -40694,7 +41992,18 @@ function diffHydratedProperties(
       }
 
       if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        updatePayload = ["children", children];
+        if (diffInCommitPhase) {
+          // We really should be patching this in the commit phase but since
+          // this only affects legacy mode hydration which is deprecated anyway
+          // we can get away with it.
+          // Host singletons get their children appended and don't use the text
+          // content mechanism.
+          if (tag !== "body") {
+            domElement.textContent = children;
+          }
+        } else {
+          updatePayload = ["children", children];
+        }
       }
     }
   }
@@ -40844,489 +42153,6 @@ function restoreControlledState(domElement, tag, props) {
     case "select":
       restoreControlledSelectState(domElement, props);
       return;
-  }
-}
-
-// This validation code was written based on the HTML5 parsing spec:
-// https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-//
-// Note: this does not catch all invalid nesting, nor does it try to (as it's
-// not clear what practical benefit doing so provides); instead, we warn only
-// for cases where the parser will give a parse tree differing from what React
-// intended. For example, <b><div></div></b> is invalid but we don't warn
-// because it still parses correctly; we do warn for other cases like nested
-// <p> tags where the beginning of the second element implicitly closes the
-// first, causing a confusing mess.
-// https://html.spec.whatwg.org/multipage/syntax.html#special
-var specialTags = [
-  "address",
-  "applet",
-  "area",
-  "article",
-  "aside",
-  "base",
-  "basefont",
-  "bgsound",
-  "blockquote",
-  "body",
-  "br",
-  "button",
-  "caption",
-  "center",
-  "col",
-  "colgroup",
-  "dd",
-  "details",
-  "dir",
-  "div",
-  "dl",
-  "dt",
-  "embed",
-  "fieldset",
-  "figcaption",
-  "figure",
-  "footer",
-  "form",
-  "frame",
-  "frameset",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "head",
-  "header",
-  "hgroup",
-  "hr",
-  "html",
-  "iframe",
-  "img",
-  "input",
-  "isindex",
-  "li",
-  "link",
-  "listing",
-  "main",
-  "marquee",
-  "menu",
-  "menuitem",
-  "meta",
-  "nav",
-  "noembed",
-  "noframes",
-  "noscript",
-  "object",
-  "ol",
-  "p",
-  "param",
-  "plaintext",
-  "pre",
-  "script",
-  "section",
-  "select",
-  "source",
-  "style",
-  "summary",
-  "table",
-  "tbody",
-  "td",
-  "template",
-  "textarea",
-  "tfoot",
-  "th",
-  "thead",
-  "title",
-  "tr",
-  "track",
-  "ul",
-  "wbr",
-  "xmp"
-]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-
-var inScopeTags = [
-  "applet",
-  "caption",
-  "html",
-  "table",
-  "td",
-  "th",
-  "marquee",
-  "object",
-  "template", // https://html.spec.whatwg.org/multipage/syntax.html#html-integration-point
-  // TODO: Distinguish by namespace here -- for <title>, including it here
-  // errs on the side of fewer warnings
-  "foreignObject",
-  "desc",
-  "title"
-]; // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
-
-var buttonScopeTags = inScopeTags.concat(["button"]); // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
-
-var impliedEndTags = ["dd", "dt", "li", "option", "optgroup", "p", "rp", "rt"];
-var emptyAncestorInfoDev = {
-  current: null,
-  formTag: null,
-  aTagInScope: null,
-  buttonTagInScope: null,
-  nobrTagInScope: null,
-  pTagInButtonScope: null,
-  listItemTagAutoclosing: null,
-  dlItemTagAutoclosing: null,
-  containerTagInScope: null
-};
-
-function updatedAncestorInfoDev(oldInfo, tag) {
-  {
-    var ancestorInfo = assign({}, oldInfo || emptyAncestorInfoDev);
-
-    var info = {
-      tag: tag
-    };
-
-    if (inScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.aTagInScope = null;
-      ancestorInfo.buttonTagInScope = null;
-      ancestorInfo.nobrTagInScope = null;
-    }
-
-    if (buttonScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.pTagInButtonScope = null;
-    } // See rules for 'li', 'dd', 'dt' start tags in
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-
-    if (
-      specialTags.indexOf(tag) !== -1 &&
-      tag !== "address" &&
-      tag !== "div" &&
-      tag !== "p"
-    ) {
-      ancestorInfo.listItemTagAutoclosing = null;
-      ancestorInfo.dlItemTagAutoclosing = null;
-    }
-
-    ancestorInfo.current = info;
-
-    if (tag === "form") {
-      ancestorInfo.formTag = info;
-    }
-
-    if (tag === "a") {
-      ancestorInfo.aTagInScope = info;
-    }
-
-    if (tag === "button") {
-      ancestorInfo.buttonTagInScope = info;
-    }
-
-    if (tag === "nobr") {
-      ancestorInfo.nobrTagInScope = info;
-    }
-
-    if (tag === "p") {
-      ancestorInfo.pTagInButtonScope = info;
-    }
-
-    if (tag === "li") {
-      ancestorInfo.listItemTagAutoclosing = info;
-    }
-
-    if (tag === "dd" || tag === "dt") {
-      ancestorInfo.dlItemTagAutoclosing = info;
-    }
-
-    if (tag === "#document" || tag === "html") {
-      ancestorInfo.containerTagInScope = null;
-    } else if (!ancestorInfo.containerTagInScope) {
-      ancestorInfo.containerTagInScope = info;
-    }
-
-    return ancestorInfo;
-  }
-}
-/**
- * Returns whether
- */
-
-function isTagValidWithParent(tag, parentTag) {
-  // First, let's check if we're in an unusual parsing mode...
-  switch (parentTag) {
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
-    case "select":
-      return tag === "option" || tag === "optgroup" || tag === "#text";
-
-    case "optgroup":
-      return tag === "option" || tag === "#text";
-    // Strictly speaking, seeing an <option> doesn't mean we're in a <select>
-    // but
-
-    case "option":
-      return tag === "#text";
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intd
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incaption
-    // No special behavior since these rules fall back to "in body" mode for
-    // all except special table nodes which cause bad parsing behavior anyway.
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intr
-
-    case "tr":
-      return (
-        tag === "th" ||
-        tag === "td" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intbody
-
-    case "tbody":
-    case "thead":
-    case "tfoot":
-      return (
-        tag === "tr" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-incolgroup
-
-    case "colgroup":
-      return tag === "col" || tag === "template";
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-intable
-
-    case "table":
-      return (
-        tag === "caption" ||
-        tag === "colgroup" ||
-        tag === "tbody" ||
-        tag === "tfoot" ||
-        tag === "thead" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inhead
-
-    case "head":
-      return (
-        tag === "base" ||
-        tag === "basefont" ||
-        tag === "bgsound" ||
-        tag === "link" ||
-        tag === "meta" ||
-        tag === "title" ||
-        tag === "noscript" ||
-        tag === "noframes" ||
-        tag === "style" ||
-        tag === "script" ||
-        tag === "template"
-      );
-    // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
-
-    case "html":
-      return tag === "head" || tag === "body" || tag === "frameset";
-
-    case "frameset":
-      return tag === "frame";
-
-    case "#document":
-      return tag === "html";
-  } // Probably in the "in body" parsing mode, so we outlaw only tag combos
-  // where the parsing rules cause implicit opens or closes to be added.
-  // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-
-  switch (tag) {
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6":
-      return (
-        parentTag !== "h1" &&
-        parentTag !== "h2" &&
-        parentTag !== "h3" &&
-        parentTag !== "h4" &&
-        parentTag !== "h5" &&
-        parentTag !== "h6"
-      );
-
-    case "rp":
-    case "rt":
-      return impliedEndTags.indexOf(parentTag) === -1;
-
-    case "body":
-    case "caption":
-    case "col":
-    case "colgroup":
-    case "frameset":
-    case "frame":
-    case "head":
-    case "html":
-    case "tbody":
-    case "td":
-    case "tfoot":
-    case "th":
-    case "thead":
-    case "tr":
-      // These tags are only valid with a few parents that have special child
-      // parsing rules -- if we're down here, then none of those matched and
-      // so we allow it only if we don't know what the parent is, as all other
-      // cases are invalid.
-      return parentTag == null;
-  }
-
-  return true;
-}
-/**
- * Returns whether
- */
-
-function findInvalidAncestorForTag(tag, ancestorInfo) {
-  switch (tag) {
-    case "address":
-    case "article":
-    case "aside":
-    case "blockquote":
-    case "center":
-    case "details":
-    case "dialog":
-    case "dir":
-    case "div":
-    case "dl":
-    case "fieldset":
-    case "figcaption":
-    case "figure":
-    case "footer":
-    case "header":
-    case "hgroup":
-    case "main":
-    case "menu":
-    case "nav":
-    case "ol":
-    case "p":
-    case "section":
-    case "summary":
-    case "ul":
-    case "pre":
-    case "listing":
-    case "table":
-    case "hr":
-    case "xmp":
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6":
-      return ancestorInfo.pTagInButtonScope;
-
-    case "form":
-      return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
-
-    case "li":
-      return ancestorInfo.listItemTagAutoclosing;
-
-    case "dd":
-    case "dt":
-      return ancestorInfo.dlItemTagAutoclosing;
-
-    case "button":
-      return ancestorInfo.buttonTagInScope;
-
-    case "a":
-      // Spec says something about storing a list of markers, but it sounds
-      // equivalent to this check.
-      return ancestorInfo.aTagInScope;
-
-    case "nobr":
-      return ancestorInfo.nobrTagInScope;
-  }
-
-  return null;
-}
-
-var didWarn = {};
-
-function validateDOMNesting(childTag, childText, ancestorInfo) {
-  {
-    ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
-    var parentInfo = ancestorInfo.current;
-    var parentTag = parentInfo && parentInfo.tag;
-
-    if (childText != null) {
-      if (childTag != null) {
-        error(
-          "validateDOMNesting: when childText is passed, childTag should be null"
-        );
-      }
-
-      childTag = "#text";
-    } else if (childTag == null) {
-      error("validateDOMNesting: when childText or childTag must be provided");
-
-      return;
-    }
-
-    var invalidParent = isTagValidWithParent(childTag, parentTag)
-      ? null
-      : parentInfo;
-    var invalidAncestor = invalidParent
-      ? null
-      : findInvalidAncestorForTag(childTag, ancestorInfo);
-    var invalidParentOrAncestor = invalidParent || invalidAncestor;
-
-    if (!invalidParentOrAncestor) {
-      return;
-    }
-
-    var ancestorTag = invalidParentOrAncestor.tag;
-    var warnKey = String(!!invalidParent) + "|" + childTag + "|" + ancestorTag; // eslint-disable-next-line react-internal/safe-string-coercion
-
-    if (didWarn[warnKey]) {
-      return;
-    }
-
-    didWarn[warnKey] = true;
-    var tagDisplayName = childTag;
-    var whitespaceInfo = "";
-
-    if (childTag === "#text") {
-      if (childText != null && /\S/.test(childText)) {
-        tagDisplayName = "Text nodes";
-      } else {
-        tagDisplayName = "Whitespace text nodes";
-        whitespaceInfo =
-          " Make sure you don't have any extra whitespace between tags on " +
-          "each line of your source code.";
-      }
-    } else {
-      tagDisplayName = "<" + childTag + ">";
-    }
-
-    if (invalidParent) {
-      var info = "";
-
-      if (ancestorTag === "table" && childTag === "tr") {
-        info +=
-          " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by " +
-          "the browser.";
-      }
-
-      error(
-        "validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s",
-        tagDisplayName,
-        ancestorTag,
-        whitespaceInfo,
-        info
-      );
-    } else {
-      error(
-        "validateDOMNesting(...): %s cannot appear as a descendant of " +
-          "<%s>.",
-        tagDisplayName,
-        ancestorTag
-      );
-    }
   }
 }
 
@@ -41657,20 +42483,7 @@ function createInstance(
   {
     // TODO: take namespace into account when validating.
     var hostContextDev = hostContext;
-    validateDOMNesting(type, null, hostContextDev.ancestorInfo);
-
-    if (
-      typeof props.children === "string" ||
-      typeof props.children === "number"
-    ) {
-      var string = "" + props.children;
-      var ownAncestorInfo = updatedAncestorInfoDev(
-        hostContextDev.ancestorInfo,
-        type
-      );
-      validateDOMNesting(null, string, ownAncestorInfo);
-    }
-
+    validateDOMNesting(type, hostContextDev.ancestorInfo);
     namespace = hostContextDev.namespace;
   }
 
@@ -41817,21 +42630,9 @@ function finalizeInitialChildren(domElement, type, props, hostContext) {
   }
 }
 function prepareUpdate(domElement, type, oldProps, newProps, hostContext) {
-  {
-    var hostContextDev = hostContext;
-
-    if (
-      typeof newProps.children !== typeof oldProps.children &&
-      (typeof newProps.children === "string" ||
-        typeof newProps.children === "number")
-    ) {
-      var string = "" + newProps.children;
-      var ownAncestorInfo = updatedAncestorInfoDev(
-        hostContextDev.ancestorInfo,
-        type
-      );
-      validateDOMNesting(null, string, ownAncestorInfo);
-    }
+  if (diffInCommitPhase) {
+    // TODO: Figure out how to validateDOMNesting when children turn into a string.
+    return null;
   }
 
   return diffProperties(domElement, type, oldProps, newProps);
@@ -41855,7 +42656,11 @@ function createTextInstance(
 ) {
   {
     var hostContextDev = hostContext;
-    validateDOMNesting(null, text, hostContextDev.ancestorInfo);
+    var ancestor = hostContextDev.ancestorInfo.current;
+
+    if (ancestor != null) {
+      validateTextNesting(text, ancestor.tag);
+    }
   }
 
   var textNode = getOwnerDocumentFromRootContainer(
@@ -41953,8 +42758,19 @@ function commitUpdate(
   newProps,
   internalInstanceHandle
 ) {
-  // Apply the diff to the DOM node.
-  updateProperties(domElement, updatePayload, type, oldProps, newProps); // Update the props handle so that we know which props are the ones with
+  if (diffInCommitPhase) {
+    // Diff and update the properties.
+    updateProperties(domElement, type, oldProps, newProps);
+  } else {
+    // Apply the diff to the DOM node.
+    updatePropertiesWithDiff(
+      domElement,
+      updatePayload,
+      type,
+      oldProps,
+      newProps
+    );
+  } // Update the props handle so that we know which props are the ones with
   // with current event handlers.
 
   updateFiberProps(domElement, newProps);
@@ -42711,7 +43527,7 @@ function resolveSingletonInstance(
     var hostContextDev = hostContext;
 
     if (validateDOMNestingDev) {
-      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, hostContextDev.ancestorInfo);
     }
   }
 

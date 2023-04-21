@@ -73,6 +73,7 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -4995,6 +4996,9 @@ function getChildContextValues(context) {
     collectNearestChildContextValues(currentFiber, context, childContextValues);
   return childContextValues;
 }
+function markUpdate(workInProgress) {
+  workInProgress.flags |= 4;
+}
 function scheduleRetryEffect(workInProgress, retryQueue) {
   null !== retryQueue
     ? (workInProgress.flags |= 4)
@@ -5108,8 +5112,10 @@ function completeWork(current, workInProgress, renderLanes) {
       renderLanes = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
         current.memoizedProps !== newProps &&
-          (workInProgress.updateQueue = UPDATE_SIGNAL) &&
-          (workInProgress.flags |= 4),
+          (diffInCommitPhase
+            ? markUpdate(workInProgress)
+            : (workInProgress.updateQueue = UPDATE_SIGNAL) &&
+              markUpdate(workInProgress)),
           current.ref !== workInProgress.ref &&
             (workInProgress.flags |= 2097664);
       else {
@@ -5176,7 +5182,7 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     case 6:
       if (current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && (workInProgress.flags |= 4);
+        current.memoizedProps !== newProps && markUpdate(workInProgress);
       else {
         if ("string" !== typeof newProps && null === workInProgress.stateNode)
           throw Error(formatProdErrorMessage(166));
@@ -5342,8 +5348,8 @@ function completeWork(current, workInProgress, renderLanes) {
             }),
             shim$1(),
             null !== workInProgress.ref &&
-              ((workInProgress.flags |= 2097664), (workInProgress.flags |= 4)))
-          : (null !== workInProgress.ref && (workInProgress.flags |= 4),
+              ((workInProgress.flags |= 2097664), markUpdate(workInProgress)))
+          : (null !== workInProgress.ref && markUpdate(workInProgress),
             current.ref !== workInProgress.ref &&
               (workInProgress.flags |= 2097664)),
         bubbleProperties(workInProgress),
@@ -6401,7 +6407,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         current = null !== current ? current.memoizedProps : newProps;
         var updatePayload = finishedWork.updateQueue;
         finishedWork.updateQueue = null;
-        if (null !== updatePayload)
+        if (null !== updatePayload || diffInCommitPhase)
           try {
             flags._applyProps(flags, newProps, current);
           } catch (error$107) {
@@ -9737,7 +9743,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-5a04a0b8",
+    version: "18.3.0-www-modern-52157a92",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1324 = {
@@ -9768,7 +9774,7 @@ var internals$jscomp$inline_1324 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-5a04a0b8"
+  reconcilerVersion: "18.3.0-www-modern-52157a92"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1325 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

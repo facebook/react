@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-c6b3e31c";
+var ReactVersion = "18.3.0-www-classic-daf8f3c7";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -177,7 +177,8 @@ var revertRemovalOfSiblingPrerendering =
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask; // On WWW, false is used for a new modern build.
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase; // On WWW, false is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -17583,18 +17584,23 @@ function updateHostComponent(
       // In mutation mode, this is sufficient for a bailout because
       // we won't touch this node even if children changed.
       return;
-    } // If we get updated because one of our children updated, we don't
-    getHostContext(); // TODO: Experiencing an error where oldProps is null. Suggests a host
-    // component is hitting the resume path. Figure out why. Possibly
-    // related to `hidden`.
+    }
 
-    var updatePayload = prepareUpdate(); // TODO: Type this specific to this type of component.
-
-    workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update. All the work is done in commitWork.
-
-    if (updatePayload) {
+    if (diffInCommitPhase) {
       markUpdate(workInProgress);
+    } else {
+      // component is hitting the resume path. Figure out why. Possibly
+      // related to `hidden`.
+
+      getHostContext();
+      var updatePayload = prepareUpdate(); // TODO: Type this specific to this type of component.
+
+      workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
+      // is a new ref we mark this as an update. All the work is done in commitWork.
+
+      if (updatePayload) {
+        markUpdate(workInProgress);
+      }
     }
   }
 } // This function must be called at the very end of the complete phase, because
@@ -21225,7 +21231,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null) {
+            if (_updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   _instance2,
