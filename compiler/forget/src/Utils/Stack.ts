@@ -5,10 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export interface Stack<T> {
-  push(value: T): Stack<T>;
+/**
+ * An immutable stack data structure supporting O(1) push/pop operations.
+ */
+export type Stack<T> = Node<T> | Empty<T>;
 
-  pop(): Stack<T>;
+// Static assertion that Stack<T> is a StackInterface<T>
+function _assertStackInterface<T>(stack: Stack<T>): void {
+  let _: StackInterface<T> = stack;
+}
+
+// Internal interface to enforce consistent behavior btw Node/Empty variants
+// Note that we export a union rather than the interface so that it is impossible
+// to create additional variants: a Stack should always be exactly a Node or Empty
+// instance.
+interface StackInterface<T> {
+  push(value: T): StackInterface<T>;
+
+  pop(): StackInterface<T>;
 
   contains(value: T): boolean;
 
@@ -25,7 +39,7 @@ export function empty<T>(): Stack<T> {
   return EMPTY as any;
 }
 
-class Node<T> implements Stack<T> {
+class Node<T> implements StackInterface<T> {
   #value: T;
   #next: Stack<T>;
 
@@ -58,9 +72,9 @@ class Node<T> implements Stack<T> {
   }
 }
 
-class Empty<T> implements Stack<T> {
+class Empty<T> implements StackInterface<T> {
   push(value: T): Stack<T> {
-    return new Node(value, this);
+    return new Node(value as T, this as Stack<T>);
   }
   pop(): Stack<T> {
     return this;
