@@ -5,5 +5,12 @@ export async function like() {
 }
 
 export async function greet(formData) {
-  return 'Hi ' + formData.get('name') + '!';
+  const name = formData.get('name') || 'you';
+  const file = formData.get('file');
+  if (file) {
+    return `Ok, ${name}, here is ${file.name}:
+      ${(await file.text()).toUpperCase()}
+    `;
+  }
+  return 'Hi ' + name + '!';
 }
