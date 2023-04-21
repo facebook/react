@@ -9,6 +9,8 @@ import fs from "fs/promises";
 import path from "path";
 import { exists } from "./utils";
 
+const originalConsoleError = console.error;
+
 let version: number | null = null;
 export function clearRequireCache() {
   Object.keys(require.cache).forEach(function (key) {
@@ -29,6 +31,10 @@ export async function compile(
   fixture: string,
   compilerVersion: number
 ): Promise<TestResult> {
+  const seenConsoleErrors: Array<string> = [];
+  console.error = (...messages: Array<string>) => {
+    seenConsoleErrors.push(...messages);
+  };
   if (version !== null && compilerVersion !== version) {
     clearRequireCache();
   }
@@ -76,6 +82,11 @@ export async function compile(
       };
     }
 
+    let panicOnBailout = true;
+    if (firstLine.indexOf("@panicOnBailout false") !== -1) {
+      panicOnBailout = false;
+    }
+
     const language = parseLanguage(firstLine);
 
     code = runReactForgetBabelPlugin(input, fixture, language, {
@@ -96,9 +107,20 @@ export async function compile(
       },
       logger: null,
       gating,
+      panicOnBailout,
     }).code;
   } catch (e) {
     error = e;
+  }
+
+  // Promote console errors so they can be recorded in fixture output
+  for (const consoleError of seenConsoleErrors) {
+    if (error != null) {
+      error.message = `${error.message}\n\n${consoleError}`;
+    } else {
+      error = new Error(consoleError);
+      error.name = "ConsoleError";
+    }
   }
 
   let output: string;
@@ -109,6 +131,8 @@ export async function compile(
       throw new Error(
         `Expected an error to be thrown for fixture: '${fixture}', remove the 'error.' prefix if an error is not expected.`
       );
+    } else if (code != null) {
+      output = `${formatOutput(code)}\n${formatErrorOutput(error)}`;
     } else {
       output = formatErrorOutput(error);
     }
@@ -131,6 +155,8 @@ ${wrapWithTripleBackticks(input, "javascript")}
 
 ${output}
       `; // trailing newline + space internional
+
+  console.error = originalConsoleError;
 
   return { inputPath, outputPath, actual, expected };
 }
