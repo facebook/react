@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4f902d10ff6c4c49a6f2e765b4662a5e>>
+ * @generated SignedSource<<3dd5e105138064b59966612a35ec1f24>>
  */
 
 "use strict";
@@ -6973,6 +6973,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         workInProgressRootRenderLanes
       );
       break;
+    case 5:
+      resetHooksOnUnwind();
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -8599,7 +8601,7 @@ var devToolsConfig$jscomp$inline_1021 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-c57a0f68a-20230421",
+  version: "18.3.0-next-fd3fb8e3c-20230421",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1206 = {
@@ -8630,7 +8632,7 @@ var internals$jscomp$inline_1206 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-c57a0f68a-20230421"
+  reconcilerVersion: "18.3.0-next-fd3fb8e3c-20230421"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1207 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

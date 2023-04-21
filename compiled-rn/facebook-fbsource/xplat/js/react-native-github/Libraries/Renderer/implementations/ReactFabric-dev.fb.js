@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<40e2743803d8d937ee642c7e74254e74>>
+ * @generated SignedSource<<b3b5a76440bc189cfbc25945472cc0ca>>
  */
 
 'use strict';
@@ -24609,6 +24609,16 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       break;
     }
 
+    case HostComponent: {
+      // Some host components are stateful (that's how we implement form
+      // actions) but we don't bother to reuse the memoized state because it's
+      // not worth the extra code. The main reason to reuse the previous hooks
+      // is to reuse uncached promises, but we happen to know that the only
+      // promises that a host component might suspend on are definitely cached
+      // because they are controlled by us. So don't bother.
+      resetHooksOnUnwind(); // Fallthrough to the next branch.
+    }
+
     default: {
       // Other types besides function components are reset completely before
       // being replayed. Currently this only happens when a Usable type is
@@ -27148,7 +27158,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-c57a0f68a-20230421";
+var ReactVersion = "18.3.0-next-fd3fb8e3c-20230421";
 
 function createPortal$1(
   children,

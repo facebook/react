@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<472cb7f28d742af2e290a0816a880f33>>
+ * @generated SignedSource<<388ecd5d71ee2c3022a43487fedc6a5a>>
  */
 
 "use strict";
@@ -8063,6 +8063,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         workInProgressRootRenderLanes
       );
       break;
+    case 5:
+      resetHooksOnUnwind();
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -9470,7 +9472,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1045 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-c57a0f68a-20230421",
+    version: "18.3.0-next-fd3fb8e3c-20230421",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9512,7 +9514,7 @@ var internals$jscomp$inline_1276 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-c57a0f68a-20230421"
+  reconcilerVersion: "18.3.0-next-fd3fb8e3c-20230421"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

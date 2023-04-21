@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eb589f3defe98e20e791e57446c3f979>>
+ * @generated SignedSource<<8e8a7cd3892f3b9331677bf16ba6a24b>>
  */
 
 
@@ -8660,6 +8660,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
         workInProgressRootRenderLanes
       );
       break;
+    case 5:
+      resetHooksOnUnwind();
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -10179,7 +10181,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1123 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-c57a0f68a-20230421",
+    version: "18.3.0-next-fd3fb8e3c-20230421",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10234,7 +10236,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-c57a0f68a-20230421"
+  reconcilerVersion: "18.3.0-next-fd3fb8e3c-20230421"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
