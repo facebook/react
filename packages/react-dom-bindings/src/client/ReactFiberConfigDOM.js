@@ -67,11 +67,7 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
   getEventPriority,
 } from '../events/ReactDOMEventListener';
-import {
-  getChildNamespace,
-  SVG_NAMESPACE,
-  MATH_NAMESPACE,
-} from './DOMNamespaces';
+import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -154,11 +150,11 @@ export interface SuspenseInstance extends Comment {
 }
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
-type HostContextDev = {
-  namespace: HostContextProd,
+export type HostContextDev = {
+  context: HostContextProd,
   ancestorInfo: AncestorInfoDev,
 };
-type HostContextProd = string;
+type HostContextProd = HostContextNamespace;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
@@ -180,6 +176,11 @@ const SUSPENSE_FALLBACK_START_DATA = '$!';
 
 const STYLE = 'style';
 
+opaque type HostContextNamespace = 0 | 1 | 2;
+export const HostContextNamespaceNone: HostContextNamespace = 0;
+const HostContextNamespaceSvg: HostContextNamespace = 1;
+const HostContextNamespaceMath: HostContextNamespace = 2;
+
 let eventsEnabled: ?boolean = null;
 let selectionInformation: null | SelectionInformation = null;
 
@@ -197,14 +198,21 @@ export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
   let type;
-  let namespace: HostContextProd;
+  let context: HostContextProd;
   const nodeType = rootContainerInstance.nodeType;
   switch (nodeType) {
     case DOCUMENT_NODE:
     case DOCUMENT_FRAGMENT_NODE: {
       type = nodeType === DOCUMENT_NODE ? '#document' : '#fragment';
       const root = (rootContainerInstance: any).documentElement;
-      namespace = root ? root.namespaceURI : getChildNamespace(null, '');
+      if (root) {
+        const namespaceURI = root.namespaceURI;
+        context = namespaceURI
+          ? getOwnHostContext(namespaceURI)
+          : HostContextNamespaceNone;
+      } else {
+        context = HostContextNamespaceNone;
+      }
       break;
     }
     default: {
@@ -212,18 +220,67 @@ export function getRootHostContext(
         nodeType === COMMENT_NODE
           ? rootContainerInstance.parentNode
           : rootContainerInstance;
-      const ownNamespace = container.namespaceURI || null;
       type = container.tagName;
-      namespace = getChildNamespace(ownNamespace, type);
+      const namespaceURI = container.namespaceURI;
+      if (!namespaceURI) {
+        switch (type) {
+          case 'svg':
+            context = HostContextNamespaceSvg;
+            break;
+          case 'math':
+            context = HostContextNamespaceMath;
+            break;
+          default:
+            context = HostContextNamespaceNone;
+            break;
+        }
+      } else {
+        const ownContext = getOwnHostContext(namespaceURI);
+        context = getChildHostContextProd(ownContext, type);
+      }
       break;
     }
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfoDev(null, validatedTag);
-    return {namespace, ancestorInfo};
+    return {context, ancestorInfo};
   }
-  return namespace;
+  return context;
+}
+
+function getOwnHostContext(namespaceURI: string): HostContextNamespace {
+  switch (namespaceURI) {
+    case SVG_NAMESPACE:
+      return HostContextNamespaceSvg;
+    case MATH_NAMESPACE:
+      return HostContextNamespaceMath;
+    default:
+      return HostContextNamespaceNone;
+  }
+}
+
+function getChildHostContextProd(
+  parentNamespace: HostContextNamespace,
+  type: string,
+): HostContextNamespace {
+  if (parentNamespace === HostContextNamespaceNone) {
+    // No (or default) parent namespace: potential entry point.
+    switch (type) {
+      case 'svg':
+        return HostContextNamespaceSvg;
+      case 'math':
+        return HostContextNamespaceMath;
+      default:
+        return HostContextNamespaceNone;
+    }
+  }
+  if (parentNamespace === HostContextNamespaceSvg && type === 'foreignObject') {
+    // We're leaving SVG.
+    return HostContextNamespaceNone;
+  }
+  // By default, pass namespace below.
+  return parentNamespace;
 }
 
 export function getChildHostContext(
@@ -232,15 +289,15 @@ export function getChildHostContext(
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    const namespace = getChildNamespace(parentHostContextDev.namespace, type);
+    const context = getChildHostContextProd(parentHostContextDev.context, type);
     const ancestorInfo = updatedAncestorInfoDev(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {namespace, ancestorInfo};
+    return {context, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
-  return getChildNamespace(parentNamespace, type);
+  return getChildHostContextProd(parentNamespace, type);
 }
 
 export function getPublicInstance(instance: Instance): Instance {
@@ -326,15 +383,14 @@ export function createInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  let namespace;
+  let hostContextProd: HostContextProd;
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
     validateDOMNesting(type, hostContextDev.ancestorInfo);
-    namespace = hostContextDev.namespace;
+    hostContextProd = hostContextDev.context;
   } else {
-    const hostContextProd: HostContextProd = (hostContext: any);
-    namespace = hostContextProd;
+    hostContextProd = (hostContext: any);
   }
 
   const ownerDocument = getOwnerDocumentFromRootContainer(
@@ -342,10 +398,12 @@ export function createInstance(
   );
 
   let domElement: Instance;
-  switch (namespace) {
-    case SVG_NAMESPACE:
-    case MATH_NAMESPACE:
-      domElement = ownerDocument.createElementNS(namespace, type);
+  switch (hostContextProd) {
+    case HostContextNamespaceSvg:
+      domElement = ownerDocument.createElementNS(SVG_NAMESPACE, type);
+      break;
+    case HostContextNamespaceMath:
+      domElement = ownerDocument.createElementNS(MATH_NAMESPACE, type);
       break;
     default:
       switch (type) {
@@ -1243,22 +1301,13 @@ export function hydrateInstance(
   const isConcurrentMode =
     ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
 
-  let parentNamespace;
-  if (__DEV__) {
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    parentNamespace = hostContextDev.namespace;
-  } else {
-    const hostContextProd = ((hostContext: any): HostContextProd);
-    parentNamespace = hostContextProd;
-  }
-
   return diffHydratedProperties(
     instance,
     type,
     props,
     isConcurrentMode,
     shouldWarnDev,
-    parentNamespace,
+    hostContext,
   );
 }
 
@@ -2924,20 +2973,19 @@ export function isHostHoistableType(
   hostContext: HostContext,
 ): boolean {
   let outsideHostContainerContext: boolean;
-  let namespace: HostContextProd;
+  let hostContextProd: HostContextProd;
   if (__DEV__) {
     const hostContextDev: HostContextDev = (hostContext: any);
     // We can only render resources when we are not within the host container context
     outsideHostContainerContext =
       !hostContextDev.ancestorInfo.containerTagInScope;
-    namespace = hostContextDev.namespace;
+    hostContextProd = hostContextDev.context;
   } else {
-    const hostContextProd: HostContextProd = (hostContext: any);
-    namespace = hostContextProd;
+    hostContextProd = (hostContext: any);
   }
 
   // Global opt out of hoisting for anything in SVG Namespace or anything with an itemProp inside an itemScope
-  if (namespace === SVG_NAMESPACE || props.itemProp != null) {
+  if (hostContextProd === HostContextNamespaceSvg || props.itemProp != null) {
     if (__DEV__) {
       if (
         outsideHostContainerContext &&
