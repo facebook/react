@@ -3701,7 +3701,7 @@ describe('ReactDOMFizzServer', () => {
       Array.from(document.head.getElementsByTagName('script')).map(
         n => n.outerHTML,
       ),
-    ).toEqual(['<script src="src-of-external-runtime" async=""></script>']);
+    ).toEqual(['<script async="" src="src-of-external-runtime"></script>']);
 
     expect(getVisibleChildren(document)).toEqual(
       <html>

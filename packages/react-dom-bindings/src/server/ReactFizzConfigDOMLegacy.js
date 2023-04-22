@@ -137,8 +137,7 @@ export {
   writePostamble,
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
-  prepareToRender,
-  cleanupAfterRender,
+  prepareHostDispatcher,
 } from './ReactFizzConfigDOM';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';

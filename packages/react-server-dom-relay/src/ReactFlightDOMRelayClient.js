@@ -17,6 +17,7 @@ import {
   resolveModule,
   resolveErrorDev,
   resolveErrorProd,
+  resolveHint,
   close,
   getRoot,
 } from 'react-client/src/ReactFlightClient';
@@ -30,10 +31,14 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
   } else if (chunk[0] === 'I') {
     // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
+  } else if (chunk[0] === 'H') {
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
+    resolveHint(response, chunk[1], chunk[2]);
   } else {
     if (__DEV__) {
       resolveErrorDev(
         response,
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
         chunk[1],
         // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
         // $FlowFixMe[prop-missing]

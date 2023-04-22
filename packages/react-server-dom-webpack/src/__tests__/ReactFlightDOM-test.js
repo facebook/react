@@ -25,9 +25,11 @@ let clientModuleError;
 let webpackMap;
 let Stream;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
+let ReactDOMFizzServer;
 let Suspense;
 let ErrorBoundary;
 
@@ -42,6 +44,8 @@ describe('ReactFlightDOM', () => {
 
     Stream = require('stream');
     React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMFizzServer = require('react-dom/server.node');
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
@@ -1152,5 +1156,293 @@ describe('ReactFlightDOM', () => {
         : '<p>digest("Server throw")</p>',
     );
     expect(reportedErrors).toEqual([theError]);
+  });
+
+  // @gate enableUseHook
+  it('should support ReactDOM.preload when rendering in Fiber', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(readable);
+      }
+      return response;
+    }
+
+    function App() {
+      return getResponse();
+    }
+
+    // We pause to allow the float call after the await point to process before the
+    // HostDispatcher gets set for Fiber by createRoot. This is only needed in testing
+    // because the module graphs are not different and the HostDispatcher is shared.
+    // In a real environment the Fiber and Flight code would each have their own independent
+    // dispatcher.
+    // @TODO consider what happens when Server-Components-On-The-Client exist. we probably
+    // want to use the Fiber HostDispatcher there too since it is more about the host than the runtime
+    // but we need to make sure that actually makes sense
+    await 1;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(document.head.innerHTML).toBe(
+      '<link href="before" rel="preload" as="style">' +
+        '<link href="after" rel="preload" as="style">',
+    );
+    expect(container.innerHTML).toBe('<p>hello world</p>');
+  });
+
+  // @gate enableUseHook
+  it('should support ReactDOM.preload when rendering in Fizz', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    // In a real environment you would want to call the render during the Fizz render.
+    // The reason we cannot do this in our test is because we don't actually have two separate
+    // module graphs and we are contriving the sequencing to work in a way where
+    // the right HostDispatcher is in scope during the Flight Server Float calls and the
+    // Flight Client hint dispatches
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(flightWritable);
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response =
+          ReactServerDOMClient.createFromReadableStream(flightReadable);
+      }
+      return response;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>{getResponse()}</body>
+        </html>
+      );
+    }
+
+    await act(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(<App />).pipe(fizzWritable);
+    });
+
+    const decoder = new TextDecoder();
+    const reader = fizzReadable.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        content += decoder.decode();
+        break;
+      }
+      content += decoder.decode(value, {stream: true});
+    }
+
+    expect(content).toEqual(
+      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before"/>' +
+        '<link rel="preload" as="style" href="after"/></head><body><p>hello world</p></body></html>',
+    );
+  });
+
+  it('supports Float hints from concurrent Flight -> Fizz renders', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent1() {
+      ReactDOM.preload('before1', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after1', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    async function ServerComponent2() {
+      ReactDOM.preload('before2', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after2', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const {writable: flightWritable1, readable: flightReadable1} =
+      getTestStream();
+    const {writable: flightWritable2, readable: flightReadable2} =
+      getTestStream();
+
+    ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent1 />,
+      webpackMap,
+    ).pipe(flightWritable1);
+
+    ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent2 />,
+      webpackMap,
+    ).pipe(flightWritable2);
+
+    const responses = new Map();
+    function getResponse(stream) {
+      let response = responses.get(stream);
+      if (!response) {
+        response = ReactServerDOMClient.createFromReadableStream(stream);
+        responses.set(stream, response);
+      }
+      return response;
+    }
+
+    function App({stream}) {
+      return (
+        <html>
+          <body>{getResponse(stream)}</body>
+        </html>
+      );
+    }
+
+    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
+    // we aren't operating separate module graphs for flight and fiber. In a real app
+    // each would have their own dispatcher and there would be no cross dispatching.
+    await 1;
+
+    const {writable: fizzWritable1, readable: fizzReadable1} = getTestStream();
+    const {writable: fizzWritable2, readable: fizzReadable2} = getTestStream();
+    await act(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        <App stream={flightReadable1} />,
+      ).pipe(fizzWritable1);
+      ReactDOMFizzServer.renderToPipeableStream(
+        <App stream={flightReadable2} />,
+      ).pipe(fizzWritable2);
+    });
+
+    async function read(stream) {
+      const decoder = new TextDecoder();
+      const reader = stream.getReader();
+      let buffer = '';
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) {
+          buffer += decoder.decode();
+          break;
+        }
+        buffer += decoder.decode(value, {stream: true});
+      }
+      return buffer;
+    }
+
+    const [content1, content2] = await Promise.all([
+      read(fizzReadable1),
+      read(fizzReadable2),
+    ]);
+
+    expect(content1).toEqual(
+      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before1"/>' +
+        '<link rel="preload" as="style" href="after1"/></head><body><p>hello world</p></body></html>',
+    );
+    expect(content2).toEqual(
+      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before2"/>' +
+        '<link rel="preload" as="style" href="after2"/></head><body><p>hello world</p></body></html>',
+    );
+  });
+
+  it('supports deduping hints by Float key', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.prefetchDNS('dns');
+      ReactDOM.preconnect('preconnect');
+      ReactDOM.preload('load', {as: 'style'});
+      ReactDOM.preinit('init', {as: 'script'});
+      // again but vary preconnect to demonstrate crossOrigin participates in the key
+      ReactDOM.prefetchDNS('dns');
+      ReactDOM.preconnect('preconnect', {crossOrigin: 'anonymous'});
+      ReactDOM.preload('load', {as: 'style'});
+      ReactDOM.preinit('init', {as: 'script'});
+      await 1;
+      // after an async point
+      ReactDOM.prefetchDNS('dns');
+      ReactDOM.preconnect('preconnect', {crossOrigin: 'use-credentials'});
+      ReactDOM.preload('load', {as: 'style'});
+      ReactDOM.preinit('init', {as: 'script'});
+      return <ClientComponent />;
+    }
+
+    const {writable, readable} = getTestStream();
+
+    ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    ).pipe(writable);
+
+    const hintRows = [];
+    async function collectHints(stream) {
+      const decoder = new TextDecoder();
+      const reader = stream.getReader();
+      let buffer = '';
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) {
+          buffer += decoder.decode();
+          if (buffer.includes(':H')) {
+            hintRows.push(buffer);
+          }
+          break;
+        }
+        buffer += decoder.decode(value, {stream: true});
+        let line;
+        while ((line = buffer.indexOf('\n')) > -1) {
+          const row = buffer.slice(0, line);
+          buffer = buffer.slice(line + 1);
+          if (row.includes(':H')) {
+            hintRows.push(row);
+          }
+        }
+      }
+    }
+
+    await collectHints(readable);
+    expect(hintRows.length).toEqual(6);
   });
 });

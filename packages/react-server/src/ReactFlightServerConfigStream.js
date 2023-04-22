@@ -75,11 +75,6 @@ import type {Chunk} from './ReactServerStreamConfig';
 
 export type {Destination, Chunk} from './ReactServerStreamConfig';
 
-export {
-  supportsRequestStorage,
-  requestStorage,
-} from './ReactServerStreamConfig';
-
 const stringify = JSON.stringify;
 
 function serializeRowHeader(tag: string, id: number) {
@@ -153,6 +148,17 @@ export function processImportChunk(
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(clientReferenceMetadata);
   const row = serializeRowHeader('I', id) + json + '\n';
+  return stringToChunk(row);
+}
+
+export function processHintChunk(
+  request: Request,
+  id: number,
+  code: string,
+  model: JSONValue,
+): Chunk {
+  const json: string = stringify(model);
+  const row = serializeRowHeader('H' + code, id) + json + '\n';
   return stringToChunk(row);
 }
 

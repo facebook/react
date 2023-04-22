@@ -8,3 +8,12 @@
  */
 
 export const isPrimaryRenderer = true;
+
+export type Hints = null;
+export type HintModel = '';
+
+export function createHints(): null {
+  return null;
+}
+
+export function prepareHostDispatcher() {}

@@ -16,6 +16,8 @@ import type {
   ClientReferenceKey,
   ServerReference,
   ServerReferenceId,
+  Hints,
+  HintModel,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
@@ -44,6 +46,7 @@ import {
   processErrorChunkProd,
   processErrorChunkDev,
   processReferenceChunk,
+  processHintChunk,
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
@@ -52,6 +55,8 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
+  prepareHostDispatcher,
+  createHints,
 } from './ReactFlightServerConfig';
 
 import {
@@ -61,11 +66,7 @@ import {
   getThenableStateAfterSuspending,
   resetHooksForRequest,
 } from './ReactFlightHooks';
-import {
-  DefaultCacheDispatcher,
-  getCurrentCache,
-  setCurrentCache,
-} from './ReactFlightCache';
+import {DefaultCacheDispatcher} from './flight/ReactFlightServerCache';
 import {
   pushProvider,
   popProvider,
@@ -148,15 +149,18 @@ type Task = {
 
 export type Request = {
   status: 0 | 1 | 2,
+  flushScheduled: boolean,
   fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: ClientManifest,
   cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
+  hints: Hints,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
+  completedHintChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
@@ -196,21 +200,26 @@ export function createRequest(
       'Currently React only supports one RSC renderer at a time.',
     );
   }
+  prepareHostDispatcher();
   ReactCurrentCache.current = DefaultCacheDispatcher;
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
+  const hints = createHints();
   const request: Request = {
     status: OPEN,
+    flushScheduled: false,
     fatalError: null,
     destination: null,
     bundlerConfig,
     cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
+    hints,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
+    completedHintChunks: ([]: Array<Chunk>),
     completedJSONChunks: ([]: Array<Chunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
@@ -230,6 +239,17 @@ export function createRequest(
   const rootTask = createTask(request, model, rootContext, abortSet);
   pingedTasks.push(rootTask);
   return request;
+}
+
+let currentRequest: null | Request = null;
+
+export function resolveRequest(): null | Request {
+  if (currentRequest) return currentRequest;
+  if (supportsRequestStorage) {
+    const store = requestStorage.getStore();
+    if (store) return store;
+  }
+  return null;
 }
 
 function createRootContext(
@@ -318,6 +338,23 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
   );
 
   return newTask.id;
+}
+
+export function emitHint(
+  request: Request,
+  code: string,
+  model: HintModel,
+): void {
+  emitHintChunk(request, code, model);
+  enqueueFlush(request);
+}
+
+export function getHints(request: Request): Hints {
+  return request.hints;
+}
+
+export function getCache(request: Request): Map<Function, mixed> {
+  return request.cache;
 }
 
 function readThenable<T>(thenable: Thenable<T>): T {
@@ -502,6 +539,7 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
+    request.flushScheduled = request.destination !== null;
     scheduleWork(() => performWork(request));
   }
 }
@@ -1082,6 +1120,16 @@ function emitImportChunk(
   request.completedImportChunks.push(processedChunk);
 }
 
+function emitHintChunk(request: Request, code: string, model: HintModel): void {
+  const processedChunk = processHintChunk(
+    request,
+    request.nextChunkId++,
+    code,
+    model,
+  );
+  request.completedHintChunks.push(processedChunk);
+}
+
 function emitSymbolChunk(request: Request, id: number, name: string): void {
   const symbolReference = serializeSymbolReference(name);
   const processedChunk = processReferenceChunk(request, id, symbolReference);
@@ -1195,9 +1243,9 @@ function retryTask(request: Request, task: Task): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
-  const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = HooksDispatcher;
-  setCurrentCache(request.cache);
+  const prevRequest = currentRequest;
+  currentRequest = request;
   prepareToUseHooksForRequest(request);
 
   try {
@@ -1215,8 +1263,8 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
-    setCurrentCache(prevCache);
     resetHooksForRequest();
+    currentRequest = prevRequest;
   }
 }
 
@@ -1250,6 +1298,21 @@ function flushCompletedChunks(
       }
     }
     importsChunks.splice(0, i);
+
+    // Next comes hints.
+    const hintChunks = request.completedHintChunks;
+    i = 0;
+    for (; i < hintChunks.length; i++) {
+      const chunk = hintChunks[i];
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
+        request.destination = null;
+        i++;
+        break;
+      }
+    }
+    hintChunks.splice(0, i);
+
     // Next comes model data.
     const jsonChunks = request.completedJSONChunks;
     i = 0;
@@ -1264,6 +1327,7 @@ function flushCompletedChunks(
       }
     }
     jsonChunks.splice(0, i);
+
     // Finally, errors are sent. The idea is that it's ok to delay
     // any error messages and prioritize display of other parts of
     // the page.
@@ -1281,6 +1345,7 @@ function flushCompletedChunks(
     }
     errorChunks.splice(0, i);
   } finally {
+    request.flushScheduled = false;
     completeWriting(destination);
   }
   flushBuffered(destination);
@@ -1291,10 +1356,26 @@ function flushCompletedChunks(
 }
 
 export function startWork(request: Request): void {
+  request.flushScheduled = request.destination !== null;
   if (supportsRequestStorage) {
-    scheduleWork(() => requestStorage.run(request.cache, performWork, request));
+    scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
+  }
+}
+
+function enqueueFlush(request: Request): void {
+  if (
+    request.flushScheduled === false &&
+    // If there are pinged tasks we are going to flush anyway after work completes
+    request.pingedTasks.length === 0 &&
+    // If there is no destination there is nothing we can flush to. A flush will
+    // happen when we start flowing again
+    request.destination !== null
+  ) {
+    const destination = request.destination;
+    request.flushScheduled = true;
+    scheduleWork(() => flushCompletedChunks(request, destination));
   }
 }
 
