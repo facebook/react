@@ -88,8 +88,17 @@ function decodeReplyFromBusboy<T>(
   webpackMap: ServerManifest,
 ): Thenable<T> {
   const response = createResponse(webpackMap, '');
+  let pendingFiles = 0;
+  const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {
-    resolveField(response, name, value);
+    if (pendingFiles > 0) {
+      // Because the 'end' event fires two microtasks after the next 'field'
+      // we would resolve files and fields out of order. To handle this properly
+      // we queue any fields we receive until the previous file is done.
+      queuedFields.push(name, value);
+    } else {
+      resolveField(response, name, value);
+    }
   });
   busboyStream.on('file', (name, value, {filename, encoding, mimeType}) => {
     if (encoding.toLowerCase() === 'base64') {
@@ -99,12 +108,21 @@ function decodeReplyFromBusboy<T>(
           'the wrong assumption, we can easily fix it.',
       );
     }
+    pendingFiles++;
     const file = resolveFileInfo(response, name, filename, mimeType);
     value.on('data', chunk => {
       resolveFileChunk(response, file, chunk);
     });
     value.on('end', () => {
       resolveFileComplete(response, name, file);
+      pendingFiles--;
+      if (pendingFiles === 0) {
+        // Release any queued fields
+        for (let i = 0; i < queuedFields.length; i += 2) {
+          resolveField(response, queuedFields[i], queuedFields[i + 1]);
+        }
+        queuedFields.length = 0;
+      }
     });
   });
   busboyStream.on('finish', () => {

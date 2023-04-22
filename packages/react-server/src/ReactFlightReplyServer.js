@@ -564,8 +564,11 @@ export function resolveFileComplete(
   handle: FileHandle,
 ): void {
   // Add this file to the backing store.
-  const file = new File(handle.chunks, handle.filename, {type: handle.mime});
-  response._formData.append(key, file);
+  // Node.js doesn't expose a global File constructor so we need to use
+  // the append() form that takes the file name as the third argument,
+  // to create a File object.
+  const blob = new Blob(handle.chunks, {type: handle.mime});
+  response._formData.append(key, blob, handle.filename);
 }
 
 export function close(response: Response): void {

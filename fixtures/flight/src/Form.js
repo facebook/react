@@ -20,8 +20,14 @@ export default function Form({action, children}) {
             React.startTransition(() => setIsPending(false));
           }
         }}>
-        <input name="name" />
+        <label>
+          Name: <input name="name" />
+        </label>
+        <label>
+          File: <input type="file" name="file" />
+        </label>
         <button>Say Hi</button>
+        {isPending ? 'Saving...' : null}
       </form>
     </ErrorBoundary>
   );
