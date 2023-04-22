@@ -686,13 +686,8 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Initial');
   });
 
+  // @gate enableFormActions && enableAsyncActions
   it('sync errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -732,13 +727,8 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Oh no!');
   });
 
+  // @gate enableFormActions && enableAsyncActions
   it('async errors in form actions can be captured by an error boundary', async () => {
-    if (gate(flags => !(flags.enableFormActions && flags.enableAsyncActions))) {
-      // TODO: Uncaught JSDOM errors fail the test after the scope has finished
-      // so don't work with the `gate` mechanism.
-      return;
-    }
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
