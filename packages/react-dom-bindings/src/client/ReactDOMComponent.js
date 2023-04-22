@@ -7,6 +7,10 @@
  * @flow
  */
 
+import type {HostContext, HostContextDev} from './ReactFiberConfigDOM';
+
+import {HostContextNamespaceNone} from './ReactFiberConfigDOM';
+
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -53,7 +57,7 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
+import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import isCustomElement from '../shared/isCustomElement';
 import getAttributeAlias from '../shared/getAttributeAlias';
 import possibleStandardNames from '../shared/possibleStandardNames';
@@ -290,12 +294,13 @@ function normalizeHTML(parent: Element, html: string) {
     // how <noscript> is being handled. So we use the same document.
     // See the discussion in https://github.com/facebook/react/pull/11157.
     const testElement =
-      parent.namespaceURI === HTML_NAMESPACE
-        ? parent.ownerDocument.createElement(parent.tagName)
-        : parent.ownerDocument.createElementNS(
+      parent.namespaceURI === MATH_NAMESPACE ||
+      parent.namespaceURI === SVG_NAMESPACE
+        ? parent.ownerDocument.createElementNS(
             (parent.namespaceURI: any),
             parent.tagName,
-          );
+          )
+        : parent.ownerDocument.createElement(parent.tagName);
     testElement.innerHTML = html;
     return testElement.innerHTML;
   }
@@ -2469,7 +2474,7 @@ function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
   props: Object,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
   extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
@@ -2545,11 +2550,14 @@ function diffHydratedCustomComponent(
         }
       // Fall through
       default: {
-        let ownNamespaceDev = parentNamespaceDev;
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          ownNamespaceDev = getIntrinsicNamespace(tag);
-        }
-        if (ownNamespaceDev === HTML_NAMESPACE) {
+        // This is a DEV-only path
+        const hostContextDev: HostContextDev = (hostContext: any);
+        const hostContextProd = hostContextDev.context;
+        if (
+          hostContextProd === HostContextNamespaceNone &&
+          tag !== 'svg' &&
+          tag !== 'math'
+        ) {
           extraAttributes.delete(propKey.toLowerCase());
         } else {
           extraAttributes.delete(propKey);
@@ -2576,7 +2584,7 @@ function diffHydratedGenericElement(
   domElement: Element,
   tag: string,
   props: Object,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
   extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
@@ -2945,11 +2953,16 @@ function diffHydratedGenericElement(
         }
         const attributeName = getAttributeAlias(propKey);
         let isMismatchDueToBadCasing = false;
-        let ownNamespaceDev = parentNamespaceDev;
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          ownNamespaceDev = getIntrinsicNamespace(tag);
-        }
-        if (ownNamespaceDev === HTML_NAMESPACE) {
+
+        // This is a DEV-only path
+        const hostContextDev: HostContextDev = (hostContext: any);
+        const hostContextProd = hostContextDev.context;
+
+        if (
+          hostContextProd === HostContextNamespaceNone &&
+          tag !== 'svg' &&
+          tag !== 'math'
+        ) {
           extraAttributes.delete(attributeName.toLowerCase());
         } else {
           const standardName = getPossibleStandardName(propKey);
@@ -2983,7 +2996,7 @@ export function diffHydratedProperties(
   props: Object,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
@@ -3155,7 +3168,7 @@ export function diffHydratedProperties(
         domElement,
         tag,
         props,
-        parentNamespaceDev,
+        hostContext,
         extraAttributes,
       );
     } else {
@@ -3163,7 +3176,7 @@ export function diffHydratedProperties(
         domElement,
         tag,
         props,
-        parentNamespaceDev,
+        hostContext,
         extraAttributes,
       );
     }
