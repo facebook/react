@@ -1182,7 +1182,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -1213,7 +1213,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -1979,7 +1979,14 @@ export function updatePropertiesWithDiff(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2054,7 +2061,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2089,7 +2103,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultValue is ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2110,7 +2131,14 @@ export function updatePropertiesWithDiff(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2149,7 +2177,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2166,7 +2201,7 @@ export function updatePropertiesWithDiff(
             propKey,
             propValue,
             nextProps,
-            null,
+            lastProps[propKey],
           );
         }
         return;
@@ -2178,7 +2213,7 @@ export function updatePropertiesWithDiff(
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, nextProps, null);
+    setProp(domElement, tag, propKey, propValue, nextProps, lastProps[propKey]);
   }
 }
 
