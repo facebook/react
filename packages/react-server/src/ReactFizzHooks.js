@@ -31,7 +31,6 @@ import {makeId} from './ReactFizzConfig';
 
 import {
   enableCache,
-  enableUseHook,
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
 } from 'shared/ReactFeatureFlags';
@@ -610,6 +609,7 @@ function noop(): void {}
 
 export const HooksDispatcher: Dispatcher = {
   readContext,
+  use,
   useContext,
   useMemo,
   useReducer,
@@ -640,9 +640,6 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
-}
-if (enableUseHook) {
-  HooksDispatcher.use = use;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

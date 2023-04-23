@@ -130,7 +130,6 @@ describe('ReactFlightDOM', () => {
     });
   });
 
-  // @gate enableUseHook
   it('should resolve the root', async () => {
     // Model
     function Text({children}) {
@@ -180,7 +179,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate enableUseHook
   it('should not get confused by $', async () => {
     // Model
     function RootModel() {
@@ -215,7 +213,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  // @gate enableUseHook
   it('should not get confused by @', async () => {
     // Model
     function RootModel() {
@@ -250,7 +247,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  // @gate enableUseHook
   it('should be able to esm compat test module references', async () => {
     const ESMCompatModule = {
       __esModule: true,
@@ -300,7 +296,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  // @gate enableUseHook
   it('should be able to render a named component export', async () => {
     const Module = {
       Component: function ({greeting}) {
@@ -338,7 +333,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  // @gate enableUseHook
   it('should be able to render a module split named component export', async () => {
     const Module = {
       // This gets split into a separate module from the original one.
@@ -377,7 +371,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
-  // @gate enableUseHook
   it('should unwrap async module references', async () => {
     const AsyncModule = Promise.resolve(function AsyncModule({text}) {
       return 'Async: ' + text;
@@ -418,7 +411,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Async: Module</p>');
   });
 
-  // @gate enableUseHook
   it('should unwrap async module references using use', async () => {
     const AsyncModule = Promise.resolve('Async Text');
 
@@ -457,7 +449,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>Async Text</p>');
   });
 
-  // @gate enableUseHook
   it('should be able to import a name called "then"', async () => {
     const thenExports = {
       then: function then() {
@@ -531,7 +522,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -728,7 +718,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  // @gate enableUseHook
   it('should preserve state of client components on refetch', async () => {
     // Client
 
@@ -814,7 +803,6 @@ describe('ReactFlightDOM', () => {
     expect(inputB.value).toBe('goodbye');
   });
 
-  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
@@ -873,7 +861,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
-  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side', async () => {
     const reportedErrors = [];
 
@@ -919,7 +906,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring client-side async', async () => {
     const reportedErrors = [];
 
@@ -977,7 +963,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  // @gate enableUseHook
   it('should be able to recover from a direct reference erroring server-side', async () => {
     const reportedErrors = [];
 
@@ -1044,7 +1029,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 
-  // @gate enableUseHook
   it('should pass a Promise through props and be able use() it on the client', async () => {
     async function getData() {
       return 'async hello';
@@ -1090,7 +1074,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>async hello</p>');
   });
 
-  // @gate enableUseHook
   it('should throw on the client if a passed promise eventually rejects', async () => {
     const reportedErrors = [];
     const theError = new Error('Server throw');
@@ -1158,7 +1141,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate enableUseHook
   it('should support ReactDOM.preload when rendering in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1214,7 +1196,6 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
 
-  // @gate enableUseHook
   it('should support ReactDOM.preload when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;

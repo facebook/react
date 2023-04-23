@@ -182,7 +182,6 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
-  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -492,7 +491,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(isDone).toBeTruthy();
   });
 
-  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
@@ -576,7 +574,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
-  // @gate enableUseHook
   it('basic use(promise)', async () => {
     function Server() {
       return (
@@ -605,7 +602,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
-  // @gate enableUseHook
   it('basic use(context)', async () => {
     const ContextA = React.createServerContext('ContextA', '');
     const ContextB = React.createServerContext('ContextB', 'B');
@@ -639,7 +635,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('AB');
   });
 
-  // @gate enableUseHook
   it('use(promise) in multiple components', async () => {
     function Child({prefix}) {
       return prefix + use(Promise.resolve('C')) + use(Promise.resolve('D'));
@@ -670,7 +665,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABCD');
   });
 
-  // @gate enableUseHook
   it('using a rejected promise will throw', async () => {
     const promiseA = Promise.resolve('A');
     const promiseB = Promise.reject(new Error('Oops!'));
@@ -732,7 +726,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors[0].message).toBe('Oops!');
   });
 
-  // @gate enableUseHook
   it("use a promise that's already been instrumented and resolved", async () => {
     const thenable = {
       status: 'fulfilled',
@@ -760,7 +753,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('Hi');
   });
 
-  // @gate enableUseHook
   it('unwraps thenable that fulfills synchronously without suspending', async () => {
     function Server() {
       const thenable = {
