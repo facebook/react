@@ -135,7 +135,6 @@ describe('ReactFetch', () => {
     expect(fetchCount).toBe(1);
   });
 
-  // @gate enableUseHook
   it('can opt-out of deduping fetches inside of render with custom signal', async () => {
     const controller = new AbortController();
     function useCustomHook() {
@@ -154,7 +153,6 @@ describe('ReactFetch', () => {
     expect(fetchCount).not.toBe(1);
   });
 
-  // @gate enableUseHook
   it('opts out of deduping for POST requests', async () => {
     function useCustomHook() {
       return use(

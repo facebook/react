@@ -530,7 +530,6 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>I am client</div>);
   });
 
-  // @gate enableUseHook
   it('should error if a non-serializable value is passed to a host component', async () => {
     function ClientImpl({children}) {
       return children;
@@ -641,7 +640,6 @@ describe('ReactFlight', () => {
     });
   });
 
-  // @gate enableUseHook
   it('should trigger the inner most error boundary inside a Client Component', async () => {
     function ServerComponent() {
       throw new Error('This was thrown in the Server Component.');

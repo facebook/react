@@ -106,6 +106,13 @@ function readContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
+function use<T>(): T {
+  // TODO: What should this do if it receives an unresolved promise?
+  throw new Error(
+    'Support for `use` not yet implemented in react-debug-tools.',
+  );
+}
+
 function useContext<T>(context: ReactContext<T>): T {
   hookLog.push({
     primitive: 'Context',
@@ -327,6 +334,7 @@ function useId(): string {
 }
 
 const Dispatcher: DispatcherType = {
+  use,
   readContext,
   useCacheRefresh,
   useCallback,
