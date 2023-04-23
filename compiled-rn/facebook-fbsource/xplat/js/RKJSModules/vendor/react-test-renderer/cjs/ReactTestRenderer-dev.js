@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<968b9a9a87595c8009c33efb698508af>>
+ * @generated SignedSource<<c196c39a8657ac593b26ca40d9fedf8b>>
  */
 
 'use strict';
@@ -8299,6 +8299,7 @@ function entangleTransitionUpdate(root, queue, lane) {
 
 var ContextOnlyDispatcher = {
   readContext: readContext,
+  use: use,
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
@@ -8319,10 +8320,6 @@ var ContextOnlyDispatcher = {
 
 {
   ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
-}
-
-{
-  ContextOnlyDispatcher.use = throwInvalidHookError;
 }
 
 var HooksDispatcherOnMountInDEV = null;
@@ -8356,6 +8353,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       mountHookTypesDev();
@@ -8476,14 +8474,11 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  {
-    HooksDispatcherOnMountInDEV.use = use;
-  }
-
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -8599,14 +8594,11 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       };
   }
 
-  {
-    HooksDispatcherOnMountWithHookTypesInDEV.use = use;
-  }
-
   HooksDispatcherOnUpdateInDEV = {
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -8721,14 +8713,11 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     };
   }
 
-  {
-    HooksDispatcherOnUpdateInDEV.use = use;
-  }
-
   HooksDispatcherOnRerenderInDEV = {
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -8844,14 +8833,14 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       };
   }
 
-  {
-    HooksDispatcherOnRerenderInDEV.use = use;
-  }
-
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
+    },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
     },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
@@ -8984,17 +8973,14 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       };
   }
 
-  {
-    InvalidNestedHooksDispatcherOnMountInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
-  }
-
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
+    },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
     },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
@@ -9127,17 +9113,14 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       };
   }
 
-  {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
-  }
-
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
+    },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
     },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
@@ -9268,13 +9251,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
         updateHookTypesDev();
         return updateRefresh();
       };
-  }
-
-  {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
   }
 }
 
@@ -23848,7 +23824,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-a21d1475f-20230422";
+var ReactVersion = "18.3.0-next-7ce765ec3-20230423";
 
 // Might add PROFILE later.
 

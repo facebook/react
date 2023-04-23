@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<388ecd5d71ee2c3022a43487fedc6a5a>>
+ * @generated SignedSource<<a63be6473ffec871fd321bb499df9913>>
  */
 
 "use strict";
@@ -4239,6 +4239,7 @@ function entangleTransitionUpdate(root, queue, lane) {
 }
 var ContextOnlyDispatcher = {
   readContext: readContext,
+  use: use,
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
@@ -4256,10 +4257,10 @@ var ContextOnlyDispatcher = {
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
-ContextOnlyDispatcher.use = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
+  use: use,
   useCallback: function (callback, deps) {
     mountWorkInProgressHook().memoizedState = [
       callback,
@@ -4376,10 +4377,10 @@ var HooksDispatcherOnMount = {
     return (hook.memoizedState = identifierPrefix);
   }
 };
-HooksDispatcherOnMount.use = use;
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
+  use: use,
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
@@ -4412,9 +4413,9 @@ var HooksDispatcherOnUpdate = {
   useId: updateId
 };
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
-HooksDispatcherOnUpdate.use = use;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
+  use: use,
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
@@ -4448,7 +4449,6 @@ var HooksDispatcherOnRerender = {
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId
 };
-HooksDispatcherOnRerender.use = use;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
@@ -9472,7 +9472,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1045 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-a21d1475f-20230422",
+    version: "18.3.0-next-7ce765ec3-20230423",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9514,7 +9514,7 @@ var internals$jscomp$inline_1276 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-a21d1475f-20230422"
+  reconcilerVersion: "18.3.0-next-7ce765ec3-20230423"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e8a7cd3892f3b9331677bf16ba6a24b>>
+ * @generated SignedSource<<d4644da705d946010d5c00180a62eca5>>
  */
 
 
@@ -4371,6 +4371,7 @@ function entangleTransitionUpdate(root, queue, lane) {
 }
 var ContextOnlyDispatcher = {
   readContext: readContext,
+  use: use,
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
@@ -4388,10 +4389,10 @@ var ContextOnlyDispatcher = {
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
-ContextOnlyDispatcher.use = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
+  use: use,
   useCallback: function (callback, deps) {
     mountWorkInProgressHook().memoizedState = [
       callback,
@@ -4508,10 +4509,10 @@ var HooksDispatcherOnMount = {
     return (hook.memoizedState = identifierPrefix);
   }
 };
-HooksDispatcherOnMount.use = use;
 HooksDispatcherOnMount.useMemoCache = useMemoCache;
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
+  use: use,
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
@@ -4544,9 +4545,9 @@ var HooksDispatcherOnUpdate = {
   useId: updateId
 };
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
-HooksDispatcherOnUpdate.use = use;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
+  use: use,
   useCallback: updateCallback,
   useContext: readContext,
   useEffect: updateEffect,
@@ -4580,7 +4581,6 @@ var HooksDispatcherOnRerender = {
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId
 };
-HooksDispatcherOnRerender.use = use;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 var now = Scheduler.unstable_now,
   commitTime = 0,
@@ -10181,7 +10181,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1123 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-a21d1475f-20230422",
+    version: "18.3.0-next-7ce765ec3-20230423",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10236,7 +10236,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-a21d1475f-20230422"
+  reconcilerVersion: "18.3.0-next-7ce765ec3-20230423"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

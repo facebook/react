@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a9f3cb903b49266953a4dde78ca03fb>>
+ * @generated SignedSource<<e4a28f50238cf94a5314bc2871fdf73d>>
  */
 
 'use strict';
@@ -12729,6 +12729,7 @@ function markUpdateInDevTools(fiber, lane, action) {
 
 var ContextOnlyDispatcher = {
   readContext: readContext,
+  use: use,
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
@@ -12746,10 +12747,6 @@ var ContextOnlyDispatcher = {
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
-
-{
-  ContextOnlyDispatcher.use = throwInvalidHookError;
-}
 
 {
   ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
@@ -12786,6 +12783,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       mountHookTypesDev();
@@ -12897,10 +12895,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       return mountId();
     }
   };
-
-  {
-    HooksDispatcherOnMountInDEV.use = use;
-  }
 
   {
     HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
@@ -12910,6 +12904,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -13017,10 +13012,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    HooksDispatcherOnMountWithHookTypesInDEV.use = use;
-  }
-
-  {
     HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
   }
 
@@ -13028,6 +13019,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -13135,10 +13127,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    HooksDispatcherOnUpdateInDEV.use = use;
-  }
-
-  {
     HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
   }
 
@@ -13146,6 +13134,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       return readContext(context);
     },
+    use: use,
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       updateHookTypesDev();
@@ -13253,10 +13242,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    HooksDispatcherOnRerenderInDEV.use = use;
-  }
-
-  {
     HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
   }
 
@@ -13264,6 +13249,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
+    },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
     },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
@@ -13386,13 +13375,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       return mountId();
     }
   };
-
-  {
-    InvalidNestedHooksDispatcherOnMountInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
-  }
 
   {
     InvalidNestedHooksDispatcherOnMountInDEV.useMemoCache = function (size) {
@@ -13406,6 +13388,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       warnInvalidContextAccess();
       return readContext(context);
     },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
+    },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
       warnInvalidHookAccess();
@@ -13529,13 +13515,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
   };
 
   {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
-  }
-
-  {
     InvalidNestedHooksDispatcherOnUpdateInDEV.useMemoCache = function (size) {
       warnInvalidHookAccess();
       return useMemoCache(size);
@@ -13546,6 +13525,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     readContext: function (context) {
       warnInvalidContextAccess();
       return readContext(context);
+    },
+    use: function (usable) {
+      warnInvalidHookAccess();
+      return use(usable);
     },
     useCallback: function (callback, deps) {
       currentHookNameInDev = "useCallback";
@@ -13668,13 +13651,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       return updateId();
     }
   };
-
-  {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.use = function (usable) {
-      warnInvalidHookAccess();
-      return use(usable);
-    };
-  }
 
   {
     InvalidNestedHooksDispatcherOnRerenderInDEV.useMemoCache = function (size) {
@@ -27671,7 +27647,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-a21d1475f-20230422";
+var ReactVersion = "18.3.0-next-7ce765ec3-20230423";
 
 function createPortal$1(
   children,
