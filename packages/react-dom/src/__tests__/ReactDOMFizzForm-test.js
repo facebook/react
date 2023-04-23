@@ -195,4 +195,169 @@ describe('ReactDOMFizzForm', () => {
       'Prop `action` did not match. Server: "action" Client: "function action(formData) {}"',
     );
   });
+
+  // @gate enableFormActions || !__DEV__
+  it('should reset form fields after you update away from hydrated function', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
+    function action(formData) {}
+    function App({isUpdate}) {
+      return (
+        <form
+          action={isUpdate ? 'action' : action}
+          ref={formRef}
+          method={isUpdate ? 'POST' : null}>
+          <input
+            type="submit"
+            formAction={isUpdate ? 'action' : action}
+            ref={inputRef}
+            formTarget={isUpdate ? 'elsewhere' : null}
+          />
+          <button
+            formAction={isUpdate ? 'action' : action}
+            ref={buttonRef}
+            formEncType={isUpdate ? 'multipart/form-data' : null}
+          />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+    let root;
+    await act(async () => {
+      root = ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    await act(async () => {
+      root.render(<App isUpdate={true} />);
+    });
+    expect(formRef.current.getAttribute('action')).toBe('action');
+    expect(formRef.current.hasAttribute('encType')).toBe(false);
+    expect(formRef.current.getAttribute('method')).toBe('POST');
+    expect(formRef.current.hasAttribute('target')).toBe(false);
+
+    expect(inputRef.current.getAttribute('formAction')).toBe('action');
+    expect(inputRef.current.hasAttribute('name')).toBe(false);
+    expect(inputRef.current.hasAttribute('formEncType')).toBe(false);
+    expect(inputRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(inputRef.current.getAttribute('formTarget')).toBe('elsewhere');
+
+    expect(buttonRef.current.getAttribute('formAction')).toBe('action');
+    expect(buttonRef.current.hasAttribute('name')).toBe(false);
+    expect(buttonRef.current.getAttribute('formEncType')).toBe(
+      'multipart/form-data',
+    );
+    expect(buttonRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
+  });
+
+  // @gate enableFormActions || !__DEV__
+  it('should reset form fields after you remove a hydrated function', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
+    function action(formData) {}
+    function App({isUpdate}) {
+      return (
+        <form action={isUpdate ? undefined : action} ref={formRef}>
+          <input
+            type="submit"
+            formAction={isUpdate ? undefined : action}
+            ref={inputRef}
+          />
+          <button formAction={isUpdate ? undefined : action} ref={buttonRef} />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+    let root;
+    await act(async () => {
+      root = ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    await act(async () => {
+      root.render(<App isUpdate={true} />);
+    });
+    expect(formRef.current.hasAttribute('action')).toBe(false);
+    expect(formRef.current.hasAttribute('encType')).toBe(false);
+    expect(formRef.current.hasAttribute('method')).toBe(false);
+    expect(formRef.current.hasAttribute('target')).toBe(false);
+
+    expect(inputRef.current.hasAttribute('formAction')).toBe(false);
+    expect(inputRef.current.hasAttribute('name')).toBe(false);
+    expect(inputRef.current.hasAttribute('formEncType')).toBe(false);
+    expect(inputRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(inputRef.current.hasAttribute('formTarget')).toBe(false);
+
+    expect(buttonRef.current.hasAttribute('formAction')).toBe(false);
+    expect(buttonRef.current.hasAttribute('name')).toBe(false);
+    expect(buttonRef.current.hasAttribute('formEncType')).toBe(false);
+    expect(buttonRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
+  });
+
+  // @gate enableFormActions || !__DEV__
+  it('should restore the form fields even if they were incorrectly set', async () => {
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
+    function action(formData) {}
+    function App({isUpdate}) {
+      return (
+        <form
+          action={isUpdate ? 'action' : action}
+          ref={formRef}
+          method="DELETE">
+          <input
+            type="submit"
+            formAction={isUpdate ? 'action' : action}
+            ref={inputRef}
+            formTarget="elsewhere"
+          />
+          <button
+            formAction={isUpdate ? 'action' : action}
+            ref={buttonRef}
+            formEncType="text/plain"
+          />
+        </form>
+      );
+    }
+
+    // Specifying the extra form fields are a DEV error, but we expect it
+    // to eventually still be patched up after an update.
+    await expect(async () => {
+      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      await readIntoContainer(stream);
+    }).toErrorDev([
+      'Cannot specify a encType or method for a form that specifies a function as the action.',
+      'Cannot specify a formTarget for a button that specifies a function as a formAction.',
+    ]);
+    let root;
+    await expect(async () => {
+      await act(async () => {
+        root = ReactDOMClient.hydrateRoot(container, <App />);
+      });
+    }).toErrorDev(['Prop `formTarget` did not match.']);
+    await act(async () => {
+      root.render(<App isUpdate={true} />);
+    });
+    expect(formRef.current.getAttribute('action')).toBe('action');
+    expect(formRef.current.hasAttribute('encType')).toBe(false);
+    expect(formRef.current.getAttribute('method')).toBe('DELETE');
+    expect(formRef.current.hasAttribute('target')).toBe(false);
+
+    expect(inputRef.current.getAttribute('formAction')).toBe('action');
+    expect(inputRef.current.hasAttribute('name')).toBe(false);
+    expect(inputRef.current.hasAttribute('formEncType')).toBe(false);
+    expect(inputRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(inputRef.current.getAttribute('formTarget')).toBe('elsewhere');
+
+    expect(buttonRef.current.getAttribute('formAction')).toBe('action');
+    expect(buttonRef.current.hasAttribute('name')).toBe(false);
+    expect(buttonRef.current.getAttribute('formEncType')).toBe('text/plain');
+    expect(buttonRef.current.hasAttribute('formMethod')).toBe(false);
+    expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
+  });
 });
