@@ -131,7 +131,6 @@ export function updateInput(
     // Submit/reset inputs need the attribute removed completely to avoid
     // blank-text buttons.
     node.removeAttribute('value');
-    return;
   }
 
   if (disableInputAttributeSyncing) {

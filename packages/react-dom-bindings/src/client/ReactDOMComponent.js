@@ -483,6 +483,68 @@ function setProp(
     case 'action':
     case 'formAction': {
       // TODO: Consider moving these special cases to the form, input and button tags.
+      if (enableFormActions) {
+        if (typeof value === 'function') {
+          // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
+          // because we'll preventDefault, but it can happen if a form is manually submitted or
+          // if someone calls stopPropagation before React gets the event.
+          // If CSP is used to block javascript: URLs that's fine too. It just won't show this
+          // error message but the URL will be logged.
+          domElement.setAttribute(
+            key,
+            // eslint-disable-next-line no-script-url
+            "javascript:throw new Error('" +
+              'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
+              "consider using form.requestSubmit() instead. If you're trying to use " +
+              'event.stopPropagation() in a submit event handler, consider also calling ' +
+              'event.preventDefault().' +
+              "')",
+          );
+          break;
+        } else if (typeof prevValue === 'function') {
+          // When we're switching off a Server Action that was originally hydrated.
+          // The server control these fields during SSR that are now trailing.
+          // The regular diffing doesn't apply since we compare against the previous props.
+          // Instead, we need to force them to be set to whatever they should be now.
+          // This would be a lot cleaner if we did this whole fork in the per-tag approach.
+          if (key === 'formAction') {
+            if (tag !== 'input') {
+              // Setting the name here isn't completely safe for inputs if this is switching
+              // to become a radio button. In that case we let the tag based override take
+              // control.
+              setProp(domElement, tag, 'name', props.name, props, null);
+            }
+            setProp(
+              domElement,
+              tag,
+              'formEncType',
+              props.formEncType,
+              props,
+              null,
+            );
+            setProp(
+              domElement,
+              tag,
+              'formMethod',
+              props.formMethod,
+              props,
+              null,
+            );
+            setProp(
+              domElement,
+              tag,
+              'formTarget',
+              props.formTarget,
+              props,
+              null,
+            );
+          } else {
+            setProp(domElement, tag, 'encType', props.encType, props, null);
+            setProp(domElement, tag, 'method', props.method, props, null);
+            setProp(domElement, tag, 'target', props.target, props, null);
+          }
+        }
+      }
       if (
         value == null ||
         (!enableFormActions && typeof value === 'function') ||
@@ -494,24 +556,6 @@ function setProp(
       }
       if (__DEV__) {
         validateFormActionInDevelopment(tag, key, value, props);
-      }
-      if (enableFormActions && typeof value === 'function') {
-        // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
-        // because we'll preventDefault, but it can happen if a form is manually submitted or
-        // if someone calls stopPropagation before React gets the event.
-        // If CSP is used to block javascript: URLs that's fine too. It just won't show this
-        // error message but the URL will be logged.
-        domElement.setAttribute(
-          key,
-          // eslint-disable-next-line no-script-url
-          "javascript:throw new Error('" +
-            'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
-            "consider using form.requestSubmit() instead. If you're trying to use " +
-            'event.stopPropagation() in a submit event handler, consider also calling ' +
-            'event.preventDefault().' +
-            "')",
-        );
-        break;
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
@@ -2709,6 +2753,18 @@ function diffHydratedGenericElement(
           const hasFormActionURL = serverValue === EXPECTED_FORM_ACTION_URL;
           if (typeof value === 'function') {
             extraAttributes.delete(propKey.toLowerCase());
+            // The server can set these extra properties to implement actions.
+            // So we remove them from the extra attributes warnings.
+            if (propKey === 'formAction') {
+              extraAttributes.delete('name');
+              extraAttributes.delete('formenctype');
+              extraAttributes.delete('formmethod');
+              extraAttributes.delete('formtarget');
+            } else {
+              extraAttributes.delete('enctype');
+              extraAttributes.delete('method');
+              extraAttributes.delete('target');
+            }
             if (hasFormActionURL) {
               // Expected
               continue;
