@@ -132,6 +132,9 @@ function validateFormActionInDevelopment(
   props: any,
 ) {
   if (__DEV__) {
+    if (value == null) {
+      return;
+    }
     if (tag === 'form') {
       if (key === 'formAction') {
         console.error(
@@ -483,6 +486,9 @@ function setProp(
     case 'action':
     case 'formAction': {
       // TODO: Consider moving these special cases to the form, input and button tags.
+      if (__DEV__) {
+        validateFormActionInDevelopment(tag, key, value, props);
+      }
       if (enableFormActions) {
         if (typeof value === 'function') {
           // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
@@ -553,9 +559,6 @@ function setProp(
       ) {
         domElement.removeAttribute(key);
         break;
-      }
-      if (__DEV__) {
-        validateFormActionInDevelopment(tag, key, value, props);
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
