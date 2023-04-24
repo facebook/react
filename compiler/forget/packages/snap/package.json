@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "public": false,
   "description": "Snapshot testing CLI tool",
-  "main": "dist/index.js",
+  "main": "dist/main.js",
   "license": "MIT",
   "files": [
     "src"

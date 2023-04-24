@@ -21,16 +21,29 @@ import * as compiler from "./compiler-worker.js";
 
 readline.emitKeypressEvents(process.stdin);
 
-if (process.stdin.isTTY) {
-  process.stdin.setRawMode(true);
-}
+process.stdin.on("keypress", function (chunk, key) {
+  if (key && key.name === "c" && key.ctrl) {
+    cleanup(-1);
+  }
+});
+process.on("SIGINT", function () {
+  // Parent process may send SIGINT
+  cleanup(-1);
+});
 
-const argv: {
+process.on("SIGTERM", function () {
+  cleanup(-1);
+});
+
+type Results = Map<string, TestResult>;
+type RunnerOptions = {
   sync: boolean;
   workerThreads: boolean;
   watch: boolean;
   update: boolean;
-} = yargs
+};
+
+const opts: RunnerOptions = yargs
   .boolean("sync")
   .describe(
     "sync",
@@ -56,10 +69,6 @@ const argv: {
   .strict()
   .parseSync(hideBin(process.argv));
 
-const PARALLEL = !argv.sync;
-const ENABLE_WORKER_THREADS = argv.workerThreads;
-const WATCH = argv.watch;
-const UPDATE = argv.update;
 const WORKER_PATH = require.resolve("./compiler-worker.js");
 const COMPILER_PATH = path.join(
   process.cwd(),
@@ -75,18 +84,33 @@ const FIXTURES_PATH = path.join(
   "compiler"
 );
 
-const worker: Worker & typeof compiler = new Worker(WORKER_PATH, {
-  enableWorkerThreads: ENABLE_WORKER_THREADS,
-}) as any;
-worker.getStderr().pipe(process.stderr);
-worker.getStdout().pipe(process.stdout);
-
-type Results = Map<string, TestResult>;
+/**
+ * Cleanup / handle interrupts
+ */
+const cleanupTasks: Array<() => void> = new Array();
+function pushCleanupTask(fn: () => void) {
+  cleanupTasks.push(fn);
+}
+function cleanup(code: number) {
+  for (const task of cleanupTasks) {
+    task();
+  }
+  process.exit(code);
+}
+function clearConsole() {
+  // console.clear() only works when stdout is connected to a TTY device.
+  // we're currently piping stdout (see main.ts), so let's do a 'hack'
+  console.log("\u001Bc");
+}
 
 /**
  * Do a test run and return the test results
  */
-async function run(compilerVersion: number): Promise<Results> {
+async function run(
+  worker: Worker & typeof compiler,
+  opts: RunnerOptions,
+  compilerVersion: number
+): Promise<Results> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
   // the directory each time.
@@ -100,7 +124,7 @@ async function run(compilerVersion: number): Promise<Results> {
   ).sort();
 
   let entries: Array<[string, TestResult]>;
-  if (PARALLEL) {
+  if (!opts.sync) {
     // Note: promise.all to ensure parallelism when enabled
     entries = await Promise.all(
       fixtures.map(async (fixture) => {
@@ -288,8 +312,17 @@ enum Mode {
 /**
  * Runs the compiler in watch or single-execution mode
  */
-async function main(): Promise<void> {
-  if (WATCH) {
+export async function main(opts: RunnerOptions): Promise<void> {
+  const worker: Worker & typeof compiler = new Worker(WORKER_PATH, {
+    enableWorkerThreads: opts.workerThreads,
+  }) as any;
+  worker.getStderr().pipe(process.stderr);
+  worker.getStdout().pipe(process.stdout);
+  pushCleanupTask(() => {
+    worker.end();
+  });
+
+  if (opts.watch) {
     // Monotonically increasing integer to describe the 'version' of the compiler.
     // This is passed to `compile()` (from compiler-worker) when compiling, so
     // that the worker knows when it has to reset its module cache and when its
@@ -306,10 +339,10 @@ async function main(): Promise<void> {
     async function onChange({ mode }: { mode: Mode }) {
       if (isCompilerValid) {
         const start = performance.now();
-        console.clear();
+        clearConsole();
         console.log("Running tests...");
-        const results = await run(compilerVersion);
-        console.clear();
+        const results = await run(worker, opts, compilerVersion);
+        clearConsole();
         if (mode === Mode.Update) {
           update(results);
         } else {
@@ -331,7 +364,7 @@ async function main(): Promise<void> {
     }
 
     // Run TS in incremental watch mode
-    const _tsWatch = watchSrc(onStart, (isSuccess) => {
+    const tsWatch = watchSrc(onStart, (isSuccess) => {
       // Bump the compiler version after a build finishes
       // and re-run tests
       if (isSuccess) {
@@ -340,12 +373,15 @@ async function main(): Promise<void> {
       isCompilerValid = isSuccess;
       onChange({ mode: Mode.Test });
     });
+    pushCleanupTask(() => {
+      tsWatch.close();
+    });
 
     // Watch the fixtures directory for changes
     // TODO: ignore changes that occurred as a result of our explicitly updating
     // fixtures in update() - maybe keep a timestamp of last known changes, and
     // ignore events that occurred prior to that timestamp.
-    const _fileSubscription = watcher.subscribe(
+    const fileSubscription = watcher.subscribe(
       FIXTURES_PATH,
       async (err, _events) => {
         if (err) {
@@ -357,14 +393,22 @@ async function main(): Promise<void> {
       }
     );
 
+    pushCleanupTask(() => {
+      fileSubscription
+        .then((subscription) => {
+          subscription.unsubscribe();
+        })
+        .catch((err) => {
+          console.log("error cleaning up file subscription", err);
+        });
+    });
+
     // Basic key event handling
     process.stdin.on("keypress", (str, key) => {
       if (key.name === "u") {
         // u => update fixtures
         onChange({ mode: Mode.Update });
       } else if (key.name === "q") {
-        process.exit(0);
-      } else if (key.ctrl && key.name === "c") {
         process.exit(0);
       } else {
         // any other key re-runs tests
@@ -380,8 +424,8 @@ async function main(): Promise<void> {
       () => {},
       async (isSuccess: boolean) => {
         if (isSuccess) {
-          const results = await run(0);
-          if (UPDATE) {
+          const results = await run(worker, opts, 0);
+          if (opts.update) {
             update(results);
           } else {
             report(results);
@@ -393,14 +437,19 @@ async function main(): Promise<void> {
         }
         if (tsWatch != null) {
           tsWatch.close();
+          tsWatch = null;
         }
         await worker.end();
         process.exit(isSuccess ? 0 : -1);
       }
     );
+    pushCleanupTask(() => {
+      tsWatch?.close();
+      tsWatch = null;
+    });
   }
 }
 
 // I couldn't figure out the right combination of settings to allow using `await` at the top-level,
 // but it's easy enough to use the promise API just here
-main().catch((error) => console.error(error));
+main(opts).catch((error) => console.error(error));

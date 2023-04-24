@@ -14,7 +14,7 @@
     "hash": "scripts/hash-dist.sh",
     "playground": "cd packages/playground && yarn && yarn dev",
     "test": "tsc && jest",
-    "snap": "node packages/snap/dist/runner.js",
+    "snap": "node packages/snap/dist/main.js",
     "snap:build": "cd packages/snap && yarn build",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
     "test262": "yarn run --silent test262-harness --preprocessor=scripts/test262-preprocessor.js",
