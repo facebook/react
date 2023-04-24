@@ -776,8 +776,11 @@ export function TransitionAwareHostComponent(): boolean {
     return false;
   }
   const dispatcher = ReactCurrentDispatcher.current;
-  const [isPending] = dispatcher.useTransition();
-  return isPending;
+  const [booleanOrThenable] = dispatcher.useState();
+  return typeof booleanOrThenable === 'boolean'
+    ? booleanOrThenable
+    : // This will suspend until the async action scope has finished.
+      useThenable(booleanOrThenable);
 }
 
 export function checkDidRenderIdHook(): boolean {
@@ -2545,8 +2548,8 @@ export function startHostTransition<F>(
     // it was stateful all along so we can reuse most of the implementation
     // for function components and useTransition.
     //
-    // Create the initial hooks used by useTransition. This is essentially an
-    // inlined version of mountTransition.
+    // Create the state hook used by TransitionAwareHostComponent. This is
+    // essentially an inlined version of mountState.
     const queue: UpdateQueue<
       Thenable<boolean> | boolean,
       Thenable<boolean> | boolean,
@@ -2569,22 +2572,8 @@ export function startHostTransition<F>(
       (dispatchSetState.bind(null, formFiber, queue): any);
     setPending = queue.dispatch = dispatch;
 
-    // TODO: The only reason this second hook exists is to save a reference to
-    // the `dispatch` function. But we already store this on the state hook. So
-    // we can cheat and read it from there. Need to make this change to the
-    // regular `useTransition` implementation, too.
-    const transitionHook: Hook = {
-      memoizedState: dispatch,
-      baseState: null,
-      baseQueue: null,
-      queue: null,
-      next: null,
-    };
-
-    stateHook.next = transitionHook;
-
-    // Add the initial list of hooks to both fiber alternates. The idea is that
-    // the fiber had these hooks all along.
+    // Add the state hook to both fiber alternates. The idea is that the fiber
+    // had this hook all along.
     formFiber.memoizedState = stateHook;
     const alternate = formFiber.alternate;
     if (alternate !== null) {
@@ -2592,9 +2581,9 @@ export function startHostTransition<F>(
     }
   } else {
     // This fiber was already upgraded to be stateful.
-    const transitionHook: Hook = formFiber.memoizedState.next;
+    const stateHook: Hook = formFiber.memoizedState;
     const dispatch: (Thenable<boolean> | boolean) => void =
-      transitionHook.memoizedState;
+      stateHook.queue.dispatch;
     setPending = dispatch;
   }
 
