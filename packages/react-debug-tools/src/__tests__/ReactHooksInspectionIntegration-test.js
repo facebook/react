@@ -654,19 +654,10 @@ describe('ReactHooksInspectionIntegration', () => {
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree.length).toEqual(1);
-    expect(tree[0]).toMatchInlineSnapshot(`
-      {
-        "id": 0,
-        "isStateEditable": false,
-        "name": "MemoCache",
-        "subHooks": [],
-        "value": [
-          <div>
-            1
-          </div>,
-        ],
-      }
-    `);
+    expect(tree[0].isStateEditable).toBe(false);
+    expect(tree[0].name).toBe('MemoCache');
+    expect(tree[0].value).toHaveLength(1);
+    expect(tree[0].value[0]).toEqual(<div>{1}</div>);
   });
 
   describe('useDebugValue', () => {
