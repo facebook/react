@@ -111,7 +111,7 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'change',
   'contextmenu',
   'reset',
-  'submit',
+  // 'submit', // stopPropagation blocks the replay mechanism
 ];
 
 export function isDiscreteEventThatRequiresHydration(
