@@ -685,7 +685,10 @@ function setProp(
         if (__DEV__) {
           checkAttributeStringCoercion(value, key);
         }
-        domElement.setAttribute(key, (value: any));
+        domElement.setAttribute(
+          key,
+          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+        );
       } else {
         domElement.removeAttribute(key);
       }
