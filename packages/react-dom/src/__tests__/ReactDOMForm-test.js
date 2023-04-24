@@ -475,7 +475,8 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   it('can read the clicked button in the formdata event', async () => {
-    const ref = React.createRef();
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
     let button;
     let title;
 
@@ -487,11 +488,13 @@ describe('ReactDOMForm', () => {
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(
-        // TODO: Test button element too.
         <form action={action}>
           <input type="text" name="title" defaultValue="hello" />
           <input type="submit" name="button" value="save" />
-          <input type="submit" name="button" value="delete" ref={ref} />
+          <input type="submit" name="button" value="delete" ref={inputRef} />
+          <button name="button" value="edit" ref={buttonRef}>
+            Edit
+          </button>
         </form>,
       );
     });
@@ -503,10 +506,70 @@ describe('ReactDOMForm', () => {
       }
     });
 
-    await submit(ref.current);
+    await submit(inputRef.current);
 
     expect(button).toBe('delete');
     expect(title).toBe(null);
+
+    await submit(buttonRef.current);
+
+    expect(button).toBe('edit');
+    expect(title).toBe('hello');
+
+    // Ensure that the type field got correctly restored
+    expect(inputRef.current.getAttribute('type')).toBe('submit');
+    expect(buttonRef.current.getAttribute('type')).toBe(null);
+  });
+
+  // @gate enableFormActions
+  it('excludes the submitter name when the submitter is a function action', async () => {
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
+    let button;
+
+    function action(formData) {
+      // A function action cannot control the name since it might be controlled by the server
+      // so we need to make sure it doesn't get into the FormData.
+      button = formData.get('button');
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(async () => {
+        root.render(
+          <form>
+            <input
+              type="submit"
+              name="button"
+              value="delete"
+              ref={inputRef}
+              formAction={action}
+            />
+            <button
+              name="button"
+              value="edit"
+              ref={buttonRef}
+              formAction={action}>
+              Edit
+            </button>
+          </form>,
+        );
+      });
+    }).toErrorDev([
+      'Cannot specify a "name" prop for a button that specifies a function as a formAction.',
+    ]);
+
+    await submit(inputRef.current);
+
+    expect(button).toBe(null);
+
+    await submit(buttonRef.current);
+
+    expect(button).toBe(null);
+
+    // Ensure that the type field got correctly restored
+    expect(inputRef.current.getAttribute('type')).toBe('submit');
+    expect(buttonRef.current.getAttribute('type')).toBe(null);
   });
 
   // @gate enableFormActions || !__DEV__
