@@ -527,4 +527,121 @@ describe('ReactAsyncActions', () => {
     assertLog(['Pending: true', 'Pending: false']);
     expect(root).toMatchRenderedOutput('Pending: false');
   });
+
+  // @gate enableAsyncActions
+  test('if there are multiple entangled actions, and one of them errors, it only affects that action', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    let startTransitionA;
+    function ActionA() {
+      const [isPendingA, start] = useTransition();
+      startTransitionA = start;
+      return <Text text={'Pending A: ' + isPendingA} />;
+    }
+
+    let startTransitionB;
+    function ActionB() {
+      const [isPending, start] = useTransition();
+      startTransitionB = start;
+      return <Text text={'Pending B: ' + isPending} />;
+    }
+
+    let startTransitionC;
+    function ActionC() {
+      const [isPending, start] = useTransition();
+      startTransitionC = start;
+      return <Text text={'Pending C: ' + isPending} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <>
+          <div>
+            <ErrorBoundary>
+              <ActionA />
+            </ErrorBoundary>
+          </div>
+          <div>
+            <ErrorBoundary>
+              <ActionB />
+            </ErrorBoundary>
+          </div>
+          <div>
+            <ErrorBoundary>
+              <ActionC />
+            </ErrorBoundary>
+          </div>
+        </>,
+      );
+    });
+    assertLog(['Pending A: false', 'Pending B: false', 'Pending C: false']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending A: false</div>
+        <div>Pending B: false</div>
+        <div>Pending C: false</div>
+      </>,
+    );
+
+    // Start a bunch of entangled transitions. A and C throw errors, but B
+    // doesn't. A and should surface their respective errors, but B should
+    // finish successfully.
+    await act(() => {
+      startTransitionC(async () => {
+        startTransitionB(async () => {
+          startTransitionA(async () => {
+            await getText('Wait for A');
+            throw new Error('Oops A!');
+          });
+          await getText('Wait for B');
+        });
+        await getText('Wait for C');
+        throw new Error('Oops C!');
+      });
+    });
+    assertLog(['Pending A: true', 'Pending B: true', 'Pending C: true']);
+
+    // Finish action A. We can't commit the result yet because it's entangled
+    // with B and C.
+    await act(() => resolveText('Wait for A'));
+    assertLog([]);
+
+    // Finish action B. Same as above.
+    await act(() => resolveText('Wait for B'));
+    assertLog([]);
+
+    // Now finish action C. This is the last action in the entangled set, so
+    // rendering can proceed.
+    await act(() => resolveText('Wait for C'));
+    assertLog([
+      // A and C result in (separate) errors, but B does not.
+      'Oops A!',
+      'Pending B: false',
+      'Oops C!',
+
+      // Because there was an error, React will try rendering one more time.
+      'Oops A!',
+      'Pending B: false',
+      'Oops C!',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Oops A!</div>
+        <div>Pending B: false</div>
+        <div>Oops C!</div>
+      </>,
+    );
+  });
 });
