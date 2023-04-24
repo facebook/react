@@ -44,7 +44,7 @@ export type ReactServerValue =
   // References are passed by their value
   | ServerReference<any>
   // The rest are passed as is. Sub-types can be passed in but lose their
-  // subtype, so the receiver can only accept once of these.
+  // subtype, so the receiver can only accept one of these.
   | string
   | boolean
   | number
