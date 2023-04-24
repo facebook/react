@@ -18,6 +18,7 @@ import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
+import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
@@ -364,7 +365,9 @@ export function restoreControlledInputState(element: Element, props: Object) {
       checkAttributeStringCoercion(name, 'name');
     }
     const group = queryRoot.querySelectorAll(
-      'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
+      'input[name="' +
+        escapeSelectorAttributeValueInsideDoubleQuotes('' + name) +
+        '"][type="radio"]',
     );
 
     for (let i = 0; i < group.length; i++) {

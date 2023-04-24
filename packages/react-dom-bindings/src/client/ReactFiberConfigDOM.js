@@ -102,6 +102,7 @@ import {
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
 } from '../shared/ReactDOMResourceValidation';
+import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
 
 export type Type = string;
 export type Props = {
@@ -2478,11 +2479,13 @@ function styleTagPropsFromRawProps(
 function getStyleKey(href: string) {
   const limitedEscapedHref =
     escapeSelectorAttributeValueInsideDoubleQuotes(href);
-  return `href~="${limitedEscapedHref}"`;
+  return `href="${limitedEscapedHref}"`;
 }
 
-function getStyleTagSelectorFromKey(key: string) {
-  return `style[data-${key}]`;
+function getStyleTagSelector(href: string) {
+  const limitedEscapedHref =
+    escapeSelectorAttributeValueInsideDoubleQuotes(href);
+  return `style[data-href~="${limitedEscapedHref}"]`;
 }
 
 function getStylesheetSelectorFromKey(key: string) {
@@ -2567,11 +2570,10 @@ export function acquireResource(
     switch (resource.type) {
       case 'style': {
         const qualifiedProps: StyleTagQualifyingProps = props;
-        const key = getStyleKey(qualifiedProps.href);
 
         // Attempt to hydrate instance from DOM
         let instance: null | Instance = hoistableRoot.querySelector(
-          getStyleTagSelectorFromKey(key),
+          getStyleTagSelector(qualifiedProps.href),
         );
         if (instance) {
           resource.instance = instance;
@@ -2950,19 +2952,6 @@ export function mountHoistable(
 
 export function unmountHoistable(instance: Instance): void {
   (instance.parentNode: any).removeChild(instance);
-}
-
-// When passing user input into querySelector(All) the embedded string must not alter
-// the semantics of the query. This escape function is safe to use when we know the
-// provided value is going to be wrapped in double quotes as part of an attribute selector
-// Do not use it anywhere else
-// we escape double quotes and backslashes
-const escapeSelectorAttributeValueInsideDoubleQuotesRegex = /[\n\"\\]/g;
-function escapeSelectorAttributeValueInsideDoubleQuotes(value: string): string {
-  return value.replace(
-    escapeSelectorAttributeValueInsideDoubleQuotesRegex,
-    ch => '\\' + ch.charCodeAt(0).toString(16),
-  );
 }
 
 export function isHostHoistableType(
