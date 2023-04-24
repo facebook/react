@@ -188,7 +188,7 @@ export function updateInput(
     if (__DEV__) {
       checkAttributeStringCoercion(name, 'name');
     }
-    node.name = name;
+    node.name = toString(getToStringValue(name));
   } else {
     node.removeAttribute('name');
   }
