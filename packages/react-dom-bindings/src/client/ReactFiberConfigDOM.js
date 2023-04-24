@@ -18,7 +18,9 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
+import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
+import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 // TODO: Remove this deep import when we delete the legacy root API
@@ -163,6 +165,8 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type RendererInspectionConfig = $ReadOnly<{}>;
+
+export type TransitionStatus = FormStatus;
 
 type SelectionInformation = {
   focusedElem: null | HTMLElement,
@@ -3448,3 +3452,5 @@ function insertStylesheetIntoRoot(
   }
   resource.state.loading |= Inserted;
 }
+
+export const NotPendingTransition: TransitionStatus = NotPending;

@@ -34,7 +34,7 @@ const sharedNotPendingObject = {
   action: null,
 };
 
-const NotPending: FormStatus = __DEV__
+export const NotPending: FormStatus = __DEV__
   ? Object.freeze(sharedNotPendingObject)
   : sharedNotPendingObject;
 

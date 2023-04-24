@@ -27,7 +27,9 @@ import type {
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Flags} from './ReactFiberFlags';
+import type {TransitionStatus} from './ReactFiberConfig';
 
+import {NotPendingTransition as NoPendingHostTransition} from './ReactFiberConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
@@ -757,9 +759,9 @@ export function renderTransitionAwareHostComponentWithHooks(
   current: Fiber | null,
   workInProgress: Fiber,
   lanes: Lanes,
-): boolean {
+): TransitionStatus {
   if (!(enableFormActions && enableAsyncActions)) {
-    return false;
+    throw new Error('Not implemented.');
   }
   return renderWithHooks(
     current,
@@ -771,16 +773,19 @@ export function renderTransitionAwareHostComponentWithHooks(
   );
 }
 
-export function TransitionAwareHostComponent(): boolean {
+export function TransitionAwareHostComponent(): TransitionStatus {
   if (!(enableFormActions && enableAsyncActions)) {
-    return false;
+    throw new Error('Not implemented.');
   }
   const dispatcher = ReactCurrentDispatcher.current;
-  const [booleanOrThenable] = dispatcher.useState();
-  return typeof booleanOrThenable === 'boolean'
-    ? booleanOrThenable
-    : // This will suspend until the async action scope has finished.
-      useThenable(booleanOrThenable);
+  const [maybeThenable] = dispatcher.useState();
+  if (typeof maybeThenable.then === 'function') {
+    const thenable: Thenable<TransitionStatus> = (maybeThenable: any);
+    return useThenable(thenable);
+  } else {
+    const status: TransitionStatus = maybeThenable;
+    return status;
+  }
 }
 
 export function checkDidRenderIdHook(): boolean {
@@ -2520,6 +2525,7 @@ function startTransition<S>(
 
 export function startHostTransition<F>(
   formFiber: Fiber,
+  pendingState: TransitionStatus,
   callback: F => mixed,
   formData: F,
 ): void {
@@ -2551,24 +2557,24 @@ export function startHostTransition<F>(
     // Create the state hook used by TransitionAwareHostComponent. This is
     // essentially an inlined version of mountState.
     const queue: UpdateQueue<
-      Thenable<boolean> | boolean,
-      Thenable<boolean> | boolean,
+      Thenable<TransitionStatus> | TransitionStatus,
+      Thenable<TransitionStatus> | TransitionStatus,
     > = {
       pending: null,
       lanes: NoLanes,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
-      lastRenderedState: false,
+      lastRenderedState: NoPendingHostTransition,
     };
     const stateHook: Hook = {
-      memoizedState: false,
-      baseState: false,
+      memoizedState: NoPendingHostTransition,
+      baseState: NoPendingHostTransition,
       baseQueue: null,
       queue: queue,
       next: null,
     };
 
-    const dispatch: (Thenable<boolean> | boolean) => void =
+    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
       (dispatchSetState.bind(null, formFiber, queue): any);
     setPending = queue.dispatch = dispatch;
 
@@ -2582,14 +2588,14 @@ export function startHostTransition<F>(
   } else {
     // This fiber was already upgraded to be stateful.
     const stateHook: Hook = formFiber.memoizedState;
-    const dispatch: (Thenable<boolean> | boolean) => void =
+    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
       stateHook.queue.dispatch;
     setPending = dispatch;
   }
 
   startTransition(
-    true,
-    false,
+    pendingState,
+    NoPendingHostTransition,
     setPending,
     // TODO: We can avoid this extra wrapper, somehow. Figure out layering
     // once more of this function is implemented.
