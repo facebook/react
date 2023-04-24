@@ -99,28 +99,32 @@ async function run(compilerVersion: number): Promise<Results> {
     )
   ).sort();
 
-  // Note: promise.all to ensure parallelism when enabled
-  const entries: Array<[string, TestResult]> = await Promise.all(
-    fixtures.map(async (fixture) => {
-      let output: TestResult;
-      if (PARALLEL) {
-        output = await worker.compile(
+  let entries: Array<[string, TestResult]>;
+  if (PARALLEL) {
+    // Note: promise.all to ensure parallelism when enabled
+    entries = await Promise.all(
+      fixtures.map(async (fixture) => {
+        let output = await worker.compile(
           COMPILER_PATH,
           FIXTURES_PATH,
           fixture,
           compilerVersion
         );
-      } else {
-        output = await compiler.compile(
-          COMPILER_PATH,
-          FIXTURES_PATH,
-          fixture,
-          compilerVersion
-        );
-      }
-      return [fixture, output];
-    })
-  );
+        return [fixture, output];
+      })
+    );
+  } else {
+    entries = [];
+    for (const fixture of fixtures) {
+      let output = await compiler.compile(
+        COMPILER_PATH,
+        FIXTURES_PATH,
+        fixture,
+        compilerVersion
+      );
+      entries.push([fixture, output]);
+    }
+  }
 
   return new Map(entries);
 }
