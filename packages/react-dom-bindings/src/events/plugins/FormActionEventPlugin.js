@@ -53,11 +53,9 @@ function extractEvents(
     if (submitterAction != null) {
       // The submitter overrides the form action.
       action = submitterAction;
-      if (typeof action === 'function') {
-        // If the action is a function, we don't want to pass its name
-        // value to the FormData since it's controlled by the server.
-        submitter = null;
-      }
+      // If the action is a function, we don't want to pass its name
+      // value to the FormData since it's controlled by the server.
+      submitter = null;
     }
   }
 
