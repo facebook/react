@@ -3157,7 +3157,7 @@ export function pushEndInstance(
   target.push(endTag1, stringToChunk(type), endTag2);
 }
 
-export function writeCompletedRoot(
+function writeBootstrap(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
@@ -3167,9 +3167,18 @@ export function writeCompletedRoot(
     writeChunk(destination, bootstrapChunks[i]);
   }
   if (i < bootstrapChunks.length) {
-    return writeChunkAndReturn(destination, bootstrapChunks[i]);
+    const lastChunk = bootstrapChunks[i];
+    bootstrapChunks.length = 0;
+    return writeChunkAndReturn(destination, lastChunk);
   }
   return true;
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeBootstrap(destination, responseState);
 }
 
 // Structural Nodes
@@ -3629,11 +3638,13 @@ export function writeCompletedBoundaryInstruction(
       writeChunk(destination, completeBoundaryScript3b);
     }
   }
+  let writeMore;
   if (scriptFormat) {
-    return writeChunkAndReturn(destination, completeBoundaryScriptEnd);
+    writeMore = writeChunkAndReturn(destination, completeBoundaryScriptEnd);
   } else {
-    return writeChunkAndReturn(destination, completeBoundaryDataEnd);
+    writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
+  return writeBootstrap(destination, responseState) && writeMore;
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
