@@ -8,68 +8,6 @@
  */
 'use strict';
 
-import * as tmp from 'tmp';
-import * as fs from 'fs';
-import replace from '@rollup/plugin-replace';
-import resolve from '@rollup/plugin-node-resolve';
-import {rollup} from 'rollup';
-import path from 'path';
-
-const rollupCache: Map<string, string | null> = new Map();
-
-// Utility function to read and bundle a standalone browser script
-async function getRollupResult(scriptSrc: string): Promise<string | null> {
-  const cachedResult = rollupCache.get(scriptSrc);
-  if (cachedResult !== undefined) {
-    return cachedResult;
-  }
-  let tmpFile;
-  try {
-    tmpFile = tmp.fileSync();
-    const rollupConfig = {
-      input: require.resolve(scriptSrc),
-      onwarn: console.warn,
-      plugins: [
-        replace({__DEV__: 'true', preventAssignment: true}),
-        resolve({
-          rootDir: path.join(__dirname, '..', '..', '..'),
-        }),
-      ],
-      output: {
-        externalLiveBindings: false,
-        freeze: false,
-        interop: false,
-        esModule: false,
-      },
-    };
-    const outputConfig = {
-      file: tmpFile.name,
-      format: 'iife',
-    };
-    const bundle = await rollup(rollupConfig);
-    await bundle.write(outputConfig);
-    const bundleBuffer = Buffer.alloc(4096);
-    let bundleStr = '';
-    while (true) {
-      // $FlowFixMe[incompatible-call]
-      const bytes = fs.readSync(tmpFile.fd, bundleBuffer);
-      if (bytes <= 0) {
-        break;
-      }
-      bundleStr += bundleBuffer.slice(0, bytes).toString();
-    }
-    rollupCache.set(scriptSrc, bundleStr);
-    return bundleStr;
-  } catch (e) {
-    rollupCache.set(scriptSrc, null);
-    return null;
-  } finally {
-    if (tmpFile) {
-      tmpFile.removeCallback();
-    }
-  }
-}
-
 async function insertNodesAndExecuteScripts(
   source: Document | Element,
   target: Node,
@@ -150,12 +88,17 @@ async function executeScript(script: Element) {
   const parent = script.parentNode;
   const scriptSrc = script.getAttribute('src');
   if (scriptSrc) {
-    const rollupOutput = await getRollupResult(scriptSrc);
-    if (rollupOutput) {
-      const transientScript = ownerDocument.createElement('script');
-      transientScript.textContent = rollupOutput;
-      parent.appendChild(transientScript);
-      parent.removeChild(transientScript);
+    if (document !== ownerDocument) {
+      throw new Error(
+        'You must set the current document to the global document to use script src in tests',
+      );
+    }
+    try {
+      // $FlowFixMe
+      require(scriptSrc);
+    } catch (x) {
+      const event = new window.ErrorEvent('error', {error: x});
+      window.dispatchEvent(event);
     }
   } else {
     const newScript = ownerDocument.createElement('script');

@@ -64,7 +64,11 @@ describe('ReactDOMFizzServer', () => {
     });
     streamingContainer = null;
     global.window = jsdom.window;
-    global.document = jsdom.window.document;
+    global.document = global.window.document;
+    global.navigator = global.window.navigator;
+    global.Node = global.window.Node;
+    global.addEventListener = global.window.addEventListener;
+    global.MutationObserver = global.window.MutationObserver;
     container = document.getElementById('container');
 
     Scheduler = require('scheduler');
