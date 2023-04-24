@@ -39,6 +39,7 @@ describe('ReactDOMForm', () => {
   let Suspense;
   let startTransition;
   let textCache;
+  let useFormStatus;
 
   beforeEach(() => {
     jest.resetModules();
@@ -51,6 +52,7 @@ describe('ReactDOMForm', () => {
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
+    useFormStatus = ReactDOM.experimental_useFormStatus;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -845,5 +847,21 @@ describe('ReactDOMForm', () => {
     await act(() => resolveText('Wait'));
     assertLog(['Oh no!', 'Oh no!']);
     expect(container.textContent).toBe('Oh no!');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormStatus exists', async () => {
+    // This API isn't fully implemented yet. This just tests that it's wired
+    // up correctly.
+
+    function App() {
+      const {pending} = useFormStatus();
+      return 'Pending: ' + pending;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    expect(container.textContent).toBe('Pending: false');
   });
 });
