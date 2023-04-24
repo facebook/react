@@ -14,8 +14,8 @@ import path from "path";
 import process from "process";
 import * as readline from "readline";
 import ts from "typescript";
+import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import yargs from "yargs/yargs";
 import { TestResult } from "./compiler-worker";
 import * as compiler from "./compiler-worker.js";
 
@@ -26,26 +26,40 @@ if (process.stdin.isTTY) {
 }
 
 const argv: {
-  sync?: boolean;
-  disableWorkerThreads?: boolean;
-  watch?: boolean;
-  update?: boolean;
-} = yargs(hideBin(process.argv)).argv as any;
+  sync: boolean;
+  workerThreads: boolean;
+  watch: boolean;
+  update: boolean;
+} = yargs
+  .boolean("sync")
+  .describe(
+    "sync",
+    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false."
+  )
+  .default("sync", false)
+  .boolean("worker-threads")
+  .describe(
+    "worker-threads",
+    "Run compiler in worker threads (instead of subprocesses). Defaults to true."
+  )
+  .default("worker-threads", true)
+  .boolean("watch")
+  .describe("watch", "Run in watch mode. Defaults to false (single run).")
+  .default("watch", false)
+  .boolean("update") // Test mode by default, opt-in to update
+  .describe(
+    "update",
+    "Run in update mode. Update mode only affects the first run, subsequent runs (in watch mode) require typing `u` to update. Defaults to false."
+  )
+  .default("update", false)
+  .help("help")
+  .strict()
+  .parseSync(hideBin(process.argv));
 
-// Parallel by default
 const PARALLEL = !argv.sync;
-
-// Enable worker threads by default
-const ENABLE_WORKER_THREADS = !argv.disableWorkerThreads;
-
-// Single-run by default, opt-in to watch mode
-const WATCH = !!argv.watch;
-
-// Test mode by default, opt-in to update
-// NOTE: update mode only affects the first run, subsequent runs (in watch mode)
-// require typing `u` to update
-const UPDATE = !!argv.update;
-
+const ENABLE_WORKER_THREADS = argv.workerThreads;
+const WATCH = argv.watch;
+const UPDATE = argv.update;
 const WORKER_PATH = require.resolve("./compiler-worker.js");
 const COMPILER_PATH = path.join(
   process.cwd(),
@@ -184,7 +198,7 @@ async function update(results: Results): Promise<void> {
 
 function watchSrc(
   onStart: () => void,
-  onComplete: () => void
+  onComplete: (isSuccess: boolean) => void
 ): ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> {
   const configPath = ts.findConfigFile(
     /*searchPath*/ "./",
@@ -200,8 +214,8 @@ function watchSrc(
     {},
     ts.sys,
     createProgram,
-    reportDiagnostic,
-    reportWatchStatusChanged
+    () => {}, // we manually report errors in afterProgramCreate
+    () => {} // we manually report watch status
   );
 
   const origCreateProgram = host.createProgram;
@@ -212,41 +226,54 @@ function watchSrc(
   const origPostProgramCreate = host.afterProgramCreate;
   host.afterProgramCreate = (program) => {
     origPostProgramCreate!(program);
-    onComplete();
+
+    // syntactic diagnostics refer to javascript syntax
+    const errors = program
+      .getSyntacticDiagnostics()
+      .filter((diag) => diag.category === ts.DiagnosticCategory.Error);
+    // semantic diagnostics refer to typescript semantics
+    errors.push(
+      ...program
+        .getSemanticDiagnostics()
+        .filter((diag) => diag.category === ts.DiagnosticCategory.Error)
+    );
+
+    if (errors.length > 0) {
+      for (const diagnostic of errors) {
+        let fileLoc: string;
+        if (diagnostic.file) {
+          // https://github.com/microsoft/TypeScript/blob/ddd5084659c423f4003d2176e12d879b6a5bcf30/src/compiler/program.ts#L663-L674
+          const { line, character } = ts.getLineAndCharacterOfPosition(
+            diagnostic.file,
+            diagnostic.start!
+          );
+          const fileName = path.relative(
+            ts.sys.getCurrentDirectory(),
+            diagnostic.file.fileName
+          );
+          fileLoc = `${fileName}:${line + 1}:${character + 1} - `;
+        } else {
+          fileLoc = "";
+        }
+        console.error(
+          `${fileLoc}error TS${diagnostic.code}:`,
+          ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
+        );
+      }
+      console.error(
+        `Compilation failed (${errors.length} ${
+          errors.length > 1 ? "errors" : "error"
+        }).\n`
+      );
+    }
+
+    const isSuccess = errors.length === 0;
+    onComplete(isSuccess);
   };
 
   // `createWatchProgram` creates an initial program, watches files, and updates
   // the program over time.
   return ts.createWatchProgram(host);
-}
-
-const formatHost = {
-  getCanonicalFileName: (path: string) => path,
-  getCurrentDirectory: ts.sys.getCurrentDirectory,
-  getNewLine: () => ts.sys.newLine,
-};
-
-// Gets called if TS reported any errors with the source.
-// TODO: wire this up, if there are errors we should just report them and
-// probably not run tests.
-function reportDiagnostic(diagnostic: ts.Diagnostic): void {
-  console.error(
-    "Error",
-    diagnostic.code,
-    ":",
-    ts.flattenDiagnosticMessageText(
-      diagnostic.messageText,
-      formatHost.getNewLine()
-    )
-  );
-}
-
-/**
- * Prints a diagnostic every time the watch status changes.
- * This is mainly for messages like "Starting compilation" or "Compilation completed".
- */
-function reportWatchStatusChanged(diagnostic: ts.Diagnostic): void {
-  // console.info(ts.formatDiagnostic(diagnostic, formatHost));
 }
 
 enum Mode {
@@ -258,39 +285,55 @@ enum Mode {
  * Runs the compiler in watch or single-execution mode
  */
 async function main(): Promise<void> {
-  // Monotonically increasing integer to describe the 'version' of the compiler.
-  // This is passed to `compile()` (from compiler-worker) when compiling, so
-  // that the worker knows when it has to reset its module cache and when its
-  // safe to use a cached compiler version
-  let compilerVersion = 0;
-
   if (WATCH) {
+    // Monotonically increasing integer to describe the 'version' of the compiler.
+    // This is passed to `compile()` (from compiler-worker) when compiling, so
+    // that the worker knows when it has to reset its module cache and when its
+    // safe to use a cached compiler version
+    let compilerVersion = 0;
+    let isCompilerValid = false;
+
     function onStart() {
       // Notify the user when compilation starts but don't clear the screen yet
-      console.log("Compiling...");
+      console.log("\nCompiling...");
     }
 
     // Callback to re-run tests after some change
     async function onChange({ mode }: { mode: Mode }) {
-      const start = performance.now();
-      console.clear();
-      console.log("Running tests...");
-      const results = await run(compilerVersion);
-      console.clear();
-      if (mode === Mode.Update) {
-        update(results);
+      if (isCompilerValid) {
+        const start = performance.now();
+        console.clear();
+        console.log("Running tests...");
+        const results = await run(compilerVersion);
+        console.clear();
+        if (mode === Mode.Update) {
+          update(results);
+        } else {
+          report(results);
+        }
+        const end = performance.now();
+        console.log(`Completed in ${Math.floor(end - start)} ms`);
       } else {
-        report(results);
+        console.error(
+          `${mode}: Found errors in Forget source code, skipping test fixtures.`
+        );
       }
-      const end = performance.now();
-      console.log(`Completed in ${end - start} ms`);
+      console.log(
+        "\nWaiting for input or file changes...\n" +
+          "u     - update fixtures\n" +
+          "q     - quit\n" +
+          "[any] - rerun tests\n"
+      );
     }
 
     // Run TS in incremental watch mode
-    const _tsWatch = watchSrc(onStart, () => {
+    const _tsWatch = watchSrc(onStart, (isSuccess) => {
       // Bump the compiler version after a build finishes
       // and re-run tests
-      compilerVersion++;
+      if (isSuccess) {
+        compilerVersion++;
+      }
+      isCompilerValid = isSuccess;
       onChange({ mode: Mode.Test });
     });
 
@@ -331,18 +374,24 @@ async function main(): Promise<void> {
       null;
     tsWatch = watchSrc(
       () => {},
-      async () => {
-        const results = await run(compilerVersion);
-        if (UPDATE) {
-          update(results);
+      async (isSuccess: boolean) => {
+        if (isSuccess) {
+          const results = await run(0);
+          if (UPDATE) {
+            update(results);
+          } else {
+            report(results);
+          }
         } else {
-          report(results);
+          console.error(
+            "Found errors in Forget source code, skipping test fixtures."
+          );
         }
         if (tsWatch != null) {
           tsWatch.close();
         }
         await worker.end();
-        process.exit();
+        process.exit(isSuccess ? 0 : -1);
       }
     );
   }
