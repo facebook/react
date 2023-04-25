@@ -14,6 +14,7 @@ let React;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
+let useMemoCache;
 
 describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ReactTestRenderer = require('react-test-renderer');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
+    useMemoCache = React.unstable_useMemoCache;
   });
 
   it('should inspect the current state of useState hooks', async () => {
@@ -636,7 +638,7 @@ describe('ReactHooksInspectionIntegration', () => {
   // @gate enableUseMemoCacheHook
   it('should support useMemoCache hook', () => {
     function Foo() {
-      const $ = React.unstable_useMemoCache(1);
+      const $ = useMemoCache(1);
       let t0;
 
       if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
