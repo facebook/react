@@ -148,9 +148,9 @@ function processGenerated(directory) {
     const originalContents = readFileSync(file, 'utf8');
     const contents = originalContents
       // Replace {@}format with {@}noformat
-      .replace(/(\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
+      .replace(/(\r?\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
       // Add {@}nolint and {@}generated
-      .replace(' */\n', ` * @nolint\n * ${getSigningToken()}\n */\n`);
+      .replace(/(\r?\n\s*\*)\//, `$1 @nolint$1 ${getSigningToken()}$1/`);
     const signedContents = signFile(contents);
     writeFileSync(file, signedContents, 'utf8');
   });
