@@ -183,7 +183,7 @@ describe('ReactDOMFizzForm', () => {
   });
 
   // @gate enableFormActions || !__DEV__
-  it('should warn when passing a string during SSR and function during hydration', async () => {
+  it('should ideally warn when passing a string during SSR and function during hydration', async () => {
     function action(formData) {}
     function App({isClient}) {
       return (
@@ -195,13 +195,10 @@ describe('ReactDOMFizzForm', () => {
 
     const stream = await ReactDOMServer.renderToReadableStream(<App />);
     await readIntoContainer(stream);
-    await expect(async () => {
-      await act(async () => {
-        ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
-      });
-    }).toErrorDev(
-      'Prop `action` did not match. Server: "action" Client: "function action(formData) {}"',
-    );
+    // This should ideally warn because only the client provides a function that doesn't line up.
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />);
+    });
   });
 
   // @gate enableFormActions || !__DEV__
@@ -471,5 +468,134 @@ describe('ReactDOMFizzForm', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container.textContent).toBe('hi');
+  });
+
+  // @gate enableFormActions
+  it('can provide a custom action on the server for actions', async () => {
+    const ref = React.createRef();
+    let foo;
+
+    function action(formData) {
+      foo = formData.get('foo');
+    }
+    action.$$FORM_ACTION = function (identifierPrefix) {
+      const extraFields = new FormData();
+      extraFields.append(identifierPrefix + 'hello', 'world');
+      return {
+        action: this.name,
+        name: identifierPrefix,
+        method: 'POST',
+        encType: 'multipart/form-data',
+        target: 'self',
+        data: extraFields,
+      };
+    };
+    function App() {
+      return (
+        <form action={action} ref={ref} method={null}>
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+
+    const form = container.firstChild;
+    expect(form.getAttribute('action')).toBe('action');
+    expect(form.getAttribute('method')).toBe('POST');
+    expect(form.getAttribute('enctype')).toBe('multipart/form-data');
+    expect(form.getAttribute('target')).toBe('self');
+    const formActionName = form.firstChild.getAttribute('name');
+    expect(
+      container
+        .querySelector('input[name="' + formActionName + 'hello"]')
+        .getAttribute('value'),
+    ).toBe('world');
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    submit(ref.current);
+
+    expect(foo).toBe('bar');
+  });
+
+  // @gate enableFormActions
+  it('can provide a custom action on buttons the server for actions', async () => {
+    const inputRef = React.createRef();
+    const buttonRef = React.createRef();
+    let foo;
+
+    function action(formData) {
+      foo = formData.get('foo');
+    }
+    action.$$FORM_ACTION = function (identifierPrefix) {
+      const extraFields = new FormData();
+      extraFields.append(identifierPrefix + 'hello', 'world');
+      return {
+        action: this.name,
+        name: identifierPrefix,
+        method: 'POST',
+        encType: 'multipart/form-data',
+        target: 'self',
+        data: extraFields,
+      };
+    };
+    function App() {
+      return (
+        <form>
+          <input type="hidden" name="foo" value="bar" />
+          <input
+            type="submit"
+            formAction={action}
+            method={null}
+            ref={inputRef}
+          />
+          <button formAction={action} ref={buttonRef} target={null} />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+
+    const input = container.getElementsByTagName('input')[1];
+    const button = container.getElementsByTagName('button')[0];
+    expect(input.getAttribute('formaction')).toBe('action');
+    expect(input.getAttribute('formmethod')).toBe('POST');
+    expect(input.getAttribute('formenctype')).toBe('multipart/form-data');
+    expect(input.getAttribute('formtarget')).toBe('self');
+    expect(button.getAttribute('formaction')).toBe('action');
+    expect(button.getAttribute('formmethod')).toBe('POST');
+    expect(button.getAttribute('formenctype')).toBe('multipart/form-data');
+    expect(button.getAttribute('formtarget')).toBe('self');
+    const inputName = input.getAttribute('name');
+    const buttonName = button.getAttribute('name');
+    expect(
+      container
+        .querySelector('input[name="' + inputName + 'hello"]')
+        .getAttribute('value'),
+    ).toBe('world');
+    expect(
+      container
+        .querySelector('input[name="' + buttonName + 'hello"]')
+        .getAttribute('value'),
+    ).toBe('world');
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    submit(inputRef.current);
+
+    expect(foo).toBe('bar');
+
+    foo = null;
+
+    submit(buttonRef.current);
+
+    expect(foo).toBe('bar');
   });
 });

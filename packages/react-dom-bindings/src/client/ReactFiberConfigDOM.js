@@ -1445,7 +1445,7 @@ export function shouldDeleteUnhydratedTailInstances(
   return (
     (enableHostSingletons ||
       (parentType !== 'head' && parentType !== 'body')) &&
-    (!enableFormActions || parentType !== 'form')
+    (!enableFormActions || (parentType !== 'form' && parentType !== 'button'))
   );
 }
 
