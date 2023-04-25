@@ -10440,7 +10440,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1178 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-25b99efe0-20230425",
+    version: "18.3.0-next-f87e97a0a-20230425",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10495,7 +10495,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-25b99efe0-20230425"
+  reconcilerVersion: "18.3.0-next-f87e97a0a-20230425"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
