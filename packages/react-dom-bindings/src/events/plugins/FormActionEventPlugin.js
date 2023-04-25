@@ -114,3 +114,11 @@ function extractEvents(
 }
 
 export {extractEvents};
+
+export function dispatchReplayedFormAction(
+  formInst: Fiber,
+  action: FormData => void | Promise<void>,
+  formData: FormData,
+): void {
+  startHostTransition(formInst, action, formData);
+}

@@ -225,19 +225,25 @@ export function dispatchEvent(
   );
 }
 
+export function findInstanceBlockingEvent(
+  nativeEvent: AnyNativeEvent,
+): null | Container | SuspenseInstance {
+  const nativeEventTarget = getEventTarget(nativeEvent);
+  return findInstanceBlockingTarget(nativeEventTarget);
+}
+
 export let return_targetInst: null | Fiber = null;
 
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
-export function findInstanceBlockingEvent(
-  nativeEvent: AnyNativeEvent,
+export function findInstanceBlockingTarget(
+  targetNode: Node,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
 
   return_targetInst = null;
 
-  const nativeEventTarget = getEventTarget(nativeEvent);
-  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
+  let targetInst = getClosestInstanceFromNode(targetNode);
 
   if (targetInst !== null) {
     const nearestMounted = getNearestMountedFiber(targetInst);

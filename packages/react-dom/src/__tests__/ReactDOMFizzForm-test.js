@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {insertNodesAndExecuteScripts} from '../test-utils/FizzTestUtils';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
@@ -65,7 +67,9 @@ describe('ReactDOMFizzForm', () => {
       }
       result += Buffer.from(value).toString('utf8');
     }
-    container.innerHTML = result;
+    const temp = document.createElement('div');
+    temp.innerHTML = result;
+    insertNodesAndExecuteScripts(temp, container, null);
   }
 
   // @gate enableFormActions
@@ -377,5 +381,76 @@ describe('ReactDOMFizzForm', () => {
 
     await act(() => ReactDOMClient.hydrateRoot(container, <App />));
     expect(container.textContent).toBe('Pending: false');
+  });
+
+  // @gate enableFormActions
+  it('should replay a form action after hydration', async () => {
+    let foo;
+    function action(formData) {
+      foo = formData.get('foo');
+    }
+    function App() {
+      return (
+        <form action={action}>
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+
+    // Dispatch an event before hydration
+    submit(container.getElementsByTagName('form')[0]);
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    // It should've now been replayed
+    expect(foo).toBe('bar');
+  });
+
+  // @gate enableFormActions
+  it('should replay input/button formAction', async () => {
+    let rootActionCalled = false;
+    let savedTitle = null;
+    let deletedTitle = null;
+
+    function action(formData) {
+      rootActionCalled = true;
+    }
+
+    function saveItem(formData) {
+      savedTitle = formData.get('title');
+    }
+
+    function deleteItem(formData) {
+      deletedTitle = formData.get('title');
+    }
+
+    function App() {
+      return (
+        <form action={action}>
+          <input type="text" name="title" defaultValue="Hello" />
+          <input type="submit" formAction={saveItem} value="Save" />
+          <button formAction={deleteItem}>Delete</button>
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+
+    submit(container.getElementsByTagName('input')[1]);
+    submit(container.getElementsByTagName('button')[0]);
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    expect(savedTitle).toBe('Hello');
+    expect(deletedTitle).toBe('Hello');
+    expect(rootActionCalled).toBe(false);
   });
 });
