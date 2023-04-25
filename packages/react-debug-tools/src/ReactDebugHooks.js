@@ -30,8 +30,6 @@ import {
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
 
-const MEMO_CACHE_SENTINEL = Symbol.for('react.memo_cache_sentinel');
-
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
 // Used to track hooks called during a render
@@ -367,6 +365,7 @@ function useMemoCache(size: number): Array<any> {
 
   let data = memoCache.data[memoCache.index];
   if (data === undefined) {
+    const MEMO_CACHE_SENTINEL = Symbol.for('react.memo_cache_sentinel');
     data = new Array(size);
     for (let i = 0; i < size; i++) {
       data[i] = MEMO_CACHE_SENTINEL;
