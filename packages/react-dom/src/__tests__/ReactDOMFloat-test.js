@@ -3391,6 +3391,166 @@ body {
     );
   });
 
+  it('will not flush a preload for a new rendered Stylesheet Resource if one was already flushed', async () => {
+    function Component() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <BlockedOn value="blocked">
+              <link rel="stylesheet" href="foo" precedence="default" />
+              hello
+            </BlockedOn>
+          </Suspense>
+        </div>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('blocked');
+    });
+    await act(loadStylesheets);
+    assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will not flush a preload for a new preinitialized Stylesheet Resource if one was already flushed', async () => {
+    function Component() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <BlockedOn value="blocked">
+              <Preinit />
+              hello
+            </BlockedOn>
+          </Suspense>
+        </div>
+      );
+    }
+
+    function Preinit() {
+      ReactDOM.preinit('foo', {as: 'style'});
+    }
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('blocked');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will not insert a preload if the underlying resource already exists in the Document', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <script async={true} src="bar" />
+            <link rel="preload" href="baz" as="font" />
+          </head>
+          <body>
+            <div id="container" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <script async="" src="bar" />
+          <link rel="preload" href="baz" as="font" />
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    container = document.getElementById('container');
+
+    function ClientApp() {
+      ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preload('bar', {as: 'script'});
+      ReactDOM.preload('baz', {as: 'font'});
+      return 'foo';
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+
+    await clientAct(() => root.render(<ClientApp />));
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <script async="" src="bar" />
+          <link rel="preload" href="baz" as="font" />
+        </head>
+        <body>
+          <div id="container">foo</div>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {

@@ -2138,8 +2138,12 @@ function preload(href: string, options: PreloadOptions) {
     const as = options.as;
     const limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    const preloadKey = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
-    let key = preloadKey;
+    const preloadSelector = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
+
+    // Some preloads are keyed under their selector. This happens when the preload is for
+    // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
+    // Here we figure out which key to use to determine if we have a preload already.
+    let key = preloadSelector;
     switch (as) {
       case 'style':
         key = getStyleKey(href);
@@ -2152,7 +2156,20 @@ function preload(href: string, options: PreloadOptions) {
       const preloadProps = preloadPropsFromPreloadOptions(href, as, options);
       preloadPropsMap.set(key, preloadProps);
 
-      if (null === ownerDocument.querySelector(preloadKey)) {
+      if (null === ownerDocument.querySelector(preloadSelector)) {
+        if (
+          as === 'style' &&
+          ownerDocument.querySelector(getStylesheetSelectorFromKey(key))
+        ) {
+          // We already have a stylesheet for this key. We don't need to preload it.
+          return;
+        } else if (
+          as === 'script' &&
+          ownerDocument.querySelector(getScriptSelectorFromKey(key))
+        ) {
+          // We already have a stylesheet for this key. We don't need to preload it.
+          return;
+        }
         const instance = ownerDocument.createElement('link');
         setInitialProperties(instance, 'link', preloadProps);
         markNodeAsHoistable(instance);

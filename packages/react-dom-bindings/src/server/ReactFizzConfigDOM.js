@@ -1900,6 +1900,7 @@ function pushLink(
         if (!resource) {
           const resourceProps = stylesheetPropsFromRawProps(props);
           const preloadResource = resources.preloadsMap.get(key);
+          let state = NoState;
           if (preloadResource) {
             // If we already had a preload we don't want that resource to flush directly.
             // We let the newly created resource govern flushing.
@@ -1908,11 +1909,14 @@ function pushLink(
               resourceProps,
               preloadResource.props,
             );
+            if (preloadResource.state & Flushed) {
+              state = PreloadFlushed;
+            }
           }
           resource = {
             type: 'stylesheet',
             chunks: ([]: Array<Chunk | PrecomputedChunk>),
-            state: NoState,
+            state,
             props: resourceProps,
           };
           resources.stylesMap.set(key, resource);
@@ -4004,12 +4008,9 @@ function flushAllStylesInPreamble(
 }
 
 function preloadLateStyle(this: Destination, resource: StyleResource) {
-  if (__DEV__) {
-    if (resource.state & PreloadFlushed) {
-      console.error(
-        'React encountered a Stylesheet Resource that already flushed a Preload when it was not expected to. This is a bug in React.',
-      );
-    }
+  if (resource.state & PreloadFlushed) {
+    // This resource has already had a preload flushed
+    return;
   }
 
   if (resource.type === 'style') {
@@ -5209,10 +5210,15 @@ function preinit(href: string, options: PreinitOptions): void {
           }
         }
         if (!resource) {
+          let state = NoState;
+          const preloadResource = resources.preloadsMap.get(key);
+          if (preloadResource && preloadResource.state & Flushed) {
+            state = PreloadFlushed;
+          }
           resource = {
             type: 'stylesheet',
             chunks: ([]: Array<Chunk | PrecomputedChunk>),
-            state: NoState,
+            state,
             props: stylesheetPropsFromPreinitOptions(href, precedence, options),
           };
           resources.stylesMap.set(key, resource);
