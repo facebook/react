@@ -3496,6 +3496,61 @@ body {
     );
   });
 
+  it('will not insert a preload if the underlying resource already exists in the Document', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <script async={true} src="bar" />
+            <link rel="preload" href="baz" as="font" />
+          </head>
+          <body>
+            <div id="container" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <script async="" src="bar" />
+          <link rel="preload" href="baz" as="font" />
+        </head>
+        <body>
+          <div id="container" />
+        </body>
+      </html>,
+    );
+
+    container = document.getElementById('container');
+
+    function ClientApp() {
+      ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preload('bar', {as: 'script'});
+      ReactDOM.preload('baz', {as: 'font'});
+      return 'foo';
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+
+    await clientAct(() => root.render(<ClientApp />));
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <script async="" src="bar" />
+          <link rel="preload" href="baz" as="font" />
+        </head>
+        <body>
+          <div id="container">foo</div>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
