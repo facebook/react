@@ -59,7 +59,11 @@ describe('ReactDOMFloat', () => {
     });
     streamingContainer = null;
     global.window = jsdom.window;
-    global.document = jsdom.window.document;
+    global.document = global.window.document;
+    global.navigator = global.window.navigator;
+    global.Node = global.window.Node;
+    global.addEventListener = global.window.addEventListener;
+    global.MutationObserver = global.window.MutationObserver;
     container = document.getElementById('container');
 
     React = require('react');
@@ -95,7 +99,7 @@ describe('ReactDOMFloat', () => {
     renderOptions = {};
     if (gate(flags => flags.enableFizzExternalRuntime)) {
       renderOptions.unstable_externalRuntimeSrc =
-        'react-dom-bindings/src/server/ReactDOMServerExternalRuntime.js';
+        'react-dom/unstable_server-external-runtime';
     }
   });
 
