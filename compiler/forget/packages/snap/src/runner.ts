@@ -329,6 +329,15 @@ export async function main(opts: RunnerOptions): Promise<void> {
     // safe to use a cached compiler version
     let compilerVersion = 0;
     let isCompilerValid = false;
+    let lastUpdate = -1;
+
+    function isRealUpdate(): boolean {
+      // Try to ignore changes that occurred as a result of our explicitly updating
+      // fixtures in update().
+      // Currently keeps a timestamp of last known changes, and ignore events that occurred
+      // around that timestamp.
+      return performance.now() - lastUpdate > 5000;
+    }
 
     function onStart() {
       // Notify the user when compilation starts but don't clear the screen yet
@@ -349,6 +358,9 @@ export async function main(opts: RunnerOptions): Promise<void> {
           report(results);
         }
         const end = performance.now();
+        if (mode === Mode.Update) {
+          lastUpdate = end;
+        }
         console.log(`Completed in ${Math.floor(end - start)} ms`);
       } else {
         console.error(
@@ -378,9 +390,6 @@ export async function main(opts: RunnerOptions): Promise<void> {
     });
 
     // Watch the fixtures directory for changes
-    // TODO: ignore changes that occurred as a result of our explicitly updating
-    // fixtures in update() - maybe keep a timestamp of last known changes, and
-    // ignore events that occurred prior to that timestamp.
     const fileSubscription = watcher.subscribe(
       FIXTURES_PATH,
       async (err, _events) => {
@@ -388,8 +397,10 @@ export async function main(opts: RunnerOptions): Promise<void> {
           console.error(err);
           process.exit(1);
         }
-        // Fixtures changed, re-run tests
-        onChange({ mode: Mode.Test });
+        if (isRealUpdate()) {
+          // Fixtures changed, re-run tests
+          onChange({ mode: Mode.Test });
+        }
       }
     );
 
