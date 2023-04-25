@@ -3391,6 +3391,111 @@ body {
     );
   });
 
+  it('will not flush a preload for a new rendered Stylesheet Resource if one was already flushed', async () => {
+    function Component() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <BlockedOn value="blocked">
+              <link rel="stylesheet" href="foo" precedence="default" />
+              hello
+            </BlockedOn>
+          </Suspense>
+        </div>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('blocked');
+    });
+    await act(loadStylesheets);
+    assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will not flush a preload for a new preinitialized Stylesheet Resource if one was already flushed', async () => {
+    function Component() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <BlockedOn value="blocked">
+              <Preinit />
+              hello
+            </BlockedOn>
+          </Suspense>
+        </div>
+      );
+    }
+
+    function Preinit() {
+      ReactDOM.preinit('foo', {as: 'style'});
+    }
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>loading...</div>
+        </body>
+      </html>,
+    );
+    await act(() => {
+      resolveText('blocked');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
