@@ -8,6 +8,7 @@
 import watcher from "@parcel/watcher";
 import chalk from "chalk";
 import fs from "fs/promises";
+import invariant from "invariant";
 import { diff } from "jest-diff";
 import { Worker } from "jest-worker";
 import path from "path";
@@ -18,6 +19,24 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { TestResult } from "./compiler-worker";
 import * as compiler from "./compiler-worker.js";
+import { exists } from "./utils";
+
+const WORKER_PATH = require.resolve("./compiler-worker.js");
+const COMPILER_PATH = path.join(
+  process.cwd(),
+  "dist",
+  "Babel",
+  "RunReactForgetBabelPlugin.js"
+);
+const FIXTURES_PATH = path.join(
+  process.cwd(),
+  "src",
+  "__tests__",
+  "fixtures",
+  "compiler"
+);
+const FILTER_FILENAME = "testfilter.txt";
+const FILTER_PATH = path.join(process.cwd(), FILTER_FILENAME);
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -39,8 +58,7 @@ type Results = Map<string, TestResult>;
 type RunnerOptions = {
   sync: boolean;
   workerThreads: boolean;
-  watch: boolean;
-  update: boolean;
+  mode: "watch" | "update" | "filter" | null;
 };
 
 const opts: RunnerOptions = yargs
@@ -56,33 +74,19 @@ const opts: RunnerOptions = yargs
     "Run compiler in worker threads (instead of subprocesses). Defaults to true."
   )
   .default("worker-threads", true)
-  .boolean("watch")
-  .describe("watch", "Run in watch mode. Defaults to false (single run).")
-  .default("watch", false)
-  .boolean("update") // Test mode by default, opt-in to update
   .describe(
-    "update",
-    "Run in update mode. Update mode only affects the first run, subsequent runs (in watch mode) require typing `u` to update. Defaults to false."
+    "mode",
+    "Snap tester modes:\n" +
+      "  [default] - test all test fixtures\n" +
+      `  filter    - test filtered fixtures ("${FILTER_FILENAME}")\n` +
+      "  update    - update all test fixtures)\n" +
+      "  watch     - watch for changes"
   )
-  .default("update", false)
+  .choices("mode", ["watch", "update", "filter", null])
+  .default("mode", null)
   .help("help")
   .strict()
   .parseSync(hideBin(process.argv));
-
-const WORKER_PATH = require.resolve("./compiler-worker.js");
-const COMPILER_PATH = path.join(
-  process.cwd(),
-  "dist",
-  "Babel",
-  "RunReactForgetBabelPlugin.js"
-);
-const FIXTURES_PATH = path.join(
-  process.cwd(),
-  "src",
-  "__tests__",
-  "fixtures",
-  "compiler"
-);
 
 /**
  * Cleanup / handle interrupts
@@ -109,19 +113,37 @@ function clearConsole() {
 async function run(
   worker: Worker & typeof compiler,
   opts: RunnerOptions,
+  filter: TestFilter | null,
   compilerVersion: number
 ): Promise<Results> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
   // the directory each time.
   const files = await fs.readdir(FIXTURES_PATH);
-  const fixtures = Array.from(
+  const allFixtures = Array.from(
     new Set(
       files.map((file) => {
         return path.basename(path.basename(file, ".js"), ".expect.md");
       })
     )
   ).sort();
+
+  let fixtures;
+  if (filter) {
+    if (filter.kind === "only") {
+      fixtures = allFixtures.filter(
+        (name) => filter.paths.indexOf(name) !== -1
+      );
+    } else if (filter.kind === "skip") {
+      fixtures = allFixtures.filter(
+        (name) => filter.paths.indexOf(name) === -1
+      );
+    } else {
+      invariant(false, "Internal snap error.");
+    }
+  } else {
+    fixtures = allFixtures;
+  }
 
   let entries: Array<[string, TestResult]>;
   if (!opts.sync) {
@@ -309,6 +331,50 @@ enum Mode {
   Update = "Update",
 }
 
+type TestFilter =
+  | {
+      kind: "only";
+      paths: Array<string>;
+    }
+  | {
+      kind: "skip";
+      paths: Array<string>;
+    };
+
+async function readTestFilter(): Promise<TestFilter | null> {
+  const input = (await exists(FILTER_PATH))
+    ? await fs.readFile(FILTER_PATH, "utf8")
+    : null;
+  if (input === null) {
+    return null;
+  }
+
+  const lines = input.trim().split("\n");
+  if (lines.length < 2) {
+    console.warn("Misformed filter file. Expected at least two lines.");
+    return null;
+  }
+
+  let filter: "only" | "skip" | null = null;
+  if (lines[0]!.indexOf("@only") !== -1) {
+    filter = "only";
+  }
+  if (lines[0]!.indexOf("@skip") !== -1) {
+    filter = "skip";
+  }
+  if (filter === null) {
+    console.warn(
+      "Misformed filter file. Expected first line to contain @only or @skip"
+    );
+    return null;
+  }
+  lines.shift();
+  return {
+    kind: filter,
+    paths: lines,
+  };
+}
+
 /**
  * Runs the compiler in watch or single-execution mode
  */
@@ -322,7 +388,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     worker.end();
   });
 
-  if (opts.watch) {
+  if (opts.mode === "watch") {
     // Monotonically increasing integer to describe the 'version' of the compiler.
     // This is passed to `compile()` (from compiler-worker) when compiling, so
     // that the worker knows when it has to reset its module cache and when its
@@ -330,6 +396,8 @@ export async function main(opts: RunnerOptions): Promise<void> {
     let compilerVersion = 0;
     let isCompilerValid = false;
     let lastUpdate = -1;
+    let filterMode: boolean = false;
+    let testFilter: TestFilter | null = await readTestFilter();
 
     function isRealUpdate(): boolean {
       // Try to ignore changes that occurred as a result of our explicitly updating
@@ -350,7 +418,12 @@ export async function main(opts: RunnerOptions): Promise<void> {
         const start = performance.now();
         clearConsole();
         console.log("Running tests...");
-        const results = await run(worker, opts, compilerVersion);
+        const results = await run(
+          worker,
+          opts,
+          filterMode ? testFilter : null,
+          compilerVersion
+        );
         clearConsole();
         if (mode === Mode.Update) {
           update(results);
@@ -368,8 +441,13 @@ export async function main(opts: RunnerOptions): Promise<void> {
         );
       }
       console.log(
-        "\nWaiting for input or file changes...\n" +
-          "u     - update fixtures\n" +
+        "\n" +
+          (filterMode
+            ? `Current mode = FILTER, filter test fixtures by "${FILTER_FILENAME}".`
+            : "Current mode = NORMAL, run all test fixtures.") +
+          "\nWaiting for input or file changes...\n" +
+          "u     - update all fixtures\n" +
+          `f     - toggle (turn ${filterMode ? "off" : "on"}) filter mode\n` +
           "q     - quit\n" +
           "[any] - rerun tests\n"
       );
@@ -414,6 +492,33 @@ export async function main(opts: RunnerOptions): Promise<void> {
         });
     });
 
+    const filterSubscription = watcher.subscribe(
+      process.cwd(),
+      async (err, events) => {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        } else if (
+          events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !==
+          -1
+        ) {
+          testFilter = await readTestFilter();
+          if (filterMode) {
+            onChange({ mode: Mode.Test });
+          }
+        }
+      }
+    );
+    pushCleanupTask(() => {
+      filterSubscription
+        .then((subscription) => {
+          subscription.unsubscribe();
+        })
+        .catch((err) => {
+          console.log("error cleaning up filter subscription", err);
+        });
+    });
+
     // Basic key event handling
     process.stdin.on("keypress", (str, key) => {
       if (key.name === "u") {
@@ -421,6 +526,9 @@ export async function main(opts: RunnerOptions): Promise<void> {
         onChange({ mode: Mode.Update });
       } else if (key.name === "q") {
         process.exit(0);
+      } else if (key.name === "f") {
+        filterMode = !filterMode;
+        onChange({ mode: Mode.Test });
       } else {
         // any other key re-runs tests
         onChange({ mode: Mode.Test });
@@ -435,8 +543,10 @@ export async function main(opts: RunnerOptions): Promise<void> {
       () => {},
       async (isSuccess: boolean) => {
         if (isSuccess) {
-          const results = await run(worker, opts, 0);
-          if (opts.update) {
+          const testFilter =
+            opts.mode === "filter" ? await readTestFilter() : null;
+          const results = await run(worker, opts, testFilter, 0);
+          if (opts.mode === "update") {
             update(results);
           } else {
             report(results);

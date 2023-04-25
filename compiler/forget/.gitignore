@@ -6,3 +6,4 @@ package-lock.json
 .vscode
 !packages/playground/.vscode
 .spr.yml
+testfilter.txt
