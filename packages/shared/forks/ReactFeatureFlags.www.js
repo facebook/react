@@ -73,7 +73,7 @@ export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 
-export const enableFormActions = true;
+export const enableFormActions = false;
 
 export const disableJavaScriptURLs = true;
 
