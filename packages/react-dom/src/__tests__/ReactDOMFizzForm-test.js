@@ -19,6 +19,7 @@ let container;
 let React;
 let ReactDOMServer;
 let ReactDOMClient;
+let useFormStatus;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('ReactDOMFizzForm', () => {
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
+    useFormStatus = require('react-dom').experimental_useFormStatus;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -359,5 +361,21 @@ describe('ReactDOMFizzForm', () => {
     expect(buttonRef.current.getAttribute('formEncType')).toBe('text/plain');
     expect(buttonRef.current.hasAttribute('formMethod')).toBe(false);
     expect(buttonRef.current.hasAttribute('formTarget')).toBe(false);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormStatus is not pending during server render', async () => {
+    function App() {
+      const {pending} = useFormStatus();
+      return 'Pending: ' + pending;
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+    expect(container.textContent).toBe('Pending: false');
+
+    await act(() => ReactDOMClient.hydrateRoot(container, <App />));
+    expect(container.textContent).toBe('Pending: false');
   });
 });
