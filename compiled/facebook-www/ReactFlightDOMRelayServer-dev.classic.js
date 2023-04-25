@@ -18,6 +18,7 @@ if (__DEV__) {
 
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl");
 var ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration");
+var ReactDOM = require("react-dom");
 var React = require("react");
 
 // This refers to a WWW module.
@@ -142,6 +143,10 @@ function processImportChunk(request, id, clientReferenceMetadata) {
   // The clientReferenceMetadata is already a JSON serializable value.
   return ["I", id, clientReferenceMetadata];
 }
+function processHintChunk(request, id, code, model) {
+  // The hint is already a JSON serializable value.
+  return ["H", code, model];
+}
 function scheduleWork(callback) {
   callback();
 }
@@ -152,6 +157,128 @@ function writeChunkAndReturn(destination, chunk) {
 }
 function closeWithError(destination, error) {
   ReactFlightDOMRelayServerIntegration.close(destination);
+}
+
+var ReactDOMSharedInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+// Re-export dynamic flags from the www version.
+require("ReactFeatureFlags");
+
+var ReactDOMFlightServerDispatcher = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preinit: preinit
+};
+
+function prefetchDNS(href, options) {
+  {
+    if (typeof href === "string") {
+      var request = resolveRequest();
+
+      if (request) {
+        var hints = getHints(request);
+        var key = "D" + href;
+
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+
+        hints.add(key);
+
+        if (options) {
+          emitHint(request, "D", [href, options]);
+        } else {
+          emitHint(request, "D", href);
+        }
+      }
+    }
+  }
+}
+
+function preconnect(href, options) {
+  {
+    if (typeof href === "string") {
+      var request = resolveRequest();
+
+      if (request) {
+        var hints = getHints(request);
+        var crossOrigin =
+          options == null || typeof options.crossOrigin !== "string"
+            ? null
+            : options.crossOrigin === "use-credentials"
+            ? "use-credentials"
+            : "";
+        var key =
+          "C" + (crossOrigin === null ? "null" : crossOrigin) + "|" + href;
+
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+
+        hints.add(key);
+
+        if (options) {
+          emitHint(request, "C", [href, options]);
+        } else {
+          emitHint(request, "C", href);
+        }
+      }
+    }
+  }
+}
+
+function preload(href, options) {
+  {
+    if (typeof href === "string") {
+      var request = resolveRequest();
+
+      if (request) {
+        var hints = getHints(request);
+        var key = "L" + href;
+
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+
+        hints.add(key);
+        emitHint(request, "L", [href, options]);
+      }
+    }
+  }
+}
+
+function preinit(href, options) {
+  {
+    if (typeof href === "string") {
+      var request = resolveRequest();
+
+      if (request) {
+        var hints = getHints(request);
+        var key = "I" + href;
+
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+
+        hints.add(key);
+        emitHint(request, "I", [href, options]);
+      }
+    }
+  }
+}
+
+var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+function prepareHostDispatcher() {
+  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
+} // Used to distinguish these contexts from ones used in other renderers.
+function createHints() {
+  return new Set();
 }
 
 // ATTENTION
@@ -397,9 +524,6 @@ function readContext$1(context) {
   return value;
 }
 
-// Re-export dynamic flags from the www version.
-require("ReactFeatureFlags");
-
 // Corresponds to ReactFiberWakeable and ReactFizzWakeable modules. Generally,
 // changes to one module should be reflected in the others.
 // TODO: Rename this module and the corresponding Fiber one to "Thenable"
@@ -522,14 +646,14 @@ function getSuspendedThenable() {
   return thenable;
 }
 
-var currentRequest = null;
+var currentRequest$1 = null;
 var thenableIndexCounter = 0;
 var thenableState = null;
 function prepareToUseHooksForRequest(request) {
-  currentRequest = request;
+  currentRequest$1 = request;
 }
 function resetHooksForRequest() {
-  currentRequest = null;
+  currentRequest$1 = null;
 }
 function prepareToUseHooksForComponent(prevThenableState) {
   thenableIndexCounter = 0;
@@ -551,7 +675,7 @@ function readContext(context) {
       }
     }
 
-    if (currentRequest === null) {
+    if (currentRequest$1 === null) {
       error(
         "Context can only be read while React is rendering. " +
           "In classes, you can read it in the render method or getDerivedStateFromProps. " +
@@ -612,13 +736,13 @@ function unsupportedRefresh() {
 }
 
 function useId() {
-  if (currentRequest === null) {
+  if (currentRequest$1 === null) {
     throw new Error("useId can only be used while React is rendering");
   }
 
-  var id = currentRequest.identifierCount++; // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
+  var id = currentRequest$1.identifierCount++; // use 'S' for Flight components to distinguish from 'R' and 'r' in Fizz/Client
 
-  return ":" + currentRequest.identifierPrefix + "S" + id.toString(32) + ":";
+  return ":" + currentRequest$1.identifierPrefix + "S" + id.toString(32) + ":";
 }
 
 function use(usable) {
@@ -659,9 +783,11 @@ function createSignal() {
 }
 
 function resolveCache() {
-  if (currentCache) return currentCache;
-  // active and so to support cache() and fetch() outside of render, we yield
-  // an empty Map.
+  var request = resolveRequest();
+
+  if (request) {
+    return getCache(request);
+  }
 
   return new Map();
 }
@@ -691,14 +817,6 @@ var DefaultCacheDispatcher = {
     return entry;
   }
 };
-var currentCache = null;
-function setCurrentCache(cache) {
-  currentCache = cache;
-  return currentCache;
-}
-function getCurrentCache() {
-  return currentCache;
-}
 
 // in case they error.
 
@@ -780,7 +898,7 @@ function describeValueForErrorMessage(value) {
   switch (typeof value) {
     case "string": {
       return JSON.stringify(
-        value.length <= 10 ? value : value.substr(0, 10) + "..."
+        value.length <= 10 ? value : value.slice(0, 10) + "..."
       );
     }
 
@@ -1065,20 +1183,25 @@ function createRequest(
     );
   }
 
+  prepareHostDispatcher();
   ReactCurrentCache.current = DefaultCacheDispatcher;
   var abortSet = new Set();
   var pingedTasks = [];
+  var hints = createHints();
   var request = {
     status: OPEN,
+    flushScheduled: false,
     fatalError: null,
     destination: null,
     bundlerConfig: bundlerConfig,
     cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
+    hints: hints,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     completedImportChunks: [],
+    completedHintChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
     writtenSymbols: new Map(),
@@ -1098,6 +1221,12 @@ function createRequest(
   var rootTask = createTask(request, model, rootContext, abortSet);
   pingedTasks.push(rootTask);
   return request;
+}
+var currentRequest = null;
+function resolveRequest() {
+  if (currentRequest) return currentRequest;
+
+  return null;
 }
 
 function createRootContext(reqContext) {
@@ -1192,6 +1321,17 @@ function serializeThenable(request, thenable) {
     }
   );
   return newTask.id;
+}
+
+function emitHint(request, code, model) {
+  emitHintChunk(request, code, model);
+  enqueueFlush(request);
+}
+function getHints(request) {
+  return request.hints;
+}
+function getCache(request) {
+  return request.cache;
 }
 
 function readThenable(thenable) {
@@ -1400,6 +1540,7 @@ function pingTask(request, task) {
   pingedTasks.push(task);
 
   if (pingedTasks.length === 1) {
+    request.flushScheduled = request.destination !== null;
     scheduleWork(function () {
       return performWork(request);
     });
@@ -1442,8 +1583,32 @@ function serializeProviderReference(name) {
   return "$P" + name;
 }
 
+function serializeNumber(number) {
+  if (Number.isFinite(number)) {
+    if (number === 0 && 1 / number === -Infinity) {
+      return "$-0";
+    } else {
+      return number;
+    }
+  } else {
+    if (number === Infinity) {
+      return "$Infinity";
+    } else if (number === -Infinity) {
+      return "$-Infinity";
+    } else {
+      return "$NaN";
+    }
+  }
+}
+
 function serializeUndefined() {
   return "$undefined";
+}
+
+function serializeDateFromDateJSON(dateJSON) {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return "$D" + dateJSON;
 }
 
 function serializeBigInt(n) {
@@ -1518,11 +1683,16 @@ function escapeStringValue(value) {
 var insideContextProps = null;
 var isInsideContextValue = false;
 function resolveModelToJSON(request, parent, key, value) {
+  // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
   {
     // $FlowFixMe[incompatible-use]
     var originalValue = parent[key];
 
-    if (typeof originalValue === "object" && originalValue !== value) {
+    if (
+      typeof originalValue === "object" &&
+      originalValue !== value &&
+      !(originalValue instanceof Date)
+    ) {
       if (objectName(originalValue) !== "Object") {
         var jsxParentType = jsxChildrenParents.get(parent);
 
@@ -1730,11 +1900,26 @@ function resolveModelToJSON(request, parent, key, value) {
   }
 
   if (typeof value === "string") {
+    // TODO: Maybe too clever. If we support URL there's no similar trick.
+    if (value[value.length - 1] === "Z") {
+      // Possibly a Date, whose toJSON automatically calls toISOString
+      // $FlowFixMe[incompatible-use]
+      var _originalValue = parent[key]; // $FlowFixMe[method-unbinding]
+
+      if (_originalValue instanceof Date) {
+        return serializeDateFromDateJSON(value);
+      }
+    }
+
     return escapeStringValue(value);
   }
 
-  if (typeof value === "boolean" || typeof value === "number") {
+  if (typeof value === "boolean") {
     return value;
+  }
+
+  if (typeof value === "number") {
+    return serializeNumber(value);
   }
 
   if (typeof value === "undefined") {
@@ -1868,6 +2053,16 @@ function emitImportChunk(request, id, clientReferenceMetadata) {
   request.completedImportChunks.push(processedChunk);
 }
 
+function emitHintChunk(request, code, model) {
+  var processedChunk = processHintChunk(
+    request,
+    request.nextChunkId++,
+    code,
+    model
+  );
+  request.completedHintChunks.push(processedChunk);
+}
+
 function emitSymbolChunk(request, id, name) {
   var symbolReference = serializeSymbolReference(name);
   var processedChunk = processReferenceChunk(request, id, symbolReference);
@@ -1976,9 +2171,9 @@ function retryTask(request, task) {
 
 function performWork(request) {
   var prevDispatcher = ReactCurrentDispatcher.current;
-  var prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = HooksDispatcher;
-  setCurrentCache(request.cache);
+  var prevRequest = currentRequest;
+  currentRequest = request;
   prepareToUseHooksForRequest(request);
 
   try {
@@ -1998,8 +2193,8 @@ function performWork(request) {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
-    setCurrentCache(prevCache);
     resetHooksForRequest();
+    currentRequest = prevRequest;
   }
 }
 
@@ -2022,18 +2217,35 @@ function flushCompletedChunks(request, destination) {
       }
     }
 
-    importsChunks.splice(0, i); // Next comes model data.
+    importsChunks.splice(0, i); // Next comes hints.
+
+    var hintChunks = request.completedHintChunks;
+    i = 0;
+
+    for (; i < hintChunks.length; i++) {
+      var _chunk = hintChunks[i];
+
+      var _keepWriting = writeChunkAndReturn(destination, _chunk);
+
+      if (!_keepWriting) {
+        request.destination = null;
+        i++;
+        break;
+      }
+    }
+
+    hintChunks.splice(0, i); // Next comes model data.
 
     var jsonChunks = request.completedJSONChunks;
     i = 0;
 
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
-      var _chunk = jsonChunks[i];
+      var _chunk2 = jsonChunks[i];
 
-      var _keepWriting = writeChunkAndReturn(destination, _chunk);
+      var _keepWriting2 = writeChunkAndReturn(destination, _chunk2);
 
-      if (!_keepWriting) {
+      if (!_keepWriting2) {
         request.destination = null;
         i++;
         break;
@@ -2049,11 +2261,11 @@ function flushCompletedChunks(request, destination) {
 
     for (; i < errorChunks.length; i++) {
       request.pendingChunks--;
-      var _chunk2 = errorChunks[i];
+      var _chunk3 = errorChunks[i];
 
-      var _keepWriting2 = writeChunkAndReturn(destination, _chunk2);
+      var _keepWriting3 = writeChunkAndReturn(destination, _chunk3);
 
-      if (!_keepWriting2) {
+      if (!_keepWriting3) {
         request.destination = null;
         i++;
         break;
@@ -2062,6 +2274,7 @@ function flushCompletedChunks(request, destination) {
 
     errorChunks.splice(0, i);
   } finally {
+    request.flushScheduled = false;
   }
 
   if (request.pendingChunks === 0) {
@@ -2071,12 +2284,30 @@ function flushCompletedChunks(request, destination) {
 }
 
 function startWork(request) {
+  request.flushScheduled = request.destination !== null;
+
   {
     scheduleWork(function () {
       return performWork(request);
     });
   }
 }
+
+function enqueueFlush(request) {
+  if (
+    request.flushScheduled === false && // If there are pinged tasks we are going to flush anyway after work completes
+    request.pingedTasks.length === 0 && // If there is no destination there is nothing we can flush to. A flush will
+    // happen when we start flowing again
+    request.destination !== null
+  ) {
+    var destination = request.destination;
+    request.flushScheduled = true;
+    scheduleWork(function () {
+      return flushCompletedChunks(request, destination);
+    });
+  }
+}
+
 function startFlowing(request, destination) {
   if (request.status === CLOSING) {
     request.status = CLOSED;

@@ -17,6 +17,7 @@ if (__DEV__) {
 "use strict";
 
 var ReactFlightDOMRelayClientIntegration = require("ReactFlightDOMRelayClientIntegration");
+var ReactDOM = require("react-dom");
 var React = require("react");
 
 var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
@@ -70,6 +71,54 @@ function parseModelRecursively(response, parentObj, key, value) {
 var dummy = {};
 function parseModel(response, json) {
   return parseModelRecursively(response, dummy, "", json);
+}
+
+var ReactDOMSharedInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+// This client file is in the shared folder because it applies to both SSR and browser contexts.
+var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+function dispatchHint(code, model) {
+  var dispatcher = ReactDOMCurrentDispatcher.current;
+
+  if (dispatcher) {
+    var href, options;
+
+    if (typeof model === "string") {
+      href = model;
+    } else {
+      href = model[0];
+      options = model[1];
+    }
+
+    switch (code) {
+      case "D": {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        dispatcher.prefetchDNS(href, options);
+        return;
+      }
+
+      case "C": {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        dispatcher.preconnect(href, options);
+        return;
+      }
+
+      case "L": {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        // $FlowFixMe[incompatible-call] options are not refined to their types by code
+        dispatcher.preload(href, options);
+        return;
+      }
+
+      case "I": {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        // $FlowFixMe[incompatible-call] options are not refined to their types by code
+        dispatcher.preinit(href, options);
+        return;
+      }
+    }
+  }
 }
 
 var knownServerReferences = new WeakMap();
@@ -503,12 +552,12 @@ function parseModelString(response, parentObject, key, value) {
     switch (value[1]) {
       case "$": {
         // This was an escaped string value.
-        return value.substring(1);
+        return value.slice(1);
       }
 
       case "L": {
         // Lazy node
-        var id = parseInt(value.substring(2), 16);
+        var id = parseInt(value.slice(2), 16);
         var chunk = getChunk(response, id); // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
 
@@ -517,7 +566,7 @@ function parseModelString(response, parentObject, key, value) {
 
       case "@": {
         // Promise
-        var _id = parseInt(value.substring(2), 16);
+        var _id = parseInt(value.slice(2), 16);
 
         var _chunk = getChunk(response, _id);
 
@@ -526,17 +575,17 @@ function parseModelString(response, parentObject, key, value) {
 
       case "S": {
         // Symbol
-        return Symbol.for(value.substring(2));
+        return Symbol.for(value.slice(2));
       }
 
       case "P": {
         // Server Context Provider
-        return getOrCreateServerContext(value.substring(2)).Provider;
+        return getOrCreateServerContext(value.slice(2)).Provider;
       }
 
       case "F": {
         // Server Reference
-        var _id2 = parseInt(value.substring(2), 16);
+        var _id2 = parseInt(value.slice(2), 16);
 
         var _chunk2 = getChunk(response, _id2);
 
@@ -558,20 +607,44 @@ function parseModelString(response, parentObject, key, value) {
         }
       }
 
+      case "I": {
+        // $Infinity
+        return Infinity;
+      }
+
+      case "-": {
+        // $-0 or $-Infinity
+        if (value === "$-0") {
+          return -0;
+        } else {
+          return -Infinity;
+        }
+      }
+
+      case "N": {
+        // $NaN
+        return NaN;
+      }
+
       case "u": {
         // matches "$undefined"
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
 
+      case "D": {
+        // Date
+        return new Date(Date.parse(value.slice(2)));
+      }
+
       case "n": {
         // BigInt
-        return BigInt(value.substring(2));
+        return BigInt(value.slice(2));
       }
 
       default: {
         // We assume that anything else is a reference ID.
-        var _id3 = parseInt(value.substring(1), 16);
+        var _id3 = parseInt(value.slice(1), 16);
 
         var _chunk3 = getChunk(response, _id3);
 
@@ -711,6 +784,10 @@ function resolveErrorDev(response, id, digest, message, stack) {
     triggerErrorOnChunk(chunk, errorWithDigest);
   }
 }
+function resolveHint(response, code, model) {
+  var hintModel = parseModel(response, model);
+  dispatchHint(code, hintModel);
+}
 function close(response) {
   // In case there are any remaining unresolved chunks, they won't
   // be resolved now. So we need to issue an error to those.
@@ -726,10 +803,13 @@ function resolveRow(response, chunk) {
   } else if (chunk[0] === "I") {
     // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
+  } else if (chunk[0] === "H") {
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
+    resolveHint(response, chunk[1], chunk[2]);
   } else {
     {
       resolveErrorDev(
-        response,
+        response, // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
         chunk[1], // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
         // $FlowFixMe[prop-missing]
         // $FlowFixMe[incompatible-use]

@@ -12,6 +12,7 @@
 
 "use strict";
 var ReactFlightDOMRelayClientIntegration = require("ReactFlightDOMRelayClientIntegration"),
+  ReactDOM = require("react-dom"),
   React = require("react");
 function formatProdErrorMessage(code) {
   for (
@@ -69,6 +70,8 @@ function parseModelRecursively(response, parentObj, key, value) {
   return value;
 }
 var dummy = {},
+  ReactDOMCurrentDispatcher =
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   knownServerReferences = new WeakMap(),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
@@ -248,23 +251,23 @@ function parseModelString(response, parentObject, key, value) {
     if ("$" === value) return REACT_ELEMENT_TYPE;
     switch (value[1]) {
       case "$":
-        return value.substring(1);
+        return value.slice(1);
       case "L":
         return (
-          (parentObject = parseInt(value.substring(2), 16)),
+          (parentObject = parseInt(value.slice(2), 16)),
           (response = getChunk(response, parentObject)),
           { $$typeof: REACT_LAZY_TYPE, _payload: response, _init: readChunk }
         );
       case "@":
         return (
-          (parentObject = parseInt(value.substring(2), 16)),
+          (parentObject = parseInt(value.slice(2), 16)),
           getChunk(response, parentObject)
         );
       case "S":
-        return Symbol.for(value.substring(2));
+        return Symbol.for(value.slice(2));
       case "P":
         return (
-          (response = value.substring(2)),
+          (response = value.slice(2)),
           ContextRegistry[response] ||
             (ContextRegistry[response] = React.createServerContext(
               response,
@@ -273,7 +276,7 @@ function parseModelString(response, parentObject, key, value) {
           ContextRegistry[response].Provider
         );
       case "F":
-        parentObject = parseInt(value.substring(2), 16);
+        parentObject = parseInt(value.slice(2), 16);
         parentObject = getChunk(response, parentObject);
         switch (parentObject.status) {
           case "resolved_model":
@@ -285,12 +288,20 @@ function parseModelString(response, parentObject, key, value) {
           default:
             throw parentObject.reason;
         }
+      case "I":
+        return Infinity;
+      case "-":
+        return "$-0" === value ? -0 : -Infinity;
+      case "N":
+        return NaN;
       case "u":
         return;
+      case "D":
+        return new Date(Date.parse(value.slice(2)));
       case "n":
-        return BigInt(value.substring(2));
+        return BigInt(value.slice(2));
       default:
-        value = parseInt(value.substring(1), 16);
+        value = parseInt(value.slice(1), 16);
         response = getChunk(response, value);
         switch (response.status) {
           case "resolved_model":
@@ -368,31 +379,67 @@ exports.createResponse = function (bundlerConfig, callServer) {
 exports.getRoot = function (response) {
   return getChunk(response, 0);
 };
-exports.resolveRow = function (response, chunk) {
-  if ("O" === chunk[0]) {
-    var id = chunk[1],
-      model = chunk[2],
-      chunks = response._chunks;
-    (chunk = chunks.get(id))
+exports.resolveRow = function (response, chunk$jscomp$0) {
+  if ("O" === chunk$jscomp$0[0]) {
+    var id = chunk$jscomp$0[1],
+      model = chunk$jscomp$0[2];
+    chunk$jscomp$0 = response._chunks;
+    var chunk = chunk$jscomp$0.get(id);
+    chunk
       ? "pending" === chunk.status &&
         ((response = chunk.value),
-        (id = chunk.reason),
+        (chunk$jscomp$0 = chunk.reason),
         (chunk.status = "resolved_model"),
         (chunk.value = model),
         null !== response &&
           (initializeModelChunk(chunk),
-          wakeChunkIfInitialized(chunk, response, id)))
-      : chunks.set(id, new Chunk("resolved_model", model, null, response));
+          wakeChunkIfInitialized(chunk, response, chunk$jscomp$0)))
+      : chunk$jscomp$0.set(
+          id,
+          new Chunk("resolved_model", model, null, response)
+        );
+  } else if ("I" === chunk$jscomp$0[0])
+    resolveModule(response, chunk$jscomp$0[1], chunk$jscomp$0[2]);
+  else if ("H" === chunk$jscomp$0[0]) {
+    if (
+      ((model = chunk$jscomp$0[1]),
+      (response = parseModelRecursively(
+        response,
+        dummy,
+        "",
+        chunk$jscomp$0[2]
+      )),
+      (chunk$jscomp$0 = ReactDOMCurrentDispatcher.current))
+    )
+      switch (
+        ("string" === typeof response
+          ? (id = response)
+          : ((id = response[0]), (chunk = response[1])),
+        model)
+      ) {
+        case "D":
+          chunk$jscomp$0.prefetchDNS(id, chunk);
+          break;
+        case "C":
+          chunk$jscomp$0.preconnect(id, chunk);
+          break;
+        case "L":
+          chunk$jscomp$0.preload(id, chunk);
+          break;
+        case "I":
+          chunk$jscomp$0.preinit(id, chunk);
+      }
   } else
-    "I" === chunk[0]
-      ? resolveModule(response, chunk[1], chunk[2])
-      : ((model = chunk[1]),
-        (id = chunk[2].digest),
-        (chunk = Error(formatProdErrorMessage(441))),
-        (chunk.stack = "Error: " + chunk.message),
-        (chunk.digest = id),
-        (id = response._chunks),
-        (chunks = id.get(model))
-          ? triggerErrorOnChunk(chunks, chunk)
-          : id.set(model, new Chunk("rejected", null, chunk, response)));
+    (model = chunk$jscomp$0[1]),
+      (chunk$jscomp$0 = chunk$jscomp$0[2].digest),
+      (chunk = Error(formatProdErrorMessage(441))),
+      (chunk.stack = "Error: " + chunk.message),
+      (chunk.digest = chunk$jscomp$0),
+      (chunk$jscomp$0 = response._chunks),
+      (id = chunk$jscomp$0.get(model))
+        ? triggerErrorOnChunk(id, chunk)
+        : chunk$jscomp$0.set(
+            model,
+            new Chunk("rejected", null, chunk, response)
+          );
 };

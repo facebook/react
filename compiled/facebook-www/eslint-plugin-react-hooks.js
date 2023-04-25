@@ -1812,7 +1812,7 @@ var ExhaustiveDeps = {
               break;
 
             case 'updater':
-              extraWarning = " You can also do a functional update '" + setStateRecommendation.setter + "(" + setStateRecommendation.missingDep.substring(0, 1) + " => ...)' if you only need '" + setStateRecommendation.missingDep + "'" + (" in the '" + setStateRecommendation.setter + "' call.");
+              extraWarning = " You can also do a functional update '" + setStateRecommendation.setter + "(" + setStateRecommendation.missingDep.slice(0, 1) + " => ...)' if you only need '" + setStateRecommendation.missingDep + "'" + (" in the '" + setStateRecommendation.setter + "' call.");
               break;
 
             default:

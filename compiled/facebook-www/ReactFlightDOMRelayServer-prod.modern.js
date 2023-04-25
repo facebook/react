@@ -13,6 +13,7 @@
 "use strict";
 var JSResourceReferenceImpl = require("JSResourceReferenceImpl"),
   ReactFlightDOMRelayServerIntegration = require("ReactFlightDOMRelayServerIntegration"),
+  ReactDOM = require("react-dom"),
   React = require("react"),
   hasOwnProperty = Object.prototype.hasOwnProperty,
   isArrayImpl = Array.isArray;
@@ -47,7 +48,80 @@ function writeChunkAndReturn(destination, chunk) {
   ReactFlightDOMRelayServerIntegration.emitRow(destination, chunk);
   return !0;
 }
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var ReactDOMSharedInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+require("ReactFeatureFlags");
+var ReactDOMFlightServerDispatcher = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preinit: preinit
+};
+function prefetchDNS(href, options) {
+  if ("string" === typeof href) {
+    var request = currentRequest ? currentRequest : null;
+    if (request) {
+      var hints = request.hints,
+        key = "D" + href;
+      hints.has(key) ||
+        (hints.add(key),
+        options
+          ? emitHintChunk(request, "D", [href, options])
+          : emitHintChunk(request, "D", href),
+        enqueueFlush(request));
+    }
+  }
+}
+function preconnect(href, options) {
+  if ("string" === typeof href) {
+    var request = currentRequest ? currentRequest : null;
+    if (request) {
+      var hints = request.hints,
+        crossOrigin =
+          null == options || "string" !== typeof options.crossOrigin
+            ? null
+            : "use-credentials" === options.crossOrigin
+            ? "use-credentials"
+            : "";
+      crossOrigin =
+        "C" + (null === crossOrigin ? "null" : crossOrigin) + "|" + href;
+      hints.has(crossOrigin) ||
+        (hints.add(crossOrigin),
+        options
+          ? emitHintChunk(request, "C", [href, options])
+          : emitHintChunk(request, "C", href),
+        enqueueFlush(request));
+    }
+  }
+}
+function preload(href, options) {
+  if ("string" === typeof href) {
+    var request = currentRequest ? currentRequest : null;
+    if (request) {
+      var hints = request.hints,
+        key = "L" + href;
+      hints.has(key) ||
+        (hints.add(key),
+        emitHintChunk(request, "L", [href, options]),
+        enqueueFlush(request));
+    }
+  }
+}
+function preinit(href, options) {
+  if ("string" === typeof href) {
+    var request = currentRequest ? currentRequest : null;
+    if (request) {
+      var hints = request.hints,
+        key = "I" + href;
+      hints.has(key) ||
+        (hints.add(key),
+        emitHintChunk(request, "I", [href, options]),
+        enqueueFlush(request));
+    }
+  }
+}
+var ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher,
+  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
@@ -141,7 +215,6 @@ function pushProvider(context, nextValue) {
       value: nextValue
     });
 }
-require("ReactFeatureFlags");
 var SuspenseException = Error(
   "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
 );
@@ -198,7 +271,7 @@ function getSuspendedThenable() {
   suspendedThenable = null;
   return thenable;
 }
-var currentRequest = null,
+var currentRequest$1 = null,
   thenableIndexCounter = 0,
   thenableState = null;
 function getThenableStateAfterSuspending() {
@@ -248,10 +321,10 @@ function unsupportedRefresh() {
   throw Error("Refreshing the cache is not supported in Server Components.");
 }
 function useId() {
-  if (null === currentRequest)
+  if (null === currentRequest$1)
     throw Error("useId can only be used while React is rendering");
-  var id = currentRequest.identifierCount++;
-  return ":" + currentRequest.identifierPrefix + "S" + id.toString(32) + ":";
+  var id = currentRequest$1.identifierCount++;
+  return ":" + currentRequest$1.identifierPrefix + "S" + id.toString(32) + ":";
 }
 function use(usable) {
   if (
@@ -272,23 +345,26 @@ function use(usable) {
 function createSignal() {
   return new AbortController().signal;
 }
+function resolveCache() {
+  var request = currentRequest ? currentRequest : null;
+  return request ? request.cache : new Map();
+}
 var DefaultCacheDispatcher = {
-    getCacheSignal: function () {
-      var cache = currentCache ? currentCache : new Map(),
-        entry = cache.get(createSignal);
-      void 0 === entry &&
-        ((entry = createSignal()), cache.set(createSignal, entry));
-      return entry;
-    },
-    getCacheForType: function (resourceType) {
-      var cache = currentCache ? currentCache : new Map(),
-        entry = cache.get(resourceType);
-      void 0 === entry &&
-        ((entry = resourceType()), cache.set(resourceType, entry));
-      return entry;
-    }
+  getCacheSignal: function () {
+    var cache = resolveCache(),
+      entry = cache.get(createSignal);
+    void 0 === entry &&
+      ((entry = createSignal()), cache.set(createSignal, entry));
+    return entry;
   },
-  currentCache = null;
+  getCacheForType: function (resourceType) {
+    var cache = resolveCache(),
+      entry = cache.get(resourceType);
+    void 0 === entry &&
+      ((entry = resourceType()), cache.set(resourceType, entry));
+    return entry;
+  }
+};
 function objectName(object) {
   return Object.prototype.toString
     .call(object)
@@ -300,7 +376,7 @@ function describeValueForErrorMessage(value) {
   switch (typeof value) {
     case "string":
       return JSON.stringify(
-        10 >= value.length ? value : value.substr(0, 10) + "..."
+        10 >= value.length ? value : value.slice(0, 10) + "..."
       );
     case "object":
       if (isArrayImpl(value)) return "[...]";
@@ -410,20 +486,25 @@ function createRequest(
     ReactCurrentCache.current !== DefaultCacheDispatcher
   )
     throw Error("Currently React only supports one RSC renderer at a time.");
+  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
   ReactCurrentCache.current = DefaultCacheDispatcher;
   var abortSet = new Set(),
     pingedTasks = [],
+    hints = new Set(),
     request = {
       status: 0,
+      flushScheduled: !1,
       fatalError: null,
       destination: null,
       bundlerConfig: bundlerConfig,
       cache: new Map(),
       nextChunkId: 0,
       pendingChunks: 0,
+      hints: hints,
       abortableTasks: abortSet,
       pingedTasks: pingedTasks,
       completedImportChunks: [],
+      completedHintChunks: [],
       completedJSONChunks: [],
       completedErrorChunks: [],
       writtenSymbols: new Map(),
@@ -443,7 +524,8 @@ function createRequest(
   pingedTasks.push(model);
   return request;
 }
-var POP = {};
+var currentRequest = null,
+  POP = {};
 function serializeThenable(request, thenable) {
   request.pendingChunks++;
   var newTask = createTask(
@@ -599,7 +681,9 @@ function attemptResolveElement(
 function pingTask(request, task) {
   var pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
-  1 === pingedTasks.length && performWork(request);
+  1 === pingedTasks.length &&
+    ((request.flushScheduled = null !== request.destination),
+    performWork(request));
 }
 function createTask(request, model, context, abortSet) {
   var task = {
@@ -751,9 +835,26 @@ function resolveModelToJSON(request, parent, key, value) {
       ? Array.from(value)
       : value;
   }
-  if ("string" === typeof value)
-    return (request = "$" === value[0] ? "$" + value : value), request;
-  if ("boolean" === typeof value || "number" === typeof value) return value;
+  if ("string" === typeof value) {
+    if ("Z" === value[value.length - 1] && parent[key] instanceof Date)
+      return "$D" + value;
+    request = "$" === value[0] ? "$" + value : value;
+    return request;
+  }
+  if ("boolean" === typeof value) return value;
+  if ("number" === typeof value)
+    return (
+      (request = value),
+      Number.isFinite(request)
+        ? 0 === request && -Infinity === 1 / request
+          ? "$-0"
+          : request
+        : Infinity === request
+        ? "$Infinity"
+        : -Infinity === request
+        ? "$-Infinity"
+        : "$NaN"
+    );
   if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
     if (value instanceof JSResourceReferenceImpl)
@@ -814,12 +915,15 @@ function fatalError(request, error) {
 function emitErrorChunkProd(request, id, digest) {
   request.completedErrorChunks.push(["E", id, { digest: digest }]);
 }
+function emitHintChunk(request, code, model) {
+  request.nextChunkId++;
+  request.completedHintChunks.push(["H", code, model]);
+}
 function performWork(request$jscomp$0) {
-  var prevDispatcher = ReactCurrentDispatcher.current,
-    prevCache = currentCache;
+  var prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = HooksDispatcher;
-  currentCache = request$jscomp$0.cache;
-  currentRequest = request$jscomp$0;
+  var prevRequest = currentRequest;
+  currentRequest$1 = currentRequest = request$jscomp$0;
   try {
     var pingedTasks = request$jscomp$0.pingedTasks;
     request$jscomp$0.pingedTasks = [];
@@ -898,28 +1002,48 @@ function performWork(request$jscomp$0) {
       fatalError(request$jscomp$0, error);
   } finally {
     (ReactCurrentDispatcher.current = prevDispatcher),
-      (currentCache = prevCache),
-      (currentRequest = null);
+      (currentRequest$1 = null),
+      (currentRequest = prevRequest);
   }
 }
 function flushCompletedChunks(request, destination) {
-  for (
-    var importsChunks = request.completedImportChunks, i = 0;
-    i < importsChunks.length;
-    i++
-  )
-    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
-  importsChunks.splice(0, i);
-  importsChunks = request.completedJSONChunks;
-  for (i = 0; i < importsChunks.length; i++)
-    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
-  importsChunks.splice(0, i);
-  importsChunks = request.completedErrorChunks;
-  for (i = 0; i < importsChunks.length; i++)
-    request.pendingChunks--, writeChunkAndReturn(destination, importsChunks[i]);
-  importsChunks.splice(0, i);
+  try {
+    for (
+      var importsChunks = request.completedImportChunks, i = 0;
+      i < importsChunks.length;
+      i++
+    )
+      request.pendingChunks--,
+        writeChunkAndReturn(destination, importsChunks[i]);
+    importsChunks.splice(0, i);
+    var hintChunks = request.completedHintChunks;
+    for (i = 0; i < hintChunks.length; i++)
+      writeChunkAndReturn(destination, hintChunks[i]);
+    hintChunks.splice(0, i);
+    var jsonChunks = request.completedJSONChunks;
+    for (i = 0; i < jsonChunks.length; i++)
+      request.pendingChunks--, writeChunkAndReturn(destination, jsonChunks[i]);
+    jsonChunks.splice(0, i);
+    var errorChunks = request.completedErrorChunks;
+    for (i = 0; i < errorChunks.length; i++)
+      request.pendingChunks--, writeChunkAndReturn(destination, errorChunks[i]);
+    errorChunks.splice(0, i);
+  } finally {
+    request.flushScheduled = !1;
+  }
   0 === request.pendingChunks &&
     ReactFlightDOMRelayServerIntegration.close(destination);
+}
+function enqueueFlush(request) {
+  if (
+    !1 === request.flushScheduled &&
+    0 === request.pingedTasks.length &&
+    null !== request.destination
+  ) {
+    var destination = request.destination;
+    request.flushScheduled = !0;
+    flushCompletedChunks(request, destination);
+  }
 }
 function importServerContexts(contexts) {
   if (contexts) {
@@ -950,6 +1074,7 @@ exports.render = function (model, destination, config, options) {
     void 0,
     options ? options.identifierPrefix : void 0
   );
+  model.flushScheduled = null !== model.destination;
   performWork(model);
   if (1 === model.status)
     (model.status = 2), ReactFlightDOMRelayServerIntegration.close(destination);

@@ -166,11 +166,11 @@ function escapeTextForBrowser(text) {
         default:
           continue;
       }
-      lastIndex !== index && (html += text.substring(lastIndex, index));
+      lastIndex !== index && (html += text.slice(lastIndex, index));
       lastIndex = index + 1;
       html += match;
     }
-    text = lastIndex !== index ? html + text.substring(lastIndex, index) : html;
+    text = lastIndex !== index ? html + text.slice(lastIndex, index) : html;
   }
   return text;
 }
@@ -191,9 +191,7 @@ var isArrayImpl = Array.isArray,
     preconnect: preconnect,
     preload: preload,
     preinit: preinit
-  },
-  currentResources = null,
-  currentResourcesStack = [];
+  };
 function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
   return {
     insertionMode: insertionMode,
@@ -290,6 +288,24 @@ function pushStringAttribute(target, name, value) {
     "boolean" !== typeof value &&
     target.push(" ", name, '="', escapeTextForBrowser(value), '"');
 }
+escapeTextForBrowser(
+  "javascript:throw new Error('A React form was unexpectedly submitted.')"
+);
+function pushFormActionAttribute(
+  target,
+  responseState,
+  formAction,
+  formEncType,
+  formMethod,
+  formTarget,
+  name
+) {
+  null !== name && pushAttribute(target, "name", name);
+  null !== formAction && pushAttribute(target, "formAction", formAction);
+  null !== formEncType && pushAttribute(target, "formEncType", formEncType);
+  null !== formMethod && pushAttribute(target, "formMethod", formMethod);
+  null !== formTarget && pushAttribute(target, "formTarget", formTarget);
+}
 function pushAttribute(target, name, value) {
   switch (name) {
     case "className":
@@ -310,8 +326,8 @@ function pushAttribute(target, name, value) {
       break;
     case "src":
     case "href":
-    case "action":
       if ("" === value) break;
+    case "action":
     case "formAction":
       if (
         null == value ||
@@ -710,17 +726,17 @@ function pushStartInstance(
       break;
     case "select":
       target.push(startChunkForTag("select"));
-      resources = textEmbedded = null;
+      textEmbedded = responseState = null;
       for (var propKey in props)
         if (hasOwnProperty.call(props, propKey)) {
           var propValue = props[propKey];
           if (null != propValue)
             switch (propKey) {
               case "children":
-                textEmbedded = propValue;
+                responseState = propValue;
                 break;
               case "dangerouslySetInnerHTML":
-                resources = propValue;
+                textEmbedded = propValue;
                 break;
               case "defaultValue":
               case "value":
@@ -730,13 +746,12 @@ function pushStartInstance(
             }
         }
       target.push(">");
-      pushInnerHTML(target, resources, textEmbedded);
-      return textEmbedded;
+      pushInnerHTML(target, textEmbedded, responseState);
+      return responseState;
     case "option":
-      textEmbedded = formatContext.selectedValue;
+      responseState = formatContext.selectedValue;
       target.push(startChunkForTag("option"));
-      var value = (resources = null),
-        selected = null;
+      var selected = (resources = textEmbedded = null);
       propValue = null;
       for (var propKey$jscomp$0 in props)
         if (hasOwnProperty.call(props, propKey$jscomp$0)) {
@@ -744,7 +759,7 @@ function pushStartInstance(
           if (null != propValue$jscomp$0)
             switch (propKey$jscomp$0) {
               case "children":
-                resources = propValue$jscomp$0;
+                textEmbedded = propValue$jscomp$0;
                 break;
               case "selected":
                 selected = propValue$jscomp$0;
@@ -753,119 +768,251 @@ function pushStartInstance(
                 propValue = propValue$jscomp$0;
                 break;
               case "value":
-                value = propValue$jscomp$0;
+                resources = propValue$jscomp$0;
               default:
                 pushAttribute(target, propKey$jscomp$0, propValue$jscomp$0);
             }
         }
-      if (null != textEmbedded)
+      if (null != responseState)
         if (
           ((props =
-            null !== value ? "" + value : flattenOptionChildren(resources)),
-          isArrayImpl(textEmbedded))
+            null !== resources
+              ? "" + resources
+              : flattenOptionChildren(textEmbedded)),
+          isArrayImpl(responseState))
         )
-          for (
-            propKey$jscomp$0 = 0;
-            propKey$jscomp$0 < textEmbedded.length;
-            propKey$jscomp$0++
-          ) {
-            if ("" + textEmbedded[propKey$jscomp$0] === props) {
+          for (resources = 0; resources < responseState.length; resources++) {
+            if ("" + responseState[resources] === props) {
               target.push(' selected=""');
               break;
             }
           }
-        else "" + textEmbedded === props && target.push(' selected=""');
+        else "" + responseState === props && target.push(' selected=""');
       else selected && target.push(' selected=""');
       target.push(">");
-      pushInnerHTML(target, propValue, resources);
-      return resources;
+      pushInnerHTML(target, propValue, textEmbedded);
+      return textEmbedded;
     case "textarea":
       target.push(startChunkForTag("textarea"));
-      propValue = resources = textEmbedded = null;
-      for (propValue$jscomp$0 in props)
+      propValue = textEmbedded = responseState = null;
+      for (var propKey$jscomp$1 in props)
         if (
-          hasOwnProperty.call(props, propValue$jscomp$0) &&
-          ((propKey$jscomp$0 = props[propValue$jscomp$0]),
-          null != propKey$jscomp$0)
+          hasOwnProperty.call(props, propKey$jscomp$1) &&
+          ((resources = props[propKey$jscomp$1]), null != resources)
         )
-          switch (propValue$jscomp$0) {
+          switch (propKey$jscomp$1) {
             case "children":
-              propValue = propKey$jscomp$0;
+              propValue = resources;
               break;
             case "value":
-              textEmbedded = propKey$jscomp$0;
+              responseState = resources;
               break;
             case "defaultValue":
-              resources = propKey$jscomp$0;
+              textEmbedded = resources;
               break;
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(91));
             default:
-              pushAttribute(target, propValue$jscomp$0, propKey$jscomp$0);
+              pushAttribute(target, propKey$jscomp$1, resources);
           }
-      null === textEmbedded && null !== resources && (textEmbedded = resources);
+      null === responseState &&
+        null !== textEmbedded &&
+        (responseState = textEmbedded);
       target.push(">");
       if (null != propValue) {
-        if (null != textEmbedded) throw Error(formatProdErrorMessage(92));
+        if (null != responseState) throw Error(formatProdErrorMessage(92));
         if (isArrayImpl(propValue) && 1 < propValue.length)
           throw Error(formatProdErrorMessage(93));
-        textEmbedded = "" + propValue;
+        responseState = "" + propValue;
       }
-      "string" === typeof textEmbedded &&
-        "\n" === textEmbedded[0] &&
+      "string" === typeof responseState &&
+        "\n" === responseState[0] &&
         target.push("\n");
-      null !== textEmbedded &&
-        target.push(escapeTextForBrowser("" + textEmbedded));
+      null !== responseState &&
+        target.push(escapeTextForBrowser("" + responseState));
       return null;
     case "input":
       target.push(startChunkForTag("input"));
-      propKey$jscomp$0 = propValue = resources = textEmbedded = null;
-      for (value in props)
-        if (
-          hasOwnProperty.call(props, value) &&
-          ((selected = props[value]), null != selected)
-        )
-          switch (value) {
-            case "children":
-            case "dangerouslySetInnerHTML":
-              throw Error(formatProdErrorMessage(399, "input"));
-            case "defaultChecked":
-              propKey$jscomp$0 = selected;
-              break;
-            case "defaultValue":
-              resources = selected;
-              break;
-            case "checked":
-              propValue = selected;
-              break;
-            case "value":
-              textEmbedded = selected;
-              break;
-            default:
-              pushAttribute(target, value, selected);
-          }
-      null !== propValue
-        ? pushBooleanAttribute(target, "checked", propValue)
-        : null !== propKey$jscomp$0 &&
-          pushBooleanAttribute(target, "checked", propKey$jscomp$0);
-      null !== textEmbedded
-        ? pushAttribute(target, "value", textEmbedded)
-        : null !== resources && pushAttribute(target, "value", resources);
+      var formTarget =
+          (propValue$jscomp$0 =
+          selected =
+          resources =
+          textEmbedded =
+            null),
+        defaultValue = (propKey$jscomp$0 = null);
+      propKey = propKey$jscomp$1 = null;
+      for (propValue in props)
+        if (hasOwnProperty.call(props, propValue)) {
+          var propValue$jscomp$1 = props[propValue];
+          if (null != propValue$jscomp$1)
+            switch (propValue) {
+              case "children":
+              case "dangerouslySetInnerHTML":
+                throw Error(formatProdErrorMessage(399, "input"));
+              case "name":
+                textEmbedded = propValue$jscomp$1;
+                break;
+              case "formAction":
+                resources = propValue$jscomp$1;
+                break;
+              case "formEncType":
+                selected = propValue$jscomp$1;
+                break;
+              case "formMethod":
+                propValue$jscomp$0 = propValue$jscomp$1;
+                break;
+              case "formTarget":
+                formTarget = propValue$jscomp$1;
+                break;
+              case "defaultChecked":
+                propKey = propValue$jscomp$1;
+                break;
+              case "defaultValue":
+                defaultValue = propValue$jscomp$1;
+                break;
+              case "checked":
+                propKey$jscomp$1 = propValue$jscomp$1;
+                break;
+              case "value":
+                propKey$jscomp$0 = propValue$jscomp$1;
+                break;
+              default:
+                pushAttribute(target, propValue, propValue$jscomp$1);
+            }
+        }
+      pushFormActionAttribute(
+        target,
+        responseState,
+        resources,
+        selected,
+        propValue$jscomp$0,
+        formTarget,
+        textEmbedded
+      );
+      null !== propKey$jscomp$1
+        ? pushBooleanAttribute(target, "checked", propKey$jscomp$1)
+        : null !== propKey && pushBooleanAttribute(target, "checked", propKey);
+      null !== propKey$jscomp$0
+        ? pushAttribute(target, "value", propKey$jscomp$0)
+        : null !== defaultValue && pushAttribute(target, "value", defaultValue);
       target.push("/>");
       return null;
+    case "button":
+      target.push(startChunkForTag("button"));
+      defaultValue =
+        propKey$jscomp$0 =
+        formTarget =
+        selected =
+        resources =
+        propValue =
+        textEmbedded =
+          null;
+      for (propValue$jscomp$0 in props)
+        if (
+          hasOwnProperty.call(props, propValue$jscomp$0) &&
+          ((propKey$jscomp$1 = props[propValue$jscomp$0]),
+          null != propKey$jscomp$1)
+        )
+          switch (propValue$jscomp$0) {
+            case "children":
+              textEmbedded = propKey$jscomp$1;
+              break;
+            case "dangerouslySetInnerHTML":
+              propValue = propKey$jscomp$1;
+              break;
+            case "name":
+              resources = propKey$jscomp$1;
+              break;
+            case "formAction":
+              selected = propKey$jscomp$1;
+              break;
+            case "formEncType":
+              formTarget = propKey$jscomp$1;
+              break;
+            case "formMethod":
+              propKey$jscomp$0 = propKey$jscomp$1;
+              break;
+            case "formTarget":
+              defaultValue = propKey$jscomp$1;
+              break;
+            default:
+              pushAttribute(target, propValue$jscomp$0, propKey$jscomp$1);
+          }
+      pushFormActionAttribute(
+        target,
+        responseState,
+        selected,
+        formTarget,
+        propKey$jscomp$0,
+        defaultValue,
+        resources
+      );
+      target.push(">");
+      pushInnerHTML(target, propValue, textEmbedded);
+      "string" === typeof textEmbedded
+        ? (target.push(escapeTextForBrowser(textEmbedded)), (target = null))
+        : (target = textEmbedded);
+      return target;
+    case "form":
+      target.push(startChunkForTag("form"));
+      propValue$jscomp$0 =
+        selected =
+        resources =
+        propValue =
+        textEmbedded =
+        responseState =
+          null;
+      for (formTarget in props)
+        if (
+          hasOwnProperty.call(props, formTarget) &&
+          ((propKey$jscomp$0 = props[formTarget]), null != propKey$jscomp$0)
+        )
+          switch (formTarget) {
+            case "children":
+              responseState = propKey$jscomp$0;
+              break;
+            case "dangerouslySetInnerHTML":
+              textEmbedded = propKey$jscomp$0;
+              break;
+            case "action":
+              propValue = propKey$jscomp$0;
+              break;
+            case "encType":
+              resources = propKey$jscomp$0;
+              break;
+            case "method":
+              selected = propKey$jscomp$0;
+              break;
+            case "target":
+              propValue$jscomp$0 = propKey$jscomp$0;
+              break;
+            default:
+              pushAttribute(target, formTarget, propKey$jscomp$0);
+          }
+      null !== propValue && pushAttribute(target, "action", propValue);
+      null !== resources && pushAttribute(target, "encType", resources);
+      null !== selected && pushAttribute(target, "method", selected);
+      null !== propValue$jscomp$0 &&
+        pushAttribute(target, "target", propValue$jscomp$0);
+      target.push(">");
+      pushInnerHTML(target, textEmbedded, responseState);
+      "string" === typeof responseState
+        ? (target.push(escapeTextForBrowser(responseState)), (target = null))
+        : (target = responseState);
+      return target;
     case "menuitem":
       target.push(startChunkForTag("menuitem"));
-      for (var propKey$jscomp$1 in props)
+      for (var propKey$jscomp$2 in props)
         if (
-          hasOwnProperty.call(props, propKey$jscomp$1) &&
-          ((textEmbedded = props[propKey$jscomp$1]), null != textEmbedded)
+          hasOwnProperty.call(props, propKey$jscomp$2) &&
+          ((responseState = props[propKey$jscomp$2]), null != responseState)
         )
-          switch (propKey$jscomp$1) {
+          switch (propKey$jscomp$2) {
             case "children":
             case "dangerouslySetInnerHTML":
               throw Error(formatProdErrorMessage(400));
             default:
-              pushAttribute(target, propKey$jscomp$1, textEmbedded);
+              pushAttribute(target, propKey$jscomp$2, responseState);
           }
       target.push(">");
       return null;
@@ -899,13 +1046,13 @@ function pushStartInstance(
       )
         target = pushScriptImpl(target, props);
       else {
-        value = "[script]" + props.src;
+        selected = "[script]" + props.src;
         if (!0 !== props.async || props.onLoad || props.onError) {
           if (
             (!0 !== props.noModule &&
-              ((propValue = resources.preloadsMap.get(value)),
-              propValue ||
-                ((propValue = {
+              ((responseState = resources.preloadsMap.get(selected)),
+              responseState ||
+                ((responseState = {
                   type: "preload",
                   chunks: [],
                   state: 0,
@@ -918,9 +1065,9 @@ function pushStartInstance(
                     referrerPolicy: props.referrerPolicy
                   }
                 }),
-                resources.preloadsMap.set(value, propValue),
-                resources.usedScripts.add(propValue),
-                pushLinkImpl(propValue.chunks, propValue.props))),
+                resources.preloadsMap.set(selected, responseState),
+                resources.usedScripts.add(responseState),
+                pushLinkImpl(responseState.chunks, responseState.props))),
             !0 !== props.async)
           ) {
             pushScriptImpl(target, props);
@@ -928,116 +1075,113 @@ function pushStartInstance(
             break a;
           }
         } else if (
-          ((propValue = resources.scriptsMap.get(value)), !propValue)
+          ((responseState = resources.scriptsMap.get(selected)), !responseState)
         ) {
-          propValue = { type: "script", chunks: [], state: 0, props: null };
-          resources.scriptsMap.set(value, propValue);
-          resources.scripts.add(propValue);
-          propKey$jscomp$0 = props;
-          if ((resources = resources.preloadsMap.get(value)))
+          responseState = { type: "script", chunks: [], state: 0, props: null };
+          resources.scriptsMap.set(selected, responseState);
+          resources.scripts.add(responseState);
+          propValue = props;
+          if ((resources = resources.preloadsMap.get(selected)))
             (resources.state |= 4),
-              (props = propKey$jscomp$0 = assign({}, props)),
+              (props = propValue = assign({}, props)),
               (resources = resources.props),
               null == props.crossOrigin &&
                 (props.crossOrigin = resources.crossOrigin),
               null == props.integrity &&
                 (props.integrity = resources.integrity);
-          pushScriptImpl(propValue.chunks, propKey$jscomp$0);
+          pushScriptImpl(responseState.chunks, propValue);
         }
         textEmbedded && target.push("\x3c!-- --\x3e");
         target = null;
       }
       return target;
     case "style":
-      propKey$jscomp$0 = props.precedence;
-      value = props.href;
+      responseState = props.precedence;
+      propValue = props.href;
       if (
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
         null != props.itemProp ||
-        "string" !== typeof propKey$jscomp$0 ||
-        "string" !== typeof value ||
-        "" === value
+        "string" !== typeof responseState ||
+        "string" !== typeof propValue ||
+        "" === propValue
       ) {
         target.push(startChunkForTag("style"));
-        resources = textEmbedded = null;
-        for (selected in props)
+        textEmbedded = responseState = null;
+        for (defaultValue in props)
           if (
-            hasOwnProperty.call(props, selected) &&
-            ((propValue = props[selected]), null != propValue)
+            hasOwnProperty.call(props, defaultValue) &&
+            ((propValue = props[defaultValue]), null != propValue)
           )
-            switch (selected) {
+            switch (defaultValue) {
               case "children":
-                textEmbedded = propValue;
+                responseState = propValue;
                 break;
               case "dangerouslySetInnerHTML":
-                resources = propValue;
+                textEmbedded = propValue;
                 break;
               default:
-                pushAttribute(target, selected, propValue);
+                pushAttribute(target, defaultValue, propValue);
             }
         target.push(">");
-        props = Array.isArray(textEmbedded)
-          ? 2 > textEmbedded.length
-            ? textEmbedded[0]
+        props = Array.isArray(responseState)
+          ? 2 > responseState.length
+            ? responseState[0]
             : null
-          : textEmbedded;
+          : responseState;
         "function" !== typeof props &&
           "symbol" !== typeof props &&
           null !== props &&
           void 0 !== props &&
           target.push(escapeTextForBrowser("" + props));
-        pushInnerHTML(target, resources, textEmbedded);
+        pushInnerHTML(target, textEmbedded, responseState);
         target.push("</", "style", ">");
         target = null;
       } else {
-        selected = "[style]" + value;
-        propValue$jscomp$0 = resources.stylesMap.get(selected);
-        if (!propValue$jscomp$0) {
-          (propValue$jscomp$0 =
-            resources.stylePrecedences.get(propKey$jscomp$0))
-            ? propValue$jscomp$0.props.hrefs.push(value)
-            : ((propValue$jscomp$0 = {
+        propValue$jscomp$0 = "[style]" + propValue;
+        formTarget = resources.stylesMap.get(propValue$jscomp$0);
+        if (!formTarget) {
+          (formTarget = resources.stylePrecedences.get(responseState))
+            ? formTarget.props.hrefs.push(propValue)
+            : ((formTarget = {
                 type: "style",
                 chunks: [],
                 state: 0,
-                props: { precedence: propKey$jscomp$0, hrefs: [value] }
+                props: { precedence: responseState, hrefs: [propValue] }
               }),
-              resources.stylePrecedences.set(
-                propKey$jscomp$0,
-                propValue$jscomp$0
-              ),
-              (value = new Set()),
-              value.add(propValue$jscomp$0),
-              resources.precedences.set(propKey$jscomp$0, value));
-          resources.stylesMap.set(selected, propValue$jscomp$0);
+              resources.stylePrecedences.set(responseState, formTarget),
+              (propValue = new Set()),
+              propValue.add(formTarget),
+              resources.precedences.set(responseState, propValue));
+          resources.stylesMap.set(propValue$jscomp$0, formTarget);
           resources.boundaryResources &&
-            resources.boundaryResources.add(propValue$jscomp$0);
-          resources = propValue$jscomp$0.chunks;
-          value = propKey$jscomp$0 = null;
-          for (propValue in props)
+            resources.boundaryResources.add(formTarget);
+          responseState = formTarget.chunks;
+          resources = propValue = null;
+          for (selected in props)
             if (
-              hasOwnProperty.call(props, propValue) &&
-              ((selected = props[propValue]), null != selected)
+              hasOwnProperty.call(props, selected) &&
+              ((propValue$jscomp$0 = props[selected]),
+              null != propValue$jscomp$0)
             )
-              switch (propValue) {
+              switch (selected) {
                 case "children":
-                  propKey$jscomp$0 = selected;
+                  propValue = propValue$jscomp$0;
                   break;
                 case "dangerouslySetInnerHTML":
-                  value = selected;
+                  resources = propValue$jscomp$0;
               }
-          props = Array.isArray(propKey$jscomp$0)
-            ? 2 > propKey$jscomp$0.length
-              ? propKey$jscomp$0[0]
+          props = Array.isArray(propValue)
+            ? 2 > propValue.length
+              ? propValue[0]
               : null
-            : propKey$jscomp$0;
+            : propValue;
           "function" !== typeof props &&
             "symbol" !== typeof props &&
             null !== props &&
             void 0 !== props &&
-            resources.push(escapeTextForBrowser("" + props));
-          pushInnerHTML(resources, value, propKey$jscomp$0);
+            responseState.push(escapeTextForBrowser("" + props));
+          pushInnerHTML(responseState, resources, propValue);
         }
         textEmbedded && target.push("\x3c!-- --\x3e");
         target = void 0;
@@ -1063,38 +1207,38 @@ function pushStartInstance(
     case "listing":
     case "pre":
       target.push(startChunkForTag(type));
-      resources = textEmbedded = null;
-      for (var propKey$jscomp$2 in props)
+      textEmbedded = responseState = null;
+      for (propValue$jscomp$1 in props)
         if (
-          hasOwnProperty.call(props, propKey$jscomp$2) &&
-          ((propValue = props[propKey$jscomp$2]), null != propValue)
+          hasOwnProperty.call(props, propValue$jscomp$1) &&
+          ((propValue = props[propValue$jscomp$1]), null != propValue)
         )
-          switch (propKey$jscomp$2) {
+          switch (propValue$jscomp$1) {
             case "children":
-              textEmbedded = propValue;
+              responseState = propValue;
               break;
             case "dangerouslySetInnerHTML":
-              resources = propValue;
+              textEmbedded = propValue;
               break;
             default:
-              pushAttribute(target, propKey$jscomp$2, propValue);
+              pushAttribute(target, propValue$jscomp$1, propValue);
           }
       target.push(">");
-      if (null != resources) {
-        if (null != textEmbedded) throw Error(formatProdErrorMessage(60));
-        if ("object" !== typeof resources || !("__html" in resources))
+      if (null != textEmbedded) {
+        if (null != responseState) throw Error(formatProdErrorMessage(60));
+        if ("object" !== typeof textEmbedded || !("__html" in textEmbedded))
           throw Error(formatProdErrorMessage(61));
-        props = resources.__html;
+        props = textEmbedded.__html;
         null !== props &&
           void 0 !== props &&
           ("string" === typeof props && 0 < props.length && "\n" === props[0]
             ? target.push("\n", props)
             : target.push("" + props));
       }
-      "string" === typeof textEmbedded &&
-        "\n" === textEmbedded[0] &&
+      "string" === typeof responseState &&
+        "\n" === responseState[0] &&
         target.push("\n");
-      return textEmbedded;
+      return responseState;
     case "base":
     case "area":
     case "br":
@@ -1144,7 +1288,7 @@ function pushStartInstance(
     default:
       if (-1 !== type.indexOf("-")) {
         target.push(startChunkForTag(type));
-        resources = textEmbedded = null;
+        textEmbedded = responseState = null;
         for (var propKey$jscomp$3 in props)
           if (
             hasOwnProperty.call(props, propKey$jscomp$3) &&
@@ -1167,10 +1311,10 @@ function pushStartInstance(
               propKey$jscomp$3)
             ) {
               case "children":
-                textEmbedded = propValue;
+                responseState = propValue;
                 break;
               case "dangerouslySetInnerHTML":
-                resources = propValue;
+                textEmbedded = propValue;
                 break;
               case "style":
                 pushStyleAttribute(target, propValue);
@@ -1191,11 +1335,19 @@ function pushStartInstance(
                   );
             }
         target.push(">");
-        pushInnerHTML(target, resources, textEmbedded);
-        return textEmbedded;
+        pushInnerHTML(target, textEmbedded, responseState);
+        return responseState;
       }
   }
   return pushStartGenericElement(target, props, type);
+}
+function writeBootstrap(destination, responseState) {
+  responseState = responseState.bootstrapChunks;
+  for (var i = 0; i < responseState.length - 1; i++)
+    destination.push(responseState[i]);
+  return i < responseState.length
+    ? ((i = responseState[i]), (responseState.length = 0), destination.push(i))
+    : !0;
 }
 function writeStartPendingSuspenseBoundary(destination, responseState, id) {
   destination.push('\x3c!--$?--\x3e<template id="');
@@ -1461,10 +1613,11 @@ function writePreamble(
   !willFlushAllSegments &&
     responseState.externalRuntimeConfig &&
     ((willFlushAllSegments = responseState.externalRuntimeConfig),
-    preinitImpl(resources, willFlushAllSegments.src, {
-      as: "script",
-      integrity: willFlushAllSegments.integrity
-    }));
+    internalPreinitScript(
+      resources,
+      willFlushAllSegments.src,
+      willFlushAllSegments.integrity
+    ));
   willFlushAllSegments = responseState.htmlChunks;
   var headChunks = responseState.headChunks,
     i = 0;
@@ -1756,8 +1909,9 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
   destination.push(attributeName);
 }
 function prefetchDNS(href) {
-  if (currentResources) {
-    var resources = currentResources;
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
     if ("string" === typeof href && href) {
       var key = "[prefetchDNS]" + href,
         resource = resources.preconnectsMap.get(key);
@@ -1766,12 +1920,14 @@ function prefetchDNS(href) {
         resources.preconnectsMap.set(key, resource),
         pushLinkImpl(resource.chunks, { href: href, rel: "dns-prefetch" }));
       resources.preconnects.add(resource);
+      enqueueFlush(request);
     }
   }
 }
 function preconnect(href, options) {
-  if (currentResources) {
-    var resources = currentResources;
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
     if ("string" === typeof href && href) {
       options =
         null == options || "string" !== typeof options.crossOrigin
@@ -1791,12 +1947,14 @@ function preconnect(href, options) {
           crossOrigin: options
         }));
       resources.preconnects.add(resource);
+      enqueueFlush(request);
     }
   }
 }
 function preload(href, options) {
-  if (currentResources) {
-    var resources = currentResources;
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
     if (
       "string" === typeof href &&
       href &&
@@ -1836,69 +1994,86 @@ function preload(href, options) {
         default:
           resources.explicitOtherPreloads.add(resource);
       }
+      enqueueFlush(request);
     }
   }
 }
 function preinit(href, options) {
-  currentResources && preinitImpl(currentResources, href, options);
-}
-function preinitImpl(resources, href, options) {
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options
-  ) {
-    var as = options.as;
-    switch (as) {
-      case "style":
-        var key = "[" + as + "]" + href;
-        as = resources.stylesMap.get(key);
-        var precedence = options.precedence || "default";
-        as ||
-          ((as = {
-            type: "stylesheet",
-            chunks: [],
-            state: 0,
-            props: {
-              rel: "stylesheet",
-              href: href,
-              "data-precedence": precedence,
-              crossOrigin: options.crossOrigin,
-              integrity: options.integrity
-            }
-          }),
-          resources.stylesMap.set(key, as),
-          (href = resources.precedences.get(precedence)),
-          href ||
-            ((href = new Set()),
-            resources.precedences.set(precedence, href),
-            (options = {
-              type: "style",
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
+    if (
+      "string" === typeof href &&
+      href &&
+      "object" === typeof options &&
+      null !== options
+    ) {
+      var as = options.as;
+      switch (as) {
+        case "style":
+          var key = "[" + as + "]" + href;
+          as = resources.stylesMap.get(key);
+          var precedence = options.precedence || "default";
+          as ||
+            ((as = {
+              type: "stylesheet",
               chunks: [],
               state: 0,
-              props: { precedence: precedence, hrefs: [] }
+              props: {
+                rel: "stylesheet",
+                href: href,
+                "data-precedence": precedence,
+                crossOrigin: options.crossOrigin,
+                integrity: options.integrity
+              }
             }),
-            href.add(options),
-            resources.stylePrecedences.set(precedence, options)),
-          href.add(as));
-        break;
-      case "script":
-        (precedence = "[" + as + "]" + href),
-          (as = resources.scriptsMap.get(precedence)),
-          as ||
-            ((as = { type: "script", chunks: [], state: 0, props: null }),
-            resources.scriptsMap.set(precedence, as),
-            (href = {
-              src: href,
-              async: !0,
-              crossOrigin: options.crossOrigin,
-              integrity: options.integrity
-            }),
-            resources.scripts.add(as),
-            pushScriptImpl(as.chunks, href));
+            resources.stylesMap.set(key, as),
+            (href = resources.precedences.get(precedence)),
+            href ||
+              ((href = new Set()),
+              resources.precedences.set(precedence, href),
+              (options = {
+                type: "style",
+                chunks: [],
+                state: 0,
+                props: { precedence: precedence, hrefs: [] }
+              }),
+              href.add(options),
+              resources.stylePrecedences.set(precedence, options)),
+            href.add(as),
+            enqueueFlush(request));
+          break;
+        case "script":
+          (precedence = "[" + as + "]" + href),
+            (as = resources.scriptsMap.get(precedence)),
+            as ||
+              ((as = { type: "script", chunks: [], state: 0, props: null }),
+              resources.scriptsMap.set(precedence, as),
+              (href = {
+                src: href,
+                async: !0,
+                crossOrigin: options.crossOrigin,
+                integrity: options.integrity
+              }),
+              resources.scripts.add(as),
+              pushScriptImpl(as.chunks, href),
+              enqueueFlush(request));
+      }
     }
   }
+}
+function internalPreinitScript(resources, src, integrity) {
+  var key = "[script]" + src,
+    resource = resources.scriptsMap.get(key);
+  resource ||
+    ((resource = { type: "script", chunks: [], state: 0, props: null }),
+    resources.scriptsMap.set(key, resource),
+    resources.scripts.add(resource),
+    pushScriptImpl(resource.chunks, {
+      async: !0,
+      src: src,
+      integrity: integrity
+    }));
 }
 function preloadAsStylePropsFromProps(href, props) {
   return {
@@ -2365,6 +2540,17 @@ var HooksDispatcher = {
     readContext: function (context) {
       return context._currentValue2;
     },
+    use: function (usable) {
+      if (null !== usable && "object" === typeof usable) {
+        if ("function" === typeof usable.then) return unwrapThenable(usable);
+        if (
+          usable.$$typeof === REACT_CONTEXT_TYPE ||
+          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+        )
+          return usable._currentValue2;
+      }
+      throw Error(formatProdErrorMessage(438, String(usable)));
+    },
     useContext: function (context) {
       resolveCurrentlyRenderingComponent();
       return context._currentValue2;
@@ -2437,17 +2623,6 @@ var HooksDispatcher = {
       for (var data = Array(size), i = 0; i < size; i++)
         data[i] = REACT_MEMO_CACHE_SENTINEL;
       return data;
-    },
-    use: function (usable) {
-      if (null !== usable && "object" === typeof usable) {
-        if ("function" === typeof usable.then) return unwrapThenable(usable);
-        if (
-          usable.$$typeof === REACT_CONTEXT_TYPE ||
-          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        )
-          return usable._currentValue2;
-      }
-      throw Error(formatProdErrorMessage(438, String(usable)));
     }
   },
   currentResponseState = null,
@@ -2477,6 +2652,7 @@ function createRequest(
   onShellError,
   onFatalError
 ) {
+  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   var pingedTasks = [],
     abortSet = new Set(),
     resources = {
@@ -2498,6 +2674,7 @@ function createRequest(
     };
   responseState = {
     destination: null,
+    flushScheduled: !1,
     responseState: responseState,
     progressiveChunkSize:
       void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize,
@@ -2542,6 +2719,7 @@ function createRequest(
   pingedTasks.push(children);
   return responseState;
 }
+var currentRequest = null;
 function createTask(
   request,
   thenableState,
@@ -2560,9 +2738,10 @@ function createTask(
   var task = {
     node: node,
     ping: function () {
-      var pingedTasks = request.pingedTasks;
-      pingedTasks.push(task);
-      1 === pingedTasks.length && performWork(request);
+      request.pingedTasks.push(task);
+      1 === request.pingedTasks.length &&
+        ((request.flushScheduled = null !== request.destination),
+        performWork(request));
     },
     blockedBoundary: blockedBoundary,
     blockedSegment: blockedSegment,
@@ -3209,11 +3388,8 @@ function performWork(request$jscomp$1) {
     ReactCurrentDispatcher.current = HooksDispatcher;
     var prevCacheDispatcher = ReactCurrentCache.current;
     ReactCurrentCache.current = DefaultCacheDispatcher;
-    var resources = request$jscomp$1.resources;
-    currentResourcesStack.push(currentResources);
-    currentResources = resources;
-    resources = ReactDOMCurrentDispatcher.current;
-    ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+    var prevRequest = currentRequest;
+    currentRequest = request$jscomp$1;
     var prevResponseState = currentResponseState;
     currentResponseState = request$jscomp$1.responseState;
     try {
@@ -3300,9 +3476,8 @@ function performWork(request$jscomp$1) {
       (currentResponseState = prevResponseState),
         (ReactCurrentDispatcher.current = prevDispatcher),
         (ReactCurrentCache.current = prevCacheDispatcher),
-        (currentResources = currentResourcesStack.pop()),
-        (ReactDOMCurrentDispatcher.current = resources),
-        prevDispatcher === HooksDispatcher && switchContext(prevContext);
+        prevDispatcher === HooksDispatcher && switchContext(prevContext),
+        (currentRequest = prevRequest);
     }
   }
 }
@@ -3474,10 +3649,10 @@ function flushCompletedBoundary(request, destination, boundary) {
       : (destination.push('" data-sty="'),
         writeStyleResourceDependenciesInAttr(destination, boundary))
     : scriptFormat && destination.push('"');
-  destination = scriptFormat
+  completedSegments = scriptFormat
     ? destination.push(")\x3c/script>")
     : destination.push('"></template>');
-  return destination;
+  return writeBootstrap(destination, request) && completedSegments;
 }
 function flushPartiallyCompletedSegment(
   request,
@@ -3519,30 +3694,22 @@ function flushCompletedQueues(request, destination) {
     var i,
       completedRootSegment = request.completedRootSegment;
     if (null !== completedRootSegment)
-      if (0 === request.pendingRootTasks) {
+      if (0 === request.pendingRootTasks)
         writePreamble(
           destination,
           request.resources,
           request.responseState,
           0 === request.allPendingTasks
-        );
-        flushSegment(request, destination, completedRootSegment);
-        request.completedRootSegment = null;
-        var bootstrapChunks = request.responseState.bootstrapChunks;
-        for (
-          completedRootSegment = 0;
-          completedRootSegment < bootstrapChunks.length - 1;
-          completedRootSegment++
-        )
-          destination.push(bootstrapChunks[completedRootSegment]);
-        completedRootSegment < bootstrapChunks.length &&
-          destination.push(bootstrapChunks[completedRootSegment]);
-      } else return;
+        ),
+          flushSegment(request, destination, completedRootSegment),
+          (request.completedRootSegment = null),
+          writeBootstrap(destination, request.responseState);
+      else return;
     else writeHoistables(destination, request.resources, request.responseState);
     var clientRenderedBoundaries = request.clientRenderedBoundaries;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       var boundary = clientRenderedBoundaries[i];
-      bootstrapChunks = destination;
+      completedRootSegment = destination;
       var responseState = request.responseState,
         boundaryID = boundary.id,
         errorDigest = boundary.errorDigest,
@@ -3550,54 +3717,54 @@ function flushCompletedQueues(request, destination) {
         errorComponentStack = boundary.errorComponentStack,
         scriptFormat = 0 === responseState.streamingFormat;
       scriptFormat
-        ? (bootstrapChunks.push(responseState.startInlineScript),
+        ? (completedRootSegment.push(responseState.startInlineScript),
           0 === (responseState.instructions & 4)
             ? ((responseState.instructions |= 4),
-              bootstrapChunks.push(
+              completedRootSegment.push(
                 '$RX=function(b,c,d,e){var a=document.getElementById(b);a&&(b=a.previousSibling,b.data="$!",a=a.dataset,c&&(a.dgst=c),d&&(a.msg=d),e&&(a.stck=e),b._reactRetry&&b._reactRetry())};;$RX("'
               ))
-            : bootstrapChunks.push('$RX("'))
-        : bootstrapChunks.push('<template data-rxi="" data-bid="');
+            : completedRootSegment.push('$RX("'))
+        : completedRootSegment.push('<template data-rxi="" data-bid="');
       if (null === boundaryID) throw Error(formatProdErrorMessage(395));
-      bootstrapChunks.push(boundaryID);
-      scriptFormat && bootstrapChunks.push('"');
+      completedRootSegment.push(boundaryID);
+      scriptFormat && completedRootSegment.push('"');
       if (errorDigest || errorMessage || errorComponentStack)
         if (scriptFormat) {
-          bootstrapChunks.push(",");
+          completedRootSegment.push(",");
           var chunk = escapeJSStringsForInstructionScripts(errorDigest || "");
-          bootstrapChunks.push(chunk);
+          completedRootSegment.push(chunk);
         } else {
-          bootstrapChunks.push('" data-dgst="');
+          completedRootSegment.push('" data-dgst="');
           var chunk$jscomp$0 = escapeTextForBrowser(errorDigest || "");
-          bootstrapChunks.push(chunk$jscomp$0);
+          completedRootSegment.push(chunk$jscomp$0);
         }
       if (errorMessage || errorComponentStack)
         if (scriptFormat) {
-          bootstrapChunks.push(",");
+          completedRootSegment.push(",");
           var chunk$jscomp$1 = escapeJSStringsForInstructionScripts(
             errorMessage || ""
           );
-          bootstrapChunks.push(chunk$jscomp$1);
+          completedRootSegment.push(chunk$jscomp$1);
         } else {
-          bootstrapChunks.push('" data-msg="');
+          completedRootSegment.push('" data-msg="');
           var chunk$jscomp$2 = escapeTextForBrowser(errorMessage || "");
-          bootstrapChunks.push(chunk$jscomp$2);
+          completedRootSegment.push(chunk$jscomp$2);
         }
       if (errorComponentStack)
         if (scriptFormat) {
-          bootstrapChunks.push(",");
+          completedRootSegment.push(",");
           var chunk$jscomp$3 =
             escapeJSStringsForInstructionScripts(errorComponentStack);
-          bootstrapChunks.push(chunk$jscomp$3);
+          completedRootSegment.push(chunk$jscomp$3);
         } else {
-          bootstrapChunks.push('" data-stck="');
+          completedRootSegment.push('" data-stck="');
           var chunk$jscomp$4 = escapeTextForBrowser(errorComponentStack);
-          bootstrapChunks.push(chunk$jscomp$4);
+          completedRootSegment.push(chunk$jscomp$4);
         }
       if (
         scriptFormat
-          ? !bootstrapChunks.push(")\x3c/script>")
-          : !bootstrapChunks.push('"></template>')
+          ? !completedRootSegment.push(")\x3c/script>")
+          : !completedRootSegment.push('"></template>')
       ) {
         request.destination = null;
         i++;
@@ -3673,7 +3840,8 @@ function flushCompletedQueues(request, destination) {
       0 === request.pingedTasks.length &&
       0 === request.clientRenderedBoundaries.length &&
       0 === request.completedBoundaries.length &&
-      ((request = request.responseState),
+      ((request.flushScheduled = !1),
+      (request = request.responseState),
       request.hasBody &&
         (destination.push("</"),
         destination.push("body"),
@@ -3683,6 +3851,17 @@ function flushCompletedQueues(request, destination) {
         destination.push("html"),
         destination.push(">")),
       destination.push(null));
+  }
+}
+function enqueueFlush(request) {
+  if (
+    !1 === request.flushScheduled &&
+    0 === request.pingedTasks.length &&
+    null !== request.destination
+  ) {
+    var destination = request.destination;
+    request.flushScheduled = !0;
+    flushCompletedQueues(request, destination);
   }
 }
 function abort(request, reason) {
@@ -3741,6 +3920,7 @@ function renderToStringImpl(
     void 0,
     void 0
   );
+  children.flushScheduled = null !== children.destination;
   performWork(children);
   abort(children, abortReason);
   if (1 === children.status)
@@ -3780,4 +3960,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-5f07a9f9";
+exports.version = "18.3.0-www-classic-c76bb5a5";
