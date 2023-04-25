@@ -51,9 +51,19 @@ type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
+type MemoCache = {
+  data: Array<Array<any>>,
+  index: number,
+};
+
+type FunctionComponentUpdateQueue = {
+  memoCache?: MemoCache | null,
+};
+
 type Hook = {
   memoizedState: any,
   next: Hook | null,
+  updateQueue: FunctionComponentUpdateQueue | null,
 };
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
@@ -79,6 +89,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
+      if (typeof Dispatcher.useMemoCache === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useMemoCache(0);
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -333,6 +347,38 @@ function useId(): string {
   return id;
 }
 
+function useMemoCache(size: number): Array<any> {
+  const hook = nextHook();
+  let memoCache: MemoCache;
+  if (
+    hook !== null &&
+    hook.updateQueue !== null &&
+    hook.updateQueue.memoCache != null
+  ) {
+    memoCache = hook.updateQueue.memoCache;
+  } else {
+    memoCache = {
+      data: [],
+      index: 0,
+    };
+  }
+
+  let data = memoCache.data[memoCache.index];
+  if (data === undefined) {
+    const MEMO_CACHE_SENTINEL = Symbol.for('react.memo_cache_sentinel');
+    data = new Array(size);
+    for (let i = 0; i < size; i++) {
+      data[i] = MEMO_CACHE_SENTINEL;
+    }
+  }
+  hookLog.push({
+    primitive: 'MemoCache',
+    stackError: new Error(),
+    value: data,
+  });
+  return data;
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -345,6 +391,7 @@ const Dispatcher: DispatcherType = {
   useLayoutEffect,
   useInsertionEffect,
   useMemo,
+  useMemoCache,
   useReducer,
   useRef,
   useState,
