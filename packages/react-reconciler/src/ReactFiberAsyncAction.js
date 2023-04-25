@@ -58,17 +58,7 @@ export function requestAsyncActionContext(
     const thenable: Wakeable = (actionReturnValue: any);
     if (currentAsyncAction === null) {
       // There's no outer async action scope. Create a new one.
-      const asyncAction: AsyncAction = {
-        lane: requestTransitionLane(),
-        listeners: [],
-        count: 0,
-        status: 'pending',
-        value: false,
-        reason: undefined,
-        then(resolve: boolean => mixed) {
-          asyncAction.listeners.push(resolve);
-        },
-      };
+      const asyncAction: AsyncAction = getNewAsyncActionScope();
       attachPingListeners(thenable, asyncAction);
       currentAsyncAction = asyncAction;
       return asyncAction;
@@ -88,6 +78,21 @@ export function requestAsyncActionContext(
       return currentAsyncAction;
     }
   }
+}
+
+function getNewAsyncActionScope(): AsyncAction {
+  const asyncAction: AsyncAction = {
+    lane: requestTransitionLane(),
+    listeners: [],
+    count: 0,
+    status: 'pending',
+    value: false,
+    reason: undefined,
+    then(resolve: boolean => mixed) {
+      asyncAction.listeners.push(resolve);
+    },
+  };
+  return asyncAction;
 }
 
 export function peekAsyncActionContext(): AsyncAction | null {
