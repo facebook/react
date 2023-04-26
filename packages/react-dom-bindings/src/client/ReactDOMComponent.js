@@ -7,6 +7,10 @@
  * @flow
  */
 
+import type {HostContext, HostContextDev} from './ReactFiberConfigDOM';
+
+import {HostContextNamespaceNone} from './ReactFiberConfigDOM';
+
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -54,7 +58,7 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
-import {HTML_NAMESPACE, getIntrinsicNamespace} from './DOMNamespaces';
+import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import isCustomElement from '../shared/isCustomElement';
 import getAttributeAlias from '../shared/getAttributeAlias';
 import possibleStandardNames from '../shared/possibleStandardNames';
@@ -66,6 +70,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
+  enableFormActions,
   enableHostSingletons,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
@@ -80,6 +85,10 @@ import {
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
 let didWarnInvalidHydration = false;
+let didWarnFormActionType = false;
+let didWarnFormActionName = false;
+let didWarnFormActionTarget = false;
+let didWarnFormActionMethod = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   // IE 11 parses & normalizes the style attribute as opposed to other
@@ -113,6 +122,105 @@ function validatePropertiesInDevelopment(type: string, props: any) {
           'those nodes are unexpectedly modified or duplicated. This is ' +
           'probably not intentional.',
       );
+    }
+  }
+}
+
+function validateFormActionInDevelopment(
+  tag: string,
+  key: string,
+  value: mixed,
+  props: any,
+) {
+  if (__DEV__) {
+    if (value == null) {
+      return;
+    }
+    if (tag === 'form') {
+      if (key === 'formAction') {
+        console.error(
+          'You can only pass the formAction prop to <input> or <button>. Use the action prop on <form>.',
+        );
+      } else if (typeof value === 'function') {
+        if (
+          (props.encType != null || props.method != null) &&
+          !didWarnFormActionMethod
+        ) {
+          didWarnFormActionMethod = true;
+          console.error(
+            'Cannot specify a encType or method for a form that specifies a ' +
+              'function as the action. React provides those automatically. ' +
+              'They will get overridden.',
+          );
+        }
+        if (props.target != null && !didWarnFormActionTarget) {
+          didWarnFormActionTarget = true;
+          console.error(
+            'Cannot specify a target for a form that specifies a function as the action. ' +
+              'The function will always be executed in the same window.',
+          );
+        }
+      }
+    } else if (tag === 'input' || tag === 'button') {
+      if (key === 'action') {
+        console.error(
+          'You can only pass the action prop to <form>. Use the formAction prop on <input> or <button>.',
+        );
+      } else if (
+        tag === 'input' &&
+        props.type !== 'submit' &&
+        props.type !== 'image' &&
+        !didWarnFormActionType
+      ) {
+        didWarnFormActionType = true;
+        console.error(
+          'An input can only specify a formAction along with type="submit" or type="image".',
+        );
+      } else if (
+        tag === 'button' &&
+        props.type != null &&
+        props.type !== 'submit' &&
+        !didWarnFormActionType
+      ) {
+        didWarnFormActionType = true;
+        console.error(
+          'A button can only specify a formAction along with type="submit" or no type.',
+        );
+      } else if (typeof value === 'function') {
+        // Function form actions cannot control the form properties
+        if (props.name != null && !didWarnFormActionName) {
+          didWarnFormActionName = true;
+          console.error(
+            'Cannot specify a "name" prop for a button that specifies a function as a formAction. ' +
+              'React needs it to encode which action should be invoked. It will get overridden.',
+          );
+        }
+        if (
+          (props.formEncType != null || props.formMethod != null) &&
+          !didWarnFormActionMethod
+        ) {
+          didWarnFormActionMethod = true;
+          console.error(
+            'Cannot specify a formEncType or formMethod for a button that specifies a ' +
+              'function as a formAction. React provides those automatically. They will get overridden.',
+          );
+        }
+        if (props.formTarget != null && !didWarnFormActionTarget) {
+          didWarnFormActionTarget = true;
+          console.error(
+            'Cannot specify a formTarget for a button that specifies a function as a formAction. ' +
+              'The function will always be executed in the same window.',
+          );
+        }
+      }
+    } else {
+      if (key === 'action') {
+        console.error('You can only pass the action prop to <form>.');
+      } else {
+        console.error(
+          'You can only pass the formAction prop to <input> or <button>.',
+        );
+      }
     }
   }
 }
@@ -190,12 +298,13 @@ function normalizeHTML(parent: Element, html: string) {
     // how <noscript> is being handled. So we use the same document.
     // See the discussion in https://github.com/facebook/react/pull/11157.
     const testElement =
-      parent.namespaceURI === HTML_NAMESPACE
-        ? parent.ownerDocument.createElement(parent.tagName)
-        : parent.ownerDocument.createElementNS(
+      parent.namespaceURI === MATH_NAMESPACE ||
+      parent.namespaceURI === SVG_NAMESPACE
+        ? parent.ownerDocument.createElementNS(
             (parent.namespaceURI: any),
             parent.tagName,
-          );
+          )
+        : parent.ownerDocument.createElement(parent.tagName);
     testElement.innerHTML = html;
     return testElement.innerHTML;
   }
@@ -331,8 +440,7 @@ function setProp(
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
     case 'src':
-    case 'href':
-    case 'action':
+    case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
         if (value === '') {
           if (__DEV__) {
@@ -359,11 +467,97 @@ function setProp(
           break;
         }
       }
-    // Fall through to the last case which shouldn't remove empty strings.
-    case 'formAction': {
       if (
         value == null ||
         typeof value === 'function' ||
+        typeof value === 'symbol' ||
+        typeof value === 'boolean'
+      ) {
+        domElement.removeAttribute(key);
+        break;
+      }
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, key);
+      }
+      const sanitizedValue = (sanitizeURL(
+        enableTrustedTypesIntegration ? value : '' + (value: any),
+      ): any);
+      domElement.setAttribute(key, sanitizedValue);
+      break;
+    }
+    case 'action':
+    case 'formAction': {
+      // TODO: Consider moving these special cases to the form, input and button tags.
+      if (__DEV__) {
+        validateFormActionInDevelopment(tag, key, value, props);
+      }
+      if (enableFormActions) {
+        if (typeof value === 'function') {
+          // Set a javascript URL that doesn't do anything. We don't expect this to be invoked
+          // because we'll preventDefault, but it can happen if a form is manually submitted or
+          // if someone calls stopPropagation before React gets the event.
+          // If CSP is used to block javascript: URLs that's fine too. It just won't show this
+          // error message but the URL will be logged.
+          domElement.setAttribute(
+            key,
+            // eslint-disable-next-line no-script-url
+            "javascript:throw new Error('" +
+              'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
+              "consider using form.requestSubmit() instead. If you're trying to use " +
+              'event.stopPropagation() in a submit event handler, consider also calling ' +
+              'event.preventDefault().' +
+              "')",
+          );
+          break;
+        } else if (typeof prevValue === 'function') {
+          // When we're switching off a Server Action that was originally hydrated.
+          // The server control these fields during SSR that are now trailing.
+          // The regular diffing doesn't apply since we compare against the previous props.
+          // Instead, we need to force them to be set to whatever they should be now.
+          // This would be a lot cleaner if we did this whole fork in the per-tag approach.
+          if (key === 'formAction') {
+            if (tag !== 'input') {
+              // Setting the name here isn't completely safe for inputs if this is switching
+              // to become a radio button. In that case we let the tag based override take
+              // control.
+              setProp(domElement, tag, 'name', props.name, props, null);
+            }
+            setProp(
+              domElement,
+              tag,
+              'formEncType',
+              props.formEncType,
+              props,
+              null,
+            );
+            setProp(
+              domElement,
+              tag,
+              'formMethod',
+              props.formMethod,
+              props,
+              null,
+            );
+            setProp(
+              domElement,
+              tag,
+              'formTarget',
+              props.formTarget,
+              props,
+              null,
+            );
+          } else {
+            setProp(domElement, tag, 'encType', props.encType, props, null);
+            setProp(domElement, tag, 'method', props.method, props, null);
+            setProp(domElement, tag, 'target', props.target, props, null);
+          }
+        }
+      }
+      if (
+        value == null ||
+        (!enableFormActions && typeof value === 'function') ||
         typeof value === 'symbol' ||
         typeof value === 'boolean'
       ) {
@@ -495,7 +689,10 @@ function setProp(
         if (__DEV__) {
           checkAttributeStringCoercion(value, key);
         }
-        domElement.setAttribute(key, (value: any));
+        domElement.setAttribute(
+          key,
+          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+        );
       } else {
         domElement.removeAttribute(key);
       }
@@ -838,6 +1035,7 @@ export function setInitialProperties(
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
 
+      let name = null;
       let type = null;
       let value = null;
       let defaultValue = null;
@@ -852,31 +1050,16 @@ export function setInitialProperties(
           continue;
         }
         switch (propKey) {
+          case 'name': {
+            name = propValue;
+            break;
+          }
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              type = propValue;
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            }
+            type = propValue;
             break;
           }
           case 'checked': {
             checked = propValue;
-            const checkedValue =
-              propValue != null ? propValue : props.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
@@ -908,7 +1091,6 @@ export function setInitialProperties(
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       initInput(
         domElement,
@@ -917,8 +1099,10 @@ export function setInitialProperties(
         checked,
         defaultChecked,
         type,
+        name,
         false,
       );
+      track((domElement: any));
       return;
     }
     case 'select': {
@@ -1008,15 +1192,15 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, value, defaultValue, children);
+      track((domElement: any));
       return;
     }
     case 'option': {
@@ -1039,7 +1223,7 @@ export function setInitialProperties(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, props);
+            setProp(domElement, tag, propKey, propValue, props, null);
           }
         }
       }
@@ -1309,14 +1493,6 @@ export function updateProperties(
         if (lastProps.hasOwnProperty(propKey) && lastProp != null) {
           switch (propKey) {
             case 'checked': {
-              if (!nextProps.hasOwnProperty(propKey)) {
-                const checkedValue = nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'value': {
@@ -1345,22 +1521,6 @@ export function updateProperties(
           switch (propKey) {
             case 'type': {
               type = nextProp;
-              // Fast path since 'type' is very common on inputs
-              if (nextProp !== lastProp) {
-                if (
-                  nextProp != null &&
-                  typeof nextProp !== 'function' &&
-                  typeof nextProp !== 'symbol' &&
-                  typeof nextProp !== 'boolean'
-                ) {
-                  if (__DEV__) {
-                    checkAttributeStringCoercion(nextProp, propKey);
-                  }
-                  domElement.setAttribute(propKey, nextProp);
-                } else {
-                  domElement.removeAttribute(propKey);
-                }
-              }
               break;
             }
             case 'name': {
@@ -1369,15 +1529,6 @@ export function updateProperties(
             }
             case 'checked': {
               checked = nextProp;
-              if (nextProp !== lastProp) {
-                const checkedValue =
-                  nextProp != null ? nextProp : nextProps.defaultChecked;
-                const inputElement: HTMLInputElement = (domElement: any);
-                inputElement.checked =
-                  !!checkedValue &&
-                  typeof checkedValue !== 'function' &&
-                  checkedValue !== 'symbol';
-              }
               break;
             }
             case 'defaultChecked': {
@@ -1457,23 +1608,6 @@ export function updateProperties(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1485,6 +1619,7 @@ export function updateProperties(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -1826,33 +1961,12 @@ export function updatePropertiesWithDiff(
         const propValue = updatePayload[i + 1];
         switch (propKey) {
           case 'type': {
-            // Fast path since 'type' is very common on inputs
-            if (
-              propValue != null &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol' &&
-              typeof propValue !== 'boolean'
-            ) {
-              if (__DEV__) {
-                checkAttributeStringCoercion(propValue, propKey);
-              }
-              domElement.setAttribute(propKey, propValue);
-            } else {
-              domElement.removeAttribute(propKey);
-            }
             break;
           }
           case 'name': {
             break;
           }
           case 'checked': {
-            const checkedValue =
-              propValue != null ? propValue : nextProps.defaultChecked;
-            const inputElement: HTMLInputElement = (domElement: any);
-            inputElement.checked =
-              !!checkedValue &&
-              typeof checkedValue !== 'function' &&
-              checkedValue !== 'symbol';
             break;
           }
           case 'defaultChecked': {
@@ -1875,7 +1989,14 @@ export function updatePropertiesWithDiff(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -1920,23 +2041,6 @@ export function updatePropertiesWithDiff(
         }
       }
 
-      // Update checked *before* name.
-      // In the middle of an update, it is possible to have multiple checked.
-      // When a checked radio tries to change name, browser makes another radio's checked false.
-      if (
-        name != null &&
-        typeof name !== 'function' &&
-        typeof name !== 'symbol' &&
-        typeof name !== 'boolean'
-      ) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(name, 'name');
-        }
-        domElement.setAttribute('name', name);
-      } else {
-        domElement.removeAttribute('name');
-      }
-
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after updating the rest of props. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
@@ -1948,6 +2052,7 @@ export function updatePropertiesWithDiff(
         checked,
         defaultChecked,
         type,
+        name,
       );
       return;
     }
@@ -1966,7 +2071,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2001,7 +2113,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultValue is ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2022,7 +2141,14 @@ export function updatePropertiesWithDiff(
             break;
           }
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2061,7 +2187,14 @@ export function updatePropertiesWithDiff(
           }
           // defaultChecked and defaultValue are ignored by setProp
           default: {
-            setProp(domElement, tag, propKey, propValue, nextProps, null);
+            setProp(
+              domElement,
+              tag,
+              propKey,
+              propValue,
+              nextProps,
+              lastProps[propKey],
+            );
           }
         }
       }
@@ -2078,7 +2211,7 @@ export function updatePropertiesWithDiff(
             propKey,
             propValue,
             nextProps,
-            null,
+            lastProps[propKey],
           );
         }
         return;
@@ -2090,7 +2223,7 @@ export function updatePropertiesWithDiff(
   for (let i = 0; i < updatePayload.length; i += 2) {
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, nextProps, null);
+    setProp(domElement, tag, propKey, propValue, nextProps, lastProps[propKey]);
   }
 }
 
@@ -2430,7 +2563,7 @@ function diffHydratedCustomComponent(
   domElement: Element,
   tag: string,
   props: Object,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
   extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
@@ -2506,11 +2639,14 @@ function diffHydratedCustomComponent(
         }
       // Fall through
       default: {
-        let ownNamespaceDev = parentNamespaceDev;
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          ownNamespaceDev = getIntrinsicNamespace(tag);
-        }
-        if (ownNamespaceDev === HTML_NAMESPACE) {
+        // This is a DEV-only path
+        const hostContextDev: HostContextDev = (hostContext: any);
+        const hostContextProd = hostContextDev.context;
+        if (
+          hostContextProd === HostContextNamespaceNone &&
+          tag !== 'svg' &&
+          tag !== 'math'
+        ) {
           extraAttributes.delete(propKey.toLowerCase());
         } else {
           extraAttributes.delete(propKey);
@@ -2526,11 +2662,18 @@ function diffHydratedCustomComponent(
   }
 }
 
+// This is the exact URL string we expect that Fizz renders if we provide a function action.
+// We use this for hydration warnings. It needs to be in sync with Fizz. Maybe makes sense
+// as a shared module for that reason.
+const EXPECTED_FORM_ACTION_URL =
+  // eslint-disable-next-line no-script-url
+  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+
 function diffHydratedGenericElement(
   domElement: Element,
   tag: string,
   props: Object,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
   extraAttributes: Set<string>,
 ) {
   for (const propKey in props) {
@@ -2608,7 +2751,6 @@ function diffHydratedGenericElement(
       }
       case 'src':
       case 'href':
-      case 'action':
         if (enableFilterEmptyStringAttributesDOM) {
           if (value === '') {
             if (__DEV__) {
@@ -2649,11 +2791,41 @@ function diffHydratedGenericElement(
           extraAttributes,
         );
         continue;
+      case 'action':
       case 'formAction':
+        if (enableFormActions) {
+          const serverValue = domElement.getAttribute(propKey);
+          const hasFormActionURL = serverValue === EXPECTED_FORM_ACTION_URL;
+          if (typeof value === 'function') {
+            extraAttributes.delete(propKey.toLowerCase());
+            // The server can set these extra properties to implement actions.
+            // So we remove them from the extra attributes warnings.
+            if (propKey === 'formAction') {
+              extraAttributes.delete('name');
+              extraAttributes.delete('formenctype');
+              extraAttributes.delete('formmethod');
+              extraAttributes.delete('formtarget');
+            } else {
+              extraAttributes.delete('enctype');
+              extraAttributes.delete('method');
+              extraAttributes.delete('target');
+            }
+            if (hasFormActionURL) {
+              // Expected
+              continue;
+            }
+            warnForPropDifference(propKey, serverValue, value);
+            continue;
+          } else if (hasFormActionURL) {
+            extraAttributes.delete(propKey.toLowerCase());
+            warnForPropDifference(propKey, 'function', value);
+            continue;
+          }
+        }
         hydrateSanitizedAttribute(
           domElement,
           propKey,
-          'formaction',
+          propKey.toLowerCase(),
           value,
           extraAttributes,
         );
@@ -2882,11 +3054,16 @@ function diffHydratedGenericElement(
         }
         const attributeName = getAttributeAlias(propKey);
         let isMismatchDueToBadCasing = false;
-        let ownNamespaceDev = parentNamespaceDev;
-        if (ownNamespaceDev === HTML_NAMESPACE) {
-          ownNamespaceDev = getIntrinsicNamespace(tag);
-        }
-        if (ownNamespaceDev === HTML_NAMESPACE) {
+
+        // This is a DEV-only path
+        const hostContextDev: HostContextDev = (hostContext: any);
+        const hostContextProd = hostContextDev.context;
+
+        if (
+          hostContextProd === HostContextNamespaceNone &&
+          tag !== 'svg' &&
+          tag !== 'math'
+        ) {
           extraAttributes.delete(attributeName.toLowerCase());
         } else {
           const standardName = getPossibleStandardName(propKey);
@@ -2920,7 +3097,7 @@ export function diffHydratedProperties(
   props: Object,
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
-  parentNamespaceDev: string,
+  hostContext: HostContext,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
@@ -2974,7 +3151,6 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateInputProps(domElement, props);
       // For input and textarea we current always set the value property at
       // post mount to force it to diverge from attributes. However, for
@@ -2988,8 +3164,10 @@ export function diffHydratedProperties(
         props.checked,
         props.defaultChecked,
         props.type,
+        props.name,
         true,
       );
+      track((domElement: any));
       break;
     case 'option':
       validateOptionProps(domElement, props);
@@ -3012,9 +3190,9 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('invalid', domElement);
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      track((domElement: any));
       validateTextareaProps(domElement, props);
       initTextarea(domElement, props.value, props.defaultValue, props.children);
+      track((domElement: any));
       break;
   }
 
@@ -3091,7 +3269,7 @@ export function diffHydratedProperties(
         domElement,
         tag,
         props,
-        parentNamespaceDev,
+        hostContext,
         extraAttributes,
       );
     } else {
@@ -3099,7 +3277,7 @@ export function diffHydratedProperties(
         domElement,
         tag,
         props,
-        parentNamespaceDev,
+        hostContext,
         extraAttributes,
       );
     }

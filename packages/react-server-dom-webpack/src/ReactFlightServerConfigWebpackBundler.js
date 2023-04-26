@@ -71,8 +71,8 @@ export function resolveClientReferenceMetadata<T>(
     // probably go back to encoding path and name separately on the client reference.
     const idx = modulePath.lastIndexOf('#');
     if (idx !== -1) {
-      name = modulePath.substr(idx + 1);
-      resolvedModuleData = config[modulePath.substr(0, idx)];
+      name = modulePath.slice(idx + 1);
+      resolvedModuleData = config[modulePath.slice(0, idx)];
     }
     if (!resolvedModuleData) {
       throw new Error(

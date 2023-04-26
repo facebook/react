@@ -479,11 +479,3 @@ export function suspendInstance(type, props) {}
 export function waitForCommitToBeReady() {
   return null;
 }
-// eslint-disable-next-line no-undef
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}

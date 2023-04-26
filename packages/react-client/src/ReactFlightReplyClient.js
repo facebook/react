@@ -74,6 +74,11 @@ function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
 
+function serializeFormDataReference(id: number): string {
+  // Why K? F is "Function". D is "Date". What else?
+  return '$K' + id.toString(16);
+}
+
 function serializeNumber(number: number): string | number {
   if (Number.isFinite(number)) {
     if (number === 0 && 1 / number === -Infinity) {
@@ -96,6 +101,12 @@ function serializeUndefined(): string {
   return '$undefined';
 }
 
+function serializeDateFromDateJSON(dateJSON: string): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + dateJSON;
+}
+
 function serializeBigInt(n: bigint): string {
   return '$n' + n.toString(10);
 }
@@ -112,6 +123,7 @@ function escapeStringValue(value: string): string {
 
 export function processReply(
   root: ReactServerValue,
+  formFieldPrefix: string,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
 ): void {
@@ -127,10 +139,16 @@ export function processReply(
     value: ReactServerValue,
   ): ReactJSONValue {
     const parent = this;
+
+    // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
     if (__DEV__) {
       // $FlowFixMe[incompatible-use]
-      const originalValue = this[key];
-      if (typeof originalValue === 'object' && originalValue !== value) {
+      const originalValue = parent[key];
+      if (
+        typeof originalValue === 'object' &&
+        originalValue !== value &&
+        !(originalValue instanceof Date)
+      ) {
         if (objectName(originalValue) !== 'Object') {
           console.error(
             'Only plain objects can be passed to Server Functions from the Client. ' +
@@ -171,7 +189,7 @@ export function processReply(
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
             // eslint-disable-next-line react-internal/safe-string-coercion
-            data.append('' + promiseId, partJSON);
+            data.append(formFieldPrefix + promiseId, partJSON);
             pendingParts--;
             if (pendingParts === 0) {
               resolve(data);
@@ -184,6 +202,24 @@ export function processReply(
           },
         );
         return serializePromiseID(promiseId);
+      }
+      // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
+      if (value instanceof FormData) {
+        if (formData === null) {
+          // Upgrade to use FormData to allow us to use rich objects as its values.
+          formData = new FormData();
+        }
+        const data: FormData = formData;
+        const refId = nextPartId++;
+        // Copy all the form fields with a prefix for this reference.
+        // These must come first in the form order because we assume that all the
+        // fields are available before this is referenced.
+        const prefix = formFieldPrefix + refId + '_';
+        // $FlowFixMe[prop-missing]: FormData has forEach.
+        value.forEach((originalValue: string | File, originalKey: string) => {
+          data.append(prefix + originalKey, originalValue);
+        });
+        return serializeFormDataReference(refId);
       }
       if (!isArray(value)) {
         const iteratorFn = getIteratorFn(value);
@@ -242,6 +278,17 @@ export function processReply(
     }
 
     if (typeof value === 'string') {
+      // TODO: Maybe too clever. If we support URL there's no similar trick.
+      if (value[value.length - 1] === 'Z') {
+        // Possibly a Date, whose toJSON automatically calls toISOString
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[key];
+        // $FlowFixMe[method-unbinding]
+        if (originalValue instanceof Date) {
+          return serializeDateFromDateJSON(value);
+        }
+      }
+
       return escapeStringValue(value);
     }
 
@@ -268,7 +315,7 @@ export function processReply(
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
         // eslint-disable-next-line react-internal/safe-string-coercion
-        formData.set('' + refId, metaDataJSON);
+        formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
       throw new Error(
@@ -308,7 +355,7 @@ export function processReply(
     resolve(json);
   } else {
     // Otherwise, we use FormData to let us stream in the result.
-    formData.set('0', json);
+    formData.set(formFieldPrefix + '0', json);
     if (pendingParts === 0) {
       // $FlowFixMe[incompatible-call] this has already been refined.
       resolve(formData);

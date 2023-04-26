@@ -39,6 +39,7 @@ import {
   enableTransitionTracing,
   useModernStrictMode,
   disableLegacyContext,
+  alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -71,8 +72,6 @@ import {
   afterActiveInstanceBlur,
   getCurrentEventPriority,
   errorHydratingContainer,
-  prepareRendererToRender,
-  resetRendererAfterRender,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
@@ -129,7 +128,6 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
-  claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
   isSubsetOfLanes,
@@ -278,10 +276,10 @@ import {
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
-  getCurrentEventTransitionLane,
-  setCurrentEventTransitionLane,
+  requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -633,18 +631,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
       transition._updatedFibers.add(fiber);
     }
-    // The algorithm for assigning an update to a lane should be stable for all
-    // updates at the same priority within the same event. To do this, the
-    // inputs to the algorithm must be the same.
-    //
-    // The trick we use is to cache the first of each of these inputs within an
-    // event. Then reset the cached values once we can be sure the event is
-    // over. Our heuristic for that is whenever we enter a concurrent work loop.
-    if (getCurrentEventTransitionLane() === NoLane) {
-      // All transitions within the same event are assigned the same lane.
-      setCurrentEventTransitionLane(claimNextTransitionLane());
-    }
-    return getCurrentEventTransitionLane();
+
+    const actionScopeLane = peekEntangledActionLane();
+    return actionScopeLane !== NoLane
+      ? // We're inside an async action scope. Reuse the same lane.
+        actionScopeLane
+      : // We may or may not be inside an async action scope. If we are, this
+        // is the first update in that scope. Either way, we need to get a
+        // fresh transition lane.
+        requestTransitionLane();
   }
 
   // Updates originating inside certain React methods, like flushSync, have
@@ -1119,7 +1114,10 @@ function finishConcurrentRender(
       workInProgressTransitions,
     );
   } else {
-    if (includesOnlyRetries(lanes)) {
+    if (
+      includesOnlyRetries(lanes) &&
+      (alwaysThrottleRetries || exitStatus === RootSuspended)
+    ) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
       const msUntilTimeout =
@@ -1757,7 +1755,6 @@ export function shouldRemainOnPreviousScreen(): boolean {
 }
 
 function pushDispatcher(container: any) {
-  prepareRendererToRender(container);
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
   if (prevDispatcher === null) {
@@ -1771,7 +1768,6 @@ function pushDispatcher(container: any) {
 }
 
 function popDispatcher(prevDispatcher: any) {
-  resetRendererAfterRender();
   ReactCurrentDispatcher.current = prevDispatcher;
 }
 
@@ -2333,6 +2329,16 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
         workInProgressRootRenderLanes,
       );
       break;
+    }
+    case HostComponent: {
+      // Some host components are stateful (that's how we implement form
+      // actions) but we don't bother to reuse the memoized state because it's
+      // not worth the extra code. The main reason to reuse the previous hooks
+      // is to reuse uncached promises, but we happen to know that the only
+      // promises that a host component might suspend on are definitely cached
+      // because they are controlled by us. So don't bother.
+      resetHooksOnUnwind();
+      // Fallthrough to the next branch.
     }
     default: {
       // Other types besides function components are reset completely before

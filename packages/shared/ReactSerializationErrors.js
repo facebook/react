@@ -90,7 +90,7 @@ export function describeValueForErrorMessage(value: mixed): string {
   switch (typeof value) {
     case 'string': {
       return JSON.stringify(
-        value.length <= 10 ? value : value.substr(0, 10) + '...',
+        value.length <= 10 ? value : value.slice(0, 10) + '...',
       );
     }
     case 'object': {

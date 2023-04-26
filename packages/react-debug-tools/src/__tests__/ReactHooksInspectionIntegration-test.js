@@ -14,6 +14,7 @@ let React;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
+let useMemoCache;
 
 describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ReactTestRenderer = require('react-test-renderer');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
+    useMemoCache = React.unstable_useMemoCache;
   });
 
   it('should inspect the current state of useState hooks', async () => {
@@ -633,6 +635,33 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
+  // @gate enableUseMemoCacheHook
+  it('should support useMemoCache hook', () => {
+    function Foo() {
+      const $ = useMemoCache(1);
+      let t0;
+
+      if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
+        t0 = <div>{1}</div>;
+        $[0] = t0;
+      } else {
+        t0 = $[0];
+      }
+
+      return t0;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+
+    expect(tree.length).toEqual(1);
+    expect(tree[0].isStateEditable).toBe(false);
+    expect(tree[0].name).toBe('MemoCache');
+    expect(tree[0].value).toHaveLength(1);
+    expect(tree[0].value[0]).toEqual(<div>{1}</div>);
+  });
+
   describe('useDebugValue', () => {
     it('should support inspectable values for multiple custom hooks', () => {
       function useLabeledValue(label) {
@@ -869,7 +898,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const Suspense = React.Suspense;
 
     function Foo(props) {
-      const [value] = React.useState(props.defaultValue.substr(0, 3));
+      const [value] = React.useState(props.defaultValue.slice(0, 3));
       return <div>{value}</div>;
     }
     Foo.defaultProps = {

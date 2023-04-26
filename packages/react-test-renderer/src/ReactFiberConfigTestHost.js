@@ -343,11 +343,3 @@ export function suspendInstance(type: Type, props: Props): void {}
 export function waitForCommitToBeReady(): null {
   return null;
 }
-
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}

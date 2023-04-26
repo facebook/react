@@ -1,13 +1,22 @@
-name: Commit Artifacts for Facebook WWW and fbsource
+name: Commit Artifacts for Meta WWW and fbsource
 
 on:
   push:
-    branches: [main]
+    branches: [main, meta-www, meta-fbsource]
 
 jobs:
   download_artifacts:
     runs-on: ubuntu-latest
+    outputs:
+      www_branch_count: ${{ steps.check_branches.outputs.www_branch_count }}
+      fbsource_branch_count: ${{ steps.check_branches.outputs.fbsource_branch_count }}
     steps:
+      - uses: actions/checkout@v3
+      - name: "Check branches"
+        id: check_branches
+        run: |
+          echo "www_branch_count=$(git ls-remote --heads origin "refs/heads/meta-www" | wc -l)" >> "$GITHUB_OUTPUT"
+          echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
       - name: Download and unzip artifacts
         uses: actions/github-script@v6
         env:
@@ -168,6 +177,7 @@ jobs:
 
   commit_www_artifacts:
     needs: download_artifacts
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -204,6 +214,7 @@ jobs:
   commit_fbsource_artifacts:
     needs: download_artifacts
     runs-on: ubuntu-latest
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
     steps:
       - uses: actions/checkout@v3
         with:

@@ -21,10 +21,6 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  (null: any);
-
 const VIEW_SIZE = 512;
 let currentView = null;
 let writtenBytes = 0;

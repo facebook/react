@@ -107,6 +107,8 @@ import {
   enableUseMutableSource,
   enableFloat,
   enableHostSingletons,
+  enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -208,6 +210,7 @@ import {
   checkDidRenderIdHook,
   bailoutHooks,
   replaySuspendedComponentWithHooks,
+  renderTransitionAwareHostComponentWithHooks,
 } from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
@@ -1618,6 +1621,23 @@ function updateHostComponent(
     // If we're switching from a direct text child to a normal child, or to
     // empty, we need to schedule the text content to be reset.
     workInProgress.flags |= ContentReset;
+  }
+
+  if (enableFormActions && enableAsyncActions) {
+    const memoizedState = workInProgress.memoizedState;
+    if (memoizedState !== null) {
+      // This fiber has been upgraded to a stateful component. The only way
+      // happens currently is for form actions. We use hooks to track the
+      // pending and error state of the form.
+      //
+      // Once a fiber is upgraded to be stateful, it remains stateful for the
+      // rest of its lifetime.
+      renderTransitionAwareHostComponentWithHooks(
+        current,
+        workInProgress,
+        renderLanes,
+      );
+    }
   }
 
   markRef(current, workInProgress);

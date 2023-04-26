@@ -63,6 +63,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   ) {
     return saveModule(reference.value);
   },
+  prepareHostDispatcher() {},
 });
 
 type Options = {

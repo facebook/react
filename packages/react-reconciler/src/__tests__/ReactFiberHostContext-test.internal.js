@@ -85,8 +85,6 @@ describe('ReactFiberHostContext', () => {
       waitForCommitToBeReady() {
         return null;
       },
-      prepareRendererToRender: function () {},
-      resetRendererAfterRender: function () {},
       supportsMutation: true,
     });
 

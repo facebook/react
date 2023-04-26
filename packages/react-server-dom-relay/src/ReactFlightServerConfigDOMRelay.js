@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
 import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
 
 import type {
@@ -191,6 +192,16 @@ export function processImportChunk(
   return ['I', id, clientReferenceMetadata];
 }
 
+export function processHintChunk(
+  request: Request,
+  id: number,
+  code: string,
+  model: HintModel,
+): Chunk {
+  // The hint is already a JSON serializable value.
+  return ['H', code, model];
+}
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -198,8 +209,7 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  (null: any);
+export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

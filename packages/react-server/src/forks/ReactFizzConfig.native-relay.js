@@ -6,5 +6,9 @@
  *
  * @flow
  */
+import type {Request} from 'react-server/src/ReactFizzServer';
 
 export * from 'react-native-renderer/src/server/ReactFizzConfigNative';
+
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<Request> = (null: any);

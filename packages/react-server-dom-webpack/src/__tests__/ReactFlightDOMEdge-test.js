@@ -54,7 +54,6 @@ describe('ReactFlightDOMEdge', () => {
     }
   }
 
-  // @gate enableUseHook
   it('should allow an alternative module mapping to be used for SSR', async () => {
     function ClientComponent() {
       return <span>Client Component</span>;
