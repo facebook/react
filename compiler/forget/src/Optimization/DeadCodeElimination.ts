@@ -190,6 +190,10 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       }
       return true;
     }
+    case "Debugger": {
+      // explicitly retain debugger statements to not break debugging workflows
+      return false;
+    }
     case "ExpressionStatement": {
       // We create ExpressionStatements specifically for expressions that would otherwise
       // be dropped but which we don't want to eliminate.

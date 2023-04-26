@@ -478,6 +478,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `ExpressionStatement ${printPlace(instrValue.value)}`;
       break;
     }
+    case "Debugger": {
+      value = `Debugger`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

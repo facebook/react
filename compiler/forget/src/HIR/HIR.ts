@@ -710,6 +710,8 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
+  // `debugger` statement
+  | { kind: "Debugger"; loc: SourceLocation }
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow

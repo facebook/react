@@ -184,6 +184,7 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "Debugger":
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
@@ -451,6 +452,7 @@ export function mapInstructionOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
+    case "Debugger":
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":

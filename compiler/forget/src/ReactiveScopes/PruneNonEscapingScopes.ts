@@ -417,6 +417,7 @@ function computeMemoizationInputs(
         rvalues: value.children,
       };
     }
+    case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":
     case "LoadGlobal":

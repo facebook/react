@@ -439,7 +439,6 @@ function codegenInstructionNullable(
   cx: Context,
   instr: ReactiveInstruction
 ): t.Statement | null {
-  let statement;
   if (
     instr.value.kind === "StoreLocal" ||
     instr.value.kind === "Destructure" ||
@@ -514,14 +513,16 @@ function codegenInstructionNullable(
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);
       }
     }
+  } else if (instr.value.kind === "Debugger") {
+    return t.debuggerStatement();
   } else {
     const value = codegenInstructionValue(cx, instr.value);
-    statement = codegenInstruction(cx, instr, value);
+    const statement = codegenInstruction(cx, instr, value);
+    if (statement.type === "EmptyStatement") {
+      return null;
+    }
+    return statement;
   }
-  if (statement.type === "EmptyStatement") {
-    return null;
-  }
-  return statement;
 }
 
 function codegenForInit(
@@ -1000,6 +1001,7 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.value);
       break;
     }
+    case "Debugger":
     case "DeclareLocal":
     case "Destructure":
     case "StoreLocal": {

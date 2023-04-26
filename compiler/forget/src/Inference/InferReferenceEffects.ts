@@ -673,6 +673,7 @@ function inferBlock(
         effectKind = Effect.Mutate;
         break;
       }
+      case "Debugger":
       case "LoadGlobal":
       case "JSXText":
       case "Primitive": {

@@ -866,9 +866,22 @@ function lowerStatement(
       );
       return;
     }
+    case "DebuggerStatement": {
+      const stmt = stmtPath as NodePath<t.DebuggerStatement>;
+      const loc = stmt.node.loc ?? GeneratedSource;
+      builder.push({
+        id: makeInstructionId(0),
+        lvalue: buildTemporaryPlace(builder, loc),
+        value: {
+          kind: "Debugger",
+          loc,
+        },
+        loc,
+      });
+      return;
+    }
     case "ForInStatement":
     case "ClassDeclaration":
-    case "DebuggerStatement":
     case "DeclareClass":
     case "DeclareExportAllDeclaration":
     case "DeclareExportDeclaration":

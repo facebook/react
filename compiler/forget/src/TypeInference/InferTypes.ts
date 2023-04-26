@@ -212,6 +212,7 @@ function* generateInstructionTypes(
     case "NextIterableOf":
     case "ExpressionStatement":
     case "UnsupportedNode":
+    case "Debugger":
       break;
     default:
       assertExhaustive(value, `Unhandled instruction value kind: ${value}`);
