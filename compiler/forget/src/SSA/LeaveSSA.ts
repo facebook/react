@@ -28,6 +28,7 @@ import {
   eachInstructionValueOperand,
   eachPatternOperand,
   eachTerminalOperand,
+  terminalFallthrough,
 } from "../HIR/visitors";
 
 /**
@@ -294,17 +295,9 @@ export function leaveSSA(fn: HIRFunction): void {
         }
       }
     }
-    if (
-      (terminal.kind === "if" ||
-        terminal.kind === "switch" ||
-        terminal.kind === "while" ||
-        terminal.kind === "do-while" ||
-        terminal.kind === "for" ||
-        terminal.kind === "for-of" ||
-        terminal.kind === "label") &&
-      terminal.fallthrough !== null
-    ) {
-      const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
+    const fallthroughId = terminalFallthrough(terminal);
+    if (fallthroughId !== null) {
+      const fallthrough = fn.body.blocks.get(fallthroughId)!;
       pushPhis(fallthrough);
     }
     if (terminal.kind === "while" || terminal.kind === "for") {
@@ -344,14 +337,6 @@ export function leaveSSA(fn: HIRFunction): void {
         const update = fn.body.blocks.get(terminal.update)!;
         pushPhis(update);
       }
-    }
-    if (
-      terminal.kind === "logical" ||
-      terminal.kind === "ternary" ||
-      terminal.kind === "optional-call"
-    ) {
-      const fallthrough = fn.body.blocks.get(terminal.fallthrough)!;
-      pushPhis(fallthrough);
     }
 
     for (const { phi, block: phiBlock } of reassignmentPhis) {

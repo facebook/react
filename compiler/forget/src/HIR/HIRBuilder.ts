@@ -28,7 +28,11 @@ import {
   Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
-import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
+import {
+  eachTerminalSuccessor,
+  mapOptionalFallthroughs,
+  mapTerminalSuccessors,
+} from "./visitors";
 
 // *******************************************************************************************
 // *******************************************************************************************
@@ -535,19 +539,13 @@ export function removeUnreachableFallthroughs(func: HIR): void {
 
   // Cleanup any fallthrough blocks that weren't visited
   for (const [_, block] of func.blocks) {
-    if (
-      block.terminal.kind === "if" ||
-      block.terminal.kind === "switch" ||
-      block.terminal.kind === "while" ||
-      block.terminal.kind === "label"
-    ) {
-      if (
-        block.terminal.fallthrough !== null &&
-        !visited.has(block.terminal.fallthrough)
-      ) {
-        block.terminal.fallthrough = null;
+    mapOptionalFallthroughs(block.terminal, (fallthrough) => {
+      if (visited.has(fallthrough)) {
+        return fallthrough;
+      } else {
+        return null;
       }
-    }
+    });
   }
 }
 

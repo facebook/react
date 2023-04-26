@@ -702,6 +702,112 @@ export function mapTerminalSuccessors(
 }
 
 /**
+ * Helper to get a terminal's fallthrough. The main reason to extract this as a helper
+ * function is to ensure that we use an exhaustive switch to ensure that we add new terminal
+ * variants as appropriate.
+ */
+export function terminalFallthrough(terminal: Terminal): BlockId | null {
+  switch (terminal.kind) {
+    case "branch":
+    case "goto":
+    case "return":
+    case "throw":
+    case "unsupported": {
+      return null;
+    }
+    case "do-while":
+    case "for-of":
+    case "for":
+    case "if":
+    case "label":
+    case "logical":
+    case "optional-call":
+    case "switch":
+    case "ternary":
+    case "while": {
+      return terminal.fallthrough;
+    }
+    default: {
+      assertExhaustive(
+        terminal,
+        `Unexpected terminal kind '${(terminal as any).kind}'`
+      );
+    }
+  }
+}
+
+export function mapOptionalFallthroughs(
+  terminal: Terminal,
+  fn: (block: BlockId) => BlockId | null
+): void {
+  switch (terminal.kind) {
+    case "branch":
+    case "goto":
+    case "return":
+    case "throw":
+    case "unsupported": {
+      return;
+    }
+    // NOTE: TypeScript has a bug where it does not correctly model properties whose values are
+    // non-null in some cases and nullable in other cases, if those cases are joined together.
+    // Thus we use one block per case here to ensure that any changes to the types will cause
+    // a compiler error.
+    case "do-while": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "for-of": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "for": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "logical": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "optional-call": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "ternary": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "while": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "switch": {
+      if (terminal.fallthrough !== null) {
+        terminal.fallthrough = fn(terminal.fallthrough);
+      }
+      break;
+    }
+    case "if": {
+      if (terminal.fallthrough !== null) {
+        terminal.fallthrough = fn(terminal.fallthrough);
+      }
+      break;
+    }
+    case "label": {
+      if (terminal.fallthrough !== null) {
+        terminal.fallthrough = fn(terminal.fallthrough);
+      }
+      break;
+    }
+    default: {
+      assertExhaustive(
+        terminal,
+        `Unexpected terminal kind '${(terminal as any).kind}'`
+      );
+    }
+  }
+}
+
+/**
  * Iterates over the successor block ids of the provided terminal. The function is called
  * specifically for the successors that define the standard control flow, and not
  * pseduo-successors such as fallthroughs.
