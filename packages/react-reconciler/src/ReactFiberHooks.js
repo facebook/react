@@ -1884,9 +1884,7 @@ function forceStoreRerender(fiber: Fiber) {
   }
 }
 
-function mountState<S>(
-  initialState: (() => S) | S,
-): [S, Dispatch<BasicStateAction<S>>] {
+function mountStateImpl<S>(initialState: (() => S) | S): Hook {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
@@ -1901,9 +1899,20 @@ function mountState<S>(
     lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
-  const dispatch: Dispatch<BasicStateAction<S>> = (queue.dispatch =
-    (dispatchSetState.bind(null, currentlyRenderingFiber, queue): any));
-  return [hook.memoizedState, dispatch];
+  const dispatch: Dispatch<BasicStateAction<S>> = (dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any);
+  queue.dispatch = dispatch;
+  return hook;
+}
+
+function mountState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
+  const hook = mountStateImpl(initialState);
+  return [hook.memoizedState, hook.queue.dispatch];
 }
 
 function updateState<S>(
@@ -2469,9 +2478,10 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
 }
 
 function startTransition<S>(
+  fiber: Fiber,
+  queue: UpdateQueue<S | Thenable<S>, BasicStateAction<S | Thenable<S>>>,
   pendingState: S,
   finishedState: S,
-  setPending: (Thenable<S> | S) => void,
   callback: () => mixed,
   options?: StartTransitionOptions,
 ): void {
@@ -2482,7 +2492,7 @@ function startTransition<S>(
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
-  setPending(pendingState);
+  dispatchSetState(fiber, queue, pendingState);
   const currentTransition = (ReactCurrentBatchConfig.transition =
     ({}: BatchConfigTransition));
 
@@ -2509,10 +2519,10 @@ function startTransition<S>(
         returnValue,
         finishedState,
       );
-      setPending(maybeThenable);
+      dispatchSetState(fiber, queue, maybeThenable);
     } else {
       // Async actions are not enabled.
-      setPending(finishedState);
+      dispatchSetState(fiber, queue, finishedState);
       callback();
     }
   } catch (error) {
@@ -2525,7 +2535,7 @@ function startTransition<S>(
         status: 'rejected',
         reason: error,
       };
-      setPending(rejectedThenable);
+      dispatchSetState(fiber, queue, rejectedThenable);
     } else {
       // The error rethrowing behavior is only enabled when the async actions
       // feature is on, even for sync actions.
@@ -2577,7 +2587,10 @@ export function startHostTransition<F>(
     );
   }
 
-  let setPending;
+  let queue: UpdateQueue<
+    Thenable<TransitionStatus> | TransitionStatus,
+    BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
+  >;
   if (formFiber.memoizedState === null) {
     // Upgrade this host component fiber to be stateful. We're going to pretend
     // it was stateful all along so we can reuse most of the implementation
@@ -2585,27 +2598,27 @@ export function startHostTransition<F>(
     //
     // Create the state hook used by TransitionAwareHostComponent. This is
     // essentially an inlined version of mountState.
-    const queue: UpdateQueue<
+    const newQueue: UpdateQueue<
       Thenable<TransitionStatus> | TransitionStatus,
-      Thenable<TransitionStatus> | TransitionStatus,
+      BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
     > = {
       pending: null,
       lanes: NoLanes,
-      dispatch: null,
+      // We're going to cheat and intentionally not create a bound dispatch
+      // method, because we can call it directly in startTransition.
+      dispatch: (null: any),
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: NoPendingHostTransition,
     };
+    queue = newQueue;
+
     const stateHook: Hook = {
       memoizedState: NoPendingHostTransition,
       baseState: NoPendingHostTransition,
       baseQueue: null,
-      queue: queue,
+      queue: newQueue,
       next: null,
     };
-
-    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
-      (dispatchSetState.bind(null, formFiber, queue): any);
-    setPending = queue.dispatch = dispatch;
 
     // Add the state hook to both fiber alternates. The idea is that the fiber
     // had this hook all along.
@@ -2617,15 +2630,14 @@ export function startHostTransition<F>(
   } else {
     // This fiber was already upgraded to be stateful.
     const stateHook: Hook = formFiber.memoizedState;
-    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
-      stateHook.queue.dispatch;
-    setPending = dispatch;
+    queue = stateHook.queue;
   }
 
   startTransition(
+    formFiber,
+    queue,
     pendingState,
     NoPendingHostTransition,
-    setPending,
     // TODO: We can avoid this extra wrapper, somehow. Figure out layering
     // once more of this function is implemented.
     () => callback(formData),
@@ -2636,9 +2648,15 @@ function mountTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const [, setPending] = mountState((false: Thenable<boolean> | boolean));
+  const stateHook = mountStateImpl((false: Thenable<boolean> | boolean));
   // The `start` method never changes.
-  const start = startTransition.bind(null, true, false, setPending);
+  const start = startTransition.bind(
+    null,
+    currentlyRenderingFiber,
+    stateHook.queue,
+    true,
+    false,
+  );
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];
