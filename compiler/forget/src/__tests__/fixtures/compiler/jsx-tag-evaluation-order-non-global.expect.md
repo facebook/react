@@ -27,26 +27,26 @@ function Component(props) {
   const c_0 = $[0] !== props.component;
   const c_1 = $[1] !== props.alternateComponent;
   let Tag;
-  let t0;
+  let T0;
   let t1;
   let t2;
   if (c_0 || c_1) {
     const maybeMutable = new MaybeMutable();
     Tag = props.component;
 
-    t0 = Tag;
+    T0 = Tag;
     t1 = "\n      ";
     Tag = props.alternateComponent;
     t2 = maybeMutate(maybeMutable);
     $[0] = props.component;
     $[1] = props.alternateComponent;
     $[2] = Tag;
-    $[3] = t0;
+    $[3] = T0;
     $[4] = t1;
     $[5] = t2;
   } else {
     Tag = $[2];
-    t0 = $[3];
+    T0 = $[3];
     t1 = $[4];
     t2 = $[5];
   }
@@ -59,20 +59,20 @@ function Component(props) {
   } else {
     t3 = $[7];
   }
-  const c_8 = $[8] !== t0;
+  const c_8 = $[8] !== T0;
   const c_9 = $[9] !== t1;
   const c_10 = $[10] !== t2;
   const c_11 = $[11] !== t3;
   let t4;
   if (c_8 || c_9 || c_10 || c_11) {
     t4 = (
-      <t0>
+      <T0>
         {t1}
         {t2}
         {t3}
-      </t0>
+      </T0>
     );
-    $[8] = t0;
+    $[8] = T0;
     $[9] = t1;
     $[10] = t2;
     $[11] = t3;

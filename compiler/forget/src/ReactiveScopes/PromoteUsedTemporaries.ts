@@ -5,15 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import {
+  Identifier,
+  IdentifierId,
+  InstructionId,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
+  ReactiveValue,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 type VisitorState = {
   nextId: number;
+  tags: JsxExpressionTags;
 };
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   override visitScope(block: ReactiveScopeBlock, state: VisitorState): void {
@@ -21,7 +27,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     for (const dep of block.scope.dependencies) {
       const { identifier } = dep;
       if (identifier.name == null) {
-        identifier.name = `t${state.nextId++}`;
+        promoteTemporary(identifier, state);
       }
     }
     // This is technically optional. We could prune ReactiveScopes
@@ -31,7 +37,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     // it is better for now to promote (and memoize) every output.
     for (const [, declaration] of block.scope.declarations) {
       if (declaration.identifier.name == null) {
-        declaration.identifier.name = `t${state.nextId++}`;
+        promoteTemporary(declaration.identifier, state);
       }
     }
   }
@@ -42,9 +48,38 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     this.traverseInstruction(instruction, state);
   }
 }
+
+type JsxExpressionTags = Set<IdentifierId>;
+class CollectJsxTagsVisitor extends ReactiveFunctionVisitor<JsxExpressionTags> {
+  override visitValue(
+    _id: InstructionId,
+    value: ReactiveValue,
+    state: JsxExpressionTags
+  ): void {
+    if (value.kind === "JsxExpression") {
+      state.add(value.tag.identifier.id);
+    }
+  }
+}
+
 export function promoteUsedTemporaries(fn: ReactiveFunction): void {
+  const tags: JsxExpressionTags = new Set();
+  visitReactiveFunction(fn, new CollectJsxTagsVisitor(), tags);
   const state: VisitorState = {
     nextId: 0,
+    tags,
   };
   visitReactiveFunction(fn, new Visitor(), state);
+}
+
+function promoteTemporary(identifier: Identifier, state: VisitorState): void {
+  invariant(
+    identifier.name === null,
+    "Expected to be called only for temporaries"
+  );
+  if (state.tags.has(identifier.id)) {
+    identifier.name = `T${state.nextId++}`;
+  } else {
+    identifier.name = `t${state.nextId++}`;
+  }
 }
