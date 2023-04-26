@@ -354,3 +354,6 @@ export function writeResourcesForBoundary(
 ): boolean {
   return true;
 }
+
+export type TransitionStatus = mixed;
+export const NotPendingTransition: TransitionStatus = null;

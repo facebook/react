@@ -90,6 +90,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -489,3 +490,5 @@ export function suspendInstance(type: Type, props: Props): void {}
 export function waitForCommitToBeReady(): null {
   return null;
 }
+
+export const NotPendingTransition: TransitionStatus = null;

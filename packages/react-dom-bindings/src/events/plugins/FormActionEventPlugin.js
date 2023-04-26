@@ -12,6 +12,7 @@ import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 import {getFiberCurrentPropsFromNode} from '../../client/ReactDOMComponentTree';
 import {startHostTransition} from 'react-reconciler/src/ReactFiberReconciler';
@@ -98,7 +99,16 @@ function extractEvents(
       formData = new FormData(form);
     }
 
-    startHostTransition(formInst, action, formData);
+    const pendingState: FormStatus = {
+      pending: true,
+      data: formData,
+      method: form.method,
+      action: action,
+    };
+    if (__DEV__) {
+      Object.freeze(pendingState);
+    }
+    startHostTransition(formInst, pendingState, action, formData);
   }
 
   dispatchQueue.push({
@@ -117,8 +127,18 @@ export {extractEvents};
 
 export function dispatchReplayedFormAction(
   formInst: Fiber,
+  form: HTMLFormElement,
   action: FormData => void | Promise<void>,
   formData: FormData,
 ): void {
-  startHostTransition(formInst, action, formData);
+  const pendingState: FormStatus = {
+    pending: true,
+    data: formData,
+    method: form.method,
+    action: action,
+  };
+  if (__DEV__) {
+    Object.freeze(pendingState);
+  }
+  startHostTransition(formInst, pendingState, action, formData);
 }

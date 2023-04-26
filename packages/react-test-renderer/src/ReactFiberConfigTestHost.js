@@ -41,6 +41,7 @@ export type NoTimeout = -1;
 export type EventResponder = any;
 
 export type RendererInspectionConfig = $ReadOnly<{}>;
+export type TransitionStatus = mixed;
 
 export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
@@ -343,3 +344,5 @@ export function suspendInstance(type: Type, props: Props): void {}
 export function waitForCommitToBeReady(): null {
   return null;
 }
+
+export const NotPendingTransition: TransitionStatus = null;

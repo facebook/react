@@ -647,10 +647,16 @@ describe('ReactDOMForm', () => {
   it('form actions are transitions', async () => {
     const formRef = React.createRef();
 
+    function Status() {
+      const {pending} = useFormStatus();
+      return pending ? <Text text="Pending..." /> : null;
+    }
+
     function App() {
       const [state, setState] = useState('Initial');
       return (
         <form action={() => setState('Updated')} ref={formRef}>
+          <Status />
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text={state} />
           </Suspense>
@@ -667,8 +673,8 @@ describe('ReactDOMForm', () => {
     // This should suspend because form actions are implicitly wrapped
     // in startTransition.
     await submit(formRef.current);
-    assertLog(['Suspend! [Updated]', 'Loading...']);
-    expect(container.textContent).toBe('Initial');
+    assertLog(['Pending...', 'Suspend! [Updated]', 'Loading...']);
+    expect(container.textContent).toBe('Pending...Initial');
 
     await act(() => resolveText('Updated'));
     assertLog(['Updated']);
@@ -680,10 +686,16 @@ describe('ReactDOMForm', () => {
   it('multiple form actions', async () => {
     const formRef = React.createRef();
 
+    function Status() {
+      const {pending} = useFormStatus();
+      return pending ? <Text text="Pending..." /> : null;
+    }
+
     function App() {
       const [state, setState] = useState(0);
       return (
         <form action={() => setState(n => n + 1)} ref={formRef}>
+          <Status />
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text={'Count: ' + state} />
           </Suspense>
@@ -699,8 +711,8 @@ describe('ReactDOMForm', () => {
 
     // Update
     await submit(formRef.current);
-    assertLog(['Suspend! [Count: 1]', 'Loading...']);
-    expect(container.textContent).toBe('Count: 0');
+    assertLog(['Pending...', 'Suspend! [Count: 1]', 'Loading...']);
+    expect(container.textContent).toBe('Pending...Count: 0');
 
     await act(() => resolveText('Count: 1'));
     assertLog(['Count: 1']);
@@ -708,8 +720,8 @@ describe('ReactDOMForm', () => {
 
     // Update again
     await submit(formRef.current);
-    assertLog(['Suspend! [Count: 2]', 'Loading...']);
-    expect(container.textContent).toBe('Count: 1');
+    assertLog(['Pending...', 'Suspend! [Count: 2]', 'Loading...']);
+    expect(container.textContent).toBe('Pending...Count: 1');
 
     await act(() => resolveText('Count: 2'));
     assertLog(['Count: 2']);
@@ -719,6 +731,11 @@ describe('ReactDOMForm', () => {
   // @gate enableFormActions
   it('form actions can be asynchronous', async () => {
     const formRef = React.createRef();
+
+    function Status() {
+      const {pending} = useFormStatus();
+      return pending ? <Text text="Pending..." /> : null;
+    }
 
     function App() {
       const [state, setState] = useState('Initial');
@@ -730,6 +747,7 @@ describe('ReactDOMForm', () => {
             startTransition(() => setState('Updated'));
           }}
           ref={formRef}>
+          <Status />
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text={state} />
           </Suspense>
@@ -744,11 +762,15 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('Initial');
 
     await submit(formRef.current);
-    assertLog(['Async action started']);
+    assertLog(['Async action started', 'Pending...']);
 
     await act(() => resolveText('Wait'));
     assertLog(['Suspend! [Updated]', 'Loading...']);
-    expect(container.textContent).toBe('Initial');
+    expect(container.textContent).toBe('Pending...Initial');
+
+    await act(() => resolveText('Updated'));
+    assertLog(['Updated']);
+    expect(container.textContent).toBe('Updated');
   });
 
   it('sync errors in form actions can be captured by an error boundary', async () => {
@@ -851,17 +873,53 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('useFormStatus exists', async () => {
-    // This API isn't fully implemented yet. This just tests that it's wired
-    // up correctly.
+  it('useFormStatus reads the status of a pending form action', async () => {
+    const formRef = React.createRef();
+
+    function Status() {
+      const {pending, data, action, method} = useFormStatus();
+      if (!pending) {
+        return <Text text="No pending action" />;
+      } else {
+        const foo = data.get('foo');
+        return (
+          <Text
+            text={`Pending action ${action.name}: foo is ${foo}, method is ${method}`}
+          />
+        );
+      }
+    }
+
+    async function myAction() {
+      Scheduler.log('Async action started');
+      await getText('Wait');
+      Scheduler.log('Async action finished');
+    }
 
     function App() {
-      const {pending} = useFormStatus();
-      return 'Pending: ' + pending;
+      return (
+        <form action={myAction} ref={formRef}>
+          <input type="text" name="foo" defaultValue="bar" />
+          <Status />
+        </form>
+      );
     }
 
     const root = ReactDOMClient.createRoot(container);
     await act(() => root.render(<App />));
-    expect(container.textContent).toBe('Pending: false');
+    assertLog(['No pending action']);
+    expect(container.textContent).toBe('No pending action');
+
+    await submit(formRef.current);
+    assertLog([
+      'Async action started',
+      'Pending action myAction: foo is bar, method is get',
+    ]);
+    expect(container.textContent).toBe(
+      'Pending action myAction: foo is bar, method is get',
+    );
+
+    await act(() => resolveText('Wait'));
+    assertLog(['Async action finished', 'No pending action']);
   });
 });
