@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
+import { GeneratedSource } from "../HIR";
 import {
   Identifier,
   IdentifierId,
@@ -73,10 +74,12 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
 }
 
 function promoteTemporary(identifier: Identifier, state: VisitorState): void {
-  invariant(
-    identifier.name === null,
-    "Expected to be called only for temporaries"
-  );
+  if (identifier.name !== null) {
+    CompilerError.invariant(
+      "promoteTemporary: Expected to be called only for temporary variables",
+      GeneratedSource
+    );
+  }
   if (state.tags.has(identifier.id)) {
     identifier.name = `T${state.nextId++}`;
   } else {
