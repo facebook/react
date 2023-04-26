@@ -16,6 +16,8 @@ import type {
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
 import type {SharedQueue} from './ReactFiberClassUpdateQueue';
+import type {TransitionStatus} from './ReactFiberConfig';
+import type {Hook} from './ReactFiberHooks';
 
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
@@ -43,8 +45,14 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
   enableServerContext,
+  enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
+import {
+  getHostTransitionProvider,
+  HostTransitionContext,
+} from './ReactFiberHostContext';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -583,6 +591,33 @@ function propagateParentContextChanges(
           } else {
             contexts = [context];
           }
+        }
+      }
+    } else if (
+      enableFormActions &&
+      enableAsyncActions &&
+      parent === getHostTransitionProvider()
+    ) {
+      // During a host transition, a host component can act like a context
+      // provider. E.g. in React DOM, this would be a <form />.
+      const currentParent = parent.alternate;
+      if (currentParent === null) {
+        throw new Error('Should have a current fiber. This is a bug in React.');
+      }
+
+      const oldStateHook: Hook = currentParent.memoizedState;
+      const oldState: TransitionStatus = oldStateHook.memoizedState;
+
+      const newStateHook: Hook = parent.memoizedState;
+      const newState: TransitionStatus = newStateHook.memoizedState;
+
+      // This uses regular equality instead of Object.is because we assume that
+      // host transition state doesn't include NaN as a valid type.
+      if (oldState !== newState) {
+        if (contexts !== null) {
+          contexts.push(HostTransitionContext);
+        } else {
+          contexts = [HostTransitionContext];
         }
       }
     }

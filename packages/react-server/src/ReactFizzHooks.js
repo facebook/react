@@ -22,17 +22,20 @@ import type {
 import type {ResponseState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
+import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
-import {makeId} from './ReactFizzConfig';
+import {makeId, NotPendingTransition} from './ReactFizzConfig';
 
 import {
   enableCache,
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
+  enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -545,6 +548,11 @@ function useTransition(): [
   return [false, unsupportedStartTransition];
 }
 
+function useHostTransitionStatus(): TransitionStatus {
+  resolveCurrentlyRenderingComponent();
+  return NotPendingTransition;
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
@@ -640,6 +648,9 @@ if (enableUseEffectEventHook) {
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
+}
+if (enableFormActions && enableAsyncActions) {
+  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

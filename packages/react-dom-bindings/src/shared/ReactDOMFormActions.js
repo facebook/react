@@ -7,7 +7,12 @@
  * @flow
  */
 
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+
 import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 type FormStatusNotPending = {|
   pending: false,
@@ -38,13 +43,34 @@ export const NotPending: FormStatus = __DEV__
   ? Object.freeze(sharedNotPendingObject)
   : sharedNotPendingObject;
 
+function resolveDispatcher() {
+  // Copied from react/src/ReactHooks.js. It's the same thing but in a
+  // different package.
+  const dispatcher = ReactCurrentDispatcher.current;
+  if (__DEV__) {
+    if (dispatcher === null) {
+      console.error(
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+          ' one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      );
+    }
+  }
+  // Will result in a null access error if accessed outside render phase. We
+  // intentionally don't throw our own error because this is in a hot path.
+  // Also helps ensure this is inlined.
+  return ((dispatcher: any): Dispatcher);
+}
+
 export function useFormStatus(): FormStatus {
   if (!(enableFormActions && enableAsyncActions)) {
     throw new Error('Not implemented.');
   } else {
-    // TODO: This isn't fully implemented yet but we return a correctly typed
-    // value so we can test that the API is exposed and gated correctly. The
-    // real implementation will access the status via the dispatcher.
-    return NotPending;
+    const dispatcher = resolveDispatcher();
+    // $FlowFixMe We know this exists because of the feature check above.
+    return dispatcher.useHostTransitionStatus();
   }
 }

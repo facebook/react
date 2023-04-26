@@ -31,6 +31,8 @@ import type {
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import type {FormStatus} from '../shared/ReactDOMFormActions';
+
 import {
   writeChunk,
   writeChunkAndReturn,
@@ -81,6 +83,8 @@ import {
   describeDifferencesForPreloads,
   describeDifferencesForPreloadOverImplicitPreload,
 } from '../shared/ReactDOMResourceValidation';
+
+import {NotPending} from '../shared/ReactDOMFormActions';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
@@ -5562,3 +5566,6 @@ function getAsResourceDEV(
     );
   }
 }
+
+export type TransitionStatus = FormStatus;
+export const NotPendingTransition: TransitionStatus = NotPending;

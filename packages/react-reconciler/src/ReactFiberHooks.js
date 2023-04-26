@@ -148,6 +148,7 @@ import {
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {requestAsyncActionContext} from './ReactFiberAsyncAction';
+import {HostTransitionContext} from './ReactFiberHostContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -2645,6 +2646,14 @@ function rerenderTransition(): [
   return [isPending, start];
 }
 
+function useHostTransitionStatus(): TransitionStatus {
+  if (!(enableFormActions && enableAsyncActions)) {
+    throw new Error('Not implemented.');
+  }
+  const status: TransitionStatus | null = readContext(HostTransitionContext);
+  return status !== null ? status : NoPendingHostTransition;
+}
+
 function mountId(): string {
   const hook = mountWorkInProgressHook();
 
@@ -2972,6 +2981,10 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (ContextOnlyDispatcher: Dispatcher).useEffectEvent = throwInvalidHookError;
 }
+if (enableFormActions && enableAsyncActions) {
+  (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
+    throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3003,6 +3016,10 @@ if (enableUseMemoCacheHook) {
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnMount: Dispatcher).useEffectEvent = mountEvent;
 }
+if (enableFormActions && enableAsyncActions) {
+  (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
+    useHostTransitionStatus;
+}
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3032,6 +3049,10 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnUpdate: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableFormActions && enableAsyncActions) {
+  (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
+    useHostTransitionStatus;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -3063,6 +3084,10 @@ if (enableUseMemoCacheHook) {
 }
 if (enableUseEffectEventHook) {
   (HooksDispatcherOnRerender: Dispatcher).useEffectEvent = updateEvent;
+}
+if (enableFormActions && enableAsyncActions) {
+  (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
+    useHostTransitionStatus;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -3250,6 +3275,10 @@ if (__DEV__) {
         return mountEvent(callback);
       };
   }
+  if (enableFormActions && enableAsyncActions) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3403,6 +3432,10 @@ if (__DEV__) {
         updateHookTypesDev();
         return mountEvent(callback);
       };
+  }
+  if (enableFormActions && enableAsyncActions) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -3560,6 +3593,10 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableFormActions && enableAsyncActions) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3715,6 +3752,10 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateEvent(callback);
       };
+  }
+  if (enableFormActions && enableAsyncActions) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3893,6 +3934,10 @@ if (__DEV__) {
         mountHookTypesDev();
         return mountEvent(callback);
       };
+  }
+  if (enableFormActions && enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -4075,6 +4120,10 @@ if (__DEV__) {
         return updateEvent(callback);
       };
   }
+  if (enableFormActions && enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4255,5 +4304,9 @@ if (__DEV__) {
         updateHookTypesDev();
         return updateEvent(callback);
       };
+  }
+  if (enableFormActions && enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
+      useHostTransitionStatus;
   }
 }
