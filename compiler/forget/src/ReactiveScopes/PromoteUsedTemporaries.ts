@@ -56,7 +56,7 @@ class CollectJsxTagsVisitor extends ReactiveFunctionVisitor<JsxExpressionTags> {
     value: ReactiveValue,
     state: JsxExpressionTags
   ): void {
-    if (value.kind === "JsxExpression") {
+    if (value.kind === "JsxExpression" && value.tag.kind === "Identifier") {
       state.add(value.tag.identifier.id);
     }
   }

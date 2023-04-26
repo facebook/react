@@ -17,6 +17,7 @@ import {
   ArrayPattern,
   BlockId,
   BranchTerminal,
+  BuiltinTag,
   Case,
   Effect,
   GeneratedSource,
@@ -2035,7 +2036,7 @@ function lowerJsxElementName(
   exprPath: NodePath<
     t.JSXIdentifier | t.JSXMemberExpression | t.JSXNamespacedName
   >
-): Place {
+): Place | BuiltinTag {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   if (exprPath.isJSXIdentifier()) {
@@ -2047,19 +2048,11 @@ function lowerJsxElementName(
         loc: exprLoc,
       });
     } else {
-      if (tag.indexOf(":") !== -1) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerJsxElementName) JSXIdentifier to have no colons, got '${tag}'`,
-          severity: ErrorSeverity.InvalidInput,
-          nodePath: exprPath,
-        });
-      }
-      const place = lowerValueToTemporary(builder, {
-        kind: "Primitive",
-        value: tag,
+      return {
+        kind: "BuiltinTag",
+        name: tag,
         loc: exprLoc,
-      });
-      return place;
+      };
     }
   } else if (exprPath.isJSXMemberExpression()) {
     return lowerJsxMemberExpression(builder, exprPath);

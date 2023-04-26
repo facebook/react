@@ -381,7 +381,9 @@ function computeMemoizationInputs(
     }
     case "JsxExpression": {
       const operands: Array<Place> = [];
-      operands.push(value.tag);
+      if (value.tag.kind === "Identifier") {
+        operands.push(value.tag);
+      }
       for (const prop of value.props) {
         if (prop.kind === "JsxAttribute") {
           operands.push(prop.place);

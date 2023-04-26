@@ -317,18 +317,20 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           propItems.push(`...${printPlace(attribute.argument)}`);
         }
       }
+      const tag =
+        instrValue.tag.kind === "Identifier"
+          ? printPlace(instrValue.tag)
+          : instrValue.tag.name;
       const props = propItems.length !== 0 ? " " + propItems.join(" ") : "";
       if (instrValue.children !== null) {
         const children = instrValue.children.map((child) => {
           return `{${printPlace(child)}}`;
         });
-        value = `JSX <${printPlace(instrValue.tag)}${props}${
+        value = `JSX <${tag}${props}${
           props.length > 0 ? " " : ""
-        }>${children.join("")}</${printPlace(instrValue.tag)}>`;
+        }>${children.join("")}</${tag}>`;
       } else {
-        value = `JSX <${printPlace(instrValue.tag)}${props}${
-          props.length > 0 ? " " : ""
-        }/>`;
+        value = `JSX <${tag}${props}${props.length > 0 ? " " : ""}/>`;
       }
       break;
     }

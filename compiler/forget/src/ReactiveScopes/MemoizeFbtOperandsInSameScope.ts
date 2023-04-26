@@ -10,9 +10,13 @@ import {
   makeInstructionId,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveValue,
 } from "../HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+import {
+  eachReactiveValueOperand,
+  ReactiveFunctionVisitor,
+  visitReactiveFunction,
+} from "./visitors";
 
 /**
  * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/).
@@ -57,15 +61,14 @@ class Transform extends ReactiveFunctionVisitor<void> {
       // Record references to `fbt` as a global
       this.fbtValues.add(lvalue.identifier.id);
     } else if (
-      (value.kind === "JsxExpression" &&
-        this.fbtValues.has(value.tag.identifier.id)) ||
+      isFbtJsxExpression(this.fbtValues, value) ||
       (value.kind === "CallExpression" &&
         this.fbtValues.has(value.callee.identifier.id))
     ) {
       // if the JSX element's tag was `fbt`, mark all its operands
       // to ensure that they end up in the same scope as the jsx element
       // itself.
-      for (const operand of eachInstructionValueOperand(value)) {
+      for (const operand of eachReactiveValueOperand(value)) {
         operand.identifier.scope = lvalue.identifier.scope;
         operand.identifier.mutableRange.end =
           lvalue.identifier.mutableRange.end;
@@ -80,4 +83,16 @@ class Transform extends ReactiveFunctionVisitor<void> {
       }
     }
   }
+}
+
+function isFbtJsxExpression(
+  fbtValues: Set<IdentifierId>,
+  value: ReactiveValue
+): boolean {
+  return (
+    value.kind === "JsxExpression" &&
+    ((value.tag.kind === "Identifier" &&
+      fbtValues.has(value.tag.identifier.id)) ||
+      (value.tag.kind === "BuiltinTag" && value.tag.name === "fbt"))
+  );
 }

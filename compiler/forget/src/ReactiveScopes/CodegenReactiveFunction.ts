@@ -752,7 +752,10 @@ function codegenInstructionValue(
       for (const attribute of instrValue.props) {
         attributes.push(codegenJsxAttribute(cx, attribute));
       }
-      let tagValue = codegenPlace(cx, instrValue.tag);
+      let tagValue =
+        instrValue.tag.kind === "Identifier"
+          ? codegenPlace(cx, instrValue.tag)
+          : t.stringLiteral(instrValue.tag.name);
       let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
       if (tagValue.type === "Identifier") {
         tag = createJsxIdentifier(instrValue.tag.loc, tagValue.name);

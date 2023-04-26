@@ -110,7 +110,9 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "JsxExpression": {
-      yield instrValue.tag;
+      if (instrValue.tag.kind === "Identifier") {
+        yield instrValue.tag;
+      }
       for (const attribute of instrValue.props) {
         switch (attribute.kind) {
           case "JsxAttribute": {
@@ -370,7 +372,9 @@ export function mapInstructionOperands(
       break;
     }
     case "JsxExpression": {
-      instrValue.tag = fn(instrValue.tag);
+      if (instrValue.tag.kind === "Identifier") {
+        instrValue.tag = fn(instrValue.tag);
+      }
       for (const attribute of instrValue.props) {
         switch (attribute.kind) {
           case "JsxAttribute": {

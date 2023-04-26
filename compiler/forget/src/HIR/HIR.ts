@@ -608,7 +608,7 @@ export type InstructionValue =
     }
   | {
       kind: "JsxExpression";
-      tag: Place;
+      tag: Place | BuiltinTag;
       props: Array<JsxAttribute>;
       children: Array<Place> | null; // null === no children
       loc: SourceLocation;
@@ -748,6 +748,12 @@ export type Primitive = {
 
 export type LoadGlobal = {
   kind: "LoadGlobal";
+  name: string;
+  loc: SourceLocation;
+};
+
+export type BuiltinTag = {
+  kind: "BuiltinTag";
   name: string;
   loc: SourceLocation;
 };
