@@ -233,14 +233,7 @@ export default function ReactForgetBabelPlugin(
               }
             },
             ImportDeclaration(importDeclPath) {
-              // Matches `import { /* ... */ } from 'react';`
-              // but not `import * as React from 'react';`
-              if (
-                importDeclPath.get("source").node.value === "react" &&
-                importDeclPath
-                  .get("specifiers")
-                  .every((specifier) => specifier.isImportSpecifier())
-              ) {
+              if (isNonNamespacedImportOfReact(importDeclPath)) {
                 hasExistingReactImport = true;
               }
             },
@@ -253,7 +246,7 @@ export default function ReactForgetBabelPlugin(
               let didUpdateImport = false;
               path.traverse({
                 ImportDeclaration(importDeclPath) {
-                  if (importDeclPath.get("source").node.value === "react") {
+                  if (isNonNamespacedImportOfReact(importDeclPath)) {
                     importDeclPath.pushContainer(
                       "specifiers",
                       t.importSpecifier(
@@ -262,6 +255,7 @@ export default function ReactForgetBabelPlugin(
                       )
                     );
                     didUpdateImport = true;
+                    path.stop();
                   }
                 },
               });
@@ -439,4 +433,19 @@ function buildImportForGatingModule(
 
 function buildSpecifierIdent(gating: GatingOptions): t.Identifier {
   return t.identifier(gating.importSpecifierName);
+}
+
+/**
+ * Matches `import { ... } from 'react';`
+ * but not `import * as React from 'react';`
+ */
+function isNonNamespacedImportOfReact(
+  importDeclPath: BabelCore.NodePath<t.ImportDeclaration>
+): boolean {
+  return (
+    importDeclPath.get("source").node.value === "react" &&
+    importDeclPath
+      .get("specifiers")
+      .every((specifier) => specifier.isImportSpecifier())
+  );
 }
