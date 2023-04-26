@@ -171,7 +171,6 @@ export default function ReactForgetBabelPlugin(
             Directive(path) {
               if (hasUseForgetDirective(path.node)) {
                 fileHasUseForgetDirective = true;
-                path.stop();
               }
             },
           });
@@ -255,7 +254,6 @@ export default function ReactForgetBabelPlugin(
                       )
                     );
                     didUpdateImport = true;
-                    path.stop();
                   }
                 },
               });
