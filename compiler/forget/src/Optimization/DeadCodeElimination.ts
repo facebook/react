@@ -190,6 +190,11 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       }
       return true;
     }
+    case "ExpressionStatement": {
+      // We create ExpressionStatements specifically for expressions that would otherwise
+      // be dropped but which we don't want to eliminate.
+      return false;
+    }
     case "Await":
     case "CallExpression":
     case "ComputedDelete":

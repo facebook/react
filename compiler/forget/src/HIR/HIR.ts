@@ -702,6 +702,14 @@ export type InstructionValue =
       value: Place; // the collection
       loc: SourceLocation;
     }
+  // Represents a value that is unused but which we want to ensure is not dropped
+  // Examples include logical or ternary expressions that appear as expression statements,
+  // that appear only for their side effects
+  | {
+      kind: "ExpressionStatement";
+      value: Place;
+      loc: SourceLocation;
+    }
   /**
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow

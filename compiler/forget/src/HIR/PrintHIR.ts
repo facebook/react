@@ -474,6 +474,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `NextIterableOf ${printPlace(instrValue.value)}`;
       break;
     }
+    case "ExpressionStatement": {
+      value = `ExpressionStatement ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

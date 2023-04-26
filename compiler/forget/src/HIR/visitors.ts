@@ -180,6 +180,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "ExpressionStatement": {
+      yield instrValue.value;
+      break;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "UnsupportedNode":
@@ -440,6 +444,10 @@ export function mapInstructionOperands(
       break;
     }
     case "NextIterableOf": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "ExpressionStatement": {
       instrValue.value = fn(instrValue.value);
       break;
     }

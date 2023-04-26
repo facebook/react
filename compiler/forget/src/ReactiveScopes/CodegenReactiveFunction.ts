@@ -996,6 +996,10 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.value);
       break;
     }
+    case "ExpressionStatement": {
+      value = codegenPlace(cx, instrValue.value);
+      break;
+    }
     case "DeclareLocal":
     case "Destructure":
     case "StoreLocal": {
