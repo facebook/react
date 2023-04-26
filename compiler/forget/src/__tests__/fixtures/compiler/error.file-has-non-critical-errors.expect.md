@@ -18,14 +18,14 @@ function Good() {
 ## Code
 
 ```javascript
-import * as React from "react"; // @panicOnBailout false
+import { unstable_useMemoCache as useMemoCache } from "react"; // @panicOnBailout false
 function Bad() {
   var x = 1;
   return <div>{x}</div>;
 }
 
 function Good() {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = useMemoCache(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = <div>{1}</div>;

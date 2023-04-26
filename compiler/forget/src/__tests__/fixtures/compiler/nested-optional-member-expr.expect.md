@@ -14,10 +14,10 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // We should codegen nested optional properties correctly
+import { unstable_useMemoCache as useMemoCache } from "react"; // We should codegen nested optional properties correctly
 // (i.e. placing `?` in the correct PropertyLoad)
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a;
   let t0;
   if (c_0) {

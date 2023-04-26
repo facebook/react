@@ -13,9 +13,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = useMemoCache(5);
 
   const t0 = props.cond ? props.foo : props.bar;
   const c_0 = $[0] !== t0;

@@ -17,9 +17,9 @@ function foo(a, b) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = useMemoCache(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];

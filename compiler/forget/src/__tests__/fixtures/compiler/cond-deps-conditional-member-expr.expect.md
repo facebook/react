@@ -17,12 +17,12 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
+import { unstable_useMemoCache as useMemoCache } from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a` as a dependency (since `props.a.b` is
 // a conditional dependency, i.e. gated behind control flow)
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {

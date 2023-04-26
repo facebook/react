@@ -214,48 +214,76 @@ export default function ReactForgetBabelPlugin(
           opts: { ...pass.opts, ...options },
         });
 
-        // If there isn't already an import of * as React, insert it so React.useMemoCache doesn't
+        // If there isn't already an import of * as React, insert it so useMemoCache doesn't
         // throw
         if (hasForgetCompiledCode) {
           let didInsertUseMemoCache = false;
           let hasExistingReactImport = false;
           path.traverse({
-            MemberExpression(memberExprPath) {
-              const obj = memberExprPath.get("object");
-              const prop = memberExprPath.get("property");
+            CallExpression(callExprPath) {
+              const callee = callExprPath.get("callee");
+              const args = callExprPath.get("arguments");
               if (
-                obj.isIdentifier() &&
-                obj.node.name === "React" &&
-                prop.isIdentifier() &&
-                prop.node.name === "unstable_useMemoCache"
+                callee.isIdentifier() &&
+                callee.node.name === "useMemoCache" &&
+                args.length === 1 &&
+                args[0].isNumericLiteral()
               ) {
                 didInsertUseMemoCache = true;
-                memberExprPath.stop();
               }
             },
             ImportDeclaration(importDeclPath) {
+              // Matches `import { /* ... */ } from 'react';`
+              // but not `import * as React from 'react';`
               if (
                 importDeclPath.get("source").node.value === "react" &&
-                importDeclPath.get("specifiers").length === 1 &&
                 importDeclPath
-                  .get("specifiers")[0]
-                  .isImportNamespaceSpecifier() &&
-                importDeclPath.get("specifiers")[0].get("local").node.name ===
-                  "React"
+                  .get("specifiers")
+                  .every((specifier) => specifier.isImportSpecifier())
               ) {
                 hasExistingReactImport = true;
-                importDeclPath.stop();
               }
             },
           });
-          if (didInsertUseMemoCache && !hasExistingReactImport) {
-            path.unshiftContainer(
-              "body",
-              t.importDeclaration(
-                [t.importNamespaceSpecifier(t.identifier("React"))],
-                t.stringLiteral("react")
-              )
-            );
+          // If Forget did successfully compile inject/update an import of
+          // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
+          // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
+          if (didInsertUseMemoCache) {
+            if (hasExistingReactImport) {
+              let didUpdateImport = false;
+              path.traverse({
+                ImportDeclaration(importDeclPath) {
+                  if (importDeclPath.get("source").node.value === "react") {
+                    importDeclPath.pushContainer(
+                      "specifiers",
+                      t.importSpecifier(
+                        t.identifier("useMemoCache"),
+                        t.identifier("unstable_useMemoCache")
+                      )
+                    );
+                    didUpdateImport = true;
+                  }
+                },
+              });
+              if (didUpdateImport === false) {
+                throw new Error(
+                  "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
+                );
+              }
+            } else {
+              path.unshiftContainer(
+                "body",
+                t.importDeclaration(
+                  [
+                    t.importSpecifier(
+                      t.identifier("useMemoCache"),
+                      t.identifier("unstable_useMemoCache")
+                    ),
+                  ],
+                  t.stringLiteral("react")
+                )
+              );
+            }
           }
           if (options.gating != null) {
             path.unshiftContainer(

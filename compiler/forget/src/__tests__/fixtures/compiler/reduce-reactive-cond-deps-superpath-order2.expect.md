@@ -20,12 +20,12 @@ function TestConditionalSuperpath2(props, other) {
 ## Code
 
 ```javascript
-import * as React from "react"; // When an unconditional dependency `props.a` is the subpath of a conditional
+import { unstable_useMemoCache as useMemoCache } from "react"; // When an unconditional dependency `props.a` is the subpath of a conditional
 // dependency `props.a.b`, we can safely overestimate and only track `props.a`
 // as a dependency
 // ordering of accesses should not matter
 function TestConditionalSuperpath2(props, other) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== other;
   const c_1 = $[1] !== props.a;
   let x;

@@ -22,12 +22,12 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function useFreeze() {}
 function foo() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [];

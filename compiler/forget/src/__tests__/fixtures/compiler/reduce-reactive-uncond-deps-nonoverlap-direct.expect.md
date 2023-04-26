@@ -16,10 +16,10 @@ function TestNonOverlappingTracked(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Test that we can track non-overlapping dependencies separately.
+import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we can track non-overlapping dependencies separately.
 // (not needed for correctness but for dependency granularity)
 function TestNonOverlappingTracked(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== props.a.b;
   const c_1 = $[1] !== props.a.c;
   let x;

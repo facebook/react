@@ -45,9 +45,9 @@ function getNativeLogFunction(level) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function getNativeLogFunction(level) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== level;
   let t0;
   if (c_0) {

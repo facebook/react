@@ -17,10 +17,10 @@ function TestOverlappingTracked(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Test that we correctly track a subpath if the subpath itself is accessed as
+import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we correctly track a subpath if the subpath itself is accessed as
 // a dependency
 function TestOverlappingTracked(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {

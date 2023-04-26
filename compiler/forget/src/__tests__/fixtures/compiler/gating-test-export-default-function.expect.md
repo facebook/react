@@ -23,13 +23,13 @@ function Foo(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import * as React from "react"; // @gating @forgetDirective
+import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @forgetDirective
 function Bar_uncompiled(props) {
   "use forget";
   return <div>{props.bar}</div>;
 }
 function Bar_forget(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.bar;
   let t0;
   if (c_0) {
@@ -53,7 +53,7 @@ function Foo_uncompiled(props) {
   return <Foo>{props.bar}</Foo>;
 }
 function Foo_forget(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.bar;
   let t0;
   if (c_0) {

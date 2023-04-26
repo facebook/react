@@ -34,9 +34,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = useMemoCache(8);
   const items = props.items;
   const maxItems = props.maxItems;
   const c_0 = $[0] !== maxItems;

@@ -16,9 +16,9 @@ function component(a, b) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a, b) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   let t14 = undefined;
   if (a) {
     const c_0 = $[0] !== b;

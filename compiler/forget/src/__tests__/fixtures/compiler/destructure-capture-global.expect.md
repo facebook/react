@@ -13,10 +13,10 @@ function component(a) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 let someGlobal = {};
 function component(a) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {

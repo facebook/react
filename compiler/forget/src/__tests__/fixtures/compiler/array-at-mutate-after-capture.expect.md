@@ -18,10 +18,10 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // x's mutable range should extend to `mutate(y)`
+import { unstable_useMemoCache as useMemoCache } from "react"; // x's mutable range should extend to `mutate(y)`
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};

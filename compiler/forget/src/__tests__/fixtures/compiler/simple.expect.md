@@ -14,9 +14,9 @@ export default function foo(x, y) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 export default function foo(x, y) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = useMemoCache(4);
   if (x) {
     const c_0 = $[0] !== y;
     let t0;

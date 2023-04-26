@@ -23,11 +23,11 @@ function TestCondDepInSwitchMissingDefault(props, other) {
 ## Code
 
 ```javascript
-import * as React from "react"; // props.a.b should NOT be added as a unconditional dependency to the reactive
+import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b should NOT be added as a unconditional dependency to the reactive
 // scope that produces x if it is not accessed in the default case.
 
 function TestCondDepInSwitchMissingDefault(props, other) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== other;
   const c_1 = $[1] !== props;
   let x;

@@ -20,9 +20,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = useMemoCache(8);
   const c_0 = $[0] !== props.p0;
   const c_1 = $[1] !== props.p1;
   let x;

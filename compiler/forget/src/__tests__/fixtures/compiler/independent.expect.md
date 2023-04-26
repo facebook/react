@@ -27,7 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 /**
  * Should produce 3 scopes:
  *
@@ -39,7 +39,7 @@ import * as React from "react";
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = useMemoCache(7);
   const c_0 = $[0] !== props.a;
   let t0;
   if (c_0) {

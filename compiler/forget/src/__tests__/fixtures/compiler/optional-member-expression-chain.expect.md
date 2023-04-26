@@ -15,10 +15,10 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
+import { unstable_useMemoCache as useMemoCache } from "react"; // Note that `a?.b.c` is semantically different from `(a?.b).c`
 // We should codegen the correct member expressions
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const x = props?.b.c;
   const y = props?.b.c.d?.e.f.g?.h;
   const c_0 = $[0] !== x;

@@ -21,11 +21,11 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // @Pass runMutableRangeAnalysis
+import { unstable_useMemoCache as useMemoCache } from "react"; // @Pass runMutableRangeAnalysis
 function foo() {}
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   let a;
   let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

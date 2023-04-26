@@ -14,9 +14,9 @@ function Component() {
 ## Code
 
 ```javascript
-import * as React from "react"; // Forget should call the original x (x = foo()) to compute result
+import { unstable_useMemoCache as useMemoCache } from "react"; // Forget should call the original x (x = foo()) to compute result
 function Component() {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   let t0;
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

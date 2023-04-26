@@ -34,7 +34,7 @@ function TestJoinCondDepsInUncondScopes(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // This tests an optimization, NOT a correctness property.
+import { unstable_useMemoCache as useMemoCache } from "react"; // This tests an optimization, NOT a correctness property.
 // When propagating reactive dependencies of an inner scope up to its parent,
 // we prefer to retain granularity.
 //
@@ -52,7 +52,7 @@ import * as React from "react"; // This tests an optimization, NOT a correctness
 //  }
 
 function TestJoinCondDepsInUncondScopes(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = useMemoCache(8);
   const c_0 = $[0] !== props.a.b;
   let x;
   let y;

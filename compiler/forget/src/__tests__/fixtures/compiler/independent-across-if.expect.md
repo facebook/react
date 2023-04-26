@@ -36,7 +36,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function compute() {}
 function mutate() {}
 function foo() {}
@@ -57,7 +57,7 @@ function Foo() {}
  *   return = <Foo a={a} b={b} />
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = useMemoCache(8);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;

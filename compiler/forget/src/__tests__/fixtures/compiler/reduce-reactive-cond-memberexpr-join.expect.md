@@ -25,7 +25,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
+import { unstable_useMemoCache as useMemoCache } from "react"; // To preserve the nullthrows behavior and reactive deps of this code,
 // Forget needs to add `props.a.b` or a subpath as a dependency.
 //
 // (1) Since the reactive block producing x unconditionally read props.a.<...>,
@@ -37,7 +37,7 @@ import * as React from "react"; // To preserve the nullthrows behavior and react
 //     we technically do not need to add `props.a` as a dependency.
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a.b;
   let x;
   if (c_0) {

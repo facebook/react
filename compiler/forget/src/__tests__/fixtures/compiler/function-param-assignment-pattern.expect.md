@@ -11,9 +11,9 @@ function Component(x = "default", y = [{}]) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(t24, t0) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = useMemoCache(5);
   const x = t24 === undefined ? "default" : t24;
   const c_0 = $[0] !== t0;
   let t1;

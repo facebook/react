@@ -12,9 +12,9 @@ function StoreLandingUnseenGiftModalContainer(a) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function StoreLandingUnseenGiftModalContainer(a) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {

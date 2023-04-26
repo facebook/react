@@ -18,9 +18,9 @@ function foo(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(props) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = useMemoCache(4);
   const c_0 = $[0] !== props.bar;
   let x;
   if (c_0) {

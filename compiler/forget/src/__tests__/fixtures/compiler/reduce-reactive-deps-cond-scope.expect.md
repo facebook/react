@@ -34,7 +34,7 @@ function TestReactiveDepsInCondScope(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Some reactive scopes are created within a conditional. If a child scope
+import { unstable_useMemoCache as useMemoCache } from "react"; // Some reactive scopes are created within a conditional. If a child scope
 // is within a conditional, its reactive dependencies should be propagated
 // as conditionals
 //
@@ -53,7 +53,7 @@ import * as React from "react"; // Some reactive scopes are created within a con
 // ```
 
 function TestReactiveDepsInCondScope(props) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = useMemoCache(4);
   const c_0 = $[0] !== props;
   let x;
   if (c_0) {

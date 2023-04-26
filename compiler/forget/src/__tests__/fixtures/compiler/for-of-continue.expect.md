@@ -19,9 +19,9 @@ function Component() {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component() {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [0, 1, 2, 3];

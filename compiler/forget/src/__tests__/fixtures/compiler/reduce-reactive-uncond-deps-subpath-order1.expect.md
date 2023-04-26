@@ -17,10 +17,10 @@ function TestDepsSubpathOrder1(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Determine that we only need to track p.a here
+import { unstable_useMemoCache as useMemoCache } from "react"; // Determine that we only need to track p.a here
 // Ordering of access should not matter
 function TestDepsSubpathOrder1(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {

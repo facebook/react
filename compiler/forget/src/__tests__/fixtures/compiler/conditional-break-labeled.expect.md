@@ -23,12 +23,12 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 /**
  * props.b *does* influence `a`
  */
 function Component(props) {
-  const $ = React.unstable_useMemoCache(5);
+  const $ = useMemoCache(5);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
   const c_2 = $[2] !== props.c;

@@ -18,9 +18,9 @@ function foo(a, b, c, d) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c, d) {
-  const $ = React.unstable_useMemoCache(4);
+  const $ = useMemoCache(4);
   let x = undefined;
   if (someVal) {
     const c_0 = $[0] !== b;

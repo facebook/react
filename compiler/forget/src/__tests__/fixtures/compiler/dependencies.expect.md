@@ -23,9 +23,9 @@ function foo(x, y, z) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(x, y, z) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const items = [z];
   items.push(x);
   const c_0 = $[0] !== x;

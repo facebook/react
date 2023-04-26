@@ -17,12 +17,12 @@ function ArrayAtTest(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // arrayInstance.at should have the following effects:
+import { unstable_useMemoCache as useMemoCache } from "react"; // arrayInstance.at should have the following effects:
 //  - read on arg0
 //  - read on receiver
 //  - mutate on lvalue
 function ArrayAtTest(props) {
-  const $ = React.unstable_useMemoCache(9);
+  const $ = useMemoCache(9);
   const c_0 = $[0] !== props.x;
   let t0;
   if (c_0) {

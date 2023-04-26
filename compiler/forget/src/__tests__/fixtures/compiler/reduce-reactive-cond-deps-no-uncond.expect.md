@@ -18,10 +18,10 @@ function TestOnlyConditionalDependencies(props, other) {
 ## Code
 
 ```javascript
-import * as React from "react"; // When an object's properties are only read conditionally, we should
+import { unstable_useMemoCache as useMemoCache } from "react"; // When an object's properties are only read conditionally, we should
 // track the base object as a dependency.
 function TestOnlyConditionalDependencies(props, other) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== other;
   const c_1 = $[1] !== props;
   let x;

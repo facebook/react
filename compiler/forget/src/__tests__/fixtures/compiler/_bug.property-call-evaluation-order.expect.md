@@ -22,14 +22,14 @@ function Component() {
 ## Code
 
 ```javascript
-import * as React from "react"; // Should print A, arg, original
+import { unstable_useMemoCache as useMemoCache } from "react"; // Should print A, arg, original
 
 function changeF(o) {
   o.f = () => console.log("new");
 }
 
 function Component() {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => console.log("original");

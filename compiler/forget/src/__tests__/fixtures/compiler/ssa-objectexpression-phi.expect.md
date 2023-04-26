@@ -21,9 +21,9 @@ function foo() {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function foo() {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = useMemoCache(1);
   const x = 1;
 
   const y = 3;

@@ -18,12 +18,12 @@ export const Renderer = (props) => (
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import * as React from "react"; // @gating
+import { unstable_useMemoCache as useMemoCache } from "react"; // @gating
 function ErrorView_uncompiled(error, _retry) {
   return <MessageBox error={error}></MessageBox>;
 }
 function ErrorView_forget(error, _retry) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== error;
   let t0;
   if (c_0) {
@@ -47,7 +47,7 @@ function Renderer_uncompiled(props) {
   );
 }
 function Renderer_forget(props) {
-  const $ = React.unstable_useMemoCache(3);
+  const $ = useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Bar />;

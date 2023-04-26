@@ -16,9 +16,9 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(2);
   let results;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const collection = [makeObject()];

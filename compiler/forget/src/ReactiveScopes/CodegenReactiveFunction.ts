@@ -54,17 +54,14 @@ export function codegenReactiveFunction(
   }
   const cacheCount = cx.nextCacheIndex;
   if (cacheCount !== 0) {
+    // The import declaration for `useMemoCache` is inserted in the Babel plugin
     statements.unshift(
       t.variableDeclaration("const", [
         t.variableDeclarator(
           t.identifier("$"),
-          t.callExpression(
-            t.memberExpression(
-              t.identifier("React"),
-              t.identifier("unstable_useMemoCache")
-            ),
-            [t.numericLiteral(cacheCount)]
-          )
+          t.callExpression(t.identifier("useMemoCache"), [
+            t.numericLiteral(cacheCount),
+          ])
         ),
       ])
     );

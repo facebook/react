@@ -16,9 +16,9 @@ function MyApp(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // This caused an infinite loop in the compiler
+import { unstable_useMemoCache as useMemoCache } from "react"; // This caused an infinite loop in the compiler
 function MyApp(props) {
-  const $ = React.unstable_useMemoCache(1);
+  const $ = useMemoCache(1);
   let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     y = makeObj();

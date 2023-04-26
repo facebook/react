@@ -19,11 +19,11 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // arrayInstance.push should have the following effects:
+import { unstable_useMemoCache as useMemoCache } from "react"; // arrayInstance.push should have the following effects:
 //  - read on all args (rest parameter)
 //  - mutate on receiver
 function Component(props) {
-  const $ = React.unstable_useMemoCache(8);
+  const $ = useMemoCache(8);
   const c_0 = $[0] !== props.x;
   let t0;
   if (c_0) {

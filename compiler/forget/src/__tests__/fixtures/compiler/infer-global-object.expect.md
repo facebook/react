@@ -21,10 +21,10 @@ function Component(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // Check that we correctly resolve type and effect lookups on the javascript
+import { unstable_useMemoCache as useMemoCache } from "react"; // Check that we correctly resolve type and effect lookups on the javascript
 // global object.
 function Component(props) {
-  const $ = React.unstable_useMemoCache(7);
+  const $ = useMemoCache(7);
   const c_0 = $[0] !== props.b;
   let t0;
   if (c_0) {

@@ -2,18 +2,17 @@
 ## Input
 
 ```javascript
-import * as React from "react";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 
 function Component(props) {
-  const [x] = React.useState(0);
+  const [x] = useState(0);
   const expensiveNumber = useMemo(() => calculateExpensiveNumber(x), [x]);
 
   return <div>{expensiveNumber}</div>;
 }
 
 function Component2(props) {
-  const [x] = React.useState(0);
+  const [x] = useState(0);
   const expensiveNumber = useMemo(() => calculateExpensiveNumber(x), [x]);
 
   return <div>{expensiveNumber}</div>;
@@ -24,49 +23,60 @@ function Component2(props) {
 ## Code
 
 ```javascript
-import * as React from "react";
-import { useMemo } from "react";
+import {
+  useState,
+  useMemo,
+  unstable_useMemoCache as useMemoCache,
+} from "react";
 
 function Component(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(4);
+  const [x] = useState(0);
+  const c_0 = $[0] !== x;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const [x] = React.useState(0);
+  if (c_0) {
     t0 = calculateExpensiveNumber(x);
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
-  const t17 = t0;
-  const expensiveNumber = t17;
+  const t16 = t0;
+  const expensiveNumber = t16;
+  const c_2 = $[2] !== expensiveNumber;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_2) {
     t1 = <div>{expensiveNumber}</div>;
-    $[1] = t1;
+    $[2] = expensiveNumber;
+    $[3] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[3];
   }
   return t1;
 }
 
 function Component2(props) {
-  const $ = React.unstable_useMemoCache(2);
+  const $ = useMemoCache(4);
+  const [x] = useState(0);
+  const c_0 = $[0] !== x;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const [x] = React.useState(0);
+  if (c_0) {
     t0 = calculateExpensiveNumber(x);
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
-  const t17 = t0;
-  const expensiveNumber = t17;
+  const t16 = t0;
+  const expensiveNumber = t16;
+  const c_2 = $[2] !== expensiveNumber;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_2) {
     t1 = <div>{expensiveNumber}</div>;
-    $[1] = t1;
+    $[2] = expensiveNumber;
+    $[3] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[3];
   }
   return t1;
 }

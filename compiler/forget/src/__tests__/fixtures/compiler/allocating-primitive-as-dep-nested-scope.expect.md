@@ -19,12 +19,12 @@ function AllocatingPrimitiveAsDepNested(props) {
 ## Code
 
 ```javascript
-import * as React from "react"; // bar(props.b) is an allocating expression that produces a primitive, which means
+import { unstable_useMemoCache as useMemoCache } from "react"; // bar(props.b) is an allocating expression that produces a primitive, which means
 // that Forget should memoize it.
 // Correctness:
 //   - y depends on either bar(props.b) or bar(props.b) + 1
 function AllocatingPrimitiveAsDepNested(props) {
-  const $ = React.unstable_useMemoCache(9);
+  const $ = useMemoCache(9);
   const c_0 = $[0] !== props.b;
   const c_1 = $[1] !== props.a;
   let x;
