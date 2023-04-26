@@ -10,11 +10,15 @@ function Component(props) {
 
 ```
 
+## Code
 
-## Error
+```javascript
+function Component(props) {
+  let x = undefined;
+
+  props.cond ? (x = 1) : (x = 2);
+  return x;
+}
 
 ```
-[ReactForget] Todo: TODO: Support ConditionalExpression whose value is unused (3:3)
-```
-          
       

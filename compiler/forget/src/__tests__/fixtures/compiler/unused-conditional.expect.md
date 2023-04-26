@@ -10,11 +10,15 @@ function Component(props) {
 
 ```
 
+## Code
 
-## Error
+```javascript
+function Component(props) {
+  let x = undefined;
+
+  ((x = 1), 1) && (x = 2);
+  return x;
+}
 
 ```
-[ReactForget] Todo: TODO: Support LogicalExpression whose value is unused (3:3)
-```
-          
       
