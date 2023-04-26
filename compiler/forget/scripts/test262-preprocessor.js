@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const runReactForgetBabelPlugin =
-  require("../dist/Babel/RunReactForgetBabelPlugin").default;
+const {
+  runReactForgetBabelPlugin,
+} = require("../dist/Babel/RunReactForgetBabelPlugin");
 
 // Preprocessor that runs Forget on the test262 test prior to execution. Compilation errors short
 // circuit test execution and report an error immediately.
