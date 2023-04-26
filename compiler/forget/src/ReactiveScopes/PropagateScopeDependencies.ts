@@ -39,13 +39,13 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
-  const promotedTemporaries: PromotedTemporaries = {
+  const escapingTemporaries: TemporariesUsedOutsideDefiningScope = {
     declarations: new Map(),
-    used: new Set(),
+    usedOutsideDeclaringScope: new Set(),
   };
-  visitReactiveFunction(fn, new FindPromotedTemporaries(), promotedTemporaries);
+  visitReactiveFunction(fn, new FindPromotedTemporaries(), escapingTemporaries);
 
-  const context = new Context(promotedTemporaries.used);
+  const context = new Context(escapingTemporaries.usedOutsideDeclaringScope);
   if (fn.id !== null) {
     context.declare(fn.id, {
       id: makeInstructionId(0),
@@ -61,16 +61,19 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   visit(context, fn.body);
 }
 
-type PromotedTemporaries = {
+type TemporariesUsedOutsideDefiningScope = {
+  // tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
+  // and the scope where they are defined
   declarations: Map<IdentifierId, ReactiveScope>;
-  used: Set<IdentifierId>;
+  // temporaries used outside of their defining scope
+  usedOutsideDeclaringScope: Set<IdentifierId>;
 };
-class FindPromotedTemporaries extends ReactiveFunctionVisitor<PromotedTemporaries> {
+class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOutsideDefiningScope> {
   scopes: Array<ReactiveScope> = [];
 
   override visitScope(
     scope: ReactiveScopeBlock,
-    state: PromotedTemporaries
+    state: TemporariesUsedOutsideDefiningScope
   ): void {
     this.scopes.push(scope.scope);
     this.traverseScope(scope, state);
@@ -79,7 +82,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<PromotedTemporarie
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: PromotedTemporaries
+    state: TemporariesUsedOutsideDefiningScope
   ): void {
     const scope = this.scopes.at(-1);
     if (instruction.lvalue === null || scope === undefined) {
@@ -101,7 +104,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<PromotedTemporarie
   override visitPlace(
     _id: InstructionId,
     place: Place,
-    state: PromotedTemporaries
+    state: TemporariesUsedOutsideDefiningScope
   ): void {
     const declaringScope = state.declarations.get(place.identifier.id);
     if (this.scopes.length === 0 || declaringScope === undefined) {
@@ -109,7 +112,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<PromotedTemporarie
     }
     if (this.scopes.indexOf(declaringScope) === -1) {
       // Declaring scope is not active === used outside declaring scope
-      state.used.add(place.identifier.id);
+      state.usedOutsideDeclaringScope.add(place.identifier.id);
     }
   }
 }
