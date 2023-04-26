@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1734297975a5c75886dc8f61c542873e>>
+ * @generated SignedSource<<147e07431dc4defee6d2e9faf584292a>>
  */
 
 'use strict';
@@ -2587,7 +2587,7 @@ function isRootDehydrated(root) {
 
 var contextStackCursor = createCursor(null);
 var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
 
 function requiredContext(c) {
   {
@@ -2641,24 +2641,21 @@ function pushHostContext(fiber) {
   var context = requiredContext(contextStackCursor.current);
   var nextContext = getChildHostContext(); // Don't push this Fiber's context unless it's unique.
 
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
+  if (context !== nextContext) {
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
+    push(contextStackCursor, nextContext, fiber);
+  }
 }
 
 function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
+  if (contextFiberStackCursor.current === fiber) {
+    // Do not pop unless this Fiber provided the current context.
+    // pushHostContext() only pushes Fibers that provide unique contexts.
+    pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
   }
-
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
 }
 
 var isHydrating = false; // This flag allows for warning supression when we expect there to be mismatches
@@ -23895,7 +23892,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-6eadbe0c4-20230425";
+var ReactVersion = "18.3.0-next-540bab085-20230426";
 
 // Might add PROFILE later.
 
