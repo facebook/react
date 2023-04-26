@@ -880,6 +880,9 @@ function lowerStatement(
       });
       return;
     }
+    case "EmptyStatement": {
+      return;
+    }
     case "ForInStatement":
     case "ClassDeclaration":
     case "DeclareClass":
@@ -892,7 +895,6 @@ function lowerStatement(
     case "DeclareOpaqueType":
     case "DeclareTypeAlias":
     case "DeclareVariable":
-    case "EmptyStatement":
     case "EnumDeclaration":
     case "ExportAllDeclaration":
     case "ExportDefaultDeclaration":
