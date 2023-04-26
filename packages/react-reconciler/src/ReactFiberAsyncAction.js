@@ -7,44 +7,36 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
+} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
+
 import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {NoLane} from './ReactFiberLane';
 
-interface AsyncActionImpl {
-  lane: Lane;
-  listeners: Array<(false) => mixed>;
-  count: number;
-  then(
-    onFulfill: (value: boolean) => mixed,
-    onReject: (error: mixed) => mixed,
-  ): void;
-}
+// If there are multiple, concurrent async actions, they are entangled. All
+// transition updates that occur while the async action is still in progress
+// are treated as part of the action.
+//
+// The ideal behavior would be to treat each async function as an independent
+// action. However, without a mechanism like AsyncContext, we can't tell which
+// action an update corresponds to. So instead, we entangle them all into one.
 
-interface PendingAsyncAction extends AsyncActionImpl {
-  status: 'pending';
-}
+// The listeners to notify once the entangled scope completes.
+let currentEntangledListeners: Array<() => mixed> | null = null;
+// The number of pending async actions in the entangled scope.
+let currentEntangledPendingCount: number = 0;
+// The transition lane shared by all updates in the entangled scope.
+let currentEntangledLane: Lane = NoLane;
 
-interface FulfilledAsyncAction extends AsyncActionImpl {
-  status: 'fulfilled';
-  value: boolean;
-}
-
-interface RejectedAsyncAction extends AsyncActionImpl {
-  status: 'rejected';
-  reason: mixed;
-}
-
-type AsyncAction =
-  | PendingAsyncAction
-  | FulfilledAsyncAction
-  | RejectedAsyncAction;
-
-let currentAsyncAction: AsyncAction | null = null;
-
-export function requestAsyncActionContext(
+export function requestAsyncActionContext<S>(
   actionReturnValue: mixed,
-): AsyncAction | false {
+  finishedState: S,
+): Thenable<S> | S {
   if (
     actionReturnValue !== null &&
     typeof actionReturnValue === 'object' &&
@@ -53,78 +45,131 @@ export function requestAsyncActionContext(
     // This is an async action.
     //
     // Return a thenable that resolves once the action scope (i.e. the async
-    // function passed to startTransition) has finished running. The fulfilled
-    // value is `false` to represent that the action is not pending.
-    const thenable: Wakeable = (actionReturnValue: any);
-    if (currentAsyncAction === null) {
+    // function passed to startTransition) has finished running.
+
+    const thenable: Thenable<mixed> = (actionReturnValue: any);
+    let entangledListeners;
+    if (currentEntangledListeners === null) {
       // There's no outer async action scope. Create a new one.
-      const asyncAction: AsyncAction = {
-        lane: requestTransitionLane(),
-        listeners: [],
-        count: 0,
-        status: 'pending',
-        value: false,
-        reason: undefined,
-        then(resolve: boolean => mixed) {
-          asyncAction.listeners.push(resolve);
-        },
-      };
-      attachPingListeners(thenable, asyncAction);
-      currentAsyncAction = asyncAction;
-      return asyncAction;
+      entangledListeners = currentEntangledListeners = [];
+      currentEntangledPendingCount = 0;
+      currentEntangledLane = requestTransitionLane();
     } else {
-      // Inherit the outer scope.
-      const asyncAction: AsyncAction = (currentAsyncAction: any);
-      attachPingListeners(thenable, asyncAction);
-      return asyncAction;
+      entangledListeners = currentEntangledListeners;
     }
+
+    currentEntangledPendingCount++;
+    let resultStatus = 'pending';
+    let rejectedReason;
+    thenable.then(
+      () => {
+        resultStatus = 'fulfilled';
+        pingEngtangledActionScope();
+      },
+      error => {
+        resultStatus = 'rejected';
+        rejectedReason = error;
+        pingEngtangledActionScope();
+      },
+    );
+
+    // Create a thenable that represents the result of this action, but doesn't
+    // resolve until the entire entangled scope has finished.
+    //
+    // Expressed using promises:
+    //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
+    //   return thisResult;
+    const resultThenable = createResultThenable<S>(entangledListeners);
+
+    // Attach a listener to fill in the result.
+    entangledListeners.push(() => {
+      switch (resultStatus) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = finishedState;
+          break;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<S> = (resultThenable: any);
+          rejectedThenable.status = 'rejected';
+          rejectedThenable.reason = rejectedReason;
+          break;
+        }
+        case 'pending':
+        default: {
+          // The listener above should have been called first, so `resultStatus`
+          // should already be set to the correct value.
+          throw new Error(
+            'Thenable should have already resolved. This ' +
+              'is a bug in React.',
+          );
+        }
+      }
+    });
+
+    return resultThenable;
   } else {
     // This is not an async action, but it may be part of an outer async action.
-    if (currentAsyncAction === null) {
-      // There's no outer async action scope.
-      return false;
+    if (currentEntangledListeners === null) {
+      return finishedState;
     } else {
-      // Inherit the outer scope.
-      return currentAsyncAction;
+      // Return a thenable that does not resolve until the entangled actions
+      // have finished.
+      const entangledListeners = currentEntangledListeners;
+      const resultThenable = createResultThenable<S>(entangledListeners);
+      entangledListeners.push(() => {
+        const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
+        fulfilledThenable.status = 'fulfilled';
+        fulfilledThenable.value = finishedState;
+      });
+      return resultThenable;
     }
   }
 }
 
-export function peekAsyncActionContext(): AsyncAction | null {
-  return currentAsyncAction;
+function pingEngtangledActionScope() {
+  if (
+    currentEntangledListeners !== null &&
+    --currentEntangledPendingCount === 0
+  ) {
+    // All the actions have finished. Close the entangled async action scope
+    // and notify all the listeners.
+    const listeners = currentEntangledListeners;
+    currentEntangledListeners = null;
+    currentEntangledLane = NoLane;
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      listener();
+    }
+  }
 }
 
-function attachPingListeners(thenable: Wakeable, asyncAction: AsyncAction) {
-  asyncAction.count++;
-  thenable.then(
-    () => {
-      if (--asyncAction.count === 0) {
-        const fulfilledAsyncAction: FulfilledAsyncAction = (asyncAction: any);
-        fulfilledAsyncAction.status = 'fulfilled';
-        completeAsyncActionScope(asyncAction);
-      }
+function createResultThenable<S>(
+  entangledListeners: Array<() => mixed>,
+): Thenable<S> {
+  // Waits for the entangled async action to complete, then resolves to the
+  // result of an individual action.
+  const resultThenable: PendingThenable<S> = {
+    status: 'pending',
+    value: null,
+    reason: null,
+    then(resolve: S => mixed) {
+      // This is a bit of a cheat. `resolve` expects a value of type `S` to be
+      // passed, but because we're instrumenting the `status` field ourselves,
+      // and we know this thenable will only be used by React, we also know
+      // the value isn't actually needed. So we add the resolve function
+      // directly to the entangled listeners.
+      //
+      // This is also why we don't need to check if the thenable is still
+      // pending; the Suspense implementation already performs that check.
+      const ping: () => mixed = (resolve: any);
+      entangledListeners.push(ping);
     },
-    (error: mixed) => {
-      if (--asyncAction.count === 0) {
-        const rejectedAsyncAction: RejectedAsyncAction = (asyncAction: any);
-        rejectedAsyncAction.status = 'rejected';
-        rejectedAsyncAction.reason = error;
-        completeAsyncActionScope(asyncAction);
-      }
-    },
-  );
-  return asyncAction;
+  };
+  return resultThenable;
 }
 
-function completeAsyncActionScope(action: AsyncAction) {
-  if (currentAsyncAction === action) {
-    currentAsyncAction = null;
-  }
-
-  const listeners = action.listeners;
-  action.listeners = [];
-  for (let i = 0; i < listeners.length; i++) {
-    const listener = listeners[i];
-    listener(false);
-  }
+export function peekEntangledActionLane(): Lane {
+  return currentEntangledLane;
 }

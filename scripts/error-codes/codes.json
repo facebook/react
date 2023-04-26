@@ -462,5 +462,6 @@
   "474": "Suspense Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React.",
   "475": "Internal React Error: suspendedState null when it was expected to exists. Please report this as a React bug.",
   "476": "Expected the form instance to be a HostComponent. This is a bug in React.",
-  "477": "React Internal Error: processHintChunk is not implemented for Native-Relay. The fact that this method was called means there is a bug in React."
+  "477": "React Internal Error: processHintChunk is not implemented for Native-Relay. The fact that this method was called means there is a bug in React.",
+  "478": "Thenable should have already resolved. This is a bug in React."
 }

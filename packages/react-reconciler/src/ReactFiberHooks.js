@@ -2431,8 +2431,10 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
   }
 }
 
-function startTransition(
-  setPending: (Thenable<boolean> | boolean) => void,
+function startTransition<S>(
+  pendingState: S,
+  finishedState: S,
+  setPending: (Thenable<S> | S) => void,
   callback: () => mixed,
   options?: StartTransitionOptions,
 ): void {
@@ -2443,7 +2445,7 @@ function startTransition(
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
-  setPending(true);
+  setPending(pendingState);
   const currentTransition = (ReactCurrentBatchConfig.transition =
     ({}: BatchConfigTransition));
 
@@ -2462,15 +2464,18 @@ function startTransition(
     if (enableAsyncActions) {
       const returnValue = callback();
 
-      // `isPending` is either `false` or a thenable that resolves to `false`,
-      // depending on whether the action scope is an async function. In the
-      // async case, the resulting render will suspend until the async action
-      // scope has finished.
-      const isPending = requestAsyncActionContext(returnValue);
-      setPending(isPending);
+      // This is either `finishedState` or a thenable that resolves to
+      // `finishedState`, depending on whether the action scope is an async
+      // function. In the async case, the resulting render will suspend until
+      // the async action scope has finished.
+      const maybeThenable = requestAsyncActionContext(
+        returnValue,
+        finishedState,
+      );
+      setPending(maybeThenable);
     } else {
       // Async actions are not enabled.
-      setPending(false);
+      setPending(finishedState);
       callback();
     }
   } catch (error) {
@@ -2478,7 +2483,7 @@ function startTransition(
       // This is a trick to get the `useTransition` hook to rethrow the error.
       // When it unwraps the thenable with the `use` algorithm, the error
       // will be thrown.
-      const rejectedThenable: RejectedThenable<boolean> = {
+      const rejectedThenable: RejectedThenable<S> = {
         then() {},
         status: 'rejected',
         reason: error,
@@ -2594,6 +2599,8 @@ export function startHostTransition<F>(
   }
 
   startTransition(
+    true,
+    false,
     setPending,
     // TODO: We can avoid this extra wrapper, somehow. Figure out layering
     // once more of this function is implemented.
@@ -2607,7 +2614,7 @@ function mountTransition(): [
 ] {
   const [, setPending] = mountState((false: Thenable<boolean> | boolean));
   // The `start` method never changes.
-  const start = startTransition.bind(null, setPending);
+  const start = startTransition.bind(null, true, false, setPending);
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];

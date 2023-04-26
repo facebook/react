@@ -279,7 +279,7 @@ import {
   requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
-import {peekAsyncActionContext} from './ReactFiberAsyncAction';
+import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -632,10 +632,10 @@ export function requestUpdateLane(fiber: Fiber): Lane {
       transition._updatedFibers.add(fiber);
     }
 
-    const asyncAction = peekAsyncActionContext();
-    return asyncAction !== null
+    const actionScopeLane = peekEntangledActionLane();
+    return actionScopeLane !== NoLane
       ? // We're inside an async action scope. Reuse the same lane.
-        asyncAction.lane
+        actionScopeLane
       : // We may or may not be inside an async action scope. If we are, this
         // is the first update in that scope. Either way, we need to get a
         // fresh transition lane.
