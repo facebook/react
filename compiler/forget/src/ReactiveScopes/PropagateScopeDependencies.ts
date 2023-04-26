@@ -16,6 +16,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
+  ReactiveScopeBlock,
   ReactiveScopeDependency,
   ReactiveValue,
 } from "../HIR/HIR";
@@ -29,6 +30,7 @@ import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
 } from "./DeriveMinimalDependencies";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
  * Infers the dependencies of each scope to include variables whose values
@@ -37,7 +39,13 @@ import {
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
-  const context = new Context();
+  const promotedTemporaries: PromotedTemporaries = {
+    declarations: new Map(),
+    used: new Set(),
+  };
+  visitReactiveFunction(fn, new FindPromotedTemporaries(), promotedTemporaries);
+
+  const context = new Context(promotedTemporaries.used);
   if (fn.id !== null) {
     context.declare(fn.id, {
       id: makeInstructionId(0),
@@ -53,6 +61,59 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   visit(context, fn.body);
 }
 
+type PromotedTemporaries = {
+  declarations: Map<IdentifierId, ReactiveScope>;
+  used: Set<IdentifierId>;
+};
+class FindPromotedTemporaries extends ReactiveFunctionVisitor<PromotedTemporaries> {
+  scopes: Array<ReactiveScope> = [];
+
+  override visitScope(
+    scope: ReactiveScopeBlock,
+    state: PromotedTemporaries
+  ): void {
+    this.scopes.push(scope.scope);
+    this.traverseScope(scope, state);
+    this.scopes.pop();
+  }
+
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: PromotedTemporaries
+  ): void {
+    const scope = this.scopes.at(-1);
+    if (instruction.lvalue === null || scope === undefined) {
+      return;
+    }
+    switch (instruction.value.kind) {
+      case "LoadLocal":
+      case "PropertyLoad": {
+        state.declarations.set(instruction.lvalue.identifier.id, scope);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+    this.traverseInstruction(instruction, state);
+  }
+
+  override visitPlace(
+    _id: InstructionId,
+    place: Place,
+    state: PromotedTemporaries
+  ): void {
+    const declaringScope = state.declarations.get(place.identifier.id);
+    if (this.scopes.length === 0 || declaringScope === undefined) {
+      return;
+    }
+    if (this.scopes.indexOf(declaringScope) === -1) {
+      // Declaring scope is not active === used outside declaring scope
+      state.used.add(place.identifier.id);
+    }
+  }
+}
+
 type DeclMap = Map<IdentifierId, Decl>;
 type Decl = {
   id: InstructionId;
@@ -60,6 +121,7 @@ type Decl = {
 };
 
 class Context {
+  #temporariesUsedOutsideScope: Set<IdentifierId>;
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
   // Reactive dependencies used in the current reactive scope.
@@ -71,8 +133,7 @@ class Context {
   //    ReactiveScope (B) that uses the produced temporary.
   //  - codegen will inline these PropertyLoads back into scope (B)
   #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
-  #temporaries: Map<Identifier, { place: Place; scope: ReactiveScope | null }> =
-    new Map();
+  #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
   // Reactive dependencies used unconditionally in the current conditional.
   // Composed of dependencies:
@@ -81,6 +142,10 @@ class Context {
   #depsInCurrentConditional: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
   #scopes: Stack<ReactiveScope> = empty();
+
+  constructor(temporariesUsedOutsideScope: Set<IdentifierId>) {
+    this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
+  }
 
   enter(scope: ReactiveScope, fn: () => void): Set<ReactiveScopeDependency> {
     // Save context of previous scope
@@ -117,6 +182,10 @@ class Context {
       this.#checkValidDependencyId.bind(this)
     );
     return minInnerScopeDependencies;
+  }
+
+  isUsedOutsideDeclaringScope(place: Place): boolean {
+    return this.#temporariesUsedOutsideScope.has(place.identifier.id);
   }
 
   /**
@@ -186,21 +255,11 @@ class Context {
   }
 
   declareTemporary(lvalue: Place, place: Place): void {
-    this.#temporaries.set(lvalue.identifier, {
-      place,
-      scope: this.currentScope.value,
-    });
+    this.#temporaries.set(lvalue.identifier, place);
   }
 
   resolveTemporary(place: Place): Place {
-    const temporary = this.#temporaries.get(place.identifier);
-    if (
-      temporary !== undefined &&
-      (temporary.scope === null || this.#isScopeActive(temporary.scope))
-    ) {
-      return temporary.place;
-    }
-    return place;
+    return this.#temporaries.get(place.identifier) ?? place;
   }
 
   #getProperty(
@@ -539,14 +598,15 @@ function visitInstructionValue(
   if (value.kind === "LoadLocal" && lvalue !== null) {
     if (
       value.place.identifier.name !== null &&
-      lvalue.identifier.name === null
+      lvalue.identifier.name === null &&
+      !context.isUsedOutsideDeclaringScope(lvalue)
     ) {
       context.declareTemporary(lvalue, value.place);
     } else {
       context.visitOperand(value.place);
     }
   } else if (value.kind === "PropertyLoad") {
-    if (lvalue !== null) {
+    if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
       context.declareProperty(
         lvalue,
         value.object,
