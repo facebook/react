@@ -33,13 +33,13 @@ export function deadCodeElimination(fn: HIRFunction): void {
   // of the blocks
   const hasLoop = hasBackEdge(fn);
 
+  const reversedBlocks = [...fn.body.blocks.values()].reverse();
   let size = state.count;
   do {
     size = state.count;
 
     // Iterate blocks in postorder (successors before predecessors, excepting loops)
     // to find usages before declarations
-    const reversedBlocks = [...fn.body.blocks.values()].reverse();
     for (const block of reversedBlocks) {
       for (const operand of eachTerminalOperand(block.terminal)) {
         state.reference(operand.identifier);
