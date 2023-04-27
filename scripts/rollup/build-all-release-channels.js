@@ -189,7 +189,11 @@ function processStable(buildDir) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       reactNativeBuildDir,
-      ReactVersion + '-' + nextChannelLabel + '-' + hash.digest('hex').slice(0, 8)
+      ReactVersion +
+        '-' +
+        nextChannelLabel +
+        '-' +
+        hash.digest('hex').slice(0, 8)
     );
   }
 
