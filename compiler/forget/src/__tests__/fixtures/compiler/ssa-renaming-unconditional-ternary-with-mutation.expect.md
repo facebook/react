@@ -5,10 +5,9 @@
 function foo(props) {
   let x = [];
   x.push(props.bar);
-  const _ = props.cond
+  props.cond
     ? ((x = {}), (x = []), x.push(props.foo))
     : ((x = []), (x = []), x.push(props.bar));
-  console.log(_);
   mut(x);
   return x;
 }
@@ -26,10 +25,7 @@ function foo(props) {
   if (c_0) {
     x = [];
     x.push(props.bar);
-    const _ = props.cond
-      ? ((x = []), x.push(props.foo))
-      : ((x = []), x.push(props.bar));
-    console.log(_);
+    props.cond ? ((x = []), x.push(props.foo)) : ((x = []), x.push(props.bar));
     mut(x);
     $[0] = props;
     $[1] = x;
