@@ -8,11 +8,11 @@
 import { Effect, ValueKind } from "./HIR";
 import { Hook } from "./Hooks";
 import {
+  BUILTIN_SHAPES,
+  BuiltInArrayId,
+  ShapeRegistry,
   addFunction,
   addObject,
-  BuiltInArrayId,
-  BUILTIN_SHAPES,
-  ShapeRegistry,
 } from "./ObjectShape";
 import { BuiltInType, HookType, PolyType } from "./Types";
 
@@ -128,6 +128,65 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   ],
   ["Infinity", { kind: "Primitive" }],
   ["NaN", { kind: "Primitive" }],
+  [
+    "console",
+    addObject(DEFAULT_SHAPES, "console", [
+      [
+        "error",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "info",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "log",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "table",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "trace",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+      [
+        "warn",
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: { kind: "Primitive" },
+          calleeEffect: Effect.Read,
+        }),
+      ],
+    ]),
+  ],
   // TODO: rest of Global objects
 ];
 
