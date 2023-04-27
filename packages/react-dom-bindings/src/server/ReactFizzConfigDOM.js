@@ -270,9 +270,9 @@ export function createResponseState(
       nonce === undefined
         ? startModuleSrc
         : stringToPrecomputedChunk(
-            '<script type="module" nonce="' +
+            '<script nonce="' +
               escapeTextForBrowser(nonce) +
-              '" src="',
+              '" type="module" src="',
           );
 
     for (let i = 0; i < bootstrapModules.length; i++) {
