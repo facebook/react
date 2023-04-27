@@ -35,7 +35,6 @@ function Component() {
   const fn = function () {
     mutate(x_0);
   };
-
   fn();
   return x;
 }

@@ -33,7 +33,6 @@ function component(a) {
       t0 = $[2];
     }
     const x = t0;
-
     x(t);
     $[0] = a;
     $[1] = t;

@@ -28,7 +28,6 @@ function component(a) {
     (function () {
       y.x = x;
     })();
-
     mutate(y);
     $[0] = a;
     $[1] = y;

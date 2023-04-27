@@ -33,7 +33,6 @@ function component(foo, bar) {
       let b = x;
       a.x = b;
     })();
-
     mutate(y);
     $[0] = foo;
     $[1] = bar;

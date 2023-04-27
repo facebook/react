@@ -26,7 +26,6 @@ function component(a) {
     x = function () {
       y.b.a = 2;
     };
-
     x();
     $[0] = a;
     $[1] = x;

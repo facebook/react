@@ -54,7 +54,6 @@ function CaptureNotMutate(props) {
       const arr = { element };
       return arr[idx];
     };
-
     aliasedElement = fn();
     mutate(aliasedElement);
     $[2] = props.el;

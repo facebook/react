@@ -26,7 +26,6 @@ function component(a) {
     const x = function x() {
       t.foo();
     };
-
     x(t);
     $[0] = a;
     $[1] = t;
