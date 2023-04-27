@@ -895,7 +895,7 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      value = instrValue.expr;
+      value = t.cloneNode(instrValue.expr, true, true);
       break;
     }
     case "TaggedTemplateExpression": {

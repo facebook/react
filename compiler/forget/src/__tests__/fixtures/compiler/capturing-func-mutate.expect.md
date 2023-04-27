@@ -40,6 +40,7 @@ function component(a, b) {
       z.a = 2;
       y.b;
     };
+
     x();
     $[0] = a;
     $[1] = b;

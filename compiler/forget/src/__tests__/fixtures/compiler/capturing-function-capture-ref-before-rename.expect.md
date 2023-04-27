@@ -37,6 +37,7 @@ function component(a, b) {
   } else {
     z = $[1];
   }
+
   let y = z;
   const c_2 = $[2] !== b;
   let t0;

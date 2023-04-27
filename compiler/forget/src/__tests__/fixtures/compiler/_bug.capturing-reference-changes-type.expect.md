@@ -23,6 +23,7 @@ function component(a) {
   (function () {
     y = x;
   })();
+
   mutate(1);
   return 1;
 }

@@ -31,6 +31,7 @@ function Component() {
   const fn = function () {
     x = x + 1;
   };
+
   fn();
   return 40;
 }
