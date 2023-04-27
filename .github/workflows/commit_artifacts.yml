@@ -43,53 +43,6 @@ jobs:
             }
 
             let artifactsUrl = 'https://circleci.com/api/v1.1/project/github/facebook/react/678175/artifacts';
-            # // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-            # // workflow to notify this GitHub action. Sorry!
-            # let iter = 0;
-            # spinloop: while (iter < 15) {
-            #   const res = await github.rest.repos.listCommitStatusesForRef({
-            #     owner: context.repo.owner,
-            #     repo: context.repo.repo,
-            #     ref: context.sha
-            #   });
-            #   for (const status of res.data) {
-            #     if (/process_artifacts_combined/.test(status.context)) {
-            #       switch (status.state) {
-            #         case 'pending': {
-            #           console.log(`${status.context} is still pending`);
-            #           break;
-            #         }
-            #         case 'failure':
-            #         case 'error': {
-            #           throw new Error(`${status.context} has failed or errored`);
-            #         }
-            #         case 'success': {
-            #           // The status does not include a build ID, but we can extract it
-            #           // from the URL. I couldn't find a better way to do this.
-            #           const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-            #             status.target_url,
-            #           )[1];
-            #           if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-            #             artifactsUrl =
-            #               `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-            #             console.log(`Found artifactsUrl: ${artifactsUrl}`);
-            #             break spinloop;
-            #           } else {
-            #             throw new Error(`${ciBuildId} isn't a number`);
-            #           }
-            #           break;
-            #         }
-            #         default: {
-            #           throw new Error(`Unhandled status state: ${status.state}`);
-            #           break;
-            #         }
-            #       }
-            #     }
-            #   }
-            #   iter++;
-            #   console.log("Sleeping for 60s...");
-            #   await sleep(60_000);
-            # }
             if (artifactsUrl != null) {
               const {CIRCLECI_TOKEN} = process.env;
               const res = await fetch(artifactsUrl, {
@@ -175,74 +128,74 @@ jobs:
           name: compiled-rn
           path: compiled-rn/
 
-  commit_www_artifacts:
-    needs: download_artifacts
-    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: builds/facebook-www
-      - name: Ensure clean directory
-        run: rm -rf compiled
-      - uses: actions/download-artifact@v3
-        with:
-          name: compiled
-          path: compiled/
-      - run: git status -u
-      - name: Check if only the REVISION file has changed
-        id: check_should_commit
-        run: |
-          if git status --porcelain | grep -qv '/REVISION$'; then
-            echo "should_commit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_commit=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: |
-            ${{ github.event.head_commit.message }}
+  # commit_www_artifacts:
+  #   needs: download_artifacts
+  #   if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         ref: builds/facebook-www
+  #     - name: Ensure clean directory
+  #       run: rm -rf compiled
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: compiled
+  #         path: compiled/
+  #     - run: git status -u
+  #     - name: Check if only the REVISION file has changed
+  #       id: check_should_commit
+  #       run: |
+  #         if git status --porcelain | grep -qv '/REVISION$'; then
+  #           echo "should_commit=true" >> "$GITHUB_OUTPUT"
+  #         else
+  #           echo "should_commit=false" >> "$GITHUB_OUTPUT"
+  #         fi
+  #     - name: Commit changes to branch
+  #       if: steps.check_should_commit.outputs.should_commit == 'true'
+  #       uses: stefanzweifel/git-auto-commit-action@v4
+  #       with:
+  #         commit_message: |
+  #           ${{ github.event.head_commit.message }}
 
-            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
-          branch: builds/facebook-www
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor }}@users.noreply.github.com
-          create_branch: true
+  #           DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
+  #         branch: builds/facebook-www
+  #         commit_user_name: ${{ github.actor }}
+  #         commit_user_email: ${{ github.actor }}@users.noreply.github.com
+  #         create_branch: true
 
-  commit_fbsource_artifacts:
-    needs: download_artifacts
-    runs-on: ubuntu-latest
-    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: main
-          repository: facebook/react-fbsource-import
-          token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
-      - name: Ensure clean directory
-        run: rm -rf compiled-rn
-      - uses: actions/download-artifact@v3
-        with:
-          name: compiled-rn
-          path: compiled-rn/
-      - run: git status -u
-      - name: Check if only the REVISION file has changed
-        id: check_should_commit
-        run: |
-          if git status --porcelain | grep -qv '/REVISION$'; then
-            echo "should_commit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_commit=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: |
-            ${{ github.event.head_commit.message }}
+  # commit_fbsource_artifacts:
+  #   needs: download_artifacts
+  #   runs-on: ubuntu-latest
+  #   if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         ref: main
+  #         repository: facebook/react-fbsource-import
+  #         token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
+  #     - name: Ensure clean directory
+  #       run: rm -rf compiled-rn
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: compiled-rn
+  #         path: compiled-rn/
+  #     - run: git status -u
+  #     - name: Check if only the REVISION file has changed
+  #       id: check_should_commit
+  #       run: |
+  #         if git status --porcelain | grep -qv '/REVISION$'; then
+  #           echo "should_commit=true" >> "$GITHUB_OUTPUT"
+  #         else
+  #           echo "should_commit=false" >> "$GITHUB_OUTPUT"
+  #         fi
+  #     - name: Commit changes to branch
+  #       if: steps.check_should_commit.outputs.should_commit == 'true'
+  #       uses: stefanzweifel/git-auto-commit-action@v4
+  #       with:
+  #         commit_message: |
+  #           ${{ github.event.head_commit.message }}
 
-            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+  #           DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+  #         commit_user_name: ${{ github.actor }}
+  #         commit_user_email: ${{ github.actor }}@users.noreply.github.com
