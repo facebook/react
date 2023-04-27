@@ -17,12 +17,12 @@ import {
   GotoVariant,
   HIR,
   HIRFunction,
-  IdentifierId,
   Identifier,
+  IdentifierId,
   InstructionKind,
+  Place,
   makeInstructionId,
   makeType,
-  Place,
   reversePostorderBlocks,
   shrink,
 } from "../HIR";
@@ -97,10 +97,8 @@ export function inlineUseMemo(fn: HIRFunction): void {
             }
             const body = functions.get(lambda.identifier.id);
             if (body === undefined) {
-              CompilerError.invariant(
-                "Expected first argument to useMemo() to be a function expression",
-                lambda.loc
-              );
+              // Allow passing a named function to useMemo, eg `useMemo(someImportedFunction, [])`
+              continue;
             }
 
             if (body.loweredFunc.params.length > 0) {
