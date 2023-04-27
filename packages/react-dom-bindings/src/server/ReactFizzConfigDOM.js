@@ -239,6 +239,9 @@ export function createResponseState(
     }
   }
   if (bootstrapScripts !== undefined) {
+
+    const startScriptWithNonce = nonce === undefined ? startScriptSrc : stringToPrecomputedChunk('<script nonce="' + escapeTextForBrowser(nonce) + '" src="');
+
     for (let i = 0; i < bootstrapScripts.length; i++) {
       const scriptConfig = bootstrapScripts[i];
       const src =
@@ -246,7 +249,7 @@ export function createResponseState(
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       bootstrapChunks.push(
-        startScriptSrc,
+        startScriptWithNonce,
         stringToChunk(escapeTextForBrowser(src)),
       );
       if (integrity) {
@@ -259,6 +262,9 @@ export function createResponseState(
     }
   }
   if (bootstrapModules !== undefined) {
+
+    const startModuleWithNonce = nonce === undefined ? startModuleSrc : stringToPrecomputedChunk('<script type="module" nonce="' + escapeTextForBrowser(nonce) + '" src="');
+
     for (let i = 0; i < bootstrapModules.length; i++) {
       const scriptConfig = bootstrapModules[i];
       const src =
@@ -266,7 +272,7 @@ export function createResponseState(
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       bootstrapChunks.push(
-        startModuleSrc,
+        startModuleWithNonce,
         stringToChunk(escapeTextForBrowser(src)),
       );
       if (integrity) {
