@@ -574,7 +574,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('should support nonce scripts', async () => {
+  it('should support nonce for inline scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
       let resolve;
