@@ -164,38 +164,41 @@ jobs:
   #         commit_user_email: ${{ github.actor }}@users.noreply.github.com
   #         create_branch: true
 
-  # commit_fbsource_artifacts:
-  #   needs: download_artifacts
-  #   runs-on: ubuntu-latest
-  #   if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         ref: main
-  #         repository: facebook/react-fbsource-import
-  #         token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
-  #     - name: Ensure clean directory
-  #       run: rm -rf compiled-rn
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         name: compiled-rn
-  #         path: compiled-rn/
-  #     - run: git status -u
-  #     - name: Check if only the REVISION file has changed
-  #       id: check_should_commit
-  #       run: |
-  #         if git status --porcelain | grep -qv '/REVISION$'; then
-  #           echo "should_commit=true" >> "$GITHUB_OUTPUT"
-  #         else
-  #           echo "should_commit=false" >> "$GITHUB_OUTPUT"
-  #         fi
-  #     - name: Commit changes to branch
-  #       if: steps.check_should_commit.outputs.should_commit == 'true'
-  #       uses: stefanzweifel/git-auto-commit-action@v4
-  #       with:
-  #         commit_message: |
-  #           ${{ github.event.head_commit.message }}
+  commit_fbsource_artifacts:
+    needs: download_artifacts
+    runs-on: ubuntu-latest
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+          repository: facebook/react-fbsource-import
+          token: ${{secrets.FBSOURCE_SYNC_PUSH_TOKEN}}
+      - name: Ensure clean directory
+        run: rm -rf compiled-rn
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
+      - run: git status -u
+      - name: Check if only the REVISION file has changed
+        id: check_should_commit
+        run: |
+          if git status --porcelain | grep -qv '/REVISION$'; then
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Commit changes to branch
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          echo "THIS DOES RUN"
 
-  #           DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
-  #         commit_user_name: ${{ github.actor }}
-  #         commit_user_email: ${{ github.actor }}@users.noreply.github.com
+        # uses: stefanzweifel/git-auto-commit-action@v4
+        # with:
+        #   commit_message: |
+        #     ${{ github.event.head_commit.message }}
+
+        #     DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+        #   commit_user_name: ${{ github.actor }}
+        #   commit_user_email: ${{ github.actor }}@users.noreply.github.com
