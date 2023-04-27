@@ -98,10 +98,12 @@ export default function generateTestsFromFixtures(
           const lines = input.split("\n");
           if (lines[0]!.indexOf("@only") !== -1) {
             testCommand = test.only;
-            debug = true;
           }
           if (lines[0]!.indexOf("@skip") !== -1) {
             testCommand = test.skip;
+          }
+          if (lines[0]!.indexOf("@debug") !== -1) {
+            debug = true;
           }
           if (lines[0]!.indexOf("@forgetDirective") !== -1) {
             enableOnlyOnUseForgetDirective = true;
