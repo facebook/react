@@ -2203,6 +2203,7 @@ type PreinitOptions = {
   precedence?: string,
   crossOrigin?: string,
   integrity?: string,
+  nonce?: string,
 };
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
@@ -2355,6 +2356,7 @@ function scriptPropsFromPreinitOptions(
     async: true,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
+    nonce: options.nonce,
   };
 }
 
