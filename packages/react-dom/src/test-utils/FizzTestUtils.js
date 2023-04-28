@@ -103,6 +103,12 @@ async function executeScript(script: Element) {
   } else {
     const newScript = ownerDocument.createElement('script');
     newScript.textContent = script.textContent;
+    // make sure to add nonce back to script if it exists
+    const scriptNonce = script.getAttribute('nonce');
+    if (scriptNonce) {
+      newScript.setAttribute('nonce', scriptNonce);
+    }
+
     parent.insertBefore(newScript, script);
     parent.removeChild(script);
   }
