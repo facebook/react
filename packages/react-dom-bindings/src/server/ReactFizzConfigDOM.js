@@ -3033,6 +3033,14 @@ export function pushStartInstance(
         formatContext.noscriptTagInScope,
       );
     case 'script':
+      if (responseState.nonce) {
+        // add nonce to props, but allow override
+        props = {
+          nonce: responseState.nonce,
+          ...props,
+        };
+      }
+
       return enableFloat
         ? pushScript(
             target,
