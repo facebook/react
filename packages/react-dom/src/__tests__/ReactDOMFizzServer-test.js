@@ -628,12 +628,17 @@ describe('ReactDOMFizzServer', () => {
           <html>
             <body>
               <script>{'try { foo() } catch (e) {} ;'}</script>
-              <script src="foo" />
+              <script src="foo" async={true} />
               <script src="bar" />
-              <script src="baz" integrity="qux" />
-              <script type="module" src="quux" />
-              <script type="module" src="corge" />
-              <script type="module" src="grault" integrity="garply" />
+              <script src="baz" integrity="qux" async={true} />
+              <script type="module" src="quux" async={true} />
+              <script type="module" src="corge" async={true} />
+              <script
+                type="module"
+                src="grault"
+                integrity="garply"
+                async={true}
+              />
             </body>
           </html>,
           {
@@ -649,13 +654,14 @@ describe('ReactDOMFizzServer', () => {
           renderOptions.unstable_externalRuntimeSrc,
         ).map(n => n.outerHTML),
       ).toEqual([
+        // async scripts get inserted first in render
+        `<script nonce="${CSPnonce}" src="foo" async=""></script>`,
+        `<script nonce="${CSPnonce}" src="baz" integrity="qux" async=""></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="quux" async=""></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="corge" async=""></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="grault" integrity="garply" async=""></script>`,
         `<script nonce="${CSPnonce}">try { foo() } catch (e) {} ;</script>`,
-        `<script nonce="${CSPnonce}" src="foo"></script>`,
         `<script nonce="${CSPnonce}" src="bar"></script>`,
-        `<script nonce="${CSPnonce}" src="baz" integrity="qux"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="quux"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="corge"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="grault" integrity="garply"></script>`,
       ]);
     } finally {
       CSPnonce = null;
