@@ -107,6 +107,51 @@ function printWarning(level, format, args) {
 
 var assign = Object.assign;
 
+// Re-export dynamic flags from the www version.
+var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+var disableInputAttributeSyncing =
+    dynamicFeatureFlags.disableInputAttributeSyncing,
+  disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
+  enableTrustedTypesIntegration =
+    dynamicFeatureFlags.enableTrustedTypesIntegration,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback =
+    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
+  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
+  enableLazyContextPropagation =
+    dynamicFeatureFlags.enableLazyContextPropagation,
+  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
+  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableCustomElementPropertySupport =
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask =
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries; // On WWW, true is used for a new modern build.
+var enableProfilerTimer = true;
+var enableProfilerCommitHooks = true;
+var enableProfilerNestedUpdatePhase = true;
+var enableProfilerNestedUpdateScheduledHook =
+  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
+var createRootStrictEffectsByDefault = false;
+var enableClientRenderFallbackOnTextMismatch = false;
+
+var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+var enableSuspenseCallback = true;
+
+var ReactSharedInternals =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+function useFormStatus() {
+  {
+    throw new Error("Not implemented.");
+  }
+}
+
 var valueStack = [];
 var fiberStack;
 
@@ -158,9 +203,54 @@ function push(cursor, value, fiber) {
   cursor.current = value;
 }
 
+// ATTENTION
+// When adding new symbols to this file,
+// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+// The Symbol used to tag the ReactElement-like types.
+var REACT_ELEMENT_TYPE = Symbol.for("react.element");
+var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
+var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+var REACT_CONTEXT_TYPE = Symbol.for("react.context");
+var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
+var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
+var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
+var REACT_MEMO_TYPE = Symbol.for("react.memo");
+var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+var REACT_SCOPE_TYPE = Symbol.for("react.scope");
+var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+var REACT_CACHE_TYPE = Symbol.for("react.cache");
+var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
+var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
+  "react.default_value"
+);
+var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = "@@iterator";
+function getIteratorFn(maybeIterable) {
+  if (maybeIterable === null || typeof maybeIterable !== "object") {
+    return null;
+  }
+
+  var maybeIterator =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+  if (typeof maybeIterator === "function") {
+    return maybeIterator;
+  }
+
+  return null;
+}
+
 var contextStackCursor = createCursor(null);
 var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
 
 function requiredContext(c) {
   {
@@ -218,61 +308,22 @@ function pushHostContext(fiber) {
   var context = requiredContext(contextStackCursor.current);
   var nextContext = getChildHostContext(context, fiber.type); // Don't push this Fiber's context unless it's unique.
 
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
+  if (context !== nextContext) {
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
+    push(contextStackCursor, nextContext, fiber);
+  }
 }
 
 function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
+  if (contextFiberStackCursor.current === fiber) {
+    // Do not pop unless this Fiber provided the current context.
+    // pushHostContext() only pushes Fibers that provide unique contexts.
+    pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
   }
-
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
 }
-
-// Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-var disableInputAttributeSyncing =
-    dynamicFeatureFlags.disableInputAttributeSyncing,
-  disableIEWorkarounds = dynamicFeatureFlags.disableIEWorkarounds,
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback =
-    dynamicFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableLegacyFBSupport = dynamicFeatureFlags.enableLegacyFBSupport,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport,
-  enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-  alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries; // On WWW, true is used for a new modern build.
-var enableProfilerTimer = true;
-var enableProfilerCommitHooks = true;
-var enableProfilerNestedUpdatePhase = true;
-var enableProfilerNestedUpdateScheduledHook =
-  dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-var createRootStrictEffectsByDefault = false;
-var enableClientRenderFallbackOnTextMismatch = false;
-
-var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
-var enableSuspenseCallback = true;
 
 var NoFlags$1 =
   /*                      */
@@ -2743,54 +2794,6 @@ function setValueForPropertyOnCustomComponent(node, name, value) {
   } // From here, it's the same as any attribute
 
   setValueForAttribute(node, name, value);
-}
-
-var ReactSharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-// ATTENTION
-// When adding new symbols to this file,
-// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-// The Symbol used to tag the ReactElement-like types.
-var REACT_ELEMENT_TYPE = Symbol.for("react.element");
-var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
-var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
-var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-var REACT_MEMO_TYPE = Symbol.for("react.memo");
-var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-var REACT_CACHE_TYPE = Symbol.for("react.cache");
-var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-  "react.default_value"
-);
-var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-var FAUX_ITERATOR_SYMBOL = "@@iterator";
-function getIteratorFn(maybeIterable) {
-  if (maybeIterable === null || typeof maybeIterable !== "object") {
-    return null;
-  }
-
-  var maybeIterator =
-    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-    maybeIterable[FAUX_ITERATOR_SYMBOL];
-
-  if (typeof maybeIterator === "function") {
-    return maybeIterator;
-  }
-
-  return null;
 }
 
 var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
@@ -12225,8 +12228,20 @@ function requestTransitionLane() {
   return currentEventTransitionLane;
 }
 
-var currentAsyncAction = null;
-function requestAsyncActionContext(actionReturnValue) {
+// transition updates that occur while the async action is still in progress
+// are treated as part of the action.
+//
+// The ideal behavior would be to treat each async function as an independent
+// action. However, without a mechanism like AsyncContext, we can't tell which
+// action an update corresponds to. So instead, we entangle them all into one.
+// The listeners to notify once the entangled scope completes.
+
+var currentEntangledListeners = null; // The number of pending async actions in the entangled scope.
+
+var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
+
+var currentEntangledLane = NoLane;
+function requestAsyncActionContext(actionReturnValue, finishedState) {
   if (
     actionReturnValue !== null &&
     typeof actionReturnValue === "object" &&
@@ -12235,81 +12250,134 @@ function requestAsyncActionContext(actionReturnValue) {
     // This is an async action.
     //
     // Return a thenable that resolves once the action scope (i.e. the async
-    // function passed to startTransition) has finished running. The fulfilled
-    // value is `false` to represent that the action is not pending.
+    // function passed to startTransition) has finished running.
     var thenable = actionReturnValue;
+    var entangledListeners;
 
-    if (currentAsyncAction === null) {
+    if (currentEntangledListeners === null) {
       // There's no outer async action scope. Create a new one.
-      var asyncAction = {
-        lane: requestTransitionLane(),
-        listeners: [],
-        count: 0,
-        status: "pending",
-        value: false,
-        reason: undefined,
-        then: function (resolve) {
-          asyncAction.listeners.push(resolve);
-        }
-      };
-      attachPingListeners(thenable, asyncAction);
-      currentAsyncAction = asyncAction;
-      return asyncAction;
+      entangledListeners = currentEntangledListeners = [];
+      currentEntangledPendingCount = 0;
+      currentEntangledLane = requestTransitionLane();
     } else {
-      // Inherit the outer scope.
-      var _asyncAction = currentAsyncAction;
-      attachPingListeners(thenable, _asyncAction);
-      return _asyncAction;
+      entangledListeners = currentEntangledListeners;
     }
+
+    currentEntangledPendingCount++;
+    var resultStatus = "pending";
+    var rejectedReason;
+    thenable.then(
+      function () {
+        resultStatus = "fulfilled";
+        pingEngtangledActionScope();
+      },
+      function (error) {
+        resultStatus = "rejected";
+        rejectedReason = error;
+        pingEngtangledActionScope();
+      }
+    ); // Create a thenable that represents the result of this action, but doesn't
+    // resolve until the entire entangled scope has finished.
+    //
+    // Expressed using promises:
+    //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
+    //   return thisResult;
+
+    var resultThenable = createResultThenable(entangledListeners); // Attach a listener to fill in the result.
+
+    entangledListeners.push(function () {
+      switch (resultStatus) {
+        case "fulfilled": {
+          var fulfilledThenable = resultThenable;
+          fulfilledThenable.status = "fulfilled";
+          fulfilledThenable.value = finishedState;
+          break;
+        }
+
+        case "rejected": {
+          var rejectedThenable = resultThenable;
+          rejectedThenable.status = "rejected";
+          rejectedThenable.reason = rejectedReason;
+          break;
+        }
+
+        case "pending":
+        default: {
+          // The listener above should have been called first, so `resultStatus`
+          // should already be set to the correct value.
+          throw new Error(
+            "Thenable should have already resolved. This " +
+              "is a bug in React."
+          );
+        }
+      }
+    });
+    return resultThenable;
   } else {
     // This is not an async action, but it may be part of an outer async action.
-    if (currentAsyncAction === null) {
-      // There's no outer async action scope.
-      return false;
+    if (currentEntangledListeners === null) {
+      return finishedState;
     } else {
-      // Inherit the outer scope.
-      return currentAsyncAction;
+      // Return a thenable that does not resolve until the entangled actions
+      // have finished.
+      var _entangledListeners = currentEntangledListeners;
+
+      var _resultThenable = createResultThenable(_entangledListeners);
+
+      _entangledListeners.push(function () {
+        var fulfilledThenable = _resultThenable;
+        fulfilledThenable.status = "fulfilled";
+        fulfilledThenable.value = finishedState;
+      });
+
+      return _resultThenable;
     }
   }
 }
-function peekAsyncActionContext() {
-  return currentAsyncAction;
-}
 
-function attachPingListeners(thenable, asyncAction) {
-  asyncAction.count++;
-  thenable.then(
-    function () {
-      if (--asyncAction.count === 0) {
-        var fulfilledAsyncAction = asyncAction;
-        fulfilledAsyncAction.status = "fulfilled";
-        completeAsyncActionScope(asyncAction);
-      }
-    },
-    function (error) {
-      if (--asyncAction.count === 0) {
-        var rejectedAsyncAction = asyncAction;
-        rejectedAsyncAction.status = "rejected";
-        rejectedAsyncAction.reason = error;
-        completeAsyncActionScope(asyncAction);
-      }
+function pingEngtangledActionScope() {
+  if (
+    currentEntangledListeners !== null &&
+    --currentEntangledPendingCount === 0
+  ) {
+    // All the actions have finished. Close the entangled async action scope
+    // and notify all the listeners.
+    var listeners = currentEntangledListeners;
+    currentEntangledListeners = null;
+    currentEntangledLane = NoLane;
+
+    for (var i = 0; i < listeners.length; i++) {
+      var listener = listeners[i];
+      listener();
     }
-  );
-  return asyncAction;
+  }
 }
 
-function completeAsyncActionScope(action) {
-  if (currentAsyncAction === action) {
-    currentAsyncAction = null;
-  }
+function createResultThenable(entangledListeners) {
+  // Waits for the entangled async action to complete, then resolves to the
+  // result of an individual action.
+  var resultThenable = {
+    status: "pending",
+    value: null,
+    reason: null,
+    then: function (resolve) {
+      // This is a bit of a cheat. `resolve` expects a value of type `S` to be
+      // passed, but because we're instrumenting the `status` field ourselves,
+      // and we know this thenable will only be used by React, we also know
+      // the value isn't actually needed. So we add the resolve function
+      // directly to the entangled listeners.
+      //
+      // This is also why we don't need to check if the thenable is still
+      // pending; the Suspense implementation already performs that check.
+      var ping = resolve;
+      entangledListeners.push(ping);
+    }
+  };
+  return resultThenable;
+}
 
-  var listeners = action.listeners;
-  action.listeners = [];
-
-  for (var i = 0; i < listeners.length; i++) {
-    var listener = listeners[i];
-    listener(false);
-  }
+function peekEntangledActionLane() {
+  return currentEntangledLane;
 }
 
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
@@ -12771,6 +12839,7 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   //
   // Keep rendering in a loop for as long as render phase updates continue to
   // be scheduled. Use a counter to prevent infinite loops.
+  currentlyRenderingFiber$1 = workInProgress;
   var numberOfReRenders = 0;
   var children;
 
@@ -12846,11 +12915,12 @@ function resetHooksAfterThrow() {
   //
   // It should only reset things like the current dispatcher, to prevent hooks
   // from being called outside of a component.
-  // We can assume the previous dispatcher is always this one, since we set it
+  currentlyRenderingFiber$1 = null; // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
+
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
 }
-function resetHooksOnUnwind() {
+function resetHooksOnUnwind(workInProgress) {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
@@ -12860,7 +12930,7 @@ function resetHooksOnUnwind() {
     // Only reset the updates from the queue if it has a clone. If it does
     // not have a clone, that means it wasn't processed, and the updates were
     // scheduled before we entered the render phase.
-    var hook = currentlyRenderingFiber$1.memoizedState;
+    var hook = workInProgress.memoizedState;
 
     while (hook !== null) {
       var queue = hook.queue;
@@ -13443,11 +13513,11 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
   var version = getVersion(source._source);
   var dispatcher = ReactCurrentDispatcher$1.current; // eslint-disable-next-line prefer-const
 
-  var _dispatcher$useState = dispatcher.useState(function () {
+  var _dispatcher$useState2 = dispatcher.useState(function () {
       return readFromUnsubscribedMutableSource(root, source, getSnapshot);
     }),
-    currentSnapshot = _dispatcher$useState[0],
-    setSnapshot = _dispatcher$useState[1];
+    currentSnapshot = _dispatcher$useState2[0],
+    setSnapshot = _dispatcher$useState2[1];
 
   var snapshot = currentSnapshot; // Grab a handle to the state hook as well.
   // We use it to clear the pending update queue if we have a new source.
@@ -14339,14 +14409,20 @@ function updateDeferredValueImpl(hook, prevValue, value) {
   }
 }
 
-function startTransition(setPending, callback, options) {
+function startTransition(
+  pendingState,
+  finishedState,
+  setPending,
+  callback,
+  options
+) {
   var previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   var prevTransition = ReactCurrentBatchConfig$3.transition;
   ReactCurrentBatchConfig$3.transition = null;
-  setPending(true);
+  setPending(pendingState);
   var currentTransition = (ReactCurrentBatchConfig$3.transition = {});
 
   if (enableTransitionTracing) {
@@ -14362,16 +14438,16 @@ function startTransition(setPending, callback, options) {
 
   try {
     if (enableAsyncActions) {
-      var returnValue = callback(); // `isPending` is either `false` or a thenable that resolves to `false`,
-      // depending on whether the action scope is an async function. In the
-      // async case, the resulting render will suspend until the async action
-      // scope has finished.
+      var returnValue = callback(); // This is either `finishedState` or a thenable that resolves to
+      // `finishedState`, depending on whether the action scope is an async
+      // function. In the async case, the resulting render will suspend until
+      // the async action scope has finished.
 
-      var isPending = requestAsyncActionContext(returnValue);
-      setPending(isPending);
+      var maybeThenable = requestAsyncActionContext(returnValue, finishedState);
+      setPending(maybeThenable);
     } else {
       // Async actions are not enabled.
-      setPending(false);
+      setPending(finishedState);
       callback();
     }
   } catch (error) {
@@ -14416,7 +14492,7 @@ function mountTransition() {
   var _mountState = mountState(false),
     setPending = _mountState[1]; // The `start` method never changes.
 
-  var start = startTransition.bind(null, setPending);
+  var start = startTransition.bind(null, true, false, setPending);
   var hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];
@@ -29303,9 +29379,9 @@ function requestUpdateLane(fiber) {
       transition._updatedFibers.add(fiber);
     }
 
-    var asyncAction = peekAsyncActionContext();
-    return asyncAction !== null // We're inside an async action scope. Reuse the same lane.
-      ? asyncAction.lane // We may or may not be inside an async action scope. If we are, this
+    var actionScopeLane = peekEntangledActionLane();
+    return actionScopeLane !== NoLane // We're inside an async action scope. Reuse the same lane.
+      ? actionScopeLane // We may or may not be inside an async action scope. If we are, this
       : // is the first update in that scope. Either way, we need to get a
         // fresh transition lane.
         requestTransitionLane();
@@ -30111,7 +30187,7 @@ function resetWorkInProgressStack() {
   } else {
     // Work-in-progress is in suspended state. Reset the work loop and unwind
     // both the suspended fiber and all its parents.
-    resetSuspendedWorkLoopOnUnwind();
+    resetSuspendedWorkLoopOnUnwind(workInProgress);
     interruptedWork = workInProgress;
   }
 
@@ -30168,10 +30244,10 @@ function prepareFreshStack(root, lanes) {
   return rootWorkInProgress;
 }
 
-function resetSuspendedWorkLoopOnUnwind() {
+function resetSuspendedWorkLoopOnUnwind(fiber) {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(fiber);
   resetChildReconcilerOnUnwind();
 }
 
@@ -30927,7 +31003,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       // is to reuse uncached promises, but we happen to know that the only
       // promises that a host component might suspend on are definitely cached
       // because they are controlled by us. So don't bother.
-      resetHooksOnUnwind(); // Fallthrough to the next branch.
+      resetHooksOnUnwind(unitOfWork); // Fallthrough to the next branch.
     }
 
     default: {
@@ -30973,7 +31049,7 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   //
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
-  resetSuspendedWorkLoopOnUnwind();
+  resetSuspendedWorkLoopOnUnwind(unitOfWork);
   var returnFiber = unitOfWork.return;
 
   if (returnFiber === null || workInProgressRoot === null) {
@@ -32198,7 +32274,7 @@ if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // same fiber again.
       // Unwind the failed stack frame
 
-      resetSuspendedWorkLoopOnUnwind();
+      resetSuspendedWorkLoopOnUnwind(unitOfWork);
       unwindInterruptedWork(current, unitOfWork); // Restore the original properties of the fiber.
 
       assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy);
@@ -33736,7 +33812,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-cbca888b";
+var ReactVersion = "18.3.0-www-modern-f1029d9d";
 
 function createPortal$1(
   children,
@@ -43968,9 +44044,12 @@ function preload$1(href, options) {
     var as = options.as;
     var limitedEscapedHref =
       escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    var preloadKey =
-      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]';
-    var key = preloadKey;
+    var preloadSelector =
+      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]'; // Some preloads are keyed under their selector. This happens when the preload is for
+    // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
+    // Here we figure out which key to use to determine if we have a preload already.
+
+    var key = preloadSelector;
 
     switch (as) {
       case "style":
@@ -43986,7 +44065,21 @@ function preload$1(href, options) {
       var preloadProps = preloadPropsFromPreloadOptions(href, as, options);
       preloadPropsMap.set(key, preloadProps);
 
-      if (null === ownerDocument.querySelector(preloadKey)) {
+      if (null === ownerDocument.querySelector(preloadSelector)) {
+        if (
+          as === "style" &&
+          ownerDocument.querySelector(getStylesheetSelectorFromKey(key))
+        ) {
+          // We already have a stylesheet for this key. We don't need to preload it.
+          return;
+        } else if (
+          as === "script" &&
+          ownerDocument.querySelector(getScriptSelectorFromKey(key))
+        ) {
+          // We already have a stylesheet for this key. We don't need to preload it.
+          return;
+        }
+
         var instance = ownerDocument.createElement("link");
         setInitialProperties(instance, "link", preloadProps);
         markNodeAsHoistable(instance);
@@ -44148,7 +44241,8 @@ function scriptPropsFromPreinitOptions(src, options) {
     src: src,
     async: true,
     crossOrigin: options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    nonce: options.nonce
   };
 } // This function is called in begin work and we should always have a currentDocument set
 
@@ -45653,12 +45747,6 @@ function preinit(href, options) {
   } // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
-}
-
-function useFormStatus() {
-  {
-    throw new Error("Not implemented.");
-  }
 }
 
 {

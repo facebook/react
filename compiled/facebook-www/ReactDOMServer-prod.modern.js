@@ -182,6 +182,8 @@ function sanitizeURL(url) {
     : url;
 }
 var isArrayImpl = Array.isArray,
+  ReactSharedInternals =
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   ReactDOMCurrentDispatcher =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   ReactDOMServerDispatcher = {
@@ -529,19 +531,29 @@ function pushLink(
         pushLinkImpl(target, props)
       );
     href = resources.stylesMap.get(responseState);
-    if (!href) {
-      props = assign({}, props, {
+    href ||
+      ((props = assign({}, props, {
         "data-precedence": props.precedence,
         precedence: null
-      });
-      if ((href = resources.preloadsMap.get(responseState)))
-        (href.state |= 4),
-          (href = href.props),
-          null == props.crossOrigin && (props.crossOrigin = href.crossOrigin),
-          null == props.integrity && (props.integrity = href.integrity);
-      href = { type: "stylesheet", chunks: [], state: 0, props: props };
-      resources.stylesMap.set(responseState, href);
-      props = resources.precedences.get(precedence);
+      })),
+      (href = resources.preloadsMap.get(responseState)),
+      (insertionMode = 0),
+      href &&
+        ((href.state |= 4),
+        (noscriptTagInScope = href.props),
+        null == props.crossOrigin &&
+          (props.crossOrigin = noscriptTagInScope.crossOrigin),
+        null == props.integrity &&
+          (props.integrity = noscriptTagInScope.integrity),
+        href.state & 3 && (insertionMode = 8)),
+      (href = {
+        type: "stylesheet",
+        chunks: [],
+        state: insertionMode,
+        props: props
+      }),
+      resources.stylesMap.set(responseState, href),
+      (props = resources.precedences.get(precedence)),
       props ||
         ((props = new Set()),
         resources.precedences.set(precedence, props),
@@ -552,9 +564,8 @@ function pushLink(
           props: { precedence: precedence, hrefs: [] }
         }),
         props.add(responseState),
-        resources.stylePrecedences.set(precedence, responseState));
-      props.add(href);
-    }
+        resources.stylePrecedences.set(precedence, responseState)),
+      props.add(href));
     resources.boundaryResources && resources.boundaryResources.add(href);
     textEmbedded && target.push("\x3c!-- --\x3e");
     return null;
@@ -1585,7 +1596,7 @@ function flushAllStylesInPreamble(set, precedence) {
   }
 }
 function preloadLateStyle(resource) {
-  if ("style" !== resource.type) {
+  if (!(resource.state & 8) && "style" !== resource.type) {
     var chunks = resource.chunks,
       preloadProps = preloadAsStylePropsFromProps(
         resource.props.href,
@@ -2009,49 +2020,54 @@ function preinit(href, options) {
       var as = options.as;
       switch (as) {
         case "style":
-          var key = "[" + as + "]" + href;
-          as = resources.stylesMap.get(key);
-          var precedence = options.precedence || "default";
-          as ||
-            ((as = {
+          var key = "[" + as + "]" + href,
+            resource = resources.stylesMap.get(key);
+          as = options.precedence || "default";
+          if (!resource) {
+            resource = 0;
+            var preloadResource = resources.preloadsMap.get(key);
+            preloadResource && preloadResource.state & 3 && (resource = 8);
+            resource = {
               type: "stylesheet",
               chunks: [],
-              state: 0,
+              state: resource,
               props: {
                 rel: "stylesheet",
                 href: href,
-                "data-precedence": precedence,
+                "data-precedence": as,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity
               }
-            }),
-            resources.stylesMap.set(key, as),
-            (href = resources.precedences.get(precedence)),
+            };
+            resources.stylesMap.set(key, resource);
+            href = resources.precedences.get(as);
             href ||
               ((href = new Set()),
-              resources.precedences.set(precedence, href),
+              resources.precedences.set(as, href),
               (options = {
                 type: "style",
                 chunks: [],
                 state: 0,
-                props: { precedence: precedence, hrefs: [] }
+                props: { precedence: as, hrefs: [] }
               }),
               href.add(options),
-              resources.stylePrecedences.set(precedence, options)),
-            href.add(as),
-            enqueueFlush(request));
+              resources.stylePrecedences.set(as, options));
+            href.add(resource);
+            enqueueFlush(request);
+          }
           break;
         case "script":
-          (precedence = "[" + as + "]" + href),
-            (as = resources.scriptsMap.get(precedence)),
+          (key = "[" + as + "]" + href),
+            (as = resources.scriptsMap.get(key)),
             as ||
               ((as = { type: "script", chunks: [], state: 0, props: null }),
-              resources.scriptsMap.set(precedence, as),
+              resources.scriptsMap.set(key, as),
               (href = {
                 src: href,
                 async: !0,
                 crossOrigin: options.crossOrigin,
-                integrity: options.integrity
+                integrity: options.integrity,
+                nonce: options.nonce
               }),
               resources.scripts.add(as),
               pushScriptImpl(as.chunks, href),
@@ -2156,8 +2172,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-  ReactSharedInternals =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   emptyContextObject = {},
   currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {
@@ -3857,4 +3871,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-86ff718c";
+exports.version = "18.3.0-www-modern-9c1f7368";

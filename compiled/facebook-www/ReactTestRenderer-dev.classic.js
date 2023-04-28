@@ -2837,7 +2837,7 @@ function isRootDehydrated(root) {
 
 var contextStackCursor = createCursor(null);
 var contextFiberStackCursor = createCursor(null);
-var rootInstanceStackCursor = createCursor(null);
+var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
 
 function requiredContext(c) {
   {
@@ -2891,24 +2891,21 @@ function pushHostContext(fiber) {
   var context = requiredContext(contextStackCursor.current);
   var nextContext = getChildHostContext(); // Don't push this Fiber's context unless it's unique.
 
-  if (context === nextContext) {
-    return;
-  } // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
+  if (context !== nextContext) {
+    // Track the context and the Fiber that provided it.
+    // This enables us to pop only Fibers that provide unique contexts.
+    push(contextFiberStackCursor, fiber, fiber);
+    push(contextStackCursor, nextContext, fiber);
+  }
 }
 
 function popHostContext(fiber) {
-  // Do not pop unless this Fiber provided the current context.
-  // pushHostContext() only pushes Fibers that provide unique contexts.
-  if (contextFiberStackCursor.current !== fiber) {
-    return;
+  if (contextFiberStackCursor.current === fiber) {
+    // Do not pop unless this Fiber provided the current context.
+    // pushHostContext() only pushes Fibers that provide unique contexts.
+    pop(contextStackCursor, fiber);
+    pop(contextFiberStackCursor, fiber);
   }
-
-  pop(contextStackCursor, fiber);
-  pop(contextFiberStackCursor, fiber);
 }
 
 var isHydrating = false; // This flag allows for warning supression when we expect there to be mismatches
@@ -6668,8 +6665,20 @@ function requestTransitionLane() {
   return currentEventTransitionLane;
 }
 
-var currentAsyncAction = null;
-function requestAsyncActionContext(actionReturnValue) {
+// transition updates that occur while the async action is still in progress
+// are treated as part of the action.
+//
+// The ideal behavior would be to treat each async function as an independent
+// action. However, without a mechanism like AsyncContext, we can't tell which
+// action an update corresponds to. So instead, we entangle them all into one.
+// The listeners to notify once the entangled scope completes.
+
+var currentEntangledListeners = null; // The number of pending async actions in the entangled scope.
+
+var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
+
+var currentEntangledLane = NoLane;
+function requestAsyncActionContext(actionReturnValue, finishedState) {
   if (
     actionReturnValue !== null &&
     typeof actionReturnValue === "object" &&
@@ -6678,81 +6687,134 @@ function requestAsyncActionContext(actionReturnValue) {
     // This is an async action.
     //
     // Return a thenable that resolves once the action scope (i.e. the async
-    // function passed to startTransition) has finished running. The fulfilled
-    // value is `false` to represent that the action is not pending.
+    // function passed to startTransition) has finished running.
     var thenable = actionReturnValue;
+    var entangledListeners;
 
-    if (currentAsyncAction === null) {
+    if (currentEntangledListeners === null) {
       // There's no outer async action scope. Create a new one.
-      var asyncAction = {
-        lane: requestTransitionLane(),
-        listeners: [],
-        count: 0,
-        status: "pending",
-        value: false,
-        reason: undefined,
-        then: function (resolve) {
-          asyncAction.listeners.push(resolve);
-        }
-      };
-      attachPingListeners(thenable, asyncAction);
-      currentAsyncAction = asyncAction;
-      return asyncAction;
+      entangledListeners = currentEntangledListeners = [];
+      currentEntangledPendingCount = 0;
+      currentEntangledLane = requestTransitionLane();
     } else {
-      // Inherit the outer scope.
-      var _asyncAction = currentAsyncAction;
-      attachPingListeners(thenable, _asyncAction);
-      return _asyncAction;
+      entangledListeners = currentEntangledListeners;
     }
+
+    currentEntangledPendingCount++;
+    var resultStatus = "pending";
+    var rejectedReason;
+    thenable.then(
+      function () {
+        resultStatus = "fulfilled";
+        pingEngtangledActionScope();
+      },
+      function (error) {
+        resultStatus = "rejected";
+        rejectedReason = error;
+        pingEngtangledActionScope();
+      }
+    ); // Create a thenable that represents the result of this action, but doesn't
+    // resolve until the entire entangled scope has finished.
+    //
+    // Expressed using promises:
+    //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
+    //   return thisResult;
+
+    var resultThenable = createResultThenable(entangledListeners); // Attach a listener to fill in the result.
+
+    entangledListeners.push(function () {
+      switch (resultStatus) {
+        case "fulfilled": {
+          var fulfilledThenable = resultThenable;
+          fulfilledThenable.status = "fulfilled";
+          fulfilledThenable.value = finishedState;
+          break;
+        }
+
+        case "rejected": {
+          var rejectedThenable = resultThenable;
+          rejectedThenable.status = "rejected";
+          rejectedThenable.reason = rejectedReason;
+          break;
+        }
+
+        case "pending":
+        default: {
+          // The listener above should have been called first, so `resultStatus`
+          // should already be set to the correct value.
+          throw new Error(
+            "Thenable should have already resolved. This " +
+              "is a bug in React."
+          );
+        }
+      }
+    });
+    return resultThenable;
   } else {
     // This is not an async action, but it may be part of an outer async action.
-    if (currentAsyncAction === null) {
-      // There's no outer async action scope.
-      return false;
+    if (currentEntangledListeners === null) {
+      return finishedState;
     } else {
-      // Inherit the outer scope.
-      return currentAsyncAction;
+      // Return a thenable that does not resolve until the entangled actions
+      // have finished.
+      var _entangledListeners = currentEntangledListeners;
+
+      var _resultThenable = createResultThenable(_entangledListeners);
+
+      _entangledListeners.push(function () {
+        var fulfilledThenable = _resultThenable;
+        fulfilledThenable.status = "fulfilled";
+        fulfilledThenable.value = finishedState;
+      });
+
+      return _resultThenable;
     }
   }
 }
-function peekAsyncActionContext() {
-  return currentAsyncAction;
-}
 
-function attachPingListeners(thenable, asyncAction) {
-  asyncAction.count++;
-  thenable.then(
-    function () {
-      if (--asyncAction.count === 0) {
-        var fulfilledAsyncAction = asyncAction;
-        fulfilledAsyncAction.status = "fulfilled";
-        completeAsyncActionScope(asyncAction);
-      }
-    },
-    function (error) {
-      if (--asyncAction.count === 0) {
-        var rejectedAsyncAction = asyncAction;
-        rejectedAsyncAction.status = "rejected";
-        rejectedAsyncAction.reason = error;
-        completeAsyncActionScope(asyncAction);
-      }
+function pingEngtangledActionScope() {
+  if (
+    currentEntangledListeners !== null &&
+    --currentEntangledPendingCount === 0
+  ) {
+    // All the actions have finished. Close the entangled async action scope
+    // and notify all the listeners.
+    var listeners = currentEntangledListeners;
+    currentEntangledListeners = null;
+    currentEntangledLane = NoLane;
+
+    for (var i = 0; i < listeners.length; i++) {
+      var listener = listeners[i];
+      listener();
     }
-  );
-  return asyncAction;
+  }
 }
 
-function completeAsyncActionScope(action) {
-  if (currentAsyncAction === action) {
-    currentAsyncAction = null;
-  }
+function createResultThenable(entangledListeners) {
+  // Waits for the entangled async action to complete, then resolves to the
+  // result of an individual action.
+  var resultThenable = {
+    status: "pending",
+    value: null,
+    reason: null,
+    then: function (resolve) {
+      // This is a bit of a cheat. `resolve` expects a value of type `S` to be
+      // passed, but because we're instrumenting the `status` field ourselves,
+      // and we know this thenable will only be used by React, we also know
+      // the value isn't actually needed. So we add the resolve function
+      // directly to the entangled listeners.
+      //
+      // This is also why we don't need to check if the thenable is still
+      // pending; the Suspense implementation already performs that check.
+      var ping = resolve;
+      entangledListeners.push(ping);
+    }
+  };
+  return resultThenable;
+}
 
-  var listeners = action.listeners;
-  action.listeners = [];
-
-  for (var i = 0; i < listeners.length; i++) {
-    var listener = listeners[i];
-    listener(false);
-  }
+function peekEntangledActionLane() {
+  return currentEntangledLane;
 }
 
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
@@ -7173,6 +7235,7 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   //
   // Keep rendering in a loop for as long as render phase updates continue to
   // be scheduled. Use a counter to prevent infinite loops.
+  currentlyRenderingFiber$1 = workInProgress;
   var numberOfReRenders = 0;
   var children;
 
@@ -7240,11 +7303,12 @@ function resetHooksAfterThrow() {
   //
   // It should only reset things like the current dispatcher, to prevent hooks
   // from being called outside of a component.
-  // We can assume the previous dispatcher is always this one, since we set it
+  currentlyRenderingFiber$1 = null; // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
+
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
 }
-function resetHooksOnUnwind() {
+function resetHooksOnUnwind(workInProgress) {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
@@ -7254,7 +7318,7 @@ function resetHooksOnUnwind() {
     // Only reset the updates from the queue if it has a clone. If it does
     // not have a clone, that means it wasn't processed, and the updates were
     // scheduled before we entered the render phase.
-    var hook = currentlyRenderingFiber$1.memoizedState;
+    var hook = workInProgress.memoizedState;
 
     while (hook !== null) {
       var queue = hook.queue;
@@ -7768,11 +7832,11 @@ function useMutableSource(hook, source, getSnapshot, subscribe) {
   var version = getVersion(source._source);
   var dispatcher = ReactCurrentDispatcher$1.current; // eslint-disable-next-line prefer-const
 
-  var _dispatcher$useState = dispatcher.useState(function () {
+  var _dispatcher$useState2 = dispatcher.useState(function () {
       return readFromUnsubscribedMutableSource(root, source, getSnapshot);
     }),
-    currentSnapshot = _dispatcher$useState[0],
-    setSnapshot = _dispatcher$useState[1];
+    currentSnapshot = _dispatcher$useState2[0],
+    setSnapshot = _dispatcher$useState2[1];
 
   var snapshot = currentSnapshot; // Grab a handle to the state hook as well.
   // We use it to clear the pending update queue if we have a new source.
@@ -8510,14 +8574,20 @@ function updateDeferredValueImpl(hook, prevValue, value) {
   }
 }
 
-function startTransition(setPending, callback, options) {
+function startTransition(
+  pendingState,
+  finishedState,
+  setPending,
+  callback,
+  options
+) {
   var previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   var prevTransition = ReactCurrentBatchConfig$2.transition;
   ReactCurrentBatchConfig$2.transition = null;
-  setPending(true);
+  setPending(pendingState);
   var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   {
@@ -8525,11 +8595,11 @@ function startTransition(setPending, callback, options) {
   }
 
   try {
-    var returnValue, isPending;
+    var returnValue, maybeThenable;
     if (enableAsyncActions);
     else {
       // Async actions are not enabled.
-      setPending(false);
+      setPending(finishedState);
       callback();
     }
   } catch (error) {
@@ -8564,7 +8634,7 @@ function mountTransition() {
   var _mountState = mountState(false),
     setPending = _mountState[1]; // The `start` method never changes.
 
-  var start = startTransition.bind(null, setPending);
+  var start = startTransition.bind(null, true, false, setPending);
   var hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];
@@ -20600,9 +20670,9 @@ function requestUpdateLane(fiber) {
       transition._updatedFibers.add(fiber);
     }
 
-    var asyncAction = peekAsyncActionContext();
-    return asyncAction !== null // We're inside an async action scope. Reuse the same lane.
-      ? asyncAction.lane // We may or may not be inside an async action scope. If we are, this
+    var actionScopeLane = peekEntangledActionLane();
+    return actionScopeLane !== NoLane // We're inside an async action scope. Reuse the same lane.
+      ? actionScopeLane // We may or may not be inside an async action scope. If we are, this
       : // is the first update in that scope. Either way, we need to get a
         // fresh transition lane.
         requestTransitionLane();
@@ -21318,7 +21388,7 @@ function resetWorkInProgressStack() {
   } else {
     // Work-in-progress is in suspended state. Reset the work loop and unwind
     // both the suspended fiber and all its parents.
-    resetSuspendedWorkLoopOnUnwind();
+    resetSuspendedWorkLoopOnUnwind(workInProgress);
     interruptedWork = workInProgress;
   }
 
@@ -21375,10 +21445,10 @@ function prepareFreshStack(root, lanes) {
   return rootWorkInProgress;
 }
 
-function resetSuspendedWorkLoopOnUnwind() {
+function resetSuspendedWorkLoopOnUnwind(fiber) {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(fiber);
   resetChildReconcilerOnUnwind();
 }
 
@@ -22033,7 +22103,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       // is to reuse uncached promises, but we happen to know that the only
       // promises that a host component might suspend on are definitely cached
       // because they are controlled by us. So don't bother.
-      resetHooksOnUnwind(); // Fallthrough to the next branch.
+      resetHooksOnUnwind(unitOfWork); // Fallthrough to the next branch.
     }
 
     default: {
@@ -22079,7 +22149,7 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   //
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
-  resetSuspendedWorkLoopOnUnwind();
+  resetSuspendedWorkLoopOnUnwind(unitOfWork);
   var returnFiber = unitOfWork.return;
 
   if (returnFiber === null || workInProgressRoot === null) {
@@ -24455,7 +24525,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-3c32bc8c";
+var ReactVersion = "18.3.0-www-classic-59dc1008";
 
 // Might add PROFILE later.
 

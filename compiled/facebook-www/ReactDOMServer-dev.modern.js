@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-a23c15ee";
+var ReactVersion = "18.3.0-www-modern-b7ba1a13";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2329,6 +2329,9 @@ function describeDifferencesForPreinitOverScript(newProps, currentProps) {
   return description;
 }
 
+var ReactSharedInternals =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
 var ReactDOMSharedInternals =
   ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
@@ -4084,6 +4087,7 @@ function pushLink(
         if (!_resource) {
           var resourceProps = stylesheetPropsFromRawProps(props);
           var preloadResource = resources.preloadsMap.get(key);
+          var state = NoState;
 
           if (preloadResource) {
             // If we already had a preload we don't want that resource to flush directly.
@@ -4093,12 +4097,16 @@ function pushLink(
               resourceProps,
               preloadResource.props
             );
+
+            if (preloadResource.state & Flushed) {
+              state = PreloadFlushed;
+            }
           }
 
           _resource = {
             type: "stylesheet",
             chunks: [],
-            state: NoState,
+            state: state,
             props: resourceProps
           };
           resources.stylesMap.set(key, _resource);
@@ -6129,12 +6137,9 @@ function flushAllStylesInPreamble(set, precedence) {
 }
 
 function preloadLateStyle(resource) {
-  {
-    if (resource.state & PreloadFlushed) {
-      error(
-        "React encountered a Stylesheet Resource that already flushed a Preload when it was not expected to. This is a bug in React."
-      );
-    }
+  if (resource.state & PreloadFlushed) {
+    // This resource has already had a preload flushed
+    return;
   }
 
   if (resource.type === "style") {
@@ -7241,10 +7246,17 @@ function preinit(href, options) {
         }
 
         if (!resource) {
+          var state = NoState;
+          var preloadResource = resources.preloadsMap.get(key);
+
+          if (preloadResource && preloadResource.state & Flushed) {
+            state = PreloadFlushed;
+          }
+
           resource = {
             type: "stylesheet",
             chunks: [],
-            state: NoState,
+            state: state,
             props: stylesheetPropsFromPreinitOptions(href, precedence, options)
           };
           resources.stylesMap.set(key, resource);
@@ -7487,7 +7499,8 @@ function scriptPropsFromPreinitOptions(src, options) {
     src: src,
     async: true,
     crossOrigin: options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    nonce: options.nonce
   };
 }
 
@@ -7943,9 +7956,6 @@ function reenableLogs() {
     }
   }
 }
-
-var ReactSharedInternals =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
 var prefix;
