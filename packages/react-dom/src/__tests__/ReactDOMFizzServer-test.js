@@ -620,6 +620,48 @@ describe('ReactDOMFizzServer', () => {
     }
   });
 
+  it('should render scripts with nonce added', async () => {
+    CSPnonce = 'R4nd0m';
+    try {
+      await act(async () => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <body>
+              <script>{'try { foo() } catch (e) {} ;'}</script>
+              <script src="foo" />
+              <script src="bar" />
+              <script src="baz" integrity="qux" />
+              <script type="module" src="quux" />
+              <script type="module" src="corge" />
+              <script type="module" src="grault" integrity="garply" />
+            </body>
+          </html>,
+          {
+            nonce: CSPnonce,
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(
+        stripExternalRuntimeInNodes(
+          document.getElementsByTagName('script'),
+          renderOptions.unstable_externalRuntimeSrc,
+        ).map(n => n.outerHTML),
+      ).toEqual([
+        `<script nonce="${CSPnonce}">try { foo() } catch (e) {} ;</script>`,
+        `<script nonce="${CSPnonce}" src="foo"></script>`,
+        `<script nonce="${CSPnonce}" src="bar"></script>`,
+        `<script nonce="${CSPnonce}" src="baz" integrity="qux"></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="quux"></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="corge"></script>`,
+        `<script nonce="${CSPnonce}" type="module" src="grault" integrity="garply"></script>`,
+      ]);
+    } finally {
+      CSPnonce = null;
+    }
+  });
+
   it('should client render a boundary if a lazy component rejects', async () => {
     let rejectComponent;
     const LazyComponent = React.lazy(() => {
@@ -5725,48 +5767,6 @@ describe('ReactDOMFizzServer', () => {
       }
     } finally {
       console.error = originalConsoleError;
-    }
-  });
-
-  it('can render scripts with nonce added', async () => {
-    CSPnonce = 'R4nd0m';
-    try {
-      await act(async () => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <body>
-              <script>{'try { foo() } catch (e) {} ;'}</script>
-              <script src="foo" />
-              <script src="bar" />
-              <script src="baz" integrity="qux" />
-              <script type="module" src="quux" />
-              <script type="module" src="corge" />
-              <script type="module" src="grault" integrity="garply" />
-            </body>
-          </html>,
-          {
-            nonce: CSPnonce,
-          },
-        );
-        pipe(writable);
-      });
-
-      expect(
-        stripExternalRuntimeInNodes(
-          document.getElementsByTagName('script'),
-          renderOptions.unstable_externalRuntimeSrc,
-        ).map(n => n.outerHTML),
-      ).toEqual([
-        `<script nonce="${CSPnonce}">try { foo() } catch (e) {} ;</script>`,
-        `<script nonce="${CSPnonce}" src="foo"></script>`,
-        `<script nonce="${CSPnonce}" src="bar"></script>`,
-        `<script nonce="${CSPnonce}" src="baz" integrity="qux"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="quux"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="corge"></script>`,
-        `<script nonce="${CSPnonce}" type="module" src="grault" integrity="garply"></script>`,
-      ]);
-    } finally {
-      CSPnonce = null;
     }
   });
 });
