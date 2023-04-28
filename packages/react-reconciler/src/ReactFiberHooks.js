@@ -1918,6 +1918,30 @@ function rerenderState<S>(
   return rerenderReducer(basicStateReducer, (initialState: any));
 }
 
+function mountOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  // $FlowFixMe - TODO: Actual implementation
+  return mountState(passthrough);
+}
+
+function updateOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  // $FlowFixMe - TODO: Actual implementation
+  return updateState(passthrough);
+}
+
+function rerenderOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  // $FlowFixMe - TODO: Actual implementation
+  return rerenderState(passthrough);
+}
+
 function pushEffect(
   tag: HookFlags,
   create: () => (() => void) | void,
@@ -2989,6 +3013,10 @@ if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
 }
+if (enableAsyncActions) {
+  (ContextOnlyDispatcher: Dispatcher).useOptimisticState =
+    throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3024,6 +3052,11 @@ if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
 }
+if (enableAsyncActions) {
+  (HooksDispatcherOnMount: Dispatcher).useOptimisticState =
+    mountOptimisticState;
+}
+
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3057,6 +3090,10 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  (HooksDispatcherOnUpdate: Dispatcher).useOptimisticState =
+    updateOptimisticState;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -3092,6 +3129,10 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  (HooksDispatcherOnRerender: Dispatcher).useOptimisticState =
+    rerenderOptimisticState;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -3283,6 +3324,17 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        mountHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3440,6 +3492,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -3601,6 +3664,17 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return updateOptimisticState(passthrough, reducer);
+      };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3760,6 +3834,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return rerenderOptimisticState(passthrough, reducer);
+      };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3942,6 +4027,18 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -4128,6 +4225,18 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateOptimisticState(passthrough, reducer);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4312,5 +4421,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderOptimisticState(passthrough, reducer);
+      };
   }
 }

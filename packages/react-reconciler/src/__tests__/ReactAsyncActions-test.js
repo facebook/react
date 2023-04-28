@@ -5,6 +5,7 @@ let act;
 let assertLog;
 let useTransition;
 let useState;
+let useOptimisticState;
 let textCache;
 
 describe('ReactAsyncActions', () => {
@@ -18,6 +19,7 @@ describe('ReactAsyncActions', () => {
     assertLog = require('internal-test-utils').assertLog;
     useTransition = React.useTransition;
     useState = React.useState;
+    useOptimisticState = React.experimental_useOptimisticState;
 
     textCache = new Map();
   });
@@ -643,5 +645,20 @@ describe('ReactAsyncActions', () => {
         <div>Oops C!</div>
       </>,
     );
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState exists', async () => {
+    // This API isn't implemented yet. This just tests that it's wired
+    // up correctly.
+    function App() {
+      const [text] = useOptimisticState('Hi');
+      return <Text text={text} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 });

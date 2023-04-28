@@ -22,6 +22,7 @@ let React;
 let ReactDOMServer;
 let ReactDOMClient;
 let useFormStatus;
+let useOptimisticState;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -30,6 +31,7 @@ describe('ReactDOMFizzForm', () => {
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useFormStatus = require('react-dom').experimental_useFormStatus;
+    useOptimisticState = require('react').experimental_useOptimisticState;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -452,5 +454,22 @@ describe('ReactDOMFizzForm', () => {
     expect(savedTitle).toBe('Hello');
     expect(deletedTitle).toBe('Hello');
     expect(rootActionCalled).toBe(false);
+  });
+
+  // @gate enableAsyncActions
+  it('useOptimisticState returns passthrough value', async () => {
+    function App() {
+      const [optimisticState] = useOptimisticState('hi');
+      return optimisticState;
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+    expect(container.textContent).toBe('hi');
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(container.textContent).toBe('hi');
   });
 });
