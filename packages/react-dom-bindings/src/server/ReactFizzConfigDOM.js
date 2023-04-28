@@ -130,6 +130,9 @@ export type ResponseState = {
   startInlineScript: PrecomputedChunk,
   instructions: InstructionState,
 
+  // state for outputting CSP nonce
+  nonce: string | void,
+
   // state for data streaming format
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
 
@@ -313,6 +316,7 @@ export function createResponseState(
     preloadChunks: [],
     hoistableChunks: [],
     stylesToHoist: false,
+    nonce,
   };
 }
 
@@ -4082,7 +4086,7 @@ export function writePreamble(
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
     const {src, integrity} = responseState.externalRuntimeConfig;
-    internalPreinitScript(resources, src, integrity);
+    internalPreinitScript(resources, src, integrity, responseState.nonce);
   }
 
   const htmlChunks = responseState.htmlChunks;
@@ -5364,6 +5368,7 @@ function internalPreinitScript(
   resources: Resources,
   src: string,
   integrity: ?string,
+  nonce: ?string,
 ): void {
   const key = getResourceKey('script', src);
   let resource = resources.scriptsMap.get(key);
@@ -5380,6 +5385,7 @@ function internalPreinitScript(
       async: true,
       src,
       integrity,
+      nonce,
     });
   }
   return;
