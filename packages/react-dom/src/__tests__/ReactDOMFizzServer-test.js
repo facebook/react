@@ -574,7 +574,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('should support nonce for inline scripts', async () => {
+  it('should support nonce for bootstrap and runtime scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
       let resolve;
@@ -591,11 +591,26 @@ describe('ReactDOMFizzServer', () => {
               <Lazy text="Hello" />
             </Suspense>
           </div>,
-          {nonce: 'R4nd0m'},
+          {
+            nonce: 'R4nd0m',
+            bootstrapScriptContent: 'INIT();',
+            bootstrapScripts: ['init.js'],
+            bootstrapModules: ['init.mjs'],
+          },
         );
         pipe(writable);
       });
+
       expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+      // check that there are 4 scripts with a matching nonce:
+      // The runtime script, an inline bootstrap script, and two src scripts
+      expect(
+        Array.from(container.getElementsByTagName('script')).filter(
+          node => node.getAttribute('nonce') === CSPnonce,
+        ).length,
+      ).toEqual(4);
+
       await act(() => {
         resolve({default: Text});
       });
