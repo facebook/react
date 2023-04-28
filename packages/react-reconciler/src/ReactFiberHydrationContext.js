@@ -802,7 +802,8 @@ function popHydrationState(fiber: Fiber): boolean {
       fiber.tag !== HostSingleton &&
       !(
         fiber.tag === HostComponent &&
-        shouldSetTextContent(fiber.type, fiber.memoizedProps)
+        (!shouldDeleteUnhydratedTailInstances(fiber.type) ||
+          shouldSetTextContent(fiber.type, fiber.memoizedProps))
       )
     ) {
       shouldClear = true;

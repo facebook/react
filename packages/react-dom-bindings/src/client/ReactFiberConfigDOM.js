@@ -89,6 +89,7 @@ import {
   enableHostSingletons,
   enableTrustedTypesIntegration,
   diffInCommitPhase,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -1419,12 +1420,14 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
-// @TODO remove this function once float lands and hydrated tail nodes
-// are controlled by HostSingleton fibers
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
-  return parentType !== 'head' && parentType !== 'body';
+  return (
+    (enableHostSingletons ||
+      (parentType !== 'head' && parentType !== 'body')) &&
+    (!enableFormActions || parentType !== 'form')
+  );
 }
 
 export function didNotMatchHydratedContainerTextInstance(
