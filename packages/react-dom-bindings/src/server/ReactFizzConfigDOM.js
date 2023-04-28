@@ -163,14 +163,8 @@ const startInlineScript = stringToPrecomputedChunk('<script>');
 const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
-const startScriptSrcWithNonce = stringToPrecomputedChunk('<script nonce="');
-const middleScriptSrcWithNonce = stringToPrecomputedChunk('" src="');
-
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
-const startModuleSrcWithNonce = stringToPrecomputedChunk('<script nonce="');
-const middleModuleSrcWithNonce = stringToPrecomputedChunk(
-  '" type="module" src="',
-);
+const scriptNonce = stringToPrecomputedChunk('" nonce="');
 const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
@@ -255,17 +249,15 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
-      if (nonce === undefined) {
+
+      bootstrapChunks.push(
+        startScriptSrc,
+        stringToChunk(escapeTextForBrowser(src)),
+      );
+      if (nonce) {
         bootstrapChunks.push(
-          startScriptSrc,
-          stringToChunk(escapeTextForBrowser(src)),
-        );
-      } else {
-        bootstrapChunks.push(
-          startScriptSrcWithNonce,
+          scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
-          middleScriptSrcWithNonce,
-          stringToChunk(escapeTextForBrowser(src)),
         );
       }
       if (integrity) {
@@ -284,17 +276,16 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
-      if (nonce === undefined) {
+
+      bootstrapChunks.push(
+        startModuleSrc,
+        stringToChunk(escapeTextForBrowser(src)),
+      );
+
+      if (nonce) {
         bootstrapChunks.push(
-          startModuleSrc,
-          stringToChunk(escapeTextForBrowser(src)),
-        );
-      } else {
-        bootstrapChunks.push(
-          startModuleSrcWithNonce,
+          scriptNonce,
           stringToChunk(escapeTextForBrowser(nonce)),
-          middleModuleSrcWithNonce,
-          stringToChunk(escapeTextForBrowser(src)),
         );
       }
       if (integrity) {

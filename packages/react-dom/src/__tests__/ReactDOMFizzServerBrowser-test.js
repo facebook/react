@@ -500,7 +500,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div>hello world</div><script nonce="${nonce}">INIT();</script><script nonce="${nonce}" src="init.js" async=""></script><script nonce="${nonce}" type="module" src="init.mjs" async=""></script>"`,
+      `"<div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
     );
   });
 });
