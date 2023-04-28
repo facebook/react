@@ -1047,20 +1047,39 @@ export function canHydrateInstance(
 ): null | Instance {
   while (instance.nodeType === ELEMENT_NODE) {
     const element: Element = (instance: any);
+    const anyProps = (props: any);
     if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
       if (!inRootOrSingleton || !enableHostSingletons) {
         // Usually we error for mismatched tags.
-        return null;
+        if (
+          enableFormActions &&
+          element.nodeName === 'INPUT' &&
+          (element: any).type === 'hidden'
+        ) {
+          // If we have extra hidden inputs, we don't mismatch. This allows us to embed
+          // extra form data in the original form.
+        } else {
+          return null;
+        }
       }
       // In root or singleton parents we skip past mismatched instances.
     } else if (!inRootOrSingleton || !enableHostSingletons) {
       // Match
-      return element;
+      if (
+        enableFormActions &&
+        type === 'input' &&
+        (element: any).type === 'hidden' &&
+        anyProps.type !== 'hidden'
+      ) {
+        // Skip past hidden inputs unless that's what we're looking for. This allows us
+        // embed extra form data in the original form.
+      } else {
+        return element;
+      }
     } else if (isMarkedHoistable(element)) {
       // We've already claimed this as a hoistable which isn't hydrated this way so we skip past it.
     } else {
       // We have an Element with the right type.
-      const anyProps = (props: any);
 
       // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
       // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
