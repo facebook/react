@@ -1038,7 +1038,7 @@ export function isHydratableText(text: string): boolean {
   return text !== '';
 }
 
-export function shouldSkipHydratableForInstance(
+function shouldSkipHydratableForInstance(
   instance: HydratableInstance,
   type: string,
   props: Props,
@@ -1146,13 +1146,13 @@ export function shouldSkipHydratableForInstance(
   }
 }
 
-export function shouldSkipHydratableForTextInstance(
+function shouldSkipHydratableForTextInstance(
   instance: HydratableInstance,
 ): boolean {
   return instance.nodeType === ELEMENT_NODE;
 }
 
-export function shouldSkipHydratableForSuspenseInstance(
+function shouldSkipHydratableForSuspenseInstance(
   instance: HydratableInstance,
 ): boolean {
   return instance.nodeType === ELEMENT_NODE;
@@ -1162,7 +1162,17 @@ export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
   props: Props,
+  inRootOrSingleton: boolean,
 ): null | Instance {
+  if (enableHostSingletons && inRootOrSingleton) {
+    while (shouldSkipHydratableForInstance(instance, type, props)) {
+      const nextInstance = getNextHydratableSibling(instance);
+      if (nextInstance === null) {
+        return null;
+      }
+      instance = nextInstance;
+    }
+  }
   if (
     instance.nodeType !== ELEMENT_NODE ||
     instance.nodeName.toLowerCase() !== type.toLowerCase()
@@ -1176,8 +1186,19 @@ export function canHydrateInstance(
 export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
+  inRootOrSingleton: boolean,
 ): null | TextInstance {
   if (text === '') return null;
+
+  if (enableHostSingletons && inRootOrSingleton) {
+    while (shouldSkipHydratableForTextInstance(instance)) {
+      const nextInstance = getNextHydratableSibling(instance);
+      if (nextInstance === null) {
+        return null;
+      }
+      instance = nextInstance;
+    }
+  }
 
   if (instance.nodeType !== TEXT_NODE) {
     // Empty strings are not parsed by HTML so there won't be a correct match here.
@@ -1189,7 +1210,18 @@ export function canHydrateTextInstance(
 
 export function canHydrateSuspenseInstance(
   instance: HydratableInstance,
+  inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
+  if (enableHostSingletons && inRootOrSingleton) {
+    while (shouldSkipHydratableForSuspenseInstance(instance)) {
+      const nextInstance = getNextHydratableSibling(instance);
+      if (nextInstance === null) {
+        return null;
+      }
+      instance = nextInstance;
+    }
+  }
+
   if (instance.nodeType !== COMMENT_NODE) {
     return null;
   }
