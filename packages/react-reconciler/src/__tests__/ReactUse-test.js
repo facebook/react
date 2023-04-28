@@ -1580,4 +1580,40 @@ describe('ReactUse', () => {
       </>,
     );
   });
+
+  test('regression test: updates while component is suspended should not be mistaken for render phase updates', async () => {
+    const getCachedAsyncText = cache(getAsyncText);
+
+    let setState;
+    function App() {
+      const [state, _setState] = useState('A');
+      setState = _setState;
+      return <Text text={use(getCachedAsyncText(state))} />;
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['Async text requested [A]']);
+    expect(root).toMatchRenderedOutput(null);
+    await act(() => resolveTextRequests('A'));
+    assertLog(['A']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Update to B. This will suspend.
+    await act(() => startTransition(() => setState('B')));
+    assertLog(['Async text requested [B]']);
+    expect(root).toMatchRenderedOutput('A');
+
+    // While B is suspended, update to C. This should immediately interrupt
+    // the render for B. In the regression, this update was mistakenly treated
+    // as a render phase update.
+    ReactNoop.flushSync(() => setState('C'));
+    assertLog(['Async text requested [C]']);
+
+    // Finish rendering.
+    await act(() => resolveTextRequests('C'));
+    assertLog(['C']);
+    expect(root).toMatchRenderedOutput('C');
+  });
 });
