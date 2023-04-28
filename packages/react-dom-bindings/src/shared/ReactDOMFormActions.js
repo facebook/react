@@ -70,7 +70,7 @@ export function useFormStatus(): FormStatus {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
-    // $FlowFixMe We know this exists because of the feature check above.
+    // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
     return dispatcher.useHostTransitionStatus();
   }
 }
