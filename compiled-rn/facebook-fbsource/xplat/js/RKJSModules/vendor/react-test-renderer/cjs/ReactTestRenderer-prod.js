@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1d48b6135e400c479a77aa3a6d0aa557>>
+ * @generated SignedSource<<36182b4efb97f53e0d4f613caa8813e2>>
  */
 
 "use strict";
@@ -2224,6 +2224,7 @@ function finishRenderingHooks() {
     );
 }
 function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
+  currentlyRenderingFiber$1 = workInProgress;
   var numberOfReRenders = 0;
   do {
     didScheduleRenderPhaseUpdateDuringThisPass && (thenableState = null);
@@ -2246,12 +2247,16 @@ function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.flags &= -2053;
   current.lanes &= ~lanes;
 }
-function resetHooksOnUnwind() {
+function resetHooksOnUnwind(workInProgress) {
   if (didScheduleRenderPhaseUpdate) {
-    for (var hook = currentlyRenderingFiber$1.memoizedState; null !== hook; ) {
-      var queue = hook.queue;
+    for (
+      workInProgress = workInProgress.memoizedState;
+      null !== workInProgress;
+
+    ) {
+      var queue = workInProgress.queue;
       null !== queue && (queue.pending = null);
-      hook = hook.next;
+      workInProgress = workInProgress.next;
     }
     didScheduleRenderPhaseUpdate = !1;
   }
@@ -6681,8 +6686,9 @@ function resetWorkInProgressStack() {
     if (0 === workInProgressSuspendedReason)
       var interruptedWork = workInProgress.return;
     else
-      resetContextDependencies(),
-        resetHooksOnUnwind(),
+      (interruptedWork = workInProgress),
+        resetContextDependencies(),
+        resetHooksOnUnwind(interruptedWork),
         (thenableState$1 = null),
         (thenableIndexCounter$1 = 0),
         (interruptedWork = workInProgress);
@@ -6720,6 +6726,7 @@ function prepareFreshStack(root, lanes) {
   return root;
 }
 function handleThrow(root, thrownValue) {
+  currentlyRenderingFiber$1 = null;
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
@@ -6974,7 +6981,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 5:
-      resetHooksOnUnwind();
+      resetHooksOnUnwind(unitOfWork);
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -6989,7 +6996,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 }
 function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(unitOfWork);
   thenableState$1 = null;
   thenableIndexCounter$1 = 0;
   var returnFiber = unitOfWork.return;
@@ -8596,19 +8603,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1022 = {
+var devToolsConfig$jscomp$inline_1024 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-540bab085-20230426",
+  version: "18.3.0-next-18282f881-20230428",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1207 = {
-  bundleType: devToolsConfig$jscomp$inline_1022.bundleType,
-  version: devToolsConfig$jscomp$inline_1022.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1022.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1022.rendererConfig,
+var internals$jscomp$inline_1209 = {
+  bundleType: devToolsConfig$jscomp$inline_1024.bundleType,
+  version: devToolsConfig$jscomp$inline_1024.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1024.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1024.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -8625,26 +8632,26 @@ var internals$jscomp$inline_1207 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1022.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1024.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-540bab085-20230426"
+  reconcilerVersion: "18.3.0-next-18282f881-20230428"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1208 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1210 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1208.isDisabled &&
-    hook$jscomp$inline_1208.supportsFiber
+    !hook$jscomp$inline_1210.isDisabled &&
+    hook$jscomp$inline_1210.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1208.inject(
-        internals$jscomp$inline_1207
+      (rendererID = hook$jscomp$inline_1210.inject(
+        internals$jscomp$inline_1209
       )),
-        (injectedHook = hook$jscomp$inline_1208);
+        (injectedHook = hook$jscomp$inline_1210);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

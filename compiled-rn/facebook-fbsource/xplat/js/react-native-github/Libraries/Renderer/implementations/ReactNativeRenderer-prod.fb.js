@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<af3a4dae6a45a4183ba8d894550b2310>>
+ * @generated SignedSource<<01e7b5c787b69207a4de64324a71419c>>
  */
 
 "use strict";
@@ -3684,6 +3684,7 @@ function finishRenderingHooks() {
     );
 }
 function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
+  currentlyRenderingFiber$1 = workInProgress;
   var numberOfReRenders = 0;
   do {
     didScheduleRenderPhaseUpdateDuringThisPass && (thenableState = null);
@@ -3706,12 +3707,16 @@ function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.flags &= -2053;
   current.lanes &= ~lanes;
 }
-function resetHooksOnUnwind() {
+function resetHooksOnUnwind(workInProgress) {
   if (didScheduleRenderPhaseUpdate) {
-    for (var hook = currentlyRenderingFiber$1.memoizedState; null !== hook; ) {
-      var queue = hook.queue;
+    for (
+      workInProgress = workInProgress.memoizedState;
+      null !== workInProgress;
+
+    ) {
+      var queue = workInProgress.queue;
       null !== queue && (queue.pending = null);
-      hook = hook.next;
+      workInProgress = workInProgress.next;
     }
     didScheduleRenderPhaseUpdate = !1;
   }
@@ -8032,8 +8037,9 @@ function resetWorkInProgressStack() {
     if (0 === workInProgressSuspendedReason)
       var interruptedWork = workInProgress.return;
     else
-      resetContextDependencies(),
-        resetHooksOnUnwind(),
+      (interruptedWork = workInProgress),
+        resetContextDependencies(),
+        resetHooksOnUnwind(interruptedWork),
         (thenableState$1 = null),
         (thenableIndexCounter$1 = 0),
         (interruptedWork = workInProgress);
@@ -8071,6 +8077,7 @@ function prepareFreshStack(root, lanes) {
   return root;
 }
 function handleThrow(root, thrownValue) {
+  currentlyRenderingFiber$1 = null;
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
@@ -8316,7 +8323,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 5:
-      resetHooksOnUnwind();
+      resetHooksOnUnwind(unitOfWork);
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -8331,7 +8338,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 }
 function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(unitOfWork);
   thenableState$1 = null;
   thenableIndexCounter$1 = 0;
   var returnFiber = unitOfWork.return;
@@ -9728,10 +9735,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1101 = {
+  devToolsConfig$jscomp$inline_1103 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-next-540bab085-20230426",
+    version: "18.3.0-next-18282f881-20230428",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9746,11 +9753,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1346 = {
-  bundleType: devToolsConfig$jscomp$inline_1101.bundleType,
-  version: devToolsConfig$jscomp$inline_1101.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1101.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1101.rendererConfig,
+var internals$jscomp$inline_1348 = {
+  bundleType: devToolsConfig$jscomp$inline_1103.bundleType,
+  version: devToolsConfig$jscomp$inline_1103.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1103.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1103.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9766,26 +9773,26 @@ var internals$jscomp$inline_1346 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1101.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1103.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-540bab085-20230426"
+  reconcilerVersion: "18.3.0-next-18282f881-20230428"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1347 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1349 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1347.isDisabled &&
-    hook$jscomp$inline_1347.supportsFiber
+    !hook$jscomp$inline_1349.isDisabled &&
+    hook$jscomp$inline_1349.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1347.inject(
-        internals$jscomp$inline_1346
+      (rendererID = hook$jscomp$inline_1349.inject(
+        internals$jscomp$inline_1348
       )),
-        (injectedHook = hook$jscomp$inline_1347);
+        (injectedHook = hook$jscomp$inline_1349);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

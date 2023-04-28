@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7634b64643555a5e869a82fd5e1dc828>>
+ * @generated SignedSource<<4d7bf75ac0b4bdba172d8252b2ae83c7>>
  */
 
 
@@ -3724,6 +3724,7 @@ function finishRenderingHooks() {
     );
 }
 function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
+  currentlyRenderingFiber$1 = workInProgress;
   var numberOfReRenders = 0;
   do {
     didScheduleRenderPhaseUpdateDuringThisPass && (thenableState = null);
@@ -3746,12 +3747,16 @@ function bailoutHooks(current, workInProgress, lanes) {
   workInProgress.flags &= -2053;
   current.lanes &= ~lanes;
 }
-function resetHooksOnUnwind() {
+function resetHooksOnUnwind(workInProgress) {
   if (didScheduleRenderPhaseUpdate) {
-    for (var hook = currentlyRenderingFiber$1.memoizedState; null !== hook; ) {
-      var queue = hook.queue;
+    for (
+      workInProgress = workInProgress.memoizedState;
+      null !== workInProgress;
+
+    ) {
+      var queue = workInProgress.queue;
       null !== queue && (queue.pending = null);
-      hook = hook.next;
+      workInProgress = workInProgress.next;
     }
     didScheduleRenderPhaseUpdate = !1;
   }
@@ -8311,8 +8316,9 @@ function resetWorkInProgressStack() {
     if (0 === workInProgressSuspendedReason)
       var interruptedWork = workInProgress.return;
     else
-      resetContextDependencies(),
-        resetHooksOnUnwind(),
+      (interruptedWork = workInProgress),
+        resetContextDependencies(),
+        resetHooksOnUnwind(interruptedWork),
         (thenableState$1 = null),
         (thenableIndexCounter$1 = 0),
         (interruptedWork = workInProgress);
@@ -8350,6 +8356,7 @@ function prepareFreshStack(root, lanes) {
   return root;
 }
 function handleThrow(root, thrownValue) {
+  currentlyRenderingFiber$1 = null;
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
@@ -8661,7 +8668,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 5:
-      resetHooksOnUnwind();
+      resetHooksOnUnwind(unitOfWork);
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
@@ -8677,7 +8684,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 }
 function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(unitOfWork);
   thenableState$1 = null;
   thenableIndexCounter$1 = 0;
   var returnFiber = unitOfWork.return;
@@ -10178,10 +10185,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1124 = {
+  devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-540bab085-20230426",
+    version: "18.3.0-next-18282f881-20230428",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10210,10 +10217,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1124.bundleType,
-  version: devToolsConfig$jscomp$inline_1124.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1124.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1124.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1126.bundleType,
+  version: devToolsConfig$jscomp$inline_1126.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1126.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1126.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10229,14 +10236,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1124.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1126.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-540bab085-20230426"
+  reconcilerVersion: "18.3.0-next-18282f881-20230428"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
