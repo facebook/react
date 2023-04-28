@@ -593,7 +593,7 @@ describe('ReactDOMFizzServer', () => {
           </div>,
           {
             nonce: 'R4nd0m',
-            bootstrapScriptContent: 'INIT();',
+            bootstrapScriptContent: 'function noop(){}',
             bootstrapScripts: ['init.js'],
             bootstrapModules: ['init.mjs'],
           },
