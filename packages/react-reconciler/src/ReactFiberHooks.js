@@ -711,6 +711,9 @@ function renderWithHooksAgain<Props, SecondArg>(
   //
   // Keep rendering in a loop for as long as render phase updates continue to
   // be scheduled. Use a counter to prevent infinite loops.
+
+  currentlyRenderingFiber = workInProgress;
+
   let numberOfReRenders: number = 0;
   let children;
   do {
@@ -826,13 +829,14 @@ export function resetHooksAfterThrow(): void {
   //
   // It should only reset things like the current dispatcher, to prevent hooks
   // from being called outside of a component.
+  currentlyRenderingFiber = (null: any);
 
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 }
 
-export function resetHooksOnUnwind(): void {
+export function resetHooksOnUnwind(workInProgress: Fiber): void {
   if (didScheduleRenderPhaseUpdate) {
     // There were render phase updates. These are only valid for this render
     // phase, which we are now aborting. Remove the updates from the queues so
@@ -842,7 +846,7 @@ export function resetHooksOnUnwind(): void {
     // Only reset the updates from the queue if it has a clone. If it does
     // not have a clone, that means it wasn't processed, and the updates were
     // scheduled before we entered the render phase.
-    let hook: Hook | null = currentlyRenderingFiber.memoizedState;
+    let hook: Hook | null = workInProgress.memoizedState;
     while (hook !== null) {
       const queue = hook.queue;
       if (queue !== null) {
