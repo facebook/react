@@ -151,29 +151,17 @@ export function flushSyncWorkOnLegacyRootsOnly() {
   flushSyncWorkAcrossRoots_impl(true);
 }
 
-function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
-  if (isFlushingWork) {
-    // Prevent reentrancy.
-    // TODO: Is this overly defensive? The callers must check the execution
-    // context first regardless.
-    return;
-  }
-
-  if (!mightHavePendingSyncWork) {
-    // Fast path. There's no sync work to do.
-    return;
-  }
-
-  const workInProgressRoot = getWorkInProgressRoot();
-  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
-
-  // There may or may not be synchronous work scheduled. Let's check.
-  let didPerformSomeWork;
+export function _doFlushWork(
+  firstRoot,
+  workInProgressRoot,
+  workInProgressRootRenderLanes,
+  onlyLegacy,
+) {
+  let didPerformSomeWork = false;
   let errors: Array<mixed> | null = null;
-  isFlushingWork = true;
   do {
     didPerformSomeWork = false;
-    let root = firstScheduledRoot;
+    let root = firstRoot;
     while (root !== null) {
       if (onlyLegacy && root.tag !== LegacyRoot) {
         // Skip non-legacy roots.
@@ -202,6 +190,33 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
       root = root.next;
     }
   } while (didPerformSomeWork);
+
+  return errors;
+}
+function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
+  if (isFlushingWork) {
+    // Prevent reentrancy.
+    // TODO: Is this overly defensive? The callers must check the execution
+    // context first regardless.
+    return;
+  }
+
+  if (!mightHavePendingSyncWork) {
+    // Fast path. There's no sync work to do.
+    return;
+  }
+
+  const workInProgressRoot = getWorkInProgressRoot();
+  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+
+  // There may or may not be synchronous work scheduled. Let's check.
+  isFlushingWork = true;
+  const errors = _doFlushWork(
+    firstScheduledRoot,
+    workInProgressRoot,
+    workInProgressRootRenderLanes,
+    onlyLegacy,
+  );
   isFlushingWork = false;
 
   // If any errors were thrown, rethrow them right before exiting.
