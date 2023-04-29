@@ -34,7 +34,6 @@ import {SettingsModalContextController} from 'react-devtools-shared/src/devtools
 import portaledContent from '../portaledContent';
 import {StoreContext} from '../context';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
-import {enableProfilerComponentTree} from 'react-devtools-feature-flags';
 
 import styles from './Profiler.css';
 
@@ -56,8 +55,6 @@ function Profiler(_: {}) {
   const {supportsTimeline} = useContext(StoreContext);
 
   const isLegacyProfilerSelected = selectedTabID !== 'timeline';
-  const isRightColumnVisible =
-    isLegacyProfilerSelected || enableProfilerComponentTree;
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'timeline') {
@@ -151,9 +148,7 @@ function Profiler(_: {}) {
             <ModalDialog />
           </div>
         </div>
-        {isRightColumnVisible && (
-          <div className={styles.RightColumn}>{sidebar}</div>
-        )}
+        <div className={styles.RightColumn}>{sidebar}</div>
         <SettingsModal />
       </div>
     </SettingsModalContextController>

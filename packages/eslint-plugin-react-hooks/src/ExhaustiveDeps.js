@@ -1103,7 +1103,7 @@ export default {
               extraWarning =
                 ` You can also do a functional update '${
                   setStateRecommendation.setter
-                }(${setStateRecommendation.missingDep.substring(
+                }(${setStateRecommendation.missingDep.slice(
                   0,
                   1,
                 )} => ...)' if you only need '${

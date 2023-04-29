@@ -3,7 +3,7 @@
 import nullthrows from 'nullthrows';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {IS_FIREFOX} from '../utils';
+import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from '../utils';
 
 // We run scripts on the page via the service worker (backgroud.js) for
 // Manifest V3 extensions (Chrome & Edge).
@@ -90,11 +90,22 @@ window.addEventListener('message', function onMessage({data, source}) {
         );
       }
       break;
-    case 'react-devtools-inject-backend':
+    case 'react-devtools-inject-backend-manager':
       if (IS_FIREFOX) {
-        injectScriptSync(
-          chrome.runtime.getURL('build/react_devtools_backend.js'),
-        );
+        injectScriptSync(chrome.runtime.getURL('build/backendManager.js'));
+      }
+      break;
+    case 'react-devtools-backend-manager':
+      if (IS_FIREFOX) {
+        data.payload?.versions?.forEach(version => {
+          if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
+            injectScriptSync(
+              chrome.runtime.getURL(
+                `/build/react_devtools_backend_${version}.js`,
+              ),
+            );
+          }
+        });
       }
       break;
   }

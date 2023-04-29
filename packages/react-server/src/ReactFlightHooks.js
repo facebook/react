@@ -16,7 +16,6 @@ import {
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
-import {enableUseHook} from 'shared/ReactFeatureFlags';
 import {createThenableState, trackUsedThenable} from './ReactFlightThenable';
 import {isClientReference} from './ReactFlightServerConfig';
 
@@ -100,7 +99,7 @@ export const HooksDispatcher: Dispatcher = {
     }
     return data;
   },
-  use: enableUseHook ? use : (unsupportedHook: any),
+  use,
 };
 
 function unsupportedHook(): void {

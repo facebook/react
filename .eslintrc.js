@@ -236,7 +236,14 @@ module.exports = {
     'no-inner-declarations': [ERROR, 'functions'],
     'no-multi-spaces': ERROR,
     'no-restricted-globals': [ERROR].concat(restrictedGlobals),
-    'no-restricted-syntax': [ERROR, 'WithStatement'],
+    'no-restricted-syntax': [
+      ERROR,
+      'WithStatement',
+      {
+        selector: 'MemberExpression[property.name=/^(?:substring|substr)$/]',
+        message: 'Prefer string.slice() over .substring() and .substr().',
+      },
+    ],
     'no-shadow': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
     'no-use-before-define': OFF,

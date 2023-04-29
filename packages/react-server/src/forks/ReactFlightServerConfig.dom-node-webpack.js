@@ -6,7 +6,14 @@
  *
  * @flow
  */
+import {AsyncLocalStorage} from 'async_hooks';
+
+import type {Request} from 'react-server/src/ReactFlightServer';
 
 export * from '../ReactFlightServerConfigStream';
 export * from 'react-server-dom-webpack/src/ReactFlightServerConfigWebpackBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
+
+export const supportsRequestStorage = true;
+export const requestStorage: AsyncLocalStorage<Request> =
+  new AsyncLocalStorage();

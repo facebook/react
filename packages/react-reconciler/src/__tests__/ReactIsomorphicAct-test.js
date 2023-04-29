@@ -206,7 +206,6 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  // @gate enableUseHook
   test('unwraps promises by yielding to microtasks (async act scope)', async () => {
     const promise = Promise.resolve('Async');
 
@@ -232,7 +231,6 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  // @gate enableUseHook
   test('unwraps promises by yielding to microtasks (non-async act scope)', async () => {
     const promise = Promise.resolve('Async');
 
@@ -260,7 +258,6 @@ describe('isomorphic act()', () => {
   });
 
   // @gate __DEV__
-  // @gate enableUseHook
   test('warns if a promise is used in a non-awaited `act` scope', async () => {
     const promise = new Promise(() => {});
 

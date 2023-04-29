@@ -26,10 +26,6 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-// AsyncLocalStorage is not available in bun
-export const supportsRequestStorage = false;
-export const requestStorage = (null: any);
-
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(

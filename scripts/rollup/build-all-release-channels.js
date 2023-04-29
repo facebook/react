@@ -36,7 +36,7 @@ let dateString = String(
 
 // On CI environment, this string is wrapped with quotes '...'s
 if (dateString.startsWith("'")) {
-  dateString = dateString.substr(1, 8);
+  dateString = dateString.slice(1, 9);
 }
 
 // Build the artifacts using a placeholder React version. We'll then do a string
@@ -173,7 +173,7 @@ function processStable(buildDir) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + hash.digest('hex').substr(0, 8)
+      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
     );
   }
 
@@ -227,7 +227,7 @@ function processExperimental(buildDir, version) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + hash.digest('hex').substr(0, 8)
+      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
     );
   }
 

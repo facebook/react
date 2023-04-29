@@ -26,6 +26,8 @@ export const enableTransitionTracing = __VARIANT__;
 export const enableCustomElementPropertySupport = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const diffInCommitPhase = __VARIANT__;
+export const enableAsyncActions = __VARIANT__;
+export const alwaysThrottleRetries = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.

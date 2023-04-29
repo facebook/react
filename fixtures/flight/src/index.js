@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Suspense} from 'react';
+import {use, Suspense} from 'react';
 import ReactDOM from 'react-dom/client';
 import {createFromFetch, encodeReply} from 'react-server-dom-webpack/client';
 
@@ -27,7 +27,8 @@ let data = createFromFetch(
   }
 );
 
-// TODO: This transition shouldn't really be necessary but it is for now.
-React.startTransition(() => {
-  ReactDOM.hydrateRoot(document, data);
-});
+function Shell({data}) {
+  return use(data);
+}
+
+ReactDOM.hydrateRoot(document, <Shell data={data} />);
