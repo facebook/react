@@ -4309,6 +4309,106 @@ body {
         'ReactDOM.preinit(): For `href` "foo", the options provided conflict with another call to `ReactDOM.preinit("foo", { as: "script", ... })`. React will always use the options it first encounters when preinitializing a hoistable script for a given `href` and any later options will be ignored if different. Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.\n  "integrity" option value: "some hash", missing from original options\n  "crossOrigin" option value: "anonymous", original option value: "use-credentials"',
       ]);
     });
+
+    it('accepts a `nonce` option for `as: "script"`', async () => {
+      function Component({src}) {
+        ReactDOM.preinit(src, {as: 'script', nonce: 'R4nD0m'});
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component src="foo" />
+            </body>
+          </html>,
+          {
+            nonce: 'R4nD0m',
+          },
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script async="" src="foo" nonce="R4nD0m" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <body>
+              <Component src="bar" />
+            </body>
+          </html>,
+        );
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script async="" src="foo" nonce="R4nD0m" />
+            <script async="" src="bar" nonce="R4nD0m" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
+
+    it('accepts an `integrity` option for `as: "script"`', async () => {
+      function Component({src, hash}) {
+        ReactDOM.preinit(src, {as: 'script', integrity: hash});
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component src="foo" hash="foo hash" />
+            </body>
+          </html>,
+          {
+            nonce: 'R4nD0m',
+          },
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script async="" src="foo" integrity="foo hash" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <body>
+              <Component src="bar" hash="bar hash" />
+            </body>
+          </html>,
+        );
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script async="" src="foo" integrity="foo hash" />
+            <script async="" src="bar" integrity="bar hash" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
   });
 
   describe('Stylesheet Resources', () => {

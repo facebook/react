@@ -422,9 +422,7 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
-  useHostTransitionStatus?: (
-    initialStatus: TransitionStatus,
-  ) => TransitionStatus,
+  useHostTransitionStatus?: () => TransitionStatus,
 };
 
 export type CacheDispatcher = {
