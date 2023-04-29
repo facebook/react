@@ -12,12 +12,12 @@ import {
   InstructionKind,
   makeInstructionId,
   Place,
-  ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependency,
+  ReactiveTerminalStatement,
   ReactiveValue,
 } from "../HIR/HIR";
 import {
@@ -58,7 +58,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
       scope: empty(),
     });
   }
-  visit(context, fn.body);
+  visitReactiveFunction(fn, new PropagationVisitor(), context);
 }
 
 type TemporariesUsedOutsideDefiningScope = {
@@ -421,237 +421,228 @@ class Context {
   }
 }
 
-function visit(context: Context, block: ReactiveBlock): void {
-  for (const item of block) {
-    switch (item.kind) {
-      case "scope": {
-        const scopeDependencies = context.enter(item.scope, () => {
-          visit(context, item.instructions);
-        });
-        item.scope.dependencies = scopeDependencies;
-        break;
-      }
-      case "instruction": {
-        visitInstruction(context, item.instruction);
-        break;
-      }
-      case "terminal": {
-        const terminal = item.terminal;
-        switch (terminal.kind) {
-          case "break":
-          case "continue": {
-            break;
-          }
-          case "return": {
-            context.visitOperand(terminal.value);
-            break;
-          }
-          case "throw": {
-            context.visitOperand(terminal.value);
-            break;
-          }
-          case "for": {
-            visitReactiveValue(context, terminal.id, terminal.init);
-            visitReactiveValue(context, terminal.id, terminal.test);
-            context.enterConditional(() => {
-              if (terminal.update !== null) {
-                visitReactiveValue(context, terminal.id, terminal.update);
-              }
-              visit(context, terminal.loop);
-            });
-            break;
-          }
-          case "for-of": {
-            visitReactiveValue(context, terminal.id, terminal.init);
-            context.enterConditional(() => {
-              visit(context, terminal.loop);
-            });
-            break;
-          }
-          case "do-while": {
-            visit(context, terminal.loop);
-            context.enterConditional(() => {
-              visitReactiveValue(context, terminal.id, terminal.test);
-            });
-            break;
-          }
-          case "while": {
-            visitReactiveValue(context, terminal.id, terminal.test);
-            context.enterConditional(() => {
-              visit(context, terminal.loop);
-            });
-            break;
-          }
-          case "if": {
-            context.visitOperand(terminal.test);
-            const { consequent, alternate } = terminal;
-            const depsInIf = context.enterConditional(() => {
-              visit(context, consequent);
-            });
-            if (alternate !== null) {
-              const depsInElse = context.enterConditional(() => {
-                visit(context, alternate);
-              });
-              context.promoteDepsFromExhaustiveConditionals([
-                depsInIf,
-                depsInElse,
-              ]);
-            }
-            break;
-          }
-          case "switch": {
-            context.visitOperand(terminal.test);
-            const depsInCases = [];
-            let foundDefault = false;
-            // This can underestimate unconditional accesses due to the current
-            // CFG representation for fallthrough. This is safe. It only
-            // reduces granularity of dependencies.
-            for (const { test, block } of terminal.cases) {
-              if (test == null) {
-                foundDefault = true;
-              }
-              if (block !== undefined) {
-                depsInCases.push(
-                  context.enterConditional(() => {
-                    visit(context, block);
-                  })
-                );
-              }
-            }
-            if (foundDefault) {
-              context.promoteDepsFromExhaustiveConditionals(depsInCases);
-            }
-            break;
-          }
-          case "label": {
-            visit(context, terminal.block);
-            break;
-          }
-          default: {
-            assertExhaustive(
-              terminal,
-              `Unexpected terminal kind '${(terminal as any).kind}'`
-            );
-          }
-        }
-        break;
-      }
-      default: {
-        assertExhaustive(item, `Unexpected item`);
-      }
-    }
+class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
+  override visitScope(scope: ReactiveScopeBlock, context: Context): void {
+    const scopeDependencies = context.enter(scope.scope, () => {
+      this.visitBlock(scope.instructions, context);
+    });
+    scope.scope.dependencies = scopeDependencies;
   }
-}
 
-function visitReactiveValue(
-  context: Context,
-  id: InstructionId,
-  value: ReactiveValue
-): void {
-  switch (value.kind) {
-    case "OptionalCall": {
-      context.enterConditional(() => {
-        visitReactiveValue(context, id, value.call);
-      });
-      break;
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    context: Context
+  ): void {
+    const { id, value, lvalue } = instruction;
+    this.visitInstructionValue(context, id, value, lvalue);
+    if (lvalue == null) {
+      return;
     }
-    case "LogicalExpression": {
-      visitReactiveValue(context, id, value.left);
-      context.enterConditional(() => {
-        visitReactiveValue(context, id, value.right);
-      });
-      break;
-    }
-    case "ConditionalExpression": {
-      visitReactiveValue(context, id, value.test);
-
-      const consequentDeps = context.enterConditional(() => {
-        visitReactiveValue(context, id, value.consequent);
-      });
-      const alternateDeps = context.enterConditional(() => {
-        visitReactiveValue(context, id, value.alternate);
-      });
-      context.promoteDepsFromExhaustiveConditionals([
-        consequentDeps,
-        alternateDeps,
-      ]);
-      break;
-    }
-    case "SequenceExpression": {
-      for (const instr of value.instructions) {
-        visitInstruction(context, instr);
-      }
-      visitInstructionValue(context, id, value.value, null);
-      break;
-    }
-    default: {
-      for (const operand of eachInstructionValueOperand(value)) {
-        context.visitOperand(operand);
-      }
-    }
-  }
-}
-
-function visitInstructionValue(
-  context: Context,
-  id: InstructionId,
-  value: ReactiveValue,
-  lvalue: Place | null
-): void {
-  if (value.kind === "LoadLocal" && lvalue !== null) {
-    if (
-      value.place.identifier.name !== null &&
-      lvalue.identifier.name === null &&
-      !context.isUsedOutsideDeclaringScope(lvalue)
-    ) {
-      context.declareTemporary(lvalue, value.place);
-    } else {
-      context.visitOperand(value.place);
-    }
-  } else if (value.kind === "PropertyLoad") {
-    if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
-      context.declareProperty(
-        lvalue,
-        value.object,
-        value.property,
-        value.optional
-      );
-    } else {
-      context.visitProperty(value.object, value.property, value.optional);
-    }
-  } else if (value.kind === "StoreLocal") {
-    context.visitOperand(value.value);
-    if (value.lvalue.kind === InstructionKind.Reassign) {
-      context.visitReassignment(value.lvalue.place);
-    }
-    context.declare(value.lvalue.place.identifier, {
+    context.declare(lvalue.identifier, {
       id,
       scope: context.currentScope,
     });
-  } else if (value.kind === "Destructure") {
-    context.visitOperand(value.value);
-    for (const place of eachPatternOperand(value.lvalue.pattern)) {
-      if (value.lvalue.kind === InstructionKind.Reassign) {
-        context.visitReassignment(place);
+  }
+
+  visitReactiveValue(
+    context: Context,
+    id: InstructionId,
+    value: ReactiveValue
+  ): void {
+    switch (value.kind) {
+      case "OptionalCall": {
+        context.enterConditional(() => {
+          this.visitReactiveValue(context, id, value.call);
+        });
+        break;
       }
-      context.declare(place.identifier, {
+      case "LogicalExpression": {
+        this.visitReactiveValue(context, id, value.left);
+        context.enterConditional(() => {
+          this.visitReactiveValue(context, id, value.right);
+        });
+        break;
+      }
+      case "ConditionalExpression": {
+        this.visitReactiveValue(context, id, value.test);
+
+        const consequentDeps = context.enterConditional(() => {
+          this.visitReactiveValue(context, id, value.consequent);
+        });
+        const alternateDeps = context.enterConditional(() => {
+          this.visitReactiveValue(context, id, value.alternate);
+        });
+        context.promoteDepsFromExhaustiveConditionals([
+          consequentDeps,
+          alternateDeps,
+        ]);
+        break;
+      }
+      case "SequenceExpression": {
+        for (const instr of value.instructions) {
+          this.visitInstruction(instr, context);
+        }
+        this.visitInstructionValue(context, id, value.value, null);
+        break;
+      }
+      default: {
+        for (const operand of eachInstructionValueOperand(value)) {
+          context.visitOperand(operand);
+        }
+      }
+    }
+  }
+
+  visitInstructionValue(
+    context: Context,
+    id: InstructionId,
+    value: ReactiveValue,
+    lvalue: Place | null
+  ): void {
+    if (value.kind === "LoadLocal" && lvalue !== null) {
+      if (
+        value.place.identifier.name !== null &&
+        lvalue.identifier.name === null &&
+        !context.isUsedOutsideDeclaringScope(lvalue)
+      ) {
+        context.declareTemporary(lvalue, value.place);
+      } else {
+        context.visitOperand(value.place);
+      }
+    } else if (value.kind === "PropertyLoad") {
+      if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
+        context.declareProperty(
+          lvalue,
+          value.object,
+          value.property,
+          value.optional
+        );
+      } else {
+        context.visitProperty(value.object, value.property, value.optional);
+      }
+    } else if (value.kind === "StoreLocal") {
+      context.visitOperand(value.value);
+      if (value.lvalue.kind === InstructionKind.Reassign) {
+        context.visitReassignment(value.lvalue.place);
+      }
+      context.declare(value.lvalue.place.identifier, {
         id,
         scope: context.currentScope,
       });
+    } else if (value.kind === "Destructure") {
+      context.visitOperand(value.value);
+      for (const place of eachPatternOperand(value.lvalue.pattern)) {
+        if (value.lvalue.kind === InstructionKind.Reassign) {
+          context.visitReassignment(place);
+        }
+        context.declare(place.identifier, {
+          id,
+          scope: context.currentScope,
+        });
+      }
+    } else {
+      this.visitReactiveValue(context, id, value);
     }
-  } else {
-    visitReactiveValue(context, id, value);
   }
-}
 
-function visitInstruction(context: Context, instr: ReactiveInstruction): void {
-  const { lvalue } = instr;
-  visitInstructionValue(context, instr.id, instr.value, lvalue);
-  if (lvalue == null) {
-    return;
+  override visitTerminal(
+    stmt: ReactiveTerminalStatement,
+    context: Context
+  ): void {
+    const terminal = stmt.terminal;
+    switch (terminal.kind) {
+      case "break":
+      case "continue": {
+        break;
+      }
+      case "return": {
+        context.visitOperand(terminal.value);
+        break;
+      }
+      case "throw": {
+        context.visitOperand(terminal.value);
+        break;
+      }
+      case "for": {
+        this.visitReactiveValue(context, terminal.id, terminal.init);
+        this.visitReactiveValue(context, terminal.id, terminal.test);
+        context.enterConditional(() => {
+          if (terminal.update !== null) {
+            this.visitReactiveValue(context, terminal.id, terminal.update);
+          }
+          this.visitBlock(terminal.loop, context);
+        });
+        break;
+      }
+      case "for-of": {
+        this.visitReactiveValue(context, terminal.id, terminal.init);
+        context.enterConditional(() => {
+          this.visitBlock(terminal.loop, context);
+        });
+        break;
+      }
+      case "do-while": {
+        this.visitBlock(terminal.loop, context);
+        context.enterConditional(() => {
+          this.visitReactiveValue(context, terminal.id, terminal.test);
+        });
+        break;
+      }
+      case "while": {
+        this.visitReactiveValue(context, terminal.id, terminal.test);
+        context.enterConditional(() => {
+          this.visitBlock(terminal.loop, context);
+        });
+        break;
+      }
+      case "if": {
+        context.visitOperand(terminal.test);
+        const { consequent, alternate } = terminal;
+        const depsInIf = context.enterConditional(() => {
+          this.visitBlock(consequent, context);
+        });
+        if (alternate !== null) {
+          const depsInElse = context.enterConditional(() => {
+            this.visitBlock(alternate, context);
+          });
+          context.promoteDepsFromExhaustiveConditionals([depsInIf, depsInElse]);
+        }
+        break;
+      }
+      case "switch": {
+        context.visitOperand(terminal.test);
+        const depsInCases = [];
+        let foundDefault = false;
+        // This can underestimate unconditional accesses due to the current
+        // CFG representation for fallthrough. This is safe. It only
+        // reduces granularity of dependencies.
+        for (const { test, block } of terminal.cases) {
+          if (test == null) {
+            foundDefault = true;
+          }
+          if (block !== undefined) {
+            depsInCases.push(
+              context.enterConditional(() => {
+                this.visitBlock(block, context);
+              })
+            );
+          }
+        }
+        if (foundDefault) {
+          context.promoteDepsFromExhaustiveConditionals(depsInCases);
+        }
+        break;
+      }
+      case "label": {
+        this.visitBlock(terminal.block, context);
+        break;
+      }
+      default: {
+        assertExhaustive(
+          terminal,
+          `Unexpected terminal kind '${(terminal as any).kind}'`
+        );
+      }
+    }
   }
-  context.declare(lvalue.identifier, {
-    id: instr.id,
-    scope: context.currentScope,
-  });
 }
