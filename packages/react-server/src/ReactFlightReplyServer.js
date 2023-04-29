@@ -131,6 +131,8 @@ Chunk.prototype.then = function <T>(
 
 export type Response = {
   _bundlerConfig: ServerManifest,
+  _prefix: string,
+  _formData: FormData,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
 };
@@ -309,7 +311,17 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
   if (!chunk) {
-    chunk = createPendingChunk(response);
+    const prefix = response._prefix;
+    const key = prefix + id;
+    // Check if we have this field in the backing store already.
+    const backingEntry = response._formData.get(key);
+    if (backingEntry != null) {
+      // We assume that this is a string entry for now.
+      chunk = createResolvedModelChunk(response, (backingEntry: any));
+    } else {
+      // We're still waiting on this entry to stream in.
+      chunk = createPendingChunk(response);
+    }
     chunks.set(id, chunk);
   }
   return chunk;
@@ -362,21 +374,21 @@ function parseModelString(
     switch (value[1]) {
       case '$': {
         // This was an escaped string value.
-        return value.substring(1);
+        return value.slice(1);
       }
       case '@': {
         // Promise
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
       }
       case 'S': {
         // Symbol
-        return Symbol.for(value.substring(2));
+        return Symbol.for(value.slice(2));
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         if (chunk.status === RESOLVED_MODEL) {
           initializeModelChunk(chunk);
@@ -396,6 +408,23 @@ function parseModelString(
           parentObject,
           key,
         );
+      }
+      case 'K': {
+        // FormData
+        const stringId = value.slice(2);
+        const formPrefix = response._prefix + stringId + '_';
+        const data = new FormData();
+        const backingFormData = response._formData;
+        // We assume that the reference to FormData always comes after each
+        // entry that it references so we can assume they all exist in the
+        // backing store already.
+        // $FlowFixMe[prop-missing] FormData has forEach on it.
+        backingFormData.forEach((entry: File | string, entryKey: string) => {
+          if (entryKey.startsWith(formPrefix)) {
+            data.append(entryKey.slice(formPrefix.length), entry);
+          }
+        });
+        return data;
       }
       case 'I': {
         // $Infinity
@@ -418,13 +447,17 @@ function parseModelString(
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
+      case 'D': {
+        // Date
+        return new Date(Date.parse(value.slice(2)));
+      }
       case 'n': {
         // BigInt
-        return BigInt(value.substring(2));
+        return BigInt(value.slice(2));
       }
       default: {
         // We assume that anything else is a reference ID.
-        const id = parseInt(value.substring(1), 16);
+        const id = parseInt(value.slice(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
           case RESOLVED_MODEL:
@@ -452,10 +485,16 @@ function parseModelString(
   return value;
 }
 
-export function createResponse(bundlerConfig: ServerManifest): Response {
+export function createResponse(
+  bundlerConfig: ServerManifest,
+  formFieldPrefix: string,
+  backingFormData?: FormData = new FormData(),
+): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _prefix: formFieldPrefix,
+    _formData: backingFormData,
     _chunks: chunks,
     _fromJSON: function (this: any, key: string, value: JSONValue) {
       if (typeof value === 'string') {
@@ -470,31 +509,45 @@ export function createResponse(bundlerConfig: ServerManifest): Response {
 
 export function resolveField(
   response: Response,
-  id: number,
-  model: string,
+  key: string,
+  value: string,
 ): void {
-  const chunks = response._chunks;
-  const chunk = chunks.get(id);
-  if (!chunk) {
-    chunks.set(id, createResolvedModelChunk(response, model));
-  } else {
-    resolveModelChunk(chunk, model);
+  // Add this field to the backing store.
+  response._formData.append(key, value);
+  const prefix = response._prefix;
+  if (key.startsWith(prefix)) {
+    const chunks = response._chunks;
+    const id = +key.slice(prefix.length);
+    const chunk = chunks.get(id);
+    if (chunk) {
+      // We were waiting on this key so now we can resolve it.
+      resolveModelChunk(chunk, value);
+    }
   }
 }
 
-export function resolveFile(response: Response, id: number, file: File): void {
-  throw new Error('Not implemented.');
+export function resolveFile(response: Response, key: string, file: File): void {
+  // Add this field to the backing store.
+  response._formData.append(key, file);
 }
 
-export opaque type FileHandle = {};
+export opaque type FileHandle = {
+  chunks: Array<Uint8Array>,
+  filename: string,
+  mime: string,
+};
 
 export function resolveFileInfo(
   response: Response,
-  id: number,
+  key: string,
   filename: string,
   mime: string,
 ): FileHandle {
-  throw new Error('Not implemented.');
+  return {
+    chunks: [],
+    filename,
+    mime,
+  };
 }
 
 export function resolveFileChunk(
@@ -502,14 +555,20 @@ export function resolveFileChunk(
   handle: FileHandle,
   chunk: Uint8Array,
 ): void {
-  throw new Error('Not implemented.');
+  handle.chunks.push(chunk);
 }
 
 export function resolveFileComplete(
   response: Response,
+  key: string,
   handle: FileHandle,
 ): void {
-  throw new Error('Not implemented.');
+  // Add this file to the backing store.
+  // Node.js doesn't expose a global File constructor so we need to use
+  // the append() form that takes the file name as the third argument,
+  // to create a File object.
+  const blob = new Blob(handle.chunks, {type: handle.mime});
+  response._formData.append(key, blob, handle.filename);
 }
 
 export function close(response: Response): void {

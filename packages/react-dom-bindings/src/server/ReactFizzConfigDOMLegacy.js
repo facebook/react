@@ -31,6 +31,10 @@ import type {
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import type {FormStatus} from '../shared/ReactDOMFormActions';
+
+import {NotPending} from '../shared/ReactDOMFormActions';
+
 export const isPrimaryRenderer = false;
 
 export type ResponseState = {
@@ -137,8 +141,7 @@ export {
   writePostamble,
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
-  prepareToRender,
-  cleanupAfterRender,
+  prepareHostDispatcher,
 } from './ReactFizzConfigDOM';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
@@ -227,3 +230,6 @@ export function writeEndClientRenderedSuspenseBoundary(
   }
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
 }
+
+export type TransitionStatus = FormStatus;
+export const NotPendingTransition: TransitionStatus = NotPending;

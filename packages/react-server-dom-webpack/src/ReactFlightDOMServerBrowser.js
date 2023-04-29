@@ -22,8 +22,6 @@ import {
 import {
   createResponse,
   close,
-  resolveField,
-  resolveFile,
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
@@ -79,20 +77,12 @@ function decodeReply<T>(
   body: string | FormData,
   webpackMap: ServerManifest,
 ): Thenable<T> {
-  const response = createResponse(webpackMap);
   if (typeof body === 'string') {
-    resolveField(response, 0, body);
-  } else {
-    // $FlowFixMe[prop-missing] Flow doesn't know that forEach exists.
-    body.forEach((value: string | File, key: string) => {
-      const id = +key;
-      if (typeof value === 'string') {
-        resolveField(response, id, value);
-      } else {
-        resolveFile(response, id, value);
-      }
-    });
+    const form = new FormData();
+    form.append('0', body);
+    body = form;
   }
+  const response = createResponse(webpackMap, '', body);
   close(response);
   return getRoot(response);
 }

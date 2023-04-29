@@ -155,7 +155,7 @@ export function sanitizeForParse(value: any): any | string {
       value.charAt(0) === "'" &&
       value.charAt(value.length - 1) === "'"
     ) {
-      return '"' + value.substr(1, value.length - 2) + '"';
+      return '"' + value.slice(1, value.length - 1) + '"';
     }
   }
   return value;

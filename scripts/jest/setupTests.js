@@ -76,7 +76,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // Don't throw yet though b'c it might be accidentally caught and suppressed.
       const stack = new Error().stack;
       unexpectedConsoleCallStacks.push([
-        stack.substr(stack.indexOf('\n') + 1),
+        stack.slice(stack.indexOf('\n') + 1),
         util.format(format, ...args),
       ]);
     };
@@ -178,7 +178,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       const args = matches[2]
         .split('&')
         .filter(s => s.startsWith('args[]='))
-        .map(s => s.substr('args[]='.length))
+        .map(s => s.slice('args[]='.length))
         .map(decodeURIComponent);
       const format = errorMap[code];
       let argIndex = 0;

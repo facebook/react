@@ -41,3 +41,6 @@ export function getBrowserTheme(): BrowserTheme {
     }
   }
 }
+
+export const COMPACT_VERSION_NAME = 'compact';
+export const EXTENSION_CONTAINED_VERSIONS = [COMPACT_VERSION_NAME];

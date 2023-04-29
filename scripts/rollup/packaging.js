@@ -148,9 +148,9 @@ function processGenerated(directory) {
     const originalContents = readFileSync(file, 'utf8');
     const contents = originalContents
       // Replace {@}format with {@}noformat
-      .replace(/(\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
+      .replace(/(\r?\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
       // Add {@}nolint and {@}generated
-      .replace(' */\n', ` * @nolint\n * ${getSigningToken()}\n */\n`);
+      .replace(/(\r?\n\s*\*)\//, `$1 @nolint$1 ${getSigningToken()}$1/`);
     const signedContents = signFile(contents);
     writeFileSync(file, signedContents, 'utf8');
   });
@@ -172,7 +172,7 @@ function getTarOptions(tgzName, packageName) {
       entries: [CONTENTS_FOLDER],
       map(header) {
         if (header.name.indexOf(CONTENTS_FOLDER + '/') === 0) {
-          header.name = header.name.substring(CONTENTS_FOLDER.length + 1);
+          header.name = header.name.slice(CONTENTS_FOLDER.length + 1);
         }
       },
     },

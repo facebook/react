@@ -187,6 +187,17 @@ export function processImportChunk(
   return ['I', id, clientReferenceMetadata];
 }
 
+export function processHintChunk(
+  request: Request,
+  id: number,
+  code: string,
+  model: JSONValue,
+): Chunk {
+  throw new Error(
+    'React Internal Error: processHintChunk is not implemented for Native-Relay. The fact that this method was called means there is a bug in React.',
+  );
+}
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -194,8 +205,7 @@ export function scheduleWork(callback: () => void) {
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  (null: any);
+export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export function beginWriting(destination: Destination) {}
 

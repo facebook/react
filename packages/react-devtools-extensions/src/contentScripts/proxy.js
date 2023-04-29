@@ -5,7 +5,7 @@
 let backendDisconnected: boolean = false;
 let backendInitialized: boolean = false;
 
-function sayHelloToBackend() {
+function sayHelloToBackendManager() {
   window.postMessage(
     {
       source: 'react-devtools-content-script',
@@ -26,14 +26,19 @@ function handleMessageFromDevtools(message) {
 }
 
 function handleMessageFromPage(event) {
-  if (
-    event.source === window &&
-    event.data &&
-    event.data.source === 'react-devtools-bridge'
-  ) {
-    backendInitialized = true;
+  if (event.source === window && event.data) {
+    // This is a message from a bridge (initialized by a devtools backend)
+    if (event.data.source === 'react-devtools-bridge') {
+      backendInitialized = true;
 
-    port.postMessage(event.data.payload);
+      port.postMessage(event.data.payload);
+    }
+    // This is a message from the backend manager
+    if (event.data.source === 'react-devtools-backend-manager') {
+      chrome.runtime.sendMessage({
+        payload: event.data.payload,
+      });
+    }
   }
 }
 
@@ -63,17 +68,17 @@ port.onDisconnect.addListener(handleDisconnect);
 
 window.addEventListener('message', handleMessageFromPage);
 
-sayHelloToBackend();
+sayHelloToBackendManager();
 
 // The backend waits to install the global hook until notified by the content script.
-// In the event of a page reload, the content script might be loaded before the backend is injected.
-// Because of this we need to poll the backend until it has been initialized.
+// In the event of a page reload, the content script might be loaded before the backend manager is injected.
+// Because of this we need to poll the backend manager until it has been initialized.
 if (!backendInitialized) {
   const intervalID = setInterval(() => {
     if (backendInitialized || backendDisconnected) {
       clearInterval(intervalID);
     } else {
-      sayHelloToBackend();
+      sayHelloToBackendManager();
     }
   }, 500);
 }

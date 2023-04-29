@@ -9,24 +9,17 @@
 
 import type {CacheDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
-import {
-  supportsRequestStorage,
-  requestStorage,
-} from './ReactFlightServerConfig';
+import {resolveRequest, getCache} from '../ReactFlightServer';
 
 function createSignal(): AbortSignal {
   return new AbortController().signal;
 }
 
 function resolveCache(): Map<Function, mixed> {
-  if (currentCache) return currentCache;
-  if (supportsRequestStorage) {
-    const cache = requestStorage.getStore();
-    if (cache) return cache;
+  const request = resolveRequest();
+  if (request) {
+    return getCache(request);
   }
-  // Since we override the dispatcher all the time, we're effectively always
-  // active and so to support cache() and fetch() outside of render, we yield
-  // an empty Map.
   return new Map();
 }
 
@@ -51,16 +44,3 @@ export const DefaultCacheDispatcher: CacheDispatcher = {
     return entry;
   },
 };
-
-let currentCache: Map<Function, mixed> | null = null;
-
-export function setCurrentCache(
-  cache: Map<Function, mixed> | null,
-): Map<Function, mixed> | null {
-  currentCache = cache;
-  return currentCache;
-}
-
-export function getCurrentCache(): Map<Function, mixed> | null {
-  return currentCache;
-}

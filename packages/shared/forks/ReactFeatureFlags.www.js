@@ -29,6 +29,8 @@ export const {
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
   diffInCommitPhase,
+  enableAsyncActions,
+  alwaysThrottleRetries,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -49,7 +51,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
-export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
@@ -71,6 +72,8 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+
+export const enableFormActions = false;
 
 export const disableJavaScriptURLs = true;
 

@@ -38,6 +38,8 @@ import type {
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {RootState} from './ReactFiberRoot';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
+import type {TransitionStatus} from './ReactFiberConfig';
+import type {Hook} from './ReactFiberHooks';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -107,6 +109,8 @@ import {
   enableUseMutableSource,
   enableFloat,
   enableHostSingletons,
+  enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -174,6 +178,7 @@ import {
   pushHostContext,
   pushHostContainer,
   getRootHostContainer,
+  HostTransitionContext,
 } from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
@@ -208,6 +213,7 @@ import {
   checkDidRenderIdHook,
   bailoutHooks,
   replaySuspendedComponentWithHooks,
+  renderTransitionAwareHostComponentWithHooks,
 } from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
@@ -1618,6 +1624,61 @@ function updateHostComponent(
     // If we're switching from a direct text child to a normal child, or to
     // empty, we need to schedule the text content to be reset.
     workInProgress.flags |= ContentReset;
+  }
+
+  if (enableFormActions && enableAsyncActions) {
+    const memoizedState = workInProgress.memoizedState;
+    if (memoizedState !== null) {
+      // This fiber has been upgraded to a stateful component. The only way
+      // happens currently is for form actions. We use hooks to track the
+      // pending and error state of the form.
+      //
+      // Once a fiber is upgraded to be stateful, it remains stateful for the
+      // rest of its lifetime.
+      const newState = renderTransitionAwareHostComponentWithHooks(
+        current,
+        workInProgress,
+        renderLanes,
+      );
+
+      // If the transition state changed, propagate the change to all the
+      // descendents. We use Context as an implementation detail for this.
+      //
+      // This is intentionally set here instead of pushHostContext because
+      // pushHostContext gets called before we process the state hook, to avoid
+      // a state mismatch in the event that something suspends.
+      //
+      // NOTE: This assumes that there cannot be nested transition providers,
+      // because the only renderer that implements this feature is React DOM,
+      // and forms cannot be nested. If we did support nested providers, then
+      // we would need to push a context value even for host fibers that
+      // haven't been upgraded yet.
+      if (isPrimaryRenderer) {
+        HostTransitionContext._currentValue = newState;
+      } else {
+        HostTransitionContext._currentValue2 = newState;
+      }
+      if (enableLazyContextPropagation) {
+        // In the lazy propagation implementation, we don't scan for matching
+        // consumers until something bails out.
+      } else {
+        if (didReceiveUpdate) {
+          if (current !== null) {
+            const oldStateHook: Hook = current.memoizedState;
+            const oldState: TransitionStatus = oldStateHook.memoizedState;
+            // This uses regular equality instead of Object.is because we assume
+            // that host transition state doesn't include NaN as a valid type.
+            if (oldState !== newState) {
+              propagateContextChange(
+                workInProgress,
+                HostTransitionContext,
+                renderLanes,
+              );
+            }
+          }
+        }
+      }
+    }
   }
 
   markRef(current, workInProgress);

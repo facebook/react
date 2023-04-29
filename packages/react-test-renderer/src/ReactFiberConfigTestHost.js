@@ -41,6 +41,7 @@ export type NoTimeout = -1;
 export type EventResponder = any;
 
 export type RendererInspectionConfig = $ReadOnly<{}>;
+export type TransitionStatus = mixed;
 
 export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
@@ -344,10 +345,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

@@ -29,6 +29,7 @@ import type {
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
+  TransitionStatus,
 } from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {
@@ -372,7 +373,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {
-  use?: <T>(Usable<T>) => T,
+  use: <T>(Usable<T>) => T,
   readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
@@ -421,6 +422,7 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
+  useHostTransitionStatus?: () => TransitionStatus,
 };
 
 export type CacheDispatcher = {

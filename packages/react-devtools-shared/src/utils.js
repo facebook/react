@@ -693,7 +693,7 @@ function truncateForDisplay(
   length: number = MAX_PREVIEW_STRING_LENGTH,
 ) {
   if (string.length > length) {
-    return string.substr(0, length) + '…';
+    return string.slice(0, length) + '…';
   } else {
     return string;
   }

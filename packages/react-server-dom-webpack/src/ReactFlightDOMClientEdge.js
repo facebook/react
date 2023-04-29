@@ -29,6 +29,13 @@ function noServerCall() {
   );
 }
 
+export function createServerReference<A: Iterable<any>, T>(
+  id: any,
+  callServer: any,
+): (...A) => Promise<T> {
+  return noServerCall;
+}
+
 export type Options = {
   moduleMap?: $NonMaybeType<SSRManifest>,
 };
