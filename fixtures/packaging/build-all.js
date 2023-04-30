@@ -25,7 +25,7 @@ function buildFixture(cmdArg, path) {
 fixtureDirs.forEach(dir => {
   cmdArgs.forEach(cmdArg => {
     // we only care about directories that have DEV and PROD directories in
-    // otherwise they don't need to be built
+    // otherwise they don't need to be build
     const devPath = path.join(__dirname, dir, 'dev');
 
     if (fs.existsSync(devPath)) {
