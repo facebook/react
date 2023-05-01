@@ -600,7 +600,10 @@ describe('ReactDOMFizzServer', () => {
               'init.js',
               {src: 'init2.js', integrity: 'init2hash'},
             ],
-            bootstrapModules: ['init.mjs'],
+            bootstrapModules: [
+              'init.mjs',
+              {src: 'init2.mjs', integrity: 'init2hash'},
+            ],
           },
         );
         pipe(writable);
@@ -615,16 +618,23 @@ describe('ReactDOMFizzServer', () => {
           nonce={CSPnonce}
           integrity="init2hash"
         />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
         <div>Loading...</div>,
       ]);
 
-      // check that there are 4 scripts with a matching nonce:
-      // The runtime script, an inline bootstrap script, and two src scripts
+      // check that there are 6 scripts with a matching nonce:
+      // The runtime script, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
       expect(
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(5);
+      ).toEqual(6);
 
       await act(() => {
         resolve({default: Text});
@@ -635,6 +645,13 @@ describe('ReactDOMFizzServer', () => {
           rel="preload"
           href="init2.js"
           as="script"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
           nonce={CSPnonce}
           integrity="init2hash"
         />,
@@ -3783,6 +3800,9 @@ describe('ReactDOMFizzServer', () => {
           <link rel="preload" href="foo" as="script" />
           <link rel="preload" href="bar" as="script" />
           <link rel="preload" href="baz" as="script" integrity="qux" />
+          <link rel="modulepreload" href="quux" />
+          <link rel="modulepreload" href="corge" />
+          <link rel="modulepreload" href="grault" integrity="garply" />
         </head>
         <body>
           <div>hello world</div>
