@@ -20,6 +20,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -80,9 +81,12 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
+    const resources = createResources();
     const request = createRequest(
       children,
+      resources,
       createResponseState(
+        resources,
         options ? options.identifierPrefix : undefined,
         options ? options.nonce : undefined,
         options ? options.bootstrapScriptContent : undefined,
