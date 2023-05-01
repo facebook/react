@@ -130,6 +130,9 @@ export type ResponseState = {
   startInlineScript: PrecomputedChunk,
   instructions: InstructionState,
 
+  // state for outputting CSP nonce
+  nonce: string | void,
+
   // state for data streaming format
   externalRuntimeConfig: BootstrapScriptDescriptor | null,
 
@@ -161,6 +164,7 @@ const endInlineScript = stringToPrecomputedChunk('</script>');
 
 const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
+const scriptNonce = stringToPrecomputedChunk('" nonce="');
 const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
@@ -245,10 +249,17 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src)),
       );
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce)),
+        );
+      }
       if (integrity) {
         bootstrapChunks.push(
           scriptIntegirty,
@@ -265,10 +276,18 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(src)),
       );
+
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce)),
+        );
+      }
       if (integrity) {
         bootstrapChunks.push(
           scriptIntegirty,
@@ -297,6 +316,7 @@ export function createResponseState(
     preloadChunks: [],
     hoistableChunks: [],
     stylesToHoist: false,
+    nonce,
   };
 }
 
@@ -4066,7 +4086,7 @@ export function writePreamble(
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
     const {src, integrity} = responseState.externalRuntimeConfig;
-    internalPreinitScript(resources, src, integrity);
+    internalPreinitScript(resources, src, integrity, responseState.nonce);
   }
 
   const htmlChunks = responseState.htmlChunks;
@@ -5349,6 +5369,7 @@ function internalPreinitScript(
   resources: Resources,
   src: string,
   integrity: ?string,
+  nonce: ?string,
 ): void {
   const key = getResourceKey('script', src);
   let resource = resources.scriptsMap.get(key);
@@ -5365,6 +5386,7 @@ function internalPreinitScript(
       async: true,
       src,
       integrity,
+      nonce,
     });
   }
   return;

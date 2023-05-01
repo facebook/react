@@ -57,6 +57,7 @@ export type ResponseState = {
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
   stylesToHoist: boolean,
+  nonce: string | void,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -94,6 +95,7 @@ export function createResponseState(
     preloadChunks: responseState.preloadChunks,
     hoistableChunks: responseState.hoistableChunks,
     stylesToHoist: responseState.stylesToHoist,
+    nonce: responseState.nonce,
 
     // This is an extra field for the legacy renderer
     generateStaticMarkup,

@@ -574,7 +574,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  it('should support nonce scripts', async () => {
+  it('should support nonce for bootstrap and runtime scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
       let resolve;
@@ -591,15 +591,77 @@ describe('ReactDOMFizzServer', () => {
               <Lazy text="Hello" />
             </Suspense>
           </div>,
-          {nonce: 'R4nd0m'},
+          {
+            nonce: 'R4nd0m',
+            bootstrapScriptContent: 'function noop(){}',
+            bootstrapScripts: ['init.js'],
+            bootstrapModules: ['init.mjs'],
+          },
         );
         pipe(writable);
       });
+
       expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+      // check that there are 4 scripts with a matching nonce:
+      // The runtime script, an inline bootstrap script, and two src scripts
+      expect(
+        Array.from(container.getElementsByTagName('script')).filter(
+          node => node.getAttribute('nonce') === CSPnonce,
+        ).length,
+      ).toEqual(4);
+
       await act(() => {
         resolve({default: Text});
       });
       expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    } finally {
+      CSPnonce = null;
+    }
+  });
+
+  it('should not automatically add nonce to rendered scripts', async () => {
+    CSPnonce = 'R4nd0m';
+    try {
+      await act(async () => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <body>
+              <script nonce={CSPnonce}>{'try { foo() } catch (e) {} ;'}</script>
+              <script nonce={CSPnonce} src="foo" async={true} />
+              <script src="bar" />
+              <script src="baz" integrity="qux" async={true} />
+              <script type="module" src="quux" async={true} />
+              <script type="module" src="corge" async={true} />
+              <script
+                type="module"
+                src="grault"
+                integrity="garply"
+                async={true}
+              />
+            </body>
+          </html>,
+          {
+            nonce: CSPnonce,
+          },
+        );
+        pipe(writable);
+      });
+
+      expect(
+        stripExternalRuntimeInNodes(
+          document.getElementsByTagName('script'),
+          renderOptions.unstable_externalRuntimeSrc,
+        ).map(n => n.outerHTML),
+      ).toEqual([
+        `<script nonce="${CSPnonce}" src="foo" async=""></script>`,
+        `<script src="baz" integrity="qux" async=""></script>`,
+        `<script type="module" src="quux" async=""></script>`,
+        `<script type="module" src="corge" async=""></script>`,
+        `<script type="module" src="grault" integrity="garply" async=""></script>`,
+        `<script nonce="${CSPnonce}">try { foo() } catch (e) {} ;</script>`,
+        `<script src="bar"></script>`,
+      ]);
     } finally {
       CSPnonce = null;
     }
