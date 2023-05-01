@@ -617,7 +617,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         // CFG representation for fallthrough. This is safe. It only
         // reduces granularity of dependencies.
         for (const { test, block } of terminal.cases) {
-          if (test == null) {
+          if (test !== null) {
+            context.visitOperand(test);
+          } else {
             foundDefault = true;
           }
           if (block !== undefined) {
