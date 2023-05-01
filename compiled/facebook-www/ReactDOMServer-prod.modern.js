@@ -33,8 +33,10 @@ function writeChunk(destination, chunk) {
   destination.push(chunk);
 }
 var assign = Object.assign,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableCustomElementPropertySupport =
-    require("ReactFeatureFlags").enableCustomElementPropertySupport,
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -2476,6 +2478,13 @@ function throwOnUseEffectEventCall() {
 function unsupportedStartTransition() {
   throw Error(formatProdErrorMessage(394));
 }
+function unsupportedSetOptimisticState() {
+  throw Error(formatProdErrorMessage(479));
+}
+function useOptimisticState(passthrough) {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
   thenableIndexCounter += 1;
@@ -2487,95 +2496,95 @@ function unsupportedRefresh() {
 }
 function noop$1() {}
 var HooksDispatcher = {
-    readContext: function (context) {
-      return context._currentValue2;
-    },
-    use: function (usable) {
-      if (null !== usable && "object" === typeof usable) {
-        if ("function" === typeof usable.then) return unwrapThenable(usable);
-        if (
-          usable.$$typeof === REACT_CONTEXT_TYPE ||
-          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        )
-          return usable._currentValue2;
-      }
-      throw Error(formatProdErrorMessage(438, String(usable)));
-    },
-    useContext: function (context) {
-      resolveCurrentlyRenderingComponent();
-      return context._currentValue2;
-    },
-    useMemo: useMemo,
-    useReducer: useReducer,
-    useRef: function (initialValue) {
-      currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
-      workInProgressHook = createWorkInProgressHook();
-      var previousRef = workInProgressHook.memoizedState;
-      return null === previousRef
-        ? ((initialValue = { current: initialValue }),
-          (workInProgressHook.memoizedState = initialValue))
-        : previousRef;
-    },
-    useState: function (initialState) {
-      return useReducer(basicStateReducer, initialState);
-    },
-    useInsertionEffect: noop$1,
-    useLayoutEffect: noop$1,
-    useCallback: function (callback, deps) {
-      return useMemo(function () {
-        return callback;
-      }, deps);
-    },
-    useImperativeHandle: noop$1,
-    useEffect: noop$1,
-    useDebugValue: noop$1,
-    useDeferredValue: function (value) {
-      resolveCurrentlyRenderingComponent();
-      return value;
-    },
-    useTransition: function () {
-      resolveCurrentlyRenderingComponent();
-      return [!1, unsupportedStartTransition];
-    },
-    useId: function () {
-      var JSCompiler_inline_result = currentlyRenderingTask.treeContext;
-      var overflow = JSCompiler_inline_result.overflow;
-      JSCompiler_inline_result = JSCompiler_inline_result.id;
-      JSCompiler_inline_result =
-        (
-          JSCompiler_inline_result &
-          ~(1 << (32 - clz32(JSCompiler_inline_result) - 1))
-        ).toString(32) + overflow;
-      var responseState = currentResponseState;
-      if (null === responseState) throw Error(formatProdErrorMessage(404));
-      overflow = localIdCounter++;
-      JSCompiler_inline_result =
-        ":" + responseState.idPrefix + "R" + JSCompiler_inline_result;
-      0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
-      return JSCompiler_inline_result + ":";
-    },
-    useMutableSource: function (source, getSnapshot) {
-      resolveCurrentlyRenderingComponent();
-      return getSnapshot(source._source);
-    },
-    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
-      if (void 0 === getServerSnapshot)
-        throw Error(formatProdErrorMessage(407));
-      return getServerSnapshot();
-    },
-    useCacheRefresh: function () {
-      return unsupportedRefresh;
-    },
-    useEffectEvent: function () {
-      return throwOnUseEffectEventCall;
-    },
-    useMemoCache: function (size) {
-      for (var data = Array(size), i = 0; i < size; i++)
-        data[i] = REACT_MEMO_CACHE_SENTINEL;
-      return data;
-    }
+  readContext: function (context) {
+    return context._currentValue2;
   },
-  currentResponseState = null,
+  use: function (usable) {
+    if (null !== usable && "object" === typeof usable) {
+      if ("function" === typeof usable.then) return unwrapThenable(usable);
+      if (
+        usable.$$typeof === REACT_CONTEXT_TYPE ||
+        usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
+      )
+        return usable._currentValue2;
+    }
+    throw Error(formatProdErrorMessage(438, String(usable)));
+  },
+  useContext: function (context) {
+    resolveCurrentlyRenderingComponent();
+    return context._currentValue2;
+  },
+  useMemo: useMemo,
+  useReducer: useReducer,
+  useRef: function (initialValue) {
+    currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+    workInProgressHook = createWorkInProgressHook();
+    var previousRef = workInProgressHook.memoizedState;
+    return null === previousRef
+      ? ((initialValue = { current: initialValue }),
+        (workInProgressHook.memoizedState = initialValue))
+      : previousRef;
+  },
+  useState: function (initialState) {
+    return useReducer(basicStateReducer, initialState);
+  },
+  useInsertionEffect: noop$1,
+  useLayoutEffect: noop$1,
+  useCallback: function (callback, deps) {
+    return useMemo(function () {
+      return callback;
+    }, deps);
+  },
+  useImperativeHandle: noop$1,
+  useEffect: noop$1,
+  useDebugValue: noop$1,
+  useDeferredValue: function (value) {
+    resolveCurrentlyRenderingComponent();
+    return value;
+  },
+  useTransition: function () {
+    resolveCurrentlyRenderingComponent();
+    return [!1, unsupportedStartTransition];
+  },
+  useId: function () {
+    var JSCompiler_inline_result = currentlyRenderingTask.treeContext;
+    var overflow = JSCompiler_inline_result.overflow;
+    JSCompiler_inline_result = JSCompiler_inline_result.id;
+    JSCompiler_inline_result =
+      (
+        JSCompiler_inline_result &
+        ~(1 << (32 - clz32(JSCompiler_inline_result) - 1))
+      ).toString(32) + overflow;
+    var responseState = currentResponseState;
+    if (null === responseState) throw Error(formatProdErrorMessage(404));
+    overflow = localIdCounter++;
+    JSCompiler_inline_result =
+      ":" + responseState.idPrefix + "R" + JSCompiler_inline_result;
+    0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
+    return JSCompiler_inline_result + ":";
+  },
+  useMutableSource: function (source, getSnapshot) {
+    resolveCurrentlyRenderingComponent();
+    return getSnapshot(source._source);
+  },
+  useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
+    if (void 0 === getServerSnapshot) throw Error(formatProdErrorMessage(407));
+    return getServerSnapshot();
+  },
+  useCacheRefresh: function () {
+    return unsupportedRefresh;
+  },
+  useEffectEvent: function () {
+    return throwOnUseEffectEventCall;
+  },
+  useMemoCache: function (size) {
+    for (var data = Array(size), i = 0; i < size; i++)
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
+    return data;
+  }
+};
+enableAsyncActions && (HooksDispatcher.useOptimisticState = useOptimisticState);
+var currentResponseState = null,
   DefaultCacheDispatcher = {
     getCacheSignal: function () {
       throw Error(formatProdErrorMessage(248));
@@ -3874,4 +3883,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-6b28dd6e";
+exports.version = "18.3.0-www-modern-83586ccd";

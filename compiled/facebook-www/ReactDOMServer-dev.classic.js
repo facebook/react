@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-b5ced452";
+var ReactVersion = "18.3.0-www-classic-cc24eed6";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -234,7 +234,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport;
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
 // On WWW, false is used for a new modern build.
 var enableFloat = true;
 
@@ -10076,6 +10077,15 @@ function useTransition() {
   return [false, unsupportedStartTransition];
 }
 
+function unsupportedSetOptimisticState() {
+  throw new Error("Cannot update optimistic state while rendering.");
+}
+
+function useOptimisticState(passthrough, reducer) {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
+
 function useId() {
   var task = currentlyRenderingTask;
   var treeId = getTreeId(task.treeContext);
@@ -10176,6 +10186,10 @@ var HooksDispatcher = {
 
 {
   HooksDispatcher.useMemoCache = useMemoCache;
+}
+
+if (enableAsyncActions) {
+  HooksDispatcher.useOptimisticState = useOptimisticState;
 }
 
 var currentResponseState = null;

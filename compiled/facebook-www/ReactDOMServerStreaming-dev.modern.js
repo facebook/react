@@ -231,7 +231,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport;
+    dynamicFeatureFlags.enableCustomElementPropertySupport,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
 // On WWW, true is used for a new modern build.
 var enableFloat = true;
 
@@ -9726,6 +9727,15 @@ function useTransition() {
   return [false, unsupportedStartTransition];
 }
 
+function unsupportedSetOptimisticState() {
+  throw new Error("Cannot update optimistic state while rendering.");
+}
+
+function useOptimisticState(passthrough, reducer) {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
+
 function useId() {
   var task = currentlyRenderingTask;
   var treeId = getTreeId(task.treeContext);
@@ -9826,6 +9836,10 @@ var HooksDispatcher = {
 
 {
   HooksDispatcher.useMemoCache = useMemoCache;
+}
+
+if (enableAsyncActions) {
+  HooksDispatcher.useOptimisticState = useOptimisticState;
 }
 
 var currentResponseState = null;
