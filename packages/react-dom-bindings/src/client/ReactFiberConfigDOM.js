@@ -89,6 +89,7 @@ import {
   enableHostSingletons,
   enableTrustedTypesIntegration,
   diffInCommitPhase,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -1038,150 +1039,164 @@ export function isHydratableText(text: string): boolean {
   return text !== '';
 }
 
-export function shouldSkipHydratableForInstance(
-  instance: HydratableInstance,
-  type: string,
-  props: Props,
-): boolean {
-  if (instance.nodeType !== ELEMENT_NODE) {
-    // This is a suspense boundary or Text node.
-    // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
-    // and this is a hydration error.
-    // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
-    // but it seems reasonable and conservative to reject this as a hydration error as well
-    return false;
-  } else if (
-    instance.nodeName.toLowerCase() !== type.toLowerCase() ||
-    isMarkedHoistable(instance)
-  ) {
-    // We are either about to
-    return true;
-  } else {
-    // We have an Element with the right type.
-    const element: Element = (instance: any);
-    const anyProps = (props: any);
-
-    // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
-    // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
-    // using high entropy attributes for certain types. This technique will fail for strange insertions like
-    // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
-    switch (type) {
-      // case 'title':
-      //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
-      // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
-      case 'meta': {
-        // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
-        // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
-        // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
-        // implications are minimal
-        if (!element.hasAttribute('itemprop')) {
-          // This is a Hoistable
-          return true;
-        }
-        break;
-      }
-      case 'link': {
-        // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
-        // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
-        // matches.
-        const rel = element.getAttribute('rel');
-        if (rel === 'stylesheet' && element.hasAttribute('data-precedence')) {
-          // This is a stylesheet resource
-          return true;
-        } else if (
-          rel !== anyProps.rel ||
-          element.getAttribute('href') !==
-            (anyProps.href == null ? null : anyProps.href) ||
-          element.getAttribute('crossorigin') !==
-            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
-          element.getAttribute('title') !==
-            (anyProps.title == null ? null : anyProps.title)
-        ) {
-          // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
-          // and title could vary for rel alternate
-          return true;
-        }
-        break;
-      }
-      case 'style': {
-        // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
-        // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
-        if (element.hasAttribute('data-precedence')) {
-          // This is a style resource
-          return true;
-        }
-        break;
-      }
-      case 'script': {
-        // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
-        // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
-        // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
-        // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
-        // if we learn it is problematic
-        const srcAttr = element.getAttribute('src');
-        if (
-          srcAttr &&
-          element.hasAttribute('async') &&
-          !element.hasAttribute('itemprop')
-        ) {
-          // This is an async script resource
-          return true;
-        } else if (
-          srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
-          element.getAttribute('type') !==
-            (anyProps.type == null ? null : anyProps.type) ||
-          element.getAttribute('crossorigin') !==
-            (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
-        ) {
-          // This script is for a different src
-          return true;
-        }
-        break;
-      }
-    }
-    // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
-    // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
-    // that should work in the vast majority of cases.
-    return false;
-  }
-}
-
-export function shouldSkipHydratableForTextInstance(
-  instance: HydratableInstance,
-): boolean {
-  return instance.nodeType === ELEMENT_NODE;
-}
-
-export function shouldSkipHydratableForSuspenseInstance(
-  instance: HydratableInstance,
-): boolean {
-  return instance.nodeType === ELEMENT_NODE;
-}
-
 export function canHydrateInstance(
   instance: HydratableInstance,
   type: string,
   props: Props,
+  inRootOrSingleton: boolean,
 ): null | Instance {
-  if (
-    instance.nodeType !== ELEMENT_NODE ||
-    instance.nodeName.toLowerCase() !== type.toLowerCase()
-  ) {
-    return null;
-  } else {
-    return ((instance: any): Instance);
+  while (instance.nodeType === ELEMENT_NODE) {
+    const element: Element = (instance: any);
+    const anyProps = (props: any);
+    if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
+      if (!inRootOrSingleton || !enableHostSingletons) {
+        // Usually we error for mismatched tags.
+        if (
+          enableFormActions &&
+          element.nodeName === 'INPUT' &&
+          (element: any).type === 'hidden'
+        ) {
+          // If we have extra hidden inputs, we don't mismatch. This allows us to embed
+          // extra form data in the original form.
+        } else {
+          return null;
+        }
+      }
+      // In root or singleton parents we skip past mismatched instances.
+    } else if (!inRootOrSingleton || !enableHostSingletons) {
+      // Match
+      if (
+        enableFormActions &&
+        type === 'input' &&
+        (element: any).type === 'hidden' &&
+        anyProps.type !== 'hidden'
+      ) {
+        // Skip past hidden inputs unless that's what we're looking for. This allows us
+        // embed extra form data in the original form.
+      } else {
+        return element;
+      }
+    } else if (isMarkedHoistable(element)) {
+      // We've already claimed this as a hoistable which isn't hydrated this way so we skip past it.
+    } else {
+      // We have an Element with the right type.
+
+      // We are going to try to exclude it if we can definitely identify it as a hoisted Node or if
+      // we can guess that the node is likely hoisted or was inserted by a 3rd party script or browser extension
+      // using high entropy attributes for certain types. This technique will fail for strange insertions like
+      // extension prepending <div> in the <body> but that already breaks before and that is an edge case.
+      switch (type) {
+        // case 'title':
+        //We assume all titles are matchable. You should only have one in the Document, at least in a hoistable scope
+        // and if you are a HostComponent with type title we must either be in an <svg> context or this title must have an `itemProp` prop.
+        case 'meta': {
+          // The only way to opt out of hoisting meta tags is to give it an itemprop attribute. We assume there will be
+          // not 3rd party meta tags that are prepended, accepting the cases where this isn't true because meta tags
+          // are usually only functional for SSR so even in a rare case where we did bind to an injected tag the runtime
+          // implications are minimal
+          if (!element.hasAttribute('itemprop')) {
+            // This is a Hoistable
+            break;
+          }
+          return element;
+        }
+        case 'link': {
+          // Links come in many forms and we do expect 3rd parties to inject them into <head> / <body>. We exclude known resources
+          // and then use high-entroy attributes like href which are almost always used and almost always unique to filter out unlikely
+          // matches.
+          const rel = element.getAttribute('rel');
+          if (rel === 'stylesheet' && element.hasAttribute('data-precedence')) {
+            // This is a stylesheet resource
+            break;
+          } else if (
+            rel !== anyProps.rel ||
+            element.getAttribute('href') !==
+              (anyProps.href == null ? null : anyProps.href) ||
+            element.getAttribute('crossorigin') !==
+              (anyProps.crossOrigin == null ? null : anyProps.crossOrigin) ||
+            element.getAttribute('title') !==
+              (anyProps.title == null ? null : anyProps.title)
+          ) {
+            // rel + href should usually be enough to uniquely identify a link however crossOrigin can vary for rel preconnect
+            // and title could vary for rel alternate
+            break;
+          }
+          return element;
+        }
+        case 'style': {
+          // Styles are hard to match correctly. We can exclude known resources but otherwise we accept the fact that a non-hoisted style tags
+          // in <head> or <body> are likely never going to be unmounted given their position in the document and the fact they likely hold global styles
+          if (element.hasAttribute('data-precedence')) {
+            // This is a style resource
+            break;
+          }
+          return element;
+        }
+        case 'script': {
+          // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
+          // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
+          // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
+          // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+          // if we learn it is problematic
+          const srcAttr = element.getAttribute('src');
+          if (
+            srcAttr &&
+            element.hasAttribute('async') &&
+            !element.hasAttribute('itemprop')
+          ) {
+            // This is an async script resource
+            break;
+          } else if (
+            srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
+            element.getAttribute('type') !==
+              (anyProps.type == null ? null : anyProps.type) ||
+            element.getAttribute('crossorigin') !==
+              (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
+          ) {
+            // This script is for a different src
+            break;
+          }
+          return element;
+        }
+        default: {
+          // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
+          // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+          // that should work in the vast majority of cases.
+          return element;
+        }
+      }
+    }
+    const nextInstance = getNextHydratableSibling(element);
+    if (nextInstance === null) {
+      break;
+    }
+    instance = nextInstance;
   }
+  // This is a suspense boundary or Text node or we got the end.
+  // Suspense Boundaries are never expected to be injected by 3rd parties. If we see one it should be matched
+  // and this is a hydration error.
+  // Text Nodes are also not expected to be injected by 3rd parties. This is less of a guarantee for <body>
+  // but it seems reasonable and conservative to reject this as a hydration error as well
+  return null;
 }
 
 export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
+  inRootOrSingleton: boolean,
 ): null | TextInstance {
+  // Empty strings are not parsed by HTML so there won't be a correct match here.
   if (text === '') return null;
 
-  if (instance.nodeType !== TEXT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
-    return null;
+  while (instance.nodeType !== TEXT_NODE) {
+    if (!inRootOrSingleton || !enableHostSingletons) {
+      return null;
+    }
+    const nextInstance = getNextHydratableSibling(instance);
+    if (nextInstance === null) {
+      return null;
+    }
+    instance = nextInstance;
   }
   // This has now been refined to a text node.
   return ((instance: any): TextInstance);
@@ -1189,9 +1204,17 @@ export function canHydrateTextInstance(
 
 export function canHydrateSuspenseInstance(
   instance: HydratableInstance,
+  inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
-  if (instance.nodeType !== COMMENT_NODE) {
-    return null;
+  while (instance.nodeType !== COMMENT_NODE) {
+    if (!inRootOrSingleton || !enableHostSingletons) {
+      return null;
+    }
+    const nextInstance = getNextHydratableSibling(instance);
+    if (nextInstance === null) {
+      return null;
+    }
+    instance = nextInstance;
   }
   // This has now been refined to a suspense node.
   return ((instance: any): SuspenseInstance);
@@ -1416,12 +1439,14 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
-// @TODO remove this function once float lands and hydrated tail nodes
-// are controlled by HostSingleton fibers
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
-  return parentType !== 'head' && parentType !== 'body';
+  return (
+    (enableHostSingletons ||
+      (parentType !== 'head' && parentType !== 'body')) &&
+    (!enableFormActions || parentType !== 'form')
+  );
 }
 
 export function didNotMatchHydratedContainerTextInstance(
