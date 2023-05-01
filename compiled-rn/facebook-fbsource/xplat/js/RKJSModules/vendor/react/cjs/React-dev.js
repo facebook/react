@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<35d1df17e68a7171ea6085b1ff9b4370>>
+ * @generated SignedSource<<21b04a040ed4292372f9e9ab8319a3b5>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-next-9545e4810-20230501";
+var ReactVersion = "18.3.0-next-491aec5d6-20230501";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2088,6 +2088,11 @@ function useEffectEvent(callback) {
 
   return dispatcher.useEffectEvent(callback);
 }
+function useOptimisticState(passthrough, reducer) {
+  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+  return dispatcher.useOptimisticState(passthrough, reducer);
+}
 
 function describeBuiltInComponentFrame(name, source, ownerFn) {
   {
@@ -3930,6 +3935,7 @@ exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
+exports.experimental_useOptimisticState = useOptimisticState;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement$1;
 exports.jsx = jsx;

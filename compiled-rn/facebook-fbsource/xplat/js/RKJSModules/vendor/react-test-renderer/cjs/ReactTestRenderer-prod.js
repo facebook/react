@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<36182b4efb97f53e0d4f613caa8813e2>>
+ * @generated SignedSource<<96db65489181b812de03003057984aec>>
  */
 
 "use strict";
@@ -2347,14 +2347,14 @@ function basicStateReducer(state, action) {
 }
 function updateReducer(reducer) {
   var hook = updateWorkInProgressHook(),
+    current = currentHook,
     queue = hook.queue;
   if (null === queue)
     throw Error(
       "Should have a queue. This is likely a bug in React. Please file an issue."
     );
   queue.lastRenderedReducer = reducer;
-  var current = currentHook,
-    baseQueue = current.baseQueue,
+  var baseQueue = hook.baseQueue,
     pendingQueue = queue.pending;
   if (null !== pendingQueue) {
     if (null !== baseQueue) {
@@ -2366,11 +2366,11 @@ function updateReducer(reducer) {
     queue.pending = null;
   }
   if (null !== baseQueue) {
-    pendingQueue = baseQueue.next;
-    current = current.baseState;
+    current = baseQueue.next;
+    pendingQueue = hook.baseState;
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
-      update = pendingQueue;
+      update = current;
     do {
       var updateLane = update.lane & -1073741825;
       if (
@@ -2382,19 +2382,22 @@ function updateReducer(reducer) {
           (newBaseQueueLast = newBaseQueueLast.next =
             {
               lane: 0,
+              revertLane: 0,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
               next: null
             }),
           (updateLane = update.action),
-          shouldDoubleInvokeUserFnsInHooksDEV && reducer(current, updateLane),
-          (current = update.hasEagerState
+          shouldDoubleInvokeUserFnsInHooksDEV &&
+            reducer(pendingQueue, updateLane),
+          (pendingQueue = update.hasEagerState
             ? update.eagerState
-            : reducer(current, updateLane));
+            : reducer(pendingQueue, updateLane));
       else {
         var clone = {
           lane: updateLane,
+          revertLane: update.revertLane,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -2402,21 +2405,21 @@ function updateReducer(reducer) {
         };
         null === newBaseQueueLast
           ? ((newBaseQueueFirst = newBaseQueueLast = clone),
-            (baseFirst = current))
+            (baseFirst = pendingQueue))
           : (newBaseQueueLast = newBaseQueueLast.next = clone);
         currentlyRenderingFiber$1.lanes |= updateLane;
         workInProgressRootSkippedLanes |= updateLane;
       }
       update = update.next;
-    } while (null !== update && update !== pendingQueue);
+    } while (null !== update && update !== current);
     null === newBaseQueueLast
-      ? (baseFirst = current)
+      ? (baseFirst = pendingQueue)
       : (newBaseQueueLast.next = newBaseQueueFirst);
-    objectIs(current, hook.memoizedState) || (didReceiveUpdate = !0);
-    hook.memoizedState = current;
+    objectIs(pendingQueue, hook.memoizedState) || (didReceiveUpdate = !0);
+    hook.memoizedState = pendingQueue;
     hook.baseState = baseFirst;
     hook.baseQueue = newBaseQueueLast;
-    queue.lastRenderedState = current;
+    queue.lastRenderedState = pendingQueue;
   }
   null === baseQueue && (queue.lanes = 0);
   return [hook.memoizedState, queue.dispatch];
@@ -2518,24 +2521,18 @@ function forceStoreRerender(fiber) {
   var root = enqueueConcurrentRenderForLane(fiber, 2);
   null !== root && scheduleUpdateOnFiber(root, fiber, 2);
 }
-function mountState(initialState) {
+function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
   "function" === typeof initialState && (initialState = initialState());
   hook.memoizedState = hook.baseState = initialState;
-  initialState = {
+  hook.queue = {
     pending: null,
     lanes: 0,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: initialState
   };
-  hook.queue = initialState;
-  initialState = initialState.dispatch = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    initialState
-  );
-  return [hook.memoizedState, initialState];
+  return hook;
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -2645,16 +2642,16 @@ function updateDeferredValueImpl(hook, prevValue, value) {
     (hook.baseState = !0));
   return prevValue;
 }
-function startTransition(pendingState, finishedState, setPending, callback) {
+function startTransition(fiber, queue, pendingState, finishedState, callback) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$2.transition;
   ReactCurrentBatchConfig$2.transition = null;
-  setPending(pendingState);
+  dispatchSetState(fiber, queue, pendingState);
   ReactCurrentBatchConfig$2.transition = {};
   try {
-    setPending(finishedState), callback();
+    dispatchSetState(fiber, queue, finishedState), callback();
   } catch (error) {
     throw error;
   } finally {
@@ -2690,6 +2687,7 @@ function dispatchReducerAction(fiber, queue, action) {
   var lane = requestUpdateLane(fiber);
   action = {
     lane: lane,
+    revertLane: 0,
     action: action,
     hasEagerState: !1,
     eagerState: null,
@@ -2707,6 +2705,7 @@ function dispatchSetState(fiber, queue, action) {
   var lane = requestUpdateLane(fiber),
     update = {
       lane: lane,
+      revertLane: 0,
       action: action,
       hasEagerState: !1,
       eagerState: null,
@@ -2845,16 +2844,32 @@ var HooksDispatcherOnMount = {
       initialValue = { current: initialValue };
       return (hook.memoizedState = initialValue);
     },
-    useState: mountState,
+    useState: function (initialState) {
+      initialState = mountStateImpl(initialState);
+      var queue = initialState.queue,
+        dispatch = dispatchSetState.bind(
+          null,
+          currentlyRenderingFiber$1,
+          queue
+        );
+      queue.dispatch = dispatch;
+      return [initialState.memoizedState, dispatch];
+    },
     useDebugValue: mountDebugValue,
     useDeferredValue: function (value) {
       return (mountWorkInProgressHook().memoizedState = value);
     },
     useTransition: function () {
-      var setPending = mountState(!1)[1];
-      setPending = startTransition.bind(null, !0, !1, setPending);
-      mountWorkInProgressHook().memoizedState = setPending;
-      return [!1, setPending];
+      var stateHook = mountStateImpl(!1);
+      stateHook = startTransition.bind(
+        null,
+        currentlyRenderingFiber$1,
+        stateHook.queue,
+        !0,
+        !1
+      );
+      mountWorkInProgressHook().memoizedState = stateHook;
+      return [!1, stateHook];
     },
     useMutableSource: function () {},
     useSyncExternalStore: function (subscribe, getSnapshot) {
@@ -8603,19 +8618,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1024 = {
+var devToolsConfig$jscomp$inline_1039 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-next-9545e4810-20230501",
+  version: "18.3.0-next-491aec5d6-20230501",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1209 = {
-  bundleType: devToolsConfig$jscomp$inline_1024.bundleType,
-  version: devToolsConfig$jscomp$inline_1024.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1024.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1024.rendererConfig,
+var internals$jscomp$inline_1238 = {
+  bundleType: devToolsConfig$jscomp$inline_1039.bundleType,
+  version: devToolsConfig$jscomp$inline_1039.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1039.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1039.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -8632,26 +8647,26 @@ var internals$jscomp$inline_1209 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1024.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1039.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-9545e4810-20230501"
+  reconcilerVersion: "18.3.0-next-491aec5d6-20230501"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1210 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1210.isDisabled &&
-    hook$jscomp$inline_1210.supportsFiber
+    !hook$jscomp$inline_1239.isDisabled &&
+    hook$jscomp$inline_1239.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1210.inject(
-        internals$jscomp$inline_1209
+      (rendererID = hook$jscomp$inline_1239.inject(
+        internals$jscomp$inline_1238
       )),
-        (injectedHook = hook$jscomp$inline_1210);
+        (injectedHook = hook$jscomp$inline_1239);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

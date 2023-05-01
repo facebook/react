@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<18e30748410410333f18797738ddce9f>>
+ * @generated SignedSource<<0b93d752798c497178bb68e8164e3a47>>
  */
 
 'use strict';
@@ -11078,6 +11078,10 @@ function mountReducer(reducer, initialArg, init) {
 
 function updateReducer(reducer, initialArg, init) {
   var hook = updateWorkInProgressHook();
+  return updateReducerImpl(hook, currentHook, reducer);
+}
+
+function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
 
   if (queue === null) {
@@ -11086,10 +11090,9 @@ function updateReducer(reducer, initialArg, init) {
     );
   }
 
-  queue.lastRenderedReducer = reducer;
-  var current = currentHook; // The last rebase update that is NOT part of the base state.
+  queue.lastRenderedReducer = reducer; // The last rebase update that is NOT part of the base state.
 
-  var baseQueue = current.baseQueue; // The last pending update that hasn't been processed yet.
+  var baseQueue = hook.baseQueue; // The last pending update that hasn't been processed yet.
 
   var pendingQueue = queue.pending;
 
@@ -11122,7 +11125,7 @@ function updateReducer(reducer, initialArg, init) {
   if (baseQueue !== null) {
     // We have a queue to process.
     var first = baseQueue.next;
-    var newState = current.baseState;
+    var newState = hook.baseState;
     var newBaseState = null;
     var newBaseQueueFirst = null;
     var newBaseQueueLast = null;
@@ -11147,6 +11150,7 @@ function updateReducer(reducer, initialArg, init) {
         // update/state.
         var clone = {
           lane: updateLane,
+          revertLane: update.revertLane,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -11168,19 +11172,24 @@ function updateReducer(reducer, initialArg, init) {
         );
         markSkippedUpdateLanes(updateLane);
       } else {
-        // This update does have sufficient priority.
-        if (newBaseQueueLast !== null) {
-          var _clone = {
-            // This update is going to be committed so we never want uncommit
-            // it. Using NoLane works because 0 is a subset of all bitmasks, so
-            // this will never be skipped by the check above.
-            lane: NoLane,
-            action: update.action,
-            hasEagerState: update.hasEagerState,
-            eagerState: update.eagerState,
-            next: null
-          };
-          newBaseQueueLast = newBaseQueueLast.next = _clone;
+        {
+          // This is not an optimistic update, and we're going to apply it now.
+          // But, if there were earlier updates that were skipped, we need to
+          // leave this update in the queue so it can be rebased later.
+          if (newBaseQueueLast !== null) {
+            var _clone = {
+              // This update is going to be committed so we never want uncommit
+              // it. Using NoLane works because 0 is a subset of all bitmasks, so
+              // this will never be skipped by the check above.
+              lane: NoLane,
+              revertLane: NoLane,
+              action: update.action,
+              hasEagerState: update.hasEagerState,
+              eagerState: update.eagerState,
+              next: null
+            };
+            newBaseQueueLast = newBaseQueueLast.next = _clone;
+          }
         } // Process this update.
 
         var action = update.action;
@@ -11738,7 +11747,7 @@ function forceStoreRerender(fiber) {
   }
 }
 
-function mountState(initialState) {
+function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
 
   if (typeof initialState === "function") {
@@ -11755,11 +11764,14 @@ function mountState(initialState) {
     lastRenderedState: initialState
   };
   hook.queue = queue;
-  var dispatch = (queue.dispatch = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    queue
-  ));
+  return hook;
+}
+
+function mountState(initialState) {
+  var hook = mountStateImpl(initialState);
+  var queue = hook.queue;
+  var dispatch = dispatchSetState.bind(null, currentlyRenderingFiber$1, queue);
+  queue.dispatch = dispatch;
   return [hook.memoizedState, dispatch];
 }
 
@@ -12194,9 +12206,10 @@ function updateDeferredValueImpl(hook, prevValue, value) {
 }
 
 function startTransition(
+  fiber,
+  queue,
   pendingState,
   finishedState,
-  setPending,
   callback,
   options
 ) {
@@ -12205,8 +12218,12 @@ function startTransition(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   var prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = null;
-  setPending(pendingState);
+
+  {
+    ReactCurrentBatchConfig$2.transition = null;
+    dispatchSetState(fiber, queue, pendingState);
+  }
+
   var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   {
@@ -12218,7 +12235,7 @@ function startTransition(
     if (enableAsyncActions);
     else {
       // Async actions are not enabled.
-      setPending(finishedState);
+      dispatchSetState(fiber, queue, finishedState);
       callback();
     }
   } catch (error) {
@@ -12250,10 +12267,15 @@ function startTransition(
 }
 
 function mountTransition() {
-  var _mountState = mountState(false),
-    setPending = _mountState[1]; // The `start` method never changes.
+  var stateHook = mountStateImpl(false); // The `start` method never changes.
 
-  var start = startTransition.bind(null, true, false, setPending);
+  var start = startTransition.bind(
+    null,
+    currentlyRenderingFiber$1,
+    stateHook.queue,
+    true,
+    false
+  );
   var hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];
@@ -12326,6 +12348,7 @@ function dispatchReducerAction(fiber, queue, action) {
   var lane = requestUpdateLane(fiber);
   var update = {
     lane: lane,
+    revertLane: NoLane,
     action: action,
     hasEagerState: false,
     eagerState: null,
@@ -12360,6 +12383,7 @@ function dispatchSetState(fiber, queue, action) {
   var lane = requestUpdateLane(fiber);
   var update = {
     lane: lane,
+    revertLane: NoLane,
     action: action,
     hasEagerState: false,
     eagerState: null,
@@ -27204,7 +27228,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-next-9545e4810-20230501";
+var ReactVersion = "18.3.0-next-491aec5d6-20230501";
 
 function createPortal$1(
   children,

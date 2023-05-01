@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<623d88de048cc740842b62d6c9f97677>>
+ * @generated SignedSource<<a5cef1c7009114f63f7485ab232c4292>>
  */
 
 "use strict";
@@ -529,6 +529,12 @@ exports.createServerContext = function (globalName, defaultValue) {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
+exports.experimental_useOptimisticState = function (passthrough, reducer) {
+  return ReactCurrentDispatcher.current.useOptimisticState(
+    passthrough,
+    reducer
+  );
+};
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -639,4 +645,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-next-9545e4810-20230501";
+exports.version = "18.3.0-next-491aec5d6-20230501";

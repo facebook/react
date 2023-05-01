@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4d7bf75ac0b4bdba172d8252b2ae83c7>>
+ * @generated SignedSource<<6a8621febebb11ad6c74045ebbde17ac>>
  */
 
 
@@ -951,7 +951,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_259 = {
+var injectedNamesToPlugins$jscomp$inline_260 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -997,32 +997,32 @@ var injectedNamesToPlugins$jscomp$inline_259 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_260 = !1,
-  pluginName$jscomp$inline_261;
-for (pluginName$jscomp$inline_261 in injectedNamesToPlugins$jscomp$inline_259)
+  isOrderingDirty$jscomp$inline_261 = !1,
+  pluginName$jscomp$inline_262;
+for (pluginName$jscomp$inline_262 in injectedNamesToPlugins$jscomp$inline_260)
   if (
-    injectedNamesToPlugins$jscomp$inline_259.hasOwnProperty(
-      pluginName$jscomp$inline_261
+    injectedNamesToPlugins$jscomp$inline_260.hasOwnProperty(
+      pluginName$jscomp$inline_262
     )
   ) {
-    var pluginModule$jscomp$inline_262 =
-      injectedNamesToPlugins$jscomp$inline_259[pluginName$jscomp$inline_261];
+    var pluginModule$jscomp$inline_263 =
+      injectedNamesToPlugins$jscomp$inline_260[pluginName$jscomp$inline_262];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_261) ||
-      namesToPlugins[pluginName$jscomp$inline_261] !==
-        pluginModule$jscomp$inline_262
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_262) ||
+      namesToPlugins[pluginName$jscomp$inline_262] !==
+        pluginModule$jscomp$inline_263
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_261])
+      if (namesToPlugins[pluginName$jscomp$inline_262])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_261 + "`.")
+            (pluginName$jscomp$inline_262 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_261] =
-        pluginModule$jscomp$inline_262;
-      isOrderingDirty$jscomp$inline_260 = !0;
+      namesToPlugins[pluginName$jscomp$inline_262] =
+        pluginModule$jscomp$inline_263;
+      isOrderingDirty$jscomp$inline_261 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_260 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_261 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -3881,14 +3881,14 @@ function basicStateReducer(state, action) {
 }
 function updateReducer(reducer) {
   var hook = updateWorkInProgressHook(),
+    current = currentHook,
     queue = hook.queue;
   if (null === queue)
     throw Error(
       "Should have a queue. This is likely a bug in React. Please file an issue."
     );
   queue.lastRenderedReducer = reducer;
-  var current = currentHook,
-    baseQueue = current.baseQueue,
+  var baseQueue = hook.baseQueue,
     pendingQueue = queue.pending;
   if (null !== pendingQueue) {
     if (null !== baseQueue) {
@@ -3900,11 +3900,11 @@ function updateReducer(reducer) {
     queue.pending = null;
   }
   if (null !== baseQueue) {
-    pendingQueue = baseQueue.next;
-    current = current.baseState;
+    current = baseQueue.next;
+    pendingQueue = hook.baseState;
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
-      update = pendingQueue;
+      update = current;
     do {
       var updateLane = update.lane & -1073741825;
       if (
@@ -3916,19 +3916,22 @@ function updateReducer(reducer) {
           (newBaseQueueLast = newBaseQueueLast.next =
             {
               lane: 0,
+              revertLane: 0,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
               next: null
             }),
           (updateLane = update.action),
-          shouldDoubleInvokeUserFnsInHooksDEV && reducer(current, updateLane),
-          (current = update.hasEagerState
+          shouldDoubleInvokeUserFnsInHooksDEV &&
+            reducer(pendingQueue, updateLane),
+          (pendingQueue = update.hasEagerState
             ? update.eagerState
-            : reducer(current, updateLane));
+            : reducer(pendingQueue, updateLane));
       else {
         var clone = {
           lane: updateLane,
+          revertLane: update.revertLane,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -3936,21 +3939,21 @@ function updateReducer(reducer) {
         };
         null === newBaseQueueLast
           ? ((newBaseQueueFirst = newBaseQueueLast = clone),
-            (baseFirst = current))
+            (baseFirst = pendingQueue))
           : (newBaseQueueLast = newBaseQueueLast.next = clone);
         currentlyRenderingFiber$1.lanes |= updateLane;
         workInProgressRootSkippedLanes |= updateLane;
       }
       update = update.next;
-    } while (null !== update && update !== pendingQueue);
+    } while (null !== update && update !== current);
     null === newBaseQueueLast
-      ? (baseFirst = current)
+      ? (baseFirst = pendingQueue)
       : (newBaseQueueLast.next = newBaseQueueFirst);
-    objectIs(current, hook.memoizedState) || (didReceiveUpdate = !0);
-    hook.memoizedState = current;
+    objectIs(pendingQueue, hook.memoizedState) || (didReceiveUpdate = !0);
+    hook.memoizedState = pendingQueue;
     hook.baseState = baseFirst;
     hook.baseQueue = newBaseQueueLast;
-    queue.lastRenderedState = current;
+    queue.lastRenderedState = pendingQueue;
   }
   null === baseQueue && (queue.lanes = 0);
   return [hook.memoizedState, queue.dispatch];
@@ -4146,24 +4149,18 @@ function forceStoreRerender(fiber) {
   var root = enqueueConcurrentRenderForLane(fiber, 2);
   null !== root && scheduleUpdateOnFiber(root, fiber, 2);
 }
-function mountState(initialState) {
+function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
   "function" === typeof initialState && (initialState = initialState());
   hook.memoizedState = hook.baseState = initialState;
-  initialState = {
+  hook.queue = {
     pending: null,
     lanes: 0,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: initialState
   };
-  hook.queue = initialState;
-  initialState = initialState.dispatch = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    initialState
-  );
-  return [hook.memoizedState, initialState];
+  return hook;
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -4273,16 +4270,16 @@ function updateDeferredValueImpl(hook, prevValue, value) {
     (hook.baseState = !0));
   return prevValue;
 }
-function startTransition(pendingState, finishedState, setPending, callback) {
+function startTransition(fiber, queue, pendingState, finishedState, callback) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$2.transition;
   ReactCurrentBatchConfig$2.transition = null;
-  setPending(pendingState);
+  dispatchSetState(fiber, queue, pendingState);
   ReactCurrentBatchConfig$2.transition = {};
   try {
-    setPending(finishedState), callback();
+    dispatchSetState(fiber, queue, finishedState), callback();
   } catch (error) {
     throw error;
   } finally {
@@ -4297,6 +4294,7 @@ function dispatchReducerAction(fiber, queue, action) {
   var lane = requestUpdateLane(fiber);
   action = {
     lane: lane,
+    revertLane: 0,
     action: action,
     hasEagerState: !1,
     eagerState: null,
@@ -4315,6 +4313,7 @@ function dispatchSetState(fiber, queue, action) {
   var lane = requestUpdateLane(fiber),
     update = {
       lane: lane,
+      revertLane: 0,
       action: action,
       hasEagerState: !1,
       eagerState: null,
@@ -4459,16 +4458,28 @@ var HooksDispatcherOnMount = {
     initialValue = { current: initialValue };
     return (hook.memoizedState = initialValue);
   },
-  useState: mountState,
+  useState: function (initialState) {
+    initialState = mountStateImpl(initialState);
+    var queue = initialState.queue,
+      dispatch = dispatchSetState.bind(null, currentlyRenderingFiber$1, queue);
+    queue.dispatch = dispatch;
+    return [initialState.memoizedState, dispatch];
+  },
   useDebugValue: mountDebugValue,
   useDeferredValue: function (value) {
     return (mountWorkInProgressHook().memoizedState = value);
   },
   useTransition: function () {
-    var setPending = mountState(!1)[1];
-    setPending = startTransition.bind(null, !0, !1, setPending);
-    mountWorkInProgressHook().memoizedState = setPending;
-    return [!1, setPending];
+    var stateHook = mountStateImpl(!1);
+    stateHook = startTransition.bind(
+      null,
+      currentlyRenderingFiber$1,
+      stateHook.queue,
+      !0,
+      !1
+    );
+    mountWorkInProgressHook().memoizedState = stateHook;
+    return [!1, stateHook];
   },
   useMutableSource: function (source, getSnapshot, subscribe) {
     var hook = mountWorkInProgressHook();
@@ -10185,10 +10196,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1126 = {
+  devToolsConfig$jscomp$inline_1141 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-next-9545e4810-20230501",
+    version: "18.3.0-next-491aec5d6-20230501",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10217,10 +10228,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1126.bundleType,
-  version: devToolsConfig$jscomp$inline_1126.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1126.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1126.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1141.bundleType,
+  version: devToolsConfig$jscomp$inline_1141.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1141.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1141.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10236,14 +10247,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1126.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1141.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-next-9545e4810-20230501"
+  reconcilerVersion: "18.3.0-next-491aec5d6-20230501"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
