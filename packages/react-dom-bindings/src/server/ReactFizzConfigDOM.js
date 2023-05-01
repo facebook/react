@@ -130,11 +130,8 @@ export type ResponseState = {
   startInlineScript: PrecomputedChunk,
   instructions: InstructionState,
 
-  // state for outputting CSP nonce
-  nonce: string | void,
-
   // state for data streaming format
-  externalRuntimeConfig: BootstrapScriptDescriptor | null,
+  externalRuntimeScript: null | ExternalRuntimeScript,
 
   // preamble and postamble chunks and state
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
@@ -196,6 +193,10 @@ export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
 };
+export type ExternalRuntimeScript = {
+  src: string,
+  chunks: Array<Chunk | PrecomputedChunk>,
+};
 // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
@@ -215,7 +216,7 @@ export function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
-  let externalRuntimeDesc = null;
+  let externalRuntimeScript: null | ExternalRuntimeScript = null;
   let streamingFormat = ScriptStreamingFormat;
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
@@ -233,12 +234,27 @@ export function createResponseState(
     if (externalRuntimeConfig !== undefined) {
       streamingFormat = DataStreamingFormat;
       if (typeof externalRuntimeConfig === 'string') {
-        externalRuntimeDesc = {
+        externalRuntimeScript = {
           src: externalRuntimeConfig,
-          integrity: undefined,
+          chunks: [],
         };
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig,
+          async: true,
+          integrity: undefined,
+          nonce: nonce,
+        });
       } else {
-        externalRuntimeDesc = externalRuntimeConfig;
+        externalRuntimeScript = {
+          src: externalRuntimeConfig.src,
+          chunks: [],
+        };
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig.src,
+          async: true,
+          integrity: externalRuntimeConfig.integrity,
+          nonce: nonce,
+        });
       }
     }
   }
@@ -307,7 +323,7 @@ export function createResponseState(
     streamingFormat,
     startInlineScript: inlineScriptWithNonce,
     instructions: NothingSent,
-    externalRuntimeConfig: externalRuntimeDesc,
+    externalRuntimeScript,
     htmlChunks: null,
     headChunks: null,
     hasBody: false,
@@ -1293,7 +1309,7 @@ function injectFormReplayingRuntime(responseState: ResponseState): void {
   // to emit anything. It's always used.
   if (
     (responseState.instructions & SentFormReplayingRuntime) === NothingSent &&
-    (!enableFizzExternalRuntime || !responseState.externalRuntimeConfig)
+    (!enableFizzExternalRuntime || !responseState.externalRuntimeScript)
   ) {
     responseState.instructions |= SentFormReplayingRuntime;
     responseState.bootstrapChunks.unshift(
@@ -4078,15 +4094,15 @@ export function writePreamble(
   if (
     enableFizzExternalRuntime &&
     !willFlushAllSegments &&
-    responseState.externalRuntimeConfig
+    responseState.externalRuntimeScript
   ) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
     // streaming format, ensure the external runtime is sent.
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
-    const {src, integrity} = responseState.externalRuntimeConfig;
-    internalPreinitScript(resources, src, integrity, responseState.nonce);
+    const {src, chunks} = responseState.externalRuntimeScript;
+    internalPreinitScript(resources, src, chunks);
   }
 
   const htmlChunks = responseState.htmlChunks;
@@ -5362,32 +5378,22 @@ function preinit(href: string, options: PreinitOptions): void {
   }
 }
 
-// This method is trusted. It must only be called from within this codebase and it assumes the arguments
-// conform to the types because no user input is being passed in. It also assumes that it is being called as
-// part of a work or flush loop and therefore does not need to request Fizz to flush Resources.
 function internalPreinitScript(
   resources: Resources,
   src: string,
-  integrity: ?string,
-  nonce: ?string,
+  chunks: Array<Chunk | PrecomputedChunk>,
 ): void {
   const key = getResourceKey('script', src);
   let resource = resources.scriptsMap.get(key);
   if (!resource) {
     resource = {
       type: 'script',
-      chunks: [],
+      chunks,
       state: NoState,
       props: null,
     };
     resources.scriptsMap.set(key, resource);
     resources.scripts.add(resource);
-    pushScriptImpl(resource.chunks, {
-      async: true,
-      src,
-      integrity,
-      nonce,
-    });
   }
   return;
 }
