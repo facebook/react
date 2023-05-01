@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
 
 import {
   checkHtmlStringCoercion,
@@ -668,15 +668,6 @@ function pushStringAttribute(
   }
 }
 
-type CustomFormAction = {
-  name?: string,
-  action?: string,
-  encType?: string,
-  method?: string,
-  target?: string,
-  data?: FormData,
-};
-
 function makeFormFieldPrefix(responseState: ResponseState): string {
   // I'm just reusing this counter. It's not really the same namespace as "name".
   // It could just be its own counter.
@@ -761,7 +752,7 @@ function pushFormActionAttribute(
         );
       }
     }
-    const customAction: CustomFormAction = formAction.$$FORM_ACTION;
+    const customAction: ReactCustomFormAction = formAction.$$FORM_ACTION;
     if (typeof customAction === 'function') {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
@@ -794,19 +785,19 @@ function pushFormActionAttribute(
       injectFormReplayingRuntime(responseState);
     }
   }
-  if (name !== null) {
+  if (name != null) {
     pushAttribute(target, 'name', name);
   }
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, 'formAction', formAction);
   }
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, 'formEncType', formEncType);
   }
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, 'formMethod', formMethod);
   }
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, 'formTarget', formTarget);
   }
   return formData;
@@ -1455,7 +1446,7 @@ function pushStartForm(
         );
       }
     }
-    const customAction: CustomFormAction = formAction.$$FORM_ACTION;
+    const customAction: ReactCustomFormAction = formAction.$$FORM_ACTION;
     if (typeof customAction === 'function') {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
@@ -1487,16 +1478,16 @@ function pushStartForm(
       injectFormReplayingRuntime(responseState);
     }
   }
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, 'action', formAction);
   }
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, 'encType', formEncType);
   }
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, 'method', formMethod);
   }
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, 'target', formTarget);
   }
 
