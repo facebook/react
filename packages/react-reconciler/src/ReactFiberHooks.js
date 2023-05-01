@@ -149,11 +149,13 @@ import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {requestAsyncActionContext} from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
+import {requestTransitionLane} from './ReactFiberRootScheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type Update<S, A> = {
   lane: Lane,
+  revertLane: Lane,
   action: A,
   hasEagerState: boolean,
   eagerState: S | null,
@@ -1136,6 +1138,14 @@ function updateReducer<S, I, A>(
   init?: I => S,
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
+  return updateReducerImpl(hook, ((currentHook: any): Hook), reducer);
+}
+
+function updateReducerImpl<S, A>(
+  hook: Hook,
+  current: Hook,
+  reducer: (S, A) => S,
+): [S, Dispatch<A>] {
   const queue = hook.queue;
 
   if (queue === null) {
@@ -1146,10 +1156,8 @@ function updateReducer<S, I, A>(
 
   queue.lastRenderedReducer = reducer;
 
-  const current: Hook = (currentHook: any);
-
   // The last rebase update that is NOT part of the base state.
-  let baseQueue = current.baseQueue;
+  let baseQueue = hook.baseQueue;
 
   // The last pending update that hasn't been processed yet.
   const pendingQueue = queue.pending;
@@ -1180,7 +1188,7 @@ function updateReducer<S, I, A>(
   if (baseQueue !== null) {
     // We have a queue to process.
     const first = baseQueue.next;
-    let newState = current.baseState;
+    let newState = hook.baseState;
 
     let newBaseState = null;
     let newBaseQueueFirst = null;
@@ -1206,6 +1214,7 @@ function updateReducer<S, I, A>(
         // update/state.
         const clone: Update<S, A> = {
           lane: updateLane,
+          revertLane: update.revertLane,
           action: update.action,
           hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
@@ -1228,18 +1237,68 @@ function updateReducer<S, I, A>(
       } else {
         // This update does have sufficient priority.
 
-        if (newBaseQueueLast !== null) {
-          const clone: Update<S, A> = {
-            // This update is going to be committed so we never want uncommit
-            // it. Using NoLane works because 0 is a subset of all bitmasks, so
-            // this will never be skipped by the check above.
-            lane: NoLane,
-            action: update.action,
-            hasEagerState: update.hasEagerState,
-            eagerState: update.eagerState,
-            next: (null: any),
-          };
-          newBaseQueueLast = newBaseQueueLast.next = clone;
+        // Check if this is an optimistic update.
+        const revertLane = update.revertLane;
+        if (!enableAsyncActions || revertLane === NoLane) {
+          // This is not an optimistic update, and we're going to apply it now.
+          // But, if there were earlier updates that were skipped, we need to
+          // leave this update in the queue so it can be rebased later.
+          if (newBaseQueueLast !== null) {
+            const clone: Update<S, A> = {
+              // This update is going to be committed so we never want uncommit
+              // it. Using NoLane works because 0 is a subset of all bitmasks, so
+              // this will never be skipped by the check above.
+              lane: NoLane,
+              revertLane: NoLane,
+              action: update.action,
+              hasEagerState: update.hasEagerState,
+              eagerState: update.eagerState,
+              next: (null: any),
+            };
+            newBaseQueueLast = newBaseQueueLast.next = clone;
+          }
+        } else {
+          // This is an optimistic update. If the "revert" priority is
+          // sufficient, don't apply the update. Otherwise, apply the update,
+          // but leave it in the queue so it can be either reverted or
+          // rebased in a subsequent render.
+          if (isSubsetOfLanes(renderLanes, revertLane)) {
+            // The transition that this optimistic update is associated with
+            // has finished. Pretend the update doesn't exist by skipping
+            // over it.
+            update = update.next;
+            continue;
+          } else {
+            const clone: Update<S, A> = {
+              // Once we commit an optimistic update, we shouldn't uncommit it
+              // until the transition it is associated with has finished
+              // (represented by revertLane). Using NoLane here works because 0
+              // is a subset of all bitmasks, so this will never be skipped by
+              // the check above.
+              lane: NoLane,
+              // Reuse the same revertLane so we know when the transition
+              // has finished.
+              revertLane: update.revertLane,
+              action: update.action,
+              hasEagerState: update.hasEagerState,
+              eagerState: update.eagerState,
+              next: (null: any),
+            };
+            if (newBaseQueueLast === null) {
+              newBaseQueueFirst = newBaseQueueLast = clone;
+              newBaseState = newState;
+            } else {
+              newBaseQueueLast = newBaseQueueLast.next = clone;
+            }
+            // Update the remaining priority in the queue.
+            // TODO: Don't need to accumulate this. Instead, we can remove
+            // renderLanes from the original lanes.
+            currentlyRenderingFiber.lanes = mergeLanes(
+              currentlyRenderingFiber.lanes,
+              revertLane,
+            );
+            markSkippedUpdateLanes(revertLane);
+          }
         }
 
         // Process this update.
@@ -1884,9 +1943,7 @@ function forceStoreRerender(fiber: Fiber) {
   }
 }
 
-function mountState<S>(
-  initialState: (() => S) | S,
-): [S, Dispatch<BasicStateAction<S>>] {
+function mountStateImpl<S>(initialState: (() => S) | S): Hook {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
@@ -1901,21 +1958,106 @@ function mountState<S>(
     lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
-  const dispatch: Dispatch<BasicStateAction<S>> = (queue.dispatch =
-    (dispatchSetState.bind(null, currentlyRenderingFiber, queue): any));
+  return hook;
+}
+
+function mountState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
+  const hook = mountStateImpl(initialState);
+  const queue = hook.queue;
+  const dispatch: Dispatch<BasicStateAction<S>> = (dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any);
+  queue.dispatch = dispatch;
   return [hook.memoizedState, dispatch];
 }
 
 function updateState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  return updateReducer(basicStateReducer, (initialState: any));
+  return updateReducer(basicStateReducer, initialState);
 }
 
 function rerenderState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  return rerenderReducer(basicStateReducer, (initialState: any));
+  return rerenderReducer(basicStateReducer, initialState);
+}
+
+function mountOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  const hook = mountWorkInProgressHook();
+  hook.memoizedState = hook.baseState = passthrough;
+  const queue: UpdateQueue<S, A> = {
+    pending: null,
+    lanes: NoLanes,
+    dispatch: null,
+    // Optimistic state does not use the eager update optimization.
+    lastRenderedReducer: null,
+    lastRenderedState: null,
+  };
+  hook.queue = queue;
+  // This is different than the normal setState function.
+  const dispatch: A => void = (dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    true,
+    queue,
+  ): any);
+  queue.dispatch = dispatch;
+  return [passthrough, dispatch];
+}
+
+function updateOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  const hook = updateWorkInProgressHook();
+
+  // Optimistic updates are always rebased on top of the latest value passed in
+  // as an argument. It's called a passthrough because if there are no pending
+  // updates, it will be returned as-is.
+  //
+  // Reset the base state and memoized state to the passthrough. Future
+  // updates will be applied on top of this.
+  hook.baseState = hook.memoizedState = passthrough;
+
+  // If a reducer is not provided, default to the same one used by useState.
+  const resolvedReducer: (S, A) => S =
+    typeof reducer === 'function' ? reducer : (basicStateReducer: any);
+
+  return updateReducerImpl(hook, ((currentHook: any): Hook), resolvedReducer);
+}
+
+function rerenderOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  // Unlike useState, useOptimisticState doesn't support render phase updates.
+  // Also unlike useState, we need to replay all pending updates again in case
+  // the passthrough value changed.
+  //
+  // So instead of a forked re-render implementation that knows how to handle
+  // render phase udpates, we can use the same implementation as during a
+  // regular mount or update.
+
+  if (currentHook !== null) {
+    // This is an update. Process the update queue.
+    return updateOptimisticState(passthrough, reducer);
+  }
+
+  // This is a mount. No updates to process.
+  const hook = updateWorkInProgressHook();
+  // Reset the base state and memoized state to the passthrough. Future
+  // updates will be applied on top of this.
+  hook.baseState = hook.memoizedState = passthrough;
+  const dispatch = hook.queue.dispatch;
+  return [passthrough, dispatch];
 }
 
 function pushEffect(
@@ -2445,9 +2587,10 @@ function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
 }
 
 function startTransition<S>(
+  fiber: Fiber,
+  queue: UpdateQueue<S | Thenable<S>, BasicStateAction<S | Thenable<S>>>,
   pendingState: S,
   finishedState: S,
-  setPending: (Thenable<S> | S) => void,
   callback: () => mixed,
   options?: StartTransitionOptions,
 ): void {
@@ -2457,8 +2600,20 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = null;
-  setPending(pendingState);
+
+  if (enableAsyncActions) {
+    // We don't really need to use an optimistic update here, because we
+    // schedule a second "revert" update below (which we use to suspend the
+    // transition until the async action scope has finished). But we'll use an
+    // optimistic update anyway to make it less likely the behavior accidentally
+    // diverges; for example, both an optimistic update and this one should
+    // share the same lane.
+    dispatchOptimisticSetState(fiber, false, queue, pendingState);
+  } else {
+    ReactCurrentBatchConfig.transition = null;
+    dispatchSetState(fiber, queue, pendingState);
+  }
+
   const currentTransition = (ReactCurrentBatchConfig.transition =
     ({}: BatchConfigTransition));
 
@@ -2485,10 +2640,10 @@ function startTransition<S>(
         returnValue,
         finishedState,
       );
-      setPending(maybeThenable);
+      dispatchSetState(fiber, queue, maybeThenable);
     } else {
       // Async actions are not enabled.
-      setPending(finishedState);
+      dispatchSetState(fiber, queue, finishedState);
       callback();
     }
   } catch (error) {
@@ -2501,7 +2656,7 @@ function startTransition<S>(
         status: 'rejected',
         reason: error,
       };
-      setPending(rejectedThenable);
+      dispatchSetState(fiber, queue, rejectedThenable);
     } else {
       // The error rethrowing behavior is only enabled when the async actions
       // feature is on, even for sync actions.
@@ -2553,7 +2708,10 @@ export function startHostTransition<F>(
     );
   }
 
-  let setPending;
+  let queue: UpdateQueue<
+    Thenable<TransitionStatus> | TransitionStatus,
+    BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
+  >;
   if (formFiber.memoizedState === null) {
     // Upgrade this host component fiber to be stateful. We're going to pretend
     // it was stateful all along so we can reuse most of the implementation
@@ -2561,27 +2719,27 @@ export function startHostTransition<F>(
     //
     // Create the state hook used by TransitionAwareHostComponent. This is
     // essentially an inlined version of mountState.
-    const queue: UpdateQueue<
+    const newQueue: UpdateQueue<
       Thenable<TransitionStatus> | TransitionStatus,
-      Thenable<TransitionStatus> | TransitionStatus,
+      BasicStateAction<Thenable<TransitionStatus> | TransitionStatus>,
     > = {
       pending: null,
       lanes: NoLanes,
-      dispatch: null,
+      // We're going to cheat and intentionally not create a bound dispatch
+      // method, because we can call it directly in startTransition.
+      dispatch: (null: any),
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: NoPendingHostTransition,
     };
+    queue = newQueue;
+
     const stateHook: Hook = {
       memoizedState: NoPendingHostTransition,
       baseState: NoPendingHostTransition,
       baseQueue: null,
-      queue: queue,
+      queue: newQueue,
       next: null,
     };
-
-    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
-      (dispatchSetState.bind(null, formFiber, queue): any);
-    setPending = queue.dispatch = dispatch;
 
     // Add the state hook to both fiber alternates. The idea is that the fiber
     // had this hook all along.
@@ -2593,15 +2751,14 @@ export function startHostTransition<F>(
   } else {
     // This fiber was already upgraded to be stateful.
     const stateHook: Hook = formFiber.memoizedState;
-    const dispatch: (Thenable<TransitionStatus> | TransitionStatus) => void =
-      stateHook.queue.dispatch;
-    setPending = dispatch;
+    queue = stateHook.queue;
   }
 
   startTransition(
+    formFiber,
+    queue,
     pendingState,
     NoPendingHostTransition,
-    setPending,
     // TODO: We can avoid this extra wrapper, somehow. Figure out layering
     // once more of this function is implemented.
     () => callback(formData),
@@ -2612,9 +2769,15 @@ function mountTransition(): [
   boolean,
   (callback: () => void, options?: StartTransitionOptions) => void,
 ] {
-  const [, setPending] = mountState((false: Thenable<boolean> | boolean));
+  const stateHook = mountStateImpl((false: Thenable<boolean> | boolean));
   // The `start` method never changes.
-  const start = startTransition.bind(null, true, false, setPending);
+  const start = startTransition.bind(
+    null,
+    currentlyRenderingFiber,
+    stateHook.queue,
+    true,
+    false,
+  );
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
   return [false, start];
@@ -2785,6 +2948,7 @@ function dispatchReducerAction<S, A>(
 
   const update: Update<S, A> = {
     lane,
+    revertLane: NoLane,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -2823,6 +2987,7 @@ function dispatchSetState<S, A>(
 
   const update: Update<S, A> = {
     lane,
+    revertLane: NoLane,
     action,
     hasEagerState: false,
     eagerState: null,
@@ -2884,6 +3049,58 @@ function dispatchSetState<S, A>(
   }
 
   markUpdateInDevTools(fiber, lane, action);
+}
+
+function dispatchOptimisticSetState<S, A>(
+  fiber: Fiber,
+  throwIfDuringRender: boolean,
+  queue: UpdateQueue<S, A>,
+  action: A,
+): void {
+  const update: Update<S, A> = {
+    // An optimistic update commits synchronously.
+    lane: SyncLane,
+    // After committing, the optimistic update is "reverted" using the same
+    // lane as the transition it's associated with.
+    //
+    // TODO: Warn if there's no transition/action associated with this
+    // optimistic update.
+    revertLane: requestTransitionLane(),
+    action,
+    hasEagerState: false,
+    eagerState: null,
+    next: (null: any),
+  };
+
+  if (isRenderPhaseUpdate(fiber)) {
+    // When calling startTransition during render, this warns instead of
+    // throwing because throwing would be a breaking change. setOptimisticState
+    // is a new API so it's OK to throw.
+    if (throwIfDuringRender) {
+      throw new Error('Cannot update optimistic state while rendering.');
+    } else {
+      // startTransition was called during render. We don't need to do anything
+      // besides warn here because the render phase update would be overidden by
+      // the second update, anyway. We can remove this branch and make it throw
+      // in a future release.
+      if (__DEV__) {
+        console.error('Cannot call startTransition while rendering.');
+      }
+    }
+  } else {
+    const root = enqueueConcurrentHookUpdate(fiber, queue, update, SyncLane);
+    if (root !== null) {
+      // NOTE: The optimistic update implementation assumes that the transition
+      // will never be attempted before the optimistic update. This currently
+      // holds because the optimistic update is always synchronous. If we ever
+      // change that, we'll need to account for this.
+      scheduleUpdateOnFiber(root, fiber, SyncLane);
+      // Optimistic updates are always synchronous, so we don't need to call
+      // entangleTransitionUpdate here.
+    }
+  }
+
+  markUpdateInDevTools(fiber, SyncLane, action);
 }
 
 function isRenderPhaseUpdate(fiber: Fiber): boolean {
@@ -2989,6 +3206,10 @@ if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
 }
+if (enableAsyncActions) {
+  (ContextOnlyDispatcher: Dispatcher).useOptimisticState =
+    throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3024,6 +3245,11 @@ if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
 }
+if (enableAsyncActions) {
+  (HooksDispatcherOnMount: Dispatcher).useOptimisticState =
+    mountOptimisticState;
+}
+
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -3057,6 +3283,10 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  (HooksDispatcherOnUpdate: Dispatcher).useOptimisticState =
+    updateOptimisticState;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -3092,6 +3322,10 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  (HooksDispatcherOnRerender: Dispatcher).useOptimisticState =
+    rerenderOptimisticState;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -3283,6 +3517,17 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        mountHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3440,6 +3685,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -3601,6 +3857,17 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return updateOptimisticState(passthrough, reducer);
+      };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -3760,6 +4027,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        updateHookTypesDev();
+        return rerenderOptimisticState(passthrough, reducer);
+      };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3942,6 +4220,18 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountOptimisticState(passthrough, reducer);
+      };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -4128,6 +4418,18 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
   }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateOptimisticState(passthrough, reducer);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4312,5 +4614,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+  }
+  if (enableAsyncActions) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
+      function useOptimisticState<S, A>(
+        passthrough: S,
+        reducer: ?(S, A) => S,
+      ): [S, (A) => void] {
+        currentHookNameInDev = 'useOptimisticState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderOptimisticState(passthrough, reducer);
+      };
   }
 }

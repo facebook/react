@@ -77,6 +77,7 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  experimental_useOptimisticState,
   useSyncExternalStore,
   useReducer,
   useRef,

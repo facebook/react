@@ -1243,10 +1243,9 @@ describe('Timeline profiler', () => {
         function Example() {
           const setHigh = React.useState(0)[1];
           const setLow = React.useState(0)[1];
-          const startTransition = React.useTransition()[1];
 
           updaterFn = () => {
-            startTransition(() => {
+            React.startTransition(() => {
               setLow(prevLow => prevLow + 1);
             });
             setHigh(prevHigh => prevHigh + 1);
@@ -1265,24 +1264,6 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
           [
-            {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000000001000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-            {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000010000000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
             {
               "componentName": "Example",
               "componentStack": "
