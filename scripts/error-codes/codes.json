@@ -465,5 +465,6 @@
   "477": "React Internal Error: processHintChunk is not implemented for Native-Relay. The fact that this method was called means there is a bug in React.",
   "478": "Thenable should have already resolved. This is a bug in React.",
   "479": "Cannot update optimistic state while rendering.",
-  "480": "File/Blob fields are not yet supported in progressive forms. It probably means you are closing over binary data or FormData in a Server Action."
+  "480": "File/Blob fields are not yet supported in progressive forms. It probably means you are closing over binary data or FormData in a Server Action.",
+  "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React."
 }

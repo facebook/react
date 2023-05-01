@@ -7,12 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
-
-import {
-  knownServerReferences,
-  createServerReference,
-} from './ReactFlightServerReferenceRegistry';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -38,6 +33,15 @@ type ReactJSONValue =
   | ReactServerObject;
 
 export opaque type ServerReference<T> = T;
+
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+
+export type ServerReferenceId = any;
+
+export const knownServerReferences: WeakMap<
+  Function,
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+> = new WeakMap();
 
 // Serializable values
 export type ReactServerValue =
@@ -363,4 +367,37 @@ export function processReply(
   }
 }
 
-export {createServerReference};
+export function encodeFormAction(
+  this: any => Promise<any>,
+  identifierPrefix: string,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  return {
+    name: '$ACTION_' + reference.id,
+    method: 'POST',
+    encType: 'multipart/form-data',
+    data: null,
+  };
+}
+
+export function createServerReference<A: Iterable<any>, T>(
+  id: ServerReferenceId,
+  callServer: CallServerCallback,
+): (...A) => Promise<T> {
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    return callServer(id, args);
+  };
+  // Expose encoder for use by SSR.
+  // TODO: Only expose this in SSR builds and not the browser client.
+  proxy.$$FORM_ACTION = encodeFormAction;
+  knownServerReferences.set(proxy, {id: id, bound: null});
+  return proxy;
+}
