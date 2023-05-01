@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-b7ba1a13";
+var ReactVersion = "18.3.0-www-modern-ccf9e22e";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2368,6 +2368,7 @@ var startInlineScript = stringToPrecomputedChunk("<script>");
 var endInlineScript = stringToPrecomputedChunk("</script>");
 var startScriptSrc = stringToPrecomputedChunk('<script src="');
 var startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
+var scriptNonce = stringToPrecomputedChunk('" nonce="');
 var scriptIntegirty = stringToPrecomputedChunk('" integrity="');
 var endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 /**
@@ -2451,6 +2452,13 @@ function createResponseState$1(
         stringToChunk(escapeTextForBrowser(src))
       );
 
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce))
+        );
+      }
+
       if (integrity) {
         bootstrapChunks.push(
           scriptIntegirty,
@@ -2476,6 +2484,13 @@ function createResponseState$1(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
       );
+
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce))
+        );
+      }
 
       if (_integrity) {
         bootstrapChunks.push(
@@ -2506,7 +2521,8 @@ function createResponseState$1(
     preconnectChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    stylesToHoist: false
+    stylesToHoist: false,
+    nonce: nonce
   };
 } // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
@@ -6186,7 +6202,7 @@ function writePreamble(
     var _responseState$extern = responseState.externalRuntimeConfig,
       src = _responseState$extern.src,
       integrity = _responseState$extern.integrity;
-    internalPreinitScript(resources, src, integrity);
+    internalPreinitScript(resources, src, integrity, responseState.nonce);
   }
 
   var htmlChunks = responseState.htmlChunks;
@@ -7412,7 +7428,7 @@ function preinit(href, options) {
 // conform to the types because no user input is being passed in. It also assumes that it is being called as
 // part of a work or flush loop and therefore does not need to request Fizz to flush Resources.
 
-function internalPreinitScript(resources, src, integrity) {
+function internalPreinitScript(resources, src, integrity, nonce) {
   var key = getResourceKey("script", src);
   var resource = resources.scriptsMap.get(key);
 
@@ -7428,7 +7444,8 @@ function internalPreinitScript(resources, src, integrity) {
     pushScriptImpl(resource.chunks, {
       async: true,
       src: src,
-      integrity: integrity
+      integrity: integrity,
+      nonce: nonce
     });
   }
 
@@ -7618,6 +7635,7 @@ function createResponseState(
     preloadChunks: responseState.preloadChunks,
     hoistableChunks: responseState.hoistableChunks,
     stylesToHoist: responseState.stylesToHoist,
+    nonce: responseState.nonce,
     // This is an extra field for the legacy renderer
     generateStaticMarkup: generateStaticMarkup
   };

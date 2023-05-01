@@ -1656,7 +1656,8 @@ function writePreamble(
     internalPreinitScript(
       resources,
       willFlushAllSegments.src,
-      willFlushAllSegments.integrity
+      willFlushAllSegments.integrity,
+      responseState.nonce
     ));
   willFlushAllSegments = responseState.htmlChunks;
   var headChunks = responseState.headChunks,
@@ -2128,7 +2129,7 @@ function preinit(href, options) {
     }
   }
 }
-function internalPreinitScript(resources, src, integrity) {
+function internalPreinitScript(resources, src, integrity, nonce) {
   var key = "[script]" + src,
     resource = resources.scriptsMap.get(key);
   resource ||
@@ -2138,7 +2139,8 @@ function internalPreinitScript(resources, src, integrity) {
     pushScriptImpl(resource.chunks, {
       async: !0,
       src: src,
-      integrity: integrity
+      integrity: integrity,
+      nonce: nonce
     }));
 }
 function preloadAsStylePropsFromProps(href, props) {
@@ -3878,7 +3880,8 @@ exports.renderToStream = function (children, options) {
     preconnectChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    stylesToHoist: !1
+    stylesToHoist: !1,
+    nonce: void 0
   };
   bootstrapModules = createFormatContext(0, null, !1);
   externalRuntimeDesc = options ? options.progressiveChunkSize : void 0;

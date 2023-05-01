@@ -1625,7 +1625,8 @@ function writePreamble(
     internalPreinitScript(
       resources,
       willFlushAllSegments.src,
-      willFlushAllSegments.integrity
+      willFlushAllSegments.integrity,
+      responseState.nonce
     ));
   willFlushAllSegments = responseState.htmlChunks;
   var headChunks = responseState.headChunks,
@@ -2076,7 +2077,7 @@ function preinit(href, options) {
     }
   }
 }
-function internalPreinitScript(resources, src, integrity) {
+function internalPreinitScript(resources, src, integrity, nonce) {
   var key = "[script]" + src,
     resource = resources.scriptsMap.get(key);
   resource ||
@@ -2086,7 +2087,8 @@ function internalPreinitScript(resources, src, integrity) {
     pushScriptImpl(resource.chunks, {
       async: !0,
       src: src,
-      integrity: integrity
+      integrity: integrity,
+      nonce: nonce
     }));
 }
 function preloadAsStylePropsFromProps(href, props) {
@@ -2137,6 +2139,7 @@ function createResponseState(
     preloadChunks: [],
     hoistableChunks: [],
     stylesToHoist: !1,
+    nonce: void 0,
     generateStaticMarkup: generateStaticMarkup
   };
 }
@@ -3871,4 +3874,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-9c1f7368";
+exports.version = "18.3.0-www-modern-6b28dd6e";

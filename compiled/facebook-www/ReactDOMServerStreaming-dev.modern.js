@@ -2365,6 +2365,7 @@ var startInlineScript = stringToPrecomputedChunk("<script>");
 var endInlineScript = stringToPrecomputedChunk("</script>");
 var startScriptSrc = stringToPrecomputedChunk('<script src="');
 var startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
+var scriptNonce = stringToPrecomputedChunk('" nonce="');
 var scriptIntegirty = stringToPrecomputedChunk('" integrity="');
 var endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 /**
@@ -2448,6 +2449,13 @@ function createResponseState(
         stringToChunk(escapeTextForBrowser(src))
       );
 
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce))
+        );
+      }
+
       if (integrity) {
         bootstrapChunks.push(
           scriptIntegirty,
@@ -2473,6 +2481,13 @@ function createResponseState(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
       );
+
+      if (nonce) {
+        bootstrapChunks.push(
+          scriptNonce,
+          stringToChunk(escapeTextForBrowser(nonce))
+        );
+      }
 
       if (_integrity) {
         bootstrapChunks.push(
@@ -2503,7 +2518,8 @@ function createResponseState(
     preconnectChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    stylesToHoist: false
+    stylesToHoist: false,
+    nonce: nonce
   };
 } // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
@@ -6193,7 +6209,7 @@ function writePreamble(
     var _responseState$extern = responseState.externalRuntimeConfig,
       src = _responseState$extern.src,
       integrity = _responseState$extern.integrity;
-    internalPreinitScript(resources, src, integrity);
+    internalPreinitScript(resources, src, integrity, responseState.nonce);
   }
 
   var htmlChunks = responseState.htmlChunks;
@@ -7419,7 +7435,7 @@ function preinit(href, options) {
 // conform to the types because no user input is being passed in. It also assumes that it is being called as
 // part of a work or flush loop and therefore does not need to request Fizz to flush Resources.
 
-function internalPreinitScript(resources, src, integrity) {
+function internalPreinitScript(resources, src, integrity, nonce) {
   var key = getResourceKey("script", src);
   var resource = resources.scriptsMap.get(key);
 
@@ -7435,7 +7451,8 @@ function internalPreinitScript(resources, src, integrity) {
     pushScriptImpl(resource.chunks, {
       async: true,
       src: src,
-      integrity: integrity
+      integrity: integrity,
+      nonce: nonce
     });
   }
 
