@@ -1653,13 +1653,12 @@ function writePreamble(
   willFlushAllSegments
 ) {
   !willFlushAllSegments &&
-    responseState.externalRuntimeConfig &&
-    ((willFlushAllSegments = responseState.externalRuntimeConfig),
+    responseState.externalRuntimeScript &&
+    ((willFlushAllSegments = responseState.externalRuntimeScript),
     internalPreinitScript(
       resources,
       willFlushAllSegments.src,
-      willFlushAllSegments.integrity,
-      responseState.nonce
+      willFlushAllSegments.chunks
     ));
   willFlushAllSegments = responseState.htmlChunks;
   var headChunks = responseState.headChunks,
@@ -2131,19 +2130,13 @@ function preinit(href, options) {
     }
   }
 }
-function internalPreinitScript(resources, src, integrity, nonce) {
-  var key = "[script]" + src,
-    resource = resources.scriptsMap.get(key);
+function internalPreinitScript(resources, src, chunks) {
+  src = "[script]" + src;
+  var resource = resources.scriptsMap.get(src);
   resource ||
-    ((resource = { type: "script", chunks: [], state: 0, props: null }),
-    resources.scriptsMap.set(key, resource),
-    resources.scripts.add(resource),
-    pushScriptImpl(resource.chunks, {
-      async: !0,
-      src: src,
-      integrity: integrity,
-      nonce: nonce
-    }));
+    ((resource = { type: "script", chunks: chunks, state: 0, props: null }),
+    resources.scriptsMap.set(src, resource),
+    resources.scripts.add(resource));
 }
 function preloadAsStylePropsFromProps(href, props) {
   return {
@@ -3155,7 +3148,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$14 = getThenableStateAfterSuspending(),
+      var thenableState$15 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -3169,7 +3162,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$14,
+        thenableState$15,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -3576,13 +3569,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$16 = partialBoundaries[i];
+      var boundary$17 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$16.resources;
-        var completedSegments = boundary$16.completedSegments;
+          boundary$17.resources;
+        var completedSegments = boundary$17.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3592,7 +3585,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$16,
+              boundary$17,
               completedSegments[responseState]
             )
           ) {
@@ -3604,7 +3597,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$16.resources,
+          boundary$17.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3664,8 +3657,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$18) {
-    logRecoverableError(request, error$18), fatalError(request, error$18);
+  } catch (error$19) {
+    logRecoverableError(request, error$19), fatalError(request, error$19);
   }
 }
 exports.abortStream = function (stream) {
@@ -3807,7 +3800,7 @@ exports.renderToStream = function (children, options) {
       : void 0;
   identifierPrefix = void 0 === identifierPrefix ? "" : identifierPrefix;
   var JSCompiler_inline_result = [];
-  var externalRuntimeDesc = null,
+  var externalRuntimeScript = null,
     streamingFormat = 0;
   void 0 !== bootstrapScriptContent &&
     JSCompiler_inline_result.push(
@@ -3817,10 +3810,24 @@ exports.renderToStream = function (children, options) {
     );
   void 0 !== externalRuntimeConfig &&
     ((streamingFormat = 1),
-    (externalRuntimeDesc =
-      "string" === typeof externalRuntimeConfig
-        ? { src: externalRuntimeConfig, integrity: void 0 }
-        : externalRuntimeConfig));
+    "string" === typeof externalRuntimeConfig
+      ? ((externalRuntimeScript = { src: externalRuntimeConfig, chunks: [] }),
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig,
+          async: !0,
+          integrity: void 0,
+          nonce: void 0
+        }))
+      : ((externalRuntimeScript = {
+          src: externalRuntimeConfig.src,
+          chunks: []
+        }),
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig.src,
+          async: !0,
+          integrity: externalRuntimeConfig.integrity,
+          nonce: void 0
+        })));
   if (void 0 !== bootstrapScripts)
     for (
       bootstrapScriptContent = 0;
@@ -3882,7 +3889,7 @@ exports.renderToStream = function (children, options) {
     streamingFormat: streamingFormat,
     startInlineScript: "<script>",
     instructions: 0,
-    externalRuntimeConfig: externalRuntimeDesc,
+    externalRuntimeScript: externalRuntimeScript,
     htmlChunks: null,
     headChunks: null,
     hasBody: !1,
@@ -3894,7 +3901,7 @@ exports.renderToStream = function (children, options) {
     nonce: void 0
   };
   bootstrapModules = createFormatContext(0, null, !1);
-  externalRuntimeDesc = options ? options.progressiveChunkSize : void 0;
+  externalRuntimeScript = options ? options.progressiveChunkSize : void 0;
   streamingFormat = options.onError;
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   options = [];
@@ -3921,7 +3928,7 @@ exports.renderToStream = function (children, options) {
     flushScheduled: !1,
     responseState: JSCompiler_inline_result,
     progressiveChunkSize:
-      void 0 === externalRuntimeDesc ? 12800 : externalRuntimeDesc,
+      void 0 === externalRuntimeScript ? 12800 : externalRuntimeScript,
     status: 0,
     fatalError: null,
     nextSegmentId: 0,

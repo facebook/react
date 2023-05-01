@@ -1622,13 +1622,12 @@ function writePreamble(
   willFlushAllSegments
 ) {
   !willFlushAllSegments &&
-    responseState.externalRuntimeConfig &&
-    ((willFlushAllSegments = responseState.externalRuntimeConfig),
+    responseState.externalRuntimeScript &&
+    ((willFlushAllSegments = responseState.externalRuntimeScript),
     internalPreinitScript(
       resources,
       willFlushAllSegments.src,
-      willFlushAllSegments.integrity,
-      responseState.nonce
+      willFlushAllSegments.chunks
     ));
   willFlushAllSegments = responseState.htmlChunks;
   var headChunks = responseState.headChunks,
@@ -2079,19 +2078,13 @@ function preinit(href, options) {
     }
   }
 }
-function internalPreinitScript(resources, src, integrity, nonce) {
-  var key = "[script]" + src,
-    resource = resources.scriptsMap.get(key);
+function internalPreinitScript(resources, src, chunks) {
+  src = "[script]" + src;
+  var resource = resources.scriptsMap.get(src);
   resource ||
-    ((resource = { type: "script", chunks: [], state: 0, props: null }),
-    resources.scriptsMap.set(key, resource),
-    resources.scripts.add(resource),
-    pushScriptImpl(resource.chunks, {
-      async: !0,
-      src: src,
-      integrity: integrity,
-      nonce: nonce
-    }));
+    ((resource = { type: "script", chunks: chunks, state: 0, props: null }),
+    resources.scriptsMap.set(src, resource),
+    resources.scripts.add(resource));
 }
 function preloadAsStylePropsFromProps(href, props) {
   return {
@@ -2114,14 +2107,28 @@ function createResponseState(
   externalRuntimeConfig
 ) {
   identifierPrefix = void 0 === identifierPrefix ? "" : identifierPrefix;
-  var externalRuntimeDesc = null,
+  var externalRuntimeScript = null,
     streamingFormat = 0;
   void 0 !== externalRuntimeConfig &&
     ((streamingFormat = 1),
-    (externalRuntimeDesc =
-      "string" === typeof externalRuntimeConfig
-        ? { src: externalRuntimeConfig, integrity: void 0 }
-        : externalRuntimeConfig));
+    "string" === typeof externalRuntimeConfig
+      ? ((externalRuntimeScript = { src: externalRuntimeConfig, chunks: [] }),
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig,
+          async: !0,
+          integrity: void 0,
+          nonce: void 0
+        }))
+      : ((externalRuntimeScript = {
+          src: externalRuntimeConfig.src,
+          chunks: []
+        }),
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig.src,
+          async: !0,
+          integrity: externalRuntimeConfig.integrity,
+          nonce: void 0
+        })));
   return {
     bootstrapChunks: [],
     placeholderPrefix: identifierPrefix + "P:",
@@ -2132,7 +2139,7 @@ function createResponseState(
     streamingFormat: streamingFormat,
     startInlineScript: "<script>",
     instructions: 0,
-    externalRuntimeConfig: externalRuntimeDesc,
+    externalRuntimeScript: externalRuntimeScript,
     htmlChunks: null,
     headChunks: null,
     hasBody: !1,
@@ -2141,7 +2148,6 @@ function createResponseState(
     preloadChunks: [],
     hoistableChunks: [],
     stylesToHoist: !1,
-    nonce: void 0,
     generateStaticMarkup: generateStaticMarkup
   };
 }
@@ -3195,7 +3201,7 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     ) {
-      var thenableState$14 = getThenableStateAfterSuspending(),
+      var thenableState$15 = getThenableStateAfterSuspending(),
         segment = task.blockedSegment,
         newSegment = createPendingSegment(
           request,
@@ -3209,7 +3215,7 @@ function renderNode(request, task, node) {
       segment.lastPushedText = !1;
       request = createTask(
         request,
-        thenableState$14,
+        thenableState$15,
         task.node,
         task.blockedBoundary,
         newSegment,
@@ -3709,13 +3715,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$16 = partialBoundaries[i];
+      var boundary$17 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$16.resources;
-        var completedSegments = boundary$16.completedSegments;
+          boundary$17.resources;
+        var completedSegments = boundary$17.completedSegments;
         for (
           responseState = 0;
           responseState < completedSegments.length;
@@ -3725,7 +3731,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$16,
+              boundary$17,
               completedSegments[responseState]
             )
           ) {
@@ -3737,7 +3743,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$16.resources,
+          boundary$17.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3800,8 +3806,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$18) {
-    logRecoverableError(request, error$18), fatalError(request, error$18);
+  } catch (error$19) {
+    logRecoverableError(request, error$19), fatalError(request, error$19);
   }
 }
 function onError() {}
@@ -3883,4 +3889,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-83586ccd";
+exports.version = "18.3.0-www-modern-07269b39";

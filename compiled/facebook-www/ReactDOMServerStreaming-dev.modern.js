@@ -2412,7 +2412,7 @@ function createResponseState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">'
         );
   var bootstrapChunks = [];
-  var externalRuntimeDesc = null;
+  var externalRuntimeScript = null;
   var streamingFormat = ScriptStreamingFormat;
 
   if (bootstrapScriptContent !== undefined) {
@@ -2428,12 +2428,27 @@ function createResponseState(
       streamingFormat = DataStreamingFormat;
 
       if (typeof externalRuntimeConfig === "string") {
-        externalRuntimeDesc = {
+        externalRuntimeScript = {
           src: externalRuntimeConfig,
-          integrity: undefined
+          chunks: []
         };
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig,
+          async: true,
+          integrity: undefined,
+          nonce: nonce
+        });
       } else {
-        externalRuntimeDesc = externalRuntimeConfig;
+        externalRuntimeScript = {
+          src: externalRuntimeConfig.src,
+          chunks: []
+        };
+        pushScriptImpl(externalRuntimeScript.chunks, {
+          src: externalRuntimeConfig.src,
+          async: true,
+          integrity: externalRuntimeConfig.integrity,
+          nonce: nonce
+        });
       }
     }
   }
@@ -2511,7 +2526,7 @@ function createResponseState(
     streamingFormat: streamingFormat,
     startInlineScript: inlineScriptWithNonce,
     instructions: NothingSent,
-    externalRuntimeConfig: externalRuntimeDesc,
+    externalRuntimeScript: externalRuntimeScript,
     htmlChunks: null,
     headChunks: null,
     hasBody: false,
@@ -6201,16 +6216,16 @@ function writePreamble(
   willFlushAllSegments
 ) {
   // This function must be called exactly once on every request
-  if (!willFlushAllSegments && responseState.externalRuntimeConfig) {
+  if (!willFlushAllSegments && responseState.externalRuntimeScript) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
     // streaming format, ensure the external runtime is sent.
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
-    var _responseState$extern = responseState.externalRuntimeConfig,
+    var _responseState$extern = responseState.externalRuntimeScript,
       src = _responseState$extern.src,
-      integrity = _responseState$extern.integrity;
-    internalPreinitScript(resources, src, integrity, responseState.nonce);
+      chunks = _responseState$extern.chunks;
+    internalPreinitScript(resources, src, chunks);
   }
 
   var htmlChunks = responseState.htmlChunks;
@@ -6265,10 +6280,10 @@ function writePreamble(
 
     if (resources.stylesMap.has(key));
     else {
-      var chunks = resource.chunks;
+      var _chunks = resource.chunks;
 
-      for (i = 0; i < chunks.length; i++) {
-        writeChunk(destination, chunks[i]);
+      for (i = 0; i < _chunks.length; i++) {
+        writeChunk(destination, _chunks[i]);
       }
     }
   });
@@ -7432,29 +7447,21 @@ function preinit(href, options) {
       }
     }
   }
-} // This method is trusted. It must only be called from within this codebase and it assumes the arguments
-// conform to the types because no user input is being passed in. It also assumes that it is being called as
-// part of a work or flush loop and therefore does not need to request Fizz to flush Resources.
+}
 
-function internalPreinitScript(resources, src, integrity, nonce) {
+function internalPreinitScript(resources, src, chunks) {
   var key = getResourceKey("script", src);
   var resource = resources.scriptsMap.get(key);
 
   if (!resource) {
     resource = {
       type: "script",
-      chunks: [],
+      chunks: chunks,
       state: NoState,
       props: null
     };
     resources.scriptsMap.set(key, resource);
     resources.scripts.add(resource);
-    pushScriptImpl(resource.chunks, {
-      async: true,
-      src: src,
-      integrity: integrity,
-      nonce: nonce
-    });
   }
 
   return;
