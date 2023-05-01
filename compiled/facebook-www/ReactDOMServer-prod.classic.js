@@ -294,6 +294,13 @@ function pushStringAttribute(target, name, value) {
 escapeTextForBrowser(
   "javascript:throw new Error('A React form was unexpectedly submitted.')"
 );
+function pushAdditionalFormField(value, key) {
+  this.push('<input type="hidden"');
+  if ("string" !== typeof value) throw Error(formatProdErrorMessage(480));
+  pushStringAttribute(this, "name", key);
+  pushStringAttribute(this, "value", value);
+  this.push("/>");
+}
 function pushFormActionAttribute(
   target,
   responseState,
@@ -308,6 +315,7 @@ function pushFormActionAttribute(
   null !== formEncType && pushAttribute(target, "formEncType", formEncType);
   null !== formMethod && pushAttribute(target, "formMethod", formMethod);
   null !== formTarget && pushAttribute(target, "formTarget", formTarget);
+  return null;
 }
 function pushAttribute(target, name, value) {
   switch (name) {
@@ -845,14 +853,15 @@ function pushStartInstance(
       return null;
     case "input":
       target.push(startChunkForTag("input"));
-      var formTarget =
-          (propValue$jscomp$0 =
-          selected =
-          resources =
-          textEmbedded =
-            null),
-        defaultValue = (propKey$jscomp$0 = null);
-      propKey = propKey$jscomp$1 = null;
+      var name = null,
+        formEncType = (propKey$jscomp$0 = null);
+      propValue$jscomp$0 =
+        selected =
+        resources =
+        textEmbedded =
+        propKey =
+        propKey$jscomp$1 =
+          null;
       for (propValue in props)
         if (hasOwnProperty.call(props, propValue)) {
           var propValue$jscomp$1 = props[propValue];
@@ -862,58 +871,60 @@ function pushStartInstance(
               case "dangerouslySetInnerHTML":
                 throw Error(formatProdErrorMessage(399, "input"));
               case "name":
-                textEmbedded = propValue$jscomp$1;
+                name = propValue$jscomp$1;
                 break;
               case "formAction":
-                resources = propValue$jscomp$1;
+                propKey$jscomp$0 = propValue$jscomp$1;
                 break;
               case "formEncType":
-                selected = propValue$jscomp$1;
+                formEncType = propValue$jscomp$1;
                 break;
               case "formMethod":
-                propValue$jscomp$0 = propValue$jscomp$1;
-                break;
-              case "formTarget":
-                formTarget = propValue$jscomp$1;
-                break;
-              case "defaultChecked":
-                propKey = propValue$jscomp$1;
-                break;
-              case "defaultValue":
-                defaultValue = propValue$jscomp$1;
-                break;
-              case "checked":
                 propKey$jscomp$1 = propValue$jscomp$1;
                 break;
+              case "formTarget":
+                propKey = propValue$jscomp$1;
+                break;
+              case "defaultChecked":
+                propValue$jscomp$0 = propValue$jscomp$1;
+                break;
+              case "defaultValue":
+                resources = propValue$jscomp$1;
+                break;
+              case "checked":
+                selected = propValue$jscomp$1;
+                break;
               case "value":
-                propKey$jscomp$0 = propValue$jscomp$1;
+                textEmbedded = propValue$jscomp$1;
                 break;
               default:
                 pushAttribute(target, propValue, propValue$jscomp$1);
             }
         }
-      pushFormActionAttribute(
+      props = pushFormActionAttribute(
         target,
         responseState,
-        resources,
-        selected,
-        propValue$jscomp$0,
-        formTarget,
-        textEmbedded
+        propKey$jscomp$0,
+        formEncType,
+        propKey$jscomp$1,
+        propKey,
+        name
       );
-      null !== propKey$jscomp$1
-        ? pushBooleanAttribute(target, "checked", propKey$jscomp$1)
-        : null !== propKey && pushBooleanAttribute(target, "checked", propKey);
-      null !== propKey$jscomp$0
-        ? pushAttribute(target, "value", propKey$jscomp$0)
-        : null !== defaultValue && pushAttribute(target, "value", defaultValue);
+      null !== selected
+        ? pushBooleanAttribute(target, "checked", selected)
+        : null !== propValue$jscomp$0 &&
+          pushBooleanAttribute(target, "checked", propValue$jscomp$0);
+      null !== textEmbedded
+        ? pushAttribute(target, "value", textEmbedded)
+        : null !== resources && pushAttribute(target, "value", resources);
       target.push("/>");
+      null !== props && props.forEach(pushAdditionalFormField, target);
       return null;
     case "button":
       target.push(startChunkForTag("button"));
-      defaultValue =
+      formEncType =
         propKey$jscomp$0 =
-        formTarget =
+        name =
         selected =
         resources =
         propValue =
@@ -939,27 +950,28 @@ function pushStartInstance(
               selected = propKey$jscomp$1;
               break;
             case "formEncType":
-              formTarget = propKey$jscomp$1;
+              name = propKey$jscomp$1;
               break;
             case "formMethod":
               propKey$jscomp$0 = propKey$jscomp$1;
               break;
             case "formTarget":
-              defaultValue = propKey$jscomp$1;
+              formEncType = propKey$jscomp$1;
               break;
             default:
               pushAttribute(target, propValue$jscomp$0, propKey$jscomp$1);
           }
-      pushFormActionAttribute(
+      props = pushFormActionAttribute(
         target,
         responseState,
         selected,
-        formTarget,
+        name,
         propKey$jscomp$0,
-        defaultValue,
+        formEncType,
         resources
       );
       target.push(">");
+      null !== props && props.forEach(pushAdditionalFormField, target);
       pushInnerHTML(target, propValue, textEmbedded);
       "string" === typeof textEmbedded
         ? (target.push(escapeTextForBrowser(textEmbedded)), (target = null))
@@ -974,12 +986,12 @@ function pushStartInstance(
         textEmbedded =
         responseState =
           null;
-      for (formTarget in props)
+      for (name in props)
         if (
-          hasOwnProperty.call(props, formTarget) &&
-          ((propKey$jscomp$0 = props[formTarget]), null != propKey$jscomp$0)
+          hasOwnProperty.call(props, name) &&
+          ((propKey$jscomp$0 = props[name]), null != propKey$jscomp$0)
         )
-          switch (formTarget) {
+          switch (name) {
             case "children":
               responseState = propKey$jscomp$0;
               break;
@@ -999,7 +1011,7 @@ function pushStartInstance(
               propValue$jscomp$0 = propKey$jscomp$0;
               break;
             default:
-              pushAttribute(target, formTarget, propKey$jscomp$0);
+              pushAttribute(target, name, propKey$jscomp$0);
           }
       null !== propValue && pushAttribute(target, "action", propValue);
       null !== resources && pushAttribute(target, "encType", resources);
@@ -1120,12 +1132,12 @@ function pushStartInstance(
       ) {
         target.push(startChunkForTag("style"));
         textEmbedded = responseState = null;
-        for (defaultValue in props)
+        for (formEncType in props)
           if (
-            hasOwnProperty.call(props, defaultValue) &&
-            ((propValue = props[defaultValue]), null != propValue)
+            hasOwnProperty.call(props, formEncType) &&
+            ((propValue = props[formEncType]), null != propValue)
           )
-            switch (defaultValue) {
+            switch (formEncType) {
               case "children":
                 responseState = propValue;
                 break;
@@ -1133,7 +1145,7 @@ function pushStartInstance(
                 textEmbedded = propValue;
                 break;
               default:
-                pushAttribute(target, defaultValue, propValue);
+                pushAttribute(target, formEncType, propValue);
             }
         target.push(">");
         props = Array.isArray(responseState)
@@ -1151,24 +1163,23 @@ function pushStartInstance(
         target = null;
       } else {
         propValue$jscomp$0 = "[style]" + propValue;
-        formTarget = resources.stylesMap.get(propValue$jscomp$0);
-        if (!formTarget) {
-          (formTarget = resources.stylePrecedences.get(responseState))
-            ? formTarget.props.hrefs.push(propValue)
-            : ((formTarget = {
+        name = resources.stylesMap.get(propValue$jscomp$0);
+        if (!name) {
+          (name = resources.stylePrecedences.get(responseState))
+            ? name.props.hrefs.push(propValue)
+            : ((name = {
                 type: "style",
                 chunks: [],
                 state: 0,
                 props: { precedence: responseState, hrefs: [propValue] }
               }),
-              resources.stylePrecedences.set(responseState, formTarget),
+              resources.stylePrecedences.set(responseState, name),
               (propValue = new Set()),
-              propValue.add(formTarget),
+              propValue.add(name),
               resources.precedences.set(responseState, propValue));
-          resources.stylesMap.set(propValue$jscomp$0, formTarget);
-          resources.boundaryResources &&
-            resources.boundaryResources.add(formTarget);
-          responseState = formTarget.chunks;
+          resources.stylesMap.set(propValue$jscomp$0, name);
+          resources.boundaryResources && resources.boundaryResources.add(name);
+          responseState = name.chunks;
           resources = propValue = null;
           for (selected in props)
             if (
@@ -3991,4 +4002,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-ad0d70c8";
+exports.version = "18.3.0-www-classic-3fbcb92a";

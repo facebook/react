@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-938c86f0";
+var ReactVersion = "18.3.0-www-modern-88959423";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2840,7 +2840,7 @@ function pushStringAttribute(target, name, value) {
       attributeEnd
     );
   }
-} // Since this will likely be repeated a lot in the HTML, we use a more concise message
+}
 // than on the client and hopefully it's googleable.
 
 stringToPrecomputedChunk(
@@ -2849,6 +2849,30 @@ stringToPrecomputedChunk(
     "javascript:throw new Error('A React form was unexpectedly submitted.')"
   )
 );
+var startHiddenInputChunk = stringToPrecomputedChunk('<input type="hidden"');
+
+function pushAdditionalFormField(value, key) {
+  var target = this;
+  target.push(startHiddenInputChunk);
+
+  if (typeof value !== "string") {
+    throw new Error(
+      "File/Blob fields are not yet supported in progressive forms. " +
+        "It probably means you are closing over binary data or FormData in a Server Action."
+    );
+  }
+
+  pushStringAttribute(target, "name", key);
+  pushStringAttribute(target, "value", value);
+  target.push(endOfStartTagSelfClosing);
+}
+
+function pushAdditionalFormFields(target, formData) {
+  if (formData !== null) {
+    // $FlowFixMe[prop-missing]: FormData has forEach.
+    formData.forEach(pushAdditionalFormField, target);
+  }
+}
 
 function pushFormActionAttribute(
   target,
@@ -2859,28 +2883,29 @@ function pushFormActionAttribute(
   formTarget,
   name
 ) {
-  {
-    // Plain form actions support all the properties, so we have to emit them.
-    if (name !== null) {
-      pushAttribute(target, "name", name);
-    }
+  var formData = null;
 
-    if (formAction !== null) {
-      pushAttribute(target, "formAction", formAction);
-    }
-
-    if (formEncType !== null) {
-      pushAttribute(target, "formEncType", formEncType);
-    }
-
-    if (formMethod !== null) {
-      pushAttribute(target, "formMethod", formMethod);
-    }
-
-    if (formTarget !== null) {
-      pushAttribute(target, "formTarget", formTarget);
-    }
+  if (name !== null) {
+    pushAttribute(target, "name", name);
   }
+
+  if (formAction !== null) {
+    pushAttribute(target, "formAction", formAction);
+  }
+
+  if (formEncType !== null) {
+    pushAttribute(target, "formEncType", formEncType);
+  }
+
+  if (formMethod !== null) {
+    pushAttribute(target, "formMethod", formMethod);
+  }
+
+  if (formTarget !== null) {
+    pushAttribute(target, "formTarget", formTarget);
+  }
+
+  return formData;
 }
 
 function pushAttribute(target, name, value) {
@@ -3535,26 +3560,24 @@ function pushStartForm(target, props, responseState) {
     }
   }
 
-  {
-    // Plain form actions support all the properties, so we have to emit them.
-    if (formAction !== null) {
-      pushAttribute(target, "action", formAction);
-    }
+  if (formAction !== null) {
+    pushAttribute(target, "action", formAction);
+  }
 
-    if (formEncType !== null) {
-      pushAttribute(target, "encType", formEncType);
-    }
+  if (formEncType !== null) {
+    pushAttribute(target, "encType", formEncType);
+  }
 
-    if (formMethod !== null) {
-      pushAttribute(target, "method", formMethod);
-    }
+  if (formMethod !== null) {
+    pushAttribute(target, "method", formMethod);
+  }
 
-    if (formTarget !== null) {
-      pushAttribute(target, "target", formTarget);
-    }
+  if (formTarget !== null) {
+    pushAttribute(target, "target", formTarget);
   }
 
   target.push(endOfStartTag);
+
   pushInnerHTML(target, innerHTML, children);
 
   if (typeof children === "string") {
@@ -3658,7 +3681,7 @@ function pushInput(target, props, responseState) {
     }
   }
 
-  pushFormActionAttribute(
+  var formData = pushFormActionAttribute(
     target,
     responseState,
     formAction,
@@ -3712,7 +3735,9 @@ function pushInput(target, props, responseState) {
     pushAttribute(target, "value", defaultValue);
   }
 
-  target.push(endOfStartTagSelfClosing);
+  target.push(endOfStartTagSelfClosing); // We place any additional hidden form fields after the input.
+
+  pushAdditionalFormFields(target, formData);
   return null;
 }
 
@@ -3785,7 +3810,7 @@ function pushStartButton(target, props, responseState) {
     }
   }
 
-  pushFormActionAttribute(
+  var formData = pushFormActionAttribute(
     target,
     responseState,
     formAction,
@@ -3794,7 +3819,9 @@ function pushStartButton(target, props, responseState) {
     formTarget,
     name
   );
-  target.push(endOfStartTag);
+  target.push(endOfStartTag); // We place any additional hidden form fields we need to include inside the button itself.
+
+  pushAdditionalFormFields(target, formData);
   pushInnerHTML(target, innerHTML, children);
 
   if (typeof children === "string") {
