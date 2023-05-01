@@ -110,18 +110,22 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
 
   itRenders('a javascript protocol input formAction', async render => {
     const e = await render(
-      <input type="submit" formAction="javascript:notfine" />,
+      <form>
+        <input type="submit" formAction="javascript:notfine" />
+      </form>,
       1,
     );
-    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
+    expect(e.firstChild.getAttribute('formAction')).toBe('javascript:notfine');
   });
 
   itRenders('a javascript protocol button formAction', async render => {
     const e = await render(
-      <button formAction="javascript:notfine">p0wned</button>,
+      <form>
+        <button formAction="javascript:notfine">p0wned</button>
+      </form>,
       1,
     );
-    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
+    expect(e.firstChild.getAttribute('formAction')).toBe('javascript:notfine');
   });
 
   itRenders('a javascript protocol iframe src', async render => {
@@ -273,16 +277,20 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
   itRenders('a javascript protocol input formAction', async render => {
     const e = await render(
-      <input type="submit" formAction="javascript:notfine" />,
+      <form>
+        <input type="submit" formAction="javascript:notfine" />
+      </form>,
     );
-    expect(e.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
+    expect(e.firstChild.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
   });
 
   itRenders('a javascript protocol button formAction', async render => {
     const e = await render(
-      <button formAction="javascript:notfine">p0wned</button>,
+      <form>
+        <button formAction="javascript:notfine">p0wned</button>
+      </form>,
     );
-    expect(e.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
+    expect(e.firstChild.getAttribute('formAction')).toBe(EXPECTED_SAFE_URL);
   });
 
   itRenders('a javascript protocol iframe src', async render => {

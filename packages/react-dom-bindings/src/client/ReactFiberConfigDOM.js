@@ -123,6 +123,7 @@ export type Props = {
   is?: string,
   size?: number,
   multiple?: boolean,
+  formAction?: mixed,
   ...
 };
 type RawProps = {
@@ -249,6 +250,7 @@ export function getRootHostContext(
     }
   }
   if (__DEV__) {
+    // TODO: Should we include all ancestor tags here?
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfoDev(null, validatedTag);
     return {context, ancestorInfo};
@@ -395,6 +397,21 @@ export function createInstance(
     // TODO: take namespace into account when validating.
     const hostContextDev: HostContextDev = (hostContext: any);
     validateDOMNesting(type, hostContextDev.ancestorInfo);
+
+    // TODO: Warn when rendering into a non-React <form> container or when
+    // adding formAction on an update.
+    if (
+      enableFormActions &&
+      // Don't warn on custom elements
+      (type === 'button' || type === 'input') &&
+      !hostContextDev.ancestorInfo.formTag &&
+      props.formAction != null
+    ) {
+      console.error(
+        'formAction has no effect when used without a <form>. Add a form around the button.',
+      );
+    }
+
     hostContextProd = hostContextDev.context;
   } else {
     hostContextProd = (hostContext: any);
@@ -544,7 +561,6 @@ export function prepareUpdate(
   hostContext: HostContext,
 ): null | Array<mixed> {
   if (diffInCommitPhase) {
-    // TODO: Figure out how to validateDOMNesting when children turn into a string.
     return null;
   }
   return diffProperties(domElement, type, oldProps, newProps);
