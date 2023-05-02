@@ -560,7 +560,7 @@ class Driver {
 
         break;
       }
-      case "optional-call":
+      case "optional":
       case "ternary":
       case "logical": {
         const fallthroughId = terminal.fallthrough;
@@ -756,7 +756,7 @@ class Driver {
     id: InstructionId;
   } {
     switch (terminal.kind) {
-      case "optional-call": {
+      case "optional": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
         invariant(
@@ -785,9 +785,9 @@ class Driver {
         return {
           place: { ...consequent.place },
           value: {
-            kind: "OptionalCall",
+            kind: "OptionalExpression",
             optional: terminal.optional,
-            call: call,
+            value: call,
             id: terminal.id,
             loc: terminal.loc,
           },

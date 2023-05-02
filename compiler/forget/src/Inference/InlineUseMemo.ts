@@ -171,7 +171,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
               }
               // These all have non-nullable fallthroughs: there is always some code in the
               // CFG that succeeds them which we should find instead
-              case "optional-call":
+              case "optional":
               case "ternary":
               case "logical":
               case "while":
@@ -282,7 +282,7 @@ function getTerminalBlock(cfg: HIR, start: BlockId): BasicBlock {
           return current;
         }
       }
-      case "optional-call":
+      case "optional":
       case "ternary":
       case "logical":
       case "while":

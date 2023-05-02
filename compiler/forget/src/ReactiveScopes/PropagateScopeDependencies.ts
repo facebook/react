@@ -450,9 +450,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     value: ReactiveValue
   ): void {
     switch (value.kind) {
-      case "OptionalCall": {
+      case "OptionalExpression": {
         context.enterConditional(() => {
-          this.visitReactiveValue(context, id, value.call);
+          this.visitReactiveValue(context, id, value.value);
         });
         break;
       }

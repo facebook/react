@@ -684,8 +684,8 @@ function codegenInstructionValue(
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
-    case "OptionalCall": {
-      const optionalValue = codegenInstructionValue(cx, instrValue.call);
+    case "OptionalExpression": {
+      const optionalValue = codegenInstructionValue(cx, instrValue.value);
       switch (optionalValue.type) {
         case "OptionalCallExpression":
         case "CallExpression": {

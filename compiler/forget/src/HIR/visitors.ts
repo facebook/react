@@ -598,11 +598,11 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "optional-call": {
+    case "optional": {
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "optional-call",
+        kind: "optional",
         optional: terminal.optional,
         test,
         fallthrough,
@@ -721,7 +721,7 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "if":
     case "label":
     case "logical":
-    case "optional-call":
+    case "optional":
     case "switch":
     case "ternary":
     case "while": {
@@ -768,7 +768,7 @@ export function mapOptionalFallthroughs(
       const _: BlockId = terminal.fallthrough;
       break;
     }
-    case "optional-call": {
+    case "optional": {
       const _: BlockId = terminal.fallthrough;
       break;
     }
@@ -834,7 +834,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       }
       break;
     }
-    case "optional-call":
+    case "optional":
     case "ternary":
     case "logical": {
       yield terminal.test;
@@ -906,7 +906,7 @@ export function mapTerminalOperands(
       break;
     }
     case "label":
-    case "optional-call":
+    case "optional":
     case "ternary":
     case "logical":
     case "do-while":
@@ -953,7 +953,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       break;
     }
     case "label":
-    case "optional-call":
+    case "optional":
     case "ternary":
     case "logical":
     case "do-while":

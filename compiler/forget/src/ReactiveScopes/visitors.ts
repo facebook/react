@@ -41,8 +41,8 @@ export class ReactiveFunctionVisitor<TState = void> {
   }
   traverseValue(id: InstructionId, value: ReactiveValue, state: TState): void {
     switch (value.kind) {
-      case "OptionalCall": {
-        this.visitValue(id, value.call, state);
+      case "OptionalExpression": {
+        this.visitValue(id, value.value, state);
         break;
       }
       case "LogicalExpression": {
@@ -290,8 +290,8 @@ export function* eachReactiveValueOperand(
   instrValue: ReactiveValue
 ): Iterable<Place> {
   switch (instrValue.kind) {
-    case "OptionalCall": {
-      yield* eachReactiveValueOperand(instrValue.call);
+    case "OptionalExpression": {
+      yield* eachReactiveValueOperand(instrValue.value);
       break;
     }
     case "LogicalExpression": {

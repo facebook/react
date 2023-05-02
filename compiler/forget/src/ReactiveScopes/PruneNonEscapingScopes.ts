@@ -525,7 +525,7 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "OptionalCall":
+    case "OptionalExpression":
     case "RegExpLiteral":
     case "FunctionExpression":
     case "TaggedTemplateExpression":

@@ -125,7 +125,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
     if (
       instruction.value.kind === "ConditionalExpression" ||
       instruction.value.kind === "LogicalExpression" ||
-      instruction.value.kind === "OptionalCall"
+      instruction.value.kind === "OptionalExpression"
     ) {
       state.enter(() => {
         super.visitInstruction(instruction, state);

@@ -1815,7 +1815,7 @@ function lowerOptionalMemberExpression(
 
   builder.terminateWithContinuation(
     {
-      kind: "optional-call",
+      kind: "optional",
       optional,
       test: testBlock,
       fallthrough: continuationBlock.id,
@@ -1966,7 +1966,7 @@ function lowerOptionalCallExpression(
 
   builder.terminateWithContinuation(
     {
-      kind: "optional-call",
+      kind: "optional",
       optional,
       test: testBlock,
       fallthrough: continuationBlock.id,

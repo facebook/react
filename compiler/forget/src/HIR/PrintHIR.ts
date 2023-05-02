@@ -80,7 +80,7 @@ export function printMixedHIR(
   }
   switch (value.kind) {
     case "label":
-    case "optional-call":
+    case "optional":
     case "branch":
     case "if":
     case "logical":
@@ -158,8 +158,8 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `[${terminal.id}] Ternary test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "optional-call": {
-      value = `[${terminal.id}] OptionalCall test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
+    case "optional": {
+      value = `[${terminal.id}] Optional test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "throw": {
@@ -458,8 +458,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `Global ${instrValue.name}`;
       break;
     }
-    case "OptionalCall": {
-      value = `OptionalCall ${printInstructionValue(instrValue.call)}`;
+    case "OptionalExpression": {
+      value = `OptionalExpression ${printInstructionValue(instrValue.value)}`;
       break;
     }
     case "RegExpLiteral": {

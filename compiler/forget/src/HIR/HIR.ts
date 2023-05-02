@@ -118,9 +118,9 @@ export type ReactiveSequenceValue = {
 };
 
 export type ReactiveOptionalCallValue = {
-  kind: "OptionalCall";
+  kind: "OptionalExpression";
   id: InstructionId;
-  call: ReactiveValue;
+  value: ReactiveValue;
   optional: boolean;
   loc: SourceLocation;
 };
@@ -275,7 +275,7 @@ export type Terminal =
   | WhileTerminal
   | LogicalTerminal
   | TernaryTerminal
-  | OptionalCallTerminal
+  | OptionalTerminal
   | LabelTerminal;
 
 function _staticInvariantTerminalHasLocation(
@@ -421,11 +421,12 @@ export type LabelTerminal = {
   loc: SourceLocation;
 };
 
-export type OptionalCallTerminal = {
-  kind: "optional-call";
-  // Whether the call itself is optional. If false, this means that the callee itself
-  // is optionally evaluated (has some OptionalMemberExpresion) but the final call is
-  // required (if the callee is not null/undefined).
+export type OptionalTerminal = {
+  kind: "optional";
+  // Specifies whether this node was optional. If false, it means that the original
+  // node was part of an optional chain but this specific item was non-optional.
+  // For example, in `a?.b.c?.()`, the `.b` access is non-optional but appears within
+  // an optional chain.
   optional: boolean;
   test: BlockId;
   fallthrough: BlockId;
