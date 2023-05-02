@@ -553,6 +553,18 @@ function useHostTransitionStatus(): TransitionStatus {
   return NotPendingTransition;
 }
 
+function unsupportedSetOptimisticState() {
+  throw new Error('Cannot update optimistic state while rendering.');
+}
+
+function useOptimisticState<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
@@ -651,6 +663,9 @@ if (enableUseMemoCacheHook) {
 }
 if (enableFormActions && enableAsyncActions) {
   HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  HooksDispatcher.useOptimisticState = useOptimisticState;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

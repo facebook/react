@@ -149,12 +149,6 @@ export const getFirstHydratableChildWithinContainer =
   $$$config.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$config.getFirstHydratableChildWithinSuspenseInstance;
-export const shouldSkipHydratableForInstance =
-  $$$config.shouldSkipHydratableForInstance;
-export const shouldSkipHydratableForTextInstance =
-  $$$config.shouldSkipHydratableForTextInstance;
-export const shouldSkipHydratableForSuspenseInstance =
-  $$$config.shouldSkipHydratableForSuspenseInstance;
 export const canHydrateInstance = $$$config.canHydrateInstance;
 export const canHydrateTextInstance = $$$config.canHydrateTextInstance;
 export const canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance;
