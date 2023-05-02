@@ -151,6 +151,14 @@ function printReactiveValue(writer: Writer, value: ReactiveValue): void {
       });
       break;
     }
+    case "OptionalCall": {
+      writer.append(`OptionalCall optional=${value.optional}`);
+      writer.newline();
+      writer.indented(() => {
+        printReactiveValue(writer, value.call);
+      });
+      break;
+    }
     default: {
       writer.append(printInstructionValue(value));
     }

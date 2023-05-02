@@ -262,7 +262,10 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   // Visit an identifier, optionally forcing it to be memoized
   function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
-    invariant(node !== undefined, "Expected a node for all identifiers");
+    invariant(
+      node !== undefined,
+      `Expected a node for all identifiers, none found for '${id}'`
+    );
     if (node.seen) {
       return node.memoized;
     }

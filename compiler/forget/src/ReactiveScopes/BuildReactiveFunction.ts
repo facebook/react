@@ -768,12 +768,26 @@ class Driver {
           testBlock.terminal.consequent,
           terminal.loc
         );
+        const call: ReactiveSequenceValue = {
+          kind: "SequenceExpression",
+          instructions: [
+            {
+              id: test.id,
+              loc: testBlock.terminal.loc,
+              lvalue: test.place,
+              value: test.value,
+            },
+          ],
+          id: consequent.id,
+          value: consequent.value,
+          loc: terminal.loc,
+        };
         return {
           place: { ...consequent.place },
           value: {
             kind: "OptionalCall",
             optional: terminal.optional,
-            call: consequent.value,
+            call: call,
             id: terminal.id,
             loc: terminal.loc,
           },

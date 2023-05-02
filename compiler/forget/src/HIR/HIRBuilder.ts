@@ -340,16 +340,13 @@ export default class HIRBuilder {
   }
 
   /**
-   * Create a new block and execute the provided callback with the new block
-   * set as the current, resetting to the previously active block upon exit.
-   * The lambda must return a terminal node, which is used to terminate the
-   * newly constructed block.
+   * Sets the given wip block as the current block, executes the provided callback to populate the block
+   * up to its terminal, and then resets the previous actively block.
    */
-  enter(nextBlockKind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
+  enterReserved(wip: WipBlock, fn: () => Terminal): void {
     const current = this.#current;
-    const nextId = this.#env.nextBlockId;
-    this.#current = newBlock(nextId, nextBlockKind);
-    const terminal = fn(nextId);
+    this.#current = wip;
+    const terminal = fn();
     const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
       kind,
@@ -360,7 +357,20 @@ export default class HIRBuilder {
       phis: new Set(),
     });
     this.#current = current;
-    return nextId;
+  }
+
+  /**
+   * Create a new block and execute the provided callback with the new block
+   * set as the current, resetting to the previously active block upon exit.
+   * The lambda must return a terminal node, which is used to terminate the
+   * newly constructed block.
+   */
+  enter(nextBlockKind: BlockKind, fn: (blockId: BlockId) => Terminal): BlockId {
+    const wip = this.reserve(nextBlockKind);
+    this.enterReserved(wip, () => {
+      return fn(wip.id);
+    });
+    return wip.id;
   }
 
   label<T>(label: string, breakBlock: BlockId, fn: () => T): T {

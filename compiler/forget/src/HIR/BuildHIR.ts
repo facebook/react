@@ -1093,6 +1093,29 @@ function lowerExpression(
       const loc = expr.node.loc ?? GeneratedSource;
       const place = buildTemporaryPlace(builder, loc);
       const continuationBlock = builder.reserve(builder.currentBlockKind());
+      const consequent = builder.reserve("value");
+
+      // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
+      const alternate = builder.enter("value", () => {
+        const temp = lowerValueToTemporary(builder, {
+          kind: "Primitive",
+          value: undefined,
+          loc,
+        });
+        lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { kind: InstructionKind.Const, place: { ...place } },
+          value: { ...temp },
+          loc,
+        });
+        return {
+          kind: "goto",
+          variant: GotoVariant.Break,
+          block: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc,
+        };
+      });
 
       // Lower the callee in the current block: the callee is always unconditionally evaluated
       // The test block's branch will test on this value to determine whether to evaluate the call (consequent)
@@ -1100,27 +1123,42 @@ function lowerExpression(
       let callee:
         | { kind: "CallExpression"; callee: Place }
         | { kind: "MethodCall"; receiver: Place; property: Place };
-      if (
-        calleePath.isMemberExpression() ||
-        calleePath.isOptionalMemberExpression()
-      ) {
-        const memberExpr = lowerMemberExpression(builder, calleePath);
-        const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
-        callee = {
-          kind: "MethodCall",
-          receiver: memberExpr.object,
-          property: propertyPlace,
+      const testBlock = builder.enter("value", () => {
+        if (
+          calleePath.isMemberExpression() ||
+          calleePath.isOptionalMemberExpression()
+        ) {
+          const memberExpr = lowerMemberExpression(builder, calleePath);
+          const propertyPlace = lowerValueToTemporary(
+            builder,
+            memberExpr.value
+          );
+          callee = {
+            kind: "MethodCall",
+            receiver: memberExpr.object,
+            property: propertyPlace,
+          };
+        } else {
+          callee = {
+            kind: "CallExpression",
+            callee: lowerExpressionToTemporary(builder, calleePath),
+          };
+        }
+        const testPlace =
+          callee.kind === "CallExpression" ? callee.callee : callee.property;
+        return {
+          kind: "branch",
+          test: { ...testPlace },
+          consequent: consequent.id,
+          alternate,
+          id: makeInstructionId(0),
+          loc,
         };
-      } else {
-        callee = {
-          kind: "CallExpression",
-          callee: lowerExpressionToTemporary(builder, calleePath),
-        };
-      }
+      });
 
       // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
       // the semantic of conditional evaluation depending on the callee
-      const consequent = builder.enter("value", () => {
+      builder.enterReserved(consequent, () => {
         const args = lowerArguments(builder, expr.get("arguments"));
         const temp = buildTemporaryPlace(builder, loc);
         if (callee.kind === "CallExpression") {
@@ -1159,41 +1197,6 @@ function lowerExpression(
           kind: "goto",
           variant: GotoVariant.Break,
           block: continuationBlock.id,
-          id: makeInstructionId(0),
-          loc,
-        };
-      });
-
-      // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
-      const alternate = builder.enter("value", () => {
-        const temp = lowerValueToTemporary(builder, {
-          kind: "Primitive",
-          value: undefined,
-          loc,
-        });
-        lowerValueToTemporary(builder, {
-          kind: "StoreLocal",
-          lvalue: { kind: InstructionKind.Const, place: { ...place } },
-          value: { ...temp },
-          loc,
-        });
-        return {
-          kind: "goto",
-          variant: GotoVariant.Break,
-          block: continuationBlock.id,
-          id: makeInstructionId(0),
-          loc,
-        };
-      });
-
-      const testBlock = builder.enter("value", () => {
-        const testPlace =
-          callee.kind === "CallExpression" ? callee.callee : callee.property;
-        return {
-          kind: "branch",
-          test: { ...testPlace },
-          consequent,
-          alternate,
           id: makeInstructionId(0),
           loc,
         };
