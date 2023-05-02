@@ -9,6 +9,7 @@
 
 import type {
   BootstrapScriptDescriptor,
+  ExternalRuntimeScript,
   FormatContext,
   StreamingFormat,
   InstructionState,
@@ -48,7 +49,7 @@ export type ResponseState = {
   streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
   instructions: InstructionState,
-  externalRuntimeConfig: BootstrapScriptDescriptor | null,
+  externalRuntimeScript: null | ExternalRuntimeScript,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   hasBody: boolean,
@@ -85,7 +86,7 @@ export function createResponseState(
     streamingFormat: responseState.streamingFormat,
     startInlineScript: responseState.startInlineScript,
     instructions: responseState.instructions,
-    externalRuntimeConfig: responseState.externalRuntimeConfig,
+    externalRuntimeScript: responseState.externalRuntimeScript,
     htmlChunks: responseState.htmlChunks,
     headChunks: responseState.headChunks,
     hasBody: responseState.hasBody,

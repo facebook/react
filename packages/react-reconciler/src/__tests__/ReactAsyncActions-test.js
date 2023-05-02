@@ -5,6 +5,7 @@ let act;
 let assertLog;
 let useTransition;
 let useState;
+let useOptimisticState;
 let textCache;
 
 describe('ReactAsyncActions', () => {
@@ -18,6 +19,7 @@ describe('ReactAsyncActions', () => {
     assertLog = require('internal-test-utils').assertLog;
     useTransition = React.useTransition;
     useState = React.useState;
+    useOptimisticState = React.experimental_useOptimisticState;
 
     textCache = new Map();
   });
@@ -641,6 +643,434 @@ describe('ReactAsyncActions', () => {
         <div>Oops A!</div>
         <div>Pending B: false</div>
         <div>Oops C!</div>
+      </>,
+    );
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState can be used to implement a pending state', async () => {
+    const startTransition = React.startTransition;
+
+    let setIsPending;
+    function App({text}) {
+      const [isPending, _setIsPending] = useOptimisticState(false);
+      setIsPending = _setIsPending;
+      return (
+        <>
+          <Text text={'Pending: ' + isPending} />
+          <AsyncText text={text} />
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    resolveText('A');
+    await act(() => root.render(<App text="A" />));
+    assertLog(['Pending: false', 'A']);
+    expect(root).toMatchRenderedOutput('Pending: falseA');
+
+    // Start a transition
+    await act(() =>
+      startTransition(() => {
+        setIsPending(true);
+        root.render(<App text="B" />);
+      }),
+    );
+    assertLog([
+      // Render the pending state immediately
+      'Pending: true',
+      'A',
+
+      // Then attempt to render the transition. The pending state will be
+      // automatically reverted.
+      'Pending: false',
+      'Suspend! [B]',
+    ]);
+
+    // Resolve the transition
+    await act(() => resolveText('B'));
+    assertLog([
+      // Render the pending state immediately
+      'Pending: false',
+      'B',
+    ]);
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState rebases pending updates on top of passthrough value', async () => {
+    let serverCart = ['A'];
+
+    async function submitNewItem(item) {
+      await getText('Adding item ' + item);
+      serverCart = [...serverCart, item];
+      React.startTransition(() => {
+        root.render(<App cart={serverCart} />);
+      });
+    }
+
+    let addItemToCart;
+    function App({cart}) {
+      const [isPending, startTransition] = useTransition();
+
+      const savedCartSize = cart.length;
+      const [optimisticCartSize, setOptimisticCartSize] =
+        useOptimisticState(savedCartSize);
+
+      addItemToCart = item => {
+        startTransition(async () => {
+          setOptimisticCartSize(n => n + 1);
+          await submitNewItem(item);
+        });
+      };
+
+      return (
+        <>
+          <div>
+            <Text text={'Pending: ' + isPending} />
+          </div>
+          <div>
+            <Text text={'Items in cart: ' + optimisticCartSize} />
+          </div>
+          <ul>
+            {cart.map(item => (
+              <li key={item}>
+                <Text text={'Item ' + item} />
+              </li>
+            ))}
+          </ul>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App cart={serverCart} />));
+    assertLog(['Pending: false', 'Items in cart: 1', 'Item A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 1</div>
+        <ul>
+          <li>Item A</li>
+        </ul>
+      </>,
+    );
+
+    // The cart size is incremented even though B hasn't been added yet.
+    await act(() => addItemToCart('B'));
+    assertLog(['Pending: true', 'Items in cart: 2', 'Item A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 2</div>
+        <ul>
+          <li>Item A</li>
+        </ul>
+      </>,
+    );
+
+    // While B is still pending, another item gets added to the cart
+    // out-of-band.
+    serverCart = [...serverCart, 'C'];
+    // NOTE: This is a synchronous update only because we don't yet support
+    // parallel transitions; all transitions are entangled together. Once we add
+    // support for parallel transitions, we can update this test.
+    ReactNoop.flushSync(() => root.render(<App cart={serverCart} />));
+    assertLog([
+      'Pending: true',
+      // Note that the optimistic cart size is still correct, because the
+      // pending update was rebased on top new value.
+      'Items in cart: 3',
+      'Item A',
+      'Item C',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 3</div>
+        <ul>
+          <li>Item A</li>
+          <li>Item C</li>
+        </ul>
+      </>,
+    );
+
+    // Finish loading B. The optimistic state is reverted.
+    await act(() => resolveText('Adding item B'));
+    assertLog([
+      'Pending: false',
+      'Items in cart: 3',
+      'Item A',
+      'Item C',
+      'Item B',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 3</div>
+        <ul>
+          <li>Item A</li>
+          <li>Item C</li>
+          <li>Item B</li>
+        </ul>
+      </>,
+    );
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState accepts a custom reducer', async () => {
+    let serverCart = ['A'];
+
+    async function submitNewItem(item) {
+      await getText('Adding item ' + item);
+      serverCart = [...serverCart, item];
+      React.startTransition(() => {
+        root.render(<App cart={serverCart} />);
+      });
+    }
+
+    let addItemToCart;
+    function App({cart}) {
+      const [isPending, startTransition] = useTransition();
+
+      const savedCartSize = cart.length;
+      const [optimisticCartSize, addToOptimisticCart] = useOptimisticState(
+        savedCartSize,
+        (prevSize, newItem) => {
+          Scheduler.log('Increment optimistic cart size for ' + newItem);
+          return prevSize + 1;
+        },
+      );
+
+      addItemToCart = item => {
+        startTransition(async () => {
+          addToOptimisticCart(item);
+          await submitNewItem(item);
+        });
+      };
+
+      return (
+        <>
+          <div>
+            <Text text={'Pending: ' + isPending} />
+          </div>
+          <div>
+            <Text text={'Items in cart: ' + optimisticCartSize} />
+          </div>
+          <ul>
+            {cart.map(item => (
+              <li key={item}>
+                <Text text={'Item ' + item} />
+              </li>
+            ))}
+          </ul>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App cart={serverCart} />));
+    assertLog(['Pending: false', 'Items in cart: 1', 'Item A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 1</div>
+        <ul>
+          <li>Item A</li>
+        </ul>
+      </>,
+    );
+
+    // The cart size is incremented even though B hasn't been added yet.
+    await act(() => addItemToCart('B'));
+    assertLog([
+      'Increment optimistic cart size for B',
+      'Pending: true',
+      'Items in cart: 2',
+      'Item A',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 2</div>
+        <ul>
+          <li>Item A</li>
+        </ul>
+      </>,
+    );
+
+    // While B is still pending, another item gets added to the cart
+    // out-of-band.
+    serverCart = [...serverCart, 'C'];
+    // NOTE: This is a synchronous update only because we don't yet support
+    // parallel transitions; all transitions are entangled together. Once we add
+    // support for parallel transitions, we can update this test.
+    ReactNoop.flushSync(() => root.render(<App cart={serverCart} />));
+    assertLog([
+      'Increment optimistic cart size for B',
+      'Pending: true',
+      // Note that the optimistic cart size is still correct, because the
+      // pending update was rebased on top new value.
+      'Items in cart: 3',
+      'Item A',
+      'Item C',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: true</div>
+        <div>Items in cart: 3</div>
+        <ul>
+          <li>Item A</li>
+          <li>Item C</li>
+        </ul>
+      </>,
+    );
+
+    // Finish loading B. The optimistic state is reverted.
+    await act(() => resolveText('Adding item B'));
+    assertLog([
+      'Pending: false',
+      'Items in cart: 3',
+      'Item A',
+      'Item C',
+      'Item B',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Pending: false</div>
+        <div>Items in cart: 3</div>
+        <ul>
+          <li>Item A</li>
+          <li>Item C</li>
+          <li>Item B</li>
+        </ul>
+      </>,
+    );
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState rebases if the passthrough is updated during a render phase update', async () => {
+    // This is kind of an esoteric case where it's hard to come up with a
+    // realistic real-world scenario but it should still work.
+    let increment;
+    let setCount;
+    function App() {
+      const [isPending, startTransition] = useTransition(2);
+      const [count, _setCount] = useState(0);
+      setCount = _setCount;
+
+      const [optimisticCount, setOptimisticCount] = useOptimisticState(
+        count,
+        prev => {
+          Scheduler.log('Increment optimistic count');
+          return prev + 1;
+        },
+      );
+
+      if (count === 1) {
+        Scheduler.log('Render phase update count from 1 to 2');
+        setCount(2);
+      }
+
+      increment = () =>
+        startTransition(async () => {
+          setOptimisticCount(n => n + 1);
+          await getText('Wait to increment');
+          React.startTransition(() => setCount(n => n + 1));
+        });
+
+      return (
+        <>
+          <div>
+            <Text text={'Count: ' + count} />
+          </div>
+          {isPending ? (
+            <div>
+              <Text text={'Optimistic count: ' + optimisticCount} />
+            </div>
+          ) : null}
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['Count: 0']);
+    expect(root).toMatchRenderedOutput(<div>Count: 0</div>);
+
+    await act(() => increment());
+    assertLog([
+      'Increment optimistic count',
+      'Count: 0',
+      'Optimistic count: 1',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Count: 0</div>
+        <div>Optimistic count: 1</div>
+      </>,
+    );
+
+    await act(() => setCount(1));
+    assertLog([
+      'Increment optimistic count',
+      'Render phase update count from 1 to 2',
+      // The optimistic update is rebased on top of the new passthrough value.
+      'Increment optimistic count',
+      'Count: 2',
+      'Optimistic count: 3',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Count: 2</div>
+        <div>Optimistic count: 3</div>
+      </>,
+    );
+
+    // Finish the action
+    await act(() => resolveText('Wait to increment'));
+    assertLog(['Count: 3']);
+    expect(root).toMatchRenderedOutput(<div>Count: 3</div>);
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimisticState rebases if the passthrough is updated during a render phase update (initial mount)', async () => {
+    // This is kind of an esoteric case where it's hard to come up with a
+    // realistic real-world scenario but it should still work.
+    function App() {
+      const [count, setCount] = useState(0);
+      const [optimisticCount] = useOptimisticState(count);
+
+      if (count === 0) {
+        Scheduler.log('Render phase update count from 1 to 2');
+        setCount(1);
+      }
+
+      return (
+        <>
+          <div>
+            <Text text={'Count: ' + count} />
+          </div>
+          <div>
+            <Text text={'Optimistic count: ' + optimisticCount} />
+          </div>
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog([
+      'Render phase update count from 1 to 2',
+      'Count: 1',
+      'Optimistic count: 1',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Count: 1</div>
+        <div>Optimistic count: 1</div>
       </>,
     );
   });
