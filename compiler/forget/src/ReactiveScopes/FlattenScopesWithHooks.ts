@@ -56,6 +56,7 @@ class Transform extends ReactiveFunctionTransform<State> {
     value: ReactiveValue,
     state: State
   ): void {
+    this.traverseValue(id, value, state);
     if (
       value.kind === "CallExpression" &&
       isHookType(value.callee.identifier)
