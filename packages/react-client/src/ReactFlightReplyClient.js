@@ -23,6 +23,10 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
+import type {
+  FulfilledThenable,
+  RejectedThenable,
+} from '../../shared/ReactTypes';
 
 type ReactJSONValue =
   | string
@@ -367,6 +371,43 @@ export function processReply(
   }
 }
 
+const boundCache: WeakMap<
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  Thenable<FormData>,
+> = new WeakMap();
+
+function encodeFormData(reference: any): Thenable<FormData> {
+  let resolve, reject;
+  // We need to have a handle on the thenable so that we can synchronously set
+  // its status from processReply, when it can complete synchronously.
+  const thenable: Thenable<FormData> = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  processReply(
+    reference,
+    '',
+    (body: string | FormData) => {
+      if (typeof body === 'string') {
+        const data = new FormData();
+        data.append('0', body);
+        body = data;
+      }
+      const fulfilled: FulfilledThenable<FormData> = (thenable: any);
+      fulfilled.status = 'fulfilled';
+      fulfilled.value = body;
+      resolve(body);
+    },
+    e => {
+      const rejected: RejectedThenable<FormData> = (thenable: any);
+      rejected.status = 'rejected';
+      rejected.reason = e;
+      reject(e);
+    },
+  );
+  return thenable;
+}
+
 export function encodeFormAction(
   this: any => Promise<any>,
   identifierPrefix: string,
@@ -378,11 +419,41 @@ export function encodeFormAction(
         'This is a bug in React.',
     );
   }
+  let data: null | FormData = null;
+  let name;
+  const boundPromise = reference.bound;
+  if (boundPromise !== null) {
+    let thenable = boundCache.get(reference);
+    if (!thenable) {
+      thenable = encodeFormData(reference);
+      boundCache.set(reference, thenable);
+    }
+    if (thenable.status === 'rejected') {
+      throw thenable.reason;
+    } else if (thenable.status !== 'fulfilled') {
+      throw thenable;
+    }
+    const encodedFormData = thenable.value;
+    // This is hacky but we need the identifier prefix to be added to
+    // all fields but the suspense cache would break since we might get
+    // a new identifier each time. So we just append it at the end instead.
+    const prefixedData = new FormData();
+    // $FlowFixMe[prop-missing]
+    encodedFormData.forEach((value: string | File, key: string) => {
+      prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
+    });
+    data = prefixedData;
+    // We encode the name of the prefix containing the data.
+    name = '$ACTION_REF_' + identifierPrefix;
+  } else {
+    // This is the simple case so we can just encode the ID.
+    name = '$ACTION_ID_' + reference.id;
+  }
   return {
-    name: '$ACTION_' + reference.id,
+    name: name,
     method: 'POST',
     encType: 'multipart/form-data',
-    data: null,
+    data: data,
   };
 }
 
