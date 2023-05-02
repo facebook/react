@@ -1728,12 +1728,111 @@ function lowerExpression(
   }
 }
 
+function lowerOptionalMemberExpression(
+  builder: HIRBuilder,
+  expr: NodePath<t.OptionalMemberExpression>,
+  parentAlternate: BlockId | null
+): { object: Place; value: Place } {
+  const optional = expr.node.optional;
+  const loc = expr.node.loc ?? GeneratedSource;
+  const place = buildTemporaryPlace(builder, loc);
+  const continuationBlock = builder.reserve(builder.currentBlockKind());
+  const consequent = builder.reserve("value");
+
+  // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
+  // note that we only create an alternate when first entering an optional subtree of the ast: if this
+  // is a child of an optional node, we use the alterate created by the parent.
+  const alternate =
+    parentAlternate !== null
+      ? parentAlternate
+      : builder.enter("value", () => {
+          const temp = lowerValueToTemporary(builder, {
+            kind: "Primitive",
+            value: undefined,
+            loc,
+          });
+          lowerValueToTemporary(builder, {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: { ...temp },
+            loc,
+          });
+          return {
+            kind: "goto",
+            variant: GotoVariant.Break,
+            block: continuationBlock.id,
+            id: makeInstructionId(0),
+            loc,
+          };
+        });
+
+  let object: Place | null = null;
+  const testBlock = builder.enter("value", () => {
+    const objectPath = expr.get("object");
+    if (objectPath.isOptionalMemberExpression()) {
+      const { value } = lowerOptionalMemberExpression(
+        builder,
+        objectPath,
+        alternate
+      );
+      object = value;
+    } else if (objectPath.isOptionalCallExpression()) {
+      const value = lowerOptionalCallExpression(builder, objectPath, alternate);
+      object = lowerValueToTemporary(builder, value);
+    } else {
+      object = lowerExpressionToTemporary(builder, objectPath);
+    }
+    return {
+      kind: "branch",
+      test: { ...object },
+      consequent: consequent.id,
+      alternate,
+      id: makeInstructionId(0),
+      loc,
+    };
+  });
+  invariant(object !== null, "Satisfy type checker");
+
+  // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
+  // the semantic of conditional evaluation depending on the callee
+  builder.enterReserved(consequent, () => {
+    const { value } = lowerMemberExpression(builder, expr, object);
+    const temp = lowerValueToTemporary(builder, value);
+    lowerValueToTemporary(builder, {
+      kind: "StoreLocal",
+      lvalue: { kind: InstructionKind.Const, place: { ...place } },
+      value: { ...temp },
+      loc,
+    });
+    return {
+      kind: "goto",
+      variant: GotoVariant.Break,
+      block: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc,
+    };
+  });
+
+  builder.terminateWithContinuation(
+    {
+      kind: "optional-call",
+      optional,
+      test: testBlock,
+      fallthrough: continuationBlock.id,
+      id: makeInstructionId(0),
+      loc,
+    },
+    continuationBlock
+  );
+
+  return { object, value: place };
+}
+
 function lowerOptionalCallExpression(
   builder: HIRBuilder,
-  exprPath: NodePath<t.OptionalCallExpression>,
+  expr: NodePath<t.OptionalCallExpression>,
   parentAlternate: BlockId | null
 ): InstructionValue {
-  const expr = exprPath as NodePath<t.OptionalCallExpression>;
   const optional = expr.node.optional;
   const calleePath = expr.get("callee");
   const loc = expr.node.loc ?? GeneratedSource;
@@ -1782,10 +1881,18 @@ function lowerOptionalCallExpression(
         kind: "CallExpression",
         callee: valuePlace,
       };
-    } else if (
-      calleePath.isMemberExpression() ||
-      calleePath.isOptionalMemberExpression()
-    ) {
+    } else if (calleePath.isOptionalMemberExpression()) {
+      const { object, value } = lowerOptionalMemberExpression(
+        builder,
+        calleePath,
+        alternate
+      );
+      callee = {
+        kind: "MethodCall",
+        receiver: object,
+        property: value,
+      };
+    } else if (calleePath.isMemberExpression()) {
       const memberExpr = lowerMemberExpression(builder, calleePath);
       const propertyPlace = lowerValueToTemporary(builder, memberExpr.value);
       callee = {
@@ -1985,15 +2092,22 @@ function lowerArguments(
   return args;
 }
 
+type LoweredMemberExpression = {
+  object: Place;
+  property: Place | string;
+  value: InstructionValue;
+};
 function lowerMemberExpression(
   builder: HIRBuilder,
-  expr: NodePath<t.MemberExpression | t.OptionalMemberExpression>
-): { object: Place; property: Place | string; value: InstructionValue } {
+  expr: NodePath<t.MemberExpression | t.OptionalMemberExpression>,
+  loweredObject: Place | null = null
+): LoweredMemberExpression {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
   const objectNode = expr.get("object");
   const propertyNode = expr.get("property");
-  const object = lowerExpressionToTemporary(builder, objectNode);
+  const object =
+    loweredObject ?? lowerExpressionToTemporary(builder, objectNode);
 
   if (
     objectNode.isOptionalMemberExpression() &&

@@ -685,17 +685,44 @@ function codegenInstructionValue(
       break;
     }
     case "OptionalCall": {
-      const call = codegenInstructionValue(cx, instrValue.call);
-      invariant(call.type === "CallExpression", "Expected a call expression");
-      invariant(
-        t.isExpression(call.callee),
-        "v8 intrinsics are validated during lowering"
-      );
-      value = t.optionalCallExpression(
-        call.callee,
-        call.arguments,
-        instrValue.optional
-      );
+      const optionalValue = codegenInstructionValue(cx, instrValue.call);
+      switch (optionalValue.type) {
+        case "OptionalCallExpression":
+        case "CallExpression": {
+          invariant(
+            t.isExpression(optionalValue.callee),
+            "v8 intrinsics are validated during lowering"
+          );
+          value = t.optionalCallExpression(
+            optionalValue.callee,
+            optionalValue.arguments,
+            instrValue.optional
+          );
+          break;
+        }
+        case "OptionalMemberExpression":
+        case "MemberExpression": {
+          const property = optionalValue.property;
+          invariant(
+            t.isExpression(property),
+            "Private names are validated during lowering"
+          );
+          value = t.optionalMemberExpression(
+            optionalValue.object,
+            property,
+            optionalValue.computed,
+            instrValue.optional
+          );
+          break;
+        }
+        default: {
+          CompilerError.invariant(
+            "Expected an optional value to resolve to a call expression or member expression",
+            instrValue.loc,
+            `Got a '${optionalValue.type}'`
+          );
+        }
+      }
       break;
     }
     case "MethodCall": {
@@ -703,7 +730,8 @@ function codegenInstructionValue(
       invariant(
         t.isMemberExpression(memberExpr) ||
           t.isOptionalMemberExpression(memberExpr),
-        "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression."
+        "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. " +
+          `Got a '${memberExpr.type}'`
       );
       invariant(
         t.isNodesEquivalent(
