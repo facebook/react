@@ -426,7 +426,6 @@ jobs:
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
 workflows:
-  version: 2
 
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
