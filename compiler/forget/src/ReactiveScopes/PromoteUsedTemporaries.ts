@@ -53,10 +53,11 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 type JsxExpressionTags = Set<IdentifierId>;
 class CollectJsxTagsVisitor extends ReactiveFunctionVisitor<JsxExpressionTags> {
   override visitValue(
-    _id: InstructionId,
+    id: InstructionId,
     value: ReactiveValue,
     state: JsxExpressionTags
   ): void {
+    this.traverseValue(id, value, state);
     if (value.kind === "JsxExpression" && value.tag.kind === "Identifier") {
       state.add(value.tag.identifier.id);
     }
