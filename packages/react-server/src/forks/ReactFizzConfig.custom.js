@@ -24,6 +24,7 @@
 // really an argument to a top-level wrapping function.
 
 import type {Request} from 'react-server/src/ReactFizzServer';
+import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
@@ -32,6 +33,7 @@ export opaque type Resources = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
+export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
 
@@ -74,6 +76,7 @@ export const writeCompletedBoundaryInstruction =
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
 export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
+export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------------
 //     Resources

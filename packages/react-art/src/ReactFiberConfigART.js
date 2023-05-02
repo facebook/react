@@ -479,3 +479,5 @@ export function suspendInstance(type, props) {}
 export function waitForCommitToBeReady() {
   return null;
 }
+
+export const NotPendingTransition = null;

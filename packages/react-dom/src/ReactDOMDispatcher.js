@@ -20,6 +20,7 @@ export type PreinitOptions = {
   precedence?: string,
   crossOrigin?: string,
   integrity?: string,
+  nonce?: string,
 };
 
 export type HostDispatcher = {

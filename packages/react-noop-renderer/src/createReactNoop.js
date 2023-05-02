@@ -78,6 +78,8 @@ type SuspenseyCommitSubscription = {
   commit: null | (() => void),
 };
 
+export type TransitionStatus = mixed;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -629,6 +631,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     waitForCommitToBeReady,
+
+    NotPendingTransition: (null: TransitionStatus),
   };
 
   const hostConfig = useMutation

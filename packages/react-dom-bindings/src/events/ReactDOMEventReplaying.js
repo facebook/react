@@ -473,7 +473,7 @@ function replayUnblockedFormActions(formReplayingQueue: FormReplayingQueue) {
       // We're ready to replay this. Let's delete it from the queue.
       formReplayingQueue.splice(i, 3);
       i -= 3;
-      dispatchReplayedFormAction(formInst, submitterOrAction, formData);
+      dispatchReplayedFormAction(formInst, form, submitterOrAction, formData);
       // Continue without incrementing the index.
       continue;
     }

@@ -38,6 +38,7 @@ export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
 export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
+export opaque type TransitionStatus = mixed; // eslint-disable-line no-undef
 export type EventResponder = any;
 
 export const getPublicInstance = $$$config.getPublicInstance;
@@ -75,6 +76,7 @@ export const preloadInstance = $$$config.preloadInstance;
 export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
+export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------
 //      Microtasks
@@ -147,12 +149,6 @@ export const getFirstHydratableChildWithinContainer =
   $$$config.getFirstHydratableChildWithinContainer;
 export const getFirstHydratableChildWithinSuspenseInstance =
   $$$config.getFirstHydratableChildWithinSuspenseInstance;
-export const shouldSkipHydratableForInstance =
-  $$$config.shouldSkipHydratableForInstance;
-export const shouldSkipHydratableForTextInstance =
-  $$$config.shouldSkipHydratableForTextInstance;
-export const shouldSkipHydratableForSuspenseInstance =
-  $$$config.shouldSkipHydratableForSuspenseInstance;
 export const canHydrateInstance = $$$config.canHydrateInstance;
 export const canHydrateTextInstance = $$$config.canHydrateTextInstance;
 export const canHydrateSuspenseInstance = $$$config.canHydrateSuspenseInstance;
