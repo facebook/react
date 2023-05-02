@@ -228,7 +228,16 @@ jobs:
           name: compiled-rn
           path: compiled-rn/
       - run: git status -u
+      - name: Check if only the REVISION file has changed
+        id: check_should_commit
+        run: |
+          if git status --porcelain | grep -qv '/REVISION$'; then
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Commit changes to branch
+        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |

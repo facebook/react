@@ -177,6 +177,26 @@ function processStable(buildDir) {
     );
   }
 
+  const reactNativeBuildDir = buildDir + '/react-native/implementations/';
+  if (fs.existsSync(reactNativeBuildDir)) {
+    const hash = crypto.createHash('sha1');
+    for (const fileName of fs.readdirSync(reactNativeBuildDir).sort()) {
+      const filePath = reactNativeBuildDir + fileName;
+      const stats = fs.statSync(filePath);
+      if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
+      }
+    }
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      reactNativeBuildDir,
+      ReactVersion +
+        '-' +
+        nextChannelLabel +
+        '-' +
+        hash.digest('hex').slice(0, 8)
+    );
+  }
+
   // Update remaining placeholders with next channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
