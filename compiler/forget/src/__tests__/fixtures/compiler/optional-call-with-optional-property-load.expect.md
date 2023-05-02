@@ -3,7 +3,7 @@
 
 ```javascript
 function Component(props) {
-  return call?.(props.a)?.(props.b)?.(props.c);
+  return props?.items?.map?.(render)?.filter(Boolean) ?? [];
 }
 
 ```
@@ -17,7 +17,7 @@ function Component(props) {
   const c_0 = $[0] !== props;
   let t0;
   if (c_0) {
-    t0 = call?.(props.a)?.(props.b)?.(props.c);
+    t0 = props?.items?.map?.(render)?.filter(Boolean) ?? [];
     $[0] = props;
     $[1] = t0;
   } else {
