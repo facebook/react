@@ -57,7 +57,8 @@ export type HookType =
   | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
-  | 'useCacheRefresh';
+  | 'useCacheRefresh'
+  | 'useOptimisticState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -423,6 +424,10 @@ export type Dispatcher = {
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
   useHostTransitionStatus?: () => TransitionStatus,
+  useOptimisticState?: <S, A>(
+    passthrough: S,
+    reducer: ?(S, A) => S,
+  ) => [S, (A) => void],
 };
 
 export type CacheDispatcher = {
