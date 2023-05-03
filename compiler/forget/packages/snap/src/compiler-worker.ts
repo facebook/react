@@ -23,6 +23,7 @@ export type TestResult = {
   outputPath: string;
   actual: string | null; // null == input did not exist
   expected: string | null; // null == output did not exist
+  unexpectedError: string | null;
 };
 
 export async function compile(
@@ -56,6 +57,7 @@ export async function compile(
       outputPath,
       actual: null,
       expected,
+      unexpectedError: null,
     };
   }
 
@@ -127,10 +129,13 @@ export async function compile(
   const expectError = fixture.startsWith("error.");
   if (expectError) {
     if (error === null) {
-      console.log(code);
-      throw new Error(
-        `Expected an error to be thrown for fixture: '${fixture}', remove the 'error.' prefix if an error is not expected.`
-      );
+      return {
+        inputPath,
+        outputPath,
+        actual: code,
+        expected,
+        unexpectedError: `Expected an error to be thrown for fixture: '${fixture}', remove the 'error.' prefix if an error is not expected.`,
+      };
     } else if (code != null) {
       output = `${formatOutput(code)}\n${formatErrorOutput(error)}`;
     } else {
@@ -138,11 +143,22 @@ export async function compile(
     }
   } else {
     if (error !== null) {
-      error.message = `Expected fixture '${fixture}' to succeed but it failed with error:\n\n${error.message}`;
-      throw error;
+      return {
+        inputPath,
+        outputPath,
+        actual: code,
+        expected,
+        unexpectedError: `Expected fixture '${fixture}' to succeed but it failed with error:\n\n${error.message}`,
+      };
     }
     if (code == null || code.length === 0) {
-      throw new Error(`Expected output for fixture '${fixture}'.`);
+      return {
+        inputPath,
+        outputPath,
+        actual: code,
+        expected,
+        unexpectedError: `Expected output for fixture '${fixture}'.`,
+      };
     }
     output = formatOutput(code);
   }
@@ -158,7 +174,13 @@ ${output}
 
   console.error = originalConsoleError;
 
-  return { inputPath, outputPath, actual, expected };
+  return {
+    inputPath,
+    outputPath,
+    actual,
+    expected,
+    unexpectedError: null,
+  };
 }
 
 function formatErrorOutput(error: Error): string {

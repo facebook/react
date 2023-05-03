@@ -181,7 +181,7 @@ async function run(
 function report(results: Results): void {
   const failures: Array<[string, TestResult]> = [];
   for (const [basename, result] of results) {
-    if (result.actual === result.expected) {
+    if (result.actual === result.expected && result.unexpectedError == null) {
       console.log(
         chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(basename)
       );
@@ -196,7 +196,13 @@ function report(results: Results): void {
 
     for (const [basename, result] of failures) {
       console.log(chalk.red.bold("FAIL:") + " " + basename);
-      console.log(diff(result.actual, result.expected) + "\n");
+      if (result.unexpectedError != null) {
+        console.log(
+          ` >> Unexpected error during test: \n${result.unexpectedError}`
+        );
+      } else {
+        console.log(diff(result.actual, result.expected) + "\n");
+      }
     }
   }
 
@@ -214,8 +220,14 @@ async function update(results: Results): Promise<void> {
   let deleted = 0;
   let updated = 0;
   let created = 0;
+  const failed = [];
   for (const [basename, result] of results) {
-    if (result.actual == null) {
+    if (result.unexpectedError != null) {
+      console.log(
+        chalk.red.inverse.bold(" FAILED ") + " " + chalk.dim(basename)
+      );
+      failed.push([basename, result.unexpectedError]);
+    } else if (result.actual == null) {
       // Input was deleted but the expect file still existed, remove it
       console.log(
         chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename)
@@ -243,7 +255,12 @@ async function update(results: Results): Promise<void> {
       );
     }
   }
-  console.log(`${deleted} Deleted, ${created} Created, ${updated} Updated`);
+  console.log(
+    `${deleted} Deleted, ${created} Created, ${updated} Updated, ${failed.length} Failed`
+  );
+  for (const [basename, errorMsg] of failed) {
+    console.log(`${chalk.red.bold("Fail:")} ${basename}\n${errorMsg}`);
+  }
 }
 
 function watchSrc(
