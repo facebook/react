@@ -3298,7 +3298,10 @@ function renderChildrenArray(request, task, children) {
   }
 }
 function renderNode(request, task, node) {
-  var previousFormatContext = task.blockedSegment.formatContext,
+  var segment = task.blockedSegment,
+    childrenLength = segment.children.length,
+    chunkLength = segment.chunks.length,
+    previousFormatContext = task.blockedSegment.formatContext,
     previousLegacyContext = task.legacyContext,
     previousContext = task.context;
   try {
@@ -3306,6 +3309,8 @@ function renderNode(request, task, node) {
   } catch (thrownValue) {
     if (
       (resetHooksState(),
+      (segment.children.length = childrenLength),
+      (segment.chunks.length = chunkLength),
       (node =
         thrownValue === SuspenseException
           ? getSuspendedThenable()
@@ -3313,36 +3318,36 @@ function renderNode(request, task, node) {
       "object" === typeof node &&
         null !== node &&
         "function" === typeof node.then)
-    ) {
-      var thenableState$15 = getThenableStateAfterSuspending(),
-        segment = task.blockedSegment,
-        newSegment = createPendingSegment(
+    )
+      (segment = getThenableStateAfterSuspending()),
+        (childrenLength = task.blockedSegment),
+        (chunkLength = createPendingSegment(
           request,
-          segment.chunks.length,
+          childrenLength.chunks.length,
           null,
-          segment.formatContext,
-          segment.lastPushedText,
+          childrenLength.formatContext,
+          childrenLength.lastPushedText,
           !0
-        );
-      segment.children.push(newSegment);
-      segment.lastPushedText = !1;
-      request = createTask(
-        request,
-        thenableState$15,
-        task.node,
-        task.blockedBoundary,
-        newSegment,
-        task.abortSet,
-        task.legacyContext,
-        task.context,
-        task.treeContext
-      ).ping;
-      node.then(request, request);
-      task.blockedSegment.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
-      task.context = previousContext;
-      switchContext(previousContext);
-    } else
+        )),
+        childrenLength.children.push(chunkLength),
+        (childrenLength.lastPushedText = !1),
+        (request = createTask(
+          request,
+          segment,
+          task.node,
+          task.blockedBoundary,
+          chunkLength,
+          task.abortSet,
+          task.legacyContext,
+          task.context,
+          task.treeContext
+        ).ping),
+        node.then(request, request),
+        (task.blockedSegment.formatContext = previousFormatContext),
+        (task.legacyContext = previousLegacyContext),
+        (task.context = previousContext),
+        switchContext(previousContext);
+    else
       throw (
         ((task.blockedSegment.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
@@ -3447,6 +3452,8 @@ function performWork(request$jscomp$1) {
         var segment = task.blockedSegment;
         if (0 === segment.status) {
           switchContext(task.context);
+          var childrenLength = segment.children.length,
+            chunkLength = segment.chunks.length;
           try {
             var prevThenableState = task.thenableState;
             task.thenableState = null;
@@ -3465,6 +3472,8 @@ function performWork(request$jscomp$1) {
             finishedTask(request, task.blockedBoundary, segment);
           } catch (thrownValue) {
             resetHooksState();
+            segment.children.length = childrenLength;
+            segment.chunks.length = chunkLength;
             var x =
               thrownValue === SuspenseException
                 ? getSuspendedThenable()
@@ -4002,4 +4011,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-42ee674f";
+exports.version = "18.3.0-www-classic-de54f0a0";
