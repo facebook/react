@@ -1,8 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import {flushSync} from 'react-dom';
+import {experimental_useFormStatus as useFormStatus} from 'react-dom';
 import ErrorBoundary from './ErrorBoundary.js';
+
+function Status() {
+  const {pending} = useFormStatus();
+  return pending ? 'Saving...' : null;
+}
 
 export default function Form({action, children}) {
   const [isPending, setIsPending] = React.useState(false);
@@ -11,14 +16,8 @@ export default function Form({action, children}) {
     <ErrorBoundary>
       <form
         action={async formData => {
-          // TODO: Migrate to useFormPending once that exists
-          flushSync(() => setIsPending(true));
-          try {
-            const result = await action(formData);
-            alert(result);
-          } finally {
-            React.startTransition(() => setIsPending(false));
-          }
+          const result = await action(formData);
+          alert(result);
         }}>
         <label>
           Name: <input name="name" />
@@ -27,7 +26,7 @@ export default function Form({action, children}) {
           File: <input type="file" name="file" />
         </label>
         <button>Say Hi</button>
-        {isPending ? 'Saving...' : null}
+        <Status />
       </form>
     </ErrorBoundary>
   );
