@@ -5,7 +5,7 @@ let act;
 let assertLog;
 let useTransition;
 let useState;
-let useOptimisticState;
+let useOptimistic;
 let textCache;
 
 describe('ReactAsyncActions', () => {
@@ -19,7 +19,7 @@ describe('ReactAsyncActions', () => {
     assertLog = require('internal-test-utils').assertLog;
     useTransition = React.useTransition;
     useState = React.useState;
-    useOptimisticState = React.experimental_useOptimisticState;
+    useOptimistic = React.experimental_useOptimistic;
 
     textCache = new Map();
   });
@@ -648,12 +648,12 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimisticState can be used to implement a pending state', async () => {
+  test('useOptimistic can be used to implement a pending state', async () => {
     const startTransition = React.startTransition;
 
     let setIsPending;
     function App({text}) {
-      const [isPending, _setIsPending] = useOptimisticState(false);
+      const [isPending, _setIsPending] = useOptimistic(false);
       setIsPending = _setIsPending;
       return (
         <>
@@ -698,7 +698,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimisticState rebases pending updates on top of passthrough value', async () => {
+  test('useOptimistic rebases pending updates on top of passthrough value', async () => {
     let serverCart = ['A'];
 
     async function submitNewItem(item) {
@@ -715,7 +715,7 @@ describe('ReactAsyncActions', () => {
 
       const savedCartSize = cart.length;
       const [optimisticCartSize, setOptimisticCartSize] =
-        useOptimisticState(savedCartSize);
+        useOptimistic(savedCartSize);
 
       addItemToCart = item => {
         startTransition(async () => {
@@ -819,7 +819,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimisticState accepts a custom reducer', async () => {
+  test('useOptimistic accepts a custom reducer', async () => {
     let serverCart = ['A'];
 
     async function submitNewItem(item) {
@@ -835,7 +835,7 @@ describe('ReactAsyncActions', () => {
       const [isPending, startTransition] = useTransition();
 
       const savedCartSize = cart.length;
-      const [optimisticCartSize, addToOptimisticCart] = useOptimisticState(
+      const [optimisticCartSize, addToOptimisticCart] = useOptimistic(
         savedCartSize,
         (prevSize, newItem) => {
           Scheduler.log('Increment optimistic cart size for ' + newItem);
@@ -951,7 +951,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimisticState rebases if the passthrough is updated during a render phase update', async () => {
+  test('useOptimistic rebases if the passthrough is updated during a render phase update', async () => {
     // This is kind of an esoteric case where it's hard to come up with a
     // realistic real-world scenario but it should still work.
     let increment;
@@ -961,7 +961,7 @@ describe('ReactAsyncActions', () => {
       const [count, _setCount] = useState(0);
       setCount = _setCount;
 
-      const [optimisticCount, setOptimisticCount] = useOptimisticState(
+      const [optimisticCount, setOptimisticCount] = useOptimistic(
         count,
         prev => {
           Scheduler.log('Increment optimistic count');
@@ -1036,12 +1036,12 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimisticState rebases if the passthrough is updated during a render phase update (initial mount)', async () => {
+  test('useOptimistic rebases if the passthrough is updated during a render phase update (initial mount)', async () => {
     // This is kind of an esoteric case where it's hard to come up with a
     // realistic real-world scenario but it should still work.
     function App() {
       const [count, setCount] = useState(0);
-      const [optimisticCount] = useOptimisticState(count);
+      const [optimisticCount] = useOptimistic(count);
 
       if (count === 0) {
         Scheduler.log('Render phase update count from 1 to 2');
