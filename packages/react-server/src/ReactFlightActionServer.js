@@ -10,7 +10,6 @@
 import type {Thenable} from 'shared/ReactTypes';
 
 import type {
-  ServerReferenceId,
   ServerManifest,
   ClientReference as ServerReference,
 } from 'react-client/src/ReactFlightClientConfig';
@@ -22,6 +21,8 @@ import {
 } from 'react-client/src/ReactFlightClientConfig';
 
 import {createResponse, close, getRoot} from './ReactFlightReplyServer';
+
+type ServerReferenceId = any;
 
 function bindArgs(fn: any, args: any) {
   return fn.bind.apply(fn, [null].concat(args));
