@@ -2892,23 +2892,23 @@ function pushFormActionAttribute(
 ) {
   var formData = null;
 
-  if (name !== null) {
+  if (name != null) {
     pushAttribute(target, "name", name);
   }
 
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, "formAction", formAction);
   }
 
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, "formEncType", formEncType);
   }
 
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, "formMethod", formMethod);
   }
 
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, "formTarget", formTarget);
   }
 
@@ -3567,19 +3567,19 @@ function pushStartForm(target, props, responseState) {
     }
   }
 
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, "action", formAction);
   }
 
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, "encType", formEncType);
   }
 
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, "method", formMethod);
   }
 
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, "target", formTarget);
   }
 

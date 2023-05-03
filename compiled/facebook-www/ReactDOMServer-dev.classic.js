@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-7f904b45";
+var ReactVersion = "18.3.0-www-classic-e6e6835d";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2885,23 +2885,23 @@ function pushFormActionAttribute(
 ) {
   var formData = null;
 
-  if (name !== null) {
+  if (name != null) {
     pushAttribute(target, "name", name);
   }
 
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, "formAction", formAction);
   }
 
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, "formEncType", formEncType);
   }
 
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, "formMethod", formMethod);
   }
 
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, "formTarget", formTarget);
   }
 
@@ -3560,19 +3560,19 @@ function pushStartForm(target, props, responseState) {
     }
   }
 
-  if (formAction !== null) {
+  if (formAction != null) {
     pushAttribute(target, "action", formAction);
   }
 
-  if (formEncType !== null) {
+  if (formEncType != null) {
     pushAttribute(target, "encType", formEncType);
   }
 
-  if (formMethod !== null) {
+  if (formMethod != null) {
     pushAttribute(target, "method", formMethod);
   }
 
-  if (formTarget !== null) {
+  if (formTarget != null) {
     pushAttribute(target, "target", formTarget);
   }
 

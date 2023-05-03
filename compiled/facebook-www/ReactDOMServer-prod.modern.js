@@ -309,11 +309,11 @@ function pushFormActionAttribute(
   formTarget,
   name
 ) {
-  null !== name && pushAttribute(target, "name", name);
-  null !== formAction && pushAttribute(target, "formAction", formAction);
-  null !== formEncType && pushAttribute(target, "formEncType", formEncType);
-  null !== formMethod && pushAttribute(target, "formMethod", formMethod);
-  null !== formTarget && pushAttribute(target, "formTarget", formTarget);
+  null != name && pushAttribute(target, "name", name);
+  null != formAction && pushAttribute(target, "formAction", formAction);
+  null != formEncType && pushAttribute(target, "formEncType", formEncType);
+  null != formMethod && pushAttribute(target, "formMethod", formMethod);
+  null != formTarget && pushAttribute(target, "formTarget", formTarget);
   return null;
 }
 function pushAttribute(target, name, value) {
@@ -1012,10 +1012,10 @@ function pushStartInstance(
             default:
               pushAttribute(target, name, propKey$jscomp$0);
           }
-      null !== propValue && pushAttribute(target, "action", propValue);
-      null !== resources && pushAttribute(target, "encType", resources);
-      null !== selected && pushAttribute(target, "method", selected);
-      null !== propValue$jscomp$0 &&
+      null != propValue && pushAttribute(target, "action", propValue);
+      null != resources && pushAttribute(target, "encType", resources);
+      null != selected && pushAttribute(target, "method", selected);
+      null != propValue$jscomp$0 &&
         pushAttribute(target, "target", propValue$jscomp$0);
       target.push(">");
       pushInnerHTML(target, textEmbedded, responseState);
@@ -3900,4 +3900,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-5e9b2f5f";
+exports.version = "18.3.0-www-modern-a116db68";

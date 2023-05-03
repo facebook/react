@@ -313,11 +313,11 @@ function pushFormActionAttribute(
   formTarget,
   name
 ) {
-  null !== name && pushAttribute(target, "name", name);
-  null !== formAction && pushAttribute(target, "formAction", formAction);
-  null !== formEncType && pushAttribute(target, "formEncType", formEncType);
-  null !== formMethod && pushAttribute(target, "formMethod", formMethod);
-  null !== formTarget && pushAttribute(target, "formTarget", formTarget);
+  null != name && pushAttribute(target, "name", name);
+  null != formAction && pushAttribute(target, "formAction", formAction);
+  null != formEncType && pushAttribute(target, "formEncType", formEncType);
+  null != formMethod && pushAttribute(target, "formMethod", formMethod);
+  null != formTarget && pushAttribute(target, "formTarget", formTarget);
   return null;
 }
 function pushAttribute(target, name, value) {
@@ -1032,10 +1032,10 @@ function pushStartInstance(
             default:
               pushAttribute(target, name, propKey$jscomp$0);
           }
-      null !== propValue && pushAttribute(target, "action", propValue);
-      null !== resources && pushAttribute(target, "encType", resources);
-      null !== selected && pushAttribute(target, "method", selected);
-      null !== propValue$jscomp$0 &&
+      null != propValue && pushAttribute(target, "action", propValue);
+      null != resources && pushAttribute(target, "encType", resources);
+      null != selected && pushAttribute(target, "method", selected);
+      null != propValue$jscomp$0 &&
         pushAttribute(target, "target", propValue$jscomp$0);
       target.push(">");
       pushInnerHTML(target, textEmbedded, responseState);
