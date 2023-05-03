@@ -11,6 +11,8 @@ import Form from './Form.js';
 
 import {like, greet} from './actions.js';
 
+import {getServerState} from './ServerState.js';
+
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
@@ -23,7 +25,7 @@ export default async function App() {
       </head>
       <body>
         <Container>
-          <h1>Hello, world</h1>
+          <h1>{getServerState()}</h1>
           <Counter />
           <Counter2 />
           <ul>

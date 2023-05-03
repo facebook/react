@@ -36,6 +36,8 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
+import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
@@ -148,4 +150,9 @@ function decodeReply<T>(
   return getRoot(response);
 }
 
-export {renderToPipeableStream, decodeReplyFromBusboy, decodeReply};
+export {
+  renderToPipeableStream,
+  decodeReplyFromBusboy,
+  decodeReply,
+  decodeAction,
+};

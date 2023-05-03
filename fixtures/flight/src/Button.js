@@ -7,12 +7,7 @@ import ErrorBoundary from './ErrorBoundary.js';
 function ButtonDisabledWhilePending({action, children}) {
   const {pending} = useFormStatus();
   return (
-    <button
-      disabled={pending}
-      formAction={async () => {
-        const result = await action();
-        console.log(result);
-      }}>
+    <button disabled={pending} formAction={action}>
       {children}
     </button>
   );

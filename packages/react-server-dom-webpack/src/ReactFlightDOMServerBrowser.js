@@ -25,6 +25,8 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
+import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+
 type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,
@@ -87,4 +89,4 @@ function decodeReply<T>(
   return getRoot(response);
 }
 
-export {renderToReadableStream, decodeReply};
+export {renderToReadableStream, decodeReply, decodeAction};

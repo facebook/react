@@ -672,7 +672,7 @@ function makeFormFieldPrefix(responseState: ResponseState): string {
   // I'm just reusing this counter. It's not really the same namespace as "name".
   // It could just be its own counter.
   const id = responseState.nextSuspenseID++;
-  return responseState.idPrefix + '$ACTION:' + id + ':';
+  return responseState.idPrefix + id;
 }
 
 // Since this will likely be repeated a lot in the HTML, we use a more concise message

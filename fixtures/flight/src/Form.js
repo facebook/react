@@ -14,11 +14,7 @@ export default function Form({action, children}) {
 
   return (
     <ErrorBoundary>
-      <form
-        action={async formData => {
-          const result = await action(formData);
-          alert(result);
-        }}>
+      <form action={action}>
         <label>
           Name: <input name="name" />
         </label>
