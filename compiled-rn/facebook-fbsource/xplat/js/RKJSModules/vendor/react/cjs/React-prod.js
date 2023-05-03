@@ -645,4 +645,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-next-fa4314841-20230502";
+exports.version = "18.3.0-canary-2c2476834-20230503";
