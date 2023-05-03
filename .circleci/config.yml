@@ -604,10 +604,20 @@ workflows:
     when: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - publish_prerelease:
-          name: Publish to Next channel
+          name: Publish to Canary channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
-          dist_tag: "next"
+          # The tags to use when publishing canaries. The main one we should
+          # always include is "canary" but we can use multiple (e.g. alpha,
+          # beta, rc). To declare multiple, use a comma-separated string, like
+          # this:
+          #   dist_tag: "canary,alpha,beta,rc"
+          #
+          # TODO: We currently tag canaries with "next" in addition to "canary"
+          # because this used to be called the "next" channel and some
+          # downstream consumers might still expect that tag. We can remove this
+          # after some time has elapsed and the change has been communicated.
+          dist_tag: "canary,next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -615,7 +625,7 @@ workflows:
             # will sometimes fail if you try to concurrently publish two
             # different versions of the same package, even if they use different
             # dist tags.
-            - Publish to Next channel
+            - Publish to Canary channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: experimental
           dist_tag: experimental
@@ -633,7 +643,7 @@ workflows:
                 - main
     jobs:
       - publish_prerelease:
-          name: Publish to Next channel
+          name: Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
           dist_tag: "next"
@@ -644,7 +654,7 @@ workflows:
             # will sometimes fail if you try to concurrently publish two
             # different versions of the same package, even if they use different
             # dist tags.
-            - Publish to Next channel
+            - Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental

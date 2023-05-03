@@ -13,7 +13,7 @@ const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
-  nextChannelLabel,
+  canaryChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -127,7 +127,7 @@ function processStable(buildDir) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        version + '-' + canaryChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -140,7 +140,7 @@ function processStable(buildDir) {
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/oss-stable',
-      ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+      ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
     );
 
     // Now do the semver ones
@@ -191,16 +191,16 @@ function processStable(buildDir) {
       reactNativeBuildDir,
       ReactVersion +
         '-' +
-        nextChannelLabel +
+        canaryChannelLabel +
         '-' +
         hash.digest('hex').slice(0, 8)
     );
   }
 
-  // Update remaining placeholders with next channel version
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {
@@ -251,10 +251,10 @@ function processExperimental(buildDir, version) {
     );
   }
 
-  // Update remaining placeholders with next channel version
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {
