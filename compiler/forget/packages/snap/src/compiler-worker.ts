@@ -28,9 +28,11 @@ export type TestResult = {
 
 export async function compile(
   compilerPath: string,
+  loggerPath: string,
   fixturesDir: string,
   fixture: string,
-  compilerVersion: number
+  compilerVersion: number,
+  isOnlyFixture: boolean
 ): Promise<TestResult> {
   const seenConsoleErrors: Array<string> = [];
   console.error = (...messages: Array<string>) => {
@@ -67,6 +69,12 @@ export async function compile(
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
     const { runReactForgetBabelPlugin } = require(compilerPath);
+    const { toggleLogging } = require(loggerPath);
+
+    // only try logging if we filtered out all but one fixture,
+    // since console log order is non-deterministic
+    const shouldLogPragma = input.split("\n")[0].includes("@debug");
+    toggleLogging(isOnlyFixture && shouldLogPragma);
 
     // Extract the first line to quickly check for custom test directives
     const firstLine = input.substring(0, input.indexOf("\n"));

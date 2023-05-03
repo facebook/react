@@ -28,6 +28,7 @@ const COMPILER_PATH = path.join(
   "Babel",
   "RunReactForgetBabelPlugin.js"
 );
+const LOGGER_PATH = path.join(process.cwd(), "dist", "Utils", "logger.js");
 const FIXTURES_PATH = path.join(
   process.cwd(),
   "src",
@@ -144,6 +145,7 @@ async function run(
   } else {
     fixtures = allFixtures;
   }
+  const isOnlyFixture = filter !== null && fixtures.length === 1;
 
   let entries: Array<[string, TestResult]>;
   if (!opts.sync) {
@@ -152,9 +154,11 @@ async function run(
       fixtures.map(async (fixture) => {
         let output = await worker.compile(
           COMPILER_PATH,
+          LOGGER_PATH,
           FIXTURES_PATH,
           fixture,
-          compilerVersion
+          compilerVersion,
+          isOnlyFixture
         );
         return [fixture, output];
       })
@@ -164,9 +168,11 @@ async function run(
     for (const fixture of fixtures) {
       let output = await compiler.compile(
         COMPILER_PATH,
+        LOGGER_PATH,
         FIXTURES_PATH,
         fixture,
-        compilerVersion
+        compilerVersion,
+        isOnlyFixture
       );
       entries.push([fixture, output]);
     }
