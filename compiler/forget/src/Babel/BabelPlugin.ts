@@ -19,8 +19,8 @@ import { compile } from "../CompilerPipeline";
 import { GeneratedSource } from "../HIR";
 import {
   GatingOptions,
-  parsePluginOptions,
   PluginOptions,
+  parsePluginOptions,
 } from "./PluginOptions";
 
 type BabelPluginPass = {
@@ -137,7 +137,24 @@ export default function ReactForgetBabelPlugin(
         return;
       }
 
-      visitFn(buildFunctionDeclaration(fn), pass);
+      const loweredFn = buildFunctionDeclaration(fn);
+      if (loweredFn instanceof CompilerError) {
+        const error = loweredFn;
+
+        const options = parsePluginOptions(pass.opts);
+        if (options.logger != null) {
+          options.logger.logEvent("err", error);
+        }
+
+        if (options.panicOnBailout || error.isCritical()) {
+          throw error;
+        } else {
+          console.error(error);
+        }
+        return;
+      }
+
+      visitFn(loweredFn, pass);
     },
   };
 
@@ -310,30 +327,47 @@ function shouldCompile(
   return true;
 }
 
+function makeError(
+  reason: string,
+  loc: t.SourceLocation | null
+): CompilerError {
+  const error = new CompilerError();
+  error.pushErrorDetail(
+    new CompilerErrorDetail({
+      reason,
+      description: null,
+      severity: ErrorSeverity.InvalidInput,
+      codeframe: null,
+      loc,
+    })
+  );
+  return error;
+}
+
 function buildFunctionDeclaration(
   fn: BabelCore.NodePath<t.ArrowFunctionExpression>
-): BabelCore.NodePath<t.FunctionDeclaration> {
+): BabelCore.NodePath<t.FunctionDeclaration> | CompilerError {
   if (!fn.parentPath.isVariableDeclarator()) {
-    CompilerError.invariant(
-      "ArrowFunctionExpression must be declared in variable declaration",
-      fn.node.loc ?? GeneratedSource
+    return makeError(
+      "Skipping compilation: ArrowFunctionExpression must be declared in variable declaration",
+      fn.node.loc ?? null
     );
   }
   const variableDeclarator = fn.parentPath;
 
   if (!variableDeclarator.parentPath.isVariableDeclaration()) {
-    CompilerError.invariant(
+    return makeError(
       "ArrowFunctionExpression must be a single declaration",
-      fn.node.loc ?? GeneratedSource
+      fn.node.loc ?? null
     );
   }
   const variableDeclaration = variableDeclarator.parentPath;
 
   const id = variableDeclarator.get("id");
   if (!id.isIdentifier()) {
-    CompilerError.invariant(
+    return makeError(
       "ArrowFunctionExpression must have an id",
-      fn.node.loc ?? GeneratedSource
+      fn.node.loc ?? null
     );
   }
 
