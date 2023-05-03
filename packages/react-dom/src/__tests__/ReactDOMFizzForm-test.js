@@ -22,7 +22,7 @@ let React;
 let ReactDOMServer;
 let ReactDOMClient;
 let useFormStatus;
-let useOptimisticState;
+let useOptimistic;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactDOMFizzForm', () => {
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
     useFormStatus = require('react-dom').experimental_useFormStatus;
-    useOptimisticState = require('react').experimental_useOptimisticState;
+    useOptimistic = require('react').experimental_useOptimistic;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -454,9 +454,9 @@ describe('ReactDOMFizzForm', () => {
   });
 
   // @gate enableAsyncActions
-  it('useOptimisticState returns passthrough value', async () => {
+  it('useOptimistic returns passthrough value', async () => {
     function App() {
-      const [optimisticState] = useOptimisticState('hi');
+      const [optimisticState] = useOptimistic('hi');
       return optimisticState;
     }
 

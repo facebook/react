@@ -1987,7 +1987,7 @@ function rerenderState<S>(
   return rerenderReducer(basicStateReducer, initialState);
 }
 
-function mountOptimisticState<S, A>(
+function mountOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
@@ -2013,7 +2013,7 @@ function mountOptimisticState<S, A>(
   return [passthrough, dispatch];
 }
 
-function updateOptimisticState<S, A>(
+function updateOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
@@ -2034,11 +2034,11 @@ function updateOptimisticState<S, A>(
   return updateReducerImpl(hook, ((currentHook: any): Hook), resolvedReducer);
 }
 
-function rerenderOptimisticState<S, A>(
+function rerenderOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
-  // Unlike useState, useOptimisticState doesn't support render phase updates.
+  // Unlike useState, useOptimistic doesn't support render phase updates.
   // Also unlike useState, we need to replay all pending updates again in case
   // the passthrough value changed.
   //
@@ -2048,7 +2048,7 @@ function rerenderOptimisticState<S, A>(
 
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimisticState(passthrough, reducer);
+    return updateOptimistic(passthrough, reducer);
   }
 
   // This is a mount. No updates to process.
@@ -3207,8 +3207,7 @@ if (enableFormActions && enableAsyncActions) {
     throwInvalidHookError;
 }
 if (enableAsyncActions) {
-  (ContextOnlyDispatcher: Dispatcher).useOptimisticState =
-    throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -3246,8 +3245,7 @@ if (enableFormActions && enableAsyncActions) {
     useHostTransitionStatus;
 }
 if (enableAsyncActions) {
-  (HooksDispatcherOnMount: Dispatcher).useOptimisticState =
-    mountOptimisticState;
+  (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -3285,8 +3283,7 @@ if (enableFormActions && enableAsyncActions) {
     useHostTransitionStatus;
 }
 if (enableAsyncActions) {
-  (HooksDispatcherOnUpdate: Dispatcher).useOptimisticState =
-    updateOptimisticState;
+  (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -3324,8 +3321,7 @@ if (enableFormActions && enableAsyncActions) {
     useHostTransitionStatus;
 }
 if (enableAsyncActions) {
-  (HooksDispatcherOnRerender: Dispatcher).useOptimisticState =
-    rerenderOptimisticState;
+  (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -3518,14 +3514,14 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         mountHookTypesDev();
-        return mountOptimisticState(passthrough, reducer);
+        return mountOptimistic(passthrough, reducer);
       };
   }
 
@@ -3687,14 +3683,14 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         updateHookTypesDev();
-        return mountOptimisticState(passthrough, reducer);
+        return mountOptimistic(passthrough, reducer);
       };
   }
 
@@ -3858,14 +3854,14 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         updateHookTypesDev();
-        return updateOptimisticState(passthrough, reducer);
+        return updateOptimistic(passthrough, reducer);
       };
   }
 
@@ -4029,14 +4025,14 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         updateHookTypesDev();
-        return rerenderOptimisticState(passthrough, reducer);
+        return rerenderOptimistic(passthrough, reducer);
       };
   }
 
@@ -4222,15 +4218,15 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountOptimisticState(passthrough, reducer);
+        return mountOptimistic(passthrough, reducer);
       };
   }
 
@@ -4419,15 +4415,15 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateOptimisticState(passthrough, reducer);
+        return updateOptimistic(passthrough, reducer);
       };
   }
 
@@ -4616,15 +4612,15 @@ if (__DEV__) {
       useHostTransitionStatus;
   }
   if (enableAsyncActions) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimisticState =
-      function useOptimisticState<S, A>(
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
+      function useOptimistic<S, A>(
         passthrough: S,
         reducer: ?(S, A) => S,
       ): [S, (A) => void] {
-        currentHookNameInDev = 'useOptimisticState';
+        currentHookNameInDev = 'useOptimistic';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return rerenderOptimisticState(passthrough, reducer);
+        return rerenderOptimistic(passthrough, reducer);
       };
   }
 }
