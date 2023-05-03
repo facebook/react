@@ -74,7 +74,8 @@ if (enableCache && enableFetchInstrumentation) {
         url = resource;
       } else {
         // Normalize the request.
-        const request = new Request(resource, options);
+        // we clone the request as to not disturb the body (in the event it's a ReadableStream)
+        const request = resource.clone();
         if (
           (request.method !== 'GET' && request.method !== 'HEAD') ||
           // $FlowFixMe[prop-missing]: keepalive is real
