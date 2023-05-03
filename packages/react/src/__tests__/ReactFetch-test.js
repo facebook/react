@@ -135,6 +135,22 @@ describe('ReactFetch', () => {
     expect(fetchCount).toBe(1);
   });
 
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches using URL and not', async () => {
+    const url = 'http://example.com/';
+    function Component() {
+      const response = use(fetch(url));
+      const text = use(response.text());
+      const response2 = use(fetch(new URL(url)));
+      const text2 = use(response2.text());
+      return text + ' ' + text2;
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET ${url} [] GET ${url} []"`,
+    );
+    expect(fetchCount).toBe(1);
+  });
+
   it('can opt-out of deduping fetches inside of render with custom signal', async () => {
     const controller = new AbortController();
     function useCustomHook() {
