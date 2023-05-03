@@ -9765,7 +9765,7 @@ function unsupportedSetOptimisticState() {
   throw new Error("Cannot update optimistic state while rendering.");
 }
 
-function useOptimisticState(passthrough, reducer) {
+function useOptimistic(passthrough, reducer) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
 }
@@ -9873,7 +9873,7 @@ var HooksDispatcher = {
 }
 
 if (enableAsyncActions) {
-  HooksDispatcher.useOptimisticState = useOptimisticState;
+  HooksDispatcher.useOptimistic = useOptimistic;
 }
 
 var currentResponseState = null;

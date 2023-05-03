@@ -2518,7 +2518,7 @@ function unsupportedStartTransition() {
 function unsupportedSetOptimisticState() {
   throw Error("Cannot update optimistic state while rendering.");
 }
-function useOptimisticState(passthrough) {
+function useOptimistic(passthrough) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
 }
@@ -2626,7 +2626,7 @@ var HooksDispatcher = {
     return data;
   }
 };
-enableAsyncActions && (HooksDispatcher.useOptimisticState = useOptimisticState);
+enableAsyncActions && (HooksDispatcher.useOptimistic = useOptimistic);
 var currentResponseState = null,
   DefaultCacheDispatcher = {
     getCacheSignal: function () {

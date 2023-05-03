@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-88959423";
+var ReactVersion = "18.3.0-www-modern-45591960";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9873,7 +9873,7 @@ function unsupportedSetOptimisticState() {
   throw new Error("Cannot update optimistic state while rendering.");
 }
 
-function useOptimisticState(passthrough, reducer) {
+function useOptimistic(passthrough, reducer) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
 }
@@ -9981,7 +9981,7 @@ var HooksDispatcher = {
 }
 
 if (enableAsyncActions) {
-  HooksDispatcher.useOptimisticState = useOptimisticState;
+  HooksDispatcher.useOptimistic = useOptimistic;
 }
 
 var currentResponseState = null;

@@ -3894,7 +3894,7 @@ function mountStateImpl(initialState) {
   };
   return hook;
 }
-function mountOptimisticState(passthrough) {
+function mountOptimistic(passthrough) {
   var hook = mountWorkInProgressHook();
   hook.memoizedState = hook.baseState = passthrough;
   var queue = {
@@ -3914,7 +3914,7 @@ function mountOptimisticState(passthrough) {
   queue.dispatch = hook;
   return [passthrough, hook];
 }
-function updateOptimisticState(passthrough, reducer) {
+function updateOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   hook.baseState = hook.memoizedState = passthrough;
   return updateReducerImpl(
@@ -3923,8 +3923,8 @@ function updateOptimisticState(passthrough, reducer) {
     "function" === typeof reducer ? reducer : basicStateReducer
   );
 }
-function rerenderOptimisticState(passthrough, reducer) {
-  if (null !== currentHook) return updateOptimisticState(passthrough, reducer);
+function rerenderOptimistic(passthrough, reducer) {
+  if (null !== currentHook) return updateOptimistic(passthrough, reducer);
   reducer = updateWorkInProgressHook();
   reducer.baseState = reducer.memoizedState = passthrough;
   return [passthrough, reducer.queue.dispatch];
@@ -4255,7 +4255,7 @@ ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
 enableAsyncActions &&
-  (ContextOnlyDispatcher.useOptimisticState = throwInvalidHookError);
+  (ContextOnlyDispatcher.useOptimistic = throwInvalidHookError);
 var HooksDispatcherOnMount = {
   readContext: readContext,
   use: use,
@@ -4430,8 +4430,7 @@ HooksDispatcherOnMount.useEffectEvent = function (callback) {
     return ref.impl.apply(void 0, arguments);
   };
 };
-enableAsyncActions &&
-  (HooksDispatcherOnMount.useOptimisticState = mountOptimisticState);
+enableAsyncActions && (HooksDispatcherOnMount.useOptimistic = mountOptimistic);
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
   use: use,
@@ -4470,7 +4469,7 @@ HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
 enableAsyncActions &&
-  (HooksDispatcherOnUpdate.useOptimisticState = updateOptimisticState);
+  (HooksDispatcherOnUpdate.useOptimistic = updateOptimistic);
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   use: use,
@@ -4511,7 +4510,7 @@ HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
 enableAsyncActions &&
-  (HooksDispatcherOnRerender.useOptimisticState = rerenderOptimisticState);
+  (HooksDispatcherOnRerender.useOptimistic = rerenderOptimistic);
 var now = Scheduler.unstable_now,
   commitTime = 0,
   layoutEffectStartTime = -1,
@@ -16939,7 +16938,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1873 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-55add5ba",
+  version: "18.3.0-www-modern-e58fb3cf",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16984,7 +16983,7 @@ var devToolsConfig$jscomp$inline_1873 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-55add5ba"
+  reconcilerVersion: "18.3.0-www-modern-e58fb3cf"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17142,7 +17141,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-55add5ba";
+exports.version = "18.3.0-www-modern-e58fb3cf";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

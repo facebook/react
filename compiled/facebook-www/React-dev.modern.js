@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-66e1909a";
+var ReactVersion = "18.3.0-www-modern-171e8ddd";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2026,10 +2026,10 @@ function useEffectEvent(callback) {
 
   return dispatcher.useEffectEvent(callback);
 }
-function useOptimisticState(passthrough, reducer) {
+function useOptimistic(passthrough, reducer) {
   var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
-  return dispatcher.useOptimisticState(passthrough, reducer);
+  return dispatcher.useOptimistic(passthrough, reducer);
 }
 
 // Helpers to patch console.logs to avoid logging during side-effect free
@@ -4144,7 +4144,7 @@ exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
-exports.experimental_useOptimisticState = useOptimisticState;
+exports.experimental_useOptimistic = useOptimistic;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement$1;
 exports.jsx = jsx;

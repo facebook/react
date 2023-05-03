@@ -536,11 +536,8 @@ exports.createServerContext = function (globalName, defaultValue) {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
-exports.experimental_useOptimisticState = function (passthrough, reducer) {
-  return ReactCurrentDispatcher.current.useOptimisticState(
-    passthrough,
-    reducer
-  );
+exports.experimental_useOptimistic = function (passthrough, reducer) {
+  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
 };
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -652,4 +649,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-classic-f9e05cb4";
+exports.version = "18.3.0-www-classic-f8d70dc8";
