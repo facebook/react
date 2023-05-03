@@ -72,14 +72,162 @@ function parseModelRecursively(response, parentObj, key, value) {
 var dummy = {},
   ReactDOMCurrentDispatcher =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
-  knownServerReferences = new WeakMap(),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
     "react.default_value"
   ),
-  ContextRegistry =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ContextRegistry;
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+function getIteratorFn(maybeIterable) {
+  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
+  maybeIterable =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable["@@iterator"];
+  return "function" === typeof maybeIterable ? maybeIterable : null;
+}
+var knownServerReferences = new WeakMap();
+function serializeNumber(number) {
+  return Number.isFinite(number)
+    ? 0 === number && -Infinity === 1 / number
+      ? "$-0"
+      : number
+    : Infinity === number
+    ? "$Infinity"
+    : -Infinity === number
+    ? "$-Infinity"
+    : "$NaN";
+}
+function processReply(root, formFieldPrefix, resolve, reject) {
+  function resolveToJSON(key, value) {
+    if (null === value) return null;
+    if ("object" === typeof value) {
+      if ("function" === typeof value.then) {
+        null === formData && (formData = new FormData());
+        pendingParts++;
+        var promiseId = nextPartId++;
+        value.then(
+          function (partValue) {
+            partValue = JSON.stringify(partValue, resolveToJSON);
+            var data = formData;
+            data.append(formFieldPrefix + promiseId, partValue);
+            pendingParts--;
+            0 === pendingParts && resolve(data);
+          },
+          function (reason) {
+            reject(reason);
+          }
+        );
+        return "$@" + promiseId.toString(16);
+      }
+      if (value instanceof FormData) {
+        null === formData && (formData = new FormData());
+        var data = formData;
+        key = nextPartId++;
+        var prefix = formFieldPrefix + key + "_";
+        value.forEach(function (originalValue, originalKey) {
+          data.append(prefix + originalKey, originalValue);
+        });
+        return "$K" + key.toString(16);
+      }
+      return !isArrayImpl(value) && getIteratorFn(value)
+        ? Array.from(value)
+        : value;
+    }
+    if ("string" === typeof value) {
+      if ("Z" === value[value.length - 1] && this[key] instanceof Date)
+        return "$D" + value;
+      value = "$" === value[0] ? "$" + value : value;
+      return value;
+    }
+    if ("boolean" === typeof value) return value;
+    if ("number" === typeof value) return serializeNumber(value);
+    if ("undefined" === typeof value) return "$undefined";
+    if ("function" === typeof value) {
+      value = knownServerReferences.get(value);
+      if (void 0 !== value)
+        return (
+          (value = JSON.stringify(value, resolveToJSON)),
+          null === formData && (formData = new FormData()),
+          (key = nextPartId++),
+          formData.set(formFieldPrefix + key, value),
+          "$F" + key.toString(16)
+        );
+      throw Error(formatProdErrorMessage(469));
+    }
+    if ("symbol" === typeof value) {
+      key = value.description;
+      if (Symbol.for(key) !== value)
+        throw Error(formatProdErrorMessage(470, value.description));
+      return "$S" + key;
+    }
+    if ("bigint" === typeof value) return "$n" + value.toString(10);
+    throw Error(formatProdErrorMessage(472, typeof value));
+  }
+  var nextPartId = 1,
+    pendingParts = 0,
+    formData = null;
+  root = JSON.stringify(root, resolveToJSON);
+  null === formData
+    ? resolve(root)
+    : (formData.set(formFieldPrefix + "0", root),
+      0 === pendingParts && resolve(formData));
+}
+var boundCache = new WeakMap();
+function encodeFormData(reference) {
+  var resolve,
+    reject,
+    thenable = new Promise(function (res, rej) {
+      resolve = res;
+      reject = rej;
+    });
+  processReply(
+    reference,
+    "",
+    function (body) {
+      if ("string" === typeof body) {
+        var data = new FormData();
+        data.append("0", body);
+        body = data;
+      }
+      thenable.status = "fulfilled";
+      thenable.value = body;
+      resolve(body);
+    },
+    function (e) {
+      thenable.status = "rejected";
+      thenable.reason = e;
+      reject(e);
+    }
+  );
+  return thenable;
+}
+function encodeFormAction(identifierPrefix) {
+  var reference = knownServerReferences.get(this);
+  if (!reference) throw Error(formatProdErrorMessage(481));
+  var data = null;
+  if (null !== reference.bound) {
+    data = boundCache.get(reference);
+    data ||
+      ((data = encodeFormData(reference)), boundCache.set(reference, data));
+    if ("rejected" === data.status) throw data.reason;
+    if ("fulfilled" !== data.status) throw data;
+    reference = data.value;
+    var prefixedData = new FormData();
+    reference.forEach(function (value, key) {
+      prefixedData.append("$ACTION_" + identifierPrefix + ":" + key, value);
+    });
+    data = prefixedData;
+    reference = "$ACTION_REF_" + identifierPrefix;
+  } else reference = "$ACTION_ID_" + reference.id;
+  return {
+    name: reference,
+    method: "POST",
+    encType: "multipart/form-data",
+    data: data
+  };
+}
+var ContextRegistry =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ContextRegistry;
 function Chunk(status, value, reason, response) {
   this.status = status;
   this.value = value;
@@ -243,6 +391,7 @@ function createServerReferenceProxy(response, metaData) {
       : callServer(metaData.id, args);
   }
   var callServer = response._callServer;
+  proxy.$$FORM_ACTION = encodeFormAction;
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }
