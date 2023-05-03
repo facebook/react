@@ -75,8 +75,9 @@ if (enableCache && enableFetchInstrumentation) {
       } else {
         // Normalize the request.
         // if resource is not a string (its an instance of Request)
-        // we clone the request as to not disturb the body (in the event it's a ReadableStream)
-        const request = typeof resource === 'string' ? new Request(resource, options) : resource.clone();
+        // then do not instantiate a new Request but instead
+        // reuse the request as to not disturb the body in the event it's a ReadableStream.
+        const request = typeof resource === 'string' ? new Request(resource, options) : resource;
         if (
           (request.method !== 'GET' && request.method !== 'HEAD') ||
           // $FlowFixMe[prop-missing]: keepalive is real
