@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<21b04a040ed4292372f9e9ab8319a3b5>>
+ * @generated SignedSource<<452f0f8d322ebca41e7548836de1f7a3>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-388686f29-20230503";
+var ReactVersion = "18.3.0-canary-b7972822b-20230503";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2088,10 +2088,10 @@ function useEffectEvent(callback) {
 
   return dispatcher.useEffectEvent(callback);
 }
-function useOptimisticState(passthrough, reducer) {
+function useOptimistic(passthrough, reducer) {
   var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
 
-  return dispatcher.useOptimisticState(passthrough, reducer);
+  return dispatcher.useOptimistic(passthrough, reducer);
 }
 
 function describeBuiltInComponentFrame(name, source, ownerFn) {
@@ -3935,7 +3935,7 @@ exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
-exports.experimental_useOptimisticState = useOptimisticState;
+exports.experimental_useOptimistic = useOptimistic;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement$1;
 exports.jsx = jsx;

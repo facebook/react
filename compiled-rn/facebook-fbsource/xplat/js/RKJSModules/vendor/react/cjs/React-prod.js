@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a5cef1c7009114f63f7485ab232c4292>>
+ * @generated SignedSource<<8bda7f5ab238068ff35a9e318f69e44f>>
  */
 
 "use strict";
@@ -529,11 +529,8 @@ exports.createServerContext = function (globalName, defaultValue) {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
-exports.experimental_useOptimisticState = function (passthrough, reducer) {
-  return ReactCurrentDispatcher.current.useOptimisticState(
-    passthrough,
-    reducer
-  );
+exports.experimental_useOptimistic = function (passthrough, reducer) {
+  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
 };
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -645,4 +642,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-canary-388686f29-20230503";
+exports.version = "18.3.0-canary-b7972822b-20230503";
