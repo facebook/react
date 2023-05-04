@@ -211,9 +211,7 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
 
         classNames = classNames.split(/\s+/);
       }
-      return classNames.every(function (name) {
-        return classList.indexOf(name) !== -1;
-      });
+      return classNames.every(name => classList.includes(name));
     }
     return false;
   });
