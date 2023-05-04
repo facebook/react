@@ -217,3 +217,12 @@ export type StartTransitionOptions = {
 };
 
 export type Usable<T> = Thenable<T> | ReactContext<T>;
+
+export type ReactCustomFormAction = {
+  name?: string,
+  action?: string,
+  encType?: string,
+  method?: string,
+  target?: string,
+  data?: null | FormData,
+};

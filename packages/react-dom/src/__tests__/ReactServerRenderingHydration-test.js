@@ -695,4 +695,41 @@ describe('ReactDOMServerHydration', () => {
       );
     }
   });
+
+  // @gate enableFormActions
+  it('allows rendering extra hidden inputs in a form', async () => {
+    const element = document.createElement('div');
+    element.innerHTML =
+      '<form>' +
+      '<input type="hidden" /><input type="hidden" name="a" value="A" />' +
+      '<input type="hidden" /><input type="submit" name="b" value="B" />' +
+      '<input type="hidden" /><button name="c" value="C"></button>' +
+      '<input type="hidden" />' +
+      '</form>';
+    const form = element.firstChild;
+    const ref = React.createRef();
+    const a = React.createRef();
+    const b = React.createRef();
+    const c = React.createRef();
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <form ref={ref}>
+          <input type="hidden" name="a" value="A" ref={a} />
+          <input type="submit" name="b" value="B" ref={b} />
+          <button name="c" value="C" ref={c} />
+        </form>,
+      );
+    });
+
+    // The content should not have been client rendered.
+    expect(ref.current).toBe(form);
+
+    expect(a.current.name).toBe('a');
+    expect(a.current.value).toBe('A');
+    expect(b.current.name).toBe('b');
+    expect(b.current.value).toBe('B');
+    expect(c.current.name).toBe('c');
+    expect(c.current.value).toBe('C');
+  });
 });

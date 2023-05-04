@@ -7,12 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
-
-import {
-  knownServerReferences,
-  createServerReference,
-} from './ReactFlightServerReferenceRegistry';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -28,6 +23,10 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
+import type {
+  FulfilledThenable,
+  RejectedThenable,
+} from '../../shared/ReactTypes';
 
 type ReactJSONValue =
   | string
@@ -38,6 +37,15 @@ type ReactJSONValue =
   | ReactServerObject;
 
 export opaque type ServerReference<T> = T;
+
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+
+export type ServerReferenceId = any;
+
+export const knownServerReferences: WeakMap<
+  Function,
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+> = new WeakMap();
 
 // Serializable values
 export type ReactServerValue =
@@ -363,4 +371,104 @@ export function processReply(
   }
 }
 
-export {createServerReference};
+const boundCache: WeakMap<
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  Thenable<FormData>,
+> = new WeakMap();
+
+function encodeFormData(reference: any): Thenable<FormData> {
+  let resolve, reject;
+  // We need to have a handle on the thenable so that we can synchronously set
+  // its status from processReply, when it can complete synchronously.
+  const thenable: Thenable<FormData> = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  processReply(
+    reference,
+    '',
+    (body: string | FormData) => {
+      if (typeof body === 'string') {
+        const data = new FormData();
+        data.append('0', body);
+        body = data;
+      }
+      const fulfilled: FulfilledThenable<FormData> = (thenable: any);
+      fulfilled.status = 'fulfilled';
+      fulfilled.value = body;
+      resolve(body);
+    },
+    e => {
+      const rejected: RejectedThenable<FormData> = (thenable: any);
+      rejected.status = 'rejected';
+      rejected.reason = e;
+      reject(e);
+    },
+  );
+  return thenable;
+}
+
+export function encodeFormAction(
+  this: any => Promise<any>,
+  identifierPrefix: string,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  let data: null | FormData = null;
+  let name;
+  const boundPromise = reference.bound;
+  if (boundPromise !== null) {
+    let thenable = boundCache.get(reference);
+    if (!thenable) {
+      thenable = encodeFormData(reference);
+      boundCache.set(reference, thenable);
+    }
+    if (thenable.status === 'rejected') {
+      throw thenable.reason;
+    } else if (thenable.status !== 'fulfilled') {
+      throw thenable;
+    }
+    const encodedFormData = thenable.value;
+    // This is hacky but we need the identifier prefix to be added to
+    // all fields but the suspense cache would break since we might get
+    // a new identifier each time. So we just append it at the end instead.
+    const prefixedData = new FormData();
+    // $FlowFixMe[prop-missing]
+    encodedFormData.forEach((value: string | File, key: string) => {
+      prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
+    });
+    data = prefixedData;
+    // We encode the name of the prefix containing the data.
+    name = '$ACTION_REF_' + identifierPrefix;
+  } else {
+    // This is the simple case so we can just encode the ID.
+    name = '$ACTION_ID_' + reference.id;
+  }
+  return {
+    name: name,
+    method: 'POST',
+    encType: 'multipart/form-data',
+    data: data,
+  };
+}
+
+export function createServerReference<A: Iterable<any>, T>(
+  id: ServerReferenceId,
+  callServer: CallServerCallback,
+): (...A) => Promise<T> {
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    return callServer(id, args);
+  };
+  // Expose encoder for use by SSR.
+  // TODO: Only expose this in SSR builds and not the browser client.
+  proxy.$$FORM_ACTION = encodeFormAction;
+  knownServerReferences.set(proxy, {id: id, bound: null});
+  return proxy;
+}
