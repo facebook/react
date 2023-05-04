@@ -113,7 +113,7 @@ export async function compile(
             },
           ],
         ]),
-        inlineUseMemo: true,
+        validateHooksUsage: true,
       },
       logger: null,
       gating,

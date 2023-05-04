@@ -19,4 +19,5 @@ export { Hook } from "./Hooks";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
 export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";
+export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateTerminalSuccessors } from "./ValidateTerminalSuccessors";

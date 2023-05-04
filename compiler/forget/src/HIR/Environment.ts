@@ -19,11 +19,11 @@ import {
   Effect,
   FunctionType,
   IdentifierId,
-  makeBlockId,
-  makeIdentifierId,
   ObjectType,
   PolyType,
   ValueKind,
+  makeBlockId,
+  makeIdentifierId,
 } from "./HIR";
 import { Hook } from "./Hooks";
 import { FunctionSignature, ShapeRegistry } from "./ObjectShape";
@@ -40,6 +40,7 @@ const HOOK_PATTERN = /^_?use/;
 export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
   memoizeJsxElements: boolean;
+  validateHooksUsage: boolean;
 }>;
 
 export class Environment {
@@ -47,6 +48,7 @@ export class Environment {
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
+  validateHooksUsage: boolean;
 
   constructor(config: EnvironmentConfig | null) {
     this.#shapes = DEFAULT_SHAPES;
@@ -66,6 +68,7 @@ export class Environment {
     } else {
       this.#globals = DEFAULT_GLOBALS;
     }
+    this.validateHooksUsage = config?.validateHooksUsage ?? false;
   }
 
   get nextIdentifierId(): IdentifierId {

@@ -13,6 +13,7 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
   validateConsistentIdentifiers,
+  validateHooksUsage,
   validateTerminalSuccessors,
 } from "./HIR";
 import { Environment, EnvironmentConfig } from "./HIR/Environment";
@@ -73,16 +74,20 @@ export function* run(
   enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
 
-  validateConsistentIdentifiers(hir);
-
   eliminateRedundantPhi(hir);
   yield log({ kind: "hir", name: "EliminateRedundantPhi", value: hir });
+
+  validateConsistentIdentifiers(hir);
 
   constantPropagation(hir);
   yield log({ kind: "hir", name: "ConstantPropagation", value: hir });
 
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
+
+  if (env.validateHooksUsage) {
+    validateHooksUsage(hir);
+  }
 
   dropMemoCalls(hir);
   yield log({ kind: "hir", name: "DropMemoCalls", value: hir });

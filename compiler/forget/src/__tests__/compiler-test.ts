@@ -55,6 +55,7 @@ describe("React Forget", () => {
                   },
                 ],
               ]),
+              validateHooksUsage: true,
             },
             logger: null,
             gating: options.gating,
