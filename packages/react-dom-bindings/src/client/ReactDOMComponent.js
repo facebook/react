@@ -2791,7 +2791,6 @@ function diffHydratedGenericElement(
       case 'formAction':
         if (enableFormActions) {
           const serverValue = domElement.getAttribute(propKey);
-          const hasFormActionURL = serverValue === EXPECTED_FORM_ACTION_URL;
           if (typeof value === 'function') {
             extraAttributes.delete(propKey.toLowerCase());
             // The server can set these extra properties to implement actions.
@@ -2806,13 +2805,14 @@ function diffHydratedGenericElement(
               extraAttributes.delete('method');
               extraAttributes.delete('target');
             }
-            if (hasFormActionURL) {
-              // Expected
-              continue;
-            }
-            warnForPropDifference(propKey, serverValue, value);
+            // Ideally we should be able to warn if the server value was not a function
+            // however since the function can return any of these attributes any way it
+            // wants as a custom progressive enhancement, there's nothing to compare to.
+            // We can check if the function has the $FORM_ACTION property on the client
+            // and if it's not, warn, but that's an unnecessary constraint that they
+            // have to have the extra extension that doesn't do anything on the client.
             continue;
-          } else if (hasFormActionURL) {
+          } else if (serverValue === EXPECTED_FORM_ACTION_URL) {
             extraAttributes.delete(propKey.toLowerCase());
             warnForPropDifference(propKey, 'function', value);
             continue;

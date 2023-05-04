@@ -20,6 +20,8 @@ import type {
 
 import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
 
+import type {CallServerCallback} from './ReactFlightReplyClient';
+
 import {
   resolveClientReference,
   preloadModule,
@@ -28,13 +30,16 @@ import {
   dispatchHint,
 } from './ReactFlightClientConfig';
 
-import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+import {
+  encodeFormAction,
+  knownServerReferences,
+} from './ReactFlightReplyClient';
 
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
-export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+export type {CallServerCallback};
 
 export type JSONValue =
   | number
@@ -500,6 +505,9 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
+  // Expose encoder for use by SSR.
+  // TODO: Only expose this in SSR builds and not the browser client.
+  proxy.$$FORM_ACTION = encodeFormAction;
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }

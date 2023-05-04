@@ -486,4 +486,21 @@ describe('ReactDOMFizzServerBrowser', () => {
       '<!DOCTYPE html><html><head><title>foo</title></head><body>bar</body></html>',
     );
   });
+
+  it('should support nonce attribute for bootstrap scripts', async () => {
+    const nonce = 'R4nd0m';
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
+      <div>hello world</div>,
+      {
+        nonce,
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      },
+    );
+    const result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
+    );
+  });
 });
