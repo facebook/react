@@ -93,12 +93,10 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
 }
 
 function validateClassInstance(inst, methodName) {
-  if (!inst) {
-    // This is probably too relaxed but it's existing behavior.
-    return;
-  }
-  if (getInstance(inst)) {
-    // This is a public instance indeed.
+  if (
+    !inst || // This is probably too relaxed but it's existing behavior.
+    getInstance(inst) // This is a public instance indeed.
+  ) {
     return;
   }
   let received;
