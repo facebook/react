@@ -6,38 +6,47 @@ import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from './utils';
 
 const ports = {};
 
-if (!IS_FIREFOX) {
-  // equivalent logic for Firefox is in prepareInjection.js
-  // Manifest V3 method of injecting content scripts (not yet supported in Firefox)
-  // Note: the "world" option in registerContentScripts is only available in Chrome v102+
-  // It's critical since it allows us to directly run scripts on the "main" world on the page
-  // "document_start" allows it to run before the page's scripts
-  // so the hook can be detected by react reconciler
-  chrome.scripting.registerContentScripts(
-    [
-      {
-        id: 'hook',
-        matches: ['<all_urls>'],
-        js: ['build/installHook.js'],
-        runAt: 'document_start',
-        world: chrome.scripting.ExecutionWorld.MAIN,
-      },
-      {
-        id: 'renderer',
-        matches: ['<all_urls>'],
-        js: ['build/renderer.js'],
-        runAt: 'document_start',
-        world: chrome.scripting.ExecutionWorld.MAIN,
-      },
-    ],
-    function () {
-      // When the content scripts are already registered, an error will be thrown.
-      // It happens when the service worker process is incorrectly duplicated.
-      if (chrome.runtime.lastError) {
-        console.error(chrome.runtime.lastError);
-      }
+async function dynamicallyInjectContentScripts() {
+  const contentScriptsToInject = [
+    {
+      id: 'hook',
+      matches: ['<all_urls>'],
+      js: ['build/installHook.js'],
+      runAt: 'document_start',
+      world: chrome.scripting.ExecutionWorld.MAIN,
     },
-  );
+    {
+      id: 'renderer',
+      matches: ['<all_urls>'],
+      js: ['build/renderer.js'],
+      runAt: 'document_start',
+      world: chrome.scripting.ExecutionWorld.MAIN,
+    },
+  ];
+
+  try {
+    // For some reason dynamically injected scripts might be already registered
+    // Registering them again will fail, which will result into
+    // __REACT_DEVTOOLS_GLOBAL_HOOK__ hook not being injected
+    await chrome.scripting.unregisterContentScripts({
+      ids: contentScriptsToInject.map(s => s.id),
+    });
+
+    // equivalent logic for Firefox is in prepareInjection.js
+    // Manifest V3 method of injecting content script
+    // TODO(hoxyq): migrate Firefox to V3 manifests
+    // Note: the "world" option in registerContentScripts is only available in Chrome v102+
+    // It's critical since it allows us to directly run scripts on the "main" world on the page
+    // "document_start" allows it to run before the page's scripts
+    // so the hook can be detected by react reconciler
+    await chrome.scripting.registerContentScripts(contentScriptsToInject);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+if (!IS_FIREFOX) {
+  dynamicallyInjectContentScripts();
 }
 
 chrome.runtime.onConnect.addListener(function (port) {

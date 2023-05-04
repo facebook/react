@@ -36,6 +36,7 @@ const bodyParser = require('body-parser');
 const busboy = require('busboy');
 const app = express();
 const compress = require('compression');
+const {Readable} = require('node:stream');
 
 app.use(compress());
 
@@ -45,7 +46,7 @@ const {readFile} = require('fs').promises;
 
 const React = require('react');
 
-app.get('/', async function (req, res) {
+async function renderApp(res, returnValue) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -91,37 +92,74 @@ app.get('/', async function (req, res) {
     ),
     React.createElement(App),
   ];
-  const {pipe} = renderToPipeableStream(root, moduleMap);
+  // For client-invoked server actions we refresh the tree and return a return value.
+  const payload = returnValue ? {returnValue, root} : root;
+  const {pipe} = renderToPipeableStream(payload, moduleMap);
   pipe(res);
+}
+
+app.get('/', async function (req, res) {
+  await renderApp(res, null);
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
-  const {renderToPipeableStream, decodeReply, decodeReplyFromBusboy} =
-    await import('react-server-dom-webpack/server');
+  const {
+    renderToPipeableStream,
+    decodeReply,
+    decodeReplyFromBusboy,
+    decodeAction,
+  } = await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
-  const [filepath, name] = serverReference.split('#');
-  const action = (await import(filepath))[name];
-  // Validate that this is actually a function we intended to expose and
-  // not the client trying to invoke arbitrary functions. In a real app,
-  // you'd have a manifest verifying this before even importing it.
-  if (action.$$typeof !== Symbol.for('react.server.reference')) {
-    throw new Error('Invalid action');
-  }
+  if (serverReference) {
+    // This is the client-side case
+    const [filepath, name] = serverReference.split('#');
+    const action = (await import(filepath))[name];
+    // Validate that this is actually a function we intended to expose and
+    // not the client trying to invoke arbitrary functions. In a real app,
+    // you'd have a manifest verifying this before even importing it.
+    if (action.$$typeof !== Symbol.for('react.server.reference')) {
+      throw new Error('Invalid action');
+    }
 
-  let args;
-  if (req.is('multipart/form-data')) {
-    // Use busboy to streamingly parse the reply from form-data.
-    const bb = busboy({headers: req.headers});
-    const reply = decodeReplyFromBusboy(bb);
-    req.pipe(bb);
-    args = await reply;
+    let args;
+    if (req.is('multipart/form-data')) {
+      // Use busboy to streamingly parse the reply from form-data.
+      const bb = busboy({headers: req.headers});
+      const reply = decodeReplyFromBusboy(bb);
+      req.pipe(bb);
+      args = await reply;
+    } else {
+      args = await decodeReply(req.body);
+    }
+    const result = action.apply(null, args);
+    try {
+      // Wait for any mutations
+      await result;
+    } catch (x) {
+      // We handle the error on the client
+    }
+    // Refresh the client and return the value
+    renderApp(res, result);
   } else {
-    args = await decodeReply(req.body);
+    // This is the progressive enhancement case
+    const UndiciRequest = require('undici').Request;
+    const fakeRequest = new UndiciRequest('http://localhost', {
+      method: 'POST',
+      headers: {'Content-Type': req.headers['content-type']},
+      body: Readable.toWeb(req),
+      duplex: 'half',
+    });
+    const formData = await fakeRequest.formData();
+    const action = await decodeAction(formData);
+    try {
+      // Wait for any mutations
+      await action();
+    } catch (x) {
+      const {setServerState} = await import('../src/ServerState.js');
+      setServerState('Error: ' + x.message);
+    }
+    renderApp(res, null);
   }
-
-  const result = action.apply(null, args);
-  const {pipe} = renderToPipeableStream(result, {});
-  pipe(res);
 });
 
 app.get('/todos', function (req, res) {

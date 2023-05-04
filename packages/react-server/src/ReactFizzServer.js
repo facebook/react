@@ -1603,8 +1603,11 @@ function spawnNewSuspendedTask(
 // This is a non-destructive form of rendering a node. If it suspends it spawns
 // a new task and restores the context of this task to what it was before.
 function renderNode(request: Request, task: Task, node: ReactNodeList): void {
-  // TODO: Store segment.children.length here and reset it in case something
+  // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
+  const segment = task.blockedSegment;
+  const childrenLength = segment.children.length;
+  const chunkLength = segment.chunks.length;
 
   // Snapshot the current context in case something throws to interrupt the
   // process.
@@ -1619,6 +1622,10 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     return renderNodeDestructive(request, task, null, node);
   } catch (thrownValue) {
     resetHooksState();
+
+    // Reset the write pointers to where we started.
+    segment.children.length = childrenLength;
+    segment.chunks.length = chunkLength;
 
     const x =
       thrownValue === SuspenseException
@@ -1895,6 +1902,9 @@ function retryTask(request: Request, task: Task): void {
     prevTaskInDEV = currentTaskInDEV;
     currentTaskInDEV = task;
   }
+
+  const childrenLength = segment.children.length;
+  const chunkLength = segment.chunks.length;
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -1918,6 +1928,10 @@ function retryTask(request: Request, task: Task): void {
     finishedTask(request, task.blockedBoundary, segment);
   } catch (thrownValue) {
     resetHooksState();
+
+    // Reset the write pointers to where we started.
+    segment.children.length = childrenLength;
+    segment.chunks.length = chunkLength;
 
     const x =
       thrownValue === SuspenseException
