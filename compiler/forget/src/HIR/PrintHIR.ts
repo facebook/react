@@ -367,9 +367,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "PropertyLoad": {
-      value = `PropertyLoad ${printPlace(instrValue.object)}${
-        instrValue.optional ? "?" : ""
-      }.${instrValue.property}`;
+      value = `PropertyLoad ${printPlace(instrValue.object)}.${
+        instrValue.property
+      }`;
       break;
     }
     case "PropertyStore": {
@@ -385,9 +385,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "ComputedLoad": {
-      value = `ComputedLoad ${printPlace(instrValue.object)}${
-        instrValue.optional ? "?" : ""
-      }[${printPlace(instrValue.property)}]`;
+      value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
+        instrValue.property
+      )}]`;
       break;
     }
     case "ComputedStore": {

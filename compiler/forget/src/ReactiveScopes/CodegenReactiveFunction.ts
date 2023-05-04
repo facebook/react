@@ -853,21 +853,11 @@ function codegenInstructionValue(
       const object = codegenPlace(cx, instrValue.object);
       // We currently only lower single chains of optional memberexpr.
       // (See BuildHIR.ts for more detail.)
-      if (t.isOptionalMemberExpression(object) || instrValue.optional) {
-        value = t.optionalMemberExpression(
-          object,
-          t.identifier(instrValue.property),
-          undefined,
-          instrValue.optional
-        );
-      } else {
-        value = t.memberExpression(
-          object,
-          t.identifier(instrValue.property),
-          undefined,
-          instrValue.optional
-        );
-      }
+      value = t.memberExpression(
+        object,
+        t.identifier(instrValue.property),
+        undefined
+      );
       break;
     }
     case "PropertyDelete": {
@@ -895,16 +885,7 @@ function codegenInstructionValue(
     case "ComputedLoad": {
       const object = codegenPlace(cx, instrValue.object);
       const property = codegenPlace(cx, instrValue.property);
-      if (t.isOptionalMemberExpression(object) || instrValue.optional) {
-        value = t.optionalMemberExpression(
-          object,
-          property,
-          true,
-          instrValue.optional
-        );
-      } else {
-        value = t.memberExpression(object, property, true, instrValue.optional);
-      }
+      value = t.memberExpression(object, property, true);
       break;
     }
     case "ComputedDelete": {

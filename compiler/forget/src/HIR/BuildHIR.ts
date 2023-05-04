@@ -2157,7 +2157,6 @@ function lowerMemberExpression(
       object: { ...object },
       property: propertyNode.node.name,
       loc: exprLoc,
-      optional: expr.node.optional ?? false,
     };
     return { object, property: propertyNode.node.name, value };
   } else {
@@ -2177,26 +2176,21 @@ function lowerMemberExpression(
         },
       };
     }
-    let optional;
     let property: Place;
-
     // See "PropertyLoad" for the difference between optionalMemberExpr()
     // and node.optional here
     if (expr.isOptionalMemberExpression()) {
       // if expr is in an optional chain, evaluation of `property` is
       // conditional on whether expr is nullish
       property = lowerReorderableExpression(builder, propertyNode);
-      optional = expr.node.optional ?? false;
     } else {
       property = lowerExpressionToTemporary(builder, propertyNode);
-      optional = false;
     }
     const value: InstructionValue = {
       kind: "ComputedLoad",
       object: { ...object },
       property: { ...property },
       loc: exprLoc,
-      optional,
     };
     return { object, property, value };
   }
@@ -2280,7 +2274,6 @@ function lowerJsxMemberExpression(
     kind: "PropertyLoad",
     object: objectPlace,
     property,
-    optional: false,
     loc,
   });
 }

@@ -306,13 +306,8 @@ class Context {
     return objectDependency;
   }
 
-  declareProperty(
-    lvalue: Place,
-    object: Place,
-    property: string,
-    isConditional: boolean
-  ): void {
-    const nextDependency = this.#getProperty(object, property, isConditional);
+  declareProperty(lvalue: Place, object: Place, property: string): void {
+    const nextDependency = this.#getProperty(object, property, false);
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
@@ -363,8 +358,8 @@ class Context {
     this.visitDependency(dependency);
   }
 
-  visitProperty(object: Place, property: string, isConditional: boolean): void {
-    const nextDependency = this.#getProperty(object, property, isConditional);
+  visitProperty(object: Place, property: string): void {
+    const nextDependency = this.#getProperty(object, property, false);
     this.visitDependency(nextDependency);
   }
 
@@ -529,14 +524,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       }
     } else if (value.kind === "PropertyLoad") {
       if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
-        context.declareProperty(
-          lvalue,
-          value.object,
-          value.property,
-          value.optional
-        );
+        context.declareProperty(lvalue, value.object, value.property);
       } else {
-        context.visitProperty(value.object, value.property, value.optional);
+        context.visitProperty(value.object, value.property);
       }
     } else if (value.kind === "StoreLocal") {
       context.visitOperand(value.value);

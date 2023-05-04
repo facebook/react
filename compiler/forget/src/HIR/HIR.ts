@@ -645,7 +645,6 @@ export type InstructionValue =
       kind: "PropertyLoad";
       object: Place;
       property: string;
-      optional: boolean;
       loc: SourceLocation;
     }
   // `delete object.property`
@@ -669,7 +668,6 @@ export type InstructionValue =
       kind: "ComputedLoad";
       object: Place;
       property: Place;
-      optional: boolean;
       loc: SourceLocation;
     }
   // `delete object[property]`

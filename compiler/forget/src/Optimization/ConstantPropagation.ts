@@ -6,7 +6,6 @@
  */
 
 import { isValidIdentifier } from "@babel/types";
-import invariant from "invariant";
 import {
   GotoVariant,
   HIRFunction,
@@ -180,16 +179,7 @@ function evaluateInstruction(
           loc: value.loc,
           property: property.value,
           object: value.object,
-          optional: value.optional,
         };
-        // Future-proofing: when we add support for optional computed properties,
-        // we'll need to copy the value here
-        if ((value as any).optional) {
-          invariant(
-            false,
-            "TODO: translate optional computed load to optional property load"
-          );
-        }
         instr.value = nextValue;
       }
       return null;
