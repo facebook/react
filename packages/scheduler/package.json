@@ -23,6 +23,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "index.native.js",
     "unstable_mock.js",
     "unstable_post_task.js",
     "cjs/",

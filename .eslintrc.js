@@ -428,12 +428,6 @@ module.exports = {
         TaskController: 'readonly',
       },
     },
-    {
-      files: ['packages/scheduler/npm/index.native.js'],
-      globals: {
-        nativeRuntimeScheduler: 'readonly',
-      },
-    },
   ],
 
   env: {

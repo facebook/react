@@ -935,6 +935,17 @@ const bundles = [
     externals: ['ReactNativeInternalFeatureFlags'],
   },
 
+  /******* React Scheduler Native *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/index.native',
+    global: 'SchedulerNative',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['ReactNativeInternalFeatureFlags'],
+  },
+
   /******* React Scheduler Post Task (experimental) *******/
   {
     bundleTypes: [
