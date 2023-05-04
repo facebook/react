@@ -525,7 +525,19 @@ function computeMemoizationInputs(
         rvalues: [value.value],
       };
     }
-    case "OptionalExpression":
+    case "OptionalExpression": {
+      // Indirection for the inner value, memoized if the value is
+      const lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+      }
+      return {
+        lvalues: lvalues,
+        rvalues: [
+          ...computeMemoizationInputs(value.value, null, options).rvalues,
+        ],
+      };
+    }
     case "RegExpLiteral":
     case "FunctionExpression":
     case "TaggedTemplateExpression":

@@ -1425,7 +1425,11 @@ function lowerExpression(
         }
       }
     }
-    case "OptionalMemberExpression":
+    case "OptionalMemberExpression": {
+      const expr = exprPath as NodePath<t.OptionalMemberExpression>;
+      const { value } = lowerOptionalMemberExpression(builder, expr, null);
+      return { kind: "LoadLocal", place: value, loc: value.loc };
+    }
     case "MemberExpression": {
       const expr = exprPath as NodePath<
         t.MemberExpression | t.OptionalMemberExpression

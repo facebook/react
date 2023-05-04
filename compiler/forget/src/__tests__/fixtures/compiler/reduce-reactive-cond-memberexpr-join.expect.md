@@ -38,13 +38,13 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // To preserve th
 
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.a.b;
+  const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {
     x = [];
     x.push(props.a?.b);
     x.push(props.a.b.c);
-    $[0] = props.a.b;
+    $[0] = props.a;
     $[1] = x;
   } else {
     x = $[1];
