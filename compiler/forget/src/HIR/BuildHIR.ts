@@ -2113,32 +2113,6 @@ function lowerMemberExpression(
   const object =
     loweredObject ?? lowerExpressionToTemporary(builder, objectNode);
 
-  if (
-    objectNode.isOptionalMemberExpression() &&
-    !expr.isOptionalMemberExpression()
-  ) {
-    // Babel's `isOptionalMemberExpression` indicates whether this property load itself
-    // is conditional (i.e. within an "optional chain"). This is different from the
-    // `optional` property, which is only true for property loads at the start of an
-    // optional chain. e.g. `a.b?.c.d` decomposes into
-    //   [0] MemberExpr          a.b;   // not in an optional chain
-    //   [1] OptionalMemberExpr [0]?.c
-    //   [2] OptionalMemberExpr [1].c
-    //   [3] OptionalMemberExpr [2].d
-    // We currently do not handle non-conditional loads from an optional memberexpr
-    // e.g. `(a?.b).c`
-    // See error.nonoptional-load-from-optional-memberexpr test fixture for details
-    builder.errors.push({
-      reason: `(BuildHIR::lowerMemberExpression) Handle optional chaining for non-optional member expr.`,
-      severity: ErrorSeverity.Todo,
-      nodePath: propertyNode,
-    });
-    return {
-      object,
-      property: propertyNode.toString(),
-      value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc },
-    };
-  }
   if (!expr.node.computed) {
     if (!propertyNode.isIdentifier()) {
       builder.errors.push({
