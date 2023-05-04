@@ -557,7 +557,7 @@ function unsupportedSetOptimisticState() {
   throw new Error('Cannot update optimistic state while rendering.');
 }
 
-function useOptimisticState<S, A>(
+function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
@@ -665,7 +665,7 @@ if (enableFormActions && enableAsyncActions) {
   HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
 }
 if (enableAsyncActions) {
-  HooksDispatcher.useOptimisticState = useOptimisticState;
+  HooksDispatcher.useOptimistic = useOptimistic;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

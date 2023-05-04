@@ -49,7 +49,7 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  experimental_useOptimisticState,
+  experimental_useOptimistic,
   useReducer,
   useRef,
   useState,

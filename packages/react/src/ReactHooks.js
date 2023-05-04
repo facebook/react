@@ -242,11 +242,11 @@ export function useEffectEvent<Args, F: (...Array<Args>) => mixed>(
   return dispatcher.useEffectEvent(callback);
 }
 
-export function useOptimisticState<S, A>(
+export function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.useOptimisticState(passthrough, reducer);
+  return dispatcher.useOptimistic(passthrough, reducer);
 }
