@@ -65,20 +65,20 @@ class Transform extends ReactiveFunctionVisitor<void> {
       (value.kind === "CallExpression" &&
         this.fbtValues.has(value.callee.identifier.id))
     ) {
+      const fbtScope = lvalue.identifier.scope;
+      if (fbtScope === null) {
+        return;
+      }
+
       // if the JSX element's tag was `fbt`, mark all its operands
       // to ensure that they end up in the same scope as the jsx element
       // itself.
       for (const operand of eachReactiveValueOperand(value)) {
-        operand.identifier.scope = lvalue.identifier.scope;
-        operand.identifier.mutableRange.end =
-          lvalue.identifier.mutableRange.end;
+        operand.identifier.scope = fbtScope;
 
         // Expand the jsx element's range to account for its operands
-        lvalue.identifier.mutableRange.start = makeInstructionId(
-          Math.min(
-            lvalue.identifier.mutableRange.start,
-            operand.identifier.mutableRange.start
-          )
+        fbtScope.range.start = makeInstructionId(
+          Math.min(fbtScope.range.start, operand.identifier.mutableRange.start)
         );
       }
     }
