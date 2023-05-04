@@ -2176,16 +2176,7 @@ function lowerMemberExpression(
         },
       };
     }
-    let property: Place;
-    // See "PropertyLoad" for the difference between optionalMemberExpr()
-    // and node.optional here
-    if (expr.isOptionalMemberExpression()) {
-      // if expr is in an optional chain, evaluation of `property` is
-      // conditional on whether expr is nullish
-      property = lowerReorderableExpression(builder, propertyNode);
-    } else {
-      property = lowerExpressionToTemporary(builder, propertyNode);
-    }
+    const property = lowerExpressionToTemporary(builder, propertyNode);
     const value: InstructionValue = {
       kind: "ComputedLoad",
       object: { ...object },
