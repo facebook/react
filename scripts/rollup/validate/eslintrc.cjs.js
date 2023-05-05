@@ -52,6 +52,9 @@ module.exports = {
 
     // act
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+
+    // Native Scheduler
+    nativeRuntimeScheduler: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 2020,

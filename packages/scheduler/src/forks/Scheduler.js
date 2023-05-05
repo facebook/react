@@ -46,7 +46,7 @@ import {
 
 export type Callback = boolean => ?Callback;
 
-type Task = {
+export opaque type Task = {
   id: number,
   callback: Callback | null,
   priorityLevel: PriorityLevel,
