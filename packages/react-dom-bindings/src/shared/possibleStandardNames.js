@@ -421,6 +421,8 @@ const possibleStandardNames = {
   'text-rendering': 'textRendering',
   to: 'to',
   transform: 'transform',
+  transformorigin: 'transformOrigin',
+  'transform-origin': 'transformOrigin',
   typeof: 'typeof',
   u1: 'u1',
   u2: 'u2',

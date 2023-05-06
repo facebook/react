@@ -12,7 +12,7 @@ import {Fragment, useContext, useEffect, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {ModalDialogContext} from './ModalDialog';
 import {StoreContext} from './context';
-import {UNSUPPORTED_VERSION_URL} from 'react-devtools-shared/src/constants';
+import {UNSUPPORTED_VERSION_URL} from '../constants';
 
 import styles from './UnsupportedVersionDialog.css';
 

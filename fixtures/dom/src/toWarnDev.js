@@ -1,7 +1,7 @@
 // copied from scripts/jest/matchers/toWarnDev.js
 'use strict';
 
-const jestDiff = require('jest-diff').default;
+const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
 
 function shouldIgnoreConsoleError(format, args) {

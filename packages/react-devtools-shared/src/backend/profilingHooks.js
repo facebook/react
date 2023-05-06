@@ -18,14 +18,16 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {
   BatchUID,
+  InternalModuleSourceToRanges,
   LaneToLabelMap,
   ReactComponentMeasure,
+  ReactLane,
   ReactMeasure,
   ReactMeasureType,
-  TimelineData,
-  SuspenseEvent,
-  SchedulingEvent,
   ReactScheduleStateUpdateEvent,
+  SchedulingEvent,
+  SuspenseEvent,
+  TimelineData,
 } from 'react-devtools-timeline/src/types';
 
 import isArray from 'shared/isArray';
@@ -52,17 +54,17 @@ let supportsUserTiming =
 let supportsUserTimingV3 = false;
 if (supportsUserTiming) {
   const CHECK_V3_MARK = '__v3';
-  const markOptions = {};
+  const markOptions = ({}: {startTime?: number});
   Object.defineProperty(markOptions, 'startTime', {
-    get: function() {
+    get: function () {
       supportsUserTimingV3 = true;
       return 0;
     },
-    set: function() {},
+    set: function () {},
   });
 
   try {
-    // $FlowFixMe: Flow expects the User Timing level 2 API.
+    // $FlowFixMe[extra-arg]: Flow expects the User Timing level 2 API.
     performance.mark(CHECK_V3_MARK, markOptions);
   } catch (error) {
     // Ignore
@@ -204,7 +206,7 @@ export function createProfilingHooks({
     }
   }
 
-  function markAndClear(markName) {
+  function markAndClear(markName: string) {
     // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
     ((performanceTarget: any): Performance).mark(markName);
     ((performanceTarget: any): Performance).clearMarks(markName);
@@ -237,10 +239,8 @@ export function createProfilingHooks({
     currentReactMeasuresStack.push(reactMeasure);
 
     if (currentTimelineData) {
-      const {
-        batchUIDToMeasuresMap,
-        laneToReactMeasureMap,
-      } = currentTimelineData;
+      const {batchUIDToMeasuresMap, laneToReactMeasureMap} =
+        currentTimelineData;
 
       let reactMeasures = batchUIDToMeasuresMap.get(currentBatchUID);
       if (reactMeasures != null) {
@@ -281,7 +281,7 @@ export function createProfilingHooks({
       );
     }
 
-    // $FlowFixMe This property should not be writable outside of this function.
+    // $FlowFixMe[cannot-write] This property should not be writable outside of this function.
     top.duration = currentTime - top.timestamp;
 
     if (currentTimelineData) {
@@ -590,7 +590,7 @@ export function createProfilingHooks({
 
   const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
-  // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+  // $FlowFixMe[incompatible-type]: Flow cannot handle polymorphic WeakMaps
   const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
   let wakeableID: number = 0;
   function getWakeableID(wakeable: Wakeable): number {
@@ -839,7 +839,8 @@ export function createProfilingHooks({
       isProfiling = value;
 
       if (isProfiling) {
-        const internalModuleSourceToRanges = new Map();
+        const internalModuleSourceToRanges: InternalModuleSourceToRanges =
+          new Map();
 
         if (supportsUserTimingV3) {
           const ranges = getInternalModuleRanges();
@@ -858,7 +859,7 @@ export function createProfilingHooks({
           }
         }
 
-        const laneToReactMeasureMap = new Map();
+        const laneToReactMeasureMap = new Map<ReactLane, ReactMeasure[]>();
         let lane = 1;
         for (let index = 0; index < REACT_TOTAL_NUM_LANES; index++) {
           laneToReactMeasureMap.set(lane, []);

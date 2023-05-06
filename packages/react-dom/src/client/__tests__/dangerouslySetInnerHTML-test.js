@@ -55,6 +55,7 @@ describe('dangerouslySetInnerHTML', () => {
       );
     });
 
+    // @gate !disableIEWorkarounds
     it('sets innerHTML on it', () => {
       const html = '<circle></circle>';
       const container = document.createElementNS(
@@ -69,6 +70,7 @@ describe('dangerouslySetInnerHTML', () => {
       expect(circle.tagName).toBe('circle');
     });
 
+    // @gate !disableIEWorkarounds
     it('clears previous children', () => {
       const firstHtml = '<rect></rect>';
       const secondHtml = '<circle></circle>';

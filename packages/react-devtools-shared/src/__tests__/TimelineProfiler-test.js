@@ -20,6 +20,10 @@ describe('Timeline profiler', () => {
   let store;
   let unmountFns;
   let utils;
+  let waitFor;
+  let waitForAll;
+  let waitForPaint;
+  let assertLog;
 
   beforeEach(() => {
     utils = require('./utils');
@@ -44,7 +48,17 @@ describe('Timeline profiler', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
+    const InternalTestUtils = require('internal-test-utils');
+    waitFor = InternalTestUtils.waitFor;
+    waitForAll = InternalTestUtils.waitForAll;
+    waitForPaint = InternalTestUtils.waitForPaint;
+    assertLog = InternalTestUtils.assertLog;
+
     store = global.store;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('User Timing API', () => {
@@ -112,8 +126,8 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
-      setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
-        .setPerformanceMock_ONLY_FOR_TESTING;
+      setPerformanceMock =
+        require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
     });
 
@@ -130,7 +144,7 @@ describe('Timeline profiler', () => {
       renderHelper(<div />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--render-stop",
@@ -147,21 +161,21 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark concurrent render without suspends or state updates', () => {
+    it('should mark concurrent render without suspends or state updates', async () => {
       renderRootHelper(<div />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--render-stop",
           "--commit-start-32",
@@ -179,12 +193,12 @@ describe('Timeline profiler', () => {
 
     it('should mark render yields', async () => {
       function Bar() {
-        Scheduler.unstable_yieldValue('Bar');
+        Scheduler.log('Bar');
         return null;
       }
 
       function Foo() {
-        Scheduler.unstable_yieldValue('Foo');
+        Scheduler.log('Foo');
         return <Bar />;
       }
 
@@ -192,11 +206,10 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Foo />);
       });
 
-      // Do one step of work.
-      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+      await waitFor(['Foo']);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-128",
           "--render-start-128",
           "--component-render-start-Foo",
@@ -219,7 +232,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-Example",
@@ -242,7 +255,7 @@ describe('Timeline profiler', () => {
 
       await fakeSuspensePromise;
       expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+                [
                   "--suspense-resolved-0-Example",
                 ]
           `);
@@ -261,7 +274,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-Example",
@@ -287,7 +300,11 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark concurrent render with suspense that resolves', async () => {
-      const fakeSuspensePromise = Promise.resolve(true);
+      let resolveFakePromise;
+      const fakeSuspensePromise = new Promise(
+        resolve => (resolveFakePromise = resolve),
+      );
+
       function Example() {
         throw fakeSuspensePromise;
       }
@@ -299,17 +316,17 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -329,16 +346,20 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      await fakeSuspensePromise;
+      await resolveFakePromise();
       expect(clearedMarks).toMatchInlineSnapshot(`
-            Array [
+            [
               "--suspense-resolved-0-Example",
             ]
         `);
     });
 
     it('should mark concurrent render with suspense that rejects', async () => {
-      const fakeSuspensePromise = Promise.reject(new Error('error'));
+      let rejectFakePromise;
+      const fakeSuspensePromise = new Promise(
+        (_, reject) => (rejectFakePromise = reject),
+      );
+
       function Example() {
         throw fakeSuspensePromise;
       }
@@ -350,17 +371,17 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -380,15 +401,18 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      await expect(fakeSuspensePromise).rejects.toThrow();
+      await expect(() => {
+        rejectFakePromise(new Error('error'));
+        return fakeSuspensePromise;
+      }).rejects.toThrow();
       expect(clearedMarks).toMatchInlineSnapshot(`
-                Array [
+                [
                   "--suspense-rejected-0-Example",
                 ]
           `);
     });
 
-    it('should mark cascading class component state updates', () => {
+    it('should mark cascading class component state updates', async () => {
       class Example extends React.Component {
         state = {didMount: false};
         componentDidMount() {
@@ -402,17 +426,17 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -442,7 +466,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading class component force updates', () => {
+    it('should mark cascading class component force updates', async () => {
       class Example extends React.Component {
         componentDidMount() {
           this.forceUpdate();
@@ -455,17 +479,17 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -495,7 +519,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase state updates for class component', () => {
+    it('should mark render phase state updates for class component', async () => {
       class Example extends React.Component {
         state = {didRender: false};
         render() {
@@ -509,7 +533,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -517,11 +541,11 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      jest.spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(errorMessage).toContain(
@@ -529,7 +553,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--schedule-state-update-32-Example",
@@ -548,7 +572,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase force updates for class component', () => {
+    it('should mark render phase force updates for class component', async () => {
       let forced = false;
       class Example extends React.Component {
         render() {
@@ -563,7 +587,7 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
@@ -571,11 +595,11 @@ describe('Timeline profiler', () => {
       clearPendingMarks();
 
       let errorMessage;
-      spyOn(console, 'error').and.callFake(message => {
+      jest.spyOn(console, 'error').mockImplementation(message => {
         errorMessage = message;
       });
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(errorMessage).toContain(
@@ -583,7 +607,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--schedule-forced-update-32-Example",
@@ -602,7 +626,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading layout updates', () => {
+    it('should mark cascading layout updates', async () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
         React.useLayoutEffect(() => {
@@ -614,17 +638,17 @@ describe('Timeline profiler', () => {
       renderRootHelper(<Example />);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-Example",
           "--component-render-stop",
@@ -656,7 +680,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark cascading passive updates', () => {
+    it('should mark cascading passive updates', async () => {
       function Example() {
         const [didMount, setDidMount] = React.useState(false);
         React.useEffect(() => {
@@ -667,10 +691,10 @@ describe('Timeline profiler', () => {
 
       renderRootHelper(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-Example",
@@ -705,7 +729,7 @@ describe('Timeline profiler', () => {
       `);
     });
 
-    it('should mark render phase updates', () => {
+    it('should mark render phase updates', async () => {
       function Example() {
         const [didRender, setDidRender] = React.useState(false);
         if (!didRender) {
@@ -716,10 +740,10 @@ describe('Timeline profiler', () => {
 
       renderRootHelper(<Example />);
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-Example",
@@ -740,7 +764,7 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark sync render that throws', async () => {
-      spyOn(console, 'error');
+      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
@@ -766,7 +790,7 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--component-render-start-ErrorBoundary",
@@ -802,7 +826,7 @@ describe('Timeline profiler', () => {
     });
 
     it('should mark concurrent render that throws', async () => {
-      spyOn(console, 'error');
+      jest.spyOn(console, 'error').mockImplementation(() => {});
 
       class ErrorBoundary extends React.Component {
         state = {error: null};
@@ -829,17 +853,17 @@ describe('Timeline profiler', () => {
       );
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
         ]
       `);
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--render-start-32",
           "--component-render-start-ErrorBoundary",
           "--component-render-stop",
@@ -884,37 +908,37 @@ describe('Timeline profiler', () => {
     it('should mark passive and layout effects', async () => {
       function ComponentWithEffects() {
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 1 mount');
+          Scheduler.log('layout 1 mount');
           return () => {
-            Scheduler.unstable_yieldValue('layout 1 unmount');
+            Scheduler.log('layout 1 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 1 mount');
+          Scheduler.log('passive 1 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 1 unmount');
+            Scheduler.log('passive 1 unmount');
           };
         }, []);
 
         React.useLayoutEffect(() => {
-          Scheduler.unstable_yieldValue('layout 2 mount');
+          Scheduler.log('layout 2 mount');
           return () => {
-            Scheduler.unstable_yieldValue('layout 2 unmount');
+            Scheduler.log('layout 2 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 2 mount');
+          Scheduler.log('passive 2 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 2 unmount');
+            Scheduler.log('passive 2 unmount');
           };
         }, []);
 
         React.useEffect(() => {
-          Scheduler.unstable_yieldValue('passive 3 mount');
+          Scheduler.log('passive 3 mount');
           return () => {
-            Scheduler.unstable_yieldValue('passive 3 unmount');
+            Scheduler.log('passive 3 unmount');
           };
         }, []);
 
@@ -923,13 +947,10 @@ describe('Timeline profiler', () => {
 
       const unmount = renderRootHelper(<ComponentWithEffects />);
 
-      expect(Scheduler).toFlushUntilNextPaint([
-        'layout 1 mount',
-        'layout 2 mount',
-      ]);
+      await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-32",
           "--render-start-32",
           "--component-render-start-ComponentWithEffects",
@@ -953,14 +974,14 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([
+      await waitForAll([
         'passive 1 mount',
         'passive 2 mount',
         'passive 3 mount',
       ]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--passive-effects-start-32",
           "--component-passive-effect-mount-start-ComponentWithEffects",
           "--component-passive-effect-mount-stop",
@@ -974,11 +995,11 @@ describe('Timeline profiler', () => {
 
       clearPendingMarks();
 
-      expect(Scheduler).toFlushAndYield([]);
+      await waitForAll([]);
 
       unmount();
 
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'layout 1 unmount',
         'layout 2 unmount',
         'passive 1 unmount',
@@ -987,7 +1008,7 @@ describe('Timeline profiler', () => {
       ]);
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
+        [
           "--schedule-render-2",
           "--render-start-2",
           "--render-stop",
@@ -1021,7 +1042,7 @@ describe('Timeline profiler', () => {
         renderHelper(<div />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-render-2",
             "--render-start-2",
             "--render-stop",
@@ -1041,7 +1062,7 @@ describe('Timeline profiler', () => {
       it('regression test DefaultLane', () => {
         renderRootHelper(<div />);
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-render-32",
           ]
         `);
@@ -1059,7 +1080,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         clearedMarks.splice(0);
 
@@ -1069,7 +1090,7 @@ describe('Timeline profiler', () => {
         await Promise.resolve();
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-state-update-2-App",
             "--render-start-2",
             "--component-render-start-App",
@@ -1098,7 +1119,7 @@ describe('Timeline profiler', () => {
         }
 
         renderRootHelper(<App />);
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         clearedMarks.splice(0);
 
@@ -1106,10 +1127,10 @@ describe('Timeline profiler', () => {
         event.initEvent('mouseover', true, true);
         dispatchAndSetCurrentEvent(targetRef.current, event);
 
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
+          [
             "--schedule-state-update-8-App",
             "--render-start-8",
             "--component-render-start-App",
@@ -1189,8 +1210,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 10,
               "type": "schedule-render",
@@ -1205,8 +1226,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
@@ -1222,10 +1243,9 @@ describe('Timeline profiler', () => {
         function Example() {
           const setHigh = React.useState(0)[1];
           const setLow = React.useState(0)[1];
-          const startTransition = React.useTransition()[1];
 
           updaterFn = () => {
-            startTransition(() => {
+            React.startTransition(() => {
               setLow(prevLow => prevLow + 1);
             });
             setHigh(prevHigh => prevHigh + 1);
@@ -1243,17 +1263,8 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000000001000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-            Object {
+          [
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1262,16 +1273,7 @@ describe('Timeline profiler', () => {
               "type": "schedule-state-update",
               "warning": null,
             },
-            Object {
-              "componentName": "Example",
-              "componentStack": "
-              in Example (at **)",
-              "lanes": "0b0000000000000000000000010000000",
-              "timestamp": 10,
-              "type": "schedule-state-update",
-              "warning": null,
-            },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1283,15 +1285,15 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
@@ -1303,15 +1305,15 @@ describe('Timeline profiler', () => {
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark render yields', async () => {
         function Bar() {
-          Scheduler.unstable_yieldValue('Bar');
+          Scheduler.log('Bar');
           return null;
         }
 
         function Foo() {
-          Scheduler.unstable_yieldValue('Foo');
+          Scheduler.log('Foo');
           return <Bar />;
         }
 
@@ -1320,11 +1322,11 @@ describe('Timeline profiler', () => {
         });
 
         // Do one step of work.
-        expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+        await waitFor(['Foo']);
 
         // Finish flushing so React commits;
         // Unless we do this, the ProfilerStore won't collect Profiling data.
-        expect(Scheduler).toFlushAndYield(['Bar']);
+        await waitForAll(['Bar']);
 
         // Since we yielded, the batch should report two separate "render" chunks.
         const batch = getBatchOfWork(0);
@@ -1342,7 +1344,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          Scheduler.log(resolved ? 'resolved' : 'suspended');
           if (!resolved) {
             throw suspensePromise;
           }
@@ -1355,13 +1357,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toHaveYielded(['suspended']);
+        assertLog(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         resolveFn();
         await suspensePromise;
 
-        expect(Scheduler).toFlushAndYield(['resolved']);
+        await waitForAll(['resolved']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1369,7 +1371,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1388,7 +1390,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark sync render with suspense that rejects', async () => {
         let rejectFn;
         let rejected = false;
@@ -1400,7 +1402,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          Scheduler.log(rejected ? 'rejected' : 'suspended');
           if (!rejected) {
             throw suspensePromise;
           }
@@ -1413,13 +1415,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toHaveYielded(['suspended']);
+        assertLog(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         rejectFn();
         await expect(suspensePromise).rejects.toThrow();
 
-        expect(Scheduler).toHaveYielded(['rejected']);
+        assertLog(['rejected']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1427,7 +1429,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1446,7 +1448,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark concurrent render with suspense that resolves', async () => {
         let resolveFn;
         let resolved = false;
@@ -1458,7 +1460,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          Scheduler.log(resolved ? 'resolved' : 'suspended');
           if (!resolved) {
             throw suspensePromise;
           }
@@ -1471,13 +1473,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toFlushAndYield(['suspended']);
+        await waitForAll(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         resolveFn();
         await suspensePromise;
 
-        expect(Scheduler).toFlushAndYield(['resolved']);
+        await waitForAll(['resolved']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1485,7 +1487,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1504,7 +1506,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      // @reactVersion >=18.0
+      // @reactVersion >=18.2
       it('should mark concurrent render with suspense that rejects', async () => {
         let rejectFn;
         let rejected = false;
@@ -1516,7 +1518,7 @@ describe('Timeline profiler', () => {
         });
 
         function Example() {
-          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          Scheduler.log(rejected ? 'rejected' : 'suspended');
           if (!rejected) {
             throw suspensePromise;
           }
@@ -1529,13 +1531,13 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(Scheduler).toFlushAndYield(['suspended']);
+        await waitForAll(['suspended']);
 
         Scheduler.unstable_advanceTime(10);
         rejectFn();
         await expect(suspensePromise).rejects.toThrow();
 
-        expect(Scheduler).toFlushAndYield(['rejected']);
+        await waitForAll(['rejected']);
 
         const timelineData = stopProfilingAndGetTimelineData();
 
@@ -1543,7 +1545,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.suspenseEvents).toHaveLength(1);
         const suspenseEvent = timelineData.suspenseEvents[0];
         expect(suspenseEvent).toMatchInlineSnapshot(`
-          Object {
+          {
             "componentName": "Example",
             "depth": 0,
             "duration": 10,
@@ -1562,7 +1564,7 @@ describe('Timeline profiler', () => {
         expect(timelineData.componentMeasures).toHaveLength(2);
       });
 
-      it('should mark cascading class component state updates', () => {
+      it('should mark cascading class component state updates', async () => {
         class Example extends React.Component {
           state = {didMount: false};
           componentDidMount() {
@@ -1570,29 +1572,27 @@ describe('Timeline profiler', () => {
           }
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
-              this.state.didMount ? 'update' : 'mount',
-            );
+            Scheduler.log(this.state.didMount ? 'update' : 'mount');
             return null;
           }
         }
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'update']);
+        await waitForPaint(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1602,14 +1602,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1622,7 +1622,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading class component force updates', () => {
+      it('should mark cascading class component force updates', async () => {
         let forced = false;
         class Example extends React.Component {
           componentDidMount() {
@@ -1631,27 +1631,27 @@ describe('Timeline profiler', () => {
           }
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'mount');
+            Scheduler.log(forced ? 'force update' : 'mount');
             return null;
           }
         }
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushUntilNextPaint(['mount', 'force update']);
+        await waitForPaint(['mount', 'force update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1661,14 +1661,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 20,
@@ -1679,7 +1679,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase state updates for class component', () => {
+      it('should mark render phase state updates for class component', async () => {
         class Example extends React.Component {
           state = {didRender: false};
           render() {
@@ -1687,7 +1687,7 @@ describe('Timeline profiler', () => {
               this.setState({didRender: true});
             }
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(
+            Scheduler.log(
               this.state.didRender ? 'second render' : 'first render',
             );
             return null;
@@ -1697,11 +1697,11 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        jest.spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
-        expect(Scheduler).toFlushAndYield(['first render', 'second render']);
+        await waitForAll(['first render', 'second render']);
 
         expect(console.error).toHaveBeenCalledTimes(1);
         expect(errorMessage).toContain(
@@ -1711,15 +1711,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1729,14 +1729,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1749,12 +1749,12 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase force updates for class component', () => {
+      it('should mark render phase force updates for class component', async () => {
         let forced = false;
         class Example extends React.Component {
           render() {
             Scheduler.unstable_advanceTime(10);
-            Scheduler.unstable_yieldValue(forced ? 'force update' : 'render');
+            Scheduler.log(forced ? 'force update' : 'render');
             if (!forced) {
               forced = true;
               this.forceUpdate();
@@ -1766,11 +1766,11 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         let errorMessage;
-        spyOn(console, 'error').and.callFake(message => {
+        jest.spyOn(console, 'error').mockImplementation(message => {
           errorMessage = message;
         });
 
-        expect(Scheduler).toFlushAndYield(['render', 'force update']);
+        await waitForAll(['render', 'force update']);
 
         expect(console.error).toHaveBeenCalledTimes(1);
         expect(errorMessage).toContain(
@@ -1780,15 +1780,15 @@ describe('Timeline profiler', () => {
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 20,
@@ -1798,14 +1798,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 20,
@@ -1816,7 +1816,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading layout updates', () => {
+      it('should mark cascading layout updates', async () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
           React.useLayoutEffect(() => {
@@ -1824,33 +1824,33 @@ describe('Timeline profiler', () => {
             setDidMount(true);
           }, []);
           Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          Scheduler.log(didMount ? 'update' : 'mount');
           return didMount;
         }
 
         renderRootHelper(<Example />);
 
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1860,14 +1860,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1880,7 +1880,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark cascading passive updates', () => {
+      it('should mark cascading passive updates', async () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
           React.useEffect(() => {
@@ -1888,32 +1888,32 @@ describe('Timeline profiler', () => {
             setDidMount(true);
           }, []);
           Scheduler.unstable_advanceTime(10);
-          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          Scheduler.log(didMount ? 'update' : 'mount');
           return didMount;
         }
 
         renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 1,
               "timestamp": 20,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "duration": 10,
               "timestamp": 21,
@@ -1923,14 +1923,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1943,26 +1943,26 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark render phase updates', () => {
+      it('should mark render phase updates', async () => {
         function Example() {
           const [didRender, setDidRender] = React.useState(false);
           Scheduler.unstable_advanceTime(10);
           if (!didRender) {
             setDidRender(true);
           }
-          Scheduler.unstable_yieldValue(didRender ? 'update' : 'mount');
+          Scheduler.log(didRender ? 'update' : 'mount');
           return didRender;
         }
 
         renderRootHelper(<Example />);
-        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+        await waitForAll(['mount', 'update']);
 
         const timelineData = stopProfilingAndGetTimelineData();
         // Render phase updates should be retried as part of the same batch.
         expect(timelineData.batchUIDToMeasuresMap.size).toBe(1);
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "Example",
               "duration": 20,
               "timestamp": 10,
@@ -1972,14 +1972,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Example",
               "componentStack": "
               in Example (at **)",
@@ -1993,7 +1993,7 @@ describe('Timeline profiler', () => {
       });
 
       it('should mark sync render that throws', async () => {
-        spyOn(console, 'error');
+        jest.spyOn(console, 'error').mockImplementation(() => {});
 
         class ErrorBoundary extends React.Component {
           state = {error: null};
@@ -2003,16 +2003,16 @@ describe('Timeline profiler', () => {
           render() {
             Scheduler.unstable_advanceTime(10);
             if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              Scheduler.log('ErrorBoundary fallback');
               return null;
             }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            Scheduler.log('ErrorBoundary render');
             return this.props.children;
           }
         }
 
         function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          Scheduler.log('ExampleThatThrows');
           throw Error('Expected error');
         }
 
@@ -2022,7 +2022,7 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'ErrorBoundary render',
           'ExampleThatThrows',
           'ExampleThatThrows',
@@ -2031,22 +2031,22 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 20,
@@ -2056,14 +2056,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000000010",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "componentStack": "
               in ErrorBoundary (at **)",
@@ -2075,8 +2075,8 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
@@ -2088,7 +2088,7 @@ describe('Timeline profiler', () => {
       });
 
       it('should mark concurrent render that throws', async () => {
-        spyOn(console, 'error');
+        jest.spyOn(console, 'error').mockImplementation(() => {});
 
         class ErrorBoundary extends React.Component {
           state = {error: null};
@@ -2098,16 +2098,16 @@ describe('Timeline profiler', () => {
           render() {
             Scheduler.unstable_advanceTime(10);
             if (this.state.error) {
-              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              Scheduler.log('ErrorBoundary fallback');
               return null;
             }
-            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            Scheduler.log('ErrorBoundary render');
             return this.props.children;
           }
         }
 
         function ExampleThatThrows() {
-          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          Scheduler.log('ExampleThatThrows');
           // eslint-disable-next-line no-throw-literal
           throw 'Expected error';
         }
@@ -2118,7 +2118,7 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'ErrorBoundary render',
           'ExampleThatThrows',
           'ExampleThatThrows',
@@ -2130,36 +2130,36 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 20,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "duration": 0,
               "timestamp": 30,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "duration": 10,
               "timestamp": 30,
@@ -2169,14 +2169,14 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ErrorBoundary",
               "componentStack": "
               in ErrorBoundary (at **)",
@@ -2188,15 +2188,15 @@ describe('Timeline profiler', () => {
           ]
         `);
         expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
               "timestamp": 20,
               "type": "thrown-error",
             },
-            Object {
+            {
               "componentName": "ExampleThatThrows",
               "message": "Expected error",
               "phase": "mount",
@@ -2210,37 +2210,37 @@ describe('Timeline profiler', () => {
       it('should mark passive and layout effects', async () => {
         function ComponentWithEffects() {
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 1 mount');
+            Scheduler.log('layout 1 mount');
             return () => {
-              Scheduler.unstable_yieldValue('layout 1 unmount');
+              Scheduler.log('layout 1 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 1 mount');
+            Scheduler.log('passive 1 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 1 unmount');
+              Scheduler.log('passive 1 unmount');
             };
           }, []);
 
           React.useLayoutEffect(() => {
-            Scheduler.unstable_yieldValue('layout 2 mount');
+            Scheduler.log('layout 2 mount');
             return () => {
-              Scheduler.unstable_yieldValue('layout 2 unmount');
+              Scheduler.log('layout 2 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 2 mount');
+            Scheduler.log('passive 2 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 2 unmount');
+              Scheduler.log('passive 2 unmount');
             };
           }, []);
 
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('passive 3 mount');
+            Scheduler.log('passive 3 mount');
             return () => {
-              Scheduler.unstable_yieldValue('passive 3 unmount');
+              Scheduler.log('passive 3 unmount');
             };
           }, []);
 
@@ -2249,22 +2249,19 @@ describe('Timeline profiler', () => {
 
         const unmount = renderRootHelper(<ComponentWithEffects />);
 
-        expect(Scheduler).toFlushUntilNextPaint([
-          'layout 1 mount',
-          'layout 2 mount',
-        ]);
+        await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'passive 1 mount',
           'passive 2 mount',
           'passive 3 mount',
         ]);
 
-        expect(Scheduler).toFlushAndYield([]);
+        await waitForAll([]);
 
         unmount();
 
-        expect(Scheduler).toHaveYielded([
+        assertLog([
           'layout 1 unmount',
           'layout 2 unmount',
           'passive 1 unmount',
@@ -2274,78 +2271,78 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-mount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "layout-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
               "type": "passive-effect-unmount",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "ComponentWithEffects",
               "duration": 0,
               "timestamp": 10,
@@ -2356,8 +2353,8 @@ describe('Timeline profiler', () => {
         `);
         expect(timelineData.batchUIDToMeasuresMap).toMatchInlineSnapshot(`
           Map {
-            1 => Array [
-              Object {
+            1 => [
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2365,7 +2362,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2373,7 +2370,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2381,7 +2378,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 1,
                 "duration": 0,
@@ -2389,7 +2386,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 1,
                 "depth": 0,
                 "duration": 0,
@@ -2398,8 +2395,8 @@ describe('Timeline profiler', () => {
                 "type": "passive-effects",
               },
             ],
-            2 => Array [
-              Object {
+            2 => [
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2407,7 +2404,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render-idle",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2415,7 +2412,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "render",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 0,
                 "duration": 0,
@@ -2423,7 +2420,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "commit",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2431,7 +2428,7 @@ describe('Timeline profiler', () => {
                 "timestamp": 10,
                 "type": "layout-effects",
               },
-              Object {
+              {
                 "batchUID": 2,
                 "depth": 1,
                 "duration": 0,
@@ -2446,7 +2443,7 @@ describe('Timeline profiler', () => {
 
       it('should generate component stacks for state update', async () => {
         function CommponentWithChildren({initialRender}) {
-          Scheduler.unstable_yieldValue('Render ComponentWithChildren');
+          Scheduler.log('Render ComponentWithChildren');
           return <Child initialRender={initialRender} />;
         }
 
@@ -2455,13 +2452,13 @@ describe('Timeline profiler', () => {
           if (!didRender) {
             setDidRender(true);
           }
-          Scheduler.unstable_yieldValue('Render Child');
+          Scheduler.log('Render Child');
           return null;
         }
 
         renderRootHelper(<CommponentWithChildren initialRender={false} />);
 
-        expect(Scheduler).toFlushAndYield([
+        await waitForAll([
           'Render ComponentWithChildren',
           'Render Child',
           'Render Child',
@@ -2469,14 +2466,14 @@ describe('Timeline profiler', () => {
 
         const timelineData = stopProfilingAndGetTimelineData();
         expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
-          Array [
-            Object {
+          [
+            {
               "lanes": "0b0000000000000000000000000100000",
               "timestamp": 10,
               "type": "schedule-render",
               "warning": null,
             },
-            Object {
+            {
               "componentName": "Child",
               "componentStack": "
               in Child (at **)

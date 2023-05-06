@@ -25,8 +25,9 @@ describe('ReactFlightNativeRelay', () => {
     React = require('react');
     // TODO: Switch this out to react-native
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
     View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTView',
@@ -122,7 +123,7 @@ describe('ReactFlightNativeRelay', () => {
     Foo.prototype = Object.create(Bar.prototype);
     // This is enumerable which some polyfills do.
     Foo.prototype.constructor = Foo;
-    Foo.prototype.method = function() {};
+    Foo.prototype.method = function () {};
 
     expect(() => {
       const transport = [];

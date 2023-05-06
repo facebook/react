@@ -8,13 +8,8 @@
 .*/rollup/shims/facebook-www/.*
 .*/rollup/shims/react-native/.*
 
-.*/node_modules/@snyk/.*
-.*/node_modules/y18n/.*
-.*/node_modules/chrome-devtools-frontend/.*
-.*/node_modules/devtools-timeline-model/.*
-.*/node_modules/create-react-class/.*
-.*/node_modules/react-native-web/.*
 .*/node_modules/fbjs/lib/keyMirrorRecursive.js.flow
+.*/node_modules/resolve/test/.*
 .*/__mocks__/.*
 .*/__tests__/.*
 
@@ -41,12 +36,11 @@ untyped-type-import=error
 
 [options]
 %CI_MAX_WORKERS%
-exact_by_default=true
 munge_underscores=false
-enforce_local_inference_annotations=false
+inference_mode=lti
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.190.0
+^0.202.0

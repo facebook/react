@@ -236,7 +236,14 @@ module.exports = {
     'no-inner-declarations': [ERROR, 'functions'],
     'no-multi-spaces': ERROR,
     'no-restricted-globals': [ERROR].concat(restrictedGlobals),
-    'no-restricted-syntax': [ERROR, 'WithStatement'],
+    'no-restricted-syntax': [
+      ERROR,
+      'WithStatement',
+      {
+        selector: 'MemberExpression[property.name=/^(?:substring|substr)$/]',
+        message: 'Prefer string.slice() over .substring() and .substr().',
+      },
+    ],
     'no-shadow': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
     'no-use-before-define': OFF,
@@ -325,6 +332,7 @@ module.exports = {
         'packages/react-native-renderer/**/*.js',
         'packages/eslint-plugin-react-hooks/**/*.js',
         'packages/jest-react/**/*.js',
+        'packages/internal-test-utils/**/*.js',
         'packages/**/__tests__/*.js',
         'packages/**/npm/*.js',
       ],
@@ -434,7 +442,6 @@ module.exports = {
     es6: true,
     node: true,
     jest: true,
-    jasmine: true,
   },
 
   globals: {
@@ -449,6 +456,9 @@ module.exports = {
     $ReadOnlyArray: 'readonly',
     $Shape: 'readonly',
     AnimationFrameID: 'readonly',
+    // For Flow type annotation. Only `BigInt` is valid at runtime.
+    bigint: 'readonly',
+    BigInt: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',

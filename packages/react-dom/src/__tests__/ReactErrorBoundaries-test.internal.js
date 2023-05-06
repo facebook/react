@@ -35,6 +35,7 @@ describe('ReactErrorBoundaries', () => {
   let NoopErrorBoundary;
   let RetryErrorBoundary;
   let Normal;
+  let assertLog;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -42,211 +43,163 @@ describe('ReactErrorBoundaries', () => {
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.skipUnmountedBoundaries = true;
     ReactDOM = require('react-dom');
     React = require('react');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
 
     BrokenConstructor = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenConstructor constructor [!]');
+        Scheduler.log('BrokenConstructor constructor [!]');
         throw new Error('Hello');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenConstructor render');
+        Scheduler.log('BrokenConstructor render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('BrokenConstructor componentWillMount');
+        Scheduler.log('BrokenConstructor componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('BrokenConstructor componentDidMount');
+        Scheduler.log('BrokenConstructor componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenConstructor componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenConstructor componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue('BrokenConstructor componentWillUpdate');
+        Scheduler.log('BrokenConstructor componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('BrokenConstructor componentDidUpdate');
+        Scheduler.log('BrokenConstructor componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('BrokenConstructor componentWillUnmount');
+        Scheduler.log('BrokenConstructor componentWillUnmount');
       }
     };
 
     BrokenComponentWillMount = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenComponentWillMount constructor');
+        Scheduler.log('BrokenComponentWillMount constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentWillMount render');
+        Scheduler.log('BrokenComponentWillMount render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentWillMount [!]',
-        );
+        Scheduler.log('BrokenComponentWillMount componentWillMount [!]');
         throw new Error('Hello');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentDidMount',
-        );
+        Scheduler.log('BrokenComponentWillMount componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenComponentWillMount componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentWillUpdate',
-        );
+        Scheduler.log('BrokenComponentWillMount componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentDidUpdate',
-        );
+        Scheduler.log('BrokenComponentWillMount componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMount componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentWillMount componentWillUnmount');
       }
     };
 
     BrokenComponentDidMount = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenComponentDidMount constructor');
+        Scheduler.log('BrokenComponentDidMount constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentDidMount render');
+        Scheduler.log('BrokenComponentDidMount render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentWillMount',
-        );
+        Scheduler.log('BrokenComponentDidMount componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentDidMount [!]',
-        );
+        Scheduler.log('BrokenComponentDidMount componentDidMount [!]');
         throw new Error('Hello');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenComponentDidMount componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentWillUpdate',
-        );
+        Scheduler.log('BrokenComponentDidMount componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentDidUpdate',
-        );
+        Scheduler.log('BrokenComponentDidMount componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMount componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentDidMount componentWillUnmount');
       }
     };
 
     BrokenComponentWillReceiveProps = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps constructor',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentWillReceiveProps render');
+        Scheduler.log('BrokenComponentWillReceiveProps render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps componentWillMount',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps componentDidMount',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentWillReceiveProps componentWillReceiveProps [!]',
         );
         throw new Error('Hello');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps componentWillUpdate',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps componentDidUpdate',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillReceiveProps componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentWillReceiveProps componentWillUnmount');
       }
     };
 
     BrokenComponentWillUpdate = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenComponentWillUpdate constructor');
+        Scheduler.log('BrokenComponentWillUpdate constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentWillUpdate render');
+        Scheduler.log('BrokenComponentWillUpdate render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentWillMount',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentDidMount',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentWillUpdate [!]',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentWillUpdate [!]');
         throw new Error('Hello');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentDidUpdate',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUpdate componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentWillUpdate componentWillUnmount');
       }
     };
 
@@ -256,42 +209,30 @@ describe('ReactErrorBoundaries', () => {
       };
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenComponentDidUpdate constructor');
+        Scheduler.log('BrokenComponentDidUpdate constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentDidUpdate render');
+        Scheduler.log('BrokenComponentDidUpdate render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentWillMount',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentDidMount',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentWillUpdate',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentDidUpdate [!]',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentDidUpdate [!]');
         throw new Error(this.props.errorText);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidUpdate componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentDidUpdate componentWillUnmount');
       }
     };
 
@@ -301,41 +242,29 @@ describe('ReactErrorBoundaries', () => {
       };
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenComponentWillUnmount constructor');
+        Scheduler.log('BrokenComponentWillUnmount constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentWillUnmount render');
+        Scheduler.log('BrokenComponentWillUnmount render');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentWillMount',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentDidMount',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentWillReceiveProps',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentWillUpdate',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentDidUpdate',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentWillUnmount [!]',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentWillUnmount [!]');
         throw new Error(this.props.errorText);
       }
     };
@@ -344,40 +273,34 @@ describe('ReactErrorBoundaries', () => {
       constructor(props) {
         super(props);
         this.state = {error: null};
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMountErrorBoundary constructor',
-        );
+        Scheduler.log('BrokenComponentWillMountErrorBoundary constructor');
       }
       render() {
         if (this.state.error) {
-          Scheduler.unstable_yieldValue(
-            'BrokenComponentWillMountErrorBoundary render error',
-          );
+          Scheduler.log('BrokenComponentWillMountErrorBoundary render error');
           return <div>Caught an error: {this.state.error.message}.</div>;
         }
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillMountErrorBoundary render success',
-        );
+        Scheduler.log('BrokenComponentWillMountErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentWillMountErrorBoundary componentWillMount [!]',
         );
         throw new Error('Hello');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentWillMountErrorBoundary componentDidMount',
         );
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentWillMountErrorBoundary componentWillUnmount',
         );
       }
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentWillMountErrorBoundary static getDerivedStateFromError',
         );
         return {error};
@@ -388,40 +311,34 @@ describe('ReactErrorBoundaries', () => {
       constructor(props) {
         super(props);
         this.state = {error: null};
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMountErrorBoundary constructor',
-        );
+        Scheduler.log('BrokenComponentDidMountErrorBoundary constructor');
       }
       render() {
         if (this.state.error) {
-          Scheduler.unstable_yieldValue(
-            'BrokenComponentDidMountErrorBoundary render error',
-          );
+          Scheduler.log('BrokenComponentDidMountErrorBoundary render error');
           return <div>Caught an error: {this.state.error.message}.</div>;
         }
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentDidMountErrorBoundary render success',
-        );
+        Scheduler.log('BrokenComponentDidMountErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentDidMountErrorBoundary componentWillMount',
         );
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentDidMountErrorBoundary componentDidMount [!]',
         );
         throw new Error('Hello');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentDidMountErrorBoundary componentWillUnmount',
         );
       }
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenComponentDidMountErrorBoundary static getDerivedStateFromError',
         );
         return {error};
@@ -432,37 +349,27 @@ describe('ReactErrorBoundaries', () => {
       constructor(props) {
         super(props);
         this.state = {error: null};
-        Scheduler.unstable_yieldValue('BrokenRenderErrorBoundary constructor');
+        Scheduler.log('BrokenRenderErrorBoundary constructor');
       }
       render() {
         if (this.state.error) {
-          Scheduler.unstable_yieldValue(
-            'BrokenRenderErrorBoundary render error [!]',
-          );
+          Scheduler.log('BrokenRenderErrorBoundary render error [!]');
           throw new Error('Hello');
         }
-        Scheduler.unstable_yieldValue(
-          'BrokenRenderErrorBoundary render success',
-        );
+        Scheduler.log('BrokenRenderErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenRenderErrorBoundary componentWillMount',
-        );
+        Scheduler.log('BrokenRenderErrorBoundary componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenRenderErrorBoundary componentDidMount',
-        );
+        Scheduler.log('BrokenRenderErrorBoundary componentDidMount');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenRenderErrorBoundary componentWillUnmount',
-        );
+        Scheduler.log('BrokenRenderErrorBoundary componentWillUnmount');
       }
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
+        Scheduler.log(
           'BrokenRenderErrorBoundary static getDerivedStateFromError',
         );
         return {error};
@@ -472,37 +379,37 @@ describe('ReactErrorBoundaries', () => {
     BrokenRender = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('BrokenRender constructor');
+        Scheduler.log('BrokenRender constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('BrokenRender render [!]');
+        Scheduler.log('BrokenRender render [!]');
         throw new Error('Hello');
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('BrokenRender componentWillMount');
+        Scheduler.log('BrokenRender componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('BrokenRender componentDidMount');
+        Scheduler.log('BrokenRender componentDidMount');
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue('BrokenRender componentWillReceiveProps');
+        Scheduler.log('BrokenRender componentWillReceiveProps');
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue('BrokenRender componentWillUpdate');
+        Scheduler.log('BrokenRender componentWillUpdate');
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue('BrokenRender componentDidUpdate');
+        Scheduler.log('BrokenRender componentDidUpdate');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('BrokenRender componentWillUnmount');
+        Scheduler.log('BrokenRender componentWillUnmount');
       }
     };
 
     BrokenUseEffect = ({children}) => {
-      Scheduler.unstable_yieldValue('BrokenUseEffect render');
+      Scheduler.log('BrokenUseEffect render');
 
       React.useEffect(() => {
-        Scheduler.unstable_yieldValue('BrokenUseEffect useEffect [!]');
+        Scheduler.log('BrokenUseEffect useEffect [!]');
         throw new Error('Hello');
       });
 
@@ -510,12 +417,10 @@ describe('ReactErrorBoundaries', () => {
     };
 
     BrokenUseLayoutEffect = ({children}) => {
-      Scheduler.unstable_yieldValue('BrokenUseLayoutEffect render');
+      Scheduler.log('BrokenUseLayoutEffect render');
 
       React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(
-          'BrokenUseLayoutEffect useLayoutEffect [!]',
-        );
+        Scheduler.log('BrokenUseLayoutEffect useLayoutEffect [!]');
         throw new Error('Hello');
       });
 
@@ -525,25 +430,23 @@ describe('ReactErrorBoundaries', () => {
     NoopErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('NoopErrorBoundary constructor');
+        Scheduler.log('NoopErrorBoundary constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('NoopErrorBoundary render');
+        Scheduler.log('NoopErrorBoundary render');
         return <BrokenRender />;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('NoopErrorBoundary componentWillMount');
+        Scheduler.log('NoopErrorBoundary componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('NoopErrorBoundary componentDidMount');
+        Scheduler.log('NoopErrorBoundary componentDidMount');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('NoopErrorBoundary componentWillUnmount');
+        Scheduler.log('NoopErrorBoundary componentWillUnmount');
       }
       static getDerivedStateFromError() {
-        Scheduler.unstable_yieldValue(
-          'NoopErrorBoundary static getDerivedStateFromError',
-        );
+        Scheduler.log('NoopErrorBoundary static getDerivedStateFromError');
       }
     };
 
@@ -553,41 +456,29 @@ describe('ReactErrorBoundaries', () => {
       };
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue(`${this.props.logName} constructor`);
+        Scheduler.log(`${this.props.logName} constructor`);
       }
       render() {
-        Scheduler.unstable_yieldValue(`${this.props.logName} render`);
+        Scheduler.log(`${this.props.logName} render`);
         return <div>{this.props.children}</div>;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillMount`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillMount`);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentDidMount`,
-        );
+        Scheduler.log(`${this.props.logName} componentDidMount`);
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillReceiveProps`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillReceiveProps`);
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillUpdate`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillUpdate`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentDidUpdate`,
-        );
+        Scheduler.log(`${this.props.logName} componentDidUpdate`);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillUnmount`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillUnmount`);
       }
     };
 
@@ -595,51 +486,37 @@ describe('ReactErrorBoundaries', () => {
       constructor(props) {
         super(props);
         this.state = {error: null};
-        Scheduler.unstable_yieldValue(`${this.props.logName} constructor`);
+        Scheduler.log(`${this.props.logName} constructor`);
       }
       render() {
         if (this.state.error && !this.props.forceRetry) {
-          Scheduler.unstable_yieldValue(`${this.props.logName} render error`);
+          Scheduler.log(`${this.props.logName} render error`);
           return this.props.renderError(this.state.error, this.props);
         }
-        Scheduler.unstable_yieldValue(`${this.props.logName} render success`);
+        Scheduler.log(`${this.props.logName} render success`);
         return <div>{this.props.children}</div>;
       }
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
-          'ErrorBoundary static getDerivedStateFromError',
-        );
+        Scheduler.log('ErrorBoundary static getDerivedStateFromError');
         return {error};
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillMount`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillMount`);
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentDidMount`,
-        );
+        Scheduler.log(`${this.props.logName} componentDidMount`);
       }
       UNSAFE_componentWillReceiveProps() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillReceiveProps`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillReceiveProps`);
       }
       UNSAFE_componentWillUpdate() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillUpdate`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillUpdate`);
       }
       componentDidUpdate() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentDidUpdate`,
-        );
+        Scheduler.log(`${this.props.logName} componentDidUpdate`);
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          `${this.props.logName} componentWillUnmount`,
-        );
+        Scheduler.log(`${this.props.logName} componentWillUnmount`);
       }
     };
     ErrorBoundary.defaultProps = {
@@ -656,27 +533,23 @@ describe('ReactErrorBoundaries', () => {
     RetryErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('RetryErrorBoundary constructor');
+        Scheduler.log('RetryErrorBoundary constructor');
       }
       render() {
-        Scheduler.unstable_yieldValue('RetryErrorBoundary render');
+        Scheduler.log('RetryErrorBoundary render');
         return <BrokenRender />;
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('RetryErrorBoundary componentWillMount');
+        Scheduler.log('RetryErrorBoundary componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('RetryErrorBoundary componentDidMount');
+        Scheduler.log('RetryErrorBoundary componentDidMount');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'RetryErrorBoundary componentWillUnmount',
-        );
+        Scheduler.log('RetryErrorBoundary componentWillUnmount');
       }
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
-          'RetryErrorBoundary static getDerivedStateFromError [!]',
-        );
+        Scheduler.log('RetryErrorBoundary static getDerivedStateFromError [!]');
         // In Fiber, calling setState() (and failing) is treated as a rethrow.
         return {};
       }
@@ -685,19 +558,19 @@ describe('ReactErrorBoundaries', () => {
     ErrorMessage = class extends React.Component {
       constructor(props) {
         super(props);
-        Scheduler.unstable_yieldValue('ErrorMessage constructor');
+        Scheduler.log('ErrorMessage constructor');
       }
       UNSAFE_componentWillMount() {
-        Scheduler.unstable_yieldValue('ErrorMessage componentWillMount');
+        Scheduler.log('ErrorMessage componentWillMount');
       }
       componentDidMount() {
-        Scheduler.unstable_yieldValue('ErrorMessage componentDidMount');
+        Scheduler.log('ErrorMessage componentDidMount');
       }
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue('ErrorMessage componentWillUnmount');
+        Scheduler.log('ErrorMessage componentWillUnmount');
       }
       render() {
-        Scheduler.unstable_yieldValue('ErrorMessage render');
+        Scheduler.log('ErrorMessage render');
         return <div>Caught an error: {this.props.message}.</div>;
       }
     };
@@ -796,16 +669,16 @@ describe('ReactErrorBoundaries', () => {
     );
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.render is no longer supported',
       );
-      expect(console.error.calls.argsFor(1)[0]).toContain(
+      expect(console.error.mock.calls[1][0]).toContain(
         'The above error occurred in the <BrokenRender> component:',
       );
     }
 
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -820,7 +693,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('renders an error state if child throws in render', () => {
@@ -832,7 +705,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -847,7 +720,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('renders an error state if child throws in constructor', () => {
@@ -859,7 +732,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -872,7 +745,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('renders an error state if child throws in componentWillMount', () => {
@@ -884,7 +757,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -898,9 +771,10 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('renders an error state if context provider throws in componentWillMount', () => {
     class BrokenComponentWillMountWithContext extends React.Component {
       static childContextTypes = {foo: PropTypes.number};
@@ -925,45 +799,45 @@ describe('ReactErrorBoundaries', () => {
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('renders an error state if module-style context provider throws in componentWillMount', () => {
-      function BrokenComponentWillMountWithContext() {
-        return {
-          getChildContext() {
-            return {foo: 42};
-          },
-          render() {
-            return <div>{this.props.children}</div>;
-          },
-          UNSAFE_componentWillMount() {
-            throw new Error('Hello');
-          },
-        };
-      }
-      BrokenComponentWillMountWithContext.childContextTypes = {
-        foo: PropTypes.number,
+  // @gate !disableModulePatternComponents
+  // @gate !disableLegacyContext
+  it('renders an error state if module-style context provider throws in componentWillMount', () => {
+    function BrokenComponentWillMountWithContext() {
+      return {
+        getChildContext() {
+          return {foo: 42};
+        },
+        render() {
+          return <div>{this.props.children}</div>;
+        },
+        UNSAFE_componentWillMount() {
+          throw new Error('Hello');
+        },
       };
+    }
+    BrokenComponentWillMountWithContext.childContextTypes = {
+      foo: PropTypes.number,
+    };
 
-      const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(
-          <ErrorBoundary>
-            <BrokenComponentWillMountWithContext />
-          </ErrorBoundary>,
-          container,
-        ),
-      ).toErrorDev(
-        'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
-          'returns a class instance. ' +
-          'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentWillMountWithContext />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toErrorDev(
+      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
+        'returns a class instance. ' +
+        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+    );
 
-      expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    });
-  }
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
 
   it('mounts the error message if mounting fails', () => {
     function renderError(error) {
@@ -977,7 +851,7 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -995,7 +869,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillUnmount',
       'ErrorMessage componentWillUnmount',
     ]);
@@ -1012,7 +886,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1037,7 +911,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('propagates errors inside boundary during componentWillMount', () => {
@@ -1049,7 +923,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1063,7 +937,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('propagates errors inside boundary while rendering error state', () => {
@@ -1077,7 +951,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1099,7 +973,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('does not call componentWillUnmount when aborting initial mount', () => {
@@ -1113,7 +987,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1125,10 +999,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      // Render third child, even though an earlier sibling threw.
-      'Normal constructor',
-      'Normal componentWillMount',
-      'Normal render',
+      // Skip the remaining siblings
       // Handle the error
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
@@ -1137,15 +1008,15 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('resets callback refs if mounting aborts', () => {
     function childRef(x) {
-      Scheduler.unstable_yieldValue('Child ref is set to ' + x);
+      Scheduler.log('Child ref is set to ' + x);
     }
     function errorMessageRef(x) {
-      Scheduler.unstable_yieldValue('Error message ref is set to ' + x);
+      Scheduler.log('Error message ref is set to ' + x);
     }
 
     const container = document.createElement('div');
@@ -1157,7 +1028,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1173,7 +1044,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillUnmount',
       'Error message ref is set to null',
     ]);
@@ -1192,7 +1063,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1210,7 +1081,7 @@ describe('ReactErrorBoundaries', () => {
     );
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
     expect(errorMessageRef.current).toEqual(null);
   });
 
@@ -1223,7 +1094,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Mounted successfully.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1231,7 +1102,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches if child throws in constructor during update', () => {
@@ -1242,7 +1113,7 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal />
@@ -1252,7 +1123,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1275,7 +1146,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches if child throws in componentWillMount during update', () => {
@@ -1287,7 +1158,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal />
@@ -1297,7 +1168,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1321,7 +1192,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches if child throws in componentWillReceiveProps during update', () => {
@@ -1334,7 +1205,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal />
@@ -1343,7 +1214,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1363,7 +1234,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches if child throws in componentWillUpdate during update', () => {
@@ -1376,7 +1247,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal />
@@ -1385,7 +1256,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1405,7 +1276,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches if child throws in render during update', () => {
@@ -1417,7 +1288,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal />
@@ -1427,7 +1298,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1451,18 +1322,18 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('keeps refs up-to-date during updates', () => {
     function child1Ref(x) {
-      Scheduler.unstable_yieldValue('Child1 ref is set to ' + x);
+      Scheduler.log('Child1 ref is set to ' + x);
     }
     function child2Ref(x) {
-      Scheduler.unstable_yieldValue('Child2 ref is set to ' + x);
+      Scheduler.log('Child2 ref is set to ' + x);
     }
     function errorMessageRef(x) {
-      Scheduler.unstable_yieldValue('Error message ref is set to ' + x);
+      Scheduler.log('Error message ref is set to ' + x);
     }
 
     const container = document.createElement('div');
@@ -1472,7 +1343,7 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1489,7 +1360,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1509,7 +1380,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillUnmount',
       'Error message ref is set to null',
     ]);
@@ -1526,7 +1397,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <BrokenComponentWillUnmount />
@@ -1534,7 +1405,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1567,7 +1438,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('recovers from nested componentWillUnmount errors on update', () => {
@@ -1582,7 +1453,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <Normal>
@@ -1592,7 +1463,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1626,7 +1497,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('picks the right boundary when handling unmounting errors', () => {
@@ -1651,7 +1522,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary
         logName="OuterErrorBoundary"
@@ -1664,7 +1535,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).toBe('Caught an inner error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // Update outer boundary
       'OuterErrorBoundary componentWillReceiveProps',
       'OuterErrorBoundary componentWillUpdate',
@@ -1689,7 +1560,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterErrorBoundary componentWillUnmount',
       'InnerErrorBoundary componentWillUnmount',
     ]);
@@ -1714,7 +1585,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
 
     // Force the success path:
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary forceRetry={true}>
         <Normal />
@@ -1722,7 +1593,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.textContent).not.toContain('Caught an error');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1736,7 +1607,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillUnmount',
       'Normal componentWillUnmount',
     ]);
@@ -1780,9 +1651,9 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM.render(<ErrorBoundary />, container);
     expect(container.textContent).toBe('Caught an error: Hello.');
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it("doesn't get into inconsistent state during additions", () => {
@@ -1798,9 +1669,9 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it("doesn't get into inconsistent state during reorders", () => {
@@ -1846,9 +1717,9 @@ describe('ReactErrorBoundaries', () => {
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches errors originating downstream', () => {
@@ -1858,7 +1729,7 @@ describe('ReactErrorBoundaries', () => {
 
       render() {
         if (fail) {
-          Scheduler.unstable_yieldValue('Stateful render [!]');
+          Scheduler.log('Stateful render [!]');
           throw new Error('Hello');
         }
         return <div>{this.props.children}</div>;
@@ -1874,13 +1745,13 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     expect(() => {
       fail = true;
       statefulInst.forceUpdate();
     }).not.toThrow();
 
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'Stateful render [!]',
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
@@ -1889,7 +1760,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches errors in componentDidMount', () => {
@@ -1904,7 +1775,7 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1947,7 +1818,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('catches errors in componentDidUpdate', () => {
@@ -1959,14 +1830,14 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary>
         <BrokenComponentDidUpdate />
       </ErrorBoundary>,
       container,
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1985,19 +1856,19 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
-  it('catches errors in useEffect', () => {
+  it('catches errors in useEffect', async () => {
     const container = document.createElement('div');
-    act(() => {
+    await act(() => {
       ReactDOM.render(
         <ErrorBoundary>
           <BrokenUseEffect>Initial value</BrokenUseEffect>
         </ErrorBoundary>,
         container,
       );
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         'ErrorBoundary constructor',
         'ErrorBoundary componentWillMount',
         'ErrorBoundary render success',
@@ -2006,11 +1877,11 @@ describe('ReactErrorBoundaries', () => {
       ]);
 
       expect(container.firstChild.textContent).toBe('Initial value');
-      Scheduler.unstable_clearYields();
+      Scheduler.unstable_clearLog();
     });
 
     // verify flushed passive effects and handle the error
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'BrokenUseEffect useEffect [!]',
       // Handle the error
       'ErrorBoundary static getDerivedStateFromError',
@@ -2030,7 +1901,7 @@ describe('ReactErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -2062,7 +1933,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -2082,7 +1953,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded(['ErrorBoundary componentWillUnmount']);
+    assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
   it('calls static getDerivedStateFromError for each error that is captured', () => {
@@ -2112,7 +1983,7 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
 
-    Scheduler.unstable_clearYields();
+    Scheduler.unstable_clearLog();
     ReactDOM.render(
       <ErrorBoundary logName="OuterErrorBoundary">
         <ErrorBoundary
@@ -2132,7 +2003,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.firstChild.textContent).toBe(
       'Caught an unmounting error: E2.' + 'Caught an updating error: E4.',
     );
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       // Begin update phase
       'OuterErrorBoundary componentWillReceiveProps',
       'OuterErrorBoundary componentWillUpdate',
@@ -2178,7 +2049,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterErrorBoundary componentWillUnmount',
       'InnerUnmountBoundary componentWillUnmount',
       'InnerUpdateBoundary componentWillUnmount',
@@ -2230,7 +2101,7 @@ describe('ReactErrorBoundaries', () => {
       ),
     ).toThrow('Hello');
     expect(container.innerHTML).toBe('');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'NoopErrorBoundary constructor',
       'NoopErrorBoundary componentWillMount',
       'NoopErrorBoundary render',
@@ -2460,7 +2331,7 @@ describe('ReactErrorBoundaries', () => {
       throw evilError;
     };
     Object.defineProperty(Throws, 'displayName', {
-      get: function() {
+      get: function () {
         throw new Error('gotta catch em all');
       },
     });
@@ -2485,19 +2356,17 @@ describe('ReactErrorBoundaries', () => {
     class LocalErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
-          `ErrorBoundary static getDerivedStateFromError`,
-        );
+        Scheduler.log(`ErrorBoundary static getDerivedStateFromError`);
         return {error};
       }
       render() {
         const {children, id, fallbackID} = this.props;
         const {error} = this.state;
         if (error) {
-          Scheduler.unstable_yieldValue(`${id} render error`);
+          Scheduler.log(`${id} render error`);
           return <Component id={fallbackID} />;
         }
-        Scheduler.unstable_yieldValue(`${id} render success`);
+        Scheduler.log(`${id} render success`);
         return children || null;
       }
     }
@@ -2505,21 +2374,19 @@ describe('ReactErrorBoundaries', () => {
     class Component extends React.Component {
       render() {
         const {id} = this.props;
-        Scheduler.unstable_yieldValue('Component render ' + id);
+        Scheduler.log('Component render ' + id);
         return id;
       }
     }
 
     class LocalBrokenComponentWillUnmount extends React.Component {
       componentWillUnmount() {
-        Scheduler.unstable_yieldValue(
-          'BrokenComponentWillUnmount componentWillUnmount',
-        );
+        Scheduler.log('BrokenComponentWillUnmount componentWillUnmount');
         throw Error('Expected');
       }
 
       render() {
-        Scheduler.unstable_yieldValue('BrokenComponentWillUnmount render');
+        Scheduler.log('BrokenComponentWillUnmount render');
         return 'broken';
       }
     }
@@ -2538,7 +2405,7 @@ describe('ReactErrorBoundaries', () => {
 
     expect(container.firstChild.textContent).toBe('sibling');
     expect(container.lastChild.textContent).toBe('broken');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterBoundary render success',
       'Component render sibling',
       'InnerBoundary render success',
@@ -2555,7 +2422,7 @@ describe('ReactErrorBoundaries', () => {
     // React should skip over the unmounting boundary and find the nearest still-mounted boundary.
     expect(container.firstChild.textContent).toBe('OuterFallback');
     expect(container.lastChild.textContent).toBe('OuterFallback');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterBoundary render success',
       'Component render sibling',
       'BrokenComponentWillUnmount componentWillUnmount',
@@ -2569,19 +2436,17 @@ describe('ReactErrorBoundaries', () => {
     class LocalErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
-        Scheduler.unstable_yieldValue(
-          `ErrorBoundary static getDerivedStateFromError`,
-        );
+        Scheduler.log(`ErrorBoundary static getDerivedStateFromError`);
         return {error};
       }
       render() {
         const {children, id, fallbackID} = this.props;
         const {error} = this.state;
         if (error) {
-          Scheduler.unstable_yieldValue(`${id} render error`);
+          Scheduler.log(`${id} render error`);
           return <Component id={fallbackID} />;
         }
-        Scheduler.unstable_yieldValue(`${id} render success`);
+        Scheduler.log(`${id} render success`);
         return children || null;
       }
     }
@@ -2589,21 +2454,21 @@ describe('ReactErrorBoundaries', () => {
     class Component extends React.Component {
       render() {
         const {id} = this.props;
-        Scheduler.unstable_yieldValue('Component render ' + id);
+        Scheduler.log('Component render ' + id);
         return id;
       }
     }
 
     class LocalBrokenCallbackRef extends React.Component {
       _ref = ref => {
-        Scheduler.unstable_yieldValue('LocalBrokenCallbackRef ref ' + !!ref);
+        Scheduler.log('LocalBrokenCallbackRef ref ' + !!ref);
         if (ref === null) {
           throw Error('Expected');
         }
       };
 
       render() {
-        Scheduler.unstable_yieldValue('LocalBrokenCallbackRef render');
+        Scheduler.log('LocalBrokenCallbackRef render');
         return <div ref={this._ref}>ref</div>;
       }
     }
@@ -2622,7 +2487,7 @@ describe('ReactErrorBoundaries', () => {
 
     expect(container.firstChild.textContent).toBe('sibling');
     expect(container.lastChild.textContent).toBe('ref');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterBoundary render success',
       'Component render sibling',
       'InnerBoundary render success',
@@ -2640,7 +2505,7 @@ describe('ReactErrorBoundaries', () => {
     // React should skip over the unmounting boundary and find the nearest still-mounted boundary.
     expect(container.firstChild.textContent).toBe('OuterFallback');
     expect(container.lastChild.textContent).toBe('OuterFallback');
-    expect(Scheduler).toHaveYielded([
+    assertLog([
       'OuterBoundary render success',
       'Component render sibling',
       'LocalBrokenCallbackRef ref false',

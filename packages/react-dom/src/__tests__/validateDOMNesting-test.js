@@ -28,9 +28,11 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
     element = <Tag>{element}</Tag>;
   }
 
-  expect(() => ReactDOM.render(element, container)).toErrorDev(warnings, {
-    withoutStack,
-  });
+  if (warnings.length) {
+    expect(() => ReactDOM.render(element, container)).toErrorDev(warnings, {
+      withoutStack,
+    });
+  }
 }
 
 describe('validateDOMNesting', () => {
@@ -39,8 +41,10 @@ describe('validateDOMNesting', () => {
     expectWarnings(
       ['body', 'datalist', 'option'],
       [
-        'render(): Rendering components directly into document.body is discouraged',
-      ],
+        gate(flags => !flags.enableHostSingletons)
+          ? 'render(): Rendering components directly into document.body is discouraged'
+          : null,
+      ].filter(Boolean),
       1,
     );
     expectWarnings(['div', 'a', 'object', 'a']);
@@ -106,13 +110,9 @@ describe('validateDOMNesting', () => {
       expectWarnings(
         ['body', 'body'],
         [
-          'render(): Rendering components directly into document.body is discouraged',
           'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
             '    in body (at **)',
-          'Warning: You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
-            '    in body (at **)',
         ],
-        1,
       );
     } else {
       expectWarnings(

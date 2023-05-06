@@ -19,7 +19,7 @@ import {
   ClassComponent,
   HostRoot,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   ContextProvider,
@@ -117,7 +117,7 @@ function unwindWork(
       // We unwound to the root without completing it. Exit.
       return null;
     }
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
@@ -237,7 +237,7 @@ function unwindInterruptedWork(
       resetMutableSourceWorkInProgressVersions();
       break;
     }
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);

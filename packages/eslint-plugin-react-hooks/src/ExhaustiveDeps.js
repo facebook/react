@@ -76,7 +76,7 @@ export default {
     const functionWithoutCapturedValueCache = new WeakMap();
     const useEffectEventVariables = new WeakSet();
     function memoizeWithWeakMap(fn, map) {
-      return function(arg) {
+      return function (arg) {
         if (map.has(arg)) {
           // to verify cache hits:
           // console.log(arg.name)
@@ -1103,7 +1103,7 @@ export default {
               extraWarning =
                 ` You can also do a functional update '${
                   setStateRecommendation.setter
-                }(${setStateRecommendation.missingDep.substring(
+                }(${setStateRecommendation.missingDep.slice(
                   0,
                   1,
                 )} => ...)' if you only need '${

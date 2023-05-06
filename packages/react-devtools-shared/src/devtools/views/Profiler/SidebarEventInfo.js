@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Stack} from '../../utils';
 import type {SchedulingEvent} from 'react-devtools-timeline/src/types';
 
 import * as React from 'react';
@@ -35,7 +36,7 @@ function SchedulingEventInfo({eventInfo}: SchedulingEventProps) {
   const {componentName, timestamp} = eventInfo;
   const componentStack = eventInfo.componentStack || null;
 
-  const viewSource = source => {
+  const viewSource = (source: ?Stack) => {
     if (viewUrlSourceFunction != null && source != null) {
       viewUrlSourceFunction(...source);
     }

@@ -10,7 +10,7 @@
 import ReactVersion from 'shared/ReactVersion';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import {
   createRequest,
@@ -22,7 +22,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
 type ServerOptions = {
   identifierPrefix?: string,
@@ -43,12 +43,14 @@ function renderToStringImpl(
   let fatalError = null;
   let result = '';
   const destination = {
+    // $FlowFixMe[missing-local-annot]
     push(chunk) {
       if (chunk !== null) {
         result += chunk;
       }
       return true;
     },
+    // $FlowFixMe[missing-local-annot]
     destroy(error) {
       didFatal = true;
       fatalError = error;

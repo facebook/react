@@ -4,12 +4,13 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import {gte} from 'semver';
 import ListApp from '../e2e-apps/ListApp';
 import ListAppLegacy from '../e2e-apps/ListAppLegacy';
+import {gte} from 'react-devtools-shared/src/backend/utils';
+
 const version = process.env.E2E_APP_REACT_VERSION;
 
-function mountApp(App) {
+function mountApp(App: () => React$Node) {
   const container = document.createElement('div');
 
   ((document.body: any): HTMLBodyElement).appendChild(container);

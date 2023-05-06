@@ -2,6 +2,8 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
+const getComments = require('./getComments');
+
 const GATE_VERSION_STR = '@reactVersion ';
 
 function transform(babel) {
@@ -65,7 +67,7 @@ function transform(babel) {
                 callee.name === 'it' ||
                 callee.name === 'fit'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 const condition = buildGateVersionCondition(comments);
                 if (condition !== null) {
                   callee.name =
@@ -87,7 +89,7 @@ function transform(babel) {
                 callee.property.type === 'Identifier' &&
                 callee.property.name === 'only'
               ) {
-                const comments = statement.leadingComments;
+                const comments = getComments(path);
                 const condition = buildGateVersionCondition(comments);
                 if (condition !== null) {
                   statement.expression = t.callExpression(

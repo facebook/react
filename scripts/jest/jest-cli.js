@@ -16,6 +16,8 @@ const devToolsConfig = './scripts/jest/config.build-devtools.js';
 const persistentConfig = './scripts/jest/config.source-persistent.js';
 const buildConfig = './scripts/jest/config.build.js';
 
+const {ReactVersion} = require('../../ReactVersions');
+
 const argv = yargs
   .parserConfiguration({
     // Important: This option tells yargs to move all other options not
@@ -179,9 +181,13 @@ function validateOptions() {
       success = false;
     }
 
-    if (argv.reactVersion && !semver.validRange(argv.reactVersion)) {
-      success = false;
-      logError('please specify a valid version range for --reactVersion');
+    if (argv.reactVersion) {
+      if (!semver.validRange(argv.reactVersion)) {
+        success = false;
+        logError('please specify a valid version range for --reactVersion');
+      }
+    } else {
+      argv.reactVersion = ReactVersion;
     }
   } else {
     if (argv.compactConsole) {
@@ -255,7 +261,7 @@ function validateOptions() {
     const buildDir = path.resolve('./build');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {

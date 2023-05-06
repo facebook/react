@@ -97,7 +97,7 @@ function row(result, baseSha, headSha) {
   return rowArr.join(' | ');
 }
 
-(async function() {
+(async function () {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
 
@@ -241,8 +241,9 @@ Comparing: ${baseSha}...${headSha}
 
 ## Critical size changes
 
-Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD *
-    100}%:
+Includes critical production bundles, as well as any change greater than ${
+    CRITICAL_THRESHOLD * 100
+  }%:
 
 ${header}
 ${criticalResults.join('\n')}

@@ -6,6 +6,7 @@
  *
  * @flow
  */
+import type {TextInstance, Instance} from '../../client/ReactFiberConfigDOM';
 import type {AnyNativeEvent} from '../PluginModuleType';
 import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
@@ -34,7 +35,7 @@ import {
   processDispatchQueue,
   accumulateTwoPhaseListeners,
 } from '../DOMPluginEventSystem';
-import isCustomComponent from '../../shared/isCustomComponent';
+import isCustomElement from '../../shared/isCustomElement';
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
@@ -50,10 +51,10 @@ function registerEvents() {
 }
 
 function createAndAccumulateChangeEvent(
-  dispatchQueue,
-  inst,
-  nativeEvent,
-  target,
+  dispatchQueue: DispatchQueue,
+  inst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  target: null | EventTarget,
 ) {
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
@@ -78,7 +79,7 @@ let activeElementInst = null;
 /**
  * SECTION: handle `change` event
  */
-function shouldUseChangeEvent(elem) {
+function shouldUseChangeEvent(elem: Instance | TextInstance) {
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
@@ -86,8 +87,8 @@ function shouldUseChangeEvent(elem) {
   );
 }
 
-function manualDispatchChangeEvent(nativeEvent) {
-  const dispatchQueue = [];
+function manualDispatchChangeEvent(nativeEvent: AnyNativeEvent) {
+  const dispatchQueue: DispatchQueue = [];
   createAndAccumulateChangeEvent(
     dispatchQueue,
     activeElementInst,
@@ -109,7 +110,7 @@ function manualDispatchChangeEvent(nativeEvent) {
   batchedUpdates(runEventInBatch, dispatchQueue);
 }
 
-function runEventInBatch(dispatchQueue) {
+function runEventInBatch(dispatchQueue: DispatchQueue) {
   processDispatchQueue(dispatchQueue, 0);
 }
 
@@ -120,7 +121,10 @@ function getInstIfValueChanged(targetInst: Object) {
   }
 }
 
-function getTargetInstForChangeEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForChangeEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'change') {
     return targetInst;
   }
@@ -143,7 +147,10 @@ if (canUseDOM) {
  * and override the value property so that we can distinguish user events from
  * value changes in JS.
  */
-function startWatchingForValueChange(target, targetInst) {
+function startWatchingForValueChange(
+  target: Instance | TextInstance,
+  targetInst: null | Fiber,
+) {
   activeElement = target;
   activeElementInst = targetInst;
   (activeElement: any).attachEvent('onpropertychange', handlePropertyChange);
@@ -166,6 +173,7 @@ function stopWatchingForValueChange() {
  * (For IE <=9) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
+// $FlowFixMe[missing-local-annot]
 function handlePropertyChange(nativeEvent) {
   if (nativeEvent.propertyName !== 'value') {
     return;
@@ -177,8 +185,8 @@ function handlePropertyChange(nativeEvent) {
 
 function handleEventsForInputEventPolyfill(
   domEventName: DOMEventName,
-  target,
-  targetInst,
+  target: Instance | TextInstance,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'focusin') {
     // In IE9, propertychange fires for most input events but is buggy and
@@ -201,7 +209,7 @@ function handleEventsForInputEventPolyfill(
 // For IE8 and IE9.
 function getTargetInstForInputEventPolyfill(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (
     domEventName === 'selectionchange' ||
@@ -225,7 +233,7 @@ function getTargetInstForInputEventPolyfill(
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
+function shouldUseClickEvent(elem: any) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
@@ -237,7 +245,10 @@ function shouldUseClickEvent(elem) {
   );
 }
 
-function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
+function getTargetInstForClickEvent(
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+) {
   if (domEventName === 'click') {
     return getInstIfValueChanged(targetInst);
   }
@@ -245,23 +256,24 @@ function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
 
 function getTargetInstForInputOrChangeEvent(
   domEventName: DOMEventName,
-  targetInst,
+  targetInst: null | Fiber,
 ) {
   if (domEventName === 'input' || domEventName === 'change') {
     return getInstIfValueChanged(targetInst);
   }
 }
 
-function handleControlledInputBlur(node: HTMLInputElement) {
-  const state = (node: any)._wrapperState;
-
-  if (!state || !state.controlled || node.type !== 'number') {
+function handleControlledInputBlur(node: HTMLInputElement, props: any) {
+  if (node.type !== 'number') {
     return;
   }
 
   if (!disableInputAttributeSyncing) {
-    // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue((node: any), 'number', (node: any).value);
+    const isControlled = props.value != null;
+    if (isControlled) {
+      // If controlled, assign the value attribute to the current value on blur
+      setDefaultValue((node: any), 'number', (node: any).value);
+    }
   }
 }
 
@@ -301,7 +313,7 @@ function extractEvents(
   } else if (
     enableCustomElementPropertySupport &&
     targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
+    isCustomElement(targetInst.elementType, targetInst.memoizedProps)
   ) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   }
@@ -324,8 +336,12 @@ function extractEvents(
   }
 
   // When blurring, set the value attribute for number inputs
-  if (domEventName === 'focusout') {
-    handleControlledInputBlur(((targetNode: any): HTMLInputElement));
+  if (domEventName === 'focusout' && targetInst) {
+    // These props aren't necessarily the most current but we warn for changing
+    // between controlled and uncontrolled, so it doesn't matter and the previous
+    // code was also broken for changes.
+    const props = targetInst.memoizedProps;
+    handleControlledInputBlur(((targetNode: any): HTMLInputElement), props);
   }
 }
 

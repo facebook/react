@@ -135,14 +135,6 @@ const forks = Object.freeze({
             return './packages/shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return './packages/shared/forks/ReactFeatureFlags.test-renderer.js';
-      case 'react-dom/unstable_testing':
-        switch (bundleType) {
-          case FB_WWW_DEV:
-          case FB_WWW_PROD:
-          case FB_WWW_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.testing.www.js';
-        }
-        return './packages/shared/forks/ReactFeatureFlags.testing.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:
@@ -254,7 +246,7 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react-reconciler/src/ReactFiberHostConfig.js': (
+  './packages/react-reconciler/src/ReactFiberConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -269,11 +261,11 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `./packages/react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-reconciler/src/forks/ReactFiberConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactFiberHostConfig to always be replaced with a shim, but ' +
+      'Expected ReactFiberConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
@@ -307,7 +299,7 @@ const forks = Object.freeze({
     );
   },
 
-  './packages/react-server/src/ReactServerFormatConfig.js': (
+  './packages/react-server/src/ReactFizzConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -325,11 +317,11 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactServerFormatConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-server/src/forks/ReactFizzConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactServerFormatConfig to always be replaced with a shim, but ' +
+      'Expected ReactFizzConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );
@@ -363,7 +355,7 @@ const forks = Object.freeze({
     );
   },
 
-  './packages/react-client/src/ReactFlightClientHostConfig.js': (
+  './packages/react-client/src/ReactFlightClientConfig.js': (
     bundleType,
     entry,
     dependencies,
@@ -381,11 +373,11 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-client/src/forks/ReactFlightClientHostConfig.${rendererInfo.shortName}.js`;
+        return `./packages/react-client/src/forks/ReactFlightClientConfig.${rendererInfo.shortName}.js`;
       }
     }
     throw new Error(
-      'Expected ReactFlightClientHostConfig to always be replaced with a shim, but ' +
+      'Expected ReactFlightClientConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );

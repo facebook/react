@@ -24,6 +24,7 @@ describe('ReactDOMFiber', () => {
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
+    jest.restoreAllMocks();
   });
 
   it('should render strings as children', () => {
@@ -206,11 +207,11 @@ describe('ReactDOMFiber', () => {
   const expectHTML = {ref: el => htmlEls.push(el)};
   const expectMath = {ref: el => mathEls.push(el)};
 
-  const usePortal = function(tree) {
+  const usePortal = function (tree) {
     return ReactDOM.createPortal(tree, document.createElement('div'));
   };
 
-  const assertNamespacesMatch = function(tree) {
+  const assertNamespacesMatch = function (tree) {
     const testContainer = document.createElement('div');
     svgEls = [];
     htmlEls = [];
@@ -717,6 +718,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
+  // @gate !disableLegacyContext
   it('should pass portal context when rendering subtree elsewhere', () => {
     const portalContainer = document.createElement('div');
 
@@ -751,6 +753,7 @@ describe('ReactDOMFiber', () => {
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
 
+  // @gate !disableLegacyContext
   it('should update portal context if it changes due to setState', () => {
     const portalContainer = document.createElement('div');
 
@@ -795,6 +798,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
+  // @gate !disableLegacyContext
   it('should update portal context if it changes due to re-render', () => {
     const portalContainer = document.createElement('div');
 
@@ -1154,11 +1158,11 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual(['A']);
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.mock.calls[0][0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
-      expect(console.error.calls.argsFor(1)[0]).toMatch(
+      expect(console.error.mock.calls[1][0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
     }
@@ -1213,9 +1217,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '<div>MEOW.</div>';
-    expect(() =>
-      ReactDOM.render(<div>baz</div>, container),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +
@@ -1232,9 +1234,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '';
-    expect(() =>
-      ReactDOM.render(<div>baz</div>, container),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<div>baz</div>, container)).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +
@@ -1261,7 +1261,7 @@ describe('ReactDOMFiber', () => {
     let actualDocument;
     let textNode;
 
-    spyOnDevAndProd(iframeContainer, 'appendChild').and.callFake(node => {
+    spyOnDevAndProd(iframeContainer, 'appendChild').mockImplementation(node => {
       actualDocument = node.ownerDocument;
       textNode = node;
     });

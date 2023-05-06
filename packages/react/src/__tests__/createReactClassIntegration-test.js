@@ -30,7 +30,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw when `render` is not specified', () => {
-    expect(function() {
+    expect(function () {
       createReactClass({});
     }).toThrowError(
       'createClass(...): Class specification must implement a `render` method.',
@@ -43,7 +43,7 @@ describe('create-react-class-integration', () => {
       propTypes: {
         value: propValidator,
       },
-      render: function() {
+      render: function () {
         return <div />;
       },
     });
@@ -59,7 +59,7 @@ describe('create-react-class-integration', () => {
         propTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -77,7 +77,7 @@ describe('create-react-class-integration', () => {
         contextTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -95,7 +95,7 @@ describe('create-react-class-integration', () => {
         childContextTypes: {
           prop: null,
         },
-        render: function() {
+        render: function () {
           return <span>{this.props.prop}</span>;
         },
       }),
@@ -109,10 +109,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling shouldComponentUpdate', () => {
     expect(() =>
       createReactClass({
-        componentShouldUpdate: function() {
+        componentShouldUpdate: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -126,10 +126,10 @@ describe('create-react-class-integration', () => {
     expect(() =>
       createReactClass({
         displayName: 'NamedComponent',
-        componentShouldUpdate: function() {
+        componentShouldUpdate: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -144,10 +144,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
-        componentWillRecieveProps: function() {
+        componentWillRecieveProps: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -161,10 +161,10 @@ describe('create-react-class-integration', () => {
   it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
-        UNSAFE_componentWillRecieveProps: function() {
+        UNSAFE_componentWillRecieveProps: function () {
           return false;
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -176,17 +176,17 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw if a reserved property is in statics', () => {
-    expect(function() {
+    expect(function () {
       createReactClass({
         statics: {
-          getDefaultProps: function() {
+          getDefaultProps: function () {
             return {
               foo: 0,
             };
           },
         },
 
-        render: function() {
+        render: function () {
           return <span />;
         },
       });
@@ -212,7 +212,7 @@ describe('create-react-class-integration', () => {
         childContextTypes: {
           foo: PropTypes.string,
         },
-        render: function() {
+        render: function () {
           return <div />;
         },
       }),
@@ -235,12 +235,12 @@ describe('create-react-class-integration', () => {
         def: 0,
         ghi: null,
         jkl: 'mno',
-        pqr: function() {
+        pqr: function () {
           return this;
         },
       },
 
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
@@ -260,12 +260,12 @@ describe('create-react-class-integration', () => {
 
   it('should work with object getInitialState() return values', () => {
     const Component = createReactClass({
-      getInitialState: function() {
+      getInitialState: function () {
         return {
           occupation: 'clown',
         };
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
@@ -279,7 +279,7 @@ describe('create-react-class-integration', () => {
       getInitialState() {
         return {};
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
@@ -291,6 +291,7 @@ describe('create-react-class-integration', () => {
     expect(instance.state.occupation).toEqual('clown');
   });
 
+  // @gate !disableLegacyContext
   it('renders based on context getInitialState', () => {
     const Foo = createReactClass({
       contextTypes: {
@@ -322,17 +323,17 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw with non-object getInitialState() return values', () => {
-    [['an array'], 'a string', 1234].forEach(function(state) {
+    [['an array'], 'a string', 1234].forEach(function (state) {
       const Component = createReactClass({
-        getInitialState: function() {
+        getInitialState: function () {
           return state;
         },
-        render: function() {
+        render: function () {
           return <span />;
         },
       });
       let instance = <Component />;
-      expect(function() {
+      expect(function () {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrowError(
         'Component.getInitialState(): must return an object or null',
@@ -342,10 +343,10 @@ describe('create-react-class-integration', () => {
 
   it('should work with a null getInitialState() return value', () => {
     const Component = createReactClass({
-      getInitialState: function() {
+      getInitialState: function () {
         return null;
       },
-      render: function() {
+      render: function () {
         return <span />;
       },
     });
@@ -361,9 +362,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    expect(() =>
-      expect(() => Component()).toThrow(),
-    ).toErrorDev(
+    expect(() => expect(() => Component()).toThrow()).toErrorDev(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory',
       {withoutStack: true},
@@ -425,7 +424,7 @@ describe('create-react-class-integration', () => {
     let instance;
     const Component = createReactClass({
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return {foo: 'bar'};
         },
       },
@@ -434,7 +433,7 @@ describe('create-react-class-integration', () => {
         return {};
       },
 
-      render: function() {
+      render: function () {
         instance = this;
         return null;
       },
@@ -483,7 +482,7 @@ describe('create-react-class-integration', () => {
     const Foo = createReactClass({
       displayName: 'Foo',
       statics: {
-        getSnapshotBeforeUpdate: function() {
+        getSnapshotBeforeUpdate: function () {
           return null;
         },
       },
@@ -503,11 +502,11 @@ describe('create-react-class-integration', () => {
     const Component = createReactClass({
       displayName: 'Component',
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return null;
         },
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
@@ -524,23 +523,23 @@ describe('create-react-class-integration', () => {
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
     const Component = createReactClass({
       statics: {
-        getDerivedStateFromProps: function() {
+        getDerivedStateFromProps: function () {
           return null;
         },
       },
-      componentWillMount: function() {
+      componentWillMount: function () {
         throw Error('unexpected');
       },
-      componentWillReceiveProps: function() {
+      componentWillReceiveProps: function () {
         throw Error('unexpected');
       },
-      componentWillUpdate: function() {
+      componentWillUpdate: function () {
         throw Error('unexpected');
       },
-      getInitialState: function() {
+      getInitialState: function () {
         return {};
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
@@ -570,20 +569,20 @@ describe('create-react-class-integration', () => {
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
     const Component = createReactClass({
-      getSnapshotBeforeUpdate: function() {
+      getSnapshotBeforeUpdate: function () {
         return null;
       },
-      componentWillMount: function() {
+      componentWillMount: function () {
         throw Error('unexpected');
       },
-      componentWillReceiveProps: function() {
+      componentWillReceiveProps: function () {
         throw Error('unexpected');
       },
-      componentWillUpdate: function() {
+      componentWillUpdate: function () {
         throw Error('unexpected');
       },
-      componentDidUpdate: function() {},
-      render: function() {
+      componentDidUpdate: function () {},
+      render: function () {
         return null;
       },
     });
@@ -617,27 +616,27 @@ describe('create-react-class-integration', () => {
     const Component = createReactClass({
       mixins: [
         {
-          componentWillMount: function() {
+          componentWillMount: function () {
             log.push('componentWillMount');
           },
-          componentWillReceiveProps: function() {
+          componentWillReceiveProps: function () {
             log.push('componentWillReceiveProps');
           },
-          componentWillUpdate: function() {
+          componentWillUpdate: function () {
             log.push('componentWillUpdate');
           },
         },
       ],
-      UNSAFE_componentWillMount: function() {
+      UNSAFE_componentWillMount: function () {
         log.push('UNSAFE_componentWillMount');
       },
-      UNSAFE_componentWillReceiveProps: function() {
+      UNSAFE_componentWillReceiveProps: function () {
         log.push('UNSAFE_componentWillReceiveProps');
       },
-      UNSAFE_componentWillUpdate: function() {
+      UNSAFE_componentWillUpdate: function () {
         log.push('UNSAFE_componentWillUpdate');
       },
-      render: function() {
+      render: function () {
         return null;
       },
     });
@@ -719,9 +718,7 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    expect(() =>
-      ReactDOM.render(<Component />, container),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',

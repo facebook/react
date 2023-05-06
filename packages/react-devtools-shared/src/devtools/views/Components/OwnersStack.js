@@ -56,7 +56,7 @@ type State = {
   selectedIndex: number,
 };
 
-function dialogReducer(state, action) {
+function dialogReducer(state: State, action: Action) {
   switch (action.type) {
     case 'UPDATE_OWNER_ID':
       const selectedIndex = action.owners.findIndex(

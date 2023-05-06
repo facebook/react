@@ -19,7 +19,9 @@ export {
   unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
-  preinit,
+  prefetchDNS,
+  preconnect,
   preload,
+  preinit,
   version,
 } from './src/client/ReactDOM';

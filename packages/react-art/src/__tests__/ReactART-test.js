@@ -41,6 +41,8 @@ let Shape;
 let Surface;
 let TestComponent;
 
+let waitFor;
+
 const Missing = {};
 
 function testDOMNodeStructure(domNode, expectedStructure) {
@@ -59,7 +61,7 @@ function testDOMNodeStructure(domNode, expectedStructure) {
     }
   }
   if (expectedStructure.children) {
-    expectedStructure.children.forEach(function(subTree, index) {
+    expectedStructure.children.forEach(function (subTree, index) {
       testDOMNodeStructure(domNode.childNodes[index], subTree);
     });
   }
@@ -77,6 +79,8 @@ describe('ReactART', () => {
     Group = ReactART.Group;
     Shape = ReactART.Shape;
     Surface = ReactART.Surface;
+
+    ({waitFor} = require('internal-test-utils'));
 
     TestComponent = class extends React.Component {
       group = React.createRef();
@@ -361,11 +365,11 @@ describe('ReactART', () => {
   });
 
   // @gate !enableSyncDefaultUpdates
-  it('can concurrently render with a "primary" renderer while sharing context', () => {
+  it('can concurrently render with a "primary" renderer while sharing context', async () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      Scheduler.unstable_yieldValue(props.value);
+      Scheduler.log(props.value);
       return null;
     }
 
@@ -392,7 +396,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    expect(Scheduler).toFlushAndYieldThrough(['A']);
+    await waitFor(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -407,7 +411,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
+    await waitFor(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });

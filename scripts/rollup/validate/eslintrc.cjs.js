@@ -33,6 +33,7 @@ module.exports = {
 
     TaskController: 'readonly',
     reportError: 'readonly',
+    AggregateError: 'readonly',
 
     // Flight
     Uint8Array: 'readonly',
@@ -51,9 +52,12 @@ module.exports = {
 
     // act
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+
+    // Native Scheduler
+    nativeRuntimeScheduler: 'readonly',
   },
   parserOptions: {
-    ecmaVersion: 5,
+    ecmaVersion: 2020,
     sourceType: 'script',
   },
   rules: {

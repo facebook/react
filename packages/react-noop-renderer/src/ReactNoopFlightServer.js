@@ -14,7 +14,7 @@
  * environment.
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {saveModule} from 'react-noop-renderer/flight-modules';
@@ -48,18 +48,22 @@ const ReactNoopFlightServer = ReactFlightServer({
   clonePrecomputedChunk(chunk: string): string {
     return chunk;
   },
-  isModuleReference(reference: Object): boolean {
-    return reference.$$typeof === Symbol.for('react.module.reference');
+  isClientReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.client.reference');
   },
-  getModuleKey(reference: Object): Object {
+  isServerReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.server.reference');
+  },
+  getClientReferenceKey(reference: Object): Object {
     return reference;
   },
-  resolveModuleMetaData(
+  resolveClientReferenceMetadata(
     config: void,
     reference: {$$typeof: symbol, value: any},
   ) {
     return saveModule(reference.value);
   },
+  prepareHostDispatcher() {},
 });
 
 type Options = {
@@ -68,7 +72,7 @@ type Options = {
   identifierPrefix?: string,
 };
 
-function render(model: ReactModel, options?: Options): Destination {
+function render(model: ReactClientValue, options?: Options): Destination {
   const destination: Destination = [];
   const bundlerConfig = undefined;
   const request = ReactNoopFlightServer.createRequest(

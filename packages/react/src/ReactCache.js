@@ -53,14 +53,16 @@ function createCacheNode<T>(): CacheNode<T> {
 }
 
 export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
-  return function() {
+  return function () {
     const dispatcher = ReactCurrentCache.current;
     if (!dispatcher) {
       // If there is no dispatcher, then we treat this as not being cached.
-      // $FlowFixMe: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       return fn.apply(null, arguments);
     }
-    const fnMap = dispatcher.getCacheForType(createCacheRoot);
+    const fnMap: WeakMap<any, CacheNode<T>> = dispatcher.getCacheForType(
+      createCacheRoot,
+    );
     const fnNode = fnMap.get(fn);
     let cacheNode: CacheNode<T>;
     if (fnNode === undefined) {
@@ -109,7 +111,7 @@ export function cache<A: Iterable<mixed>, T>(fn: (...A) => T): (...A) => T {
       throw cacheNode.v;
     }
     try {
-      // $FlowFixMe: We don't want to use rest arguments since we transpile the code.
+      // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
       const result = fn.apply(null, arguments);
       const terminatedNode: TerminatedCacheNode<T> = (cacheNode: any);
       terminatedNode.s = TERMINATED;

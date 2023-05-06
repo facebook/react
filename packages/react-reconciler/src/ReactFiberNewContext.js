@@ -16,8 +16,10 @@ import type {
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
 import type {SharedQueue} from './ReactFiberClassUpdateQueue';
+import type {TransitionStatus} from './ReactFiberConfig';
+import type {Hook} from './ReactFiberHooks';
 
-import {isPrimaryRenderer} from './ReactFiberHostConfig';
+import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
   ContextProvider,
@@ -26,7 +28,6 @@ import {
 } from './ReactWorkTags';
 import {
   NoLanes,
-  NoTimestamp,
   isSubsetOfLanes,
   includesSomeLane,
   mergeLanes,
@@ -44,10 +45,25 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
   enableServerContext,
+  enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
+import {
+  getHostTransitionProvider,
+  HostTransitionContext,
+} from './ReactFiberHostContext';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
+
+let rendererCursorDEV: StackCursor<Object | null>;
+if (__DEV__) {
+  rendererCursorDEV = createCursor(null);
+}
+let renderer2CursorDEV: StackCursor<Object | null>;
+if (__DEV__) {
+  renderer2CursorDEV = createCursor(null);
+}
 
 let rendererSigil;
 if (__DEV__) {
@@ -94,6 +110,8 @@ export function pushProvider<T>(
 
     context._currentValue = nextValue;
     if (__DEV__) {
+      push(rendererCursorDEV, context._currentRenderer, providerFiber);
+
       if (
         context._currentRenderer !== undefined &&
         context._currentRenderer !== null &&
@@ -111,6 +129,8 @@ export function pushProvider<T>(
 
     context._currentValue2 = nextValue;
     if (__DEV__) {
+      push(renderer2CursorDEV, context._currentRenderer2, providerFiber);
+
       if (
         context._currentRenderer2 !== undefined &&
         context._currentRenderer2 !== null &&
@@ -131,7 +151,7 @@ export function popProvider(
   providerFiber: Fiber,
 ): void {
   const currentValue = valueCursor.current;
-  pop(valueCursor, providerFiber);
+
   if (isPrimaryRenderer) {
     if (
       enableServerContext &&
@@ -140,6 +160,11 @@ export function popProvider(
       context._currentValue = context._defaultValue;
     } else {
       context._currentValue = currentValue;
+    }
+    if (__DEV__) {
+      const currentRenderer = rendererCursorDEV.current;
+      pop(rendererCursorDEV, providerFiber);
+      context._currentRenderer = currentRenderer;
     }
   } else {
     if (
@@ -150,7 +175,14 @@ export function popProvider(
     } else {
       context._currentValue2 = currentValue;
     }
+    if (__DEV__) {
+      const currentRenderer2 = renderer2CursorDEV.current;
+      pop(renderer2CursorDEV, providerFiber);
+      context._currentRenderer2 = currentRenderer2;
+    }
   }
+
+  pop(valueCursor, providerFiber);
 }
 
 export function scheduleContextWorkOnParentPath(
@@ -246,7 +278,7 @@ function propagateContextChange_eager<T>(
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const lane = pickArbitraryLane(renderLanes);
-            const update = createUpdate(NoTimestamp, lane);
+            const update = createUpdate(lane);
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
@@ -561,6 +593,33 @@ function propagateParentContextChanges(
           }
         }
       }
+    } else if (
+      enableFormActions &&
+      enableAsyncActions &&
+      parent === getHostTransitionProvider()
+    ) {
+      // During a host transition, a host component can act like a context
+      // provider. E.g. in React DOM, this would be a <form />.
+      const currentParent = parent.alternate;
+      if (currentParent === null) {
+        throw new Error('Should have a current fiber. This is a bug in React.');
+      }
+
+      const oldStateHook: Hook = currentParent.memoizedState;
+      const oldState: TransitionStatus = oldStateHook.memoizedState;
+
+      const newStateHook: Hook = parent.memoizedState;
+      const newState: TransitionStatus = newStateHook.memoizedState;
+
+      // This uses regular equality instead of Object.is because we assume that
+      // host transition state doesn't include NaN as a valid type.
+      if (oldState !== newState) {
+        if (contexts !== null) {
+          contexts.push(HostTransitionContext);
+        } else {
+          contexts = [HostTransitionContext];
+        }
+      }
     }
     parent = parent.return;
   }
@@ -664,7 +723,24 @@ export function readContext<T>(context: ReactContext<T>): T {
       );
     }
   }
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
 
+export function readContextDuringReconcilation<T>(
+  consumer: Fiber,
+  context: ReactContext<T>,
+  renderLanes: Lanes,
+): T {
+  if (currentlyRenderingFiber === null) {
+    prepareToReadContext(consumer, renderLanes);
+  }
+  return readContextForConsumer(consumer, context);
+}
+
+function readContextForConsumer<T>(
+  consumer: Fiber | null,
+  context: ReactContext<T>,
+): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;
@@ -679,7 +755,7 @@ export function readContext<T>(context: ReactContext<T>): T {
     };
 
     if (lastContextDependency === null) {
-      if (currentlyRenderingFiber === null) {
+      if (consumer === null) {
         throw new Error(
           'Context can only be read while React is rendering. ' +
             'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
@@ -690,12 +766,12 @@ export function readContext<T>(context: ReactContext<T>): T {
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies = {
+      consumer.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
       };
       if (enableLazyContextPropagation) {
-        currentlyRenderingFiber.flags |= NeedsPropagation;
+        consumer.flags |= NeedsPropagation;
       }
     } else {
       // Append a new context item.

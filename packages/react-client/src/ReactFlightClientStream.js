@@ -7,17 +7,16 @@
  * @flow
  */
 
-import type {Response} from './ReactFlightClientHostConfigStream';
-
-import type {BundlerConfig} from './ReactFlightClientHostConfig';
+import type {CallServerCallback} from './ReactFlightClient';
+import type {Response} from './ReactFlightClientConfigStream';
+import type {SSRManifest} from './ReactFlightClientConfig';
 
 import {
   resolveModule,
   resolveModel,
-  resolveProvider,
-  resolveSymbol,
   resolveErrorProd,
   resolveErrorDev,
+  resolveHint,
   createResponse as createResponseBase,
   parseModelString,
   parseModelTuple,
@@ -28,7 +27,7 @@ import {
   readFinalStringChunk,
   supportsBinaryStreams,
   createStringDecoder,
-} from './ReactFlightClientHostConfig';
+} from './ReactFlightClientConfig';
 
 export type {Response};
 
@@ -36,33 +35,25 @@ function processFullRow(response: Response, row: string): void {
   if (row === '') {
     return;
   }
-  const tag = row[0];
+  const colon = row.indexOf(':', 0);
+  const id = parseInt(row.slice(0, colon), 16);
+  const tag = row[colon + 1];
   // When tags that are not text are added, check them here before
   // parsing the row as text.
   // switch (tag) {
   // }
-  const colon = row.indexOf(':', 1);
-  const id = parseInt(row.substring(1, colon), 16);
-  const text = row.substring(colon + 1);
   switch (tag) {
-    case 'J': {
-      resolveModel(response, id, text);
+    case 'I': {
+      resolveModule(response, id, row.slice(colon + 2));
       return;
     }
-    case 'M': {
-      resolveModule(response, id, text);
-      return;
-    }
-    case 'P': {
-      resolveProvider(response, id, text);
-      return;
-    }
-    case 'S': {
-      resolveSymbol(response, id, JSON.parse(text));
+    case 'H': {
+      const code = row[colon + 2];
+      resolveHint(response, code, row.slice(colon + 3));
       return;
     }
     case 'E': {
-      const errorInfo = JSON.parse(text);
+      const errorInfo = JSON.parse(row.slice(colon + 2));
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -77,9 +68,9 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     default: {
-      throw new Error(
-        "Error parsing the data. It's probably an error code or network corruption.",
-      );
+      // We assume anything else is JSON.
+      resolveModel(response, id, row.slice(colon + 1));
+      return;
     }
   }
 }
@@ -91,13 +82,13 @@ export function processStringChunk(
 ): void {
   let linebreak = chunk.indexOf('\n', offset);
   while (linebreak > -1) {
-    const fullrow = response._partialRow + chunk.substring(offset, linebreak);
+    const fullrow = response._partialRow + chunk.slice(offset, linebreak);
     processFullRow(response, fullrow);
     response._partialRow = '';
     offset = linebreak + 1;
     linebreak = chunk.indexOf('\n', offset);
   }
-  response._partialRow += chunk.substring(offset);
+  response._partialRow += chunk.slice(offset);
 }
 
 export function processBinaryChunk(
@@ -122,7 +113,8 @@ export function processBinaryChunk(
 }
 
 function createFromJSONCallback(response: Response) {
-  return function(key: string, value: JSONValue) {
+  // $FlowFixMe[missing-this-annot]
+  return function (key: string, value: JSONValue) {
     if (typeof value === 'string') {
       // We can't use .bind here because we need the "this" value.
       return parseModelString(response, this, key, value);
@@ -134,11 +126,14 @@ function createFromJSONCallback(response: Response) {
   };
 }
 
-export function createResponse(bundlerConfig: BundlerConfig): Response {
+export function createResponse(
+  bundlerConfig: SSRManifest,
+  callServer: void | CallServerCallback,
+): Response {
   // NOTE: CHECK THE COMPILER OUTPUT EACH TIME YOU CHANGE THIS.
   // It should be inlined to one object literal but minor changes can break it.
   const stringDecoder = supportsBinaryStreams ? createStringDecoder() : null;
-  const response: any = createResponseBase(bundlerConfig);
+  const response: any = createResponseBase(bundlerConfig, callServer);
   response._partialRow = '';
   if (supportsBinaryStreams) {
     response._stringDecoder = stringDecoder;

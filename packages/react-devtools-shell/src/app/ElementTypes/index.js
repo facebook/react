@@ -25,7 +25,7 @@ const Context = createContext('abc');
 Context.displayName = 'ExampleContext';
 
 class ClassComponent extends Component<any> {
-  render() {
+  render(): null {
     return null;
   }
 }
@@ -58,7 +58,7 @@ export default function ElementTypes(): React.Node {
     <Profiler id="test" onRender={() => {}}>
       <Fragment>
         <Context.Provider value={'def'}>
-          <Context.Consumer>{value => null}</Context.Consumer>
+          <Context.Consumer>{(value: $FlowFixMe) => null}</Context.Consumer>
         </Context.Provider>
         <StrictMode>
           <Cache>

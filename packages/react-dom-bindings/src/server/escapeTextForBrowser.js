@@ -50,7 +50,7 @@ const matchHtmlRegExp = /["'&<>]/;
  * @public
  */
 
-function escapeHtml(string) {
+function escapeHtml(string: string) {
   if (__DEV__) {
     checkHtmlStringCoercion(string);
   }
@@ -88,14 +88,14 @@ function escapeHtml(string) {
     }
 
     if (lastIndex !== index) {
-      html += str.substring(lastIndex, index);
+      html += str.slice(lastIndex, index);
     }
 
     lastIndex = index + 1;
     html += escape;
   }
 
-  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
+  return lastIndex !== index ? html + str.slice(lastIndex, index) : html;
 }
 // end code copied and modified from escape-html
 

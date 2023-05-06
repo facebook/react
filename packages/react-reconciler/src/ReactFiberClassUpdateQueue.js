@@ -127,9 +127,6 @@ import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook';
 import assign from 'shared/assign';
 
 export type Update<State> = {
-  // TODO: Temporary field. Will remove this by storing a map of
-  // transition -> event time on the root.
-  eventTime: number,
   lane: Lane,
 
   tag: 0 | 1 | 2 | 3,
@@ -164,7 +161,7 @@ export const CaptureUpdate = 3;
 let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
-let currentlyProcessingQueue;
+let currentlyProcessingQueue: ?SharedQueue<$FlowFixMe>;
 export let resetCurrentlyProcessingQueue: () => void;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
@@ -208,9 +205,8 @@ export function cloneUpdateQueue<State>(
   }
 }
 
-export function createUpdate(eventTime: number, lane: Lane): Update<mixed> {
+export function createUpdate(lane: Lane): Update<mixed> {
   const update: Update<mixed> = {
-    eventTime,
     lane,
 
     tag: UpdateState,
@@ -331,7 +327,6 @@ export function enqueueCapturedUpdate<State>(
         let update: Update<State> = firstBaseUpdate;
         do {
           const clone: Update<State> = {
-            eventTime: update.eventTime,
             lane: update.lane,
 
             tag: update.tag,
@@ -480,7 +475,6 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   if (__DEV__) {
-    // $FlowFixMe[escaped-generic] discovered when updating Flow
     currentlyProcessingQueue = queue.shared;
   }
 
@@ -536,13 +530,10 @@ export function processUpdateQueue<State>(
 
     let newBaseState = null;
     let newFirstBaseUpdate = null;
-    let newLastBaseUpdate = null;
+    let newLastBaseUpdate: null | Update<State> = null;
 
     let update: Update<State> = firstBaseUpdate;
     do {
-      // TODO: Don't need this field anymore
-      const updateEventTime = update.eventTime;
-
       // An extra OffscreenLane bit is added to updates that were made to
       // a hidden tree, so that we can distinguish them from updates that were
       // already there when the tree was hidden.
@@ -561,7 +552,6 @@ export function processUpdateQueue<State>(
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<State> = {
-          eventTime: updateEventTime,
           lane: updateLane,
 
           tag: update.tag,
@@ -583,7 +573,6 @@ export function processUpdateQueue<State>(
 
         if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {
-            eventTime: updateEventTime,
             // This update is going to be committed so we never want uncommit
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
@@ -636,7 +625,8 @@ export function processUpdateQueue<State>(
           const lastPendingUpdate = pendingQueue;
           // Intentionally unsound. Pending updates form a circular list, but we
           // unravel them when transferring them to the base queue.
-          const firstPendingUpdate = ((lastPendingUpdate.next: any): Update<State>);
+          const firstPendingUpdate =
+            ((lastPendingUpdate.next: any): Update<State>);
           lastPendingUpdate.next = null;
           update = firstPendingUpdate;
           queue.lastBaseUpdate = lastPendingUpdate;
@@ -676,7 +666,7 @@ export function processUpdateQueue<State>(
   }
 }
 
-function callCallback(callback, context) {
+function callCallback(callback: () => mixed, context: any) {
   if (typeof callback !== 'function') {
     throw new Error(
       'Invalid argument passed as callback. Expected a function. Instead ' +
@@ -707,9 +697,8 @@ export function deferHiddenCallbacks<State>(
     if (existingHiddenCallbacks === null) {
       updateQueue.shared.hiddenCallbacks = newHiddenCallbacks;
     } else {
-      updateQueue.shared.hiddenCallbacks = existingHiddenCallbacks.concat(
-        newHiddenCallbacks,
-      );
+      updateQueue.shared.hiddenCallbacks =
+        existingHiddenCallbacks.concat(newHiddenCallbacks);
     }
   }
 }

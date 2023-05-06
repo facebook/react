@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ModuleMetaData} from 'ReactFlightNativeRelayServerIntegration';
+import type {ClientReferenceMetadata} from 'ReactFlightNativeRelayServerIntegration';
 
 export type JSONValue =
   | string
@@ -18,8 +18,8 @@ export type JSONValue =
   | Array<JSONValue>;
 
 export type RowEncoding =
-  | ['J', number, JSONValue]
-  | ['M', number, ModuleMetaData]
+  | ['O', number, JSONValue]
+  | ['I', number, ClientReferenceMetadata]
   | ['P', number, string]
   | ['S', number, string]
   | [

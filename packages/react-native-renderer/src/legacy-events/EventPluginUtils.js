@@ -30,9 +30,8 @@ export function setComponentTree(
   }
 }
 
-let validateEventDispatches;
-if (__DEV__) {
-  validateEventDispatches = function(event) {
+function validateEventDispatches(event) {
+  if (__DEV__) {
     const dispatchListeners = event._dispatchListeners;
     const dispatchInstances = event._dispatchInstances;
 
@@ -53,7 +52,7 @@ if (__DEV__) {
     if (instancesIsArr !== listenersIsArr || instancesLen !== listenersLen) {
       console.error('EventPluginUtils: Invalid `event`.');
     }
-  };
+  }
 }
 
 /**

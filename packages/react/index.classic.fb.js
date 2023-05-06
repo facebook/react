@@ -59,6 +59,7 @@ export {
   useMemo,
   useMutableSource,
   useMutableSource as unstable_useMutableSource,
+  experimental_useOptimistic,
   useReducer,
   useRef,
   useState,

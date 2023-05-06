@@ -13,7 +13,7 @@ import isArray from 'react-devtools-shared/src/isArray';
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
 export function getStyleXData(data: any): StyleXPlugin {
-  const sources = new Set();
+  const sources = new Set<string>();
   const resolvedStyles = {};
 
   crawlData(data, sources, resolvedStyles);
@@ -67,7 +67,10 @@ function crawlObjectProperties(
         // Special case; this key is the name of the style's source/file/module.
         sources.add(key);
       } else {
-        resolvedStyles[key] = getPropertyValueForStyleName(value);
+        const propertyValue = getPropertyValueForStyleName(value);
+        if (propertyValue != null) {
+          resolvedStyles[key] = propertyValue;
+        }
       }
     } else {
       const nestedStyle = {};
@@ -90,13 +93,19 @@ function getPropertyValueForStyleName(styleName: string): string | null {
     const styleSheet = ((document.styleSheets[
       styleSheetIndex
     ]: any): CSSStyleSheet);
-    // $FlowFixMe Flow doesn't konw about these properties
-    const rules = styleSheet.rules || styleSheet.cssRules;
-    // $FlowFixMe `rules` is mixed
+    let rules: CSSRuleList | null = null;
+    // this might throw if CORS rules are enforced https://www.w3.org/TR/cssom-1/#the-cssstylesheet-interface
+    try {
+      rules = styleSheet.cssRules;
+    } catch (_e) {
+      continue;
+    }
+
     for (let ruleIndex = 0; ruleIndex < rules.length; ruleIndex++) {
-      // $FlowFixMe `rules` is mixed
-      const rule = rules[ruleIndex];
-      // $FlowFixMe Flow doesn't konw about these properties
+      if (!(rules[ruleIndex] instanceof CSSStyleRule)) {
+        continue;
+      }
+      const rule = ((rules[ruleIndex]: any): CSSStyleRule);
       const {cssText, selectorText, style} = rule;
 
       if (selectorText != null) {

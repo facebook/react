@@ -39,7 +39,7 @@ export default function InspectedElementSuspenseToggle({
 
   const isSuspended = state !== null;
 
-  const toggleSuspense = (path, value) => {
+  const toggleSuspense = (path: any, value: boolean) => {
     const rendererID = store.getRendererIDForElement(id);
     if (rendererID !== null) {
       bridge.send('overrideSuspense', {

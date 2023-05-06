@@ -45,20 +45,20 @@ describe('ProfilerContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
-      .BridgeContext;
-    ProfilerContext = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
-      .ProfilerContext;
-    ProfilerContextController = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
-      .ProfilerContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context')
-      .StoreContext;
-    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
-      .TreeContextController;
-    TreeDispatcherContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
-      .TreeDispatcherContext;
-    TreeStateContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
-      .TreeStateContext;
+    BridgeContext =
+      require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    ProfilerContext =
+      require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext').ProfilerContext;
+    ProfilerContextController =
+      require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext').ProfilerContextController;
+    StoreContext =
+      require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeContextController;
+    TreeDispatcherContext =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeDispatcherContext;
+    TreeStateContext =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeStateContext;
   });
 
   const Contexts = ({
