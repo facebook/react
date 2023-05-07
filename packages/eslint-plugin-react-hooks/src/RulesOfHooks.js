@@ -17,9 +17,9 @@
 
 function isHookName(s) {
   if (__EXPERIMENTAL__) {
-    return s === 'use' || /^use[A-Z0-9]/.test(s);
+    return s === 'use' || /^use(\p{Lu}|\p{N})/u.test(s);
   }
-  return /^use[A-Z0-9]/.test(s);
+  return /^use(\p{Lu}|\p{N})/u.test(s);
 }
 
 /**
@@ -36,7 +36,7 @@ function isHook(node) {
     isHook(node.property)
   ) {
     const obj = node.object;
-    const isPascalCaseNameSpace = /^[A-Z].*/;
+    const isPascalCaseNameSpace = /^\p{Lu}/u;
     return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
   } else {
     return false;
@@ -49,7 +49,7 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  return node.type === 'Identifier' && /^\p{Lu}/u.test(node.name);
 }
 
 function isReactFunction(node, functionName) {
