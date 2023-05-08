@@ -259,6 +259,9 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
+    if ($$typeof === REACT_PROVIDER_TYPE) {
+      return ContextProvider;
+    }
   }
   return IndeterminateComponent;
 }

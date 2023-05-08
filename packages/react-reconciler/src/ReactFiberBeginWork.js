@@ -1843,6 +1843,15 @@ function mountLazyComponent(
       );
       return child;
     }
+    case ContextProvider: {
+      child = updateContextProvider(
+        null,
+        workInProgress,
+        resolvedProps,
+        renderLanes,
+      );
+      return child;
+    }
   }
   let hint = '';
   if (__DEV__) {
@@ -3487,18 +3496,18 @@ let hasWarnedAboutUsingNoValuePropOnContextProvider = false;
 function updateContextProvider(
   current: Fiber | null,
   workInProgress: Fiber,
+  nextProps: any,
   renderLanes: Lanes,
 ) {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
 
-  const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;
 
-  const newValue = newProps.value;
+  const newValue = nextProps.value;
 
   if (__DEV__) {
-    if (!('value' in newProps)) {
+    if (!('value' in nextProps)) {
       if (!hasWarnedAboutUsingNoValuePropOnContextProvider) {
         hasWarnedAboutUsingNoValuePropOnContextProvider = true;
         console.error(
@@ -3509,7 +3518,7 @@ function updateContextProvider(
     const providerPropTypes = workInProgress.type.propTypes;
 
     if (providerPropTypes) {
-      checkPropTypes(providerPropTypes, newProps, 'prop', 'Context.Provider');
+      checkPropTypes(providerPropTypes, nextProps, 'prop', 'Context.Provider');
     }
   }
 
@@ -3526,7 +3535,7 @@ function updateContextProvider(
       if (is(oldValue, newValue)) {
         // No change. Bailout early if children are the same.
         if (
-          oldProps.children === newProps.children &&
+          oldProps.children === nextProps.children &&
           !hasLegacyContextChanged()
         ) {
           return bailoutOnAlreadyFinishedWork(
@@ -3543,7 +3552,7 @@ function updateContextProvider(
     }
   }
 
-  const newChildren = newProps.children;
+  const newChildren = nextProps.children;
   reconcileChildren(current, workInProgress, newChildren, renderLanes);
   return workInProgress.child;
 }
@@ -4184,8 +4193,20 @@ function beginWork(
       return updateMode(current, workInProgress, renderLanes);
     case Profiler:
       return updateProfiler(current, workInProgress, renderLanes);
-    case ContextProvider:
-      return updateContextProvider(current, workInProgress, renderLanes);
+    case ContextProvider: {
+      const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : resolveDefaultProps(type, unresolvedProps);
+      return updateContextProvider(
+        current,
+        workInProgress,
+        resolvedProps,
+        renderLanes,
+      );
+    }
     case ContextConsumer:
       return updateContextConsumer(current, workInProgress, renderLanes);
     case MemoComponent: {

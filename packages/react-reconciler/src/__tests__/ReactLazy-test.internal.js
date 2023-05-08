@@ -120,6 +120,43 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
+  it('renders a lazy context provider', async () => {
+    const Context = React.createContext('default');
+    const ConsumerText = () => {
+      return <Text text={React.useContext(Context)} />;
+    };
+    const LazyProvider = lazy(() => fakeImport(Context.Provider));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyProvider value="Hi">
+          <ConsumerText />
+        </LazyProvider>
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+    expect(root).not.toMatchRenderedOutput('Hi');
+
+    await act(() => resolveFakeImport(Context.Provider));
+    assertLog(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+
+    // Should not suspend on update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyProvider value="Hi again">
+          <ConsumerText />
+        </LazyProvider>
+      </Suspense>,
+    );
+    await waitForAll(['Hi again']);
+    expect(root).toMatchRenderedOutput('Hi again');
+  });
+
   it('can resolve synchronously without suspending', async () => {
     const LazyText = lazy(() => ({
       then(cb) {
