@@ -28,8 +28,6 @@ import {
 import { Hook } from "./Hooks";
 import { FunctionSignature, ShapeRegistry } from "./ObjectShape";
 
-const HOOK_PATTERN = /^_?use/;
-
 // TODO(mofeiZ): User defined global types (with corresponding shapes).
 // User defined global types should have inline ObjectShapes instead of directly
 // using ObjectShapes.ShapeRegistry, as a user-provided ShapeRegistry may be
@@ -83,7 +81,7 @@ export class Environment {
     let resolvedGlobal: Global | null = this.#globals.get(name) ?? null;
     if (resolvedGlobal === null) {
       // Hack, since we don't track module level declarations and imports
-      if (name.match(HOOK_PATTERN)) {
+      if (isHookName(name)) {
         return {
           kind: "Hook",
           definition: {
@@ -131,4 +129,12 @@ export class Environment {
     }
     return null;
   }
+}
+
+// From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
+function isHookName(name: string): boolean {
+  // if (__EXPERIMENTAL__) {
+  //   return name === 'use' || /^use[A-Z0-9]/.test(name);
+  // }
+  return /^use[A-Z0-9]/.test(name);
 }
