@@ -1,0 +1,7 @@
+// @skip
+
+(class {
+  i() {
+    useState();
+  }
+});

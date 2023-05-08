@@ -49,6 +49,7 @@
     "@babel/traverse": "^7.19.1",
     "@testing-library/react": "^13.4.0",
     "@tsconfig/node16-strictest": "^1.0.3",
+    "@types/glob": "^8.1.0",
     "@types/invariant": "^2.2.35",
     "@types/jest": "^29.0.3",
     "@types/node": "^18.7.18",

@@ -10,6 +10,7 @@
 /* global expect,test */
 
 import fs from "fs";
+import glob from "glob";
 import path from "path";
 import { GatingOptions, PluginOptions } from "../../Babel/PluginOptions";
 
@@ -55,7 +56,9 @@ export default function generateTestsFromFixtures(
 ) {
   let files: Array<string>;
   try {
-    files = fs.readdirSync(fixturesPath);
+    files = glob.sync("**/*.{js,md}", {
+      cwd: fixturesPath,
+    });
   } catch (e) {
     if (e.code === "ENOENT") {
       files = [];
@@ -233,11 +236,12 @@ function matchInputOutputFixtures(files: string[], fixturesPath: string) {
         );
       }
       entry.input = resolvedPath;
-      const outputFile = path.format({
-        dir: fixturesPath,
-        name: basename,
-        ext: EXPECT_SUFFIX,
-      });
+      const outputName = `${basename}${EXPECT_SUFFIX}`;
+      const outputFile = path.join(
+        fixturesPath,
+        path.dirname(file),
+        outputName
+      );
       entry.output = outputFile;
     }
   }
