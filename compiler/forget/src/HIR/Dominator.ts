@@ -113,10 +113,9 @@ class Dominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    invariant(
-      dominator !== undefined,
-      `Called on invalid node identifier '${id}'`
-    );
+    if (dominator === undefined) {
+      return null;
+    }
     return dominator === id ? null : dominator;
   }
 
@@ -173,7 +172,7 @@ function computeReverseGraph(fn: HIRFunction): Graph<BlockId> {
       preds: new Set(eachTerminalSuccessor(block.terminal)),
       succs: new Set(block.preds),
     };
-    if (block.terminal.kind === "return" || block.terminal.kind === "throw") {
+    if (block.terminal.kind === "return") {
       node.preds.add(exitId);
       exit.succs.add(id);
     }
