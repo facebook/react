@@ -1,7 +1,0 @@
-// @skip
-
-(class {
-  useHook() {
-    useState();
-  }
-});

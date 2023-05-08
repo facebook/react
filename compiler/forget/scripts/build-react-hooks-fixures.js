@@ -16,6 +16,8 @@ const path = require("path");
 const prettier = require("prettier");
 const prettierConfigPath = require.resolve("../.prettierrc");
 const process = require("process");
+const { createHash } = require("crypto");
+const { create } = require("domain");
 
 const FIXTURES_DIR = path.join(
   process.cwd(),
@@ -26,6 +28,10 @@ const FIXTURES_DIR = path.join(
   "rules-of-hooks"
 );
 
+const PRETTIER_OPTIONS = prettier.resolveConfig.sync(FIXTURES_DIR, {
+  config: prettierConfigPath,
+});
+
 const fixtures = [];
 for (const test of tests.valid) {
   fixtures.push({ code: test.code, valid: true });
@@ -34,7 +40,6 @@ for (const test of tests.invalid) {
   fixtures.push({ code: test.code, valid: false });
 }
 
-let index = 0;
 for (const fixture of fixtures) {
   let error = null;
   let passes = true;
@@ -63,29 +68,29 @@ for (const fixture of fixtures) {
   } catch (e) {
     error = e;
   }
-  let name = `rules-of-hooks-${index}.js`;
   let code = fixture.code;
+  let prefix = "";
   if (error !== null) {
-    name = `todo.${name}`;
-    code = `// @skip\n${code}`;
+    prefix = `todo.`;
+    code = `// @skip\n// Unsupported input\n${code}`;
   } else if (fixture.valid === false) {
-    name = `error.${name}`;
+    prefix = `error.`;
     if (passes) {
       // oops, passed when we expected an error
-      name = `todo.${name}`;
-      code = `// @skip\n${code}`;
+      prefix = `todo.error.`;
+      code = `// @skip\n// Passed but should have errored\n${code}`;
     }
   } else if (!passes) {
     // oops, error when it should have passed
-    name = `todo.${name}`;
-    code = `// @skip\n${code}`;
+    prefix = `todo.`;
+    code = `// @skip\n// Failed but should have passed\n${code}`;
   }
-
+  const formatted = prettier.format(code, PRETTIER_OPTIONS);
+  const hmac = createHash("sha256");
+  hmac.update(formatted, "utf8");
+  let name = `${prefix}rules-of-hooks-${hmac
+    .digest("hex")
+    .substring(0, 12)}.js`;
   const fixturePath = path.join(FIXTURES_DIR, name);
-  const options = prettier.resolveConfig.sync(fixturePath, {
-    config: prettierConfigPath,
-  });
-  const formatted = prettier.format(code, options);
   fs.writeFileSync(fixturePath, formatted, "utf8");
-  index++;
 }
