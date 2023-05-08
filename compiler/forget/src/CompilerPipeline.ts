@@ -15,6 +15,7 @@ import {
   validateConsistentIdentifiers,
   validateHooksUsage,
   validateTerminalSuccessors,
+  validateUnconditionalHooks,
 } from "./HIR";
 import { Environment, EnvironmentConfig } from "./HIR/Environment";
 import {
@@ -87,6 +88,7 @@ export function* run(
 
   if (env.validateHooksUsage) {
     validateHooksUsage(hir);
+    validateUnconditionalHooks(hir);
   }
 
   dropMemoCalls(hir);

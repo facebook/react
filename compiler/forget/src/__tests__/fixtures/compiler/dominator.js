@@ -1,4 +1,3 @@
-// @only @debug
 function Component(props) {
   let x = 0;
   label: if (props.a) {
@@ -11,22 +10,22 @@ function Component(props) {
     }
     x = 3;
   }
-  //   label2: switch (props.c) {
-  //     case "a": {
-  //       x = 4;
-  //       break;
-  //     }
-  //     case "b": {
-  //       break label2;
-  //     }
-  //     case "c": {
-  //       x = 5;
-  //       // intentional fallthrough
-  //     }
-  //     default: {
-  //       x = 6;
-  //     }
-  //   }
+  label2: switch (props.c) {
+    case "a": {
+      x = 4;
+      break;
+    }
+    case "b": {
+      break label2;
+    }
+    case "c": {
+      x = 5;
+      // intentional fallthrough
+    }
+    default: {
+      x = 6;
+    }
+  }
   if (props.d) {
     return null;
   }

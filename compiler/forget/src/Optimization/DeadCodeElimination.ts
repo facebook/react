@@ -248,14 +248,19 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
 }
 
 export function hasBackEdge(fn: HIRFunction): boolean {
+  return findBlocksWithBackEdges(fn).size > 0;
+}
+
+export function findBlocksWithBackEdges(fn: HIRFunction): Set<BlockId> {
   const visited = new Set<BlockId>();
+  const blocks = new Set<BlockId>();
   for (const [blockId, block] of fn.body.blocks) {
     for (const predId of block.preds) {
       if (!visited.has(predId)) {
-        return true;
+        blocks.add(blockId);
       }
     }
     visited.add(blockId);
   }
-  return false;
+  return blocks;
 }

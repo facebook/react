@@ -21,3 +21,4 @@ export { printFunction, printHIR } from "./PrintHIR";
 export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";
 export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateTerminalSuccessors } from "./ValidateTerminalSuccessors";
+export { validateUnconditionalHooks } from "./ValidateUnconditionalHooks";
