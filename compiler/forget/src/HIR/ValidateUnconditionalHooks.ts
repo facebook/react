@@ -11,7 +11,7 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
-import { computeDominators } from "./Dominator";
+import { computePostDominatorTree } from "./Dominator";
 import { BlockId, HIRFunction, isHookType } from "./HIR";
 
 /**
@@ -58,9 +58,12 @@ export function validateUnconditionalHooks(fn: HIRFunction): void {
   // Construct the set of blocks that is always reachable from the entry block.
   const unconditionalBlocks = new Set<BlockId>();
   const blocksWithBackEdges = findBlocksWithBackEdges(fn);
-  const dominators = computeDominators(fn, { reverse: true });
-  // Post dominator graph so .entry is the "exit" node
-  const exit = dominators.entry;
+  const dominators = computePostDominatorTree(fn, {
+    // Hooks must only be in a consistent order for executions that return normally,
+    // so we opt-in to viewing throw as a non-exit node.
+    includeThrowsAsExitNode: false,
+  });
+  const exit = dominators.exit;
   let current: BlockId | null = fn.body.entry;
   while (
     current !== null &&
@@ -82,6 +85,9 @@ export function validateUnconditionalHooks(fn: HIRFunction): void {
         isHookType(instr.value.callee.identifier)
       ) {
         const loc = instr.loc;
+        // TODO: the current ESLint rule has different error messages for code that is called conditionally, in a loop, etc.
+        // An option would be to first record an Array<[BlockId, Place]> of problematic hooks, then compute the normal dominator graph
+        // and walk upward to determine whether each error location was due to a loop, if, etc.
         errors.pushErrorDetail(
           new CompilerErrorDetail({
             codeframe: null,

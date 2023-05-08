@@ -6,6 +6,7 @@
  */
 
 export { lower } from "./BuildHIR";
+export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
 export { Environment } from "./Environment";
 export * from "./HIR";
 export {

@@ -11,24 +11,45 @@ import { BlockId, HIRFunction } from "./HIR";
 import { eachTerminalSuccessor } from "./visitors";
 
 /**
- * Computes the dominator or post dominator tree of the given function. The returned `Dominator` stores
- * the immediate dominator of each node in the function, which can be retrieved with `Dominator.prototype.get()`.
+ * Computes the dominator tree of the given function. The returned `Dominator` stores the immediate
+ * dominator of each node in the function, which can be retrieved with `Dominator.prototype.get()`.
  *
- * The implementation is a straightforward adaptation of https://www.cs.rice.edu/~keith/Embed/dom.pdf
- * except that CFG nodes ordering is inverted (so the comparison functions are swapped)
+ * A block X dominates block Y in the CFG if all paths to Y must flow through X. Thus the entry
+ * block dominates all other blocks. See https://en.wikipedia.org/wiki/Dominator_(graph_theory)
+ * for more.
  */
-export function computeDominators(
+export function computeDominatorTree(fn: HIRFunction): Dominator<BlockId> {
+  const graph = buildGraph(fn);
+  const nodes = computeImmediateDominators(graph);
+  return new Dominator(graph.entry, nodes);
+}
+
+/**
+ * Similar to `computeDominatorTree()` but computes the post dominators of the function. The returned
+ * `PostDominator` stores the immediate post-dominators of each node in the function.
+ *
+ * A block Y post-dominates block X in the CFG if all paths from X to the exit must flow through Y.
+ * The caller must specify whether to consider `throw` statements as exit nodes. If set to false,
+ * only return statements are considered exit nodes.
+ */
+export function computePostDominatorTree(
   fn: HIRFunction,
-  options: { reverse: boolean } | null = null
-): Dominator<BlockId> {
-  const reverse = options?.reverse === true;
-  let graph: Graph<BlockId>;
-  if (reverse) {
-    graph = computeReverseGraph(fn);
-  } else {
-    graph = computeGraph(fn);
+  options: { includeThrowsAsExitNode: boolean }
+): PostDominator<BlockId> {
+  const graph = buildReverseGraph(fn, options.includeThrowsAsExitNode);
+  const nodes = computeImmediateDominators(graph);
+
+  // When options.includeThrowsAsExitNode is false, nodes that flow into a throws
+  // terminal and don't reach the exit node won't be in the node map. Add them
+  // with themselves as dominator to reflect that they don't flow into the exit.
+  if (!options.includeThrowsAsExitNode) {
+    for (const [id] of fn.body.blocks) {
+      if (!nodes.has(id)) {
+        nodes.set(id, id);
+      }
+    }
   }
-  return Dominator.create(graph);
+  return new PostDominator(graph.entry, nodes);
 }
 
 type Node<T> = {
@@ -49,55 +70,9 @@ class Dominator<T> {
   #entry: T;
   #nodes: Map<T, T>;
 
-  private constructor(entry: T, nodes: Map<T, T>) {
+  constructor(entry: T, nodes: Map<T, T>) {
     this.#entry = entry;
     this.#nodes = nodes;
-  }
-
-  static create<T>(graph: Graph<T>): Dominator<T> {
-    const nodes: Map<T, T> = new Map();
-    nodes.set(graph.entry, graph.entry);
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (const [id, node] of graph.nodes) {
-        // Skip start node
-        if (node.id === graph.entry) {
-          continue;
-        }
-
-        // first processed predecessor
-        let newIdom: T | null = null;
-        for (const pred of node.preds) {
-          if (nodes.has(pred)) {
-            newIdom = pred;
-            break;
-          }
-        }
-        invariant(
-          newIdom !== null,
-          `At least one predecessor must have been visited for block ${id}`
-        );
-
-        for (const pred of node.preds) {
-          // For all other predecessors
-          if (pred === newIdom) {
-            continue;
-          }
-          const predDom = nodes.get(pred);
-          if (predDom !== undefined) {
-            newIdom = intersect(pred, newIdom, graph, nodes);
-          }
-        }
-
-        if (nodes.get(id) !== newIdom) {
-          nodes.set(id, newIdom);
-          changed = true;
-        }
-      }
-    }
-
-    return new Dominator(graph.entry, nodes);
   }
 
   /**
@@ -113,15 +88,93 @@ class Dominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    if (dominator === undefined) {
-      return null;
-    }
+    invariant(dominator !== undefined, "Unknown node");
     return dominator === id ? null : dominator;
   }
 
   debug(): string {
     return prettyFormat(this.#nodes);
   }
+}
+
+class PostDominator<T> {
+  #exit: T;
+  #nodes: Map<T, T>;
+
+  constructor(exit: T, nodes: Map<T, T>) {
+    this.#exit = exit;
+    this.#nodes = nodes;
+  }
+
+  /**
+   * Returns the node representing normal exit from the function, ie return terminals.
+   */
+  get exit(): T {
+    return this.#exit;
+  }
+
+  /**
+   * Returns the immediate dominator of the block with @param id if present. Returns null
+   * if there is no immediate dominator (ie if the dominator is @param id itself).
+   */
+  get(id: T): T | null {
+    const dominator = this.#nodes.get(id);
+    invariant(dominator !== undefined, "Unknown node");
+    return dominator === id ? null : dominator;
+  }
+
+  debug(): string {
+    return prettyFormat(this.#nodes);
+  }
+}
+
+/**
+ * The implementation is a straightforward adaptation of https://www.cs.rice.edu/~keith/Embed/dom.pdf
+ * except that CFG nodes ordering is inverted (so the comparison functions are swapped)
+ */
+function computeImmediateDominators<T>(graph: Graph<T>): Map<T, T> {
+  const nodes: Map<T, T> = new Map();
+  nodes.set(graph.entry, graph.entry);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [id, node] of graph.nodes) {
+      // Skip start node
+      if (node.id === graph.entry) {
+        continue;
+      }
+
+      // first processed predecessor
+      let newIdom: T | null = null;
+      for (const pred of node.preds) {
+        if (nodes.has(pred)) {
+          newIdom = pred;
+          break;
+        }
+      }
+      invariant(
+        newIdom !== null,
+        `At least one predecessor must have been visited for block ${id}`
+      );
+
+      for (const pred of node.preds) {
+        // For all other predecessors
+        if (pred === newIdom) {
+          continue;
+        }
+        const predDom = nodes.get(pred);
+        if (predDom !== undefined) {
+          newIdom = intersect(pred, newIdom, graph, nodes);
+        }
+      }
+
+      if (nodes.get(id) !== newIdom) {
+        nodes.set(id, newIdom);
+        changed = true;
+      }
+    }
+  }
+  return nodes;
 }
 
 function intersect<T>(a: T, b: T, graph: Graph<T>, nodes: Map<T, T>): T {
@@ -140,7 +193,10 @@ function intersect<T>(a: T, b: T, graph: Graph<T>, nodes: Map<T, T>): T {
   return block1.id;
 }
 
-function computeGraph(fn: HIRFunction): Graph<BlockId> {
+/**
+ * Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation
+ */
+function buildGraph(fn: HIRFunction): Graph<BlockId> {
   const graph: Graph<BlockId> = { entry: fn.body.entry, nodes: new Map() };
   let index = 0;
   for (const [id, block] of fn.body.blocks) {
@@ -154,7 +210,15 @@ function computeGraph(fn: HIRFunction): Graph<BlockId> {
   return graph;
 }
 
-function computeReverseGraph(fn: HIRFunction): Graph<BlockId> {
+/**
+ *  Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation,
+ * notably this version flips the graph and puts the reversed form back into RPO (such that successors are before predecessors).
+ * Note that RPO of the reversed graph isn't the same as reversed RPO of the forward graph because of loops.
+ */
+function buildReverseGraph(
+  fn: HIRFunction,
+  includeThrowsAsExitNode: boolean
+): Graph<BlockId> {
   const nodes: Map<BlockId, Node<BlockId>> = new Map();
   const exitId = fn.env.nextBlockId;
   const exit: Node<BlockId> = {
@@ -173,6 +237,9 @@ function computeReverseGraph(fn: HIRFunction): Graph<BlockId> {
       succs: new Set(block.preds),
     };
     if (block.terminal.kind === "return") {
+      node.preds.add(exitId);
+      exit.succs.add(id);
+    } else if (block.terminal.kind === "throw" && includeThrowsAsExitNode) {
       node.preds.add(exitId);
       exit.succs.add(id);
     }
