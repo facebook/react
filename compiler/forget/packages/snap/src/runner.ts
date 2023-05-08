@@ -207,7 +207,7 @@ function report(results: Results): void {
           ` >> Unexpected error during test: \n${result.unexpectedError}`
         );
       } else {
-        console.log(diff(result.actual, result.expected) + "\n");
+        console.log(diff(result.expected, result.actual) + "\n");
       }
     }
   }
