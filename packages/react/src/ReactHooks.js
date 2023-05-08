@@ -224,7 +224,6 @@ export function useCacheRefresh(): <T>(?() => T, ?T) => void {
 
 export function use<T>(usable: Usable<T>): T {
   const dispatcher = resolveDispatcher();
-  // $FlowFixMe[not-a-function] This is unstable, thus optional
   return dispatcher.use(usable);
 }
 

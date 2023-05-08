@@ -16,7 +16,6 @@ import {COMPACT_VERSION_NAME} from './utils';
 
 let welcomeHasInitialized = false;
 
-// $FlowFixMe[missing-local-annot]
 function welcome(event: $FlowFixMe) {
   if (
     event.source !== window ||
