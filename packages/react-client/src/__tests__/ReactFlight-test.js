@@ -263,6 +263,30 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
+  it('can transport weird numbers', async () => {
+    const nums = [0, -0, Infinity, -Infinity, NaN];
+    function ComponentClient({prop}) {
+      expect(prop).not.toBe(nums);
+      expect(prop).toEqual(nums);
+      expect(prop.every((p, i) => Object.is(p, nums[i]))).toBe(true);
+      return `prop: ${prop}`;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const model = <Component prop={nums} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      // already checked -0 with expects above
+      'prop: 0,0,Infinity,-Infinity,NaN',
+    );
+  });
+
   it('can transport BigInt', async () => {
     function ComponentClient({prop}) {
       return `prop: ${prop} (${typeof prop})`;
@@ -280,6 +304,23 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(
       'prop: 90071992547409910000 (bigint)',
     );
+  });
+
+  it('can transport Date', async () => {
+    function ComponentClient({prop}) {
+      return `prop: ${prop.toISOString()}`;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const model = <Component prop={new Date(1234567890123)} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
   });
 
   it('can render a lazy component as a shared component on the server', async () => {
@@ -489,7 +530,6 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>I am client</div>);
   });
 
-  // @gate enableUseHook
   it('should error if a non-serializable value is passed to a host component', async () => {
     function ClientImpl({children}) {
       return children;
@@ -600,7 +640,6 @@ describe('ReactFlight', () => {
     });
   });
 
-  // @gate enableUseHook
   it('should trigger the inner most error boundary inside a Client Component', async () => {
     function ServerComponent() {
       throw new Error('This was thrown in the Server Component.');
@@ -651,28 +690,39 @@ describe('ReactFlight', () => {
   });
 
   it('should warn in DEV if a toJSON instance is passed to a host component', () => {
+    const obj = {
+      toJSON() {
+        return 123;
+      },
+    };
     expect(() => {
-      const transport = ReactNoopFlightServer.render(
-        <input value={new Date()} />,
-      );
+      const transport = ReactNoopFlightServer.render(<input value={obj} />);
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Date objects are not supported.',
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <input value={{toJSON: function}}>\n' +
+        '               ^^^^^^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });
 
   it('should warn in DEV if a toJSON instance is passed to a host component child', () => {
+    class MyError extends Error {
+      toJSON() {
+        return 123;
+      }
+    }
     expect(() => {
       const transport = ReactNoopFlightServer.render(
-        <div>Current date: {new Date()}</div>,
+        <div>Womp womp: {new MyError('spaghetti')}</div>,
       );
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
-      'Date objects cannot be rendered as text children. Try formatting it using toString().\n' +
-        '  <div>Current date: {Date}</div>\n' +
-        '                     ^^^^^^',
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^',
       {withoutStack: true},
     );
   });
@@ -704,37 +754,46 @@ describe('ReactFlight', () => {
   });
 
   it('should warn in DEV if a toJSON instance is passed to a Client Component', () => {
+    const obj = {
+      toJSON() {
+        return 123;
+      },
+    };
     function ClientImpl({value}) {
       return <div>{value}</div>;
     }
     const Client = clientReference(ClientImpl);
     expect(() => {
-      const transport = ReactNoopFlightServer.render(
-        <Client value={new Date()} />,
-      );
+      const transport = ReactNoopFlightServer.render(<Client value={obj} />);
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Date objects are not supported.',
+        'Objects with toJSON methods are not supported.',
       {withoutStack: true},
     );
   });
 
   it('should warn in DEV if a toJSON instance is passed to a Client Component child', () => {
+    const obj = {
+      toJSON() {
+        return 123;
+      },
+    };
     function ClientImpl({children}) {
       return <div>{children}</div>;
     }
     const Client = clientReference(ClientImpl);
     expect(() => {
       const transport = ReactNoopFlightServer.render(
-        <Client>Current date: {new Date()}</Client>,
+        <Client>Current date: {obj}</Client>,
       );
       ReactNoopFlightClient.read(transport);
     }).toErrorDev(
       'Only plain objects can be passed to Client Components from Server Components. ' +
-        'Date objects are not supported.\n' +
-        '  <>Current date: {Date}</>\n' +
-        '                  ^^^^^^',
+        'Objects with toJSON methods are not supported. ' +
+        'Convert it manually to a simple value before passing it to props.\n' +
+        '  <>Current date: {{toJSON: function}}</>\n' +
+        '                  ^^^^^^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });

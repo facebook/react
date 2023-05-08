@@ -29,6 +29,10 @@ const config = [
     entry: 'ReactDOMFizzInlineCompleteSegment.js',
     exportName: 'completeSegment',
   },
+  {
+    entry: 'ReactDOMFizzInlineFormReplaying.js',
+    exportName: 'formReplaying',
+  },
 ];
 
 const prettierConfig = require('../../.prettierrc.js');
@@ -40,6 +44,7 @@ async function main() {
       const compiler = new ClosureCompiler({
         entry_point: fullEntryPath,
         js: [
+          require.resolve('./externs/closure-externs.js'),
           fullEntryPath,
           instructionDir + '/ReactDOMFizzInstructionSetInlineSource.js',
           instructionDir + '/ReactDOMFizzInstructionSetShared.js',

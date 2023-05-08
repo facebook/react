@@ -32,6 +32,13 @@ function noServerCall() {
   );
 }
 
+export function createServerReference<A: Iterable<any>, T>(
+  id: any,
+  callServer: any,
+): (...A) => Promise<T> {
+  return noServerCall;
+}
+
 function createFromNodeStream<T>(
   stream: Readable,
   moduleMap: $NonMaybeType<SSRManifest>,

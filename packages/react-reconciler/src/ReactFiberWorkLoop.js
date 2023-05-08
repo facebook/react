@@ -39,6 +39,7 @@ import {
   enableTransitionTracing,
   useModernStrictMode,
   disableLegacyContext,
+  alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -71,8 +72,6 @@ import {
   afterActiveInstanceBlur,
   getCurrentEventPriority,
   errorHydratingContainer,
-  prepareRendererToRender,
-  resetRendererAfterRender,
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
@@ -129,7 +128,6 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
-  claimNextTransitionLane,
   claimNextRetryLane,
   includesSyncLane,
   isSubsetOfLanes,
@@ -278,8 +276,10 @@ import {
   flushSyncWorkOnAllRoots,
   flushSyncWorkOnLegacyRootsOnly,
   getContinuationForRoot,
+  requestTransitionLane,
 } from './ReactFiberRootScheduler';
 import {getMaskedContext, getUnmaskedContext} from './ReactFiberContext';
+import {peekEntangledActionLane} from './ReactFiberAsyncAction';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -582,8 +582,6 @@ const NESTED_PASSIVE_UPDATE_LIMIT = 50;
 let nestedPassiveUpdateCount: number = 0;
 let rootWithPassiveNestedUpdates: FiberRoot | null = null;
 
-let currentEventTransitionLane: Lanes = NoLanes;
-
 let isRunningInsertionEffect = false;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
@@ -633,18 +631,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
       transition._updatedFibers.add(fiber);
     }
-    // The algorithm for assigning an update to a lane should be stable for all
-    // updates at the same priority within the same event. To do this, the
-    // inputs to the algorithm must be the same.
-    //
-    // The trick we use is to cache the first of each of these inputs within an
-    // event. Then reset the cached values once we can be sure the event is
-    // over. Our heuristic for that is whenever we enter a concurrent work loop.
-    if (currentEventTransitionLane === NoLane) {
-      // All transitions within the same event are assigned the same lane.
-      currentEventTransitionLane = claimNextTransitionLane();
-    }
-    return currentEventTransitionLane;
+
+    const actionScopeLane = peekEntangledActionLane();
+    return actionScopeLane !== NoLane
+      ? // We're inside an async action scope. Reuse the same lane.
+        actionScopeLane
+      : // We may or may not be inside an async action scope. If we are, this
+        // is the first update in that scope. Either way, we need to get a
+        // fresh transition lane.
+        requestTransitionLane();
   }
 
   // Updates originating inside certain React methods, like flushSync, have
@@ -847,8 +842,6 @@ export function performConcurrentWorkOnRoot(
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
   }
-
-  currentEventTransitionLane = NoLanes;
 
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
@@ -1121,7 +1114,10 @@ function finishConcurrentRender(
       workInProgressTransitions,
     );
   } else {
-    if (includesOnlyRetries(lanes)) {
+    if (
+      includesOnlyRetries(lanes) &&
+      (alwaysThrottleRetries || exitStatus === RootSuspended)
+    ) {
       // This render only included retries, no updates. Throttle committing
       // retries so that we don't show too many loading states too quickly.
       const msUntilTimeout =
@@ -1508,7 +1504,7 @@ function resetWorkInProgressStack() {
   } else {
     // Work-in-progress is in suspended state. Reset the work loop and unwind
     // both the suspended fiber and all its parents.
-    resetSuspendedWorkLoopOnUnwind();
+    resetSuspendedWorkLoopOnUnwind(workInProgress);
     interruptedWork = workInProgress;
   }
   while (interruptedWork !== null) {
@@ -1567,10 +1563,10 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   return rootWorkInProgress;
 }
 
-function resetSuspendedWorkLoopOnUnwind() {
+function resetSuspendedWorkLoopOnUnwind(fiber: Fiber) {
   // Reset module-level state that was set during the render phase.
   resetContextDependencies();
-  resetHooksOnUnwind();
+  resetHooksOnUnwind(fiber);
   resetChildReconcilerOnUnwind();
 }
 
@@ -1759,7 +1755,6 @@ export function shouldRemainOnPreviousScreen(): boolean {
 }
 
 function pushDispatcher(container: any) {
-  prepareRendererToRender(container);
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
   if (prevDispatcher === null) {
@@ -1773,7 +1768,6 @@ function pushDispatcher(container: any) {
 }
 
 function popDispatcher(prevDispatcher: any) {
-  resetRendererAfterRender();
   ReactCurrentDispatcher.current = prevDispatcher;
 }
 
@@ -2336,6 +2330,16 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       );
       break;
     }
+    case HostComponent: {
+      // Some host components are stateful (that's how we implement form
+      // actions) but we don't bother to reuse the memoized state because it's
+      // not worth the extra code. The main reason to reuse the previous hooks
+      // is to reuse uncached promises, but we happen to know that the only
+      // promises that a host component might suspend on are definitely cached
+      // because they are controlled by us. So don't bother.
+      resetHooksOnUnwind(unitOfWork);
+      // Fallthrough to the next branch.
+    }
     default: {
       // Other types besides function components are reset completely before
       // being replayed. Currently this only happens when a Usable type is
@@ -2379,7 +2383,7 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
   //
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
-  resetSuspendedWorkLoopOnUnwind();
+  resetSuspendedWorkLoopOnUnwind(unitOfWork);
 
   const returnFiber = unitOfWork.return;
   if (returnFiber === null || workInProgressRoot === null) {
@@ -3740,7 +3744,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // same fiber again.
 
       // Unwind the failed stack frame
-      resetSuspendedWorkLoopOnUnwind();
+      resetSuspendedWorkLoopOnUnwind(unitOfWork);
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
 
       // Restore the original properties of the fiber.

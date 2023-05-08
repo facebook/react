@@ -346,6 +346,10 @@ export function getCurrentEventPriority() {
   return DefaultEventPriority;
 }
 
+export function shouldAttemptEagerTransition() {
+  return false;
+}
+
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
 
@@ -475,11 +479,5 @@ export function suspendInstance(type, props) {}
 export function waitForCommitToBeReady() {
   return null;
 }
-// eslint-disable-next-line no-undef
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
 
-export function resetRendererAfterRender(): void {
-  // noop
-}
+export const NotPendingTransition = null;

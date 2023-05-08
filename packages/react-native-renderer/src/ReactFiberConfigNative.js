@@ -43,6 +43,7 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -263,6 +264,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 
 export function getCurrentEventPriority(): * {
   return DefaultEventPriority;
+}
+
+export function shouldAttemptEagerTransition(): boolean {
+  return false;
 }
 
 // -------------------
@@ -539,10 +544,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

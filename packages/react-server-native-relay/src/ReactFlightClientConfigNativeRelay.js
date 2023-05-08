@@ -95,3 +95,5 @@ const dummy = {};
 export function parseModel<T>(response: Response, json: UninitializedModel): T {
   return (parseModelRecursively(response, dummy, '', json): any);
 }
+
+export function dispatchHint(code: string, model: mixed) {}

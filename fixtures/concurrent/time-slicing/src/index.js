@@ -22,7 +22,7 @@ class App extends PureComponent {
     }
     const multiplier = input.length !== 0 ? input.length : 1;
     const complexity =
-      (parseInt(window.location.search.substring(1), 10) / 100) * 25 || 25;
+      (parseInt(window.location.search.slice(1), 10) / 100) * 25 || 25;
     const data = _.range(5).map(t =>
       _.range(complexity * multiplier).map((j, i) => {
         return {

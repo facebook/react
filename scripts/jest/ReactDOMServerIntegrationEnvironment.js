@@ -16,6 +16,8 @@ class ReactDOMServerIntegrationEnvironment extends NodeEnvironment {
     this.global.document = this.global.window.document;
     this.global.navigator = this.global.window.navigator;
     this.global.Node = this.global.window.Node;
+    this.global.addEventListener = this.global.window.addEventListener;
+    this.global.MutationObserver = this.global.window.MutationObserver;
   }
 
   async setup() {

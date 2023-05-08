@@ -18,20 +18,28 @@ import type {
   SSRManifest,
 } from './ReactFlightClientConfig';
 
+import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
+
+import type {CallServerCallback} from './ReactFlightReplyClient';
+
 import {
   resolveClientReference,
   preloadModule,
   requireModule,
   parseModel,
+  dispatchHint,
 } from './ReactFlightClientConfig';
 
-import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+import {
+  encodeFormAction,
+  knownServerReferences,
+} from './ReactFlightReplyClient';
 
 import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
-export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+export type {CallServerCallback};
 
 export type JSONValue =
   | number
@@ -497,6 +505,9 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
+  // Expose encoder for use by SSR.
+  // TODO: Only expose this in SSR builds and not the browser client.
+  proxy.$$FORM_ACTION = encodeFormAction;
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }
@@ -515,11 +526,11 @@ export function parseModelString(
     switch (value[1]) {
       case '$': {
         // This was an escaped string value.
-        return value.substring(1);
+        return value.slice(1);
       }
       case 'L': {
         // Lazy node
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         // We create a React.lazy wrapper around any lazy values.
         // When passed into React, we'll know how to suspend on this.
@@ -527,21 +538,21 @@ export function parseModelString(
       }
       case '@': {
         // Promise
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
       }
       case 'S': {
         // Symbol
-        return Symbol.for(value.substring(2));
+        return Symbol.for(value.slice(2));
       }
       case 'P': {
         // Server Context Provider
-        return getOrCreateServerContext(value.substring(2)).Provider;
+        return getOrCreateServerContext(value.slice(2)).Provider;
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.substring(2), 16);
+        const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
           case RESOLVED_MODEL:
@@ -559,18 +570,38 @@ export function parseModelString(
             throw chunk.reason;
         }
       }
+      case 'I': {
+        // $Infinity
+        return Infinity;
+      }
+      case '-': {
+        // $-0 or $-Infinity
+        if (value === '$-0') {
+          return -0;
+        } else {
+          return -Infinity;
+        }
+      }
+      case 'N': {
+        // $NaN
+        return NaN;
+      }
       case 'u': {
         // matches "$undefined"
         // Special encoding for `undefined` which can't be serialized as JSON otherwise.
         return undefined;
       }
+      case 'D': {
+        // Date
+        return new Date(Date.parse(value.slice(2)));
+      }
       case 'n': {
         // BigInt
-        return BigInt(value.substring(2));
+        return BigInt(value.slice(2));
       }
       default: {
         // We assume that anything else is a reference ID.
-        const id = parseInt(value.substring(1), 16);
+        const id = parseInt(value.slice(1), 16);
         const chunk = getChunk(response, id);
         switch (chunk.status) {
           case RESOLVED_MODEL:
@@ -756,6 +787,15 @@ export function resolveErrorDev(
   } else {
     triggerErrorOnChunk(chunk, errorWithDigest);
   }
+}
+
+export function resolveHint(
+  response: Response,
+  code: string,
+  model: UninitializedModel,
+): void {
+  const hintModel = parseModel<HintModel>(response, model);
+  dispatchHint(code, hintModel);
 }
 
 export function close(response: Response): void {

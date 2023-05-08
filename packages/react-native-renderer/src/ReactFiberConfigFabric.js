@@ -90,6 +90,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -334,6 +335,10 @@ export function getCurrentEventPriority(): * {
   return DefaultEventPriority;
 }
 
+export function shouldAttemptEagerTransition(): boolean {
+  return false;
+}
+
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 
@@ -486,10 +491,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender() {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

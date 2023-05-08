@@ -22,18 +22,20 @@ import type {
 import type {ResponseState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
+import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
-import {makeId} from './ReactFizzConfig';
+import {makeId, NotPendingTransition} from './ReactFizzConfig';
 
 import {
   enableCache,
-  enableUseHook,
   enableUseEffectEventHook,
   enableUseMemoCacheHook,
+  enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -546,6 +548,23 @@ function useTransition(): [
   return [false, unsupportedStartTransition];
 }
 
+function useHostTransitionStatus(): TransitionStatus {
+  resolveCurrentlyRenderingComponent();
+  return NotPendingTransition;
+}
+
+function unsupportedSetOptimisticState() {
+  throw new Error('Cannot update optimistic state while rendering.');
+}
+
+function useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
@@ -610,6 +629,7 @@ function noop(): void {}
 
 export const HooksDispatcher: Dispatcher = {
   readContext,
+  use,
   useContext,
   useMemo,
   useReducer,
@@ -641,8 +661,11 @@ if (enableUseEffectEventHook) {
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
 }
-if (enableUseHook) {
-  HooksDispatcher.use = use;
+if (enableFormActions && enableAsyncActions) {
+  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  HooksDispatcher.useOptimistic = useOptimistic;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

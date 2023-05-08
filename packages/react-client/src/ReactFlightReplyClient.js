@@ -7,9 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
-
-import {knownServerReferences} from './ReactFlightServerReferenceRegistry';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -25,6 +23,10 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
+import type {
+  FulfilledThenable,
+  RejectedThenable,
+} from '../../shared/ReactTypes';
 
 type ReactJSONValue =
   | string
@@ -35,6 +37,15 @@ type ReactJSONValue =
   | ReactServerObject;
 
 export opaque type ServerReference<T> = T;
+
+export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
+
+export type ServerReferenceId = any;
+
+export const knownServerReferences: WeakMap<
+  Function,
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+> = new WeakMap();
 
 // Serializable values
 export type ReactServerValue =
@@ -71,8 +82,37 @@ function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
 
+function serializeFormDataReference(id: number): string {
+  // Why K? F is "Function". D is "Date". What else?
+  return '$K' + id.toString(16);
+}
+
+function serializeNumber(number: number): string | number {
+  if (Number.isFinite(number)) {
+    if (number === 0 && 1 / number === -Infinity) {
+      return '$-0';
+    } else {
+      return number;
+    }
+  } else {
+    if (number === Infinity) {
+      return '$Infinity';
+    } else if (number === -Infinity) {
+      return '$-Infinity';
+    } else {
+      return '$NaN';
+    }
+  }
+}
+
 function serializeUndefined(): string {
   return '$undefined';
+}
+
+function serializeDateFromDateJSON(dateJSON: string): string {
+  // JSON.stringify automatically calls Date.prototype.toJSON which calls toISOString.
+  // We need only tack on a $D prefix.
+  return '$D' + dateJSON;
 }
 
 function serializeBigInt(n: bigint): string {
@@ -91,6 +131,7 @@ function escapeStringValue(value: string): string {
 
 export function processReply(
   root: ReactServerValue,
+  formFieldPrefix: string,
   resolve: (string | FormData) => void,
   reject: (error: mixed) => void,
 ): void {
@@ -106,10 +147,16 @@ export function processReply(
     value: ReactServerValue,
   ): ReactJSONValue {
     const parent = this;
+
+    // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
     if (__DEV__) {
       // $FlowFixMe[incompatible-use]
-      const originalValue = this[key];
-      if (typeof originalValue === 'object' && originalValue !== value) {
+      const originalValue = parent[key];
+      if (
+        typeof originalValue === 'object' &&
+        originalValue !== value &&
+        !(originalValue instanceof Date)
+      ) {
         if (objectName(originalValue) !== 'Object') {
           console.error(
             'Only plain objects can be passed to Server Functions from the Client. ' +
@@ -150,7 +197,7 @@ export function processReply(
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
             // eslint-disable-next-line react-internal/safe-string-coercion
-            data.append('' + promiseId, partJSON);
+            data.append(formFieldPrefix + promiseId, partJSON);
             pendingParts--;
             if (pendingParts === 0) {
               resolve(data);
@@ -163,6 +210,24 @@ export function processReply(
           },
         );
         return serializePromiseID(promiseId);
+      }
+      // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
+      if (value instanceof FormData) {
+        if (formData === null) {
+          // Upgrade to use FormData to allow us to use rich objects as its values.
+          formData = new FormData();
+        }
+        const data: FormData = formData;
+        const refId = nextPartId++;
+        // Copy all the form fields with a prefix for this reference.
+        // These must come first in the form order because we assume that all the
+        // fields are available before this is referenced.
+        const prefix = formFieldPrefix + refId + '_';
+        // $FlowFixMe[prop-missing]: FormData has forEach.
+        value.forEach((originalValue: string | File, originalKey: string) => {
+          data.append(prefix + originalKey, originalValue);
+        });
+        return serializeFormDataReference(refId);
       }
       if (!isArray(value)) {
         const iteratorFn = getIteratorFn(value);
@@ -221,11 +286,26 @@ export function processReply(
     }
 
     if (typeof value === 'string') {
+      // TODO: Maybe too clever. If we support URL there's no similar trick.
+      if (value[value.length - 1] === 'Z') {
+        // Possibly a Date, whose toJSON automatically calls toISOString
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[key];
+        // $FlowFixMe[method-unbinding]
+        if (originalValue instanceof Date) {
+          return serializeDateFromDateJSON(value);
+        }
+      }
+
       return escapeStringValue(value);
     }
 
-    if (typeof value === 'boolean' || typeof value === 'number') {
+    if (typeof value === 'boolean') {
       return value;
+    }
+
+    if (typeof value === 'number') {
+      return serializeNumber(value);
     }
 
     if (typeof value === 'undefined') {
@@ -243,7 +323,7 @@ export function processReply(
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
         // eslint-disable-next-line react-internal/safe-string-coercion
-        formData.set('' + refId, metaDataJSON);
+        formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
       throw new Error(
@@ -283,10 +363,112 @@ export function processReply(
     resolve(json);
   } else {
     // Otherwise, we use FormData to let us stream in the result.
-    formData.set('0', json);
+    formData.set(formFieldPrefix + '0', json);
     if (pendingParts === 0) {
       // $FlowFixMe[incompatible-call] this has already been refined.
       resolve(formData);
     }
   }
+}
+
+const boundCache: WeakMap<
+  {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  Thenable<FormData>,
+> = new WeakMap();
+
+function encodeFormData(reference: any): Thenable<FormData> {
+  let resolve, reject;
+  // We need to have a handle on the thenable so that we can synchronously set
+  // its status from processReply, when it can complete synchronously.
+  const thenable: Thenable<FormData> = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  processReply(
+    reference,
+    '',
+    (body: string | FormData) => {
+      if (typeof body === 'string') {
+        const data = new FormData();
+        data.append('0', body);
+        body = data;
+      }
+      const fulfilled: FulfilledThenable<FormData> = (thenable: any);
+      fulfilled.status = 'fulfilled';
+      fulfilled.value = body;
+      resolve(body);
+    },
+    e => {
+      const rejected: RejectedThenable<FormData> = (thenable: any);
+      rejected.status = 'rejected';
+      rejected.reason = e;
+      reject(e);
+    },
+  );
+  return thenable;
+}
+
+export function encodeFormAction(
+  this: any => Promise<any>,
+  identifierPrefix: string,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  let data: null | FormData = null;
+  let name;
+  const boundPromise = reference.bound;
+  if (boundPromise !== null) {
+    let thenable = boundCache.get(reference);
+    if (!thenable) {
+      thenable = encodeFormData(reference);
+      boundCache.set(reference, thenable);
+    }
+    if (thenable.status === 'rejected') {
+      throw thenable.reason;
+    } else if (thenable.status !== 'fulfilled') {
+      throw thenable;
+    }
+    const encodedFormData = thenable.value;
+    // This is hacky but we need the identifier prefix to be added to
+    // all fields but the suspense cache would break since we might get
+    // a new identifier each time. So we just append it at the end instead.
+    const prefixedData = new FormData();
+    // $FlowFixMe[prop-missing]
+    encodedFormData.forEach((value: string | File, key: string) => {
+      prefixedData.append('$ACTION_' + identifierPrefix + ':' + key, value);
+    });
+    data = prefixedData;
+    // We encode the name of the prefix containing the data.
+    name = '$ACTION_REF_' + identifierPrefix;
+  } else {
+    // This is the simple case so we can just encode the ID.
+    name = '$ACTION_ID_' + reference.id;
+  }
+  return {
+    name: name,
+    method: 'POST',
+    encType: 'multipart/form-data',
+    data: data,
+  };
+}
+
+export function createServerReference<A: Iterable<any>, T>(
+  id: ServerReferenceId,
+  callServer: CallServerCallback,
+): (...A) => Promise<T> {
+  const proxy = function (): Promise<T> {
+    // $FlowFixMe[method-unbinding]
+    const args = Array.prototype.slice.call(arguments);
+    return callServer(id, args);
+  };
+  // Expose encoder for use by SSR.
+  // TODO: Only expose this in SSR builds and not the browser client.
+  proxy.$$FORM_ACTION = encodeFormAction;
+  knownServerReferences.set(proxy, {id: id, bound: null});
+  return proxy;
 }

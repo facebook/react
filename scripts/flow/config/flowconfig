@@ -18,11 +18,6 @@
 
 %REACT_RENDERER_FLOW_IGNORES%
 
-[include]
-./node_modules/
-./packages/
-./scripts/
-
 [libs]
 ./node_modules/fbjs/flow/lib/dev.js
 ./scripts/flow/environment.js
