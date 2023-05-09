@@ -3756,7 +3756,7 @@ function shallowEqual(objA, objB) {
     var currentKey = keysA[i];
 
     if (
-      !hasOwnProperty.call(objB, currentKey) ||
+      !hasOwnProperty.call(objB, currentKey) || // $FlowFixMe[incompatible-use] lost refinement of `objB`
       !objectIs(objA[currentKey], objB[currentKey])
     ) {
       return false;
@@ -24549,7 +24549,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-6e3da9e8";
+var ReactVersion = "18.3.0-www-classic-b4adcaa5";
 
 // Might add PROFILE later.
 

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-e737edcf";
+var ReactVersion = "18.3.0-www-classic-e1e0fe51";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -4794,7 +4794,7 @@ function shallowEqual(objA, objB) {
     var currentKey = keysA[i];
 
     if (
-      !hasOwnProperty.call(objB, currentKey) ||
+      !hasOwnProperty.call(objB, currentKey) || // $FlowFixMe[incompatible-use] lost refinement of `objB`
       !objectIs(objA[currentKey], objB[currentKey])
     ) {
       return false;

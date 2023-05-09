@@ -365,7 +365,6 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
         if (typeof value === "string") {
           substr = value;
         } else if (typeof value === "object" && value !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           substr = "{" + describeObjectForErrorMessage(value) + "}";
         } else {
           substr = "{" + describeValueForErrorMessage(value) + "}";
@@ -398,7 +397,6 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
         var _substr = void 0;
 
         if (typeof _value === "object" && _value !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           _substr = describeObjectForErrorMessage(_value);
         } else {
           _substr = describeValueForErrorMessage(_value);
@@ -441,7 +439,6 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
           typeof _value2 === "object" &&
           _value2 !== null
         ) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           _substr2 = describeObjectForErrorMessage(_value2);
         } else {
           _substr2 = describeValueForErrorMessage(_value2);
@@ -482,7 +479,6 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
         var _substr3 = void 0;
 
         if (typeof _value3 === "object" && _value3 !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           _substr3 = describeObjectForErrorMessage(_value3);
         } else {
           _substr3 = describeValueForErrorMessage(_value3);
@@ -735,7 +731,7 @@ function processReply(root, formFieldPrefix, resolve, reject) {
       if (value[value.length - 1] === "Z") {
         // Possibly a Date, whose toJSON automatically calls toISOString
         // $FlowFixMe[incompatible-use]
-        var _originalValue = parent[key]; // $FlowFixMe[method-unbinding]
+        var _originalValue = parent[key];
 
         if (_originalValue instanceof Date) {
           return serializeDateFromDateJSON(value);

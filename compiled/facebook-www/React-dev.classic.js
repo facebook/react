@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-53439320";
+var ReactVersion = "18.3.0-www-classic-cb3b85f4";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2012,8 +2012,7 @@ function useCacheRefresh() {
   return dispatcher.useCacheRefresh();
 }
 function use(usable) {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
+  var dispatcher = resolveDispatcher();
   return dispatcher.use(usable);
 }
 function useMemoCache(size) {

@@ -9554,7 +9554,7 @@ function shallowEqual(objA, objB) {
     var currentKey = keysA[i];
 
     if (
-      !hasOwnProperty.call(objB, currentKey) ||
+      !hasOwnProperty.call(objB, currentKey) || // $FlowFixMe[incompatible-use] lost refinement of `objB`
       !objectIs(objA[currentKey], objB[currentKey])
     ) {
       return false;
@@ -34785,7 +34785,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-f2874d23";
+var ReactVersion = "18.3.0-www-classic-cc8acd04";
 
 function createPortal$1(
   children,
@@ -38510,7 +38510,6 @@ function addTrappedEventListener(
 
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     var originalListener = listener; // $FlowFixMe[missing-this-annot]
-    // $FlowFixMe[definition-cycle]
 
     listener = function () {
       removeEventListener(targetContainer, domEventName, unsubscribeListener);
