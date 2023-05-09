@@ -1787,7 +1787,7 @@ function mountSyncExternalStore<T>(
   return nextSnapshot;
 }
 
-function updateSyncExternalStore<T>(
+function rerenderSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
   getServerSnapshot?: () => T,
@@ -1822,7 +1822,83 @@ function updateSyncExternalStore<T>(
       }
     }
   }
-  const prevSnapshot = (currentHook || hook).memoizedState;
+  let snapshotChanged = true;
+  if (currentHook !== null) {
+    const prevSnapshot = currentHook.memoizedState;
+    snapshotChanged = !is(prevSnapshot, nextSnapshot);
+    if (snapshotChanged) {
+      hook.memoizedState = nextSnapshot;
+      markWorkInProgressReceivedUpdate();
+    }
+  }
+  const inst = hook.queue;
+
+  updateEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
+    subscribe,
+  ]);
+
+  // Whenever getSnapshot or subscribe changes, we need to check in the
+  // commit phase if there was an interleaved mutation. In concurrent mode
+  // this can happen all the time, but even in synchronous mode, an earlier
+  // effect may have mutated the store.
+  if (
+    inst.getSnapshot !== getSnapshot ||
+    snapshotChanged ||
+    // Check if the subscribe function changed. We can save some memory by
+    // checking whether we scheduled a subscription effect above.
+    (workInProgressHook !== null &&
+      workInProgressHook.memoizedState.tag & HookHasEffect)
+  ) {
+    fiber.flags |= PassiveEffect;
+    pushEffect(
+      HookHasEffect | HookPassive,
+      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
+      createEffectInstance(),
+      null,
+    );
+
+    // Unless we're rendering a blocking lane, schedule a consistency check.
+    // Right before committing, we will walk the tree and check if any of the
+    // stores were mutated.
+    const root: FiberRoot | null = getWorkInProgressRoot();
+
+    if (root === null) {
+      throw new Error(
+        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+      );
+    }
+
+    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
+      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+    }
+  }
+
+  return nextSnapshot;
+}
+
+function updateSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  const fiber = currentlyRenderingFiber;
+  const hook = updateWorkInProgressHook();
+  // Read the current snapshot from the store on every render. This breaks the
+  // normal rules of React, and only works because store updates are
+  // always synchronous.
+  const nextSnapshot = getSnapshot();
+  if (__DEV__) {
+    if (!didWarnUncachedGetSnapshot) {
+      const cachedSnapshot = getSnapshot();
+      if (!is(nextSnapshot, cachedSnapshot)) {
+        console.error(
+          'The result of getSnapshot should be cached to avoid an infinite loop',
+        );
+        didWarnUncachedGetSnapshot = true;
+      }
+    }
+  }
+  const prevSnapshot = ((currentHook: any): Hook).memoizedState;
   const snapshotChanged = !is(prevSnapshot, nextSnapshot);
   if (snapshotChanged) {
     hook.memoizedState = nextSnapshot;
@@ -1865,7 +1941,7 @@ function updateSyncExternalStore<T>(
       );
     }
 
-    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
+    if (!includesBlockingLane(root, renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -2228,7 +2304,8 @@ function updateEffectImpl(
   const effect: Effect = hook.memoizedState;
   const inst = effect.inst;
 
-  // currentHook is null when rerendering after a render phase state update.
+  // currentHook is null on initial mount when rerendering after a render phase
+  // state update or for strict mode.
   if (currentHook !== null) {
     if (nextDeps !== null) {
       const prevEffect: Effect = currentHook.memoizedState;
@@ -3315,7 +3392,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
-  useSyncExternalStore: updateSyncExternalStore,
+  useSyncExternalStore: rerenderSyncExternalStore,
   useId: updateId,
 };
 if (enableCache) {
@@ -4002,7 +4079,11 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+      return rerenderSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
+      );
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -4583,7 +4664,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+      return rerenderSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
+      );
     },
     useId(): string {
       currentHookNameInDev = 'useId';
