@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<452f0f8d322ebca41e7548836de1f7a3>>
+ * @generated SignedSource<<98383a6e70d8f6e0bf52442e16cecb34>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-7ac5e9a60-20230508";
+var ReactVersion = "18.3.0-canary-fda1f0b90-20230509";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2074,8 +2074,7 @@ function useCacheRefresh() {
   return dispatcher.useCacheRefresh();
 }
 function use(usable) {
-  var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
+  var dispatcher = resolveDispatcher();
   return dispatcher.use(usable);
 }
 function useMemoCache(size) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<11116a9322957150fb8ff12ea7d79467>>
+ * @generated SignedSource<<05789326fa400c9b99137d6bc79e813b>>
  */
 
 'use strict';
@@ -3506,7 +3506,7 @@ function shallowEqual(objA, objB) {
     var currentKey = keysA[i];
 
     if (
-      !hasOwnProperty.call(objB, currentKey) ||
+      !hasOwnProperty.call(objB, currentKey) || // $FlowFixMe[incompatible-use] lost refinement of `objB`
       !objectIs(objA[currentKey], objB[currentKey])
     ) {
       return false;
@@ -23918,7 +23918,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-7ac5e9a60-20230508";
+var ReactVersion = "18.3.0-canary-fda1f0b90-20230509";
 
 // Might add PROFILE later.
 

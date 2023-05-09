@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3fe5476efac6de152dcbf3360ccfac0e>>
+ * @generated SignedSource<<88236db8e97d824fd76e1ed1c99b9e51>>
  */
 
 'use strict';
@@ -5785,6 +5785,7 @@ function getChildHostContext(parentHostContext, type) {
 function getPublicInstance(instance) {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
   if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    // $FlowFixMe[incompatible-return]
     return instance.canonical.publicInstance;
   }
 
@@ -7531,7 +7532,7 @@ function shallowEqual(objA, objB) {
     var currentKey = keysA[i];
 
     if (
-      !hasOwnProperty.call(objB, currentKey) ||
+      !hasOwnProperty.call(objB, currentKey) || // $FlowFixMe[incompatible-use] lost refinement of `objB`
       !objectIs(objA[currentKey], objB[currentKey])
     ) {
       return false;
@@ -27741,7 +27742,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-988f1750";
+var ReactVersion = "18.3.0-canary-e7f10976";
 
 function createPortal$1(
   children,
