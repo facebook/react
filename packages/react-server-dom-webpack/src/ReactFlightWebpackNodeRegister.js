@@ -270,7 +270,6 @@ module.exports = function register() {
         $$id: {value: moduleId},
         $$async: {value: false},
       });
-      // $FlowFixMe[incompatible-call] found when upgrading Flow
       this.exports = new Proxy(clientReference, proxyHandlers);
     }
 
