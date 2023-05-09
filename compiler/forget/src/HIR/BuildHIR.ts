@@ -2753,8 +2753,9 @@ function gatherCapturedDeps(
   fn: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>,
   componentScope: Scope
 ): { identifiers: t.Identifier[]; refs: Place[] } {
-  const capturedIds: Set<t.Identifier> = new Set();
+  const capturedIds: Map<t.Identifier, number> = new Map();
   const capturedRefs: Set<Place> = new Set();
+  const seenPaths: Set<string> = new Set();
 
   // Capture all the scopes from the parent of this function up to and including
   // the component scope.
@@ -2807,9 +2808,28 @@ function gatherCapturedDeps(
       path.skip();
     }
 
+    // Store the top-level identifiers that are captured as well as the list
+    // of Places (including PropertyLoad)
+    let index: number;
     if (!capturedIds.has(binding.identifier)) {
-      capturedIds.add(binding.identifier);
+      index = capturedIds.size;
+      capturedIds.set(binding.identifier, index);
+    } else {
+      index = capturedIds.get(binding.identifier)!;
+    }
+    let pathTokens = [];
+    let current = path;
+    while (current.isMemberExpression()) {
+      const property = path.get("property") as NodePath<t.Identifier>;
+      pathTokens.push(property.node.name);
+      current = current.get("object");
+    }
+    pathTokens.push(String(index));
+    pathTokens.reverse();
+    const pathKey = pathTokens.join(".");
+    if (!seenPaths.has(pathKey)) {
       capturedRefs.add(lowerExpressionToTemporary(builder, path));
+      seenPaths.add(pathKey);
     }
   }
 
@@ -2819,7 +2839,7 @@ function gatherCapturedDeps(
     },
   });
 
-  return { identifiers: [...capturedIds], refs: [...capturedRefs] };
+  return { identifiers: [...capturedIds.keys()], refs: [...capturedRefs] };
 }
 
 function notNull<T>(value: T | null): value is T {

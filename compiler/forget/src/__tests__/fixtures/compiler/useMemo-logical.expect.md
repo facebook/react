@@ -13,8 +13,8 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const t15 = props.a && props.b;
-  const x = t15;
+  const t17 = props.a && props.b;
+  const x = t17;
   return x;
 }
 

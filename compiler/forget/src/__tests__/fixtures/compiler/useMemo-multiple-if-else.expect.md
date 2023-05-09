@@ -26,25 +26,25 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   const c_0 = $[0] !== props;
-  let t26;
+  let t32;
   if (c_0) {
     const y = [];
     if (props.cond) {
       y.push(props.a);
     }
-    t26 = undefined;
+    t32 = undefined;
     if (props.cond2) {
-      t26 = y;
+      t32 = y;
     } else {
       y.push(props.b);
-      t26 = y;
+      t32 = y;
     }
     $[0] = props;
-    $[1] = t26;
+    $[1] = t32;
   } else {
-    t26 = $[1];
+    t32 = $[1];
   }
-  const x = t26;
+  const x = t32;
   return x;
 }
 
