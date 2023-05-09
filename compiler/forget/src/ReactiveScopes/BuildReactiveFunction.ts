@@ -6,7 +6,6 @@
  */
 
 import invariant from "invariant";
-import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -826,12 +825,6 @@ class Driver {
           testBlock.terminal.alternate,
           terminal.loc
         );
-        if (leftFinal.place.identifier !== right.place.identifier) {
-          CompilerError.todo(
-            "TODO: Support LogicalExpression whose value is unused",
-            leftFinal.place.loc
-          );
-        }
         const value: ReactiveLogicalValue = {
           kind: "LogicalExpression",
           operator: terminal.operator,
@@ -869,12 +862,6 @@ class Driver {
           alternate: alternate.value,
           loc: terminal.loc,
         };
-        if (consequent.place.identifier !== alternate.place.identifier) {
-          CompilerError.todo(
-            "TODO: Support ConditionalExpression whose value is unused",
-            consequent.place.loc
-          );
-        }
 
         return {
           place: { ...consequent.place },
