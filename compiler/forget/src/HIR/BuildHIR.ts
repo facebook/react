@@ -2586,6 +2586,14 @@ function lowerAssignment(
             });
             continue;
           }
+          if (property.node.computed) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
+              severity: ErrorSeverity.Todo,
+              nodePath: property,
+            });
+            continue;
+          }
           const key = property.get("key");
           if (!key.isIdentifier()) {
             builder.errors.push({
