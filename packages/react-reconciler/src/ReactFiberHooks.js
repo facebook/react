@@ -1776,8 +1776,6 @@ function mountSyncExternalStore<T>(
   // clean-up function, and we track the deps correctly, we can call pushEffect
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
-  // TODO: We can move this to the passive phase once we add a pre-commit
-  // consistency check. See the next comment.
   fiber.flags |= PassiveEffect;
   pushEffect(
     HookHasEffect | HookPassive,
@@ -1843,7 +1841,7 @@ function updateSyncExternalStore<T>(
   if (
     inst.getSnapshot !== getSnapshot ||
     snapshotChanged ||
-    // Check if the susbcribe function changed. We can save some memory by
+    // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HookHasEffect)
@@ -1867,7 +1865,7 @@ function updateSyncExternalStore<T>(
       );
     }
 
-    if (!includesBlockingLane(root, renderLanes)) {
+    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
