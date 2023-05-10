@@ -19,9 +19,8 @@ import {OffscreenComponent} from './ReactWorkTags';
 
 // The Suspense handler is the boundary that should capture if something
 // suspends, i.e. it's the nearest `catch` block on the stack.
-const suspenseHandlerStackCursor: StackCursor<Fiber | null> = createCursor(
-  null,
-);
+const suspenseHandlerStackCursor: StackCursor<Fiber | null> =
+  createCursor(null);
 
 // Represents the outermost boundary that is not visible in the current tree.
 // Everything above this is the "shell". When this is null, it means we're
@@ -45,6 +44,14 @@ export function pushPrimaryTreeSuspenseHandler(handler: Fiber): void {
   // TODO: Pass as argument
   const current = handler.alternate;
   const props: SuspenseProps = handler.pendingProps;
+
+  // Shallow Suspense context fields, like ForceSuspenseFallback, should only be
+  // propagated a single level. For example, when ForceSuspenseFallback is set,
+  // it should only force the nearest Suspense boundary into fallback mode.
+  pushSuspenseListContext(
+    handler,
+    setDefaultShallowSuspenseListContext(suspenseStackCursor.current),
+  );
 
   // Experimental feature: Some Suspense boundaries are marked as having an
   // undesirable fallback state. These have special behavior where we only
@@ -101,6 +108,11 @@ export function pushFallbackTreeSuspenseHandler(fiber: Fiber): void {
 
 export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
   if (fiber.tag === OffscreenComponent) {
+    // A SuspenseList context is only pushed here to avoid a push/pop mismatch.
+    // Reuse the current value on the stack.
+    // TODO: We can avoid needing to push here by by forking popSuspenseHandler
+    // into separate functions for Suspense and Offscreen.
+    pushSuspenseListContext(fiber, suspenseStackCursor.current);
     push(suspenseHandlerStackCursor, fiber, fiber);
     if (shellBoundary !== null) {
       // A parent boundary is showing a fallback, so we've already rendered
@@ -123,6 +135,7 @@ export function pushOffscreenSuspenseHandler(fiber: Fiber): void {
 }
 
 export function reuseSuspenseHandlerOnStack(fiber: Fiber) {
+  pushSuspenseListContext(fiber, suspenseStackCursor.current);
   push(suspenseHandlerStackCursor, getSuspenseHandler(), fiber);
 }
 
@@ -136,6 +149,7 @@ export function popSuspenseHandler(fiber: Fiber): void {
     // Popping back into the shell.
     shellBoundary = null;
   }
+  popSuspenseListContext(fiber);
 }
 
 // SuspenseList context

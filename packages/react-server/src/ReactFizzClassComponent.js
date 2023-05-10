@@ -24,24 +24,24 @@ let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
-let warnOnUndefinedDerivedState;
-let warnOnInvalidCallback;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
+let didWarnOnInvalidCallback;
 
 if (__DEV__) {
-  didWarnAboutUninitializedState = new Set();
-  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
-  didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
-  didWarnAboutDirectlyAssigningPropsToState = new Set();
-  didWarnAboutUndefinedDerivedState = new Set();
-  didWarnAboutContextTypeAndContextTypes = new Set();
-  didWarnAboutInvalidateContextType = new Set();
+  didWarnAboutUninitializedState = new Set<string>();
+  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set<mixed>();
+  didWarnAboutLegacyLifecyclesAndDerivedState = new Set<string>();
+  didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
+  didWarnAboutUndefinedDerivedState = new Set<string>();
+  didWarnAboutContextTypeAndContextTypes = new Set<mixed>();
+  didWarnAboutInvalidateContextType = new Set<mixed>();
+  didWarnOnInvalidCallback = new Set<string>();
+}
 
-  const didWarnOnInvalidCallback = new Set();
-
-  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed, callerName: string) {
+  if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
@@ -55,9 +55,11 @@ if (__DEV__) {
         callback,
       );
     }
-  };
+  }
+}
 
-  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
+function warnOnUndefinedDerivedState(type: any, partialState: any) {
+  if (__DEV__) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -69,7 +71,7 @@ if (__DEV__) {
         );
       }
     }
-  };
+  }
 }
 
 function warnNoop(

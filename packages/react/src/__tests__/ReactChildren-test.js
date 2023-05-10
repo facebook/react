@@ -21,7 +21,7 @@ describe('ReactChildren', () => {
 
   it('should support identity for simple', () => {
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid, index) {
+    const callback = jest.fn().mockImplementation(function (kid, index) {
       expect(this).toBe(context);
       return kid;
     });
@@ -46,7 +46,7 @@ describe('ReactChildren', () => {
 
   it('should support Portal components', () => {
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid, index) {
+    const callback = jest.fn().mockImplementation(function (kid, index) {
       expect(this).toBe(context);
       return kid;
     });
@@ -71,7 +71,7 @@ describe('ReactChildren', () => {
 
   it('should treat single arrayless child as being in array', () => {
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid, index) {
+    const callback = jest.fn().mockImplementation(function (kid, index) {
       expect(this).toBe(context);
       return kid;
     });
@@ -92,7 +92,7 @@ describe('ReactChildren', () => {
 
   it('should treat single child in array as expected', () => {
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid, index) {
+    const callback = jest.fn().mockImplementation(function (kid, index) {
       expect(this).toBe(context);
       return kid;
     });
@@ -119,7 +119,7 @@ describe('ReactChildren', () => {
     const four = <div key="keyFour" />;
     const context = {};
 
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -165,7 +165,7 @@ describe('ReactChildren', () => {
     const a = <a key="aNode" />;
 
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -225,7 +225,7 @@ describe('ReactChildren', () => {
     const five = <div key="keyFive" />;
 
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       return kid;
     });
 
@@ -263,7 +263,7 @@ describe('ReactChildren', () => {
     const zeroForceKey = <div key="keyZero" />;
     const oneForceKey = <div key="keyOne" />;
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -298,10 +298,10 @@ describe('ReactChildren', () => {
 
   it('should be called for each child in an iterable without keys', () => {
     const threeDivIterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             if (i++ < 3) {
               return {value: <div />, done: false};
             } else {
@@ -313,7 +313,7 @@ describe('ReactChildren', () => {
     };
 
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -349,10 +349,10 @@ describe('ReactChildren', () => {
 
   it('should be called for each child in an iterable with keys', () => {
     const threeDivIterable = {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
-          next: function() {
+          next: function () {
             if (i++ < 3) {
               return {value: <div key={'#' + i} />, done: false};
             } else {
@@ -364,7 +364,7 @@ describe('ReactChildren', () => {
     };
 
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -397,7 +397,7 @@ describe('ReactChildren', () => {
 
   it('should not enumerate enumerable numbers (#4776)', () => {
     /*eslint-disable no-extend-native */
-    Number.prototype['@@iterator'] = function() {
+    Number.prototype['@@iterator'] = function () {
       throw new Error('number iterator called');
     };
     /*eslint-enable no-extend-native */
@@ -412,12 +412,12 @@ describe('ReactChildren', () => {
       );
 
       const context = {};
-      const callback = jest.fn().mockImplementation(function(kid) {
+      const callback = jest.fn().mockImplementation(function (kid) {
         expect(this).toBe(context);
         return kid;
       });
 
-      const assertCalls = function() {
+      const assertCalls = function () {
         expect(callback).toHaveBeenCalledTimes(3);
         expect(callback).toHaveBeenCalledWith(5, 0);
         expect(callback).toHaveBeenCalledWith(12, 1);
@@ -454,7 +454,7 @@ describe('ReactChildren', () => {
     );
 
     const context = {};
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       expect(this).toBe(context);
       return kid;
     });
@@ -482,7 +482,7 @@ describe('ReactChildren', () => {
   });
 
   it('should pass key to returned component', () => {
-    const mapFn = function(kid, index) {
+    const mapFn = function (kid, index) {
       return <div>{kid}</div>;
     };
 
@@ -499,7 +499,7 @@ describe('ReactChildren', () => {
 
   it('should invoke callback with the right context', () => {
     let lastContext;
-    const callback = function(kid, index) {
+    const callback = function (kid, index) {
       lastContext = this;
       return this;
     };
@@ -536,7 +536,7 @@ describe('ReactChildren', () => {
       <span />, // Map from null to something.
       <div key="keyFour" />,
     ];
-    const callback = jest.fn().mockImplementation(function(kid, index) {
+    const callback = jest.fn().mockImplementation(function (kid, index) {
       return mapped[index];
     });
 
@@ -597,7 +597,7 @@ describe('ReactChildren', () => {
     const fourMapped = <div key="keyFour" />;
     const fiveMapped = <div />;
 
-    const callback = jest.fn().mockImplementation(function(kid) {
+    const callback = jest.fn().mockImplementation(function (kid) {
       switch (kid) {
         case zero:
           return zeroMapped;
@@ -666,7 +666,7 @@ describe('ReactChildren', () => {
     // Key should be added even if we don't supply it!
     const oneForceKeyMapped = <div />;
 
-    const mapFn = function(kid, index) {
+    const mapFn = function (kid, index) {
       return index === 0 ? zeroForceKeyMapped : oneForceKeyMapped;
     };
 
@@ -702,7 +702,7 @@ describe('ReactChildren', () => {
     const zero = <div />;
     const one = <div key="0" />;
 
-    const mapFn = function() {
+    const mapFn = function () {
       return null;
     };
 
@@ -713,7 +713,7 @@ describe('ReactChildren', () => {
       </div>
     );
 
-    expect(function() {
+    expect(function () {
       React.Children.map(instance.props.children, mapFn);
     }).not.toThrow();
   });
@@ -935,8 +935,8 @@ describe('ReactChildren', () => {
   });
 
   it('should throw on object', () => {
-    expect(function() {
-      React.Children.forEach({a: 1, b: 2}, function() {}, null);
+    expect(function () {
+      React.Children.forEach({a: 1, b: 2}, function () {}, null);
     }).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
         '{a, b}).' +
@@ -950,8 +950,8 @@ describe('ReactChildren', () => {
   it('should throw on regex', () => {
     // Really, we care about dates (#4840) but those have nondeterministic
     // serialization (timezones) so let's test a regex instead:
-    expect(function() {
-      React.Children.forEach(/abc/, function() {}, null);
+    expect(function () {
+      React.Children.forEach(/abc/, function () {}, null);
     }).toThrowError(
       'Objects are not valid as a React child (found: /abc/).' +
         (__DEV__

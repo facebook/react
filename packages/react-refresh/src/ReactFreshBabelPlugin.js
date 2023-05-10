@@ -7,7 +7,7 @@
 
 'use strict';
 
-export default function(babel, opts = {}) {
+export default function (babel, opts = {}) {
   if (typeof babel.env === 'function') {
     // Only available in Babel 7.
     const env = babel.env();

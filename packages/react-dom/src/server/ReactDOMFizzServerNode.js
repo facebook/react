@@ -10,7 +10,7 @@
 import type {Request} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -25,7 +25,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);

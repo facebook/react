@@ -30,18 +30,17 @@ describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
-
     React = require('react');
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
-    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .UIManager;
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
-    TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .TextInputState;
+    UIManager =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
+    TextInputState =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').TextInputState;
   });
 
   it('should be able to create and render a native component', () => {
@@ -125,9 +124,11 @@ describe('ReactNative', () => {
     expect(UIManager.dispatchViewManagerCommand).not.toBeCalled();
     ReactNative.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
     expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledTimes(1);
-    expect(
-      UIManager.dispatchViewManagerCommand,
-    ).toHaveBeenCalledWith(expect.any(Number), 'updateCommand', [10, 20]);
+    expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
+      expect.any(Number),
+      'updateCommand',
+      [10, 20],
+    );
   });
 
   it('should warn and no-op if calling dispatchCommand on non native refs', () => {
@@ -390,7 +391,7 @@ describe('ReactNative', () => {
     const c = ReactNative.render(
       <View foo="foo" ref={v => (a = v)} />,
       11,
-      function() {
+      function () {
         b = this;
       },
     );

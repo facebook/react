@@ -76,7 +76,7 @@ describe('SchedulerDOMSetImmediate', () => {
     };
 
     // Unused: we expect setImmediate to be preferred.
-    global.MessageChannel = function() {
+    global.MessageChannel = function () {
       return {
         port1: {},
         port2: {
@@ -88,7 +88,7 @@ describe('SchedulerDOMSetImmediate', () => {
     };
 
     let pendingSetImmediateCallback = null;
-    global.setImmediate = function(cb) {
+    global.setImmediate = function (cb) {
       if (pendingSetImmediateCallback) {
         throw Error('Message event already scheduled');
       }

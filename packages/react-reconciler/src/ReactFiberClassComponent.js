@@ -64,11 +64,7 @@ import {
   emptyContextObject,
 } from './ReactFiberContext';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
-import {
-  requestEventTime,
-  requestUpdateLane,
-  scheduleUpdateOnFiber,
-} from './ReactFiberWorkLoop';
+import {requestUpdateLane, scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 import {
   markForceUpdateScheduled,
@@ -85,25 +81,45 @@ let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
-let warnOnUndefinedDerivedState;
-let warnOnInvalidCallback;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
 let didWarnAboutInvalidateContextType;
+let didWarnOnInvalidCallback;
 
 if (__DEV__) {
-  didWarnAboutStateAssignmentForComponent = new Set();
-  didWarnAboutUninitializedState = new Set();
-  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
-  didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
-  didWarnAboutDirectlyAssigningPropsToState = new Set();
-  didWarnAboutUndefinedDerivedState = new Set();
-  didWarnAboutContextTypeAndContextTypes = new Set();
-  didWarnAboutInvalidateContextType = new Set();
+  didWarnAboutStateAssignmentForComponent = new Set<string>();
+  didWarnAboutUninitializedState = new Set<string>();
+  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set<string>();
+  didWarnAboutLegacyLifecyclesAndDerivedState = new Set<string>();
+  didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
+  didWarnAboutUndefinedDerivedState = new Set<string>();
+  didWarnAboutContextTypeAndContextTypes = new Set<string>();
+  didWarnAboutInvalidateContextType = new Set<string>();
+  didWarnOnInvalidCallback = new Set<string>();
 
-  const didWarnOnInvalidCallback = new Set();
+  // This is so gross but it's at least non-critical and can be removed if
+  // it causes problems. This is meant to give a nicer error message for
+  // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
+  // ...)) which otherwise throws a "_processChildContext is not a function"
+  // exception.
+  Object.defineProperty(fakeInternalInstance, '_processChildContext', {
+    enumerable: false,
+    value: function (): empty {
+      throw new Error(
+        '_processChildContext is not available in React 16+. This likely ' +
+          'means you have multiple copies of React and are attempting to nest ' +
+          'a React 15 tree inside a React 16 tree using ' +
+          "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
+          'to make sure you have only one copy of React (and ideally, switch ' +
+          'to ReactDOM.createPortal).',
+      );
+    },
+  });
+  Object.freeze(fakeInternalInstance);
+}
 
-  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed, callerName: string) {
+  if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
@@ -117,9 +133,11 @@ if (__DEV__) {
         callback,
       );
     }
-  };
+  }
+}
 
-  warnOnUndefinedDerivedState = function(type: any, partialState: any) {
+function warnOnUndefinedDerivedState(type: any, partialState: any) {
+  if (__DEV__) {
     if (partialState === undefined) {
       const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
@@ -131,27 +149,7 @@ if (__DEV__) {
         );
       }
     }
-  };
-
-  // This is so gross but it's at least non-critical and can be removed if
-  // it causes problems. This is meant to give a nicer error message for
-  // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
-  // ...)) which otherwise throws a "_processChildContext is not a function"
-  // exception.
-  Object.defineProperty(fakeInternalInstance, '_processChildContext', {
-    enumerable: false,
-    value: function(): empty {
-      throw new Error(
-        '_processChildContext is not available in React 16+. This likely ' +
-          'means you have multiple copies of React and are attempting to nest ' +
-          'a React 15 tree inside a React 16 tree using ' +
-          "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
-          'to make sure you have only one copy of React (and ideally, switch ' +
-          'to ReactDOM.createPortal).',
-      );
-    },
-  });
-  Object.freeze(fakeInternalInstance);
+  }
 }
 
 function applyDerivedStateFromProps(
@@ -198,10 +196,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueSetState(inst: any, payload: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -212,7 +209,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -231,10 +228,9 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst: any, payload: any, callback: null) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -247,7 +243,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 
@@ -267,10 +263,9 @@ const classComponentUpdater = {
   // $FlowFixMe[missing-local-annot]
   enqueueForceUpdate(inst: any, callback) {
     const fiber = getInstance(inst);
-    const eventTime = requestEventTime();
     const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane);
+    const update = createUpdate(lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -282,7 +277,7 @@ const classComponentUpdater = {
 
     const root = enqueueUpdate(fiber, update, lane);
     if (root !== null) {
-      scheduleUpdateOnFiber(root, fiber, lane, eventTime);
+      scheduleUpdateOnFiber(root, fiber, lane);
       entangleTransitions(root, fiber, lane);
     }
 

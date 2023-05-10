@@ -1,6 +1,6 @@
 'use strict';
 
-const jestDiff = require('jest-diff').default;
+const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
 const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
 
@@ -15,7 +15,7 @@ function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
     return '\n    in ' + name + ' (at **)';
   });
 }

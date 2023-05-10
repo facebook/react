@@ -8,8 +8,8 @@
  */
 
 import type {Writable} from 'stream';
+
 import {TextEncoder} from 'util';
-import {AsyncLocalStorage} from 'async_hooks';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -33,11 +33,6 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
-
-export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<
-  Map<Function, mixed>,
-> = new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;
@@ -76,11 +71,15 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
   writtenBytes += written;
 
   if (read < stringChunk.length) {
-    writeToDestination(destination, (currentView: any));
+    writeToDestination(
+      destination,
+      (currentView: any).subarray(0, writtenBytes),
+    );
     currentView = new Uint8Array(VIEW_SIZE);
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
-    writtenBytes = textEncoder.encodeInto(stringChunk.slice(read), currentView)
-      .written;
+    writtenBytes = textEncoder.encodeInto(
+      stringChunk.slice(read),
+      (currentView: any),
+    ).written;
   }
 
   if (writtenBytes === VIEW_SIZE) {
@@ -194,7 +193,7 @@ export function stringToChunk(content: string): Chunk {
   return content;
 }
 
-const precomputedChunkSet = __DEV__ ? new Set() : null;
+const precomputedChunkSet = __DEV__ ? new Set<PrecomputedChunk>() : null;
 
 export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   const precomputedChunk = textEncoder.encode(content);
@@ -217,6 +216,6 @@ export function clonePrecomputedChunk(
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
-  // $FlowFixMe: This is an Error object or the destination accepts other types.
+  // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
 }

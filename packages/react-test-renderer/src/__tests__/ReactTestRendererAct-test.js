@@ -4,6 +4,7 @@ let React;
 let ReactTestRenderer;
 let Scheduler;
 let act;
+let assertLog;
 
 describe('ReactTestRenderer.act()', () => {
   beforeEach(() => {
@@ -12,6 +13,9 @@ describe('ReactTestRenderer.act()', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     act = ReactTestRenderer.act;
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
   });
 
   // @gate __DEV__
@@ -79,9 +83,9 @@ describe('ReactTestRenderer.act()', () => {
         // This component will keep updating itself until step === 3
         const [step, proceed] = useReducer(s => (s === 3 ? 3 : s + 1), 1);
         useEffect(() => {
-          Scheduler.unstable_yieldValue('Effect');
+          Scheduler.log('Effect');
           alreadyResolvedPromise.then(() => {
-            Scheduler.unstable_yieldValue('Microtask');
+            Scheduler.log('Microtask');
             proceed();
           });
         });
@@ -91,7 +95,7 @@ describe('ReactTestRenderer.act()', () => {
       await act(async () => {
         root.update(<App />);
       });
-      expect(Scheduler).toHaveYielded([
+      assertLog([
         // Should not flush effects without also flushing microtasks
         // First render:
         'Effect',

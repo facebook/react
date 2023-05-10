@@ -17,10 +17,10 @@ import {
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
-  copyToClipboard,
   copyWithDelete,
   copyWithRename,
   copyWithSet,
+  serializeToString,
 } from '../utils';
 import {
   deletePathInObject,
@@ -137,16 +137,13 @@ export function attach(
   global: Object,
 ): RendererInterface {
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
-  const internalInstanceToIDMap: WeakMap<
-    InternalInstance,
-    number,
-  > = new WeakMap();
-  const internalInstanceToRootIDMap: WeakMap<
-    InternalInstance,
-    number,
-  > = new WeakMap();
+  const internalInstanceToIDMap: WeakMap<InternalInstance, number> =
+    new WeakMap();
+  const internalInstanceToRootIDMap: WeakMap<InternalInstance, number> =
+    new WeakMap();
 
-  let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
+  let getInternalIDForNative: GetFiberIDForNative =
+    ((null: any): GetFiberIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
   let getFiberForNative = (node: NativeType) => {
     // Not implemented.
@@ -155,9 +152,8 @@ export function attach(
 
   if (renderer.ComponentTree) {
     getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
-      const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
-        node,
-      );
+      const internalInstance =
+        renderer.ComponentTree.getClosestInstanceFromNode(node);
       return internalInstanceToIDMap.get(internalInstance) || null;
     };
     findNativeNodeForInternalID = (id: number) => {
@@ -248,7 +244,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -285,7 +280,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -322,7 +316,6 @@ export function attach(
           parentIDStack.pop();
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -354,7 +347,6 @@ export function attach(
 
           return result;
         } catch (err) {
-          // $FlowFixMe[incompatible-type] found when upgrading Flow
           parentIDStack = [];
           throw err;
         } finally {
@@ -507,11 +499,11 @@ export function attach(
     const numUnmountIDs =
       pendingUnmountedIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Array(
+    const operations = new Array<number>(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
-      // How big is the string table?
-      1 + // [stringTableLength]
+        // How big is the string table?
+        1 + // [stringTableLength]
         // Then goes the actual string table.
         pendingStringTableLength +
         // All unmounts are batched in a single message.
@@ -705,10 +697,15 @@ export function attach(
     }
   }
 
-  function copyElementPath(id: number, path: Array<string | number>): void {
+  function getSerializedElementValueByPath(
+    id: number,
+    path: Array<string | number>,
+  ): ?string {
     const inspectedElement = inspectElementRaw(id);
     if (inspectedElement !== null) {
-      copyToClipboard(getInObject(inspectedElement, path));
+      const valueToCopy = getInObject(inspectedElement, path);
+
+      return serializeToString(valueToCopy);
     }
   }
 
@@ -1109,7 +1106,7 @@ export function attach(
     clearErrorsForFiberID,
     clearWarningsForFiberID,
     cleanup,
-    copyElementPath,
+    getSerializedElementValueByPath,
     deletePath,
     flushInitialOperations,
     getBestMatchForTrackedPath,

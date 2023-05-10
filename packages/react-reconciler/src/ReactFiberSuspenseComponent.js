@@ -9,7 +9,7 @@
 
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberConfig';
 import type {Lane} from './ReactFiberLane';
 import type {TreeContext} from './ReactFiberTreeContext';
 
@@ -18,7 +18,7 @@ import {NoFlags, DidCapture} from './ReactFiberFlags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
-} from './ReactFiberHostConfig';
+} from './ReactFiberConfig';
 
 export type SuspenseProps = {
   children?: ReactNodeList,
@@ -66,6 +66,8 @@ export type SuspenseListRenderState = {
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
 };
+
+export type RetryQueue = Set<Wakeable>;
 
 export function findFirstSuspended(row: Fiber): null | Fiber {
   let node = row;

@@ -17,7 +17,8 @@ import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
 import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
 import {flattenHooksList, loadSourceAndMetadata} from './loadSourceAndMetadata';
 
-const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
+const workerizedParseHookNames: ParseSourceAndMetadataModule =
+  WorkerizedParseSourceAndMetadata();
 
 export function parseSourceAndMetadata(
   hooksList: Array<HooksNode>,
@@ -31,7 +32,7 @@ export function parseSourceAndMetadata(
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
 
-const EMPTY_MAP = new Map();
+const EMPTY_MAP: HookNames = new Map();
 
 export async function parseHookNames(
   hooksTree: HooksTree,

@@ -23,34 +23,29 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
+export const disableIEWorkarounds = true;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = true;
 export const disableLegacyContext = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = true;
-export const warnAboutSpreadingKeyToJSX = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
 export const enableUseEffectEventHook = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = false;
-export const disableNativeComponentFrames = false;
-export const skipUnmountedBoundaries = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
@@ -76,6 +71,12 @@ export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;
+export const enableDeferRootSchedulingToMicrotask = true;
+
+export const diffInCommitPhase = true;
+export const enableAsyncActions = false;
+
+export const alwaysThrottleRetries = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -21,7 +21,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerLegacyFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
 import {Readable} from 'stream';
 
@@ -43,7 +43,6 @@ class ReactMarkupReadableStream extends Readable {
   // $FlowFixMe[missing-local-annot]
   _destroy(err, callback) {
     abort(this.request);
-    // $FlowFixMe: The type definition for the callback should allow undefined and null.
     callback(err);
   }
 

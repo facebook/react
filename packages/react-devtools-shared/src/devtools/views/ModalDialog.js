@@ -56,9 +56,8 @@ type ModalDialogContextType = {
   dispatch: Dispatch,
 };
 
-const ModalDialogContext: ReactContext<ModalDialogContextType> = createContext<ModalDialogContextType>(
-  ((null: any): ModalDialogContextType),
-);
+const ModalDialogContext: ReactContext<ModalDialogContextType> =
+  createContext<ModalDialogContextType>(((null: any): ModalDialogContextType));
 ModalDialogContext.displayName = 'ModalDialogContext';
 
 function dialogReducer(state: State, action: Action) {

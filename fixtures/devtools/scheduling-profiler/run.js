@@ -18,7 +18,7 @@ const DEPENDENCIES = [
   ['react-dom/umd/react-dom.development.js', 'react-dom.js'],
 ];
 
-const BUILD_DIRECTORY = '../../../build/node_modules/';
+const BUILD_DIRECTORY = '../../../build/oss-experimental/';
 const DEPENDENCIES_DIRECTORY = 'dependencies';
 
 function initDependencies() {
@@ -39,7 +39,7 @@ function initServer() {
   const host = 'localhost';
   const port = 8000;
 
-  const requestListener = function(request, response) {
+  const requestListener = function (request, response) {
     let contents;
     switch (request.url) {
       case '/react.js':

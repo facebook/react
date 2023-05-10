@@ -36,13 +36,13 @@ const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-source-map' : false,
   entry: {
     backend: './src/backend.js',
   },
   output: {
     path: __dirname + '/build',
-    filename: 'react_devtools_backend.js',
+    filename: 'react_devtools_backend_compact.js',
   },
   node: {
     // Don't define a polyfill on window.setImmediate

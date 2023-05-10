@@ -141,7 +141,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -176,7 +176,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -204,7 +204,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -259,7 +259,7 @@ describe('ReactIdentity', () => {
       </div>
     );
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(component);
     }).not.toThrow();
   });

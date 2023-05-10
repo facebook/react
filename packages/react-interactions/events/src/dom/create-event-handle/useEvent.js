@@ -32,7 +32,7 @@ export default function useEvent(
 
   if (useEventHandle === null) {
     const setEventHandle = unstable_createEventHandle(event, options);
-    const clears = new Map();
+    const clears = new Map<EventTarget, () => void>();
     useEventHandle = {
       setListener(
         target: EventTarget,

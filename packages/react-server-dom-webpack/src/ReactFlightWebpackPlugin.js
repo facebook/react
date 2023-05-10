@@ -9,8 +9,8 @@
 
 import {join} from 'path';
 import {pathToFileURL} from 'url';
-
 import asyncLib from 'neo-async';
+import * as acorn from 'acorn-loose';
 
 import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
 import NullDependency from 'webpack/lib/dependencies/NullDependency';
@@ -40,7 +40,7 @@ class ClientReferenceDependency extends ModuleDependency {
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
 const clientImportName = 'react-server-dom-webpack/client';
-const clientFileName = require.resolve('../client');
+const clientFileName = require.resolve('../client.browser.js');
 
 type ClientReferenceSearchPath = {
   directory: string,
@@ -55,7 +55,8 @@ type Options = {
   isServer: boolean,
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
-  manifestFilename?: string,
+  clientManifestFilename?: string,
+  ssrManifestFilename?: string,
 };
 
 const PLUGIN_NAME = 'React Server Plugin';
@@ -63,7 +64,8 @@ const PLUGIN_NAME = 'React Server Plugin';
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;
   chunkName: string;
-  manifestFilename: string;
+  clientManifestFilename: string;
+  ssrManifestFilename: string;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
@@ -79,7 +81,7 @@ export default class ReactFlightWebpackPlugin {
         {
           directory: '.',
           recursive: true,
-          include: /\.client\.(js|ts|jsx|tsx)$/,
+          include: /\.(js|ts|jsx|tsx)$/,
         },
       ];
     } else if (
@@ -99,8 +101,10 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
-    this.manifestFilename =
-      options.manifestFilename || 'react-client-manifest.json';
+    this.clientManifestFilename =
+      options.clientManifestFilename || 'react-client-manifest.json';
+    this.ssrManifestFilename =
+      options.ssrManifestFilename || 'react-ssr-manifest.json';
   }
 
   apply(compiler: any) {
@@ -113,13 +117,15 @@ export default class ReactFlightWebpackPlugin {
       PLUGIN_NAME,
       ({contextModuleFactory}, callback) => {
         const contextResolver = compiler.resolverFactory.get('context', {});
+        const normalResolver = compiler.resolverFactory.get('normal');
 
         _this.resolveAllClientFiles(
           compiler.context,
           contextResolver,
+          normalResolver,
           compiler.inputFileSystem,
           contextModuleFactory,
-          function(err, resolvedClientRefs) {
+          function (err, resolvedClientRefs) {
             if (err) {
               callback(err);
               return;
@@ -205,23 +211,30 @@ export default class ReactFlightWebpackPlugin {
           name: PLUGIN_NAME,
           stage: Compilation.PROCESS_ASSETS_STAGE_REPORT,
         },
-        function() {
+        function () {
           if (clientFileNameFound === false) {
             compilation.warnings.push(
               new WebpackError(
-                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.manifestFilename} was not created.`,
+                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.clientManifestFilename} was not created.`,
               ),
             );
             return;
           }
 
-          const json: {
+          const resolvedClientFiles = new Set(
+            (resolvedClientReferences || []).map(ref => ref.request),
+          );
+
+          const clientManifest: {
+            [string]: {chunks: $FlowFixMe, id: string, name: string},
+          } = {};
+          const ssrManifest: {
             [string]: {
-              [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
+              [string]: {specifier: string, name: string},
             },
           } = {};
-          compilation.chunkGroups.forEach(function(chunkGroup) {
-            const chunkIds = chunkGroup.chunks.map(function(c) {
+          compilation.chunkGroups.forEach(function (chunkGroup) {
+            const chunkIds = chunkGroup.chunks.map(function (c) {
               return c.id;
             });
 
@@ -230,44 +243,71 @@ export default class ReactFlightWebpackPlugin {
               // TODO: Hook into deps instead of the target module.
               // That way we know by the type of dep whether to include.
               // It also resolves conflicts when the same module is in multiple chunks.
-
-              if (!/\.client\.(js|ts)x?$/.test(module.resource)) {
+              if (!resolvedClientFiles.has(module.resource)) {
                 return;
               }
 
-              const moduleProvidedExports = compilation.moduleGraph
-                .getExportsInfo(module)
-                .getProvidedExports();
-
-              const moduleExports: {
-                [string]: {chunks: $FlowFixMe, id: $FlowFixMe, name: string},
-              } = {};
-              ['', '*']
-                .concat(
-                  Array.isArray(moduleProvidedExports)
-                    ? moduleProvidedExports
-                    : [],
-                )
-                .forEach(function(name) {
-                  moduleExports[name] = {
-                    id,
-                    chunks: chunkIds,
-                    name: name,
-                  };
-                });
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
-                json[href] = moduleExports;
+                const ssrExports: {
+                  [string]: {specifier: string, name: string},
+                } = {};
+
+                clientManifest[href] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '*',
+                };
+                ssrExports['*'] = {
+                  specifier: href,
+                  name: '*',
+                };
+
+                // TODO: If this module ends up split into multiple modules, then
+                // we should encode each the chunks needed for the specific export.
+                // When the module isn't split, it doesn't matter and we can just
+                // encode the id of the whole module. This code doesn't currently
+                // deal with module splitting so is likely broken from ESM anyway.
+                /*
+                clientManifest[href + '#'] = {
+                  id,
+                  chunks: chunkIds,
+                  name: '',
+                };
+                ssrExports[''] = {
+                  specifier: href,
+                  name: '',
+                };
+
+                const moduleProvidedExports = compilation.moduleGraph
+                  .getExportsInfo(module)
+                  .getProvidedExports();
+
+                if (Array.isArray(moduleProvidedExports)) {
+                  moduleProvidedExports.forEach(function (name) {
+                    clientManifest[href + '#' + name] = {
+                      id,
+                      chunks: chunkIds,
+                      name: name,
+                    };
+                    ssrExports[name] = {
+                      specifier: href,
+                      name: name,
+                    };
+                  });
+                }
+                */
+
+                ssrManifest[id] = ssrExports;
               }
             }
 
-            chunkGroup.chunks.forEach(function(chunk) {
-              const chunkModules = compilation.chunkGraph.getChunkModulesIterable(
-                chunk,
-              );
+            chunkGroup.chunks.forEach(function (chunk) {
+              const chunkModules =
+                compilation.chunkGraph.getChunkModulesIterable(chunk);
 
-              Array.from(chunkModules).forEach(function(module) {
+              Array.from(chunkModules).forEach(function (module) {
                 const moduleId = compilation.chunkGraph.getModuleId(module);
 
                 recordModule(moduleId, module);
@@ -281,10 +321,15 @@ export default class ReactFlightWebpackPlugin {
             });
           });
 
-          const output = JSON.stringify(json, null, 2);
+          const clientOutput = JSON.stringify(clientManifest, null, 2);
           compilation.emitAsset(
-            _this.manifestFilename,
-            new sources.RawSource(output, false),
+            _this.clientManifestFilename,
+            new sources.RawSource(clientOutput, false),
+          );
+          const ssrOutput = JSON.stringify(ssrManifest, null, 2);
+          compilation.emitAsset(
+            _this.ssrManifestFilename,
+            new sources.RawSource(ssrOutput, false),
           );
         },
       );
@@ -296,6 +341,7 @@ export default class ReactFlightWebpackPlugin {
   resolveAllClientFiles(
     context: string,
     contextResolver: any,
+    normalResolver: any,
     fs: any,
     contextModuleFactory: any,
     callback: (
@@ -303,6 +349,31 @@ export default class ReactFlightWebpackPlugin {
       result?: $ReadOnlyArray<ClientReferenceDependency>,
     ) => void,
   ) {
+    function hasUseClientDirective(source: string): boolean {
+      if (source.indexOf('use client') === -1) {
+        return false;
+      }
+      let body;
+      try {
+        body = acorn.parse(source, {
+          ecmaVersion: '2024',
+          sourceType: 'module',
+        }).body;
+      } catch (x) {
+        return false;
+      }
+      for (let i = 0; i < body.length; i++) {
+        const node = body[i];
+        if (node.type !== 'ExpressionStatement' || !node.directive) {
+          break;
+        }
+        if (node.directive === 'use client') {
+          return true;
+        }
+      }
+      return false;
+    }
+
     asyncLib.map(
       this.clientReferences,
       (
@@ -316,7 +387,8 @@ export default class ReactFlightWebpackPlugin {
           cb(null, [new ClientReferenceDependency(clientReferencePath)]);
           return;
         }
-        const clientReferenceSearch: ClientReferenceSearchPath = clientReferencePath;
+        const clientReferenceSearch: ClientReferenceSearchPath =
+          clientReferencePath;
         contextResolver.resolve(
           {},
           context,
@@ -340,6 +412,7 @@ export default class ReactFlightWebpackPlugin {
               options,
               (err2: null | Error, deps: Array<any /*ModuleDependency*/>) => {
                 if (err2) return cb(err2);
+
                 const clientRefDeps = deps.map(dep => {
                   // use userRequest instead of request. request always end with undefined which is wrong
                   const request = join(resolvedDirectory, dep.userRequest);
@@ -347,7 +420,38 @@ export default class ReactFlightWebpackPlugin {
                   clientRefDep.userRequest = dep.userRequest;
                   return clientRefDep;
                 });
-                cb(null, clientRefDeps);
+
+                asyncLib.filter(
+                  clientRefDeps,
+                  (
+                    clientRefDep: ClientReferenceDependency,
+                    filterCb: (err: null | Error, truthValue: boolean) => void,
+                  ) => {
+                    normalResolver.resolve(
+                      {},
+                      context,
+                      clientRefDep.request,
+                      {},
+                      (err3: null | Error, resolvedPath: mixed) => {
+                        if (err3 || typeof resolvedPath !== 'string') {
+                          return filterCb(null, false);
+                        }
+                        fs.readFile(
+                          resolvedPath,
+                          'utf-8',
+                          (err4: null | Error, content: string) => {
+                            if (err4 || typeof content !== 'string') {
+                              return filterCb(null, false);
+                            }
+                            const useClient = hasUseClientDirective(content);
+                            filterCb(null, useClient);
+                          },
+                        );
+                      },
+                    );
+                  },
+                  cb,
+                );
               },
             );
           },

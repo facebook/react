@@ -18,7 +18,7 @@ let computeComponentStackForErrorReporting;
 function normalizeCodeLocInfo(str) {
   return (
     str &&
-    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
       return '\n    in ' + name + ' (at **)';
     })
   );
@@ -28,12 +28,11 @@ describe('ReactNativeError', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
-
     React = require('react');
     ReactNative = require('react-native-renderer');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
     computeComponentStackForErrorReporting =
       ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .computeComponentStackForErrorReporting;

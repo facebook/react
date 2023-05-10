@@ -15,9 +15,9 @@ import {
   createResponse,
   resolveModel,
   resolveModule,
-  resolveSymbol,
   resolveErrorDev,
   resolveErrorProd,
+  resolveHint,
   close,
   getRoot,
 } from 'react-client/src/ReactFlightClient';
@@ -25,29 +25,36 @@ import {
 export {createResponse, close, getRoot};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
-  if (chunk[0] === 'J') {
-    // $FlowFixMe unable to refine on array indices
+  if (chunk[0] === 'O') {
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModel(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === 'M') {
-    // $FlowFixMe unable to refine on array indices
+  } else if (chunk[0] === 'I') {
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
     resolveModule(response, chunk[1], chunk[2]);
-  } else if (chunk[0] === 'S') {
-    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
-    resolveSymbol(response, chunk[1], chunk[2]);
+  } else if (chunk[0] === 'H') {
+    // $FlowFixMe[incompatible-call] unable to refine on array indices
+    resolveHint(response, chunk[1], chunk[2]);
   } else {
     if (__DEV__) {
       resolveErrorDev(
         response,
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
         chunk[1],
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[prop-missing]
+        // $FlowFixMe[incompatible-use]
         chunk[2].digest,
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
         chunk[2].message || '',
-        // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+        // $FlowFixMe[incompatible-use]
         chunk[2].stack || '',
       );
     } else {
-      // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+      // $FlowFixMe[incompatible-call]: Flow doesn't support disjoint unions on tuples.
+      // $FlowFixMe[prop-missing]
+      // $FlowFixMe[incompatible-use]
       resolveErrorProd(response, chunk[1], chunk[2].digest);
     }
   }

@@ -22,20 +22,20 @@ const customBubblingEventTypes: {
       skipBubbling?: ?boolean,
     }>,
   }>,
-  ...,
+  ...
 } = {};
 const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{
     registrationName: string,
   }>,
-  ...,
+  ...
 } = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;
 exports.customDirectEventTypes = customDirectEventTypes;
 
-const viewConfigCallbacks = new Map();
-const viewConfigs = new Map();
+const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();
+const viewConfigs = new Map<string, ViewConfig>();
 
 function processEventTypes(viewConfig: ViewConfig): void {
   const {bubblingEventTypes, directEventTypes} = viewConfig;
@@ -75,7 +75,7 @@ function processEventTypes(viewConfig: ViewConfig): void {
  * A callback is provided to load the view config from UIManager.
  * The callback is deferred until the view is actually rendered.
  */
-exports.register = function(name: string, callback: () => ViewConfig): string {
+exports.register = function (name: string, callback: () => ViewConfig): string {
   invariant(
     !viewConfigCallbacks.has(name),
     'Tried to register two views with the same name %s',
@@ -96,7 +96,7 @@ exports.register = function(name: string, callback: () => ViewConfig): string {
  * If this is the first time the view has been used,
  * This configuration will be lazy-loaded from UIManager.
  */
-exports.get = function(name: string): ViewConfig {
+exports.get = function (name: string): ViewConfig {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);

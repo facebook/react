@@ -34,9 +34,8 @@ type Props = {
 
 export default function Element({data, index, style}: Props): React.Node {
   const store = useContext(StoreContext);
-  const {ownerFlatTree, ownerID, selectedElementID} = useContext(
-    TreeStateContext,
-  );
+  const {ownerFlatTree, ownerID, selectedElementID} =
+    useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 

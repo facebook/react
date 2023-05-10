@@ -70,7 +70,7 @@ describe('reactiverefs', () => {
     }
   }
 
-  const expectClickLogsLengthToBe = function(instance, length) {
+  const expectClickLogsLengthToBe = function (instance, length) {
     const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       instance,
       'clickLogDiv',
@@ -82,7 +82,7 @@ describe('reactiverefs', () => {
   /**
    * Render a TestRefsComponent and ensure that the main refs are wired up.
    */
-  const renderTestRefsComponent = function() {
+  const renderTestRefsComponent = function () {
     /**
      * Only purpose is to test that refs are tracked even when applied to a
      * component that is injected down several layers. Ref systems are difficult to
@@ -492,7 +492,7 @@ describe('creating element with string ref in constructor', () => {
   it('throws an error', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<RefTest />);
     }).toThrowError(
       'Element ref was specified as a string (p) but no owner was set. This could happen for one of' +

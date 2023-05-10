@@ -20,7 +20,10 @@ export {
   unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
-  preinit,
+  useFormStatus as experimental_useFormStatus,
+  prefetchDNS,
+  preconnect,
   preload,
+  preinit,
   version,
 } from './src/client/ReactDOM';

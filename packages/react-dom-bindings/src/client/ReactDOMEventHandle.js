@@ -12,7 +12,7 @@ import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
-} from '../shared/ReactDOMTypes';
+} from './ReactDOMEventHandleTypes';
 
 import {allNativeEvents} from '../events/EventRegistry';
 import {
@@ -21,7 +21,7 @@ import {
   doesTargetHaveEventHandle,
   addEventHandleToTarget,
 } from './ReactDOMComponentTree';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {ELEMENT_NODE} from './HTMLNodeType';
 import {listenToNativeEventForNonManagedEventTarget} from '../events/DOMPluginEventSystem';
 
 import {
@@ -109,7 +109,7 @@ export function createEventHandle(
       }
     }
 
-    const eventHandle = (
+    const eventHandle: ReactDOMEventHandle = (
       target: EventTarget | ReactScopeInstance,
       callback: (SyntheticEvent<EventTarget>) => void,
     ) => {

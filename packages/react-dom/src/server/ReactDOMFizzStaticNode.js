@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import {Writable, Readable} from 'stream';
 
@@ -24,7 +24,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 type Options = {
   identifierPrefix?: string,
@@ -66,7 +66,7 @@ function prerenderToNodeStreams(
     const onFatalError = reject;
 
     function onAllReady() {
-      const readable = new Readable({
+      const readable: Readable = new Readable({
         read() {
           startFlowing(request, writable);
         },

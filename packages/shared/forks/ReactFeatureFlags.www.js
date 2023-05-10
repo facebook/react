@@ -16,22 +16,21 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   disableInputAttributeSyncing,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
+  disableIEWorkarounds,
+  enableTrustedTypesIntegration,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   enableUseRefAccessWarning,
-  disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
   enableTransitionTracing,
+  enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase,
+  enableAsyncActions,
+  alwaysThrottleRetries,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -48,14 +47,15 @@ export const enableUpdaterTracking = __PROFILE__;
 export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
+
+export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
-export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
-export const enableTrustedTypesIntegration = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -72,6 +72,8 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+
+export const enableFormActions = false;
 
 export const disableJavaScriptURLs = true;
 
@@ -100,8 +102,6 @@ export const enableServerContext = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
-
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;

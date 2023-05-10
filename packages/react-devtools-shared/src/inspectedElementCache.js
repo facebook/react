@@ -89,9 +89,9 @@ export function inspectElement(
   const map = getRecordMap();
   let record = map.get(element);
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -132,7 +132,8 @@ export function inspectElement(
         InspectedElementFrontend,
         InspectedElementResponseType,
       ]) => {
-        const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
+        const resolvedRecord =
+          ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
 

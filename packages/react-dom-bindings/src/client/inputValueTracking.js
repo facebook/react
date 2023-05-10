@@ -79,12 +79,12 @@ function trackValueOnNode(node: any): ?ValueTracker {
   Object.defineProperty(node, valueField, {
     configurable: true,
     // $FlowFixMe[missing-this-annot]
-    get: function() {
+    get: function () {
       return get.call(this);
     },
     // $FlowFixMe[missing-local-annot]
     // $FlowFixMe[missing-this-annot]
-    set: function(value) {
+    set: function (value) {
       if (__DEV__) {
         checkFormFieldValueStringCoercion(value);
       }
@@ -123,7 +123,6 @@ export function track(node: ElementWithValueTracker) {
     return;
   }
 
-  // TODO: Once it's just Fiber we can move this to node._wrapperState
   node._valueTracker = trackValueOnNode(node);
 }
 

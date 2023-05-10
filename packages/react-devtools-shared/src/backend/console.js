@@ -8,8 +8,12 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {
+  CurrentDispatcherRef,
+  ReactRenderer,
+  WorkTagMap,
+  ConsolePatchSettings,
+} from './types';
 import {format, formatWithStyles} from './utils';
 
 import {getInternalReactConstants} from './renderer';
@@ -136,20 +140,12 @@ export function registerRenderer(
   }
 }
 
-const consoleSettingsRef = {
+const consoleSettingsRef: ConsolePatchSettings = {
   appendComponentStack: false,
   breakOnConsoleErrors: false,
   showInlineWarningsAndErrors: false,
   hideConsoleLogsInStrictMode: false,
   browserTheme: 'dark',
-};
-
-export type ConsolePatchSettings = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
 };
 
 // Patches console methods to append component stack for the current fiber.
@@ -354,8 +350,10 @@ export function patchForStrictMode() {
           }
         };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
+        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+          originalMethod;
+        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+          overrideMethod;
 
         targetConsole[method] = overrideMethod;
       } catch (error) {}
@@ -410,4 +408,11 @@ export function writeConsolePatchSettingsToWindow(
   window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ =
     settings.hideConsoleLogsInStrictMode;
   window.__REACT_DEVTOOLS_BROWSER_THEME__ = settings.browserTheme;
+}
+
+export function installConsoleFunctionsToWindow(): void {
+  window.__REACT_DEVTOOLS_CONSOLE_FUNCTIONS__ = {
+    patchConsoleUsingWindowValues,
+    registerRendererWithConsole: registerRenderer,
+  };
 }

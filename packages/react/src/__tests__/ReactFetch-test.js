@@ -10,14 +10,13 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 global.Headers = require('node-fetch').Headers;
 global.Request = require('node-fetch').Request;
 global.Response = require('node-fetch').Response;
-// Patch for Browser environments to be able to polyfill AsyncLocalStorage
-global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 let fetchCount = 0;
 async function fetchMock(resource, options) {
@@ -136,7 +135,22 @@ describe('ReactFetch', () => {
     expect(fetchCount).toBe(1);
   });
 
-  // @gate enableUseHook
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches using URL and not', async () => {
+    const url = 'http://example.com/';
+    function Component() {
+      const response = use(fetch(url));
+      const text = use(response.text());
+      const response2 = use(fetch(new URL(url)));
+      const text2 = use(response2.text());
+      return text + ' ' + text2;
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET ${url} [] GET ${url} []"`,
+    );
+    expect(fetchCount).toBe(1);
+  });
+
   it('can opt-out of deduping fetches inside of render with custom signal', async () => {
     const controller = new AbortController();
     function useCustomHook() {
@@ -155,7 +169,6 @@ describe('ReactFetch', () => {
     expect(fetchCount).not.toBe(1);
   });
 
-  // @gate enableUseHook
   it('opts out of deduping for POST requests', async () => {
     function useCustomHook() {
       return use(
@@ -184,7 +197,7 @@ describe('ReactFetch', () => {
       return text + ' ' + text2;
     }
     expect(await render(Component)).toMatchInlineSnapshot(
-      `"GET world [[\\"a\\",\\"A\\"]] GET world [[\\"b\\",\\"B\\"]]"`,
+      `"GET world [["a","A"]] GET world [["b","B"]]"`,
     );
     expect(fetchCount).toBe(2);
   });

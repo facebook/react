@@ -16,12 +16,16 @@ let SuspenseList;
 let getCacheForType;
 let caches;
 let seededCache;
+let assertLog;
 
 beforeEach(() => {
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
-  act = require('jest-react').act;
+  act = require('internal-test-utils').act;
+
+  const InternalTestUtils = require('internal-test-utils');
+  assertLog = InternalTestUtils.assertLog;
 
   Suspense = React.Suspense;
   if (gate(flags => flags.enableSuspenseList)) {
@@ -90,16 +94,16 @@ function readText(text) {
   if (record !== undefined) {
     switch (record.status) {
       case 'pending':
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        Scheduler.log(`Suspend! [${text}]`);
         throw record.value;
       case 'rejected':
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        Scheduler.log(`Error! [${text}]`);
         throw record.value;
       case 'resolved':
         return textCache.version;
     }
   } else {
-    Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+    Scheduler.log(`Suspend! [${text}]`);
 
     const thenable = {
       pings: [],
@@ -123,14 +127,14 @@ function readText(text) {
 }
 
 function Text({text}) {
-  Scheduler.unstable_yieldValue(text);
+  Scheduler.log(text);
   return <span prop={text} />;
 }
 
 function AsyncText({text, showVersion}) {
   const version = readText(text);
   const fullText = showVersion ? `${text} [v${version}]` : text;
-  Scheduler.unstable_yieldValue(fullText);
+  Scheduler.log(fullText);
   return <span prop={fullText} />;
 }
 
@@ -185,22 +189,18 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   }
 
   const root = ReactNoop.createRoot();
-  await act(async () => {
+  await act(() => {
     root.render(<App />);
   });
-  expect(Scheduler).toHaveYielded([
-    'Suspend! [0]',
-    'Loading Async...',
-    'Loading Tail...',
-  ]);
-  await act(async () => {
+  assertLog(['Suspend! [0]', 'Loading Async...', 'Loading Tail...']);
+  await act(() => {
     resolveText(0);
   });
-  expect(Scheduler).toHaveYielded([0, 'Tail']);
-  await act(async () => {
+  assertLog([0, 'Tail']);
+  await act(() => {
     setAsyncText(x => x + 1);
   });
-  expect(Scheduler).toHaveYielded([
+  assertLog([
     'Suspend! [1]',
     'Loading Async...',
     'Suspend! [1]',

@@ -323,7 +323,7 @@ function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
   // $FlowFixMe[missing-this-annot]
-  return function() {
+  return function () {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
@@ -606,7 +606,7 @@ function unstable_flushAllWithoutAsserting(): boolean {
   }
 }
 
-function unstable_clearYields(): Array<mixed> {
+function unstable_clearLog(): Array<mixed> {
   if (yieldedValues === null) {
     return [];
   }
@@ -632,7 +632,7 @@ function unstable_flushAll(): void {
   }
 }
 
-function unstable_yieldValue(value: mixed): void {
+function log(value: mixed): void {
   // eslint-disable-next-line react-internal/no-production-logging
   if (console.log.name === 'disabledLog' || disableYieldValue) {
     // If console.log has been patched, we assume we're in render
@@ -687,11 +687,11 @@ export {
   unstable_flushAllWithoutAsserting,
   unstable_flushNumberOfYields,
   unstable_flushExpired,
-  unstable_clearYields,
+  unstable_clearLog,
   unstable_flushUntilNextPaint,
   unstable_hasPendingWork,
   unstable_flushAll,
-  unstable_yieldValue,
+  log,
   unstable_advanceTime,
   reset,
   setDisableYieldValue as unstable_setDisableYieldValue,

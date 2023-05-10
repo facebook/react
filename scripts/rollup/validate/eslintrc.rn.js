@@ -7,6 +7,7 @@ module.exports = {
   },
   globals: {
     // ES6
+    BigInt: 'readonly',
     Map: 'readonly',
     Set: 'readonly',
     Symbol: 'readonly',
@@ -33,6 +34,7 @@ module.exports = {
 
     TaskController: 'readonly',
     reportError: 'readonly',
+    AggregateError: 'readonly',
 
     // Temp
     AsyncLocalStorage: 'readonly',

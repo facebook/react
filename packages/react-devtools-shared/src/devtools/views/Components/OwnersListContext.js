@@ -45,7 +45,6 @@ const resource: Resource<
   (element: Element) => {
     const request = inProgressRequests.get(element);
     if (request != null) {
-      // $FlowFixMe[incompatible-call] found when upgrading Flow
       return request.promise;
     }
 
@@ -61,7 +60,7 @@ const resource: Resource<
     // $FlowFixMe[incompatible-call] found when upgrading Flow
     inProgressRequests.set(element, {promise, resolveFn});
 
-    return promise;
+    return (promise: $FlowFixMe);
   },
   (element: Element) => element,
   {useWeakMap: true},
@@ -102,10 +101,8 @@ function OwnersListContextController({children}: Props): React.Node {
             ownersList.owners === null
               ? null
               : ownersList.owners.map(owner => {
-                  const [
-                    displayNameWithoutHOCs,
-                    hocDisplayNames,
-                  ] = separateDisplayNameAndHOCs(owner.displayName, owner.type);
+                  const [displayNameWithoutHOCs, hocDisplayNames] =
+                    separateDisplayNameAndHOCs(owner.displayName, owner.type);
 
                   return {
                     ...owner,

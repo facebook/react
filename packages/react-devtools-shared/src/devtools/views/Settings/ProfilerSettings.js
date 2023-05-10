@@ -39,7 +39,7 @@ export default function ProfilerSettings(_: {}): React.Node {
   );
 
   const updateRecordChangeDescriptions = useCallback(
-    ({currentTarget}) => {
+    ({currentTarget}: $FlowFixMe) => {
       store.recordChangeDescriptions = currentTarget.checked;
     },
     [store],

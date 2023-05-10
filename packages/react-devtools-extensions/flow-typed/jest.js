@@ -11,7 +11,7 @@
 
 /* eslint-disable no-unused-vars */
 
-type JestMockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
+type JestMockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
   /**
    * An object for introspecting mock calls
@@ -626,7 +626,7 @@ interface JestExpectType {
    * Use .toBeInstanceOf(Class) to check that an object is an instance of a
    * class.
    */
-  toBeInstanceOf(cls: Class<*>): void;
+  toBeInstanceOf(cls: Class<any>): void;
   /**
    * .toBeNull() is the same as .toBe(null) but the error messages are a bit
    * nicer.
@@ -815,7 +815,7 @@ type JestObjectType = {
    * Returns a new, unused mock function. Optionally takes a mock
    * implementation.
    */
-  fn<TArguments: $ReadOnlyArray<*>, TReturn>(
+  fn<TArguments: $ReadOnlyArray<any>, TReturn>(
     implementation?: (...args: TArguments) => TReturn
   ): JestMockFn<TArguments, TReturn>,
   /**
@@ -1172,28 +1172,5 @@ declare var expect: {
   },
 };
 
-// TODO handle return type
-// https://jasmine.github.io/2.4/introduction.html#section-Spies
-declare function spyOn(value: mixed, method: string): Object;
-
 /** Holds all functions related to manipulating test runner */
 declare var jest: JestObjectType;
-
-/**
- * The global Jasmine object, this is generally not exposed as the public API,
- * using features inside here could break in later versions of Jest.
- */
-declare var jasmine: {
-  DEFAULT_TIMEOUT_INTERVAL: number,
-  any(value: mixed): JestAsymmetricEqualityType,
-  anything(): any,
-  arrayContaining(value: Array<mixed>): Array<mixed>,
-  clock(): JestClockType,
-  createSpy(name: string): JestSpyType,
-  createSpyObj(
-    baseName: string,
-    methodNames: Array<string>
-  ): {[methodName: string]: JestSpyType},
-  objectContaining(value: Object): Object,
-  stringMatching(value: string): string,
-};

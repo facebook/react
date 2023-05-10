@@ -7,7 +7,8 @@
  * @flow
  */
 
-import type {ModuleMetaData} from 'ReactFlightDOMRelayServerIntegration';
+import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
+import type {ClientReferenceMetadata} from 'ReactFlightDOMRelayServerIntegration';
 
 export type JSONValue =
   | string
@@ -18,8 +19,9 @@ export type JSONValue =
   | $ReadOnlyArray<JSONValue>;
 
 export type RowEncoding =
-  | ['J', number, JSONValue]
-  | ['M', number, ModuleMetaData]
+  | ['O', number, JSONValue]
+  | ['I', number, ClientReferenceMetadata]
+  | ['H', string, HintModel]
   | ['P', number, string]
   | ['S', number, string]
   | [

@@ -19,10 +19,8 @@ import {
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
-export const topLevelEventsToReactNames: Map<
-  DOMEventName,
-  string | null,
-> = new Map();
+export const topLevelEventsToReactNames: Map<DOMEventName, string | null> =
+  new Map();
 
 // NOTE: Capitalization is important in this list!
 //

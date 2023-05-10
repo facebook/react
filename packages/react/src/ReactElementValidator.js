@@ -6,7 +6,7 @@
  */
 
 /**
- * ReactElementValidator provides a wrapper around a element factory
+ * ReactElementValidator provides a wrapper around an element factory
  * which validates the props passed to the element. This is intended to be
  * used only in DEV and could be replaced by a static type checker for languages
  * that support it.
@@ -21,7 +21,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
-import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'shared/checkPropTypes';
 import isArray from 'shared/isArray';
 
@@ -35,6 +34,8 @@ import {
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import hasOwnProperty from 'shared/hasOwnProperty';
+
+const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
@@ -166,10 +167,12 @@ function validateExplicitKey(element, parentType) {
  * @param {*} parentType node's parent's type.
  */
 function validateChildKeys(node, parentType) {
-  if (typeof node !== 'object') {
+  if (typeof node !== 'object' || !node) {
     return;
   }
-  if (isArray(node)) {
+  if (node.$$typeof === REACT_CLIENT_REFERENCE) {
+    // This is a reference to a client component so it's unknown.
+  } else if (isArray(node)) {
     for (let i = 0; i < node.length; i++) {
       const child = node[i];
       if (isValidElement(child)) {
@@ -181,7 +184,7 @@ function validateChildKeys(node, parentType) {
     if (node._store) {
       node._store.validated = true;
     }
-  } else if (node) {
+  } else {
     const iteratorFn = getIteratorFn(node);
     if (typeof iteratorFn === 'function') {
       // Entry iterators used to provide implicit keys,
@@ -209,6 +212,9 @@ function validatePropTypes(element) {
   if (__DEV__) {
     const type = element.type;
     if (type === null || type === undefined || typeof type === 'string') {
+      return;
+    }
+    if (type.$$typeof === REACT_CLIENT_REFERENCE) {
       return;
     }
     let propTypes;
@@ -365,13 +371,11 @@ export function jsxWithValidation(
               Object.freeze(children);
             }
           } else {
-            if (__DEV__) {
-              console.error(
-                'React.jsx: Static children should always be an array. ' +
-                  'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
-                  'Use the Babel transform instead.',
-              );
-            }
+            console.error(
+              'React.jsx: Static children should always be an array. ' +
+                'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+                'Use the Babel transform instead.',
+            );
           }
         } else {
           validateChildKeys(children, type);
@@ -379,31 +383,29 @@ export function jsxWithValidation(
       }
     }
 
-    if (warnAboutSpreadingKeyToJSX) {
-      if (hasOwnProperty.call(props, 'key')) {
-        const componentName = getComponentNameFromType(type);
-        const keys = Object.keys(props).filter(k => k !== 'key');
-        const beforeExample =
-          keys.length > 0
-            ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
-            : '{key: someKey}';
-        if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-          const afterExample =
-            keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
-          console.error(
-            'A props object containing a "key" prop is being spread into JSX:\n' +
-              '  let props = %s;\n' +
-              '  <%s {...props} />\n' +
-              'React keys must be passed directly to JSX without using spread:\n' +
-              '  let props = %s;\n' +
-              '  <%s key={someKey} {...props} />',
-            beforeExample,
-            componentName,
-            afterExample,
-            componentName,
-          );
-          didWarnAboutKeySpread[componentName + beforeExample] = true;
-        }
+    if (hasOwnProperty.call(props, 'key')) {
+      const componentName = getComponentNameFromType(type);
+      const keys = Object.keys(props).filter(k => k !== 'key');
+      const beforeExample =
+        keys.length > 0
+          ? '{key: someKey, ' + keys.join(': ..., ') + ': ...}'
+          : '{key: someKey}';
+      if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+        const afterExample =
+          keys.length > 0 ? '{' + keys.join(': ..., ') + ': ...}' : '{}';
+        console.error(
+          'A props object containing a "key" prop is being spread into JSX:\n' +
+            '  let props = %s;\n' +
+            '  <%s {...props} />\n' +
+            'React keys must be passed directly to JSX without using spread:\n' +
+            '  let props = %s;\n' +
+            '  <%s key={someKey} {...props} />',
+          beforeExample,
+          componentName,
+          afterExample,
+          componentName,
+        );
+        didWarnAboutKeySpread[componentName + beforeExample] = true;
       }
     }
 
@@ -523,7 +525,7 @@ export function createFactoryWithValidation(type) {
     // Legacy hook: remove it
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
-      get: function() {
+      get: function () {
         console.warn(
           'Factory.type is deprecated. Access the class directly ' +
             'before passing it to createFactory.',

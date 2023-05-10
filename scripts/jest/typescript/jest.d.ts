@@ -1,4 +1,3 @@
-declare var jasmine: any;
 declare var __DEV__: boolean;
 declare var __TEST__: boolean;
 declare var __EXTENSION__: boolean;
@@ -71,9 +70,5 @@ interface MockFunction {
   mockReturnValueOnce(value: any): MockFunction
 }
 
-// Allow importing jasmine-check
-declare module 'jasmine-check' {
-  export function install(global?: any): void;
-}
 declare var check: any;
 declare var gen: any;

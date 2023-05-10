@@ -85,11 +85,11 @@ function identityHashFn(input) {
 }
 
 const CACHE_LIMIT = 500;
-const lru = createLRU(CACHE_LIMIT);
+const lru = createLRU<$FlowFixMe>(CACHE_LIMIT);
 
 const entries: Map<Resource<any, any>, Map<any, any>> = new Map();
 
-const CacheContext = React.createContext(null);
+const CacheContext = React.createContext<mixed>(null);
 
 function accessResult<I, K, V>(
   resource: any,

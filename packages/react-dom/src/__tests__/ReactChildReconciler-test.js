@@ -25,7 +25,7 @@ describe('ReactChildReconciler', () => {
 
   function createIterable(array) {
     return {
-      '@@iterator': function() {
+      '@@iterator': function () {
         let i = 0;
         return {
           next() {

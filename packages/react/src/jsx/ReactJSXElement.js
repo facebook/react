@@ -83,7 +83,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
 
 function defineKeyPropWarningGetter(props, displayName) {
   if (__DEV__) {
-    const warnAboutAccessingKey = function() {
+    const warnAboutAccessingKey = function () {
       if (!specialPropKeyWarningShown) {
         specialPropKeyWarningShown = true;
         console.error(
@@ -105,7 +105,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 
 function defineRefPropWarningGetter(props, displayName) {
   if (__DEV__) {
-    const warnAboutAccessingRef = function() {
+    const warnAboutAccessingRef = function () {
       if (!specialPropRefWarningShown) {
         specialPropRefWarningShown = true;
         console.error(
@@ -145,7 +145,7 @@ function defineRefPropWarningGetter(props, displayName) {
  * indicating filename, line number, and/or other information.
  * @internal
  */
-const ReactElement = function(type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, ref, self, source, owner, props) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -199,7 +199,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
   }
 
   return element;
-};
+}
 
 /**
  * https://github.com/reactjs/rfcs/pull/107

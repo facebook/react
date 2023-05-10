@@ -16,8 +16,10 @@ import type {
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
 import type {SharedQueue} from './ReactFiberClassUpdateQueue';
+import type {TransitionStatus} from './ReactFiberConfig';
+import type {Hook} from './ReactFiberHooks';
 
-import {isPrimaryRenderer} from './ReactFiberHostConfig';
+import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
   ContextProvider,
@@ -26,7 +28,6 @@ import {
 } from './ReactWorkTags';
 import {
   NoLanes,
-  NoTimestamp,
   isSubsetOfLanes,
   includesSomeLane,
   mergeLanes,
@@ -44,8 +45,14 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
   enableServerContext,
+  enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
+import {
+  getHostTransitionProvider,
+  HostTransitionContext,
+} from './ReactFiberHostContext';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -271,7 +278,7 @@ function propagateContextChange_eager<T>(
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const lane = pickArbitraryLane(renderLanes);
-            const update = createUpdate(NoTimestamp, lane);
+            const update = createUpdate(lane);
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
@@ -586,6 +593,33 @@ function propagateParentContextChanges(
           }
         }
       }
+    } else if (
+      enableFormActions &&
+      enableAsyncActions &&
+      parent === getHostTransitionProvider()
+    ) {
+      // During a host transition, a host component can act like a context
+      // provider. E.g. in React DOM, this would be a <form />.
+      const currentParent = parent.alternate;
+      if (currentParent === null) {
+        throw new Error('Should have a current fiber. This is a bug in React.');
+      }
+
+      const oldStateHook: Hook = currentParent.memoizedState;
+      const oldState: TransitionStatus = oldStateHook.memoizedState;
+
+      const newStateHook: Hook = parent.memoizedState;
+      const newState: TransitionStatus = newStateHook.memoizedState;
+
+      // This uses regular equality instead of Object.is because we assume that
+      // host transition state doesn't include NaN as a valid type.
+      if (oldState !== newState) {
+        if (contexts !== null) {
+          contexts.push(HostTransitionContext);
+        } else {
+          contexts = [HostTransitionContext];
+        }
+      }
     }
     parent = parent.return;
   }
@@ -689,7 +723,24 @@ export function readContext<T>(context: ReactContext<T>): T {
       );
     }
   }
+  return readContextForConsumer(currentlyRenderingFiber, context);
+}
 
+export function readContextDuringReconcilation<T>(
+  consumer: Fiber,
+  context: ReactContext<T>,
+  renderLanes: Lanes,
+): T {
+  if (currentlyRenderingFiber === null) {
+    prepareToReadContext(consumer, renderLanes);
+  }
+  return readContextForConsumer(consumer, context);
+}
+
+function readContextForConsumer<T>(
+  consumer: Fiber | null,
+  context: ReactContext<T>,
+): T {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;
@@ -704,7 +755,7 @@ export function readContext<T>(context: ReactContext<T>): T {
     };
 
     if (lastContextDependency === null) {
-      if (currentlyRenderingFiber === null) {
+      if (consumer === null) {
         throw new Error(
           'Context can only be read while React is rendering. ' +
             'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
@@ -715,12 +766,12 @@ export function readContext<T>(context: ReactContext<T>): T {
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies = {
+      consumer.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
       };
       if (enableLazyContextPropagation) {
-        currentlyRenderingFiber.flags |= NeedsPropagation;
+        consumer.flags |= NeedsPropagation;
       }
     } else {
       // Append a new context item.

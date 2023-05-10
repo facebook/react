@@ -6,7 +6,7 @@
  */
 
 import getNodeForCharacterOffset from './getNodeForCharacterOffset';
-import {TEXT_NODE} from '../shared/HTMLNodeType';
+import {TEXT_NODE} from './HTMLNodeType';
 
 /**
  * @param {DOMElement} outerNode
