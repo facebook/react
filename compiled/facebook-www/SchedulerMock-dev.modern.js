@@ -16,11 +16,8 @@ if (__DEV__) {
   (function() {
 "use strict";
 
-// $FlowFixMe[cannot-resolve-module]
-var dynamicFeatureFlags = require("SchedulerFeatureFlags"); // Re-export dynamic flags from the www version.
-
-var enableSchedulerDebugging = dynamicFeatureFlags.enableSchedulerDebugging,
-  enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling;
+var _require = require("SchedulerFeatureFlags"), // $FlowFixMe[cannot-resolve-module]
+  enableProfilingFeatureFlag = _require.enableProfiling;
 var enableProfiling = enableProfilingFeatureFlag;
 
 function push(heap, node) {
@@ -377,10 +374,7 @@ function workLoop(hasTimeRemaining, initialTime) {
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
 
-  while (
-    currentTask !== null &&
-    !(enableSchedulerDebugging && isSchedulerPaused)
-  ) {
+  while (currentTask !== null && !isSchedulerPaused) {
     if (
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())

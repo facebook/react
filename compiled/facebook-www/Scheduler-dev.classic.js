@@ -27,18 +27,13 @@ if (
 }
           "use strict";
 
-// $FlowFixMe[cannot-resolve-module]
-var dynamicFeatureFlags = require("SchedulerFeatureFlags"); // Re-export dynamic flags from the www version.
-
-var enableIsInputPending = dynamicFeatureFlags.enableIsInputPending,
-  enableSchedulerDebugging = dynamicFeatureFlags.enableSchedulerDebugging,
-  enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling,
-  enableIsInputPendingContinuous =
-    dynamicFeatureFlags.enableIsInputPendingContinuous,
-  frameYieldMs = dynamicFeatureFlags.frameYieldMs,
-  continuousYieldMs = dynamicFeatureFlags.continuousYieldMs,
-  maxYieldMs = dynamicFeatureFlags.maxYieldMs;
+var _require = require("SchedulerFeatureFlags"), // $FlowFixMe[cannot-resolve-module]
+  enableProfilingFeatureFlag = _require.enableProfiling;
 var enableProfiling = enableProfilingFeatureFlag;
+var enableIsInputPendingContinuous = true;
+var frameYieldMs = 5;
+var continuousYieldMs = 10;
+var maxYieldMs = 10;
 
 function push(heap, node) {
   var index = heap.length;
@@ -413,10 +408,7 @@ function workLoop(hasTimeRemaining, initialTime) {
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
 
-  while (
-    currentTask !== null &&
-    !(enableSchedulerDebugging && isSchedulerPaused)
-  ) {
+  while (currentTask !== null && !isSchedulerPaused) {
     if (
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())
@@ -711,7 +703,7 @@ function shouldYieldToHost() {
   // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
   // like network events.
 
-  if (enableIsInputPending) {
+  {
     if (needsPaint) {
       // There's a pending paint (signaled by `requestPaint`). Yield now.
       return true;
@@ -742,7 +734,6 @@ function shouldYieldToHost() {
 
 function requestPaint() {
   if (
-    enableIsInputPending &&
     navigator !== undefined && // $FlowFixMe[prop-missing]
     navigator.scheduling !== undefined && // $FlowFixMe[incompatible-type]
     navigator.scheduling.isInputPending !== undefined

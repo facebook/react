@@ -11,8 +11,7 @@
  */
 
 "use strict";
-var enableSchedulerDebugging =
-  require("SchedulerFeatureFlags").enableSchedulerDebugging;
+require("SchedulerFeatureFlags");
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -121,7 +120,7 @@ function flushWork(hasTimeRemaining, initialTime) {
         currentTask = peek(taskQueue);
         !(
           null === currentTask ||
-          (enableSchedulerDebugging && isSchedulerPaused) ||
+          isSchedulerPaused ||
           (currentTask.expirationTime > initialTime &&
             (!hasTimeRemaining || shouldYieldToHost()))
         );
