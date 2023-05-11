@@ -1863,8 +1863,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Advance by a small amount of time. For testing purposes, this is meant
     // to be just under the throttling interval. It's a heurstic, though, so
     // if we adjust the heuristic we might have to update this test, too.
-    Scheduler.unstable_advanceTime(400);
-    jest.advanceTimersByTime(400);
+    Scheduler.unstable_advanceTime(200);
+    jest.advanceTimersByTime(200);
 
     // Now resolve B.
     await act(async () => {
