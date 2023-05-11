@@ -11,10 +11,26 @@ import { exists } from "./utils";
 
 const originalConsoleError = console.error;
 
+// Subpaths to ignore when clearing the require cache
+const ignoredRequireSubpaths: Array<string> = [
+  // compiler worker runner files
+  "node_modules/jest-worker",
+  // snap source files
+  "packages/snap",
+];
+const ignoredRequirePaths: Set<string> = new Set(
+  Object.keys(require.cache).filter(
+    (path) =>
+      !ignoredRequireSubpaths.every((ignored) => !path.includes(ignored))
+  )
+);
+
 let version: number | null = null;
 export function clearRequireCache() {
-  Object.keys(require.cache).forEach(function (key) {
-    delete require.cache[key];
+  Object.keys(require.cache).forEach(function (path) {
+    if (!ignoredRequirePaths.has(path)) {
+      delete require.cache[path];
+    }
   });
 }
 
