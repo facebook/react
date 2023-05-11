@@ -66,7 +66,7 @@ type Graph<T> = {
 /**
  * A dominator tree that stores the immediate dominator for each block in function.
  */
-class Dominator<T> {
+export class Dominator<T> {
   #entry: T;
   #nodes: Map<T, T>;
 
@@ -97,7 +97,7 @@ class Dominator<T> {
   }
 }
 
-class PostDominator<T> {
+export class PostDominator<T> {
   #exit: T;
   #nodes: Map<T, T>;
 
@@ -124,7 +124,14 @@ class PostDominator<T> {
   }
 
   debug(): string {
-    return prettyFormat(this.#nodes);
+    const postDominators = new Map();
+    for (const [key, value] of this.#nodes) {
+      postDominators.set(`bb${key}`, `bb${value}`);
+    }
+    return prettyFormat({
+      exit: `bb${this.exit}`,
+      postDominators,
+    });
   }
 }
 

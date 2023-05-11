@@ -53,7 +53,8 @@ import { assertExhaustive } from "./Utils/utils";
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: t.FunctionDeclaration }
   | { kind: "hir"; name: string; value: HIRFunction }
-  | { kind: "reactive"; name: string; value: ReactiveFunction };
+  | { kind: "reactive"; name: string; value: ReactiveFunction }
+  | { kind: "debug"; name: string; value: string };
 
 export function* run(
   func: NodePath<t.FunctionDeclaration>,
@@ -88,7 +89,12 @@ export function* run(
 
   if (env.validateHooksUsage) {
     validateHooksUsage(hir);
-    validateUnconditionalHooks(hir);
+    const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
+    yield log({
+      kind: "debug",
+      name: "ValidateUnconditionalHooks",
+      value: conditionalHooksResult.debug(),
+    });
   }
 
   dropMemoCalls(hir);
@@ -250,6 +256,9 @@ export function log(value: CompilerPipelineValue): CompilerPipelineValue {
     }
     case "reactive": {
       logReactiveFunction(value.name, value.value);
+      break;
+    }
+    case "debug": {
       break;
     }
     default: {

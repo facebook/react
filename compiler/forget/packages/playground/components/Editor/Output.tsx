@@ -7,6 +7,11 @@
 
 import generate from "@babel/generator";
 import * as t from "@babel/types";
+import {
+  CodeIcon,
+  DocumentAddIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/outline";
 import MonacoEditor, { DiffEditor } from "@monaco-editor/react";
 import { type CompilerError } from "babel-plugin-react-forget";
 import prettier from "prettier";
@@ -15,11 +20,6 @@ import { memo, useMemo, useState } from "react";
 import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
-import {
-  CodeIcon,
-  DocumentAddIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/outline";
 
 const MemoizedOutput = memo(Output);
 
@@ -38,7 +38,8 @@ export type PrintedCompilerPipelineValue =
       fnName: string | null;
       value: string;
     }
-  | { kind: "reactive"; name: string; fnName: string | null; value: string };
+  | { kind: "reactive"; name: string; fnName: string | null; value: string }
+  | { kind: "debug"; name: string; fnName: string | null; value: string };
 
 export type CompilerOutput =
   | { kind: "ok"; results: Map<string, PrintedCompilerPipelineValue[]> }
@@ -86,7 +87,12 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
         case "ast":
           topLevelFnDecls.push(result.value);
           break;
+        case "debug": {
+          concattedResults.set(passName, result.value);
+          break;
+        }
         default: {
+          const _: never = result;
           throw new Error("Unexpected result kind");
         }
       }

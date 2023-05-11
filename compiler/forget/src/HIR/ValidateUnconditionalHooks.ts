@@ -11,7 +11,8 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
-import { computePostDominatorTree } from "./Dominator";
+import { Err, Ok, Result } from "../Utils/Result";
+import { PostDominator, computePostDominatorTree } from "./Dominator";
 import { BlockId, HIRFunction, isHookType } from "./HIR";
 
 /**
@@ -54,7 +55,9 @@ import { BlockId, HIRFunction, isHookType } from "./HIR";
  * Now only the exit node would post dominate the entry node: there is no other node which is
  * guaranteed to be reachable.  In this graph is is only safe to call hooks in bb0.
  */
-export function validateUnconditionalHooks(fn: HIRFunction): void {
+export function validateUnconditionalHooks(
+  fn: HIRFunction
+): Result<PostDominator<BlockId>, CompilerError> {
   // Construct the set of blocks that is always reachable from the entry block.
   const unconditionalBlocks = new Set<BlockId>();
   const blocksWithBackEdges = findBlocksWithBackEdges(fn);
@@ -102,6 +105,8 @@ export function validateUnconditionalHooks(fn: HIRFunction): void {
     }
   }
   if (errors.hasErrors()) {
-    throw errors;
+    return Err(errors);
+  } else {
+    return Ok(dominators);
   }
 }

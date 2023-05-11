@@ -132,6 +132,7 @@ function compile(source: string): CompilerOutput {
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
+        validateHooksUsage: true,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
@@ -162,7 +163,17 @@ function compile(source: string): CompilerOutput {
             });
             break;
           }
+          case "debug": {
+            upsert({
+              kind: "debug",
+              fnName,
+              name: result.name,
+              value: result.value,
+            });
+            break;
+          }
           default: {
+            const _: never = result;
             throw new Error(`Unhandled result ${result}`);
           }
         }
