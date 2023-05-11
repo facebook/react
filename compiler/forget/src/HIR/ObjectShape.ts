@@ -159,7 +159,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       positionalParams: [],
       restParam: Effect.Capture,
       returnType: PRIMITIVE_TYPE,
-      calleeEffect: Effect.Mutate,
+      calleeEffect: Effect.Store,
     }),
   ],
   // TODO: rest of Array properties

@@ -25,7 +25,15 @@ export function inferAliasForStores(
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       const { value, lvalue } = instr;
-      if (lvalue.effect !== Effect.Store) {
+      const isStore =
+        lvalue.effect === Effect.Store ||
+        // Some typed functions annotate callees or arguments
+        // as Effect.Store.
+        ![...eachInstructionValueOperand(value)].every(
+          (operand) => operand.effect !== Effect.Store
+        );
+
+      if (!isStore) {
         continue;
       }
       for (const operand of eachInstructionLValue(instr)) {

@@ -323,6 +323,20 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
+        if (
+          valueKind !== ValueKind.Mutable &&
+          valueKind !== ValueKind.Context &&
+          shouldError
+        ) {
+          CompilerError.invalidInput(
+            `InferReferenceEffects: inferred mutation of known immutable value`,
+            place.loc,
+            `Found mutation of ${printIdentifier(place.identifier)}${printType(
+              place.identifier.type
+            )} (${valueKind})`
+          );
+        }
+
         // TODO(gsn): This should be bailout once we add bailout infra.
         //
         // invariant(
