@@ -537,6 +537,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         id,
         scope: context.currentScope,
       });
+    } else if (value.kind === "DeclareLocal") {
+      // Some variables may be declared and never initialized. We need
+      // to retain (and hoist) these declarations if they are included
+      // in a reactive scope. One approach is to simply add all `DeclareLocal`s
+      // as scope declarations.
+      context.declare(value.lvalue.place.identifier, {
+        id,
+        scope: context.currentScope,
+      });
     } else if (value.kind === "Destructure") {
       context.visitOperand(value.value);
       for (const place of eachPatternOperand(value.lvalue.pattern)) {
