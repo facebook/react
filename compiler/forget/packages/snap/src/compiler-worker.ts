@@ -11,24 +11,14 @@ import { exists } from "./utils";
 
 const originalConsoleError = console.error;
 
-// Subpaths to ignore when clearing the require cache
-const ignoredRequireSubpaths: Array<string> = [
-  // compiler worker runner files
-  "node_modules/jest-worker",
-  // snap source files
-  "packages/snap",
-];
-const ignoredRequirePaths: Set<string> = new Set(
-  Object.keys(require.cache).filter(
-    (path) =>
-      !ignoredRequireSubpaths.every((ignored) => !path.includes(ignored))
-  )
-);
-
+// Try to avoid clearing the entire require cache, which (as of this PR)
+// contains ~1250 files. This assumes that no dependencies have global caches
+// that may need to be invalidated across Forget reloads.
+const invalidationSubpath = "react-forget/forget/dist";
 let version: number | null = null;
 export function clearRequireCache() {
   Object.keys(require.cache).forEach(function (path) {
-    if (!ignoredRequirePaths.has(path)) {
+    if (path.includes(invalidationSubpath)) {
       delete require.cache[path];
     }
   });

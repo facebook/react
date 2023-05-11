@@ -441,13 +441,14 @@ export async function main(opts: RunnerOptions): Promise<void> {
         const start = performance.now();
         clearConsole();
         console.log("Running tests...");
+        // we don't clear console after this point, since
+        // it may contain debug console logging
         const results = await run(
           worker,
           opts,
           filterMode ? testFilter : null,
           compilerVersion
         );
-        clearConsole();
         if (mode === Mode.Update) {
           update(results);
         } else {
