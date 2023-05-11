@@ -71,14 +71,15 @@ for (const fixture of fixtures) {
   let code = fixture.code;
   let prefix = "";
   if (error !== null) {
-    prefix = `todo.`;
+    prefix = `todo.bail.`;
     code = `// @skip\n// Unsupported input\n${code}`;
   } else if (fixture.valid === false) {
-    prefix = `error.`;
     if (passes) {
-      // oops, passed when we expected an error
-      prefix = `todo.error.`;
-      code = `// @skip\n// Passed but should have errored\n${code}`;
+      prefix = `todo.error.invalid-`;
+      code = `// @skip\n// Passed but should have failed\n${code}`;
+    } else {
+      prefix = `error.invalid-`;
+      code = `// Expected to fail\n${code}`;
     }
   } else if (!passes) {
     // oops, error when it should have passed
