@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a8621febebb11ad6c74045ebbde17ac>>
+ * @generated SignedSource<<83c12e7e93e6fb4397e7202b48936e05>>
  */
 
 
@@ -4078,12 +4078,12 @@ function updateMutableSource(source, getSnapshot, subscribe) {
 }
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
-    hook = updateWorkInProgressHook(),
-    nextSnapshot = getSnapshot(),
-    snapshotChanged = !objectIs(
-      (currentHook || hook).memoizedState,
-      nextSnapshot
-    );
+    hook = updateWorkInProgressHook();
+  var nextSnapshot = getSnapshot();
+  var snapshotChanged = !objectIs(
+    (currentHook || hook).memoizedState,
+    nextSnapshot
+  );
   snapshotChanged &&
     ((hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0));
   hook = hook.queue;
@@ -10199,7 +10199,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1141 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-08cc2b37",
+    version: "18.3.0-canary-4e6ec507",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10254,7 +10254,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-08cc2b37"
+  reconcilerVersion: "18.3.0-canary-4e6ec507"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

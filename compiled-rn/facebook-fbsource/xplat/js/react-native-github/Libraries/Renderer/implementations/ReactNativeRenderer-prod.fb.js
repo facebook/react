@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9767ffe7b7f0017316ddd1960c2639c4>>
+ * @generated SignedSource<<10654ca4abb02f3a46cbb05343bb0b60>>
  */
 
 "use strict";
@@ -4038,12 +4038,12 @@ function updateMutableSource(source, getSnapshot, subscribe) {
 }
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
-    hook = updateWorkInProgressHook(),
-    nextSnapshot = getSnapshot(),
-    snapshotChanged = !objectIs(
-      (currentHook || hook).memoizedState,
-      nextSnapshot
-    );
+    hook = updateWorkInProgressHook();
+  var nextSnapshot = getSnapshot();
+  var snapshotChanged = !objectIs(
+    (currentHook || hook).memoizedState,
+    nextSnapshot
+  );
   snapshotChanged &&
     ((hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0));
   hook = hook.queue;
@@ -9749,7 +9749,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-c35490df",
+    version: "18.3.0-canary-1008dab7",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9791,7 +9791,7 @@ var internals$jscomp$inline_1370 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-c35490df"
+  reconcilerVersion: "18.3.0-canary-1008dab7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1371 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

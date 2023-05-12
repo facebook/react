@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a726914dca6f5a0f5417978ca8cbfbca>>
+ * @generated SignedSource<<ff667a8669649afcc875e7ac42bdee49>>
  */
 
 "use strict";
@@ -2470,12 +2470,12 @@ function rerenderReducer(reducer) {
 function updateMutableSource() {}
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
-    hook = updateWorkInProgressHook(),
-    nextSnapshot = getSnapshot(),
-    snapshotChanged = !objectIs(
-      (currentHook || hook).memoizedState,
-      nextSnapshot
-    );
+    hook = updateWorkInProgressHook();
+  var nextSnapshot = getSnapshot();
+  var snapshotChanged = !objectIs(
+    (currentHook || hook).memoizedState,
+    nextSnapshot
+  );
   snapshotChanged &&
     ((hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0));
   hook = hook.queue;
@@ -9049,7 +9049,7 @@ var devToolsConfig$jscomp$inline_1081 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-a389046a5-20230512",
+  version: "18.3.0-canary-4cd706566-20230512",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1279 = {
@@ -9080,7 +9080,7 @@ var internals$jscomp$inline_1279 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-a389046a5-20230512"
+  reconcilerVersion: "18.3.0-canary-4cd706566-20230512"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1280 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
