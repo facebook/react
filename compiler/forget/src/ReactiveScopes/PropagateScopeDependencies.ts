@@ -91,6 +91,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
     }
     switch (instruction.value.kind) {
       case "LoadLocal":
+      case "LoadContext":
       case "PropertyLoad": {
         state.declarations.set(instruction.lvalue.identifier.id, scope);
         break;
@@ -512,7 +513,10 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     value: ReactiveValue,
     lvalue: Place | null
   ): void {
-    if (value.kind === "LoadLocal" && lvalue !== null) {
+    if (
+      (value.kind === "LoadLocal" || value.kind === "LoadContext") &&
+      lvalue !== null
+    ) {
       if (
         value.place.identifier.name !== null &&
         lvalue.identifier.name === null &&
@@ -528,7 +532,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       } else {
         context.visitProperty(value.object, value.property);
       }
-    } else if (value.kind === "StoreLocal") {
+    } else if (value.kind === "StoreLocal" || value.kind === "StoreContext") {
       context.visitOperand(value.value);
       if (value.lvalue.kind === InstructionKind.Reassign) {
         context.visitReassignment(value.lvalue.place);

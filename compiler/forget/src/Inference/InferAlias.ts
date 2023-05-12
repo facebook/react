@@ -34,14 +34,16 @@ function inferInstr(
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;
   switch (instrValue.kind) {
-    case "LoadLocal": {
+    case "LoadLocal":
+    case "LoadContext": {
       if (isPrimitiveType(instrValue.place.identifier)) {
         return;
       }
       alias = instrValue.place;
       break;
     }
-    case "StoreLocal": {
+    case "StoreLocal":
+    case "StoreContext": {
       alias = instrValue.value;
       break;
     }

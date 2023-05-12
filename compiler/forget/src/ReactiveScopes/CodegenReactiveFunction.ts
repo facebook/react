@@ -441,13 +441,17 @@ function codegenInstructionNullable(
 ): t.Statement | null {
   if (
     instr.value.kind === "StoreLocal" ||
+    instr.value.kind === "StoreContext" ||
     instr.value.kind === "Destructure" ||
     instr.value.kind === "DeclareLocal"
   ) {
     let kind: InstructionKind = instr.value.lvalue.kind;
     let lvalue;
     let value: t.Expression | null;
-    if (instr.value.kind === "StoreLocal") {
+    if (
+      instr.value.kind === "StoreLocal" ||
+      instr.value.kind === "StoreContext"
+    ) {
       kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
         ? InstructionKind.Reassign
         : kind;
@@ -899,7 +903,8 @@ function codegenInstructionValue(
       );
       break;
     }
-    case "LoadLocal": {
+    case "LoadLocal":
+    case "LoadContext": {
       value = codegenPlace(cx, instrValue.place);
       break;
     }
@@ -1013,7 +1018,8 @@ function codegenInstructionValue(
     case "Debugger":
     case "DeclareLocal":
     case "Destructure":
-    case "StoreLocal": {
+    case "StoreLocal":
+    case "StoreContext": {
       CompilerError.invariant(
         `Unexpected ${instrValue.kind} in codegenInstructionValue`,
         instrValue.loc

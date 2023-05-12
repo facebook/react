@@ -124,6 +124,14 @@ function* generateInstructionTypes(
       break;
     }
 
+    // For now, we won't infer types for context variables
+    case "StoreContext": {
+      break;
+    }
+    case "LoadContext": {
+      yield equation(left, value.place.identifier.type);
+      break;
+    }
     case "StoreLocal": {
       yield equation(left, value.value.identifier.type);
       yield equation(

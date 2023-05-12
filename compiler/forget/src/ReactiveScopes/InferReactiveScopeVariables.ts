@@ -106,7 +106,10 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       if (range.end > range.start + 1 || mayAllocate(instr.value)) {
         operands.push(instr.lvalue!.identifier);
       }
-      if (instr.value.kind === "StoreLocal") {
+      if (
+        instr.value.kind === "StoreLocal" ||
+        instr.value.kind === "StoreContext"
+      ) {
         if (
           instr.value.lvalue.place.identifier.mutableRange.end >
           instr.value.lvalue.place.identifier.mutableRange.start + 1
@@ -226,6 +229,8 @@ function mayAllocate(value: InstructionValue): boolean {
     case "TypeCastExpression":
     case "BinaryExpression":
     case "LoadLocal":
+    case "LoadContext":
+    case "StoreContext":
     case "PropertyLoad":
     case "PropertyDelete":
     case "ComputedLoad":

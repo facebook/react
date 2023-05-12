@@ -31,6 +31,7 @@ function Component() {
   }
   const x = t0;
 
+  let x_0 = 56;
   const fn = function () {
     x_0 = 42;
   };

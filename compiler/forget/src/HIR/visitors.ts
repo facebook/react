@@ -64,11 +64,17 @@ export function* eachInstructionValueOperand(
     case "DeclareLocal": {
       break;
     }
-    case "LoadLocal": {
+    case "LoadLocal":
+    case "LoadContext": {
       yield instrValue.place;
       break;
     }
     case "StoreLocal": {
+      yield instrValue.value;
+      break;
+    }
+    case "StoreContext": {
+      yield instrValue.lvalue.place;
       yield instrValue.value;
       break;
     }
@@ -348,11 +354,17 @@ export function mapInstructionOperands(
     case "DeclareLocal": {
       break;
     }
-    case "LoadLocal": {
+    case "LoadLocal":
+    case "LoadContext": {
       instrValue.place = fn(instrValue.place);
       break;
     }
     case "StoreLocal": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "StoreContext": {
+      instrValue.lvalue.place = fn(instrValue.lvalue.place);
       instrValue.value = fn(instrValue.value);
       break;
     }

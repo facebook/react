@@ -17,14 +17,24 @@ function component(a) {
 ## Code
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
-  const x = { a };
-
-  (function () {
-    y = x;
-  })();
-  mutate(1);
-  return 1;
+  const $ = useMemoCache(2);
+  const c_0 = $[0] !== a;
+  let y;
+  if (c_0) {
+    const x = { a };
+    y = 1;
+    (function () {
+      y = x;
+    })();
+    mutate(y);
+    $[0] = a;
+    $[1] = y;
+  } else {
+    y = $[1];
+  }
+  return y;
 }
 
 ```

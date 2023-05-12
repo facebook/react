@@ -553,12 +553,23 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
+      kind: "LoadContext";
+      place: Place;
+      loc: SourceLocation;
+    }
+  | {
       kind: "DeclareLocal";
       lvalue: LValue;
       loc: SourceLocation;
     }
   | {
       kind: "StoreLocal";
+      lvalue: LValue;
+      value: Place;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "StoreContext";
       lvalue: LValue;
       value: Place;
       loc: SourceLocation;

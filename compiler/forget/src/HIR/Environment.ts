@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from "@babel/types";
 import invariant from "invariant";
 import { log } from "../Utils/logger";
 import {
@@ -47,8 +48,12 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   validateHooksUsage: boolean;
+  #contextIdentifiers: Set<t.Identifier>;
 
-  constructor(config: EnvironmentConfig | null) {
+  constructor(
+    config: EnvironmentConfig | null,
+    contextIdentifiers: Set<t.Identifier>
+  ) {
     this.#shapes = DEFAULT_SHAPES;
 
     if (config?.customHooks) {
@@ -67,6 +72,7 @@ export class Environment {
       this.#globals = DEFAULT_GLOBALS;
     }
     this.validateHooksUsage = config?.validateHooksUsage ?? false;
+    this.#contextIdentifiers = contextIdentifiers;
   }
 
   get nextIdentifierId(): IdentifierId {
@@ -75,6 +81,9 @@ export class Environment {
 
   get nextBlockId(): BlockId {
     return makeBlockId(this.#nextBlock++);
+  }
+  isContextIdentifier(node: t.Identifier): boolean {
+    return this.#contextIdentifiers.has(node);
   }
 
   getGlobalDeclaration(name: string): Global | null {

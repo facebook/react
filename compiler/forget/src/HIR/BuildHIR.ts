@@ -947,7 +947,7 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.Identifier>;
       const place = lowerIdentifier(builder, expr);
       return {
-        kind: "LoadLocal",
+        kind: getLoadKind(builder, expr),
         place,
         loc: exprLoc,
       };
@@ -1367,7 +1367,7 @@ function lowerExpression(
             loc: exprLoc,
           });
           lowerValueToTemporary(builder, {
-            kind: "StoreLocal",
+            kind: getStoreKind(builder, leftExpr),
             lvalue: {
               place: { ...identifier },
               kind: InstructionKind.Reassign,
@@ -1701,7 +1701,7 @@ function lowerExpression(
         loc: exprLoc,
       });
       lowerValueToTemporary(builder, {
-        kind: "StoreLocal",
+        kind: getStoreKind(builder, argument),
         lvalue: { place: { ...identifier }, kind: InstructionKind.Reassign },
         value: { ...temp },
         loc: exprLoc,
@@ -2404,6 +2404,22 @@ function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   return place;
 }
 
+function getStoreKind(
+  builder: HIRBuilder,
+  identifier: NodePath<t.Identifier>
+): "StoreLocal" | "StoreContext" {
+  const isContext = builder.isContextIdentifier(identifier);
+  return isContext ? "StoreContext" : "StoreLocal";
+}
+
+function getLoadKind(
+  builder: HIRBuilder,
+  identifier: NodePath<t.Identifier>
+): "LoadLocal" | "LoadContext" {
+  const isContext = builder.isContextIdentifier(identifier);
+  return isContext ? "LoadContext" : "LoadLocal";
+}
+
 function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
@@ -2446,7 +2462,7 @@ function lowerAssignment(
         loc: lvalue.node.loc ?? GeneratedSource,
       };
       const temporary = lowerValueToTemporary(builder, {
-        kind: "StoreLocal",
+        kind: getStoreKind(builder, lvalue),
         lvalue: { place: { ...place }, kind },
         value,
         loc,
@@ -2501,6 +2517,7 @@ function lowerAssignment(
       }
     }
     case "ArrayPattern": {
+      // TODO
       const lvalue = lvaluePath as NodePath<t.ArrayPattern>;
       const elements = lvalue.get("elements");
       const items: ArrayPattern["items"] = [];

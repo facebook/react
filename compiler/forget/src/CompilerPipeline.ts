@@ -18,6 +18,7 @@ import {
   validateUnconditionalHooks,
 } from "./HIR";
 import { Environment, EnvironmentConfig } from "./HIR/Environment";
+import { findContextIdentifiers } from "./HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
   dropMemoCalls,
@@ -60,7 +61,8 @@ export function* run(
   func: NodePath<t.FunctionDeclaration>,
   config?: EnvironmentConfig | null
 ): Generator<CompilerPipelineValue, t.FunctionDeclaration> {
-  const env = new Environment(config ?? null);
+  const contextIdentifiers = findContextIdentifiers(func);
+  const env = new Environment(config ?? null, contextIdentifiers);
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 

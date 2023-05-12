@@ -222,6 +222,10 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       // another StoreLocal or Destructure instruction, but conceptually we can't prune
       return false;
     }
+    case "LoadContext":
+    case "StoreContext": {
+      return false;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "ArrayExpression":

@@ -75,7 +75,8 @@ export default function analyseFunctions(func: HIRFunction): void {
           state.declareProperty(instr.lvalue, instr.value.object, "");
           break;
         }
-        case "LoadLocal": {
+        case "LoadLocal":
+        case "LoadContext": {
           if (instr.lvalue.identifier.name === null) {
             state.declareTemporary(instr.lvalue, instr.value.place);
           }

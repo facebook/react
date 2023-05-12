@@ -461,6 +461,16 @@ function computeMemoizationInputs(
         rvalues: [value.place],
       };
     }
+    case "LoadContext": {
+      return {
+        // Should never be pruned
+        lvalues:
+          lvalue !== null
+            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
+            : [],
+        rvalues: [value.place],
+      };
+    }
     case "DeclareLocal": {
       const lvalues = [
         { place: value.lvalue.place, level: MemoizationLevel.Unmemoized },
@@ -482,6 +492,20 @@ function computeMemoizationInputs(
       }
       return {
         // Indirection for the inner value, memoized if the value is
+        lvalues,
+        rvalues: [value.value],
+      };
+    }
+    case "StoreContext": {
+      // Should never be pruned
+      const lvalues = [
+        { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+      ];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+      }
+
+      return {
         lvalues,
         rvalues: [value.value],
       };

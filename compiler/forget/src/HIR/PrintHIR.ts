@@ -117,7 +117,7 @@ export function printInstruction(instr: ReactiveInstruction): string {
   }
 }
 
-function printPhi(phi: Phi): string {
+export function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
   items.push(printMutableRange(phi.id));
@@ -356,6 +356,16 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "StoreLocal": {
       value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
+        instrValue.lvalue.place
+      )} = ${printPlace(instrValue.value)}`;
+      break;
+    }
+    case "LoadContext": {
+      value = `LoadContext ${printPlace(instrValue.place)}`;
+      break;
+    }
+    case "StoreContext": {
+      value = `StoreContext ${instrValue.lvalue.kind} ${printPlace(
         instrValue.lvalue.place
       )} = ${printPlace(instrValue.value)}`;
       break;

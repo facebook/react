@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/traverse";
+import { Binding, NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
@@ -22,10 +22,10 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  Terminal,
   makeBlockId,
   makeInstructionId,
   makeType,
-  Terminal,
 } from "./HIR";
 import { printInstruction } from "./PrintHIR";
 import {
@@ -164,6 +164,35 @@ export default class HIRBuilder {
     }
   }
 
+  #resolveBabelBinding(
+    path: NodePath<t.Identifier | t.JSXIdentifier>
+  ): Binding | null {
+    const originalName = path.node.name;
+    const binding = path.scope.getBinding(originalName);
+    if (binding == null) {
+      return null;
+    }
+    // If the binding is from the parent function's outer scope, then
+    // we treat it equivalently to a global.
+    //
+    // TODO: remove the exception that resolves references to the
+    // parent function itself. We don't need to support self-recursion,
+    // so we can treat such references as globals.
+    const outerBinding =
+      this.parentFunction.scope.parent.getBinding(originalName);
+    if (binding === outerBinding) {
+      const func = this.parentFunction;
+      const isParentFunctionReference =
+        func.isFunctionDeclaration() &&
+        func.get("id").node != null &&
+        func.get("id").node!.name === originalName;
+      if (!isParentFunctionReference) {
+        return null;
+      }
+    }
+    return binding;
+  }
+
   /**
    * Maps an Identifier (or JSX identifier) Babel node to an internal `Identifier`
    * which represents the variable being referenced, according to the JS scoping rules.
@@ -198,34 +227,24 @@ export default class HIRBuilder {
     path: NodePath<t.Identifier | t.JSXIdentifier>
   ): Identifier | null {
     const originalName = path.node.name;
-    const binding = path.scope.getBinding(originalName);
-    if (binding == null) {
+    const babelBinding = this.#resolveBabelBinding(path);
+    if (babelBinding == null) {
       return null;
     }
-    // If the binding is from the parent function's outer scope, then
-    // we treat it equivalently to a global.
-    //
-    // TODO: remove the exception that resolves references to the
-    // parent function itself. We don't need to support self-recursion,
-    // so we can treat such references as globals.
-    const outerBinding =
-      this.parentFunction.scope.parent.getBinding(originalName);
-    if (binding === outerBinding) {
-      const func = this.parentFunction;
-      const isParentFunctionReference =
-        func.isFunctionDeclaration() &&
-        func.get("id").node != null &&
-        func.get("id").node!.name === originalName;
-      if (!isParentFunctionReference) {
-        return null;
-      }
-    }
-
-    const resolvedBinding = this.resolveBinding(binding.identifier);
+    const resolvedBinding = this.resolveBinding(babelBinding.identifier);
     if (resolvedBinding.name && resolvedBinding.name !== originalName) {
-      binding.scope.rename(originalName, resolvedBinding.name);
+      babelBinding.scope.rename(originalName, resolvedBinding.name);
     }
     return resolvedBinding;
+  }
+
+  isContextIdentifier(path: NodePath<t.Identifier>): boolean {
+    const binding = this.#resolveBabelBinding(path);
+    if (binding) {
+      return this.#env.isContextIdentifier(binding.identifier);
+    } else {
+      return false;
+    }
   }
 
   resolveBinding(node: t.Identifier): Identifier {

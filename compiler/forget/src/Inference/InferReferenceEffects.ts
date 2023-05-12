@@ -282,6 +282,12 @@ class InferenceState {
   #referenceImpl(place: Place, effectKind: Effect, shouldError: boolean): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
+      if (effectKind === Effect.Store) {
+        CompilerError.invariant(
+          "[InferReferenceEffects] Unhandled store reference effect",
+          place.loc
+        );
+      }
       place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
       return;
     }
@@ -849,6 +855,19 @@ function inferBlock(
         state.alias(lvalue, instrValue.place);
         continue;
       }
+      case "LoadContext": {
+        state.reference(instrValue.place, Effect.Capture);
+        const lvalue = instr.lvalue;
+        lvalue.effect = Effect.Mutate;
+        const valueKind = state.kind(instrValue.place);
+        invariant(
+          valueKind === ValueKind.Mutable || valueKind === ValueKind.Context,
+          "[InferReferenceEffects] Context variables are always mutable."
+        );
+        state.initialize(instrValue, valueKind);
+        state.define(lvalue, instrValue);
+        continue;
+      }
       case "DeclareLocal": {
         const value: InstructionValue = {
           kind: "Primitive",
@@ -874,6 +893,30 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
         state.reference(instrValue.lvalue.place, Effect.Store);
+        continue;
+      }
+      case "StoreContext": {
+        state.reference(instrValue.value, Effect.Mutate);
+        state.reference(instrValue.lvalue.place, Effect.Mutate);
+
+        const lvalue = instr.lvalue;
+        state.alias(lvalue, instrValue.value);
+        // this logic is really awkward
+        // Essentially, we want to say that
+        // 1. instr.lvalue (the value produced by the instruction itself) has a
+        //    ValueKind of the rhs.
+        //     - this is for chained assignment
+        // 2. instr.value.lvalue (the store location) has a ValueKind of Mutable
+
+        // As an alternative, we could insert a CreateContextVariable instruction
+        // before the initial StoreContext
+        const storeLValue = instrValue.lvalue.place;
+        if (!state.isDefined(storeLValue)) {
+          const instrCopy = { ...instrValue };
+          state.initialize(instrCopy, ValueKind.Mutable);
+          state.define(storeLValue, instrCopy);
+        }
+        lvalue.effect = Effect.Store;
         continue;
       }
       case "Destructure": {
