@@ -1452,7 +1452,6 @@ const tests = {
         }
       `,
     },
-    ,
   ],
   invalid: [
     {
