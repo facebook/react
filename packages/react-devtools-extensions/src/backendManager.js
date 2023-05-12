@@ -58,7 +58,7 @@ function setup(hook: ?DevToolsHook) {
 
   // register renderers that have already injected themselves.
   hook.renderers.forEach(renderer => {
-    registerRenderer(renderer);
+    registerRenderer(renderer, hook);
   });
 
   // Activate and remove from required all present backends, registered within the hook
@@ -71,7 +71,7 @@ function setup(hook: ?DevToolsHook) {
 
   // register renderers that inject themselves later.
   hook.sub('renderer', ({renderer}) => {
-    registerRenderer(renderer);
+    registerRenderer(renderer, hook);
     updateRequiredBackends();
   });
 
@@ -84,12 +84,16 @@ function setup(hook: ?DevToolsHook) {
 
 const requiredBackends = new Set<string>();
 
-function registerRenderer(renderer: ReactRenderer) {
+function registerRenderer(renderer: ReactRenderer, hook: DevToolsHook) {
   let version = renderer.reconcilerVersion || renderer.version;
   if (!hasAssignedBackend(version)) {
     version = COMPACT_VERSION_NAME;
   }
-  requiredBackends.add(version);
+
+  // Check if required backend is already activated, no need to require again
+  if (!hook.backends.has(version)) {
+    requiredBackends.add(version);
+  }
 }
 
 function activateBackend(version: string, hook: DevToolsHook) {
@@ -97,6 +101,7 @@ function activateBackend(version: string, hook: DevToolsHook) {
   if (!backend) {
     throw new Error(`Could not find backend for version "${version}"`);
   }
+
   const {Agent, Bridge, initBackend, setupNativeStyleEditor} = backend;
   const bridge = new Bridge({
     listen(fn) {
@@ -157,6 +162,10 @@ function activateBackend(version: string, hook: DevToolsHook) {
 
 // tell the service worker which versions of backends are needed for the current page
 function updateRequiredBackends() {
+  if (requiredBackends.size === 0) {
+    return;
+  }
+
   window.postMessage(
     {
       source: 'react-devtools-backend-manager',

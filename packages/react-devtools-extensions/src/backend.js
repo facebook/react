@@ -29,5 +29,6 @@ function setup(hook: ?DevToolsHook) {
     initBackend,
     setupNativeStyleEditor,
   });
+
   hook.emit('devtools-backend-installed', COMPACT_VERSION_NAME);
 }
