@@ -1452,6 +1452,25 @@ const tests = {
         }
       `,
     },
+    // TODO
+    {
+      code: normalizeIndent`
+        function Foo() {
+          let tab = "foo";
+          useEffect(() => {
+            // Closure captures the binding, sees value at time of call ('bar')
+            if (tab === "foo") {
+              return;
+            }
+            log(tab);
+            // dependency array captures value at time of render ('foo')
+          }, [tab]);
+          // TODO: it should be an error to capture a non-constant value
+          tab = "bar"; 
+          return <Tab tab={tab} />;
+        }
+      `,
+    },
   ],
   invalid: [
     {
