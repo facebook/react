@@ -26,6 +26,7 @@ export function* eachInstructionLValue(
   }
   switch (instr.value.kind) {
     case "DeclareLocal":
+    case "DeclareContext":
     case "StoreLocal": {
       yield instr.value.lvalue.place;
       break;
@@ -61,6 +62,7 @@ export function* eachInstructionValueOperand(
       yield* eachCallArgument(instrValue.args);
       break;
     }
+    case "DeclareContext":
     case "DeclareLocal": {
       break;
     }
@@ -351,6 +353,7 @@ export function mapInstructionOperands(
       instrValue.value = fn(instrValue.value);
       break;
     }
+    case "DeclareContext":
     case "DeclareLocal": {
       break;
     }

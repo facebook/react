@@ -202,6 +202,7 @@ function* generateInstructionTypes(
     }
 
     case "DeclareLocal":
+    case "DeclareContext":
     case "Destructure":
     case "NewExpression":
     case "TypeCastExpression":

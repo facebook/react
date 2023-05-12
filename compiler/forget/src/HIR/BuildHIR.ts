@@ -647,19 +647,38 @@ function lowerStatement(
               nodePath: id,
             });
           } else {
-            lowerValueToTemporary(builder, {
-              kind: "DeclareLocal",
-              lvalue: {
-                kind,
-                place: {
-                  effect: Effect.Unknown,
-                  identifier,
-                  kind: "Identifier",
-                  loc: id.node.loc ?? GeneratedSource,
-                },
-              },
+            const place: Place = {
+              effect: Effect.Unknown,
+              identifier,
+              kind: "Identifier",
               loc: id.node.loc ?? GeneratedSource,
-            });
+            };
+            if (builder.isContextIdentifier(id)) {
+              if (kind === InstructionKind.Const) {
+                builder.errors.push({
+                  reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
+                  severity: ErrorSeverity.InvalidInput,
+                  nodePath: id,
+                });
+              }
+              lowerValueToTemporary(builder, {
+                kind: "DeclareContext",
+                lvalue: {
+                  kind: InstructionKind.Let,
+                  place,
+                },
+                loc: id.node.loc ?? GeneratedSource,
+              });
+            } else {
+              lowerValueToTemporary(builder, {
+                kind: "DeclareLocal",
+                lvalue: {
+                  kind,
+                  place,
+                },
+                loc: id.node.loc ?? GeneratedSource,
+              });
+            }
           }
         } else {
           builder.errors.push({
@@ -2461,12 +2480,41 @@ function lowerAssignment(
         effect: Effect.Unknown,
         loc: lvalue.node.loc ?? GeneratedSource,
       };
-      const temporary = lowerValueToTemporary(builder, {
-        kind: getStoreKind(builder, lvalue),
-        lvalue: { place: { ...place }, kind },
-        value,
-        loc,
-      });
+
+      let temporary;
+      if (builder.isContextIdentifier(lvalue)) {
+        if (kind !== InstructionKind.Reassign) {
+          if (kind === InstructionKind.Const) {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
+              severity: ErrorSeverity.InvalidInput,
+              nodePath: lvalue,
+            });
+          }
+          lowerValueToTemporary(builder, {
+            kind: "DeclareContext",
+            lvalue: {
+              kind: InstructionKind.Let,
+              place: { ...place },
+            },
+            loc: place.loc,
+          });
+        }
+
+        temporary = lowerValueToTemporary(builder, {
+          kind: "StoreContext",
+          lvalue: { place: { ...place }, kind: InstructionKind.Reassign },
+          value,
+          loc,
+        });
+      } else {
+        temporary = lowerValueToTemporary(builder, {
+          kind: "StoreLocal",
+          lvalue: { place: { ...place }, kind },
+          value,
+          loc,
+        });
+      }
       return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
     }
     case "MemberExpression": {

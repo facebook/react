@@ -876,8 +876,11 @@ function inferBlock(
         };
         state.initialize(value, ValueKind.Immutable);
         state.define(instrValue.lvalue.place, value);
-        state.alias(instr.lvalue, instrValue.lvalue.place);
-        instr.lvalue.effect = Effect.Mutate;
+        continue;
+      }
+      case "DeclareContext": {
+        state.initialize(instrValue, ValueKind.Mutable);
+        state.define(instrValue.lvalue.place, instrValue);
         continue;
       }
       case "StoreLocal": {
@@ -901,21 +904,6 @@ function inferBlock(
 
         const lvalue = instr.lvalue;
         state.alias(lvalue, instrValue.value);
-        // this logic is really awkward
-        // Essentially, we want to say that
-        // 1. instr.lvalue (the value produced by the instruction itself) has a
-        //    ValueKind of the rhs.
-        //     - this is for chained assignment
-        // 2. instr.value.lvalue (the store location) has a ValueKind of Mutable
-
-        // As an alternative, we could insert a CreateContextVariable instruction
-        // before the initial StoreContext
-        const storeLValue = instrValue.lvalue.place;
-        if (!state.isDefined(storeLValue)) {
-          const instrCopy = { ...instrValue };
-          state.initialize(instrCopy, ValueKind.Mutable);
-          state.define(storeLValue, instrCopy);
-        }
         lvalue.effect = Effect.Store;
         continue;
       }

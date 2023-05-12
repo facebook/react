@@ -118,16 +118,6 @@ export function inferMutableLifetimes(
     }
 
     for (const instr of block.instructions) {
-      if (instr.value.kind === "StoreContext") {
-        const id = instr.value.lvalue.place.identifier;
-        // Context variables do not participate in SSA and are not generally considered
-        // lvalues (). This hack tries to initialize a mutable range the first time we
-        // visit an context variable assignment.
-        if (id.mutableRange.start === 0 && id.mutableRange.end === 0) {
-          id.mutableRange.start = instr.id;
-          id.mutableRange.end = makeInstructionId(instr.id + 1);
-        }
-      }
       for (const operand of eachInstructionLValue(instr)) {
         const lvalueId = operand.identifier;
 

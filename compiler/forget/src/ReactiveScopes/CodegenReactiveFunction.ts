@@ -443,21 +443,25 @@ function codegenInstructionNullable(
     instr.value.kind === "StoreLocal" ||
     instr.value.kind === "StoreContext" ||
     instr.value.kind === "Destructure" ||
-    instr.value.kind === "DeclareLocal"
+    instr.value.kind === "DeclareLocal" ||
+    instr.value.kind === "DeclareContext"
   ) {
     let kind: InstructionKind = instr.value.lvalue.kind;
     let lvalue;
     let value: t.Expression | null;
-    if (
-      instr.value.kind === "StoreLocal" ||
-      instr.value.kind === "StoreContext"
-    ) {
+    if (instr.value.kind === "StoreLocal") {
       kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
         ? InstructionKind.Reassign
         : kind;
       lvalue = instr.value.lvalue.place;
       value = codegenPlace(cx, instr.value.value);
-    } else if (instr.value.kind === "DeclareLocal") {
+    } else if (instr.value.kind === "StoreContext") {
+      lvalue = instr.value.lvalue.place;
+      value = codegenPlace(cx, instr.value.value);
+    } else if (
+      instr.value.kind === "DeclareLocal" ||
+      instr.value.kind === "DeclareContext"
+    ) {
       if (cx.hasDeclared(instr.value.lvalue.place.identifier)) {
         return null;
       }
@@ -507,8 +511,17 @@ function codegenInstructionNullable(
         invariant(value !== null, "Expected a value for reassignment");
         const expr = t.assignmentExpression("=", codegenLValue(lvalue), value);
         if (instr.lvalue !== null) {
-          cx.temp.set(instr.lvalue.identifier.id, expr);
-          return null;
+          if (instr.value.kind !== "StoreContext") {
+            cx.temp.set(instr.lvalue.identifier.id, expr);
+            return null;
+          } else {
+            // Handle chained reassignments for context variables
+            const statement = codegenInstruction(cx, instr, expr);
+            if (statement.type === "EmptyStatement") {
+              return null;
+            }
+            return statement;
+          }
         } else {
           return createExpressionStatement(instr.loc, expr);
         }
@@ -1017,6 +1030,7 @@ function codegenInstructionValue(
     }
     case "Debugger":
     case "DeclareLocal":
+    case "DeclareContext":
     case "Destructure":
     case "StoreLocal":
     case "StoreContext": {

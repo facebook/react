@@ -563,6 +563,14 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
+      kind: "DeclareContext";
+      lvalue: {
+        kind: InstructionKind.Let;
+        place: Place;
+      };
+      loc: SourceLocation;
+    }
+  | {
       kind: "StoreLocal";
       lvalue: LValue;
       value: Place;
@@ -570,7 +578,10 @@ export type InstructionValue =
     }
   | {
       kind: "StoreContext";
-      lvalue: LValue;
+      lvalue: {
+        kind: InstructionKind.Reassign;
+        place: Place;
+      };
       value: Place;
       loc: SourceLocation;
     }

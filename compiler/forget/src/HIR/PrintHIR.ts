@@ -354,6 +354,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )}`;
       break;
     }
+    case "DeclareContext": {
+      value = `DeclareContext ${instrValue.lvalue.kind} ${printPlace(
+        instrValue.lvalue.place
+      )}`;
+      break;
+    }
     case "StoreLocal": {
       value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
         instrValue.lvalue.place

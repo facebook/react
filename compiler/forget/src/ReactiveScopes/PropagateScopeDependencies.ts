@@ -513,10 +513,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     value: ReactiveValue,
     lvalue: Place | null
   ): void {
-    if (
-      (value.kind === "LoadLocal" || value.kind === "LoadContext") &&
-      lvalue !== null
-    ) {
+    if (value.kind === "LoadLocal" && lvalue !== null) {
       if (
         value.place.identifier.name !== null &&
         lvalue.identifier.name === null &&
@@ -532,7 +529,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       } else {
         context.visitProperty(value.object, value.property);
       }
-    } else if (value.kind === "StoreLocal" || value.kind === "StoreContext") {
+    } else if (value.kind === "StoreLocal") {
       context.visitOperand(value.value);
       if (value.lvalue.kind === InstructionKind.Reassign) {
         context.visitReassignment(value.lvalue.place);
@@ -541,11 +538,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         id,
         scope: context.currentScope,
       });
-    } else if (value.kind === "DeclareLocal") {
+    } else if (value.kind === "DeclareLocal" || value.kind === "DeclareContext") {
       // Some variables may be declared and never initialized. We need
       // to retain (and hoist) these declarations if they are included
       // in a reactive scope. One approach is to simply add all `DeclareLocal`s
       // as scope declarations.
+      
+      // We add context variable declarations here, not at `StoreContext`, since
+      // context Store / Loads are modeled as reads and mutates to the underlying
+      // variable reference (instead of through intermediate / inlined temporaries)
       context.declare(value.lvalue.place.identifier, {
         id,
         scope: context.currentScope,

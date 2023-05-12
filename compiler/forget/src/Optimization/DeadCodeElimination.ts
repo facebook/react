@@ -223,6 +223,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       return false;
     }
     case "LoadContext":
+    case "DeclareContext":
     case "StoreContext": {
       return false;
     }

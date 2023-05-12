@@ -471,6 +471,19 @@ function computeMemoizationInputs(
         rvalues: [value.place],
       };
     }
+    case "DeclareContext": {
+      const lvalues = [
+        { place: value.lvalue.place, level: MemoizationLevel.Memoized },
+      ];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Unmemoized });
+      }
+      return {
+        lvalues,
+        rvalues: [],
+      };
+    }
+
     case "DeclareLocal": {
       const lvalues = [
         { place: value.lvalue.place, level: MemoizationLevel.Unmemoized },

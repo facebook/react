@@ -28,7 +28,8 @@ function bar(a, b) {
   if (c_0 || c_1) {
     const x = [a, b];
     y = {};
-    let t = {};
+    let t;
+    t = {};
     (function () {
       y = x[0][1];
       t = x[1][0];

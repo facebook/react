@@ -224,6 +224,7 @@ function mayAllocate(value: InstructionValue): boolean {
     }
     case "Await":
     case "DeclareLocal":
+    case "DeclareContext":
     case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":
