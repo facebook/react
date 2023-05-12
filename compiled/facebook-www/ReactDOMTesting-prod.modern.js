@@ -3806,16 +3806,20 @@ function updateMutableSource(source, getSnapshot, subscribe) {
   var hook = updateWorkInProgressHook();
   return useMutableSource(hook, source, getSnapshot, subscribe);
 }
-function updateSyncExternalStore(subscribe, getSnapshot) {
+function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   var fiber = currentlyRenderingFiber$1,
     hook = updateWorkInProgressHook(),
-    nextSnapshot = getSnapshot(),
-    snapshotChanged = !objectIs(
-      (currentHook || hook).memoizedState,
-      nextSnapshot
-    );
+    isHydrating$jscomp$0 = isHydrating;
+  if (isHydrating$jscomp$0) {
+    if (void 0 === getServerSnapshot) throw Error(formatProdErrorMessage(407));
+    getServerSnapshot = getServerSnapshot();
+  } else getServerSnapshot = getSnapshot();
+  var snapshotChanged = !objectIs(
+    (currentHook || hook).memoizedState,
+    getServerSnapshot
+  );
   snapshotChanged &&
-    ((hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0));
+    ((hook.memoizedState = getServerSnapshot), (didReceiveUpdate = !0));
   hook = hook.queue;
   updateEffect(subscribeToStore.bind(null, fiber, hook, subscribe), [
     subscribe
@@ -3828,16 +3832,23 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
     fiber.flags |= 2048;
     pushEffect(
       9,
-      updateStoreInstance.bind(null, fiber, hook, nextSnapshot, getSnapshot),
+      updateStoreInstance.bind(
+        null,
+        fiber,
+        hook,
+        getServerSnapshot,
+        getSnapshot
+      ),
       { destroy: void 0 },
       null
     );
     subscribe = workInProgressRoot;
     if (null === subscribe) throw Error(formatProdErrorMessage(349));
-    includesBlockingLane(subscribe, renderLanes$1) ||
-      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+    isHydrating$jscomp$0 ||
+      includesBlockingLane(subscribe, renderLanes$1) ||
+      pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
   }
-  return nextSnapshot;
+  return getServerSnapshot;
 }
 function pushStoreConsistencyCheck(fiber, getSnapshot, renderedSnapshot) {
   fiber.flags |= 16384;
@@ -16553,7 +16564,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1817 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-bc9d666a",
+  version: "18.3.0-www-modern-6995898a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2201 = {
@@ -16584,7 +16595,7 @@ var internals$jscomp$inline_2201 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-bc9d666a"
+  reconcilerVersion: "18.3.0-www-modern-6995898a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2202 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16906,4 +16917,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-bc9d666a";
+exports.version = "18.3.0-www-modern-6995898a";

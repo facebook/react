@@ -2971,12 +2971,12 @@ function updateMutableSource(source, getSnapshot, subscribe) {
 }
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
-    hook = updateWorkInProgressHook(),
-    nextSnapshot = getSnapshot(),
-    snapshotChanged = !objectIs(
-      (currentHook || hook).memoizedState,
-      nextSnapshot
-    );
+    hook = updateWorkInProgressHook();
+  var nextSnapshot = getSnapshot();
+  var snapshotChanged = !objectIs(
+    (currentHook || hook).memoizedState,
+    nextSnapshot
+  );
   snapshotChanged &&
     ((hook.memoizedState = nextSnapshot), (didReceiveUpdate = !0));
   hook = hook.queue;
@@ -10193,7 +10193,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-b2a7bab7",
+    version: "18.3.0-www-classic-06adf47d",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1325 = {
@@ -10224,7 +10224,7 @@ var internals$jscomp$inline_1325 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b2a7bab7"
+  reconcilerVersion: "18.3.0-www-classic-06adf47d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1326 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

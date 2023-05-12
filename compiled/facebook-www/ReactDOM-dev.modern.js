@@ -13740,8 +13740,6 @@ function mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   // clean-up function, and we track the deps correctly, we can call pushEffect
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
-  // TODO: We can move this to the passive phase once we add a pre-commit
-  // consistency check. See the next comment.
 
   fiber.flags |= Passive$1;
   pushEffect(
@@ -13759,18 +13757,33 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   // normal rules of React, and only works because store updates are
   // always synchronous.
 
-  var nextSnapshot = getSnapshot();
+  var nextSnapshot;
+  var isHydrating = getIsHydrating();
 
-  {
-    if (!didWarnUncachedGetSnapshot) {
-      var cachedSnapshot = getSnapshot();
+  if (isHydrating) {
+    // Needed for strict mode double render
+    if (getServerSnapshot === undefined) {
+      throw new Error(
+        "Missing getServerSnapshot, which is required for " +
+          "server-rendered content. Will revert to client rendering."
+      );
+    }
 
-      if (!objectIs(nextSnapshot, cachedSnapshot)) {
-        error(
-          "The result of getSnapshot should be cached to avoid an infinite loop"
-        );
+    nextSnapshot = getServerSnapshot();
+  } else {
+    nextSnapshot = getSnapshot();
 
-        didWarnUncachedGetSnapshot = true;
+    {
+      if (!didWarnUncachedGetSnapshot) {
+        var cachedSnapshot = getSnapshot();
+
+        if (!objectIs(nextSnapshot, cachedSnapshot)) {
+          error(
+            "The result of getSnapshot should be cached to avoid an infinite loop"
+          );
+
+          didWarnUncachedGetSnapshot = true;
+        }
       }
     }
   }
@@ -13793,7 +13806,7 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
 
   if (
     inst.getSnapshot !== getSnapshot ||
-    snapshotChanged || // Check if the susbcribe function changed. We can save some memory by
+    snapshotChanged || // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HasEffect)
@@ -13816,7 +13829,7 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
       );
     }
 
-    if (!includesBlockingLane(root, renderLanes$1)) {
+    if (!isHydrating && !includesBlockingLane(root, renderLanes$1)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -14135,7 +14148,8 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   var nextDeps = deps === undefined ? null : deps;
   var effect = hook.memoizedState;
-  var inst = effect.inst; // currentHook is null when rerendering after a render phase state update.
+  var inst = effect.inst; // currentHook is null on initial mount when rerendering after a render phase
+  // state update or for strict mode.
 
   if (currentHook !== null) {
     if (nextDeps !== null) {
@@ -15384,7 +15398,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useId: function () {
       currentHookNameInDev = "useId";
@@ -15528,7 +15542,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useId: function () {
       currentHookNameInDev = "useId";
@@ -15859,7 +15873,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useId: function () {
       currentHookNameInDev = "useId";
@@ -16026,7 +16040,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useId: function () {
       currentHookNameInDev = "useId";
@@ -34013,7 +34027,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-50ab1d1d";
+var ReactVersion = "18.3.0-www-modern-899090e3";
 
 function createPortal$1(
   children,

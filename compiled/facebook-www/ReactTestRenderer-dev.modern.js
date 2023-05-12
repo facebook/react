@@ -8050,8 +8050,6 @@ function mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   // clean-up function, and we track the deps correctly, we can call pushEffect
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
-  // TODO: We can move this to the passive phase once we add a pre-commit
-  // consistency check. See the next comment.
 
   fiber.flags |= Passive$1;
   pushEffect(
@@ -8069,18 +8067,22 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   // normal rules of React, and only works because store updates are
   // always synchronous.
 
-  var nextSnapshot = getSnapshot();
+  var nextSnapshot;
 
   {
-    if (!didWarnUncachedGetSnapshot) {
-      var cachedSnapshot = getSnapshot();
+    nextSnapshot = getSnapshot();
 
-      if (!objectIs(nextSnapshot, cachedSnapshot)) {
-        error(
-          "The result of getSnapshot should be cached to avoid an infinite loop"
-        );
+    {
+      if (!didWarnUncachedGetSnapshot) {
+        var cachedSnapshot = getSnapshot();
 
-        didWarnUncachedGetSnapshot = true;
+        if (!objectIs(nextSnapshot, cachedSnapshot)) {
+          error(
+            "The result of getSnapshot should be cached to avoid an infinite loop"
+          );
+
+          didWarnUncachedGetSnapshot = true;
+        }
       }
     }
   }
@@ -8103,7 +8105,7 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
 
   if (
     inst.getSnapshot !== getSnapshot ||
-    snapshotChanged || // Check if the susbcribe function changed. We can save some memory by
+    snapshotChanged || // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HasEffect)
@@ -8310,7 +8312,8 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
   var hook = updateWorkInProgressHook();
   var nextDeps = deps === undefined ? null : deps;
   var effect = hook.memoizedState;
-  var inst = effect.inst; // currentHook is null when rerendering after a render phase state update.
+  var inst = effect.inst; // currentHook is null on initial mount when rerendering after a render phase
+  // state update or for strict mode.
 
   if (currentHook !== null) {
     if (nextDeps !== null) {
@@ -24549,7 +24552,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-bc9d666a";
+var ReactVersion = "18.3.0-www-modern-6995898a";
 
 // Might add PROFILE later.
 
