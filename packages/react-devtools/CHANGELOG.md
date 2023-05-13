@@ -4,6 +4,15 @@
 
 ---
 
+### 4.27.7
+May 4, 2023
+
+#### Bugfixes
+* Fixed to work when browser devtools panel is reopened ([hoxyq](https://github.com/hoxyq) in [#26779](https://github.com/facebook/react/pull/26779))
+* Fixed to work in Chrome incognito mode ([hoxyq](https://github.com/hoxyq) in [#26765](https://github.com/facebook/react/pull/26765))
+
+---
+
 ### 4.27.6
 April 20, 2023
 

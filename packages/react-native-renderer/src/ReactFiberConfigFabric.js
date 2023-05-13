@@ -13,6 +13,7 @@ import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   DefaultEventPriority,
   DiscreteEventPriority,
+  type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 
@@ -317,7 +318,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;

@@ -24,7 +24,10 @@ import {
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  type EventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -217,9 +220,10 @@ export function getChildHostContext(
   }
 }
 
-export function getPublicInstance(instance: Instance): * {
+export function getPublicInstance(instance: Instance): PublicInstance {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
   if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    // $FlowFixMe[incompatible-return]
     return instance.canonical.publicInstance;
   }
 
@@ -262,7 +266,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   return DefaultEventPriority;
 }
 

@@ -9,7 +9,10 @@ const CIRCLE_TOKEN = process.env.CIRCLE_CI_API_TOKEN;
 
 if (!CIRCLE_TOKEN) {
   console.error(
-    theme.error('Missing required environment variable: CIRCLE_CI_API_TOKEN')
+    theme.error(
+      'Missing required environment variable: CIRCLE_CI_API_TOKEN\n' +
+        'Grab it here: https://app.circleci.com/settings/user/tokens'
+    )
   );
   process.exit(1);
 }

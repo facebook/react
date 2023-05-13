@@ -1776,8 +1776,6 @@ function mountSyncExternalStore<T>(
   // clean-up function, and we track the deps correctly, we can call pushEffect
   // directly, without storing any additional state. For the same reason, we
   // don't need to set a static flag, either.
-  // TODO: We can move this to the passive phase once we add a pre-commit
-  // consistency check. See the next comment.
   fiber.flags |= PassiveEffect;
   pushEffect(
     HookHasEffect | HookPassive,
@@ -1799,15 +1797,28 @@ function updateSyncExternalStore<T>(
   // Read the current snapshot from the store on every render. This breaks the
   // normal rules of React, and only works because store updates are
   // always synchronous.
-  const nextSnapshot = getSnapshot();
-  if (__DEV__) {
-    if (!didWarnUncachedGetSnapshot) {
-      const cachedSnapshot = getSnapshot();
-      if (!is(nextSnapshot, cachedSnapshot)) {
-        console.error(
-          'The result of getSnapshot should be cached to avoid an infinite loop',
-        );
-        didWarnUncachedGetSnapshot = true;
+  let nextSnapshot;
+  const isHydrating = getIsHydrating();
+  if (isHydrating) {
+    // Needed for strict mode double render
+    if (getServerSnapshot === undefined) {
+      throw new Error(
+        'Missing getServerSnapshot, which is required for ' +
+          'server-rendered content. Will revert to client rendering.',
+      );
+    }
+    nextSnapshot = getServerSnapshot();
+  } else {
+    nextSnapshot = getSnapshot();
+    if (__DEV__) {
+      if (!didWarnUncachedGetSnapshot) {
+        const cachedSnapshot = getSnapshot();
+        if (!is(nextSnapshot, cachedSnapshot)) {
+          console.error(
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+          );
+          didWarnUncachedGetSnapshot = true;
+        }
       }
     }
   }
@@ -1830,7 +1841,7 @@ function updateSyncExternalStore<T>(
   if (
     inst.getSnapshot !== getSnapshot ||
     snapshotChanged ||
-    // Check if the susbcribe function changed. We can save some memory by
+    // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HookHasEffect)
@@ -1854,7 +1865,7 @@ function updateSyncExternalStore<T>(
       );
     }
 
-    if (!includesBlockingLane(root, renderLanes)) {
+    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -2217,7 +2228,8 @@ function updateEffectImpl(
   const effect: Effect = hook.memoizedState;
   const inst = effect.inst;
 
-  // currentHook is null when rerendering after a render phase state update.
+  // currentHook is null on initial mount when rerendering after a render phase
+  // state update or for strict mode.
   if (currentHook !== null) {
     if (nextDeps !== null) {
       const prevEffect: Effect = currentHook.memoizedState;
