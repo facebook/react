@@ -28,9 +28,10 @@ async function dynamicallyInjectContentScripts() {
     // For some reason dynamically injected scripts might be already registered
     // Registering them again will fail, which will result into
     // __REACT_DEVTOOLS_GLOBAL_HOOK__ hook not being injected
-    await chrome.scripting.unregisterContentScripts({
-      ids: contentScriptsToInject.map(s => s.id),
-    });
+
+    // Not specifying ids, because Chrome throws an error
+    // if id of non-injected script is provided
+    await chrome.scripting.unregisterContentScripts();
 
     // equivalent logic for Firefox is in prepareInjection.js
     // Manifest V3 method of injecting content script

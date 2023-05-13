@@ -8,7 +8,10 @@
  */
 
 import isArray from 'shared/isArray';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  type EventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
@@ -211,7 +214,7 @@ export function createTextInstance(
   };
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   return DefaultEventPriority;
 }
 export function shouldAttemptEagerTransition(): boolean {

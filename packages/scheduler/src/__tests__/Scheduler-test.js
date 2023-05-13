@@ -344,7 +344,7 @@ describe('SchedulerBrowser', () => {
       // about, like a network event.
       gate(flags =>
         flags.enableIsInputPending
-          ? 'Yield at 300ms'
+          ? 'Yield at 10ms'
           : // When isInputPending is disabled, we always yield quickly
             'Yield at 5ms',
       ),
@@ -398,7 +398,7 @@ describe('SchedulerBrowser', () => {
         // about, like a network event.
         gate(flags =>
           flags.enableIsInputPending
-            ? 'Yield at 300ms'
+            ? 'Yield at 10ms'
             : // When isInputPending is disabled, we always yield quickly
               'Yield at 5ms',
         ),
@@ -423,7 +423,7 @@ describe('SchedulerBrowser', () => {
         // as quickly as for a discrete event.
         gate(flags =>
           flags.enableIsInputPending
-            ? 'Yield at 50ms'
+            ? 'Yield at 10ms'
             : // When isInputPending is disabled, we always yield quickly
               'Yield at 5ms',
         ),
@@ -453,7 +453,7 @@ describe('SchedulerBrowser', () => {
       'Task with no paint',
       gate(flags =>
         flags.enableIsInputPending
-          ? 'Yield at 300ms'
+          ? 'Yield at 10ms'
           : // When isInputPending is disabled, we always yield quickly
             'Yield at 5ms',
       ),
