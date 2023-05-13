@@ -472,7 +472,6 @@ function addTrappedEventListener(
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
     // $FlowFixMe[missing-this-annot]
-    // $FlowFixMe[definition-cycle]
     listener = function (...p) {
       removeEventListener(
         targetContainer,

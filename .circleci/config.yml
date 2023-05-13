@@ -646,7 +646,7 @@ workflows:
           name: Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "next"
+          dist_tag: "canary,next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:

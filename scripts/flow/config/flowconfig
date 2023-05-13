@@ -18,11 +18,6 @@
 
 %REACT_RENDERER_FLOW_IGNORES%
 
-[include]
-./node_modules/
-./packages/
-./scripts/
-
 [libs]
 ./node_modules/fbjs/flow/lib/dev.js
 ./scripts/flow/environment.js
@@ -37,10 +32,9 @@ untyped-type-import=error
 [options]
 %CI_MAX_WORKERS%
 munge_underscores=false
-inference_mode=lti
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.202.0
+^0.205.1

@@ -20,6 +20,7 @@ let JSDOM;
 let Stream;
 let Scheduler;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
@@ -73,6 +74,7 @@ describe('ReactDOMFizzServer', () => {
 
     Scheduler = require('scheduler');
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
@@ -2506,6 +2508,98 @@ describe('ReactDOMFizzServer', () => {
       expect(spanRef.current).not.toBe(span);
     },
   );
+
+  it('can hydrate uSES in StrictMode with different client and server snapshot (sync)', async () => {
+    function subscribe() {
+      return () => {};
+    }
+    function getClientSnapshot() {
+      return 'Yay!';
+    }
+    function getServerSnapshot() {
+      return 'Nay!';
+    }
+
+    function App() {
+      const value = useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
+      Scheduler.log(value);
+
+      return value;
+    }
+
+    const element = (
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(element);
+      pipe(writable);
+    });
+
+    assertLog(['Nay!']);
+    expect(getVisibleChildren(container)).toEqual('Nay!');
+
+    await clientAct(() => {
+      ReactDOM.flushSync(() => {
+        ReactDOMClient.hydrateRoot(container, element);
+      });
+    });
+
+    expect(getVisibleChildren(container)).toEqual('Yay!');
+    assertLog(['Nay!', 'Yay!']);
+  });
+
+  it('can hydrate uSES in StrictMode with different client and server snapshot (concurrent)', async () => {
+    function subscribe() {
+      return () => {};
+    }
+    function getClientSnapshot() {
+      return 'Yay!';
+    }
+    function getServerSnapshot() {
+      return 'Nay!';
+    }
+
+    function App() {
+      const value = useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
+      Scheduler.log(value);
+
+      return value;
+    }
+
+    const element = (
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+
+    await act(async () => {
+      const {pipe} = renderToPipeableStream(element);
+      pipe(writable);
+    });
+
+    assertLog(['Nay!']);
+    expect(getVisibleChildren(container)).toEqual('Nay!');
+
+    await clientAct(() => {
+      React.startTransition(() => {
+        ReactDOMClient.hydrateRoot(container, element);
+      });
+    });
+
+    expect(getVisibleChildren(container)).toEqual('Yay!');
+    assertLog(['Nay!', 'Yay!']);
+  });
 
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
