@@ -171,8 +171,6 @@ export type ReactRenderer = {
   // 18.0+
   injectProfilingHooks?: (profilingHooks: DevToolsProfilingHooks) => void,
   getLaneLabelMap?: () => Map<Lane, string> | null,
-  // set by backend after successful attaching
-  attached?: boolean,
   ...
 };
 

@@ -81,4 +81,16 @@ describe('react-dom-server-rendering-stub', () => {
     );
     expect(x).toBe(false);
   });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('exports experimental_useFormStatus', async () => {
+    function App() {
+      const {pending} = ReactDOM.experimental_useFormStatus();
+      return 'Pending: ' + pending;
+    }
+
+    const result = await ReactDOMFizzServer.renderToStaticMarkup(<App />);
+    expect(result).toEqual('Pending: false');
+  });
 });

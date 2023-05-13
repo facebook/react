@@ -37,7 +37,7 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
 
     if (otherRenderer.shortName !== serverRenderer) {
       ignoredPaths.push(
-        `.*/packages/.*/forks/.*.${otherRenderer.shortName}.js`,
+        `.*/packages/.*/forks/.*\\.${otherRenderer.shortName}.js`,
       );
     }
   });

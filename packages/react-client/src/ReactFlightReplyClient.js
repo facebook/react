@@ -291,7 +291,6 @@ export function processReply(
         // Possibly a Date, whose toJSON automatically calls toISOString
         // $FlowFixMe[incompatible-use]
         const originalValue = parent[key];
-        // $FlowFixMe[method-unbinding]
         if (originalValue instanceof Date) {
           return serializeDateFromDateJSON(value);
         }
