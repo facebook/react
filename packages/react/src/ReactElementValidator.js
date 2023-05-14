@@ -333,15 +333,13 @@ export function jsxWithValidation(
         typeString = typeof type;
       }
 
-      if (__DEV__) {
-        console.error(
-          'React.jsx: type is invalid -- expected a string (for ' +
-            'built-in components) or a class/function (for composite ' +
-            'components) but got: %s.%s',
-          typeString,
-          info,
-        );
-      }
+      console.error(
+        'React.jsx: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
     }
 
     const element = jsxDEV(type, props, key, source, self);
