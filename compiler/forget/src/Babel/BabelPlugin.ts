@@ -25,6 +25,7 @@ import {
 
 type BabelPluginPass = {
   opts: PluginOptions;
+  filename: string | null;
 };
 
 function hasUseForgetDirective(directive: t.Directive): boolean {
@@ -108,7 +109,7 @@ export default function ReactForgetBabelPlugin(
       ) {
         throw err;
       } else {
-        console.error(err);
+        console.error(formatErrorsForConsole(err, pass.filename ?? null));
       }
     } finally {
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
@@ -149,7 +150,7 @@ export default function ReactForgetBabelPlugin(
         if (options.panicOnBailout || error.isCritical()) {
           throw error;
         } else {
-          console.error(error);
+          console.error(formatErrorsForConsole(error, pass.filename));
         }
         return;
       }
@@ -192,7 +193,7 @@ export default function ReactForgetBabelPlugin(
             },
           });
 
-          const reason = `Skipped compilation as it disables one or more React eslint rules`;
+          const reason = `One or more React eslint rules is disabled`;
           const error = new CompilerError();
           for (const violation of violations) {
             if (options.logger != null) {
@@ -218,7 +219,9 @@ export default function ReactForgetBabelPlugin(
             if (options.panicOnBailout || error.isCritical()) {
               throw error;
             } else {
-              console.error(error);
+              console.error(
+                formatErrorsForConsole(error, pass.filename ?? null)
+              );
             }
           }
 
@@ -228,6 +231,7 @@ export default function ReactForgetBabelPlugin(
         path.traverse(visitor, {
           ...pass,
           opts: { ...pass.opts, ...options },
+          filename: pass.filename ?? null,
         });
 
         // If there isn't already an import of * as React, insert it so useMemoCache doesn't
@@ -327,6 +331,19 @@ function shouldCompile(
   return true;
 }
 
+function formatErrorsForConsole(
+  error: CompilerError,
+  filename: string | null
+): string {
+  const filenameStr = filename ? `in ${filename}` : "";
+  return error.details
+    .map(
+      (e) =>
+        `[ReactForget] Skipping compilation of component ${filenameStr}: ${e.printErrorMessage()}`
+    )
+    .join("\n");
+}
+
 function makeError(
   reason: string,
   loc: t.SourceLocation | null
@@ -349,7 +366,7 @@ function buildFunctionDeclaration(
 ): BabelCore.NodePath<t.FunctionDeclaration> | CompilerError {
   if (!fn.parentPath.isVariableDeclarator()) {
     return makeError(
-      "Skipping compilation: ArrowFunctionExpression must be declared in variable declaration",
+      "ArrowFunctionExpression must be declared in variable declaration",
       fn.node.loc ?? null
     );
   }

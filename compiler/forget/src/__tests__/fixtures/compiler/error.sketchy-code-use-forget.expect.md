@@ -16,7 +16,7 @@ function lowercasecomponent() {
 ## Error
 
 ```
-[ReactForget] UnsafeInput: Skipped compilation as it disables one or more React eslint rules. eslint-disable react-hooks/rules-of-hooks (1:1)
+[ReactForget] UnsafeInput: One or more React eslint rules is disabled. eslint-disable react-hooks/rules-of-hooks (1:1)
 ```
           
       
