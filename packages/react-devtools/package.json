@@ -28,6 +28,6 @@
     "ip": "^1.1.4",
     "minimist": "^1.2.3",
     "react-devtools-core": "4.27.7",
-    "update-notifier": "^2.1.0"
+    "update-notifier": "^6.0.2"
   }
 }
