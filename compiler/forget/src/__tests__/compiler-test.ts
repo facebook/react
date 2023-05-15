@@ -56,6 +56,7 @@ describe("React Forget", () => {
                 ],
               ]),
               validateHooksUsage: true,
+              inlineUseMemo: options.environment?.inlineUseMemo ?? false,
             },
             logger: null,
             gating: options.gating,

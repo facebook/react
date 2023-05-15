@@ -40,6 +40,7 @@ export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
   memoizeJsxElements: boolean;
   validateHooksUsage: boolean;
+  inlineUseMemo: boolean;
 }>;
 
 export class Environment {

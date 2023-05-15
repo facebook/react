@@ -66,8 +66,10 @@ export function* run(
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
-  inlineUseMemo(hir);
-  yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
+  if (config?.inlineUseMemo) {
+    inlineUseMemo(hir);
+    yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
+  }
 
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
