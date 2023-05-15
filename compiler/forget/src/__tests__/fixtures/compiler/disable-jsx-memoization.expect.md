@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @memoizeJsxElements false
 function Component(props) {
   const [name, setName] = useState(null);
   const onChange = function (e) {
@@ -19,7 +20,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @memoizeJsxElements false
 function Component(props) {
   const $ = useMemoCache(2);
   const [name, setName] = useState(null);

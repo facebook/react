@@ -44,6 +44,8 @@ describe("React Forget", () => {
             enableOnlyOnUseForgetDirective:
               options.enableOnlyOnUseForgetDirective,
             environment: {
+              memoizeJsxElements:
+                options.environment?.memoizeJsxElements ?? true,
               customHooks: new Map([
                 [
                   "useFreeze",

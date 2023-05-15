@@ -96,6 +96,7 @@ export default function generateTestsFromFixtures(
         let gating: GatingOptions | null = null;
         let inlineUseMemo = true;
         let panicOnBailout = true;
+        let memoizeJsxElements = true;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -124,13 +125,16 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@panicOnBailout false") !== -1) {
             panicOnBailout = false;
           }
+          if (lines[0]!.indexOf("@memoizeJsxElements false") !== -1) {
+            memoizeJsxElements = false;
+          }
         }
 
         testCommand(basename, () => {
           let receivedOutput;
           if (input !== null) {
             receivedOutput = transform(input, basename, {
-              environment: { inlineUseMemo },
+              environment: { inlineUseMemo, memoizeJsxElements },
               logger: null,
               debug,
               enableOnlyOnUseForgetDirective,
