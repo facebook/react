@@ -109,7 +109,7 @@ export default function ReactForgetBabelPlugin(
       ) {
         throw err;
       } else {
-        console.error(formatErrorsForConsole(err, pass.filename ?? null));
+        console.log(formatErrorsForConsole(err, pass.filename ?? null));
       }
     } finally {
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
@@ -150,7 +150,7 @@ export default function ReactForgetBabelPlugin(
         if (options.panicOnBailout || error.isCritical()) {
           throw error;
         } else {
-          console.error(formatErrorsForConsole(error, pass.filename));
+          console.log(formatErrorsForConsole(error, pass.filename));
         }
         return;
       }
@@ -219,9 +219,7 @@ export default function ReactForgetBabelPlugin(
             if (options.panicOnBailout || error.isCritical()) {
               throw error;
             } else {
-              console.error(
-                formatErrorsForConsole(error, pass.filename ?? null)
-              );
+              console.log(formatErrorsForConsole(error, pass.filename ?? null));
             }
           }
 
