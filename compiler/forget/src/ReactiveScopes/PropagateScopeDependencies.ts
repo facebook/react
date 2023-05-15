@@ -538,12 +538,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         id,
         scope: context.currentScope,
       });
-    } else if (value.kind === "DeclareLocal" || value.kind === "DeclareContext") {
+    } else if (
+      value.kind === "DeclareLocal" ||
+      value.kind === "DeclareContext"
+    ) {
       // Some variables may be declared and never initialized. We need
       // to retain (and hoist) these declarations if they are included
       // in a reactive scope. One approach is to simply add all `DeclareLocal`s
       // as scope declarations.
-      
+
       // We add context variable declarations here, not at `StoreContext`, since
       // context Store / Loads are modeled as reads and mutates to the underlying
       // variable reference (instead of through intermediate / inlined temporaries)
