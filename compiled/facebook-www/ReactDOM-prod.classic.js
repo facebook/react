@@ -10032,7 +10032,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         if (
           (lanes & 125829120) === lanes &&
           (alwaysThrottleRetries || 3 === exitStatus) &&
-          ((exitStatus = globalMostRecentFallbackTime + 500 - now()),
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
           10 < exitStatus)
         ) {
           markRootSuspended(root, lanes);
@@ -11006,7 +11006,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     (3 === workInProgressRootExitStatus &&
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
-      500 > now() - globalMostRecentFallbackTime)
+      300 > now() - globalMostRecentFallbackTime)
       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root);
@@ -16653,7 +16653,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1827 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1c8a9185",
+  version: "18.3.0-www-classic-c16ecf65",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2201 = {
@@ -16683,7 +16683,7 @@ var internals$jscomp$inline_2201 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-1c8a9185"
+  reconcilerVersion: "18.3.0-www-classic-c16ecf65"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2202 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16926,4 +16926,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-1c8a9185";
+exports.version = "18.3.0-www-classic-c16ecf65";

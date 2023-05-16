@@ -8306,7 +8306,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         if (
           (lanes & 125829120) === lanes &&
           (alwaysThrottleRetries || 3 === exitStatus) &&
-          ((exitStatus = globalMostRecentFallbackTime + 500 - now()),
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
           10 < exitStatus)
         ) {
           markRootSuspended(root, lanes);
@@ -9205,7 +9205,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     (3 === workInProgressRootExitStatus &&
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
-      500 > now() - globalMostRecentFallbackTime)
+      300 > now() - globalMostRecentFallbackTime)
       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root);
@@ -10193,7 +10193,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-42b150af",
+    version: "18.3.0-www-classic-6456653a",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1323 = {
@@ -10224,7 +10224,7 @@ var internals$jscomp$inline_1323 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-42b150af"
+  reconcilerVersion: "18.3.0-www-classic-6456653a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

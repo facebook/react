@@ -20627,7 +20627,7 @@ var workInProgressRootRecoverableErrors = null; // The most recent time we eithe
 // TODO: Think of a better name for this variable?
 
 var globalMostRecentFallbackTime = 0;
-var FALLBACK_THROTTLE_MS = 500; // The absolute time for when we should start giving up on rendering
+var FALLBACK_THROTTLE_MS = 300; // The absolute time for when we should start giving up on rendering
 // more and prefer CPU suspense heuristics instead.
 
 var workInProgressRootRenderTargetTime = Infinity; // How long a render is supposed to take before we start following CPU
@@ -24561,7 +24561,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-f1adabbb";
+var ReactVersion = "18.3.0-www-classic-0768a1ed";
 
 // Might add PROFILE later.
 
