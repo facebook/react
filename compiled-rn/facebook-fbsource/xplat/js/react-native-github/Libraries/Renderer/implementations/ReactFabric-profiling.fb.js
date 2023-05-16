@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<83c12e7e93e6fb4397e7202b48936e05>>
+ * @generated SignedSource<<b2b07ccb72570d4ed30285fdbc7b6def>>
  */
 
 
@@ -951,7 +951,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_260 = {
+var injectedNamesToPlugins$jscomp$inline_257 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -997,32 +997,32 @@ var injectedNamesToPlugins$jscomp$inline_260 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_261 = !1,
-  pluginName$jscomp$inline_262;
-for (pluginName$jscomp$inline_262 in injectedNamesToPlugins$jscomp$inline_260)
+  isOrderingDirty$jscomp$inline_258 = !1,
+  pluginName$jscomp$inline_259;
+for (pluginName$jscomp$inline_259 in injectedNamesToPlugins$jscomp$inline_257)
   if (
-    injectedNamesToPlugins$jscomp$inline_260.hasOwnProperty(
-      pluginName$jscomp$inline_262
+    injectedNamesToPlugins$jscomp$inline_257.hasOwnProperty(
+      pluginName$jscomp$inline_259
     )
   ) {
-    var pluginModule$jscomp$inline_263 =
-      injectedNamesToPlugins$jscomp$inline_260[pluginName$jscomp$inline_262];
+    var pluginModule$jscomp$inline_260 =
+      injectedNamesToPlugins$jscomp$inline_257[pluginName$jscomp$inline_259];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_262) ||
-      namesToPlugins[pluginName$jscomp$inline_262] !==
-        pluginModule$jscomp$inline_263
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_259) ||
+      namesToPlugins[pluginName$jscomp$inline_259] !==
+        pluginModule$jscomp$inline_260
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_262])
+      if (namesToPlugins[pluginName$jscomp$inline_259])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_262 + "`.")
+            (pluginName$jscomp$inline_259 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_262] =
-        pluginModule$jscomp$inline_263;
-      isOrderingDirty$jscomp$inline_261 = !0;
+      namesToPlugins[pluginName$jscomp$inline_259] =
+        pluginModule$jscomp$inline_260;
+      isOrderingDirty$jscomp$inline_258 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_261 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_258 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -7501,12 +7501,16 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
-      current = finishedWork.child;
-      current.flags & 8192 &&
-        null !== current.memoizedState &&
-        (null === current.alternate ||
-          null === current.alternate.memoizedState) &&
-        (globalMostRecentFallbackTime = now$1());
+      if (finishedWork.child.flags & 8192) {
+        var isShowingFallback = null !== finishedWork.memoizedState;
+        current = null !== current && null !== current.memoizedState;
+        alwaysThrottleRetries
+          ? isShowingFallback !== current &&
+            (globalMostRecentFallbackTime = now$1())
+          : isShowingFallback &&
+            !current &&
+            (globalMostRecentFallbackTime = now$1());
+      }
       flags & 4 &&
         ((flags = finishedWork.updateQueue),
         null !== flags &&
@@ -7517,14 +7521,14 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       flags & 512 &&
         null !== current &&
         safelyDetachRef(current, current.return);
-      var isHidden$107 = null !== finishedWork.memoizedState,
-        wasHidden$108 = null !== current && null !== current.memoizedState;
+      var isHidden = null !== finishedWork.memoizedState;
+      isShowingFallback = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden$107;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
         offscreenSubtreeWasHidden =
-          prevOffscreenSubtreeWasHidden || wasHidden$108;
+          prevOffscreenSubtreeWasHidden || isShowingFallback;
         recursivelyTraverseMutationEffects(root, finishedWork);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -7535,15 +7539,14 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       root._visibility &= -3;
       root._visibility |= root._pendingVisibility & 2;
       flags & 8192 &&
-        ((root._visibility = isHidden$107
+        ((root._visibility = isHidden
           ? root._visibility & -2
           : root._visibility | 1),
-        isHidden$107 &&
-          ((isHidden$107 =
-            offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
+        isHidden &&
+          ((isHidden = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
-            wasHidden$108 ||
-            isHidden$107 ||
+            isShowingFallback ||
+            isHidden ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))));
       flags & 4 &&
@@ -7750,8 +7753,8 @@ function commitHookPassiveMountEffects(finishedWork, hookFlags) {
   } else
     try {
       commitHookEffectListMount(hookFlags, finishedWork);
-    } catch (error$111) {
-      captureCommitPhaseError(finishedWork, finishedWork.return, error$111);
+    } catch (error$108) {
+      captureCommitPhaseError(finishedWork, finishedWork.return, error$108);
     }
 }
 function recursivelyTraversePassiveMountEffects(root, parentFiber) {
@@ -8155,16 +8158,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         exitStatus = renderRootSync(root, lanes);
         if (2 === exitStatus) {
           errorRetryLanes = lanes;
-          var errorRetryLanes$113 = getLanesToRetrySynchronouslyOnError(
+          var errorRetryLanes$110 = getLanesToRetrySynchronouslyOnError(
             root,
             errorRetryLanes
           );
-          0 !== errorRetryLanes$113 &&
-            ((lanes = errorRetryLanes$113),
+          0 !== errorRetryLanes$110 &&
+            ((lanes = errorRetryLanes$110),
             (exitStatus = recoverFromConcurrentError(
               root,
               errorRetryLanes,
-              errorRetryLanes$113
+              errorRetryLanes$110
             )));
         }
         if (1 === exitStatus)
@@ -8480,8 +8483,8 @@ function renderRootSync(root, lanes) {
         }
       workLoopSync();
       break;
-    } catch (thrownValue$115) {
-      handleThrow(root, thrownValue$115);
+    } catch (thrownValue$112) {
+      handleThrow(root, thrownValue$112);
     }
   while (1);
   resetContextDependencies();
@@ -8597,8 +8600,8 @@ function renderRootConcurrent(root, lanes) {
         }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$117) {
-      handleThrow(root, thrownValue$117);
+    } catch (thrownValue$114) {
+      handleThrow(root, thrownValue$114);
     }
   while (1);
   resetContextDependencies();
@@ -10196,10 +10199,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1141 = {
+  devToolsConfig$jscomp$inline_1139 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-4e6ec507",
+    version: "18.3.0-canary-a6509f52",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -10228,10 +10231,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1141.bundleType,
-  version: devToolsConfig$jscomp$inline_1141.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1141.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1141.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1139.bundleType,
+  version: devToolsConfig$jscomp$inline_1139.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1139.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1139.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10247,14 +10250,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1141.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1139.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-4e6ec507"
+  reconcilerVersion: "18.3.0-canary-a6509f52"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

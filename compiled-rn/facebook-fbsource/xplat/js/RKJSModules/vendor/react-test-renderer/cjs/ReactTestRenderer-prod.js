@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<45020522021e7a01efc7d244b5d43b9f>>
+ * @generated SignedSource<<668f9e223a7ddfa69caac2f6094e95b5>>
  */
 
 "use strict";
@@ -5617,11 +5617,9 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
-      existingHiddenCallbacks = finishedWork.child;
-      existingHiddenCallbacks.flags & 8192 &&
-        null !== existingHiddenCallbacks.memoizedState &&
-        (null === existingHiddenCallbacks.alternate ||
-          null === existingHiddenCallbacks.alternate.memoizedState) &&
+      finishedWork.child.flags & 8192 &&
+        (null !== finishedWork.memoizedState) !==
+          (null !== current && null !== current.memoizedState) &&
         (globalMostRecentFallbackTime = now());
       flags & 4 &&
         ((flags = finishedWork.updateQueue),
@@ -5634,14 +5632,13 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         null !== current &&
         safelyDetachRef(current, current.return);
       existingHiddenCallbacks = null !== finishedWork.memoizedState;
-      var wasHidden$99 = null !== current && null !== current.memoizedState;
+      var wasHidden = null !== current && null !== current.memoizedState;
       if (finishedWork.mode & 1) {
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
           prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden =
           prevOffscreenSubtreeIsHidden || existingHiddenCallbacks;
-        offscreenSubtreeWasHidden =
-          prevOffscreenSubtreeWasHidden || wasHidden$99;
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
         recursivelyTraverseMutationEffects(root, finishedWork);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -5659,22 +5656,22 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         existingHiddenCallbacks &&
           ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
-            wasHidden$99 ||
+            wasHidden ||
             root ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))),
         null === finishedWork.memoizedProps ||
           "manual" !== finishedWork.memoizedProps.mode)
       )
-        a: for (current = null, wasHidden$99 = finishedWork; ; ) {
-          if (5 === wasHidden$99.tag) {
+        a: for (current = null, wasHidden = finishedWork; ; ) {
+          if (5 === wasHidden.tag) {
             if (null === current) {
-              current = wasHidden$99;
+              current = wasHidden;
               try {
-                (type = wasHidden$99.stateNode),
+                (type = wasHidden.stateNode),
                   existingHiddenCallbacks
                     ? (type.isHidden = !0)
-                    : (wasHidden$99.stateNode.isHidden = !1);
+                    : (wasHidden.stateNode.isHidden = !1);
               } catch (error) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -5683,10 +5680,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 );
               }
             }
-          } else if (6 === wasHidden$99.tag) {
+          } else if (6 === wasHidden.tag) {
             if (null === current)
               try {
-                wasHidden$99.stateNode.isHidden = existingHiddenCallbacks
+                wasHidden.stateNode.isHidden = existingHiddenCallbacks
                   ? !0
                   : !1;
               } catch (error$85) {
@@ -5697,28 +5694,25 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
                 );
               }
           } else if (
-            ((22 !== wasHidden$99.tag && 23 !== wasHidden$99.tag) ||
-              null === wasHidden$99.memoizedState ||
-              wasHidden$99 === finishedWork) &&
-            null !== wasHidden$99.child
+            ((22 !== wasHidden.tag && 23 !== wasHidden.tag) ||
+              null === wasHidden.memoizedState ||
+              wasHidden === finishedWork) &&
+            null !== wasHidden.child
           ) {
-            wasHidden$99.child.return = wasHidden$99;
-            wasHidden$99 = wasHidden$99.child;
+            wasHidden.child.return = wasHidden;
+            wasHidden = wasHidden.child;
             continue;
           }
-          if (wasHidden$99 === finishedWork) break a;
-          for (; null === wasHidden$99.sibling; ) {
-            if (
-              null === wasHidden$99.return ||
-              wasHidden$99.return === finishedWork
-            )
+          if (wasHidden === finishedWork) break a;
+          for (; null === wasHidden.sibling; ) {
+            if (null === wasHidden.return || wasHidden.return === finishedWork)
               break a;
-            current === wasHidden$99 && (current = null);
-            wasHidden$99 = wasHidden$99.return;
+            current === wasHidden && (current = null);
+            wasHidden = wasHidden.return;
           }
-          current === wasHidden$99 && (current = null);
-          wasHidden$99.sibling.return = wasHidden$99.return;
-          wasHidden$99 = wasHidden$99.sibling;
+          current === wasHidden && (current = null);
+          wasHidden.sibling.return = wasHidden.return;
+          wasHidden = wasHidden.sibling;
         }
       flags & 4 &&
         ((flags = finishedWork.updateQueue),
@@ -6507,16 +6501,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         didTimeout = renderRootSync(root, lanes);
         if (2 === didTimeout) {
           errorRetryLanes = lanes;
-          var errorRetryLanes$107 = getLanesToRetrySynchronouslyOnError(
+          var errorRetryLanes$104 = getLanesToRetrySynchronouslyOnError(
             root,
             errorRetryLanes
           );
-          0 !== errorRetryLanes$107 &&
-            ((lanes = errorRetryLanes$107),
+          0 !== errorRetryLanes$104 &&
+            ((lanes = errorRetryLanes$104),
             (didTimeout = recoverFromConcurrentError(
               root,
               errorRetryLanes,
-              errorRetryLanes$107
+              errorRetryLanes$104
             )));
         }
         if (1 === didTimeout)
@@ -6821,8 +6815,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$109) {
-      handleThrow(root, thrownValue$109);
+    } catch (thrownValue$106) {
+      handleThrow(root, thrownValue$106);
     }
   while (1);
   resetContextDependencies();
@@ -6929,8 +6923,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$111) {
-      handleThrow(root, thrownValue$111);
+    } catch (thrownValue$108) {
+      handleThrow(root, thrownValue$108);
     }
   while (1);
   resetContextDependencies();
@@ -8618,19 +8612,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1039 = {
+var devToolsConfig$jscomp$inline_1036 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-4cd706566-20230512",
+  version: "18.3.0-canary-4bfcd02b2-20230516",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1238 = {
-  bundleType: devToolsConfig$jscomp$inline_1039.bundleType,
-  version: devToolsConfig$jscomp$inline_1039.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1039.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1039.rendererConfig,
+var internals$jscomp$inline_1235 = {
+  bundleType: devToolsConfig$jscomp$inline_1036.bundleType,
+  version: devToolsConfig$jscomp$inline_1036.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1036.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1036.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -8647,26 +8641,26 @@ var internals$jscomp$inline_1238 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1039.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1036.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-4cd706566-20230512"
+  reconcilerVersion: "18.3.0-canary-4bfcd02b2-20230516"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1239 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1236 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1239.isDisabled &&
-    hook$jscomp$inline_1239.supportsFiber
+    !hook$jscomp$inline_1236.isDisabled &&
+    hook$jscomp$inline_1236.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1239.inject(
-        internals$jscomp$inline_1238
+      (rendererID = hook$jscomp$inline_1236.inject(
+        internals$jscomp$inline_1235
       )),
-        (injectedHook = hook$jscomp$inline_1239);
+        (injectedHook = hook$jscomp$inline_1236);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
