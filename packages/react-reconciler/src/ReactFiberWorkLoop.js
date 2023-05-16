@@ -370,8 +370,10 @@ let workInProgressRootConcurrentErrors: Array<CapturedValue<mixed>> | null =
 let workInProgressRootRecoverableErrors: Array<CapturedValue<mixed>> | null =
   null;
 
-// The most recent time we committed a fallback. This lets us ensure a train
-// model where we don't commit new loading states in too quick succession.
+// The most recent time we either committed a fallback, or when a fallback was
+// filled in with the resolved UI. This lets us throttle the appearance of new
+// content as it streams in, to minimize jank.
+// TODO: Think of a better name for this variable?
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
 
