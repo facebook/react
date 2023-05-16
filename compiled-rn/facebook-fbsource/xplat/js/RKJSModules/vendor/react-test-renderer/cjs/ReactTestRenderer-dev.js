@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1559e1781d2b4f77a1b869cc6a27b095>>
+ * @generated SignedSource<<ca59e5754dbc2396cdc2b7d218cedd13>>
  */
 
 'use strict';
@@ -20014,7 +20014,7 @@ var workInProgressRootRecoverableErrors = null; // The most recent time we eithe
 // TODO: Think of a better name for this variable?
 
 var globalMostRecentFallbackTime = 0;
-var FALLBACK_THROTTLE_MS = 500; // The absolute time for when we should start giving up on rendering
+var FALLBACK_THROTTLE_MS = 300; // The absolute time for when we should start giving up on rendering
 // more and prefer CPU suspense heuristics instead.
 
 var workInProgressRootRenderTargetTime = Infinity; // How long a render is supposed to take before we start following CPU
@@ -23930,7 +23930,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-4bfcd02b2-20230516";
+var ReactVersion = "18.3.0-canary-f8de255e9-20230516";
 
 // Might add PROFILE later.
 

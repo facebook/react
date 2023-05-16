@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1129f51d0ce56db855259eecc041cfb0>>
+ * @generated SignedSource<<d827ef8b6ab7cd5a32a962f196664c2a>>
  */
 
 "use strict";
@@ -7671,7 +7671,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         if (
           (lanes & 125829120) === lanes &&
           (alwaysThrottleRetries || 3 === exitStatus) &&
-          ((exitStatus = globalMostRecentFallbackTime + 500 - now()),
+          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
           10 < exitStatus)
         ) {
           markRootSuspended(root, lanes);
@@ -8530,7 +8530,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     (3 === workInProgressRootExitStatus &&
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
-      500 > now() - globalMostRecentFallbackTime)
+      300 > now() - globalMostRecentFallbackTime)
       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root);
@@ -9493,7 +9493,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1061 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-2c90a59e",
+    version: "18.3.0-canary-765a5f8c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForViewTag: function () {
@@ -9535,7 +9535,7 @@ var internals$jscomp$inline_1299 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2c90a59e"
+  reconcilerVersion: "18.3.0-canary-765a5f8c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1300 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

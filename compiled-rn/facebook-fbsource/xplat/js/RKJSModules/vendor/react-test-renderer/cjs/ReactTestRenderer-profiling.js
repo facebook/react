@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cc785859fee2463cf14fc2b5e4b075cb>>
+ * @generated SignedSource<<a9469d90e2f55f1395287b11b0eee96e>>
  */
 
 "use strict";
@@ -6884,7 +6884,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         }
         if (
           (lanes & 125829120) === lanes &&
-          ((didTimeout = globalMostRecentFallbackTime + 500 - now$1()),
+          ((didTimeout = globalMostRecentFallbackTime + 300 - now$1()),
           10 < didTimeout)
         ) {
           markRootSuspended(root, lanes);
@@ -7865,7 +7865,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
     (3 === workInProgressRootExitStatus &&
       (workInProgressRootRenderLanes & 125829120) ===
         workInProgressRootRenderLanes &&
-      500 > now$1() - globalMostRecentFallbackTime)
+      300 > now$1() - globalMostRecentFallbackTime)
       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
       : (workInProgressRootPingedLanes |= pingedLanes));
   ensureRootIsScheduled(root);
@@ -9043,7 +9043,7 @@ var devToolsConfig$jscomp$inline_1078 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-4bfcd02b2-20230516",
+  version: "18.3.0-canary-f8de255e9-20230516",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1276 = {
@@ -9074,7 +9074,7 @@ var internals$jscomp$inline_1276 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-4bfcd02b2-20230516"
+  reconcilerVersion: "18.3.0-canary-f8de255e9-20230516"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1277 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
