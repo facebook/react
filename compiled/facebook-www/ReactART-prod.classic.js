@@ -7099,12 +7099,12 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
-      current = finishedWork.child;
-      current.flags & 8192 &&
-        null !== current.memoizedState &&
-        (null === current.alternate ||
-          null === current.alternate.memoizedState) &&
-        (globalMostRecentFallbackTime = now());
+      finishedWork.child.flags & 8192 &&
+        ((newProps = null !== finishedWork.memoizedState),
+        (current = null !== current && null !== current.memoizedState),
+        alwaysThrottleRetries
+          ? newProps !== current && (globalMostRecentFallbackTime = now())
+          : newProps && !current && (globalMostRecentFallbackTime = now()));
       if (flags & 4) {
         try {
           if (null !== finishedWork.memoizedState) {
@@ -7721,9 +7721,9 @@ function recursivelyTraverseReconnectPassiveEffects(
           );
         break;
       case 22:
-        var instance$121 = finishedWork.stateNode;
+        var instance$118 = finishedWork.stateNode;
         null !== finishedWork.memoizedState
-          ? instance$121._visibility & 4
+          ? instance$118._visibility & 4
             ? recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -7736,7 +7736,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork
               )
-            : ((instance$121._visibility |= 4),
+            : ((instance$118._visibility |= 4),
               recursivelyTraverseReconnectPassiveEffects(
                 finishedRoot,
                 finishedWork,
@@ -7744,7 +7744,7 @@ function recursivelyTraverseReconnectPassiveEffects(
                 committedTransitions,
                 includeWorkInProgressEffects
               ))
-          : ((instance$121._visibility |= 4),
+          : ((instance$118._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
               finishedWork,
@@ -7757,7 +7757,7 @@ function recursivelyTraverseReconnectPassiveEffects(
           commitOffscreenPassiveMountEffects(
             finishedWork.alternate,
             finishedWork,
-            instance$121
+            instance$118
           );
         break;
       case 24:
@@ -8262,16 +8262,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         exitStatus = renderRootSync(root, lanes);
         if (2 === exitStatus) {
           errorRetryLanes = lanes;
-          var errorRetryLanes$130 = getLanesToRetrySynchronouslyOnError(
+          var errorRetryLanes$127 = getLanesToRetrySynchronouslyOnError(
             root,
             errorRetryLanes
           );
-          0 !== errorRetryLanes$130 &&
-            ((lanes = errorRetryLanes$130),
+          0 !== errorRetryLanes$127 &&
+            ((lanes = errorRetryLanes$127),
             (exitStatus = recoverFromConcurrentError(
               root,
               errorRetryLanes,
-              errorRetryLanes$130
+              errorRetryLanes$127
             )));
         }
         if (1 === exitStatus)
@@ -8555,8 +8555,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$132) {
-      handleThrow(root, thrownValue$132);
+    } catch (thrownValue$129) {
+      handleThrow(root, thrownValue$129);
     }
   while (1);
   resetContextDependencies();
@@ -8660,8 +8660,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$134) {
-      handleThrow(root, thrownValue$134);
+    } catch (thrownValue$131) {
+      handleThrow(root, thrownValue$131);
     }
   while (1);
   resetContextDependencies();
@@ -10188,19 +10188,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1150 = {
+  devToolsConfig$jscomp$inline_1148 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-06adf47d",
+    version: "18.3.0-www-classic-42b150af",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1325 = {
-  bundleType: devToolsConfig$jscomp$inline_1150.bundleType,
-  version: devToolsConfig$jscomp$inline_1150.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1150.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1150.rendererConfig,
+var internals$jscomp$inline_1323 = {
+  bundleType: devToolsConfig$jscomp$inline_1148.bundleType,
+  version: devToolsConfig$jscomp$inline_1148.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1148.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1148.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10217,26 +10217,26 @@ var internals$jscomp$inline_1325 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1150.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1148.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-06adf47d"
+  reconcilerVersion: "18.3.0-www-classic-42b150af"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1326 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1326.isDisabled &&
-    hook$jscomp$inline_1326.supportsFiber
+    !hook$jscomp$inline_1324.isDisabled &&
+    hook$jscomp$inline_1324.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1326.inject(
-        internals$jscomp$inline_1325
+      (rendererID = hook$jscomp$inline_1324.inject(
+        internals$jscomp$inline_1323
       )),
-        (injectedHook = hook$jscomp$inline_1326);
+        (injectedHook = hook$jscomp$inline_1324);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

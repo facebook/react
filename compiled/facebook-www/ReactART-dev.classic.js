@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-d297891e";
+var ReactVersion = "18.3.0-www-classic-ed32f0c6";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -22110,20 +22110,35 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case SuspenseComponent: {
       recursivelyTraverseMutationEffects(root, finishedWork);
-      commitReconciliationEffects(finishedWork);
+      commitReconciliationEffects(finishedWork); // TODO: We should mark a flag on the Suspense fiber itself, rather than
+      // relying on the Offscreen fiber having a flag also being marked. The
+      // reason is that this offscreen fiber might not be part of the work-in-
+      // progress tree! It could have been reused from a previous render. This
+      // doesn't lead to incorrect behavior because we don't rely on the flag
+      // check alone; we also compare the states explicitly below. But for
+      // modeling purposes, we _should_ be able to rely on the flag check alone.
+      // So this is a bit fragile.
+      //
+      // Also, all this logic could/should move to the passive phase so it
+      // doesn't block paint.
+
       var offscreenFiber = finishedWork.child;
 
       if (offscreenFiber.flags & Visibility) {
-        var newState = offscreenFiber.memoizedState;
-        var isHidden = newState !== null;
+        // Throttle the appearance and disappearance of Suspense fallbacks.
+        var isShowingFallback = finishedWork.memoizedState !== null;
+        var wasShowingFallback =
+          current !== null && current.memoizedState !== null;
 
-        if (isHidden) {
-          var wasHidden =
-            offscreenFiber.alternate !== null &&
-            offscreenFiber.alternate.memoizedState !== null;
-
-          if (!wasHidden) {
-            // TODO: Move to passive phase
+        if (alwaysThrottleRetries) {
+          if (isShowingFallback !== wasShowingFallback) {
+            // A fallback is either appearing or disappearing.
+            markCommitTimeOfFallback();
+          }
+        } else {
+          if (isShowingFallback && !wasShowingFallback) {
+            // Old behavior. Only mark when a fallback appears, not when
+            // it disappears.
             markCommitTimeOfFallback();
           }
         }
@@ -22154,11 +22169,9 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         }
       }
 
-      var _newState = finishedWork.memoizedState;
-
-      var _isHidden = _newState !== null;
-
-      var _wasHidden = current !== null && current.memoizedState !== null;
+      var newState = finishedWork.memoizedState;
+      var isHidden = newState !== null;
+      var wasHidden = current !== null && current.memoizedState !== null;
 
       if (finishedWork.mode & ConcurrentMode) {
         // Before committing the children, track on the stack whether this
@@ -22166,8 +22179,8 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         // effects again.
         var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
         var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || _isHidden;
-        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || _wasHidden;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
         recursivelyTraverseMutationEffects(root, finishedWork);
         offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
         offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
@@ -22188,13 +22201,13 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
       if (flags & Visibility) {
         // Track the current state on the Offscreen instance so we can
         // read it during an event
-        if (_isHidden) {
+        if (isHidden) {
           offscreenInstance._visibility &= ~OffscreenVisible;
         } else {
           offscreenInstance._visibility |= OffscreenVisible;
         }
 
-        if (_isHidden) {
+        if (isHidden) {
           var isUpdate = current !== null;
           var wasHiddenByAncestorOffscreen =
             offscreenSubtreeIsHidden || offscreenSubtreeWasHidden; // Only trigger disapper layout effects if:
@@ -22202,7 +22215,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           //   - This Offscreen was not hidden before.
           //   - Ancestor Offscreen was not hidden in previous commit.
 
-          if (isUpdate && !_wasHidden && !wasHiddenByAncestorOffscreen) {
+          if (isUpdate && !wasHidden && !wasHiddenByAncestorOffscreen) {
             if ((finishedWork.mode & ConcurrentMode) !== NoMode) {
               // Disappear the layout effects of all the children
               recursivelyTraverseDisappearLayoutEffects(finishedWork);
@@ -22213,7 +22226,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         if (!isOffscreenManual(finishedWork)) {
           // TODO: This needs to run whenever there's an insertion or update
           // inside a hidden Offscreen tree.
-          hideOrUnhideAllChildren(finishedWork, _isHidden);
+          hideOrUnhideAllChildren(finishedWork, isHidden);
         }
       } // TODO: Move to passive phase
 
@@ -24000,8 +24013,10 @@ var workInProgressRootPingedLanes = NoLanes; // Errors that are thrown during th
 var workInProgressRootConcurrentErrors = null; // These are errors that we recovered from without surfacing them to the UI.
 // We will log them once the tree commits.
 
-var workInProgressRootRecoverableErrors = null; // The most recent time we committed a fallback. This lets us ensure a train
-// model where we don't commit new loading states in too quick succession.
+var workInProgressRootRecoverableErrors = null; // The most recent time we either committed a fallback, or when a fallback was
+// filled in with the resolved UI. This lets us throttle the appearance of new
+// content as it streams in, to minimize jank.
+// TODO: Think of a better name for this variable?
 
 var globalMostRecentFallbackTime = 0;
 var FALLBACK_THROTTLE_MS = 500; // The absolute time for when we should start giving up on rendering
