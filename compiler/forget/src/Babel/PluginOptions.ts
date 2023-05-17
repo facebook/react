@@ -7,7 +7,7 @@
 
 import { EnvironmentConfig } from "../HIR/Environment";
 
-export type GatingOptions = {
+export type ExternalFunction = {
   /**
    * Source for the imported module that exports the `importSpecifierName` functions
    */
@@ -16,6 +16,11 @@ export type GatingOptions = {
    * Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
    */
   importSpecifierName: string;
+};
+
+export type InstrumentForgetOptions = {
+  gating: ExternalFunction;
+  instrumentFn: ExternalFunction;
 };
 
 export type PluginOptions = {
@@ -48,7 +53,35 @@ export type PluginOptions = {
    *
    *  var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
-  gating: GatingOptions | null;
+  gating: ExternalFunction | null;
+  /**
+   * Enables instrumentation codegen. This emits a dev-mode only + gated call to
+   * an instrumentation function, for components and hooks that Forget compiles.
+   * For example:
+   *  instrumentForget: {
+   *    gating: {
+   *      source: 'ReactInstrumentForgetFeatureFlag',
+   *      importSpecifierName: 'isInstrumentForgetEnabled_Pokes',
+   *    },
+   *    instrumentFn: {
+   *      source: 'react-forget-runtime',
+   *      importSpecifierName: 'useRenderCounter',
+   *    }
+   *  }
+   *
+   * produces:
+   *  import {isInstrumentForgetEnabled_Pokes} from 'ReactInstrumentForgetFeatureFlag';
+   *  import {useRenderCounter} from 'react-forget-runtime';
+   *
+   *  function Component(props) {
+   *    if (__DEV__ && isInstrumentForgetEnabled_Pokes) {
+   *       useRenderCounter();
+   *    }
+   *    // ...
+   *  }
+   *
+   */
+  instrumentForget: InstrumentForgetOptions | null;
 
   panicOnBailout: boolean;
 
@@ -66,6 +99,7 @@ export const defaultOptions: PluginOptions = {
   logger: null,
   gating: null,
   isDev: false,
+  instrumentForget: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

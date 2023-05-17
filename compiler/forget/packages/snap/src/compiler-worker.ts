@@ -91,10 +91,24 @@ export async function compile(
     }
 
     let gating = null;
+    let instrumentForget = null;
     if (firstLine.indexOf("@gating") !== -1) {
       gating = {
         source: "ReactForgetFeatureFlag",
         importSpecifierName: "isForgetEnabled_Fixtures",
+      };
+    }
+
+    if (firstLine.indexOf("@instrumentForget") !== -1) {
+      instrumentForget = {
+        gating: {
+          source: "ReactInstrumentForgetFeatureFlag",
+          importSpecifierName: "isInstrumentForgetEnabled_Fixtures",
+        },
+        instrumentFn: {
+          source: "react-forget-runtime",
+          importSpecifierName: "useRenderCounter",
+        },
       };
     }
 
@@ -120,9 +134,11 @@ export async function compile(
           ],
         ]),
         validateHooksUsage: true,
+        inlineUseMemo: true,
       },
       logger: null,
       gating,
+      instrumentForget,
       panicOnBailout,
       isDev: true,
     }).code;

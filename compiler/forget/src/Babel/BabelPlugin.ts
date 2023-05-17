@@ -17,8 +17,9 @@ import {
 } from "../CompilerError";
 import { compile } from "../CompilerPipeline";
 import { GeneratedSource } from "../HIR";
+import { addInstrumentForget } from "./InstrumentForgetBabelPlugin";
 import {
-  GatingOptions,
+  ExternalFunction,
   PluginOptions,
   parsePluginOptions,
 } from "./PluginOptions";
@@ -57,16 +58,16 @@ export default function ReactForgetBabelPlugin(
   ): void {
     try {
       const compiled = compile(fn, pass.opts.environment);
+      if (fn.node.id == null) {
+        CompilerError.invariant(
+          "FunctionDeclaration must have a name",
+          fn.node.loc ?? GeneratedSource
+        );
+      }
+      const originalIdent = fn.node.id;
 
       if (pass.opts.gating != null) {
         // Rename existing function
-        if (fn.node.id == null) {
-          CompilerError.invariant(
-            "FunctionDeclaration must have a name",
-            fn.node.loc ?? GeneratedSource
-          );
-        }
-        const original = fn.node.id;
         fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
         // Rename and append compiled function
@@ -85,12 +86,42 @@ export default function ReactForgetBabelPlugin(
           buildGatingTest({
             originalFnDecl: fn,
             compiledIdent: compiled.id,
-            originalIdent: original,
+            originalIdent,
             gating: pass.opts.gating,
           })
         );
+        if (pass.opts.instrumentForget != null) {
+          const gatingIdentifierName =
+            pass.opts.instrumentForget.gating.importSpecifierName;
+          const instrumentFnName =
+            pass.opts.instrumentForget.instrumentFn.importSpecifierName;
+          addInstrumentForget(
+            fn,
+            originalIdent.name,
+            gatingIdentifierName,
+            instrumentFnName
+          );
+          addInstrumentForget(
+            compiledFn,
+            originalIdent.name,
+            gatingIdentifierName,
+            instrumentFnName
+          );
+        }
       } else {
         fn.replaceWith(compiled);
+        if (pass.opts.instrumentForget != null) {
+          const gatingIdentifierName =
+            pass.opts.instrumentForget.gating.importSpecifierName;
+          const instrumentFnName =
+            pass.opts.instrumentForget.instrumentFn.importSpecifierName;
+          addInstrumentForget(
+            fn,
+            originalIdent.name,
+            gatingIdentifierName,
+            instrumentFnName
+          );
+        }
       }
 
       hasForgetCompiledCode = true;
@@ -302,10 +333,23 @@ export default function ReactForgetBabelPlugin(
               );
             }
           }
+          // TODO: check for duplicate import specifiers
           if (options.gating != null) {
             path.unshiftContainer(
               "body",
-              buildImportForGatingModule(options.gating)
+              buildImportForExternalFunction(options.gating)
+            );
+          }
+          if (options.instrumentForget != null) {
+            path.unshiftContainer(
+              "body",
+              buildImportForExternalFunction(options.instrumentForget.gating)
+            );
+            path.unshiftContainer(
+              "body",
+              buildImportForExternalFunction(
+                options.instrumentForget.instrumentFn
+              )
             );
           }
         }
@@ -430,7 +474,7 @@ type GatingTestOptions = {
   originalFnDecl: BabelCore.NodePath<t.FunctionDeclaration>;
   compiledIdent: t.Identifier;
   originalIdent: t.Identifier;
-  gating: GatingOptions;
+  gating: ExternalFunction;
 };
 function buildGatingTest({
   originalFnDecl,
@@ -473,8 +517,8 @@ function addSuffix(id: t.Identifier, suffix: string): t.Identifier {
   return t.identifier(`${id.name}${suffix}`);
 }
 
-function buildImportForGatingModule(
-  gating: GatingOptions
+function buildImportForExternalFunction(
+  gating: ExternalFunction
 ): t.ImportDeclaration {
   const specifierIdent = buildSpecifierIdent(gating);
   return t.importDeclaration(
@@ -483,7 +527,7 @@ function buildImportForGatingModule(
   );
 }
 
-function buildSpecifierIdent(gating: GatingOptions): t.Identifier {
+function buildSpecifierIdent(gating: ExternalFunction): t.Identifier {
   return t.identifier(gating.importSpecifierName);
 }
 

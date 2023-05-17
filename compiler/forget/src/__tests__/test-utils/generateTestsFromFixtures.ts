@@ -12,7 +12,11 @@
 import fs from "fs";
 import glob from "glob";
 import path from "path";
-import { GatingOptions, PluginOptions } from "../../Babel/PluginOptions";
+import {
+  ExternalFunction,
+  InstrumentForgetOptions,
+  PluginOptions,
+} from "../../Babel/PluginOptions";
 
 const EXPECT_SUFFIX = ".expect.md";
 
@@ -93,7 +97,8 @@ export default function generateTestsFromFixtures(
         let input: string | null = null;
         let debug = false;
         let enableOnlyOnUseForgetDirective = false;
-        let gating: GatingOptions | null = null;
+        let gating: ExternalFunction | null = null;
+        let instrumentForget: InstrumentForgetOptions | null = null;
         let inlineUseMemo = true;
         let panicOnBailout = true;
         let memoizeJsxElements = true;
@@ -119,6 +124,18 @@ export default function generateTestsFromFixtures(
               importSpecifierName: "isForgetEnabled_Fixtures",
             };
           }
+          if (lines[0]!.indexOf("@instrumentForget") !== -1) {
+            instrumentForget = {
+              gating: {
+                source: "ReactInstrumentForgetFeatureFlag",
+                importSpecifierName: "isInstrumentForgetEnabled_Fixtures",
+              },
+              instrumentFn: {
+                source: "react-forget-runtime",
+                importSpecifierName: "useRenderCounter",
+              },
+            };
+          }
           if (lines[0]!.indexOf("@inlineUseMemo false") !== -1) {
             inlineUseMemo = false;
           }
@@ -139,6 +156,7 @@ export default function generateTestsFromFixtures(
               debug,
               enableOnlyOnUseForgetDirective,
               gating,
+              instrumentForget,
               language: parseLanguage(input),
               panicOnBailout,
               isDev: true,

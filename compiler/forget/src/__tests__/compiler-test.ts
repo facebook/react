@@ -62,6 +62,7 @@ describe("React Forget", () => {
             },
             logger: null,
             gating: options.gating,
+            instrumentForget: options.instrumentForget,
             panicOnBailout: options.panicOnBailout,
             isDev: true,
           }).code,
