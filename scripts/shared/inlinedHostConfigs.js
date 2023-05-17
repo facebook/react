@@ -223,22 +223,7 @@ module.exports = [
     ],
     isFlowTyped: true,
     isServerSupported: true,
-  },
-  {
-    shortName: 'native-relay',
-    entryPoints: [
-      'react-server-native-relay',
-      'react-server-native-relay/server',
-    ],
-    paths: [
-      'react-native-renderer',
-      'react-server-native-relay',
-      // this is included here so that it's not included in the main native check
-      // remove this when it's added to the main native renderer.
-      'react-native-renderer/src/server',
-    ],
-    isFlowTyped: true,
-    isServerSupported: true,
+    isFlightSupported: false,
   },
   {
     shortName: 'custom',
