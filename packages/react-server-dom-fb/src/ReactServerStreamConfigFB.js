@@ -63,6 +63,10 @@ export function clonePrecomputedChunk(
   return chunk;
 }
 
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  throw new Error('Not implemented.');
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   destination.done = true;
   destination.fatal = true;

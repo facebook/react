@@ -40,3 +40,4 @@ export const closeWithError = $$$config.closeWithError;
 export const stringToChunk = $$$config.stringToChunk;
 export const stringToPrecomputedChunk = $$$config.stringToPrecomputedChunk;
 export const clonePrecomputedChunk = $$$config.clonePrecomputedChunk;
+export const byteLengthOfChunk = $$$config.byteLengthOfChunk;

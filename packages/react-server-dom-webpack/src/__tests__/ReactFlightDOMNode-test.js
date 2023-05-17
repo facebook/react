@@ -104,4 +104,31 @@ describe('ReactFlightDOMNode', () => {
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
   });
+
+  it('should encode long string in a compact format', async () => {
+    const testString = '"\n\t'.repeat(500) + '🙃';
+
+    const stream = ReactServerDOMServer.renderToPipeableStream({
+      text: testString,
+    });
+
+    const readable = new Stream.PassThrough();
+
+    const stringResult = readResult(readable);
+    const parsedResult = ReactServerDOMClient.createFromNodeStream(readable);
+
+    stream.pipe(readable);
+
+    const serializedContent = await stringResult;
+    // The content should be compact an unescaped
+    expect(serializedContent.length).toBeLessThan(2000);
+    expect(serializedContent).not.toContain('\\n');
+    expect(serializedContent).not.toContain('\\t');
+    expect(serializedContent).not.toContain('\\"');
+    expect(serializedContent).toContain('\t');
+
+    const result = await parsedResult;
+    // Should still match the result when parsed
+    expect(result.text).toBe(testString);
+  });
 });
