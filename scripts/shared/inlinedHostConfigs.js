@@ -181,11 +181,17 @@ module.exports = [
     isServerSupported: true,
   },
   {
-    shortName: 'art',
-    entryPoints: ['react-art'],
-    paths: ['react-art'],
-    isFlowTyped: false, // TODO: type it.
-    isServerSupported: false,
+    shortName: 'dom-fb',
+    entryPoints: ['react-server-dom-fb/src/ReactDOMServerFB.js'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-server-dom-fb',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+    isFlightSupported: false,
   },
   {
     shortName: 'native',
@@ -209,21 +215,11 @@ module.exports = [
     isServerSupported: false,
   },
   {
-    shortName: 'dom-relay',
-    entryPoints: [
-      'react-server-dom-relay',
-      'react-server-dom-relay/server',
-      'react-server-dom-relay/src/ReactDOMServerFB.js',
-    ],
-    paths: [
-      'react-dom',
-      'react-dom-bindings',
-      'react-server-dom-relay',
-      'shared/ReactDOMSharedInternals',
-    ],
-    isFlowTyped: true,
-    isServerSupported: true,
-    isFlightSupported: false,
+    shortName: 'art',
+    entryPoints: ['react-art'],
+    paths: ['react-art'],
+    isFlowTyped: false, // TODO: type it.
+    isServerSupported: false,
   },
   {
     shortName: 'custom',

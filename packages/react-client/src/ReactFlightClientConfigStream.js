@@ -10,6 +10,14 @@
 import type {ResponseBase} from './ReactFlightClient';
 import type {StringDecoder} from './ReactFlightClientConfig';
 
+type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 export type Response = ResponseBase & {
   _partialRow: string,
   _fromJSON: (key: string, value: JSONValue) => any,

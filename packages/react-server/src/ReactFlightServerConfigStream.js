@@ -75,6 +75,14 @@ import type {Chunk} from './ReactServerStreamConfig';
 
 export type {Destination, Chunk} from './ReactServerStreamConfig';
 
+type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 const stringify = JSON.stringify;
 
 function serializeRowHeader(tag: string, id: number) {

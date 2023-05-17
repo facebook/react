@@ -112,6 +112,14 @@ export function processBinaryChunk(
   response._partialRow += readPartialStringChunk(stringDecoder, chunk);
 }
 
+type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
 function createFromJSONCallback(response: Response) {
   // $FlowFixMe[missing-this-annot]
   return function (key: string, value: JSONValue) {
