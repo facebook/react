@@ -36,13 +36,13 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  bb1: if (props.cond) {
-    switch (props.test) {
+  if (props.cond) {
+    bb3: switch (props.test) {
       case 0: {
-        break bb1;
+        break bb3;
       }
       case 1: {
-        break bb1;
+        break bb3;
       }
       case 2: {
       }

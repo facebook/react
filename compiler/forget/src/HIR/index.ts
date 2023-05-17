@@ -14,7 +14,6 @@ export {
   markPredecessors,
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
-  shrink,
 } from "./HIRBuilder";
 export { Hook } from "./Hooks";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";

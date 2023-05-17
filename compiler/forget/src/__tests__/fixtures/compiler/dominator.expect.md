@@ -43,19 +43,22 @@ function Component(props) {
 ```javascript
 function Component(props) {
   let x = 0;
-  if (props.a) {
-    x = 1;
-  } else {
-    if (props.b) {
-      x = 3;
+  bb1: {
+    if (props.a) {
+      x = 1;
     } else {
+      if (props.b) {
+        x = 3;
+      } else {
+        break bb1;
+      }
     }
   }
   bb10: {
-    switch (props.c) {
+    bb12: switch (props.c) {
       case "a": {
         x = 4;
-        break bb10;
+        break bb12;
       }
       case "b": {
         break bb10;

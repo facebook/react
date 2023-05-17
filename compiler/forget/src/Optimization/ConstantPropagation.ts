@@ -20,7 +20,6 @@ import {
   Primitive,
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
-  shrink,
   validateConsistentIdentifiers,
   validateTerminalSuccessors,
 } from "../HIR";
@@ -52,7 +51,6 @@ export function constantPropagation(fn: HIRFunction): void {
   if (haveTerminalsChanged) {
     // If terminals have changed then blocks may have become newly unreachable.
     // Re-run minification of the graph (incl reordering instruction ids)
-    shrink(fn.body);
     reversePostorderBlocks(fn.body);
     removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);

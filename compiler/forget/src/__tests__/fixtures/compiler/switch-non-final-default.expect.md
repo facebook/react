@@ -53,7 +53,6 @@ function Component(props) {
           t0 = $[3];
         }
         y = t0;
-        break bb1;
       }
       default: {
         break bb1;

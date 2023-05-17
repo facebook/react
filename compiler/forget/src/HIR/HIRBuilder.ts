@@ -9,7 +9,6 @@ import { Binding, NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
-import { logHIR } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
 import { Global } from "./Globals";
@@ -283,10 +282,11 @@ export default class HIRBuilder {
       blocks: this.#completed,
       entry: this.#entry,
     };
-    logHIR("Build (pre-shrink)", ir);
-    // First reduce indirections
-    shrink(ir);
-    logHIR("Build (shrunk)", ir);
+    // logHIR("Build (pre-shrink)", ir);
+    // // First reduce indirections
+    // shrink(ir);
+    // logHIR("Build (shrunk)", ir);
+
     // then convert to reverse postorder
     reversePostorderBlocks(ir);
     removeUnreachableForUpdates(ir);
@@ -500,7 +500,7 @@ export default class HIRBuilder {
 /**
  * Helper to shrink a CFG eliminate jump-only blocks.
  */
-export function shrink(func: HIR): void {
+function _shrink(func: HIR): void {
   const gotos = new Map();
   /**
    * Given a target block for some terminator, resolves the ideal block that should be

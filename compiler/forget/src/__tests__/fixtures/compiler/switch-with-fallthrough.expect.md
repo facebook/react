@@ -40,7 +40,6 @@ function foo(x) {
     case 0: {
     }
     case 1: {
-      break bb1;
     }
     case 2: {
       break bb1;

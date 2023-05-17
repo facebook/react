@@ -24,7 +24,6 @@ import {
   makeInstructionId,
   makeType,
   reversePostorderBlocks,
-  shrink,
 } from "../HIR";
 import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
 import { assertExhaustive, retainWhere } from "../Utils/utils";
@@ -236,7 +235,6 @@ export function inlineUseMemo(fn: HIRFunction): void {
 
     // If terminals have changed then blocks may have become newly unreachable.
     // Re-run minification of the graph (incl reordering instruction ids)
-    shrink(fn.body);
     reversePostorderBlocks(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);

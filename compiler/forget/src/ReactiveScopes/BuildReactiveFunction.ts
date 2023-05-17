@@ -6,6 +6,7 @@
  */
 
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -539,9 +540,19 @@ class Driver {
           scheduleIds.push(scheduleId);
         }
 
-        const block = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.block)!
-        );
+        let block: ReactiveBlock;
+        if (this.cx.isScheduled(terminal.block)) {
+          const break_ = this.visitBreak(terminal.block, null);
+          if (break_ === null) {
+            CompilerError.invariant(
+              "Expected a break target for a label whose body is already scheduled",
+              terminal.loc
+            );
+          }
+          block = [break_];
+        } else {
+          block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);
+        }
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
