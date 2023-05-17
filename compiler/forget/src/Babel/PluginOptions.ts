@@ -51,6 +51,8 @@ export type PluginOptions = {
   gating: GatingOptions | null;
 
   panicOnBailout: boolean;
+
+  isDev: boolean;
 };
 
 export type Logger = {
@@ -63,6 +65,7 @@ export const defaultOptions: PluginOptions = {
   environment: null,
   logger: null,
   gating: null,
+  isDev: false,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

@@ -109,7 +109,9 @@ export default function ReactForgetBabelPlugin(
       ) {
         throw err;
       } else {
-        console.log(formatErrorsForConsole(err, pass.filename ?? null));
+        if (pass.opts.isDev) {
+          log(err, pass.filename ?? null);
+        }
       }
     } finally {
       // We are generating a new FunctionDeclaration node, so we must skip over it or this
@@ -150,7 +152,9 @@ export default function ReactForgetBabelPlugin(
         if (options.panicOnBailout || error.isCritical()) {
           throw error;
         } else {
-          console.log(formatErrorsForConsole(error, pass.filename));
+          if (pass.opts.isDev) {
+            log(error, pass.filename);
+          }
         }
         return;
       }
@@ -219,7 +223,9 @@ export default function ReactForgetBabelPlugin(
             if (options.panicOnBailout || error.isCritical()) {
               throw error;
             } else {
-              console.log(formatErrorsForConsole(error, pass.filename ?? null));
+              if (options.isDev) {
+                log(error, pass.filename ?? null);
+              }
             }
           }
 
@@ -329,17 +335,16 @@ function shouldCompile(
   return true;
 }
 
-function formatErrorsForConsole(
-  error: CompilerError,
-  filename: string | null
-): string {
+function log(error: CompilerError, filename: string | null): void {
   const filenameStr = filename ? `in ${filename}` : "";
-  return error.details
-    .map(
-      (e) =>
-        `[ReactForget] Skipping compilation of component ${filenameStr}: ${e.printErrorMessage()}`
-    )
-    .join("\n");
+  console.log(
+    error.details
+      .map(
+        (e) =>
+          `[ReactForget] Skipping compilation of component ${filenameStr}: ${e.printErrorMessage()}`
+      )
+      .join("\n")
+  );
 }
 
 function makeError(

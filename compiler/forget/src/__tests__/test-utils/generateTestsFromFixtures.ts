@@ -141,6 +141,7 @@ export default function generateTestsFromFixtures(
               gating,
               language: parseLanguage(input),
               panicOnBailout,
+              isDev: true,
             });
           } else {
             receivedOutput = "<<input deleted>>";

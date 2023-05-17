@@ -124,6 +124,7 @@ export async function compile(
       logger: null,
       gating,
       panicOnBailout,
+      isDev: true,
     }).code;
   } catch (e) {
     error = e;
