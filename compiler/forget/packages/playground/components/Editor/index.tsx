@@ -133,6 +133,8 @@ function compile(source: string): CompilerOutput {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
         validateHooksUsage: true,
+        inlineUseMemo: true,
+        memoizeJsxElements: true,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
