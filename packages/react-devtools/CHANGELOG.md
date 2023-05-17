@@ -4,6 +4,14 @@
 
 ---
 
+### 4.27.8
+May 17, 2023
+
+#### Bugfixes
+* Fixed duplicated backend activation with multiple renderers ([hoxyq](https://github.com/hoxyq) in [#26807](https://github.com/facebook/react/pull/26807))
+
+---
+
 ### 4.27.7
 May 4, 2023
 
