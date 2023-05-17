@@ -12,6 +12,7 @@ const {
     ReactCurrentDispatcher,
   },
   useRef,
+  useEffect,
 } = React;
 
 export const $empty = Symbol.for("react.memo_cache_sentinel");
@@ -88,4 +89,55 @@ export function $reset($) {
 
 export function $makeReadOnly() {
   throw new Error("TODO: implement $makeReadOnly in react-forget-runtime");
+}
+
+/**
+ * Instrumentation to count rerenders in React components
+ */
+export const renderCounterRegistry /*: Map<string,Set<{count: number}>>*/ =
+  new Map();
+export function clearRenderCounterRegistry() {
+  for (const counters of renderCounterRegistry.values()) {
+    counters.forEach((counter) => {
+      counter.count = 0;
+    });
+  }
+}
+
+function registerRenderCounter(name, val) {
+  let counters = renderCounterRegistry.get(name);
+  if (counters == null) {
+    counters = new Set();
+    renderCounterRegistry.set(name, counters);
+  }
+  counters.add(val);
+}
+
+function removeRenderCounter(name, val): void {
+  const counters = renderCounterRegistry.get(name);
+  if (counters == null) {
+    return;
+  }
+  counters.delete(val);
+}
+
+export function useRenderCounter(name): void {
+  const val = useRef(null);
+
+  if (val.current != null) {
+    val.current.count += 1;
+  }
+  useEffect(() => {
+    // Not counting initial render shouldn't be a problem
+    if (val.current == null) {
+      const counter = { count: 0 };
+      registerRenderCounter(name, counter);
+      val.current = counter;
+    }
+    return () => {
+      if (val.current !== null) {
+        removeRenderCounter(name, val.current);
+      }
+    };
+  });
 }
