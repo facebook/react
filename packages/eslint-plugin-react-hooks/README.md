@@ -42,7 +42,8 @@ If you want more fine-grained configuration, you can instead add a snippet like 
   "rules": {
     // ...
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react-hooks/prefer-use-state-lazy-initialization": "warn"
   }
 }
 ```
