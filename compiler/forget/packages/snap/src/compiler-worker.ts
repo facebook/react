@@ -6,7 +6,6 @@
  */
 
 import fs from "fs/promises";
-import path from "path";
 import { exists } from "./utils";
 
 const originalConsoleError = console.error;
@@ -32,11 +31,16 @@ export type TestResult = {
   unexpectedError: string | null;
 };
 
+export type TestFixture = {
+  basename: string;
+  inputPath: string;
+  outputPath: string;
+};
+
 export async function compile(
   compilerPath: string,
   loggerPath: string,
-  fixturesDir: string,
-  fixture: string,
+  fixture: TestFixture,
   compilerVersion: number,
   isOnlyFixture: boolean
 ): Promise<TestResult> {
@@ -48,11 +52,10 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const inputPath = path.join(fixturesDir, `${fixture}.js`);
+  const { inputPath, outputPath, basename } = fixture;
   const input = (await exists(inputPath))
     ? await fs.readFile(inputPath, "utf8")
     : null;
-  const outputPath = path.join(fixturesDir, `${fixture}.expect.md`);
   const expected = (await exists(outputPath))
     ? await fs.readFile(outputPath, "utf8")
     : null;
@@ -119,7 +122,7 @@ export async function compile(
 
     const language = parseLanguage(firstLine);
 
-    code = runReactForgetBabelPlugin(input, fixture, language, {
+    code = runReactForgetBabelPlugin(input, basename, language, {
       enableOnlyOnUseForgetDirective,
       environment: {
         customHooks: new Map([
@@ -157,7 +160,7 @@ export async function compile(
   }
 
   let output: string;
-  const expectError = fixture.startsWith("error.");
+  const expectError = basename.startsWith("error.");
   if (expectError) {
     if (error === null) {
       return {
@@ -165,7 +168,7 @@ export async function compile(
         outputPath,
         actual: code,
         expected,
-        unexpectedError: `Expected an error to be thrown for fixture: '${fixture}', remove the 'error.' prefix if an error is not expected.`,
+        unexpectedError: `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`,
       };
     } else if (code != null) {
       output = `${formatOutput(code)}\n${formatErrorOutput(error)}`;
@@ -179,7 +182,7 @@ export async function compile(
         outputPath,
         actual: code,
         expected,
-        unexpectedError: `Expected fixture '${fixture}' to succeed but it failed with error:\n\n${error.message}`,
+        unexpectedError: `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error.message}`,
       };
     }
     if (code == null || code.length === 0) {
@@ -188,7 +191,7 @@ export async function compile(
         outputPath,
         actual: code,
         expected,
-        unexpectedError: `Expected output for fixture '${fixture}'.`,
+        unexpectedError: `Expected output for fixture '${basename}'.`,
       };
     }
     output = formatOutput(code);

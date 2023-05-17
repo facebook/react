@@ -8,6 +8,7 @@
 import watcher from "@parcel/watcher";
 import chalk from "chalk";
 import fs from "fs/promises";
+import glob from "glob";
 import invariant from "invariant";
 import { diff } from "jest-diff";
 import { Worker } from "jest-worker";
@@ -108,6 +109,49 @@ function clearConsole() {
   console.log("\u001Bc");
 }
 
+function getFixtures(
+  filter: TestFilter | null
+): Map<string, compiler.TestFixture> {
+  // search for fixtures within nested directories
+  const files = glob.sync(`**/*.{js,md}`, {
+    cwd: FIXTURES_PATH,
+  });
+  const fixtures = new Map();
+
+  for (const filePath of files) {
+    const basename = path.basename(
+      path.basename(filePath, ".js"),
+      ".expect.md"
+    );
+    // "partial" paths do not include suffixes
+    const partialRelativePath = path.join(path.dirname(filePath), basename);
+    const partialAbsolutePath = path.join(FIXTURES_PATH, partialRelativePath);
+    // Replicate jest test behavior
+    if (basename.startsWith("todo.")) {
+      continue;
+    }
+    if (filter) {
+      if (
+        filter.kind === "only" &&
+        filter.paths.indexOf(partialRelativePath) === -1
+      ) {
+        continue;
+      } else if (
+        filter.kind === "skip" &&
+        filter.paths.indexOf(partialRelativePath) !== -1
+      ) {
+        continue;
+      }
+    }
+    fixtures.set(partialRelativePath, {
+      basename,
+      inputPath: `${partialAbsolutePath}.js`,
+      outputPath: `${partialAbsolutePath}.expect.md`,
+    });
+  }
+  // console.log("fixtures!", JSON.stringify(Array.from(fixtures.keys())));
+  return fixtures;
+}
 /**
  * Do a test run and return the test results
  */
@@ -120,61 +164,39 @@ async function run(
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
   // the directory each time.
-  const files = await fs.readdir(FIXTURES_PATH);
-  const allFixtures = Array.from(
-    new Set(
-      files.map((file) => {
-        return path.basename(path.basename(file, ".js"), ".expect.md");
-      })
-    )
-  ).sort();
-
-  let fixtures;
-  if (filter) {
-    if (filter.kind === "only") {
-      fixtures = allFixtures.filter(
-        (name) => filter.paths.indexOf(name) !== -1
-      );
-    } else if (filter.kind === "skip") {
-      fixtures = allFixtures.filter(
-        (name) => filter.paths.indexOf(name) === -1
-      );
-    } else {
-      invariant(false, "Internal snap error.");
-    }
-  } else {
-    fixtures = allFixtures;
-  }
-  const isOnlyFixture = filter !== null && fixtures.length === 1;
+  const fixtures = getFixtures(filter);
+  const isOnlyFixture = filter !== null && fixtures.size === 1;
 
   let entries: Array<[string, TestResult]>;
   if (!opts.sync) {
     // Note: promise.all to ensure parallelism when enabled
-    entries = await Promise.all(
-      fixtures.map(async (fixture) => {
-        let output = await worker.compile(
-          COMPILER_PATH,
-          LOGGER_PATH,
-          FIXTURES_PATH,
-          fixture,
-          compilerVersion,
-          isOnlyFixture
-        );
-        return [fixture, output];
-      })
-    );
+    const work: Array<Promise<[string, TestResult]>> = [];
+    for (const [fixtureName, fixture] of fixtures) {
+      work.push(
+        worker
+          .compile(
+            COMPILER_PATH,
+            LOGGER_PATH,
+            fixture,
+            compilerVersion,
+            isOnlyFixture
+          )
+          .then((result) => [fixtureName, result])
+      );
+    }
+
+    entries = await Promise.all(work);
   } else {
     entries = [];
-    for (const fixture of fixtures) {
+    for (const [fixtureName, fixture] of fixtures) {
       let output = await compiler.compile(
         COMPILER_PATH,
         LOGGER_PATH,
-        FIXTURES_PATH,
         fixture,
         compilerVersion,
         isOnlyFixture
       );
-      entries.push([fixture, output]);
+      entries.push([fixtureName, output]);
     }
   }
 
@@ -183,8 +205,9 @@ async function run(
 
 /**
  * Report test results to the user
+ * @returns boolean indicatig whether all tests passed
  */
-function report(results: Results): void {
+function report(results: Results): boolean {
   const failures: Array<[string, TestResult]> = [];
   for (const [basename, result] of results) {
     if (result.actual === result.expected && result.unexpectedError == null) {
@@ -207,7 +230,19 @@ function report(results: Results): void {
           ` >> Unexpected error during test: \n${result.unexpectedError}`
         );
       } else {
-        console.log(diff(result.expected, result.actual) + "\n");
+        if (result.expected == null) {
+          invariant(result.actual != null, "[Snap tester] Internal failure.");
+          console.log(
+            chalk.red("[ expected fixture output is absent ]") + "\n"
+          );
+        } else if (result.actual == null) {
+          invariant(result.expected != null, "[Snap tester] Internal failure.");
+          console.log(
+            chalk.red("[ fixture input (test.js) is absent ]") + "\n"
+          );
+        } else {
+          console.log(diff(result.expected, result.actual) + "\n");
+        }
       }
     }
   }
@@ -217,6 +252,7 @@ function report(results: Results): void {
       failures.length
     } Failed`
   );
+  return failures.length === 0;
 }
 
 /**
@@ -238,11 +274,16 @@ async function update(results: Results): Promise<void> {
       console.log(
         chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename)
       );
-      // await fs.unlink(result.inputPath);
-      // await fs.unlink(result.outputPath);
-      console.log(" remove  " + result.inputPath);
-      console.log(" remove  " + result.outputPath);
-      deleted++;
+      try {
+        await fs.unlink(result.outputPath);
+        console.log(" remove  " + result.outputPath);
+        deleted++;
+      } catch (e) {
+        console.error(
+          "[Snap tester error]: failed to remove " + result.outputPath
+        );
+        failed.push([basename, result.unexpectedError]);
+      }
     } else if (result.actual !== result.expected) {
       // Expected output has changed
       console.log(
@@ -565,15 +606,17 @@ export async function main(opts: RunnerOptions): Promise<void> {
       null;
     tsWatch = watchSrc(
       () => {},
-      async (isSuccess: boolean) => {
-        if (isSuccess) {
+      async (compileSuccess: boolean) => {
+        let isSuccess = compileSuccess;
+        if (compileSuccess) {
           const testFilter =
             opts.mode === "filter" ? await readTestFilter() : null;
           const results = await run(worker, opts, testFilter, 0);
           if (opts.mode === "update") {
             update(results);
           } else {
-            report(results);
+            const testSuccess = report(results);
+            isSuccess &&= testSuccess;
           }
         } else {
           console.error(
@@ -585,7 +628,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
           tsWatch = null;
         }
         await worker.end();
-        process.exit(isSuccess ? 0 : -1);
+        process.exit(isSuccess ? 0 : 1);
       }
     );
     pushCleanupTask(() => {
