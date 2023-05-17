@@ -47,10 +47,11 @@ function Component(props) {
     x = 1;
   } else {
     if (props.b) {
-      x = 3;
     } else {
       break bb1;
     }
+
+    x = 3;
   }
   bb10: bb12: switch (props.c) {
     case "a": {

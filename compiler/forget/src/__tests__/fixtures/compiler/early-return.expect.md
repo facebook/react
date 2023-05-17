@@ -19,8 +19,6 @@ function MyApp(props) {
 function MyApp(props) {
   if (props.cond) {
     return;
-  } else {
-    return;
   }
 }
 

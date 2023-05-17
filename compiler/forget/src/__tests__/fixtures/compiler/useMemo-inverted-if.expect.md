@@ -23,11 +23,16 @@ function Component(props) {
 function Component(props) {
   let t17 = undefined;
   bb10: {
-    if (props.cond) {
-      t17 = props.b;
+    bb5: {
+      if (props.cond) {
+        break bb5;
+      }
+
+      t17 = props.a;
       break bb10;
     }
-    t17 = props.a;
+
+    t17 = props.b;
   }
   const x = t17;
   return x;

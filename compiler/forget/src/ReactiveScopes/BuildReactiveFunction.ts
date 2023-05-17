@@ -573,15 +573,18 @@ class Driver {
       case "optional":
       case "ternary":
       case "logical": {
-        const fallthroughId = terminal.fallthrough;
-        invariant(
-          !this.cx.isScheduled(fallthroughId),
-          "Logical terminal fallthrough cannot have been scheduled"
-        );
-        const scheduleId = this.cx.schedule(fallthroughId, "if");
-        scheduleIds.push(scheduleId);
+        const fallthroughId =
+          terminal.fallthrough !== null &&
+          !this.cx.isScheduled(terminal.fallthrough)
+            ? terminal.fallthrough
+            : null;
+        if (fallthroughId !== null) {
+          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          scheduleIds.push(scheduleId);
+        }
 
         const { place, value } = this.visitValueBlockTerminal(terminal);
+        this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
           kind: "instruction",
           instruction: {
@@ -592,8 +595,9 @@ class Driver {
           },
         });
 
-        this.cx.unschedule(scheduleId);
-        this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
         break;
       }
       case "goto": {

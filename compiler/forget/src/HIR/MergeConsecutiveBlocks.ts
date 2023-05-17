@@ -14,6 +14,7 @@ import {
   Instruction,
 } from "./HIR";
 import { markPredecessors, removeUnreachableFallthroughs } from "./HIRBuilder";
+import { mapOptionalFallthroughs } from "./visitors";
 
 /**
  * Merges sequences of blocks that will always execute consecutively —
@@ -86,6 +87,9 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     fn.body.blocks.delete(block.id);
   }
   markPredecessors(fn.body);
+  for (const [, block] of fn.body.blocks) {
+    mapOptionalFallthroughs(block.terminal, (blockId) => merged.get(blockId));
+  }
   removeUnreachableFallthroughs(fn.body);
 }
 
