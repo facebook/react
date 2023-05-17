@@ -23,7 +23,6 @@ function foo(a, b, c) {
 ```javascript
 function foo(a, b, c) {
   if (a) {
-  } else {
   }
   return b;
 }

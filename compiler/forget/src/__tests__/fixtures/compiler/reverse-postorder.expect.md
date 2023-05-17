@@ -51,7 +51,6 @@ function Component(props) {
     }
   } else {
     if (props.cond2) {
-    } else {
     }
   }
 }

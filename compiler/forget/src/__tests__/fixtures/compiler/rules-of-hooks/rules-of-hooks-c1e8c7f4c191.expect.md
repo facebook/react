@@ -147,124 +147,84 @@ function MyComponent() {
 // Is valid but hard to compute by brute-forcing
 function MyComponent() {
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
   if (c) {
-  } else {
   }
 
   useHook();

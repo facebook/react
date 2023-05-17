@@ -385,13 +385,16 @@ function codegenTerminal(
       );
     }
     case "if": {
-      return t.ifStatement(
-        codegenPlace(cx, terminal.test),
-        codegenBlock(cx, terminal.consequent),
-        terminal.alternate !== null
-          ? codegenBlock(cx, terminal.alternate)
-          : null
-      );
+      const test = codegenPlace(cx, terminal.test);
+      const consequent = codegenBlock(cx, terminal.consequent);
+      let alternate: t.Statement | null = null;
+      if (terminal.alternate !== null) {
+        const block = codegenBlock(cx, terminal.alternate);
+        if (block.body.length !== 0) {
+          alternate = block;
+        }
+      }
+      return t.ifStatement(test, consequent, alternate);
     }
     case "return": {
       const value = codegenPlace(cx, terminal.value);
