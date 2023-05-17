@@ -23,13 +23,15 @@ function Component(props) {
 ```javascript
 function Component(props) {
   let t18 = undefined;
-  bb8: switch (props.key) {
-    case "key": {
-      t18 = props.value;
-      break bb8;
-    }
-    default: {
-      t18 = props.defaultValue;
+  bb8: {
+    switch (props.key) {
+      case "key": {
+        t18 = props.value;
+        break bb8;
+      }
+      default: {
+        t18 = props.defaultValue;
+      }
     }
   }
   const x = t18;

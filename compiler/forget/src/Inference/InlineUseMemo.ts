@@ -13,20 +13,19 @@ import {
   Environment,
   FunctionExpression,
   GeneratedSource,
-  GotoTerminal,
   GotoVariant,
-  HIR,
   HIRFunction,
   Identifier,
   IdentifierId,
   InstructionKind,
+  LabelTerminal,
   Place,
   makeInstructionId,
   makeType,
   reversePostorderBlocks,
 } from "../HIR";
 import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
-import { assertExhaustive, retainWhere } from "../Utils/utils";
+import { retainWhere } from "../Utils/utils";
 
 /**
  * Rewrites `useMemo()` calls, rewriting so that the lambda body becomes part of the
@@ -133,69 +132,17 @@ export function inlineUseMemo(fn: HIRFunction): void {
             // the useMemo
             block.instructions.length = ii;
 
-            // The block leading up to the useMemo needs to jump to the entry block of
-            // the useMemo control flow graph. These will be merged into a single block
-            // via MergeConsectuveBlocks
-            const newTerminal: GotoTerminal = {
+            // To account for complex control flow within the lambda, we treat the lambda
+            // as if it were a single labeled statement, and replace all returns with gotos
+            // to the label fallthrough.
+            const newTerminal: LabelTerminal = {
               block: body.loweredFunc.body.entry,
               id: makeInstructionId(0),
-              kind: "goto",
-              variant: GotoVariant.Break,
+              kind: "label",
+              fallthrough: continuationBlockId,
               loc: block.terminal.loc,
             };
             block.terminal = newTerminal;
-
-            // If the final terminal type has a fallthrough, update it to point to the
-            // continuation block
-            const terminalBlock = getTerminalBlock(
-              body.loweredFunc.body,
-              body.loweredFunc.body.entry
-            );
-            switch (terminalBlock.terminal.kind) {
-              case "if":
-              case "switch":
-              case "label": {
-                // These terminals can all appear as the final top-level terminal
-                // *and* have fallthroughs. If they are final, their fallthrough
-                // must be updated to point to the continuation block to main
-                // proper CFG structure (a block that succeeds all branches of a conditional
-                // must be marked as that conditional's fallthrough)
-                terminalBlock.terminal.fallthrough = continuationBlockId;
-                break;
-              }
-              case "return":
-              case "throw": {
-                // These can appear as the final top-level terminal
-                break;
-              }
-              // These all have non-nullable fallthroughs: there is always some code in the
-              // CFG that succeeds them which we should find instead
-              case "optional":
-              case "ternary":
-              case "logical":
-              case "while":
-              case "for":
-              case "for-of":
-              case "do-while":
-              // These are invalid terminals for a top-level block
-              case "branch":
-              case "goto":
-              case "unsupported": {
-                CompilerError.invariant(
-                  `Unexpected final top-level terminal`,
-                  terminalBlock.terminal.loc,
-                  `Found ${terminalBlock.terminal.kind}, expected one of if, switch, label, return, or throw`
-                );
-              }
-              default: {
-                assertExhaustive(
-                  terminalBlock.terminal,
-                  `Unexpected terminal kind '${
-                    (terminalBlock.terminal as any).kind
-                  }'`
-                );
-              }
-            }
 
             // We store the result in the useMemo temporary
             const result = instr.lvalue;
@@ -238,78 +185,6 @@ export function inlineUseMemo(fn: HIRFunction): void {
     reversePostorderBlocks(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);
-  }
-}
-
-// Finds the final top-level terminal node for a CFG, by following any
-// fallthrough nodes.
-function getTerminalBlock(cfg: HIR, start: BlockId): BasicBlock {
-  let current = cfg.blocks.get(start)!;
-  while (true) {
-    const { terminal } = current;
-    switch (terminal.kind) {
-      case "if": {
-        if (
-          terminal.fallthrough !== null &&
-          terminal.fallthrough === terminal.alternate
-        ) {
-          // Here we don't know if the fallthrough and alternate are the same because there was
-          // no alternate or because both the alternate exists and the fallthrough is just unreachable
-          // So we check if the fallthrough returns/throws (the if is the final top-level terminal)
-          // or whether execution actually may continue.
-          const fallthrough = getTerminalBlock(cfg, terminal.fallthrough);
-          if (
-            fallthrough.terminal.kind === "return" ||
-            fallthrough.terminal.kind === "throw"
-          ) {
-            return current;
-          } else {
-            current = fallthrough;
-            continue;
-          }
-        } else {
-          return current;
-        }
-      }
-      case "switch":
-      case "label": {
-        if (terminal.fallthrough !== null) {
-          current = cfg.blocks.get(terminal.fallthrough)!;
-          continue;
-        } else {
-          return current;
-        }
-      }
-      case "optional":
-      case "ternary":
-      case "logical":
-      case "while":
-      case "for":
-      case "for-of":
-      case "do-while": {
-        current = cfg.blocks.get(terminal.fallthrough)!;
-        continue;
-      }
-      case "return":
-      case "throw": {
-        return current;
-      }
-      case "unsupported":
-      case "branch":
-      case "goto": {
-        CompilerError.invariant(
-          `Unexpected block terminal`,
-          terminal.loc,
-          `Top-level blocks may not end in a ${terminal.kind} terminal`
-        );
-      }
-      default: {
-        assertExhaustive(
-          terminal,
-          `Unexpected terminal kind '${(terminal as any).kind}'`
-        );
-      }
-    }
   }
 }
 
