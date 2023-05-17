@@ -9,7 +9,6 @@
 
 import type {Request} from 'react-server/src/ReactFlightServer';
 
-export * from '../ReactFlightServerConfigStream';
 export * from '../ReactFlightServerConfigBundlerCustom';
 
 export type Hints = any;
