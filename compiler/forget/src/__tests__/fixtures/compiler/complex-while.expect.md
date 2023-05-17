@@ -19,12 +19,10 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  bb1: {
-    if (a) {
-      while (b) {
-        if (c) {
-          break bb1;
-        }
+  bb1: if (a) {
+    while (b) {
+      if (c) {
+        break bb1;
       }
     }
   }

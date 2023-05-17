@@ -29,15 +29,13 @@ function foo(a, b, c, d) {
   let y;
   if (c_0 || c_1 || c_2 || c_3) {
     y = [];
-    bb1: {
-      if (a) {
-        if (b) {
-          y.push(c);
-          break bb1;
-        }
-
-        y.push(d);
+    bb1: if (a) {
+      if (b) {
+        y.push(c);
+        break bb1;
       }
+
+      y.push(d);
     }
     $[0] = a;
     $[1] = b;

@@ -125,11 +125,12 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
           break;
         }
         if (item.label !== null) {
+          const block =
+            statement.type === "BlockStatement" && statement.body.length === 1
+              ? statement.body[0]
+              : statement;
           statements.push(
-            t.labeledStatement(
-              t.identifier(codegenLabel(item.label)),
-              statement
-            )
+            t.labeledStatement(t.identifier(codegenLabel(item.label)), block)
           );
         } else if (statement.type === "BlockStatement") {
           statements.push(...statement.body);
