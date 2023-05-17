@@ -89,19 +89,19 @@ export async function compile(
     const firstLine = input.substring(0, input.indexOf("\n"));
 
     let enableOnlyOnUseForgetDirective = false;
+    let gating = null;
+    let instrumentForget = null;
+    let panicOnBailout = true;
+    let memoizeJsxElements = true;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
-
-    let gating = null;
-    let instrumentForget = null;
     if (firstLine.indexOf("@gating") !== -1) {
       gating = {
         source: "ReactForgetFeatureFlag",
         importSpecifierName: "isForgetEnabled_Fixtures",
       };
     }
-
     if (firstLine.indexOf("@instrumentForget") !== -1) {
       instrumentForget = {
         gating: {
@@ -114,10 +114,11 @@ export async function compile(
         },
       };
     }
-
-    let panicOnBailout = true;
     if (firstLine.indexOf("@panicOnBailout false") !== -1) {
       panicOnBailout = false;
+    }
+    if (firstLine.indexOf("@memoizeJsxElements false") !== -1) {
+      memoizeJsxElements = false;
     }
 
     const language = parseLanguage(firstLine);
@@ -138,6 +139,7 @@ export async function compile(
         ]),
         validateHooksUsage: true,
         inlineUseMemo: true,
+        memoizeJsxElements,
       },
       logger: null,
       gating,
