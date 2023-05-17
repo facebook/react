@@ -16,11 +16,18 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer, rendererInfo, isServerSupported, isFlightSupported) {
+function writeConfig(
+  renderer,
+  rendererInfo,
+  isServerSupported,
+  isFlightSupported,
+) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
-  isFlightSupported = isFlightSupported === true || (isServerSupported && isFlightSupported !== false);
+  isFlightSupported =
+    isFlightSupported === true ||
+    (isServerSupported && isFlightSupported !== false);
 
   const serverRenderer = isServerSupported ? renderer : 'custom';
   const flightRenderer = isFlightSupported ? renderer : 'custom';
@@ -38,8 +45,10 @@ function writeConfig(renderer, rendererInfo, isServerSupported, isFlightSupporte
       ignoredPaths.push(`.*/packages/${otherPath}`);
     });
 
-    if (otherRenderer.shortName !== serverRenderer &&
-      otherRenderer.shortName !== flightRenderer) {
+    if (
+      otherRenderer.shortName !== serverRenderer &&
+      otherRenderer.shortName !== flightRenderer
+    ) {
       ignoredPaths.push(
         `.*/packages/.*/forks/.*\\.${otherRenderer.shortName}.js`,
       );
