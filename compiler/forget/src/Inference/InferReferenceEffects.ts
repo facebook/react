@@ -1013,7 +1013,7 @@ function hasContextRefOperand(
   return false;
 }
 
-function getFunctionCallSignature(
+export function getFunctionCallSignature(
   env: Environment,
   type: Type
 ): FunctionSignature | null {

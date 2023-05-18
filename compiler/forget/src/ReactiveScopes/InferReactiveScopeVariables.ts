@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Environment } from "../HIR";
 import {
   HIRFunction,
   Identifier,
@@ -20,6 +21,7 @@ import {
   eachInstructionOperand,
   eachPatternOperand,
 } from "../HIR/visitors";
+import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -103,7 +105,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
       const range = instr.lvalue.identifier.mutableRange;
-      if (range.end > range.start + 1 || mayAllocate(instr.value)) {
+      if (range.end > range.start + 1 || mayAllocate(fn.env, instr.value)) {
         operands.push(instr.lvalue!.identifier);
       }
       if (
@@ -217,7 +219,7 @@ function isMutable({ id }: Instruction, place: Place): boolean {
   return id >= range.start && id < range.end;
 }
 
-function mayAllocate(value: InstructionValue): boolean {
+function mayAllocate(env: Environment, value: InstructionValue): boolean {
   switch (value.kind) {
     case "Destructure": {
       return doesPatternContainSpreadElement(value.lvalue.pattern);
@@ -245,12 +247,30 @@ function mayAllocate(value: InstructionValue): boolean {
     case "Debugger": {
       return false;
     }
+    case "CallExpression": {
+      const signature = getFunctionCallSignature(
+        env,
+        value.callee.identifier.type
+      );
+      if (signature !== null) {
+        return signature.returnType.kind !== "Primitive";
+      }
+      return true;
+    }
+    case "MethodCall": {
+      const signature = getFunctionCallSignature(
+        env,
+        value.receiver.identifier.type
+      );
+      if (signature !== null) {
+        return signature.returnType.kind !== "Primitive";
+      }
+      return true;
+    }
     case "RegExpLiteral":
-    case "MethodCall":
     case "PropertyStore":
     case "ComputedStore":
     case "ArrayExpression":
-    case "CallExpression":
     case "JsxExpression":
     case "JsxFragment":
     case "NewExpression":
