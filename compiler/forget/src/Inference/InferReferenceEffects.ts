@@ -724,9 +724,7 @@ function inferBlock(
         );
 
         const effects =
-          signature !== null
-            ? getMethodCallEffects(instrValue, signature)
-            : null;
+          signature !== null ? getFunctionEffects(instrValue, signature) : null;
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
@@ -765,9 +763,7 @@ function inferBlock(
         );
 
         const effects =
-          signature !== null
-            ? getMethodCallEffects(instrValue, signature)
-            : null;
+          signature !== null ? getFunctionEffects(instrValue, signature) : null;
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
@@ -1035,7 +1031,7 @@ function getFunctionCallSignature(
  * @param sig
  * @returns Inferred effects of function arguments, or null if inference fails.
  */
-function getMethodCallEffects(
+function getFunctionEffects(
   fn: MethodCall | CallExpression,
   sig: FunctionSignature
 ): Array<Effect> | null {
