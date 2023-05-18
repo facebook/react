@@ -11,6 +11,7 @@ import { Environment } from "../HIR";
 import {
   BasicBlock,
   BlockId,
+  CallExpression,
   Effect,
   HIRFunction,
   IdentifierId,
@@ -707,8 +708,6 @@ function inferBlock(
         continue;
       }
       case "CallExpression": {
-        valueKind = ValueKind.Mutable;
-        effectKind = Effect.Mutate;
         const hook =
           instrValue.callee.identifier.type.kind === "Hook"
             ? instrValue.callee.identifier.type.definition
@@ -716,8 +715,42 @@ function inferBlock(
         if (hook !== null) {
           effectKind = hook.effectKind;
           valueKind = hook.valueKind;
+          break;
         }
-        break;
+
+        const signature = getFunctionCallSignature(
+          env,
+          instrValue.callee.identifier.type
+        );
+
+        const effects =
+          signature !== null
+            ? getMethodCallEffects(instrValue, signature)
+            : null;
+        for (let i = 0; i < instrValue.args.length; i++) {
+          const arg = instrValue.args[i];
+          const place = arg.kind === "Identifier" ? arg : arg.place;
+          if (effects !== null) {
+            // If effects are inferred for an argument, we should fail invalid
+            // mutating effects
+            state.referenceAndCheckError(place, effects[i]);
+          } else {
+            state.reference(place, Effect.Mutate);
+          }
+        }
+        if (signature !== null) {
+          state.referenceAndCheckError(
+            instrValue.callee,
+            signature.calleeEffect
+          );
+        } else {
+          state.reference(instrValue.callee, Effect.Mutate);
+        }
+
+        state.initialize(instrValue, ValueKind.Mutable);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Mutate;
+        continue;
       }
       case "MethodCall": {
         invariant(
@@ -1003,7 +1036,7 @@ function getFunctionCallSignature(
  * @returns Inferred effects of function arguments, or null if inference fails.
  */
 function getMethodCallEffects(
-  fn: MethodCall,
+  fn: MethodCall | CallExpression,
   sig: FunctionSignature
 ): Array<Effect> | null {
   const results = [];

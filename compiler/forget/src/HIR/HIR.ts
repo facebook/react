@@ -538,6 +538,13 @@ export type MethodCall = {
   loc: SourceLocation;
 };
 
+export type CallExpression = {
+  kind: "CallExpression";
+  callee: Place;
+  args: Array<Place | SpreadPattern>;
+  loc: SourceLocation;
+};
+
 /**
  * The value of a given instruction. Note that values are not recursive: complex
  * values such as objects or arrays are always defined by instructions to define
@@ -605,12 +612,7 @@ export type InstructionValue =
       args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
     }
-  | {
-      kind: "CallExpression";
-      callee: Place;
-      args: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | CallExpression
   | MethodCall
   | {
       kind: "UnaryExpression";
