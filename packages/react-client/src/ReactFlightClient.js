@@ -13,9 +13,8 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  UninitializedModel,
-  Response,
   SSRManifest,
+  StringDecoder,
 } from './ReactFlightClientConfig';
 
 import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
@@ -26,8 +25,11 @@ import {
   resolveClientReference,
   preloadModule,
   requireModule,
-  parseModel,
   dispatchHint,
+  readPartialStringChunk,
+  readFinalStringChunk,
+  supportsBinaryStreams,
+  createStringDecoder,
 } from './ReactFlightClientConfig';
 
 import {
@@ -40,6 +42,8 @@ import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
 export type {CallServerCallback};
+
+type UninitializedModel = string;
 
 export type JSONValue =
   | number
@@ -158,14 +162,14 @@ Chunk.prototype.then = function <T>(
   }
 };
 
-export type ResponseBase = {
+export type Response = {
   _bundlerConfig: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
-  ...
+  _partialRow: string,
+  _fromJSON: (key: string, value: JSONValue) => any,
+  _stringDecoder: StringDecoder,
 };
-
-export type {Response};
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
   // If we have resolved content, we try to initialize it first which
@@ -512,7 +516,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
   return proxy;
 }
 
-export function parseModelString(
+function parseModelString(
   response: Response,
   parentObject: Object,
   key: string,
@@ -632,7 +636,7 @@ export function parseModelString(
   return value;
 }
 
-export function parseModelTuple(
+function parseModelTuple(
   response: Response,
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
@@ -656,17 +660,25 @@ function missingCall() {
 export function createResponse(
   bundlerConfig: SSRManifest,
   callServer: void | CallServerCallback,
-): ResponseBase {
+): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
-  const response = {
+  const response: Response = {
     _bundlerConfig: bundlerConfig,
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
+    _partialRow: '',
+    _stringDecoder: (null: any),
+    _fromJSON: (null: any),
   };
+  if (supportsBinaryStreams) {
+    response._stringDecoder = createStringDecoder();
+  }
+  // Don't inline this call because it causes closure to outline the call above.
+  response._fromJSON = createFromJSONCallback(response);
   return response;
 }
 
-export function resolveModel(
+function resolveModel(
   response: Response,
   id: number,
   model: UninitializedModel,
@@ -680,7 +692,7 @@ export function resolveModel(
   }
 }
 
-export function resolveModule(
+function resolveModule(
   response: Response,
   id: number,
   model: UninitializedModel,
@@ -729,7 +741,7 @@ export function resolveModule(
 }
 
 type ErrorWithDigest = Error & {digest?: string};
-export function resolveErrorProd(
+function resolveErrorProd(
   response: Response,
   id: number,
   digest: string,
@@ -758,7 +770,7 @@ export function resolveErrorProd(
   }
 }
 
-export function resolveErrorDev(
+function resolveErrorDev(
   response: Response,
   id: number,
   digest: string,
@@ -789,13 +801,112 @@ export function resolveErrorDev(
   }
 }
 
-export function resolveHint(
+function resolveHint(
   response: Response,
   code: string,
   model: UninitializedModel,
 ): void {
   const hintModel = parseModel<HintModel>(response, model);
   dispatchHint(code, hintModel);
+}
+
+function processFullRow(response: Response, row: string): void {
+  if (row === '') {
+    return;
+  }
+  const colon = row.indexOf(':', 0);
+  const id = parseInt(row.slice(0, colon), 16);
+  const tag = row[colon + 1];
+  // When tags that are not text are added, check them here before
+  // parsing the row as text.
+  // switch (tag) {
+  // }
+  switch (tag) {
+    case 'I': {
+      resolveModule(response, id, row.slice(colon + 2));
+      return;
+    }
+    case 'H': {
+      const code = row[colon + 2];
+      resolveHint(response, code, row.slice(colon + 3));
+      return;
+    }
+    case 'E': {
+      const errorInfo = JSON.parse(row.slice(colon + 2));
+      if (__DEV__) {
+        resolveErrorDev(
+          response,
+          id,
+          errorInfo.digest,
+          errorInfo.message,
+          errorInfo.stack,
+        );
+      } else {
+        resolveErrorProd(response, id, errorInfo.digest);
+      }
+      return;
+    }
+    default: {
+      // We assume anything else is JSON.
+      resolveModel(response, id, row.slice(colon + 1));
+      return;
+    }
+  }
+}
+
+export function processStringChunk(
+  response: Response,
+  chunk: string,
+  offset: number,
+): void {
+  let linebreak = chunk.indexOf('\n', offset);
+  while (linebreak > -1) {
+    const fullrow = response._partialRow + chunk.slice(offset, linebreak);
+    processFullRow(response, fullrow);
+    response._partialRow = '';
+    offset = linebreak + 1;
+    linebreak = chunk.indexOf('\n', offset);
+  }
+  response._partialRow += chunk.slice(offset);
+}
+
+export function processBinaryChunk(
+  response: Response,
+  chunk: Uint8Array,
+): void {
+  if (!supportsBinaryStreams) {
+    throw new Error("This environment don't support binary chunks.");
+  }
+  const stringDecoder = response._stringDecoder;
+  let linebreak = chunk.indexOf(10); // newline
+  while (linebreak > -1) {
+    const fullrow =
+      response._partialRow +
+      readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
+    processFullRow(response, fullrow);
+    response._partialRow = '';
+    chunk = chunk.subarray(linebreak + 1);
+    linebreak = chunk.indexOf(10); // newline
+  }
+  response._partialRow += readPartialStringChunk(stringDecoder, chunk);
+}
+
+function parseModel<T>(response: Response, json: UninitializedModel): T {
+  return JSON.parse(json, response._fromJSON);
+}
+
+function createFromJSONCallback(response: Response) {
+  // $FlowFixMe[missing-this-annot]
+  return function (key: string, value: JSONValue) {
+    if (typeof value === 'string') {
+      // We can't use .bind here because we need the "this" value.
+      return parseModelString(response, this, key, value);
+    }
+    if (typeof value === 'object' && value !== null) {
+      return parseModelTuple(response, value);
+    }
+    return value;
+  };
 }
 
 export function close(response: Response): void {
