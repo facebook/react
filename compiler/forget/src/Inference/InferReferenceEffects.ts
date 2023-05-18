@@ -632,19 +632,6 @@ function inferBlock(
         effectKind = Effect.Mutate;
         break;
       }
-      case "CallExpression": {
-        valueKind = ValueKind.Mutable;
-        effectKind = Effect.Mutate;
-        const hook =
-          instrValue.callee.identifier.type.kind === "Hook"
-            ? instrValue.callee.identifier.type.definition
-            : null;
-        if (hook !== null) {
-          effectKind = hook.effectKind;
-          valueKind = hook.valueKind;
-        }
-        break;
-      }
       case "ObjectExpression": {
         valueKind = hasContextRefOperand(state, instrValue)
           ? ValueKind.Context
@@ -718,6 +705,19 @@ function inferBlock(
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
         continue;
+      }
+      case "CallExpression": {
+        valueKind = ValueKind.Mutable;
+        effectKind = Effect.Mutate;
+        const hook =
+          instrValue.callee.identifier.type.kind === "Hook"
+            ? instrValue.callee.identifier.type.definition
+            : null;
+        if (hook !== null) {
+          effectKind = hook.effectKind;
+          valueKind = hook.valueKind;
+        }
+        break;
       }
       case "MethodCall": {
         invariant(
