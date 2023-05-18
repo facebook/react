@@ -451,7 +451,7 @@ function codegenInstructionNullable(
     instr.value.kind === "DeclareContext"
   ) {
     let kind: InstructionKind = instr.value.lvalue.kind;
-    let lvalue;
+    let lvalue: Place | Pattern;
     let value: t.Expression | null;
     if (instr.value.kind === "StoreLocal") {
       kind = cx.hasDeclared(instr.value.lvalue.place.identifier)
@@ -474,6 +474,8 @@ function codegenInstructionNullable(
       value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
+      let hasReasign = false;
+      let hasDeclaration = false;
       for (const place of eachPatternOperand(lvalue)) {
         if (
           kind !== InstructionKind.Reassign &&
@@ -481,10 +483,17 @@ function codegenInstructionNullable(
         ) {
           cx.temp.set(place.identifier.id, null);
         }
-        if (cx.hasDeclared(place.identifier)) {
-          kind = InstructionKind.Reassign;
-          break;
-        }
+        const isDeclared = cx.hasDeclared(place.identifier);
+        hasReasign ||= isDeclared;
+        hasDeclaration ||= !isDeclared;
+      }
+      if (hasReasign && hasDeclaration) {
+        CompilerError.invariant(
+          "Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)",
+          instr.loc
+        );
+      } else if (hasReasign) {
+        kind = InstructionKind.Reassign;
       }
       value = codegenPlace(cx, instr.value.value);
     }
