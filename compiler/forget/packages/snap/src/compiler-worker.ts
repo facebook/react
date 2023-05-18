@@ -138,6 +138,7 @@ export async function compile(
           ],
         ]),
         validateHooksUsage: true,
+        enableFunctionCallSignatureOptimizations: true,
         inlineUseMemo: true,
         memoizeJsxElements,
       },

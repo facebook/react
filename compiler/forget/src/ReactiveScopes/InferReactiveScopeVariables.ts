@@ -248,22 +248,26 @@ function mayAllocate(env: Environment, value: InstructionValue): boolean {
       return false;
     }
     case "CallExpression": {
-      const signature = getFunctionCallSignature(
-        env,
-        value.callee.identifier.type
-      );
-      if (signature !== null) {
-        return signature.returnType.kind !== "Primitive";
+      if (env.enableFunctionCallSignatureOptimizations) {
+        const signature = getFunctionCallSignature(
+          env,
+          value.callee.identifier.type
+        );
+        if (signature !== null) {
+          return signature.returnType.kind !== "Primitive";
+        }
       }
       return true;
     }
     case "MethodCall": {
-      const signature = getFunctionCallSignature(
-        env,
-        value.receiver.identifier.type
-      );
-      if (signature !== null) {
-        return signature.returnType.kind !== "Primitive";
+      if (env.enableFunctionCallSignatureOptimizations) {
+        const signature = getFunctionCallSignature(
+          env,
+          value.receiver.identifier.type
+        );
+        if (signature !== null) {
+          return signature.returnType.kind !== "Primitive";
+        }
       }
       return true;
     }

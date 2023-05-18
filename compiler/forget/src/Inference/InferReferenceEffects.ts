@@ -718,10 +718,9 @@ function inferBlock(
           break;
         }
 
-        const signature = getFunctionCallSignature(
-          env,
-          instrValue.callee.identifier.type
-        );
+        const signature = env.enableFunctionCallSignatureOptimizations
+          ? getFunctionCallSignature(env, instrValue.callee.identifier.type)
+          : null;
 
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;

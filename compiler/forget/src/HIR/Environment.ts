@@ -41,6 +41,7 @@ export type EnvironmentConfig = Partial<{
   memoizeJsxElements: boolean;
   validateHooksUsage: boolean;
   inlineUseMemo: boolean;
+  enableFunctionCallSignatureOptimizations: boolean;
 }>;
 
 export class Environment {
@@ -49,6 +50,7 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   validateHooksUsage: boolean;
+  enableFunctionCallSignatureOptimizations: boolean;
   #contextIdentifiers: Set<t.Identifier>;
 
   constructor(
@@ -73,6 +75,8 @@ export class Environment {
       this.#globals = DEFAULT_GLOBALS;
     }
     this.validateHooksUsage = config?.validateHooksUsage ?? false;
+    this.enableFunctionCallSignatureOptimizations =
+      config?.enableFunctionCallSignatureOptimizations ?? false;
     this.#contextIdentifiers = contextIdentifiers;
   }
 
