@@ -1,0 +1,33 @@
+
+## Input
+
+```javascript
+function Foo(props) {
+  // can't remove `unused` since it affects which properties are copied into `rest`
+  const { unused, ...rest } = props.a;
+  return rest;
+}
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Foo(props) {
+  const $ = useMemoCache(2);
+  const c_0 = $[0] !== props.a;
+  let rest;
+  if (c_0) {
+    const { unused, ...t16 } = props.a;
+    rest = t16;
+    $[0] = props.a;
+    $[1] = rest;
+  } else {
+    rest = $[1];
+  }
+  return rest;
+}
+
+```
+      

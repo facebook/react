@@ -1,7 +1,3 @@
-
-## Input
-
-```javascript
 function Component(props) {
   const post = useFragment(graphql`...`, props.post);
   const allUrls = [];
@@ -12,7 +8,7 @@ function Component(props) {
   // out of the scope, and the destructure statement ends up turning into
   // a reassignment, instead of a const declaration. this means we try to
   // reassign `comments` when there's no declaration for it.
-  const { media, comments, urls } = post;
+  const { media = null, comments = [], urls = [] } = post;
   const onClick = (e) => {
     if (!comments.length) {
       return;
@@ -22,14 +18,3 @@ function Component(props) {
   allUrls.push(...urls);
   return <Media media={media} onClick={onClick} />;
 }
-
-```
-
-
-## Error
-
-```
-[ReactForget] Invariant: Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations) (11:11)
-```
-          
-      

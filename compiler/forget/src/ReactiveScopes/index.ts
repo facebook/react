@@ -9,6 +9,7 @@ export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockSc
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
 export { codegenReactiveFunction } from "./CodegenReactiveFunction";
+export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";

@@ -585,12 +585,7 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
-  | {
-      kind: "Destructure";
-      lvalue: LValuePattern;
-      value: Place;
-      loc: SourceLocation;
-    }
+  | Destructure
   | {
       kind: "Primitive";
       value: number | boolean | string | null | undefined;
@@ -756,6 +751,14 @@ export type FunctionExpression = {
   expr: t.ArrowFunctionExpression | t.FunctionExpression;
   loc: SourceLocation;
 };
+
+export type Destructure = {
+  kind: "Destructure";
+  lvalue: LValuePattern;
+  value: Place;
+  loc: SourceLocation;
+};
+
 /**
  * A place where data may be read from / written to:
  * - a variable (identifier)

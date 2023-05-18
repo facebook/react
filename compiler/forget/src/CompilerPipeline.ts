@@ -32,6 +32,7 @@ import {
   buildReactiveBlocks,
   buildReactiveFunction,
   codegenReactiveFunction,
+  extractScopeDeclarationsFromDestructuring,
   flattenReactiveLoops,
   flattenScopesWithHooks,
   inferReactiveScopeVariables,
@@ -220,6 +221,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PruneUnusedLValues",
+    value: reactiveFunction,
+  });
+
+  extractScopeDeclarationsFromDestructuring(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "ExtractScopeDeclarationsFromDestructuring",
     value: reactiveFunction,
   });
 
