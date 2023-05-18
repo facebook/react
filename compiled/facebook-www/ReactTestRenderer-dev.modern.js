@@ -24561,7 +24561,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-761d713e";
+var ReactVersion = "18.3.0-www-modern-dce737e6";
 
 // Might add PROFILE later.
 
