@@ -187,6 +187,33 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       ],
     ]),
   ],
+  [
+    "Boolean",
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Primitive" },
+      calleeEffect: Effect.Read,
+    }),
+  ],
+  [
+    "Number",
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Primitive" },
+      calleeEffect: Effect.Read,
+    }),
+  ],
+  [
+    "String",
+    addFunction(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Primitive" },
+      calleeEffect: Effect.Read,
+    }),
+  ],
   // TODO: rest of Global objects
 ];
 
