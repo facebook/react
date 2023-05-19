@@ -267,9 +267,9 @@ export function createRoot(
 function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
-function scheduleHydration(target: Node) {
+async function scheduleHydration(target: Node) {
   if (target) {
-    queueExplicitHydrationTarget(target);
+    return queueExplicitHydrationTarget(target);
   }
 }
 // $FlowFixMe[prop-missing] found when upgrading Flow

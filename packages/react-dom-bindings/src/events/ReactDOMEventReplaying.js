@@ -331,34 +331,41 @@ function attemptExplicitHydrationTarget(
     }
   }
   queuedTarget.blockedOn = null;
+  if (queuedTarget.callback) {
+    queuedTarget.callback(true);
+    queuedTarget.callback = null;
+  }
 }
 
-export function queueExplicitHydrationTarget(target: Node): void {
-  // TODO: This will read the priority if it's dispatched by the React
-  // event system but not native events. Should read window.event.type, like
-  // we do for updates (getCurrentEventPriority).
-  const updatePriority = getCurrentUpdatePriority();
-  const queuedTarget: QueuedHydrationTarget = {
-    blockedOn: null,
-    target: target,
-    priority: updatePriority,
-  };
-  let i = 0;
-  for (; i < queuedExplicitHydrationTargets.length; i++) {
-    // Stop once we hit the first target with lower priority than
-    if (
-      !isHigherEventPriority(
-        updatePriority,
-        queuedExplicitHydrationTargets[i].priority,
-      )
-    ) {
-      break;
+export async function queueExplicitHydrationTarget(target: Node): void {
+  return new Promise(resolve => {
+    // TODO: This will read the priority if it's dispatched by the React
+    // event system but not native events. Should read window.event.type, like
+    // we do for updates (getCurrentEventPriority).
+    const updatePriority = getCurrentUpdatePriority();
+    const queuedTarget: QueuedHydrationTarget = {
+      blockedOn: null,
+      target: target,
+      priority: updatePriority,
+      callback: resolve,
+    };
+    let i = 0;
+    for (; i < queuedExplicitHydrationTargets.length; i++) {
+      // Stop once we hit the first target with lower priority than
+      if (
+        !isHigherEventPriority(
+          updatePriority,
+          queuedExplicitHydrationTargets[i].priority,
+        )
+      ) {
+        break;
+      }
     }
-  }
-  queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
-  if (i === 0) {
-    attemptExplicitHydrationTarget(queuedTarget);
-  }
+    queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
+    if (i === 0) {
+      attemptExplicitHydrationTarget(queuedTarget);
+    }
+  });
 }
 
 function attemptReplayContinuousQueuedEvent(
@@ -518,6 +525,10 @@ export function retryIfBlockedOn(
     const queuedTarget = queuedExplicitHydrationTargets[i];
     if (queuedTarget.blockedOn === unblocked) {
       queuedTarget.blockedOn = null;
+      if (queuedTarget.callback) {
+        queuedTarget.callback(true);
+        queuedTarget.callback = null;
+      }
     }
   }
 
