@@ -7,9 +7,22 @@
  * @flow
  */
 
+import type {Chunk, Destination} from './ReactServerStreamConfig';
+
+import {
+  scheduleWork,
+  flushBuffered,
+  beginWriting,
+  writeChunkAndReturn,
+  stringToChunk,
+  completeWriting,
+  close,
+  closeWithError,
+} from './ReactServerStreamConfig';
+
+export type {Destination, Chunk} from './ReactServerStreamConfig';
+
 import type {
-  Destination,
-  Chunk,
   ClientManifest,
   ClientReferenceMetadata,
   ClientReference,
@@ -34,19 +47,6 @@ import type {
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import {
-  scheduleWork,
-  beginWriting,
-  writeChunkAndReturn,
-  completeWriting,
-  flushBuffered,
-  close,
-  closeWithError,
-  processModelChunk,
-  processImportChunk,
-  processErrorChunkProd,
-  processErrorChunkDev,
-  processReferenceChunk,
-  processHintChunk,
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
@@ -98,6 +98,16 @@ import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+type JSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | {+[key: string]: JSONValue}
+  | $ReadOnlyArray<JSONValue>;
+
+const stringify = JSON.stringify;
 
 type ReactJSONValue =
   | string
@@ -723,7 +733,7 @@ function escapeStringValue(value: string): string {
 let insideContextProps = null;
 let isInsideContextValue = false;
 
-export function resolveModelToJSON(
+function resolveModelToJSON(
   request: Request,
   parent:
     | {+[key: string | number]: ReactClientValue}
@@ -1449,4 +1459,89 @@ function importServerContexts(
     return importedContext;
   }
   return rootContextSnapshot;
+}
+
+function serializeRowHeader(tag: string, id: number) {
+  return id.toString(16) + ':' + tag;
+}
+
+function processErrorChunkProd(
+  request: Request,
+  id: number,
+  digest: string,
+): Chunk {
+  if (__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkProd should never be called while in development mode. Use processErrorChunkDev instead. This is a bug in React.',
+    );
+  }
+
+  const errorInfo: any = {digest};
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  return stringToChunk(row);
+}
+
+function processErrorChunkDev(
+  request: Request,
+  id: number,
+  digest: string,
+  message: string,
+  stack: string,
+): Chunk {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'processErrorChunkDev should never be called while in production mode. Use processErrorChunkProd instead. This is a bug in React.',
+    );
+  }
+
+  const errorInfo: any = {digest, message, stack};
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  return stringToChunk(row);
+}
+
+function processModelChunk(
+  request: Request,
+  id: number,
+  model: ReactClientValue,
+): Chunk {
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(model, request.toJSON);
+  const row = id.toString(16) + ':' + json + '\n';
+  return stringToChunk(row);
+}
+
+function processReferenceChunk(
+  request: Request,
+  id: number,
+  reference: string,
+): Chunk {
+  const json = stringify(reference);
+  const row = id.toString(16) + ':' + json + '\n';
+  return stringToChunk(row);
+}
+
+function processImportChunk(
+  request: Request,
+  id: number,
+  clientReferenceMetadata: ReactClientValue,
+): Chunk {
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(clientReferenceMetadata);
+  const row = serializeRowHeader('I', id) + json + '\n';
+  return stringToChunk(row);
+}
+
+function processHintChunk(
+  request: Request,
+  id: number,
+  code: string,
+  model: JSONValue,
+): Chunk {
+  const json: string = stringify(model);
+  const row = serializeRowHeader('H' + code, id) + json + '\n';
+  return stringToChunk(row);
 }
