@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
@@ -25,7 +24,6 @@ describe('ReactDOMServerScheduleHydration', () => {
 
     React = require('react');
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
