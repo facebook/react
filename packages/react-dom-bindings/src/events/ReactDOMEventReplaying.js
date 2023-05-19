@@ -80,6 +80,7 @@ type QueuedHydrationTarget = {
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: EventPriority,
+  callback: null | (true => void),
 };
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -337,7 +338,9 @@ function attemptExplicitHydrationTarget(
   }
 }
 
-export async function queueExplicitHydrationTarget(target: Node): void {
+export async function queueExplicitHydrationTarget(
+  target: Node,
+): Promise<true> {
   return new Promise(resolve => {
     // TODO: This will read the priority if it's dispatched by the React
     // event system but not native events. Should read window.event.type, like

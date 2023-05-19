@@ -48,19 +48,19 @@ describe('ReactDOMServerScheduleHydration', () => {
         Scheduler.log('App');
         return (
           <div>
-            <Child text="A"/>
+            <Child text="A" />
           </div>
         );
       }
 
-      const finalHTML = ReactDOMServer.renderToString(<App/>);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
       const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
-      const root = ReactDOMClient.hydrateRoot(container, <App/>);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -82,12 +82,12 @@ describe('ReactDOMServerScheduleHydration', () => {
         Scheduler.log('App');
         return (
           <div>
-            <Child text="A"/>
+            <Child text="A" />
           </div>
         );
       }
 
-      const finalHTML = ReactDOMServer.renderToString(<App/>);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
       const container = document.createElement('div');
@@ -95,8 +95,10 @@ describe('ReactDOMServerScheduleHydration', () => {
       const spanA = container.getElementsByTagName('span')[0];
 
       let hydrated = false;
-      const root = ReactDOMClient.hydrateRoot(container, <App/>);
-      const scheduleHydrationA = root.unstable_scheduleHydration(spanA).then(() => hydrated = true);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
+      const scheduleHydrationA = root
+        .unstable_scheduleHydration(spanA)
+        .then(() => (hydrated = true));
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -122,20 +124,20 @@ describe('ReactDOMServerScheduleHydration', () => {
         return (
           <div>
             <Suspense fallback="Loading...">
-              <Child text="A"/>
+              <Child text="A" />
             </Suspense>
           </div>
         );
       }
 
-      const finalHTML = ReactDOMServer.renderToString(<App/>);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
       const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
-      const root = ReactDOMClient.hydrateRoot(container, <App/>);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -143,9 +145,9 @@ describe('ReactDOMServerScheduleHydration', () => {
       // Hydrate everything
       await waitForAll(['App', 'A']);
 
-      const hydrated = await root.unstable_scheduleHydration(spanA)
+      const hydrated = await root.unstable_scheduleHydration(spanA);
       expect(hydrated).toBe(true);
-    })
+    });
 
     it('resolves after content is hydrated', async () => {
       function Child({text}) {
@@ -158,13 +160,13 @@ describe('ReactDOMServerScheduleHydration', () => {
         return (
           <div>
             <Suspense fallback="Loading...">
-              <Child text="A"/>
+              <Child text="A" />
             </Suspense>
           </div>
         );
       }
 
-      const finalHTML = ReactDOMServer.renderToString(<App/>);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
       const container = document.createElement('div');
@@ -172,8 +174,10 @@ describe('ReactDOMServerScheduleHydration', () => {
       const spanA = container.getElementsByTagName('span')[0];
 
       let hydrated = false;
-      const root = ReactDOMClient.hydrateRoot(container, <App/>);
-      const scheduleHydrationA = root.unstable_scheduleHydration(spanA).then(() => hydrated = true);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
+      const scheduleHydrationA = root
+        .unstable_scheduleHydration(spanA)
+        .then(() => (hydrated = true));
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -273,12 +277,18 @@ describe('ReactDOMServerScheduleHydration', () => {
       let hydratedA = false;
       let hydratedB = false;
       let hydratedC = false;
-      const scheduleHydrationA = root.unstable_scheduleHydration(spanA).then(() => hydratedA = true);
-      const scheduleHydrationB = root.unstable_scheduleHydration(spanB).then(() => {
-        console.log('A');
-        hydratedB = true;
-      });
-      const scheduleHydrationC = root.unstable_scheduleHydration(spanC).then(() => hydratedC = true);
+      const scheduleHydrationA = root
+        .unstable_scheduleHydration(spanA)
+        .then(() => (hydratedA = true));
+      const scheduleHydrationB = root
+        .unstable_scheduleHydration(spanB)
+        .then(() => {
+          console.log('A');
+          hydratedB = true;
+        });
+      const scheduleHydrationC = root
+        .unstable_scheduleHydration(spanC)
+        .then(() => (hydratedC = true));
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -310,7 +320,7 @@ describe('ReactDOMServerScheduleHydration', () => {
         return (
           <div>
             <Suspense fallback="Loading...">
-              <Child text ="A" />
+              <Child text="A" />
             </Suspense>
             <Suspense fallback="Loading...">
               <Child text="B" />
@@ -338,9 +348,15 @@ describe('ReactDOMServerScheduleHydration', () => {
       let hydratedB = false;
       let hydratedC = false;
 
-      const scheduleHydrationB = root.unstable_scheduleHydration(spanB).then(() => hydratedB = true);
-      const scheduleHydrationC = root.unstable_scheduleHydration(spanC).then(() => hydratedC = true);
-      const scheduleHydrationA = root.unstable_scheduleHydration(spanA).then(() => hydratedA = true);
+      const scheduleHydrationB = root
+        .unstable_scheduleHydration(spanB)
+        .then(() => (hydratedB = true));
+      const scheduleHydrationC = root
+        .unstable_scheduleHydration(spanC)
+        .then(() => (hydratedC = true));
+      const scheduleHydrationA = root
+        .unstable_scheduleHydration(spanA)
+        .then(() => (hydratedA = true));
 
       // Nothing has been hydrated so far.
       assertLog([]);
@@ -360,5 +376,4 @@ describe('ReactDOMServerScheduleHydration', () => {
       expect(hydratedC).toBe(true);
     });
   });
-
 });
