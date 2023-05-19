@@ -17,12 +17,10 @@ import {
 import {
   BlockId,
   BuiltInType,
-  Effect,
   FunctionType,
   IdentifierId,
   ObjectType,
   PolyType,
-  ValueKind,
   makeBlockId,
   makeIdentifierId,
 } from "./HIR";
@@ -38,10 +36,50 @@ import { FunctionSignature, ShapeRegistry } from "./ObjectShape";
 //   missing some recursive Object / Function shapeIds
 export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
+
+  /**
+   * Enable memoization of JSX elements in addition to other types of values. When disabled,
+   * other types (objects, arrays, call expressions, etc) are memoized, but not known JSX
+   * values.
+   *
+   * Defaults to true
+   */
   memoizeJsxElements: boolean;
+
+  /**
+   * Enable validation of hooks to partially check that the component honors the rules of hooks.
+   * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
+   * for suppressions of the lint rule).
+   *
+   * Defaults to false
+   */
   validateHooksUsage: boolean;
+
+  /**
+   * Enable inlining of `useMemo()` function expressions so that they can be more optimally
+   * compiled.
+   *
+   * Defaults to false
+   */
   inlineUseMemo: boolean;
+
+  /**
+   * Enable optimizations based on the signature of (non-method) built-in function calls.
+   *
+   * Defaults to false
+   */
   enableFunctionCallSignatureOptimizations: boolean;
+
+  /**
+   * When enabled, the compiler assumes that hooks follow the Rules of React:
+   * - Hooks may memoize computation based on any of their parameters, thus
+   *   any arguments to a hook are assumed frozen after calling the hook.
+   * - Hooks may memoize the result they return, thus the return value is
+   *   assumed frozen.
+
+   * Defaults to false
+   */
+  enableAssumeHooksFollowRulesOfReact: boolean;
 }>;
 
 export class Environment {
@@ -51,6 +89,7 @@ export class Environment {
   #nextBlock: number = 0;
   validateHooksUsage: boolean;
   enableFunctionCallSignatureOptimizations: boolean;
+  enableAssumeHooksFollowRulesOfReact: boolean;
   #contextIdentifiers: Set<t.Identifier>;
 
   constructor(
@@ -77,6 +116,8 @@ export class Environment {
     this.validateHooksUsage = config?.validateHooksUsage ?? false;
     this.enableFunctionCallSignatureOptimizations =
       config?.enableFunctionCallSignatureOptimizations ?? false;
+    this.enableAssumeHooksFollowRulesOfReact =
+      config?.enableAssumeHooksFollowRulesOfReact ?? false;
     this.#contextIdentifiers = contextIdentifiers;
   }
 
@@ -98,12 +139,7 @@ export class Environment {
       if (isHookName(name)) {
         return {
           kind: "Hook",
-          definition: {
-            kind: "Custom",
-            name,
-            effectKind: Effect.Mutate,
-            valueKind: ValueKind.Mutable,
-          },
+          definition: null,
         };
       } else {
         log(() => `Undefined global '${name}'`);

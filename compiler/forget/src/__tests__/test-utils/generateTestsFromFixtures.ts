@@ -102,6 +102,7 @@ export default function generateTestsFromFixtures(
         let inlineUseMemo = true;
         let panicOnBailout = true;
         let memoizeJsxElements = true;
+        let enableAssumeHooksFollowRulesOfReact = false;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -145,13 +146,23 @@ export default function generateTestsFromFixtures(
           if (lines[0]!.indexOf("@memoizeJsxElements false") !== -1) {
             memoizeJsxElements = false;
           }
+          if (
+            lines[0]!.indexOf("@enableAssumeHooksFollowRulesOfReact true") !==
+            -1
+          ) {
+            enableAssumeHooksFollowRulesOfReact = true;
+          }
         }
 
         testCommand(basename, () => {
           let receivedOutput;
           if (input !== null) {
             receivedOutput = transform(input, basename, {
-              environment: { inlineUseMemo, memoizeJsxElements },
+              environment: {
+                inlineUseMemo,
+                memoizeJsxElements,
+                enableAssumeHooksFollowRulesOfReact,
+              },
               logger: null,
               debug,
               enableOnlyOnUseForgetDirective,

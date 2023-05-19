@@ -14,7 +14,7 @@ export default function (func: HIRFunction): void {
         case "CallExpression": {
           if (isHookType(instr.value.callee.identifier)) {
             const name = (instr.value.callee.identifier.type as HookType)
-              .definition.name;
+              .definition?.name;
             if (name === "useMemo") {
               const [fn] = instr.value.args;
 

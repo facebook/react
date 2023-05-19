@@ -708,13 +708,18 @@ function inferBlock(
         continue;
       }
       case "CallExpression": {
-        const hook =
-          instrValue.callee.identifier.type.kind === "Hook"
-            ? instrValue.callee.identifier.type.definition
-            : null;
-        if (hook !== null) {
-          effectKind = hook.effectKind;
-          valueKind = hook.valueKind;
+        if (instrValue.callee.identifier.type.kind === "Hook") {
+          const definition = instrValue.callee.identifier.type.definition;
+          if (definition !== null) {
+            effectKind = definition.effectKind;
+            valueKind = definition.valueKind;
+          } else if (env.enableAssumeHooksFollowRulesOfReact) {
+            effectKind = Effect.Freeze;
+            valueKind = ValueKind.Frozen;
+          } else {
+            effectKind = Effect.Mutate;
+            valueKind = ValueKind.Mutable;
+          }
           break;
         }
 

@@ -93,6 +93,7 @@ export async function compile(
     let instrumentForget = null;
     let panicOnBailout = true;
     let memoizeJsxElements = true;
+    let enableAssumeHooksFollowRulesOfReact = false;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
@@ -120,6 +121,9 @@ export async function compile(
     if (firstLine.indexOf("@memoizeJsxElements false") !== -1) {
       memoizeJsxElements = false;
     }
+    if (firstLine.indexOf("@enableAssumeHooksFollowRulesOfReact true") !== -1) {
+      enableAssumeHooksFollowRulesOfReact = true;
+    }
 
     const language = parseLanguage(firstLine);
 
@@ -139,6 +143,7 @@ export async function compile(
         ]),
         validateHooksUsage: true,
         enableFunctionCallSignatureOptimizations: true,
+        enableAssumeHooksFollowRulesOfReact,
         inlineUseMemo: true,
         memoizeJsxElements,
       },

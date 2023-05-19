@@ -60,6 +60,9 @@ describe("React Forget", () => {
               validateHooksUsage: true,
               inlineUseMemo: options.environment?.inlineUseMemo ?? false,
               enableFunctionCallSignatureOptimizations: true,
+              enableAssumeHooksFollowRulesOfReact:
+                options.environment?.enableAssumeHooksFollowRulesOfReact ??
+                false,
             },
             logger: null,
             gating: options.gating,

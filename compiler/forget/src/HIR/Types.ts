@@ -20,7 +20,7 @@ export type Type =
 export type PrimitiveType = { kind: "Primitive" };
 export type HookType = {
   kind: "Hook";
-  definition: Hook;
+  definition: Hook | null;
 };
 
 /**
