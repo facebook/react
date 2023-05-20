@@ -9,7 +9,7 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
+import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
@@ -20,7 +20,7 @@ import {
   processStringChunk,
   processBinaryChunk,
   close,
-} from 'react-client/src/ReactFlightClientStream';
+} from 'react-client/src/ReactFlightClient';
 
 import {
   processReply,

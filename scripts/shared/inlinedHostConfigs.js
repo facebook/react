@@ -34,7 +34,6 @@ module.exports = [
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node.unbundled',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -85,7 +84,6 @@ module.exports = [
       'react-server-dom-webpack/server.browser',
       'react-server-dom-webpack/src/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -117,7 +115,6 @@ module.exports = [
       'react-server-dom-webpack/server.edge',
       'react-server-dom-webpack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -148,7 +145,6 @@ module.exports = [
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -174,18 +170,23 @@ module.exports = [
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',
       'react-dom/src/server/ReactDOMLegacyServerNodeStream.js', // file indirection to support partial forking of some methods in *Node
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
     isServerSupported: true,
   },
   {
-    shortName: 'art',
-    entryPoints: ['react-art'],
-    paths: ['react-art'],
-    isFlowTyped: false, // TODO: type it.
-    isServerSupported: false,
+    shortName: 'dom-fb',
+    entryPoints: ['react-server-dom-fb/src/ReactDOMServerFB.js'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-server-dom-fb',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+    isFlightSupported: false,
   },
   {
     shortName: 'native',
@@ -209,36 +210,11 @@ module.exports = [
     isServerSupported: false,
   },
   {
-    shortName: 'dom-relay',
-    entryPoints: [
-      'react-server-dom-relay',
-      'react-server-dom-relay/server',
-      'react-server-dom-relay/src/ReactDOMServerFB.js',
-    ],
-    paths: [
-      'react-dom',
-      'react-dom-bindings',
-      'react-server-dom-relay',
-      'shared/ReactDOMSharedInternals',
-    ],
-    isFlowTyped: true,
-    isServerSupported: true,
-  },
-  {
-    shortName: 'native-relay',
-    entryPoints: [
-      'react-server-native-relay',
-      'react-server-native-relay/server',
-    ],
-    paths: [
-      'react-native-renderer',
-      'react-server-native-relay',
-      // this is included here so that it's not included in the main native check
-      // remove this when it's added to the main native renderer.
-      'react-native-renderer/src/server',
-    ],
-    isFlowTyped: true,
-    isServerSupported: true,
+    shortName: 'art',
+    entryPoints: ['react-art'],
+    paths: ['react-art'],
+    isFlowTyped: false, // TODO: type it.
+    isServerSupported: false,
   },
   {
     shortName: 'custom',
@@ -248,11 +224,7 @@ module.exports = [
       'react-server',
       'react-server/flight',
     ],
-    paths: [
-      'react-client/flight',
-      'react-server/flight',
-      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
-    ],
+    paths: ['react-client/flight', 'react-server/flight'],
     isFlowTyped: true,
     isServerSupported: true,
   },
