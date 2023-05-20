@@ -16,11 +16,21 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer, rendererInfo, isServerSupported) {
+function writeConfig(
+  renderer,
+  rendererInfo,
+  isServerSupported,
+  isFlightSupported,
+) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
+  isFlightSupported =
+    isFlightSupported === true ||
+    (isServerSupported && isFlightSupported !== false);
+
   const serverRenderer = isServerSupported ? renderer : 'custom';
+  const flightRenderer = isFlightSupported ? renderer : 'custom';
 
   const ignoredPaths = [];
 
@@ -35,7 +45,10 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
       ignoredPaths.push(`.*/packages/${otherPath}`);
     });
 
-    if (otherRenderer.shortName !== serverRenderer) {
+    if (
+      otherRenderer.shortName !== serverRenderer &&
+      otherRenderer.shortName !== flightRenderer
+    ) {
       ignoredPaths.push(
         `.*/packages/.*/forks/.*\\.${otherRenderer.shortName}.js`,
       );
@@ -54,8 +67,8 @@ function writeConfig(renderer, rendererInfo, isServerSupported) {
 module.name_mapper='ReactFiberConfig$$' -> 'forks/ReactFiberConfig.${renderer}'
 module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
 module.name_mapper='ReactFizzConfig$$' -> 'forks/ReactFizzConfig.${serverRenderer}'
-module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${serverRenderer}'
-module.name_mapper='ReactFlightClientConfig$$' -> 'forks/ReactFlightClientConfig.${serverRenderer}'
+module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${flightRenderer}'
+module.name_mapper='ReactFlightClientConfig$$' -> 'forks/ReactFlightClientConfig.${flightRenderer}'
 module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.default'
     `.trim(),
     )
@@ -96,6 +109,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
       rendererInfo.shortName,
       rendererInfo,
       rendererInfo.isServerSupported,
+      rendererInfo.isFlightSupported,
     );
   }
 });
