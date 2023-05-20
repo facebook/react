@@ -416,7 +416,6 @@ module.exports = {
     {
       files: [
         'packages/react-native-renderer/**/*.js',
-        'packages/react-server-native-relay/**/*.js',
       ],
       globals: {
         nativeFabricUIManager: 'readonly',

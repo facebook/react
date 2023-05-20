@@ -25,7 +25,6 @@
 
 declare var $$$config: any;
 
-export type Response = any;
 export opaque type SSRManifest = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
@@ -38,9 +37,6 @@ export const requireModule = $$$config.requireModule;
 export const dispatchHint = $$$config.dispatchHint;
 
 export opaque type Source = mixed;
-
-export type UninitializedModel = string;
-export const parseModel = $$$config.parseModel;
 
 export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
 
