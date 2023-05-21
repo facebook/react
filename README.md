@@ -73,3 +73,8 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+### BootStrap
+
+Bootstrap help us in styling the element and for that we need to import react bootstrap in our project 
+Read our react-Bootstrap documentation[https://react-bootstrap.github.io/getting-started/introduction] which help you in installation on react bootstrap in your project.
