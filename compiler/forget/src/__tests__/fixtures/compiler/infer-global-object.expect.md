@@ -24,7 +24,7 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react"; // Check that we correctly resolve type and effect lookups on the javascript
 // global object.
 function Component(props) {
-  const $ = useMemoCache(7);
+  const $ = useMemoCache(4);
   const c_0 = $[0] !== props.b;
   let t0;
   if (c_0) {
@@ -35,32 +35,21 @@ function Component(props) {
     t0 = $[1];
   }
   const neverAliasedOrMutated = t0;
-  const c_2 = $[2] !== props.a;
-  const c_3 = $[3] !== neverAliasedOrMutated;
-  let t1;
-  if (c_2 || c_3) {
-    t1 = Math.max(props.a, neverAliasedOrMutated);
-    $[2] = props.a;
-    $[3] = neverAliasedOrMutated;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  const primitiveVal1 = t1;
+  const primitiveVal1 = Math.max(props.a, neverAliasedOrMutated);
 
   const primitiveVal3 = globaThis.globalThis.NaN;
 
   foo(primitiveVal1, Infinity, primitiveVal3);
-  const c_5 = $[5] !== primitiveVal1;
-  let t2;
-  if (c_5) {
-    t2 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
-    $[5] = primitiveVal1;
-    $[6] = t2;
+  const c_2 = $[2] !== primitiveVal1;
+  let t1;
+  if (c_2) {
+    t1 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
+    $[2] = primitiveVal1;
+    $[3] = t1;
   } else {
-    t2 = $[6];
+    t1 = $[3];
   }
-  return t2;
+  return t1;
 }
 
 ```

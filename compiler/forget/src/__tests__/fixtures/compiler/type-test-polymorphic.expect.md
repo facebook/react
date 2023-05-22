@@ -24,33 +24,26 @@ function component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
+  const p = makePrimitive();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = makePrimitive();
+    t0 = {};
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const p = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = {};
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const o = t1;
+  const o = t0;
   let x;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
 
     x.t = p;
 
     x.t = o;
-    $[2] = x;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   const y = x.t;
   return y;

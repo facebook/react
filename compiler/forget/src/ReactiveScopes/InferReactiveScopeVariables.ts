@@ -10,7 +10,6 @@ import {
   HIRFunction,
   Identifier,
   Instruction,
-  InstructionValue,
   makeInstructionId,
   makeScopeId,
   Place,
@@ -21,7 +20,6 @@ import {
   eachInstructionOperand,
   eachPatternOperand,
 } from "../HIR/visitors";
-import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
@@ -105,7 +103,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       const operands: Array<Identifier> = [];
       const range = instr.lvalue.identifier.mutableRange;
-      if (range.end > range.start + 1 || mayAllocate(fn.env, instr.value)) {
+      if (range.end > range.start + 1 || mayAllocate(fn.env, instr)) {
         operands.push(instr.lvalue!.identifier);
       }
       if (
@@ -219,7 +217,8 @@ function isMutable({ id }: Instruction, place: Place): boolean {
   return id >= range.start && id < range.end;
 }
 
-function mayAllocate(env: Environment, value: InstructionValue): boolean {
+function mayAllocate(env: Environment, instruction: Instruction): boolean {
+  const { value } = instruction;
   switch (value.kind) {
     case "Destructure": {
       return doesPatternContainSpreadElement(value.lvalue.pattern);
@@ -247,27 +246,10 @@ function mayAllocate(env: Environment, value: InstructionValue): boolean {
     case "Debugger": {
       return false;
     }
-    case "CallExpression": {
-      if (env.enableFunctionCallSignatureOptimizations) {
-        const signature = getFunctionCallSignature(
-          env,
-          value.callee.identifier.type
-        );
-        if (signature !== null) {
-          return signature.returnType.kind !== "Primitive";
-        }
-      }
-      return true;
-    }
+    case "CallExpression":
     case "MethodCall": {
       if (env.enableFunctionCallSignatureOptimizations) {
-        const signature = getFunctionCallSignature(
-          env,
-          value.receiver.identifier.type
-        );
-        if (signature !== null) {
-          return signature.returnType.kind !== "Primitive";
-        }
+        return instruction.lvalue.identifier.type.kind !== "Primitive";
       }
       return true;
     }
