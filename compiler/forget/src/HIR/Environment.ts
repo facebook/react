@@ -80,6 +80,16 @@ export type EnvironmentConfig = Partial<{
    * Defaults to false
    */
   enableAssumeHooksFollowRulesOfReact: boolean;
+
+  /**
+   * When enabled, the compiler treats hooks as normal typed functions for
+   * type and effect inference.
+   * Enabling this may change inference to have a higher confidence level
+   * and create more bailouts (e.g. for mutable effects to immutable values).
+   *
+   * Defaults to false
+   */
+  enableTreatHooksAsFunctions: boolean;
 }>;
 
 export class Environment {
@@ -90,6 +100,7 @@ export class Environment {
   validateHooksUsage: boolean;
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
+  enableTreatHooksAsFunctions: boolean;
   #contextIdentifiers: Set<t.Identifier>;
 
   constructor(
@@ -118,6 +129,8 @@ export class Environment {
       config?.enableFunctionCallSignatureOptimizations ?? false;
     this.enableAssumeHooksFollowRulesOfReact =
       config?.enableAssumeHooksFollowRulesOfReact ?? false;
+    this.enableTreatHooksAsFunctions =
+      config?.enableTreatHooksAsFunctions ?? false;
     this.#contextIdentifiers = contextIdentifiers;
   }
 
