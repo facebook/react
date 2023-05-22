@@ -1,5 +1,3 @@
-/* global chrome */
-
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
