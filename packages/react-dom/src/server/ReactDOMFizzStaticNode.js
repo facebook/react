@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +8,8 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+
 import {Writable, Readable} from 'stream';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -22,24 +24,25 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-type Options = {|
+type Options = {
   identifierPrefix?: string,
   namespaceURI?: string,
   bootstrapScriptContent?: string,
-  bootstrapScripts?: Array<string>,
-  bootstrapModules?: Array<string>,
+  bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
+  bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
-|};
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
 
-type StaticResult = {|
+type StaticResult = {
   prelude: Readable,
-|};
+};
 
-function createFakeWritable(readable): Writable {
+function createFakeWritable(readable: any): Writable {
   // The current host config expects a Writable so we create
   // a fake writable for now to push into the Readable.
   return ({
@@ -63,7 +66,7 @@ function prerenderToNodeStreams(
     const onFatalError = reject;
 
     function onAllReady() {
-      const readable = new Readable({
+      const readable: Readable = new Readable({
         read() {
           startFlowing(request, writable);
         },
@@ -84,6 +87,7 @@ function prerenderToNodeStreams(
         options ? options.bootstrapScriptContent : undefined,
         options ? options.bootstrapScripts : undefined,
         options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,

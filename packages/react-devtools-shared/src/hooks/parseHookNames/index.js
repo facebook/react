@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,8 @@ import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
 import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
 import {flattenHooksList, loadSourceAndMetadata} from './loadSourceAndMetadata';
 
-const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
+const workerizedParseHookNames: ParseSourceAndMetadataModule =
+  WorkerizedParseSourceAndMetadata();
 
 export function parseSourceAndMetadata(
   hooksList: Array<HooksNode>,
@@ -31,7 +32,7 @@ export function parseSourceAndMetadata(
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
 
-const EMPTY_MAP = new Map();
+const EMPTY_MAP: HookNames = new Map();
 
 export async function parseHookNames(
   hooksTree: HooksTree,

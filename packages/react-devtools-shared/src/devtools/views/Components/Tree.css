@@ -79,3 +79,22 @@
 .WarningIcon {
   color: var(--color-console-warning-icon);
 }
+
+.ZeroElementsNotice {
+  padding-left: 1em;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+  animation-delay: 2s;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.Link {
+  color: var(--color-button-active);
+}

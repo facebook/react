@@ -1,10 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -19,7 +20,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -34,18 +35,22 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itRenders,
-  itThrowsWhenRendering,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, itThrowsWhenRendering} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
   });
 
-  describe('legacy context', function() {
+  describe('legacy context', function () {
+    // The `itRenders` test abstraction doesn't work with @gate so we have
+    // to do this instead.
+    if (gate(flags => flags.disableLegacyContext)) {
+      test('empty test to stop Jest from being a complainy complainer', () => {});
+      return;
+    }
+
     let PurpleContext, RedContext;
     beforeEach(() => {
       class Parent extends React.Component {

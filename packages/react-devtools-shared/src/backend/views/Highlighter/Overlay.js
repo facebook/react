@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,7 @@ import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
 import type {Rect} from '../utils';
 import type Agent from 'react-devtools-shared/src/backend/agent';
 
-type Box = {|top: number, left: number, width: number, height: number|};
+type Box = {top: number, left: number, width: number, height: number};
 
 const assign = Object.assign;
 
@@ -148,8 +148,8 @@ class OverlayTip {
 }
 
 export default class Overlay {
-  window: window;
-  tipBoundsWindow: window;
+  window: any;
+  tipBoundsWindow: any;
   container: HTMLElement;
   tip: OverlayTip;
   rects: Array<OverlayRect>;
@@ -233,9 +233,8 @@ export default class Overlay {
       name = elements[0].nodeName.toLowerCase();
 
       const node = elements[0];
-      const rendererInterface = this.agent.getBestMatchingRendererInterface(
-        node,
-      );
+      const rendererInterface =
+        this.agent.getBestMatchingRendererInterface(node);
       if (rendererInterface) {
         const id = rendererInterface.getFiberIDForNative(node, true);
         if (id) {
@@ -277,12 +276,16 @@ export default class Overlay {
   }
 }
 
-function findTipPos(dims, bounds, tipSize) {
+function findTipPos(
+  dims: Box,
+  bounds: Box,
+  tipSize: {height: number, width: number},
+) {
   const tipHeight = Math.max(tipSize.height, 20);
   const tipWidth = Math.max(tipSize.width, 60);
   const margin = 5;
 
-  let top;
+  let top: number | string;
   if (dims.top + dims.height + tipHeight <= bounds.top + bounds.height) {
     if (dims.top + dims.height < bounds.top + 0) {
       top = bounds.top + margin;
@@ -299,7 +302,7 @@ function findTipPos(dims, bounds, tipSize) {
     top = bounds.top + bounds.height - tipHeight - margin;
   }
 
-  let left = dims.left + margin;
+  let left: number | string = dims.left + margin;
   if (dims.left < bounds.left) {
     left = bounds.left + margin;
   }
@@ -314,7 +317,7 @@ function findTipPos(dims, bounds, tipSize) {
   };
 }
 
-function boxWrap(dims, what, node) {
+function boxWrap(dims: any, what: string, node: HTMLElement) {
   assign(node.style, {
     borderTopWidth: dims[what + 'Top'] + 'px',
     borderLeftWidth: dims[what + 'Left'] + 'px',

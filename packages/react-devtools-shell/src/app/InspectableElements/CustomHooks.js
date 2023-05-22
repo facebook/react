@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -103,18 +103,19 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 const MemoWithHooks = memo(FunctionWithHooks);
 const ForwardRefWithHooks = forwardRef(FunctionWithHooks);
 
-function wrapWithHoc(Component) {
+function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
   function Hoc() {
     return <Component />;
   }
-  // $FlowFixMe
+  // $FlowFixMe[prop-missing]
   const displayName = Component.displayName || Component.name;
+  // $FlowFixMe[incompatible-type] found when upgrading Flow
   Hoc.displayName = `withHoc(${displayName})`;
   return Hoc;
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
-export default function CustomHooks() {
+export default function CustomHooks(): React.Node {
   return (
     <Fragment>
       <FunctionWithHooks />
@@ -126,7 +127,7 @@ export default function CustomHooks() {
 }
 
 // Below copied from https://usehooks.com/
-function useDebounce(value, delay) {
+function useDebounce(value: number, delay: number) {
   // State and setters for debounced value
   const [debouncedValue, setDebouncedValue] = useState(value);
 

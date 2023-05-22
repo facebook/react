@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -193,12 +193,13 @@ describe('ReactDOMEventListener', () => {
     const onMouseOut = event => mouseOut(event.target);
 
     class Wrapper extends React.Component {
+      innerRef = React.createRef();
       getInner = () => {
-        return this.refs.inner;
+        return this.innerRef.current;
       };
 
       render() {
-        const inner = <div ref="inner">Inner</div>;
+        const inner = <div ref={this.innerRef}>Inner</div>;
         return (
           <div>
             <div onMouseOut={onMouseOut} id="outer">
@@ -400,7 +401,7 @@ describe('ReactDOMEventListener', () => {
 
     const originalDocAddEventListener = document.addEventListener;
     const originalRootAddEventListener = container.addEventListener;
-    document.addEventListener = function(type) {
+    document.addEventListener = function (type) {
       switch (type) {
         case 'selectionchange':
           break;
@@ -410,7 +411,7 @@ describe('ReactDOMEventListener', () => {
           );
       }
     };
-    container.addEventListener = function(type, fn, options) {
+    container.addEventListener = function (type, fn, options) {
       if (options && (options === true || options.capture)) {
         return;
       }
@@ -980,7 +981,7 @@ describe('ReactDOMEventListener', () => {
     const log = [];
 
     const originalDocAddEventListener = document.addEventListener;
-    document.addEventListener = function(type, fn, options) {
+    document.addEventListener = function (type, fn, options) {
       switch (type) {
         case 'selectionchange':
           log.push(options);

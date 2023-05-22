@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -94,16 +94,16 @@ describe('Store owners list', () => {
     const rootID = store.getElementIDAtIndex(0);
     expect(getFormattedOwnersList(rootID)).toMatchInlineSnapshot(`
       "  ▾ <Root>
-          ▾ <Intermediate key=\\"intermediate\\">
+          ▾ <Intermediate key="intermediate">
               <Leaf>
-            <Leaf key=\\"leaf\\">"
+            <Leaf key="leaf">"
     `);
 
     const intermediateID = store.getElementIDAtIndex(1);
     expect(getFormattedOwnersList(intermediateID)).toMatchInlineSnapshot(`
-      "  ▾ <Intermediate key=\\"intermediate\\">
-            <Leaf key=\\"leaf\\">
-          ▾ <Wrapper key=\\"wrapper\\">"
+      "  ▾ <Intermediate key="intermediate">
+            <Leaf key="leaf">
+          ▾ <Wrapper key="wrapper">"
     `);
   });
 
@@ -217,9 +217,9 @@ describe('Store owners list', () => {
     `);
     expect(getFormattedOwnersList(rootID)).toMatchInlineSnapshot(`
       "  ▾ <Root>
-            <Leaf key=\\"A\\">
-            <Leaf key=\\"B\\">
-            <Leaf key=\\"C\\">"
+            <Leaf key="A">
+            <Leaf key="B">
+            <Leaf key="C">"
     `);
 
     act(() => legacyRender(<Root ascending={false} />, container));
@@ -232,9 +232,9 @@ describe('Store owners list', () => {
     `);
     expect(getFormattedOwnersList(rootID)).toMatchInlineSnapshot(`
       "  ▾ <Root>
-            <Leaf key=\\"C\\">
-            <Leaf key=\\"B\\">
-            <Leaf key=\\"A\\">"
+            <Leaf key="C">
+            <Leaf key="B">
+            <Leaf key="A">"
     `);
   });
 });

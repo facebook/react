@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -39,12 +39,10 @@ import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError'
 // This doens't work properly though when component filters are changed,
 // because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
 // So instead we key on Element ID (which is stable in this case) and use an LRU for eviction.
-const inspectedElementCache: LRUCache<
-  number,
-  InspectedElementFrontend,
-> = new LRU({
-  max: 25,
-});
+const inspectedElementCache: LRUCache<number, InspectedElementFrontend> =
+  new LRU({
+    max: 25,
+  });
 
 type Path = Array<string | number>;
 
@@ -58,12 +56,12 @@ export function inspectElement({
   element,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   element: Element,
   path: Path | null,
   rendererID: number,
-|}): Promise<InspectElementReturnType> {
+}): Promise<InspectElementReturnType> {
   const {id} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.

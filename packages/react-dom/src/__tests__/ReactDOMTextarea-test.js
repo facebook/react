@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,7 +29,7 @@ describe('ReactDOMTextarea', () => {
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
 
-    renderTextarea = function(component, container) {
+    renderTextarea = function (component, container) {
       if (!container) {
         container = document.createElement('div');
       }
@@ -40,6 +40,10 @@ describe('ReactDOMTextarea', () => {
       node.defaultValue = node.innerHTML.replace(/^\n/, '');
       return node;
     };
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('should allow setting `defaultValue`', () => {
@@ -74,7 +78,7 @@ describe('ReactDOMTextarea', () => {
 
   it('should display "foobar" for `defaultValue` of `objToString`', () => {
     const objToString = {
-      toString: function() {
+      toString: function () {
         return 'foobar';
       },
     };
@@ -133,15 +137,17 @@ describe('ReactDOMTextarea', () => {
 
     let counter = 0;
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
+    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
+      type,
+    ) {
       const el = originalCreateElement.apply(this, arguments);
       let value = '';
       if (type === 'textarea') {
         Object.defineProperty(el, 'value', {
-          get: function() {
+          get: function () {
             return value;
           },
-          set: function(val) {
+          set: function (val) {
             value = String(val);
             counter++;
           },
@@ -164,7 +170,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should render value for SSR', () => {
-    const element = <textarea value="1" onChange={function() {}} />;
+    const element = <textarea value="1" onChange={function () {}} />;
     const markup = ReactDOMServer.renderToString(element);
     const div = document.createElement('div');
     div.innerHTML = markup;
@@ -208,7 +214,7 @@ describe('ReactDOMTextarea', () => {
     expect(node.value).toBe('giraffe');
 
     const objToString = {
-      toString: function() {
+      toString: function () {
         return 'foo';
       },
     };
@@ -281,10 +287,10 @@ describe('ReactDOMTextarea', () => {
     let nodeValue = 'a';
     const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
-      get: function() {
+      get: function () {
         return nodeValue;
       },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
+      set: nodeValueSetter.mockImplementation(function (newValue) {
         nodeValue = newValue;
       }),
     });
@@ -460,7 +466,7 @@ describe('ReactDOMTextarea', () => {
   if (ReactFeatureFlags.disableTextareaChildren) {
     it('should ignore objects as children', () => {
       const obj = {
-        toString: function() {
+        toString: function () {
           return 'sharkswithlasers';
         },
       };
@@ -477,7 +483,7 @@ describe('ReactDOMTextarea', () => {
   if (!ReactFeatureFlags.disableTextareaChildren) {
     it('should allow objects as children', () => {
       const obj = {
-        toString: function() {
+        toString: function () {
           return 'sharkswithlasers';
         },
       };
@@ -597,6 +603,7 @@ describe('ReactDOMTextarea', () => {
               ref={n => (node = n)}
               value="foo"
               onChange={emptyFunction}
+              data-count={this.state.count}
             />
           </div>
         );
@@ -729,5 +736,27 @@ describe('ReactDOMTextarea', () => {
       // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
       expect(node.value).toBe('foo');
     });
+  });
+
+  it('should remove previous `defaultValue`', () => {
+    const container = document.createElement('div');
+    const node = ReactDOM.render(<textarea defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<textarea />, container);
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should treat `defaultValue={null}` as missing', () => {
+    const container = document.createElement('div');
+    const node = ReactDOM.render(<textarea defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<textarea defaultValue={null} />, container);
+    expect(node.defaultValue).toBe('');
   });
 });

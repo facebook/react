@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,20 +27,20 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingRecord = {|
+type PendingRecord = {
   status: 0,
   value: Wakeable,
-|};
+};
 
-type ResolvedRecord<T> = {|
+type ResolvedRecord<T> = {
   status: 1,
   value: T,
-|};
+};
 
-type RejectedRecord = {|
+type RejectedRecord = {
   status: 2,
   value: null,
-|};
+};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 
@@ -87,9 +87,9 @@ export function loadHookNames(
   }
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -97,7 +97,7 @@ export function loadHookNames(
       displayName: `Loading hook names for ${element.displayName || 'Unknown'}`,
     };
 
-    let timeoutID;
+    let timeoutID: $FlowFixMe | null;
     let didTimeout = false;
     let status = 'unknown';
     let resolvedHookNames: HookNames | null = null;
@@ -143,7 +143,8 @@ export function loadHookNames(
             }
 
             if (hookNames) {
-              const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
+              const resolvedRecord =
+                ((newRecord: any): ResolvedRecord<HookNames>);
               resolvedRecord.status = Resolved;
               resolvedRecord.value = hookNames;
             } else {

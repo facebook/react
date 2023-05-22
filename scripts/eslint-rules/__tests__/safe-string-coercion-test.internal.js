@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,15 @@
 
 const rule = require('../safe-string-coercion');
 const {RuleTester} = require('eslint');
+
+RuleTester.setDefaultConfig({
+  parser: require.resolve('babel-eslint'),
+  parserOptions: {
+    ecmaVersion: 6,
+    sourceType: 'module',
+  },
+});
+
 const ruleTester = new RuleTester();
 
 const missingDevCheckMessage =
@@ -57,7 +66,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
       }
     `,
     `
-      if (__DEV__) { checkFormFieldValueStringCoercion (obj) } 
+      if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
       '' + obj;
     `,
     `
@@ -87,6 +96,9 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     // doesn't violate this rule.
     "if (typeof obj === 'string') { if (typeof obj === 'string' && obj.length) {} else {'' + obj} }",
     "if (typeof obj === 'string') if (typeof obj === 'string' && obj.length) {} else {'' + obj}",
+    "'' + ''",
+    "'' + '' + ''",
+    "`test${foo}` + ''",
   ],
   invalid: [
     {
@@ -127,8 +139,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
       ],
     },
     {
-      code:
-        "if (typeof obj === 'string') { } else if (typeof obj === 'object') {'' + obj}",
+      code: "if (typeof obj === 'string') { } else if (typeof obj === 'object') {'' + obj}",
       errors: [
         {
           message: missingDevCheckMessage + '\n' + message,
@@ -145,7 +156,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     },
     {
       code: `
-          if (__D__) { checkFormFieldValueStringCoercion (obj) } 
+          if (__D__) { checkFormFieldValueStringCoercion (obj) }
           '' + obj;
         `,
       errors: [
@@ -156,7 +167,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
     },
     {
       code: `
-          if (__DEV__) { checkFormFieldValueStringCoercion (obj) } 
+          if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
           '' + notobjj;
         `,
       errors: [
@@ -172,7 +183,7 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
       code: `
           if (__DEV__) { checkFormFieldValueStringCoercion (obj) }
           // must be right before the check call
-          someOtherCode(); 
+          someOtherCode();
           '' + objj;
         `,
       errors: [
@@ -260,6 +271,17 @@ ruleTester.run('eslint-rules/safe-string-coercion', rule, {
           message: missingDevCheckMessage + '\n' + message,
         },
       ],
+    },
+    {
+      code: `'' + obj + ''`,
+      errors: [
+        {message: missingDevCheckMessage + '\n' + message},
+        {message: missingDevCheckMessage + '\n' + message},
+      ],
+    },
+    {
+      code: `foo\`text\` + ""`,
+      errors: [{message: missingDevCheckMessage + '\n' + message}],
     },
   ],
 });

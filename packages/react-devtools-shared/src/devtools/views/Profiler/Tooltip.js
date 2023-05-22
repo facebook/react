@@ -7,12 +7,17 @@ import styles from './Tooltip.css';
 
 const initialTooltipState = {height: 0, mouseX: 0, mouseY: 0, width: 0};
 
-export default function Tooltip({children, className, label, style}: any) {
+export default function Tooltip({
+  children,
+  className,
+  label,
+  style,
+}: any): React.Node {
   const containerRef = useRef(null);
   const tooltipRef = useRef(null);
 
   // update the position of the tooltip based on current mouse position
-  const updateTooltipPosition = (event: SyntheticMouseEvent<*>) => {
+  const updateTooltipPosition = (event: SyntheticMouseEvent<EventTarget>) => {
     const element = tooltipRef.current;
     if (element != null) {
       // first find the mouse position
@@ -25,7 +30,7 @@ export default function Tooltip({children, className, label, style}: any) {
     }
   };
 
-  const onMouseMove = (event: SyntheticMouseEvent<*>) => {
+  const onMouseMove = (event: SyntheticMouseEvent<EventTarget>) => {
     updateTooltipPosition(event);
   };
 
@@ -50,10 +55,18 @@ export default function Tooltip({children, className, label, style}: any) {
 const TOOLTIP_OFFSET = 5;
 
 // Method used to find the position of the tooltip based on current mouse position
-function getTooltipPosition(element, mousePosition) {
+function getTooltipPosition(
+  element: empty,
+  mousePosition: {
+    height: number,
+    mouseX: number,
+    mouseY: number,
+    width: number,
+  },
+) {
   const {height, mouseX, mouseY, width} = mousePosition;
-  let top = 0;
-  let left = 0;
+  let top: number | string = 0;
+  let left: number | string = 0;
 
   if (mouseY + TOOLTIP_OFFSET + element.offsetHeight >= height) {
     if (mouseY - TOOLTIP_OFFSET - element.offsetHeight > 0) {
@@ -80,8 +93,8 @@ function getTooltipPosition(element, mousePosition) {
 
 // method used to find the current mouse position inside the container
 function getMousePosition(
-  relativeContainer,
-  mouseEvent: SyntheticMouseEvent<*>,
+  relativeContainer: null,
+  mouseEvent: SyntheticMouseEvent<EventTarget>,
 ) {
   if (relativeContainer !== null) {
     // Position within the nearest position:relative container.

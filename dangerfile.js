@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -46,7 +46,6 @@ const CRITICAL_ARTIFACT_PATHS = new Set([
   'oss-experimental/react-dom/cjs/react-dom.production.min.js',
   'facebook-www/ReactDOM-prod.classic.js',
   'facebook-www/ReactDOM-prod.modern.js',
-  'facebook-www/ReactDOMForked-prod.classic.js',
 ]);
 
 const kilobyteFormatter = new Intl.NumberFormat('en', {
@@ -86,11 +85,19 @@ const header = `
 
 function row(result, baseSha, headSha) {
   const diffViewUrl = `https://react-builds.vercel.app/commits/${headSha}/files/${result.path}?compare=${baseSha}`;
-  // prettier-ignore
-  return `| [${result.path}](${diffViewUrl}) | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
+  const rowArr = [
+    `| [${result.path}](${diffViewUrl})`,
+    `**${change(result.change)}**`,
+    `${kbs(result.baseSize)}`,
+    `${kbs(result.headSize)}`,
+    `${change(result.changeGzip)}`,
+    `${kbs(result.baseSizeGzip)}`,
+    `${kbs(result.headSizeGzip)}`,
+  ];
+  return rowArr.join(' | ');
 }
 
-(async function() {
+(async function () {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
 
@@ -234,8 +241,9 @@ Comparing: ${baseSha}...${headSha}
 
 ## Critical size changes
 
-Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD *
-    100}%:
+Includes critical production bundles, as well as any change greater than ${
+    CRITICAL_THRESHOLD * 100
+  }%:
 
 ${header}
 ${criticalResults.join('\n')}

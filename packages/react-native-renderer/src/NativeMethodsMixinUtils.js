@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,7 +15,7 @@ export function mountSafeCallback_NOT_REALLY_SAFE(
   context: any,
   callback: ?Function,
 ): any {
-  return function() {
+  return function () {
     if (!callback) {
       return undefined;
     }
@@ -43,26 +43,6 @@ export function mountSafeCallback_NOT_REALLY_SAFE(
 
     return callback.apply(context, arguments);
   };
-}
-
-export function throwOnStylesProp(component: any, props: any) {
-  if (props.styles !== undefined) {
-    const owner = component._owner || null;
-    const name = component.constructor.displayName;
-    let msg =
-      '`styles` is not a supported property of `' +
-      name +
-      '`, did ' +
-      'you mean `style` (singular)?';
-    if (owner && owner.constructor && owner.constructor.displayName) {
-      msg +=
-        '\n\nCheck the `' +
-        owner.constructor.displayName +
-        '` parent ' +
-        ' component.';
-    }
-    throw new Error(msg);
-  }
 }
 
 export function warnForStyleProps(props: any, validAttributes: any) {

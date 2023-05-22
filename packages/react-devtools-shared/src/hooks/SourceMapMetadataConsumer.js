@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -83,10 +83,10 @@ export class SourceMapMetadataConsumer {
     line,
     column,
     source,
-  }: {|
+  }: {
     ...Position,
     +source: ?string,
-  |}): ?string {
+  }): ?string {
     if (source == null) {
       return null;
     }
@@ -131,7 +131,7 @@ export class SourceMapMetadataConsumer {
   _getMetadataObjectsBySourceNames(sourcemap: MixedSourceMap): MetadataMap {
     if (sourcemap.mappings === undefined) {
       const indexSourceMap: IndexSourceMap = sourcemap;
-      const metadataMap = new Map();
+      const metadataMap = new Map<string, ?ReactSourceMetadata>();
       indexSourceMap.sections.forEach(section => {
         const metadataMapForIndexMap = this._getMetadataObjectsBySourceNames(
           section.map,
@@ -143,7 +143,7 @@ export class SourceMapMetadataConsumer {
       return metadataMap;
     }
 
-    const metadataMap = new Map();
+    const metadataMap: MetadataMap = new Map();
     const basicMap: BasicSourceMap = sourcemap;
     const updateMap = (metadata: ReactSourceMetadata, sourceIndex: number) => {
       let source = basicMap.sources[sourceIndex];

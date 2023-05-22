@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,7 +8,7 @@
  */
 'use strict';
 
-function evalStringConcat(ast /* : Object */) /* : string */ {
+function evalStringConcat(ast /*: Object */) /*: string */ {
   switch (ast.type) {
     case 'StringLiteral':
     case 'Literal': // ESLint
@@ -25,9 +25,9 @@ function evalStringConcat(ast /* : Object */) /* : string */ {
 exports.evalStringConcat = evalStringConcat;
 
 function evalStringAndTemplateConcat(
-  ast /* : Object */,
-  args /* : Array<mixed> */
-) /* : string */ {
+  ast /*: Object */,
+  args /*: Array<mixed> */
+) /*: string */ {
   switch (ast.type) {
     case 'StringLiteral':
       return ast.value;

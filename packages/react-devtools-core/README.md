@@ -90,7 +90,7 @@ Set the DOM element DevTools UI should be rendered into on initialization.
 _Optional_ callback to be notified when DevTools `WebSocket` closes (or errors).
 
 #### `setProjectRoots(roots: Array<string>)`
-_Optional_ set of root directores for source files. These roots can be used to open an inspected component's source code using an IDE.
+_Optional_ set of root directories for source files. These roots can be used to open an inspected component's source code using an IDE.
 
 #### `setStatusListener(callback: Function)`
 _Optional_ callback to be notified of socket server events (e.g. initialized, errored, connected).

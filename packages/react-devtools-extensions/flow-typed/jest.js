@@ -1,6 +1,17 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 'use strict';
 
-type JestMockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
+/* eslint-disable no-unused-vars */
+
+type JestMockFn<TArguments: $ReadOnlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
   /**
    * An object for introspecting mock calls
@@ -206,7 +217,7 @@ type EnzymeMatchersType = {
   toIncludeText(text: string): void,
   toMatchElement(
     element: React$Element<any>,
-    options?: {|ignoreProps?: boolean, verbose?: boolean|}
+    options?: {ignoreProps?: boolean, verbose?: boolean}
   ): void,
   toMatchSelector(selector: string): void,
   // 7.x
@@ -615,7 +626,7 @@ interface JestExpectType {
    * Use .toBeInstanceOf(Class) to check that an object is an instance of a
    * class.
    */
-  toBeInstanceOf(cls: Class<*>): void;
+  toBeInstanceOf(cls: Class<any>): void;
   /**
    * .toBeNull() is the same as .toBe(null) but the error messages are a bit
    * nicer.
@@ -693,13 +704,11 @@ interface JestExpectType {
    * specific arguments.
    */
   toHaveBeenCalledWith(...args: Array<any>): void;
-  toBeCalledWith(...args: Array<any>): void;
   /**
    * Use .toHaveBeenLastCalledWith to ensure that a mock function was last called
    * with specific arguments.
    */
   toHaveBeenLastCalledWith(...args: Array<any>): void;
-  lastCalledWith(...args: Array<any>): void;
   /**
    * Check that an object has a .length property and it is set to a certain
    * numeric value.
@@ -806,7 +815,7 @@ type JestObjectType = {
    * Returns a new, unused mock function. Optionally takes a mock
    * implementation.
    */
-  fn<TArguments: $ReadOnlyArray<*>, TReturn>(
+  fn<TArguments: $ReadOnlyArray<any>, TReturn>(
     implementation?: (...args: TArguments) => TReturn
   ): JestMockFn<TArguments, TReturn>,
   /**
@@ -1095,7 +1104,7 @@ type JestPrettyFormatPrint = any => string;
 // eslint-disable-next-line no-unused-vars
 type JestPrettyFormatStringOrNull = string | null;
 
-type JestPrettyFormatOptions = {|
+type JestPrettyFormatOptions = {
   callToJSON: boolean,
   edgeSpacing: string,
   escapeRegex: boolean,
@@ -1107,14 +1116,14 @@ type JestPrettyFormatOptions = {|
   plugins: JestPrettyFormatPlugins,
   printFunctionName: boolean,
   spacing: string,
-  theme: {|
+  theme: {
     comment: string,
     content: string,
     prop: string,
     tag: string,
     value: string,
-  |},
-|};
+  },
+};
 
 type JestPrettyFormatPlugin = {
   print: (
@@ -1163,28 +1172,5 @@ declare var expect: {
   },
 };
 
-// TODO handle return type
-// https://jasmine.github.io/2.4/introduction.html#section-Spies
-declare function spyOn(value: mixed, method: string): Object;
-
 /** Holds all functions related to manipulating test runner */
 declare var jest: JestObjectType;
-
-/**
- * The global Jasmine object, this is generally not exposed as the public API,
- * using features inside here could break in later versions of Jest.
- */
-declare var jasmine: {
-  DEFAULT_TIMEOUT_INTERVAL: number,
-  any(value: mixed): JestAsymmetricEqualityType,
-  anything(): any,
-  arrayContaining(value: Array<mixed>): Array<mixed>,
-  clock(): JestClockType,
-  createSpy(name: string): JestSpyType,
-  createSpyObj(
-    baseName: string,
-    methodNames: Array<string>
-  ): {[methodName: string]: JestSpyType},
-  objectContaining(value: Object): Object,
-  stringMatching(value: string): string,
-};

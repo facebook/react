@@ -48,14 +48,16 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-source-map' : false,
   entry: {
     background: './src/background.js',
-    contentScript: './src/contentScript.js',
-    injectGlobalHook: './src/injectGlobalHook.js',
+    backendManager: './src/backendManager.js',
     main: './src/main.js',
     panel: './src/panel.js',
-    renderer: './src/renderer.js',
+    proxy: './src/contentScripts/proxy.js',
+    prepareInjection: './src/contentScripts/prepareInjection.js',
+    renderer: './src/contentScripts/renderer.js',
+    installHook: './src/contentScripts/installHook.js',
   },
   output: {
     path: __dirname + '/build',

@@ -7,12 +7,12 @@
 //
 // The @latest channel uses the version as-is, e.g.:
 //
-//   18.0.0
+//   18.3.0
 //
-// The @next channel appends additional information, with the scheme
+// The @canary channel appends additional information, with the scheme
 // <version>-<label>-<commit_sha>, e.g.:
 //
-//   18.0.0-alpha-a1c2d3e4
+//   18.3.0-canary-a1c2d3e4
 //
 // The @experimental channel doesn't include a version, only a date and a sha, e.g.:
 //
@@ -20,16 +20,21 @@
 
 const ReactVersion = '18.3.0';
 
-// The label used by the @next channel. Represents the upcoming release's
-// stability. Could be "alpha", "beta", "rc", etc.
-const nextChannelLabel = 'next';
+// The label used by the @canary channel. Represents the upcoming release's
+// stability. Most of the time, this will be "canary", but we may temporarily
+// choose to change it to "alpha", "beta", "rc", etc.
+//
+// It only affects the label used in the version string. To customize the
+// npm dist tags used during publish, refer to .circleci/config.yml.
+const canaryChannelLabel = 'canary';
 
 const stablePackages = {
-  'eslint-plugin-react-hooks': '4.7.0',
+  'eslint-plugin-react-hooks': '5.0.0',
   'jest-react': '0.15.0',
   react: ReactVersion,
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
+  'react-server-dom-webpack': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.30.0',
   'react-refresh': '0.15.0',
@@ -39,19 +44,14 @@ const stablePackages = {
   scheduler: '0.24.0',
 };
 
-// These packages do not exist in the @next or @latest channel, only
+// These packages do not exist in the @canary or @latest channel, only
 // @experimental. We don't use semver, just the commit sha, so this is just a
 // list of package names instead of a map.
-const experimentalPackages = [
-  'react-fetch',
-  'react-fs',
-  'react-pg',
-  'react-server-dom-webpack',
-];
+const experimentalPackages = [];
 
 module.exports = {
   ReactVersion,
-  nextChannelLabel,
+  canaryChannelLabel,
   stablePackages,
   experimentalPackages,
 };

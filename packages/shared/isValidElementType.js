@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,21 +31,11 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
-  enableSymbolFallbackForWWW,
 } from './ReactFeatureFlags';
 
-let REACT_MODULE_REFERENCE;
-if (enableSymbolFallbackForWWW) {
-  if (typeof Symbol === 'function') {
-    REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
-  } else {
-    REACT_MODULE_REFERENCE = 0;
-  }
-} else {
-  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
-}
+const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
 
-export default function isValidElementType(type: mixed) {
+export default function isValidElementType(type: mixed): boolean {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
   }
@@ -78,7 +68,7 @@ export default function isValidElementType(type: mixed) {
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
-      type.$$typeof === REACT_MODULE_REFERENCE ||
+      type.$$typeof === REACT_CLIENT_REFERENCE ||
       type.getModuleId !== undefined
     ) {
       return true;

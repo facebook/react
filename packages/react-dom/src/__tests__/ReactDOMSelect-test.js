@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,13 +9,20 @@
 
 'use strict';
 
+// Fix JSDOM. setAttribute is supposed to throw on things that can't be implicitly toStringed.
+const setAttribute = Element.prototype.setAttribute;
+Element.prototype.setAttribute = function (name, value) {
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return setAttribute.call(this, name, '' + value);
+};
+
 describe('ReactDOMSelect', () => {
   let React;
   let ReactDOM;
   let ReactDOMServer;
   let ReactTestUtils;
 
-  const noop = function() {};
+  const noop = function () {};
 
   beforeEach(() => {
     jest.resetModules();
@@ -269,7 +276,7 @@ describe('ReactDOMSelect', () => {
   it('should allow setting `value` with `objectToString`', () => {
     const objectToString = {
       animal: 'giraffe',
-      toString: function() {
+      toString: function () {
         return this.animal;
       },
     };
@@ -849,7 +856,7 @@ describe('ReactDOMSelect', () => {
   });
 
   describe('When given a Symbol value', () => {
-    it('treats initial Symbol value as an empty string', () => {
+    it('treats initial Symbol value as missing', () => {
       let node;
 
       expect(() => {
@@ -862,10 +869,10 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
-    it('treats updated Symbol value as an empty string', () => {
+    it('treats updated Symbol value as missing', () => {
       let node;
 
       expect(() => {
@@ -888,7 +895,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
     it('treats initial Symbol defaultValue as an empty string', () => {
@@ -904,7 +911,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
     it('treats updated Symbol defaultValue as an empty string', () => {
@@ -930,12 +937,12 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
   });
 
   describe('When given a function value', () => {
-    it('treats initial function value as an empty string', () => {
+    it('treats initial function value as missing', () => {
       let node;
 
       expect(() => {
@@ -948,7 +955,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats initial function defaultValue as an empty string', () => {
@@ -964,7 +971,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats updated function value as an empty string', () => {
@@ -990,7 +997,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats updated function defaultValue as an empty string', () => {
@@ -1016,7 +1023,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
   });
 

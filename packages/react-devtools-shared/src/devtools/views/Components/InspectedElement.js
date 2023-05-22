@@ -1,7 +1,7 @@
 /* global chrome */
 
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,11 +30,11 @@ import styles from './InspectedElement.css';
 
 import type {InspectedElement} from './types';
 
-export type Props = {||};
+export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 
-export default function InspectedElementWrapper(_: Props) {
+export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
@@ -50,12 +50,8 @@ export default function InspectedElementWrapper(_: Props) {
   } = useContext(OptionsContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {
-    hookNames,
-    inspectedElement,
-    parseHookNames,
-    toggleParseHookNames,
-  } = useContext(InspectedElementContext);
+  const {hookNames, inspectedElement, parseHookNames, toggleParseHookNames} =
+    useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -252,7 +248,7 @@ export default function InspectedElementWrapper(_: Props) {
     strictModeBadge = (
       <a
         className={styles.StrictModeNonCompliant}
-        href="https://fb.me/devtools-strict-mode"
+        href="https://react.dev/reference/react/StrictMode"
         rel="noopener noreferrer"
         target="_blank"
         title="This component is not running in StrictMode. Click to learn more.">

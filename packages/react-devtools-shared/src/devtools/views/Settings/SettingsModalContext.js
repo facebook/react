@@ -1,11 +1,13 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+import type {ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import {createContext, useMemo, useState} from 'react';
@@ -19,16 +21,22 @@ type Context = {
   ...
 };
 
-const SettingsModalContext = createContext<Context>(((null: any): Context));
+const SettingsModalContext: ReactContext<Context> = createContext<Context>(
+  ((null: any): Context),
+);
 SettingsModalContext.displayName = 'SettingsModalContext';
 
-function SettingsModalContextController({children}: {|children: React$Node|}) {
+function SettingsModalContextController({
+  children,
+}: {
+  children: React$Node,
+}): React.Node {
   const [isModalShowing, setIsModalShowing] = useState<boolean>(false);
 
-  const value = useMemo(() => ({isModalShowing, setIsModalShowing}), [
-    isModalShowing,
-    setIsModalShowing,
-  ]);
+  const value = useMemo(
+    () => ({isModalShowing, setIsModalShowing}),
+    [isModalShowing, setIsModalShowing],
+  );
 
   return (
     <SettingsModalContext.Provider value={value}>

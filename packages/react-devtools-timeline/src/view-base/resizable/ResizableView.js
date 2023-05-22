@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,17 +26,17 @@ import {rectContainsPoint} from '../geometry';
 import {noopLayout} from '../layouter';
 import {clamp} from '../utils/clamp';
 
-type ResizingState = $ReadOnly<{|
+type ResizingState = $ReadOnly<{
   /** Distance between top of resize bar and mouseY */
   cursorOffsetInBarFrame: number,
   /** Mouse's vertical coordinates relative to canvas */
   mouseY: number,
-|}>;
+}>;
 
-type LayoutState = {|
+type LayoutState = {
   /** Resize bar's vertical position relative to resize view's frame.origin.y */
   barOffsetY: number,
-|};
+};
 
 const RESIZE_BAR_HEIGHT = 8;
 const RESIZE_BAR_WITH_LABEL_HEIGHT = 16;
@@ -78,7 +78,7 @@ export class ResizableView extends View {
     this._restoreMutableViewState();
   }
 
-  desiredSize() {
+  desiredSize(): {+height: number, +width: number} {
     const subviewDesiredSize = this._subview.desiredSize();
 
     if (this._shouldRenderResizeBar()) {
@@ -132,7 +132,7 @@ export class ResizableView extends View {
     this.setNeedsDisplay();
   }
 
-  _shouldRenderResizeBar() {
+  _shouldRenderResizeBar(): boolean {
     const subviewDesiredSize = this._subview.desiredSize();
     return subviewDesiredSize.hideScrollBarIfLessThanHeight != null
       ? subviewDesiredSize.height >
@@ -195,7 +195,7 @@ export class ResizableView extends View {
     });
   }
 
-  _handleClick(interaction: ClickInteraction) {
+  _handleClick(interaction: ClickInteraction): void | boolean {
     if (!this._shouldRenderResizeBar()) {
       return;
     }
@@ -216,7 +216,7 @@ export class ResizableView extends View {
     }
   }
 
-  _handleDoubleClick(interaction: DoubleClickInteraction) {
+  _handleDoubleClick(interaction: DoubleClickInteraction): void | boolean {
     if (!this._shouldRenderResizeBar()) {
       return;
     }
@@ -236,7 +236,7 @@ export class ResizableView extends View {
     }
   }
 
-  _handleMouseDown(interaction: MouseDownInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction): void | boolean {
     const cursorLocation = interaction.payload.location;
     const resizeBarFrame = this._resizeBar.frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
@@ -250,7 +250,7 @@ export class ResizableView extends View {
     }
   }
 
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction): void | boolean {
     const {_resizingState} = this;
     if (_resizingState) {
       this._resizingState = {
@@ -279,7 +279,10 @@ export class ResizableView extends View {
     }
   }
 
-  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
+  handleInteraction(
+    interaction: Interaction,
+    viewRefs: ViewRefs,
+  ): void | boolean {
     switch (interaction.type) {
       case 'click':
         return this._handleClick(interaction);

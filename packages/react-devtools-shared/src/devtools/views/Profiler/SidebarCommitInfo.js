@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,9 +17,9 @@ import {getCommitTree} from './CommitTreeBuilder';
 
 import styles from './SidebarCommitInfo.css';
 
-export type Props = {||};
+export type Props = {};
 
-export default function SidebarCommitInfo(_: Props) {
+export default function SidebarCommitInfo(_: Props): React.Node {
   const {selectedCommitIndex, rootID} = useContext(ProfilerContext);
 
   const {profilerStore} = useContext(StoreContext);

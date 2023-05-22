@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -42,8 +42,8 @@ describe('Scheduling UMD bundle', () => {
     const umdAPIDev = require('../../npm/umd/scheduler.development');
     const umdAPIProd = require('../../npm/umd/scheduler.production.min');
     const umdAPIProfiling = require('../../npm/umd/scheduler.profiling.min');
-    const secretAPI = require('react/src/forks/ReactSharedInternals.umd')
-      .default;
+    const secretAPI =
+      require('react/src/forks/ReactSharedInternals.umd').default;
     validateForwardedAPIs(api, [
       umdAPIDev,
       umdAPIProd,

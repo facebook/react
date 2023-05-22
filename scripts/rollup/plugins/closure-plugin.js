@@ -9,7 +9,7 @@ const writeFileAsync = promisify(fs.writeFile);
 function compile(flags) {
   return new Promise((resolve, reject) => {
     const closureCompiler = new ClosureCompiler(flags);
-    closureCompiler.run(function(exitCode, stdOut, stdErr) {
+    closureCompiler.run(function (exitCode, stdOut, stdErr) {
       if (!stdErr) {
         resolve(stdOut);
       } else {

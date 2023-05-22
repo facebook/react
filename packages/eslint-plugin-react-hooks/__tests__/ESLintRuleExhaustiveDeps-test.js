@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 function normalizeIndent(strings) {
   const codeLines = strings[0].split('\n');
   const leftPadding = codeLines[1].match(/\s+/)[0];
-  return codeLines.map(line => line.substr(leftPadding.length)).join('\n');
+  return codeLines.map(line => line.slice(leftPadding.length)).join('\n');
 }
 
 // ***************************************************
@@ -1525,8 +1525,7 @@ const tests = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.foo?.bar?.baz]',
+              desc: 'Update the dependencies array to be: [props.foo?.bar?.baz]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
@@ -1630,7 +1629,7 @@ const tests = {
                     }, 1000);
                     return () => clearInterval(id);
                   }, [setCount]);
-        
+
                   return <h1>{count}</h1>;
                 }
               `,
@@ -2662,8 +2661,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.bar, props.foo]',
+              desc: 'Update the dependencies array to be: [props.bar, props.foo]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const local = {};
@@ -2819,8 +2817,7 @@ const tests = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [color, props.foo.bar.baz]',
+              desc: 'Update the dependencies array to be: [color, props.foo.bar.baz]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   let color = {}
@@ -2884,8 +2881,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.foo.bar.baz, props.foo.fizz.bizz]',
+              desc: 'Update the dependencies array to be: [props.foo.bar.baz, props.foo.fizz.bizz]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const fn = useCallback(() => {
@@ -3095,8 +3091,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.bar, props.foo]',
+              desc: 'Update the dependencies array to be: [props.bar, props.foo]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useEffect(() => {
@@ -3127,8 +3122,7 @@ const tests = {
           // Don't alphabetize if it wasn't alphabetized in the first place.
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [c, a, g, b, e, d, f]',
+              desc: 'Update the dependencies array to be: [c, a, g, b, e, d, f]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   let a, b, c, d, e, f, g;
@@ -3159,8 +3153,7 @@ const tests = {
           // Alphabetize if it was alphabetized.
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [a, b, c, d, e, f, g]',
+              desc: 'Update the dependencies array to be: [a, b, c, d, e, f, g]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   let a, b, c, d, e, f, g;
@@ -3191,8 +3184,7 @@ const tests = {
           // Alphabetize if it was empty.
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [a, b, c, d, e, f, g]',
+              desc: 'Update the dependencies array to be: [a, b, c, d, e, f, g]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   let a, b, c, d, e, f, g;
@@ -3224,8 +3216,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [local, props.bar, props.foo]',
+              desc: 'Update the dependencies array to be: [local, props.bar, props.foo]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const local = {};
@@ -3812,8 +3803,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.color, props.someOtherRefs]',
+              desc: 'Update the dependencies array to be: [props.color, props.someOtherRefs]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const ref1 = useRef();
@@ -3853,8 +3843,7 @@ const tests = {
             "because mutating them doesn't re-render the component.",
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.someOtherRefs, props.color]',
+              desc: 'Update the dependencies array to be: [props.someOtherRefs, props.color]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const ref1 = useRef();
@@ -3894,8 +3883,7 @@ const tests = {
             "because mutating them doesn't re-render the component.",
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.someOtherRefs, props.color]',
+              desc: 'Update the dependencies array to be: [props.someOtherRefs, props.color]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const ref1 = useRef();
@@ -4287,8 +4275,7 @@ const tests = {
             `props inside useEffect.`,
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [skillsCount, props.isEditMode, props.toggleEditMode, props]',
+              desc: 'Update the dependencies array to be: [skillsCount, props.isEditMode, props.toggleEditMode, props]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   const [skillsCount] = useState();
@@ -4719,8 +4706,7 @@ const tests = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [local1, local3, local4]',
+              desc: 'Update the dependencies array to be: [local1, local3, local4]',
               output: normalizeIndent`
                 function MyComponent() {
                   const local1 = 42;
@@ -5562,8 +5548,7 @@ const tests = {
           // the easy fix and you can't just move it into effect.
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   let [, setState] = useState();
@@ -5737,8 +5722,7 @@ const tests = {
           // because they are only referenced outside the effect.
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext2' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext2' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   function handleNext1() {
@@ -5787,8 +5771,7 @@ const tests = {
           // because they are only referenced outside the effect.
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext3' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext3' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   function handleNext1() {
@@ -5862,8 +5845,7 @@ const tests = {
             "definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
@@ -5892,8 +5874,7 @@ const tests = {
             "definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
@@ -5959,8 +5940,7 @@ const tests = {
           // it only wraps the first definition. But seems ok.
           suggestions: [
             {
-              desc:
-                "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
+              desc: "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   let handleNext = useCallback(() => {
@@ -6493,8 +6473,7 @@ const tests = {
             `find the parent component that defines it and wrap that definition in useCallback.`,
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [fetchPodcasts, fetchPodcasts2, id]',
+              desc: 'Update the dependencies array to be: [fetchPodcasts, fetchPodcasts2, id]',
               output: normalizeIndent`
                 function Podcasts({ fetchPodcasts, fetchPodcasts2, id }) {
                   let [podcasts, setPodcasts] = useState(null);
@@ -7135,8 +7114,7 @@ const tests = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [foo.bar, props.foo.bar]',
+              desc: 'Update the dependencies array to be: [foo.bar, props.foo.bar]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   let foo = {}
@@ -7630,6 +7608,62 @@ const tests = {
   ],
 };
 
+if (__EXPERIMENTAL__) {
+  tests.valid = [
+    ...tests.valid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, []);
+        }
+      `,
+    },
+  ];
+
+  tests.invalid = [
+    ...tests.invalid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onStuff = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onStuff();
+          }, [onStuff]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Functions returned from `useEffectEvent` must not be included in the dependency array. ' +
+            'Remove `onStuff` from the list.',
+          suggestions: [
+            {
+              desc: 'Remove the dependency `onStuff`',
+              output: normalizeIndent`
+                function MyComponent({ theme }) {
+                  const onStuff = useEffectEvent(() => {
+                    showNotification(theme);
+                  });
+                  useEffect(() => {
+                    onStuff();
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 // Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {
   valid: [
@@ -7789,8 +7823,7 @@ const testsTypescript = {
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [pizza.crust, pizza?.toppings]',
+              desc: 'Update the dependencies array to be: [pizza.crust, pizza?.toppings]',
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
@@ -7925,8 +7958,7 @@ const testsTypescript = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.upperViewHeight]',
+              desc: 'Update the dependencies array to be: [props.upperViewHeight]',
               output: normalizeIndent`
                 function Example(props) {
                   useEffect(() => {
@@ -7957,8 +7989,7 @@ const testsTypescript = {
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props?.upperViewHeight]',
+              desc: 'Update the dependencies array to be: [props?.upperViewHeight]',
               output: normalizeIndent`
                 function Example(props) {
                   useEffect(() => {

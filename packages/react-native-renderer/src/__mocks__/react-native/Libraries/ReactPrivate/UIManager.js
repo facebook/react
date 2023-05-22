@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -62,7 +62,7 @@ function removeChild(parent, child) {
 }
 
 const RCTUIManager = {
-  __dumpHierarchyForJestTestsOnly: function() {
+  __dumpHierarchyForJestTestsOnly: function () {
     function dumpSubtree(tag, indent) {
       const info = views.get(tag);
       let out = '';
@@ -155,7 +155,7 @@ const RCTUIManager = {
     }
   }),
   updateView: jest.fn(),
-  removeSubviewsFromContainerWithID: jest.fn(function(parentTag) {
+  removeSubviewsFromContainerWithID: jest.fn(function (parentTag) {
     views.get(parentTag).children.forEach(tag => removeChild(parentTag, tag));
   }),
   replaceExistingNonRootView: jest.fn(),

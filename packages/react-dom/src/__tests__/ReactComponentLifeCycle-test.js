@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,7 @@ let ReactDOM;
 let ReactTestUtils;
 let PropTypes;
 
-const clone = function(o) {
+const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
 };
 
@@ -176,7 +176,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     let instance = <StatefulComponent />;
-    expect(function() {
+    expect(function () {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
@@ -193,7 +193,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     let instance = <StatefulComponent />;
-    expect(function() {
+    expect(function () {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).not.toThrow();
   });
@@ -349,9 +349,8 @@ describe('ReactComponentLifeCycle', () => {
           hasWillUnmountCompleted: false,
         };
         this._testJournal.returnedFromGetInitialState = clone(initState);
-        this._testJournal.lifeCycleAtStartOfGetInitialState = getLifeCycleState(
-          this,
-        );
+        this._testJournal.lifeCycleAtStartOfGetInitialState =
+          getLifeCycleState(this);
         this.state = initState;
       }
 
@@ -378,14 +377,13 @@ describe('ReactComponentLifeCycle', () => {
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
-        return <div ref="theDiv">I am the inner DIV</div>;
+        return <div ref={React.createRef()}>I am the inner DIV</div>;
       }
 
       componentWillUnmount() {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
-        this._testJournal.lifeCycleAtStartOfWillUnmount = getLifeCycleState(
-          this,
-        );
+        this._testJournal.lifeCycleAtStartOfWillUnmount =
+          getLifeCycleState(this);
         this.state.hasWillUnmountCompleted = true;
       }
     }
@@ -477,7 +475,9 @@ describe('ReactComponentLifeCycle', () => {
     class Component extends React.Component {
       render() {
         return (
-          <Tooltip ref="tooltip" tooltip={<div>{this.props.tooltipText}</div>}>
+          <Tooltip
+            ref={React.createRef()}
+            tooltip={<div>{this.props.tooltipText}</div>}>
             {this.props.text}
           </Tooltip>
         );
@@ -522,8 +522,8 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should call nested legacy lifecycle methods in the right order', () => {
     let log;
-    const logger = function(msg) {
-      return function() {
+    const logger = function (msg) {
+      return function () {
         // return true for shouldComponentUpdate
         log.push(msg);
         return true;
@@ -597,8 +597,8 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should call nested new lifecycle methods in the right order', () => {
     let log;
-    const logger = function(msg) {
-      return function() {
+    const logger = function (msg) {
+      return function () {
         // return true for shouldComponentUpdate
         log.push(msg);
         return true;
@@ -984,7 +984,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('calls effects on module-pattern component', function() {
+    it('calls effects on module-pattern component', function () {
       const log = [];
 
       function Parent() {
@@ -1369,7 +1369,7 @@ describe('ReactComponentLifeCycle', () => {
     ReactDOM.render(<MyComponent />, div);
   });
 
-  it('warns about deprecated unsafe lifecycles', function() {
+  it('warns about deprecated unsafe lifecycles', function () {
     class MyComponent extends React.Component {
       componentWillMount() {}
       componentWillReceiveProps() {}

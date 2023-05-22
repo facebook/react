@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,6 +26,16 @@ describe('ReactDOMInput', () => {
     node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
   }
 
+  function isValueDirty(node) {
+    // Return the "dirty value flag" as defined in the HTML spec. Cast to text
+    // input to sidestep complicated value sanitization behaviors.
+    const copy = node.cloneNode();
+    copy.type = 'text';
+    // If modifying the attribute now doesn't change the value, the value was already detached.
+    copy.defaultValue += Math.random();
+    return copy.value === node.value;
+  }
+
   beforeEach(() => {
     jest.resetModules();
 
@@ -48,6 +58,7 @@ describe('ReactDOMInput', () => {
 
   afterEach(() => {
     document.body.removeChild(container);
+    jest.restoreAllMocks();
   });
 
   it('should warn for controlled value of 0 with missing onChange', () => {
@@ -127,6 +138,7 @@ describe('ReactDOMInput', () => {
     }).toErrorDev(
       'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
     );
+    expect(isValueDirty(node)).toBe(true);
 
     setUntrackedValue.call(node, 'giraffe');
 
@@ -135,6 +147,7 @@ describe('ReactDOMInput', () => {
     dispatchEventOnNode(node, 'input');
 
     expect(node.value).toBe('lion');
+    expect(isValueDirty(node)).toBe(true);
   });
 
   it('should control a value in reentrant events', () => {
@@ -333,26 +346,26 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('0');
   });
 
-  it('updates the value on radio buttons from "" to 0', function() {
+  it('updates the value on radio buttons from "" to 0', function () {
     ReactDOM.render(
-      <input type="radio" value="" onChange={function() {}} />,
+      <input type="radio" value="" onChange={function () {}} />,
       container,
     );
     ReactDOM.render(
-      <input type="radio" value={0} onChange={function() {}} />,
+      <input type="radio" value={0} onChange={function () {}} />,
       container,
     );
     expect(container.firstChild.value).toBe('0');
     expect(container.firstChild.getAttribute('value')).toBe('0');
   });
 
-  it('updates the value on checkboxes from "" to 0', function() {
+  it('updates the value on checkboxes from "" to 0', function () {
     ReactDOM.render(
-      <input type="checkbox" value="" onChange={function() {}} />,
+      <input type="checkbox" value="" onChange={function () {}} />,
       container,
     );
     ReactDOM.render(
-      <input type="checkbox" value={0} onChange={function() {}} />,
+      <input type="checkbox" value={0} onChange={function () {}} />,
       container,
     );
     expect(container.firstChild.value).toBe('0');
@@ -437,15 +450,22 @@ describe('ReactDOMInput', () => {
 
     expect(node.value).toBe('0');
     expect(node.defaultValue).toBe('0');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(node)).toBe(false);
+    } else {
+      expect(isValueDirty(node)).toBe(true);
+    }
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
     if (disableInputAttributeSyncing) {
       expect(node.value).toBe('1');
       expect(node.defaultValue).toBe('1');
+      expect(isValueDirty(node)).toBe(false);
     } else {
       expect(node.value).toBe('0');
       expect(node.defaultValue).toBe('1');
+      expect(isValueDirty(node)).toBe(true);
     }
   });
 
@@ -477,12 +497,14 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
     expect(() =>
       ReactDOM.render(<input type="text" defaultValue="1" />, container),
     ).toErrorDev(
       'A component is changing a controlled input to be uncontrolled.',
     );
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
   });
 
   it('should render defaultValue for SSR', () => {
@@ -533,7 +555,7 @@ describe('ReactDOMInput', () => {
 
   it('should display "foobar" for `defaultValue` of `objToString`', () => {
     const objToString = {
-      toString: function() {
+      toString: function () {
         return 'foobar';
       },
     };
@@ -680,7 +702,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('foo');
 
     const objToString = {
-      toString: function() {
+      toString: function () {
         return 'foobar';
       },
     };
@@ -698,10 +720,10 @@ describe('ReactDOMInput', () => {
     let nodeValue = 'a';
     const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
-      get: function() {
+      get: function () {
         return nodeValue;
       },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
+      set: nodeValueSetter.mockImplementation(function (newValue) {
         nodeValue = newValue;
       }),
     });
@@ -720,10 +742,10 @@ describe('ReactDOMInput', () => {
     let nodeValue = '0';
     const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
-      get: function() {
+      get: function () {
         return nodeValue;
       },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
+      set: nodeValueSetter.mockImplementation(function (newValue) {
         nodeValue = newValue;
       }),
     });
@@ -739,10 +761,10 @@ describe('ReactDOMInput', () => {
     let nodeValue = 'true';
     const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
-      get: function() {
+      get: function () {
         return nodeValue;
       },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
+      set: nodeValueSetter.mockImplementation(function (newValue) {
         nodeValue = newValue;
       }),
     });
@@ -788,18 +810,21 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition from an empty value to 0', function() {
+  it('should properly transition from an empty value to 0', function () {
     ReactDOM.render(
       <input type="text" value="" onChange={emptyFunction} />,
       container,
     );
+    const node = container.firstChild;
+    expect(isValueDirty(node)).toBe(false);
+
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
     );
 
-    const node = container.firstChild;
     expect(node.value).toBe('0');
+    expect(isValueDirty(node)).toBe(true);
 
     if (disableInputAttributeSyncing) {
       expect(node.hasAttribute('value')).toBe(false);
@@ -808,23 +833,25 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition from 0 to an empty value', function() {
+  it('should properly transition from 0 to an empty value', function () {
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
     );
+    const node = container.firstChild;
+    expect(isValueDirty(node)).toBe(true);
+
     ReactDOM.render(
       <input type="text" value="" onChange={emptyFunction} />,
       container,
     );
 
-    const node = container.firstChild;
-
     expect(node.value).toBe('');
     expect(node.defaultValue).toBe('');
+    expect(isValueDirty(node)).toBe(true);
   });
 
-  it('should properly transition a text input from 0 to an empty 0.0', function() {
+  it('should properly transition a text input from 0 to an empty 0.0', function () {
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
@@ -844,7 +871,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition a number input from "" to 0', function() {
+  it('should properly transition a number input from "" to 0', function () {
     ReactDOM.render(
       <input type="number" value="" onChange={emptyFunction} />,
       container,
@@ -864,7 +891,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition a number input from "" to "0"', function() {
+  it('should properly transition a number input from "" to "0"', function () {
     ReactDOM.render(
       <input type="number" value="" onChange={emptyFunction} />,
       container,
@@ -886,7 +913,7 @@ describe('ReactDOMInput', () => {
 
   it('should have the correct target value', () => {
     let handled = false;
-    const handler = function(event) {
+    const handler = function (event) {
       expect(event.target.nodeName).toBe('INPUT');
       handled = true;
     };
@@ -910,10 +937,16 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(inputRef.current.value).toBe('default1');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(inputRef.current)).toBe(false);
+    } else {
+      expect(isValueDirty(inputRef.current)).toBe(true);
+    }
 
     setUntrackedValue.call(inputRef.current, 'changed');
     dispatchEventOnNode(inputRef.current, 'input');
     expect(inputRef.current.value).toBe('changed');
+    expect(isValueDirty(inputRef.current)).toBe(true);
 
     ReactDOM.render(
       <form>
@@ -923,12 +956,14 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(inputRef.current.value).toBe('changed');
+    expect(isValueDirty(inputRef.current)).toBe(true);
 
     container.firstChild.reset();
     // Note: I don't know if we want to always support this.
     // But it's current behavior so worth being intentional if we break it.
     // https://github.com/facebook/react/issues/4618
     expect(inputRef.current.value).toBe('default2');
+    expect(isValueDirty(inputRef.current)).toBe(false);
   });
 
   it('should not set a value for submit buttons unnecessarily', () => {
@@ -1071,22 +1106,31 @@ describe('ReactDOMInput', () => {
 
   it('should control radio buttons', () => {
     class RadioGroup extends React.Component {
+      aRef = React.createRef();
+      bRef = React.createRef();
+      cRef = React.createRef();
+
       render() {
         return (
           <div>
             <input
-              ref="a"
+              ref={this.aRef}
               type="radio"
               name="fruit"
               checked={true}
               onChange={emptyFunction}
             />
             A
-            <input ref="b" type="radio" name="fruit" onChange={emptyFunction} />
+            <input
+              ref={this.bRef}
+              type="radio"
+              name="fruit"
+              onChange={emptyFunction}
+            />
             B
             <form>
               <input
-                ref="c"
+                ref={this.cRef}
                 type="radio"
                 name="fruit"
                 defaultChecked={true}
@@ -1099,9 +1143,9 @@ describe('ReactDOMInput', () => {
     }
 
     const stub = ReactDOM.render(<RadioGroup />, container);
-    const aNode = stub.refs.a;
-    const bNode = stub.refs.b;
-    const cNode = stub.refs.c;
+    const aNode = stub.aRef.current;
+    const bNode = stub.bRef.current;
+    const cNode = stub.cRef.current;
 
     expect(aNode.checked).toBe(true);
     expect(bNode.checked).toBe(false);
@@ -1147,7 +1191,7 @@ describe('ReactDOMInput', () => {
         updated: false,
       };
       onClick = () => {
-        this.setState({updated: true});
+        this.setState({updated: !this.state.updated});
       };
       render() {
         const {updated} = this.state;
@@ -1178,6 +1222,62 @@ describe('ReactDOMInput', () => {
     expect(firstRadioNode.checked).toBe(false);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(true);
+    dispatchEventOnNode(buttonNode, 'click');
+    expect(firstRadioNode.checked).toBe(false);
+  });
+
+  it("shouldn't get tricked by changing radio names, part 2", () => {
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={() => {}}
+        />
+        <input
+          type="radio"
+          name="a"
+          value="2"
+          checked={false}
+          onChange={() => {}}
+        />
+      </div>,
+      container,
+    );
+    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
+      true,
+    );
+    expect(container.querySelector('input[name="a"][value="2"]').checked).toBe(
+      false,
+    );
+
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={() => {}}
+        />
+        <input
+          type="radio"
+          name="b"
+          value="2"
+          checked={true}
+          onChange={() => {}}
+        />
+      </div>,
+      container,
+    );
+    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
+      true,
+    );
+    expect(container.querySelector('input[name="b"][value="2"]').checked).toBe(
+      true,
+    );
   });
 
   it('should control radio buttons if the tree updates during render', () => {
@@ -1277,7 +1377,7 @@ describe('ReactDOMInput', () => {
 
   it('should have a this value of undefined if bind is not used', () => {
     expect.assertions(1);
-    const unboundInputOnChange = function() {
+    const unboundInputOnChange = function () {
       expect(this).toBe(undefined);
     };
 
@@ -1290,8 +1390,18 @@ describe('ReactDOMInput', () => {
 
   it('should update defaultValue to empty string', () => {
     ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(container.firstChild)).toBe(false);
+    } else {
+      expect(isValueDirty(container.firstChild)).toBe(true);
+    }
     ReactDOM.render(<input type="text" defaultValue={''} />, container);
     expect(container.firstChild.defaultValue).toBe('');
+    if (disableInputAttributeSyncing) {
+      expect(isValueDirty(container.firstChild)).toBe(false);
+    } else {
+      expect(isValueDirty(container.firstChild)).toBe(true);
+    }
   });
 
   it('should warn if value is null', () => {
@@ -1661,21 +1771,33 @@ describe('ReactDOMInput', () => {
   it('sets type, step, min, max before value always', () => {
     const log = [];
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
+    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
+      type,
+    ) {
       const el = originalCreateElement.apply(this, arguments);
       let value = '';
+      let typeProp = '';
 
       if (type === 'input') {
+        Object.defineProperty(el, 'type', {
+          get: function () {
+            return typeProp;
+          },
+          set: function (val) {
+            typeProp = String(val);
+            log.push('set property type');
+          },
+        });
         Object.defineProperty(el, 'value', {
-          get: function() {
+          get: function () {
             return value;
           },
-          set: function(val) {
+          set: function (val) {
             value = String(val);
             log.push('set property value');
           },
         });
-        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name) {
+        spyOnDevAndProd(el, 'setAttribute').mockImplementation(function (name) {
           log.push('set attribute ' + name);
         });
       }
@@ -1695,10 +1817,10 @@ describe('ReactDOMInput', () => {
     );
 
     expect(log).toEqual([
-      'set attribute type',
       'set attribute min',
       'set attribute max',
       'set attribute step',
+      'set property type',
       'set property value',
     ]);
   });
@@ -1734,7 +1856,9 @@ describe('ReactDOMInput', () => {
 
     const log = [];
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
+    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
+      type,
+    ) {
       const el = originalCreateElement.apply(this, arguments);
       const getDefaultValue = Object.getOwnPropertyDescriptor(
         HTMLInputElement.prototype,
@@ -1752,26 +1876,46 @@ describe('ReactDOMInput', () => {
         HTMLInputElement.prototype,
         'value',
       ).set;
+      const getType = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'type',
+      ).get;
+      const setType = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'type',
+      ).set;
       if (type === 'input') {
         Object.defineProperty(el, 'defaultValue', {
-          get: function() {
+          get: function () {
             return getDefaultValue.call(this);
           },
-          set: function(val) {
+          set: function (val) {
             log.push(`node.defaultValue = ${strify(val)}`);
             setDefaultValue.call(this, val);
           },
         });
         Object.defineProperty(el, 'value', {
-          get: function() {
+          get: function () {
             return getValue.call(this);
           },
-          set: function(val) {
+          set: function (val) {
             log.push(`node.value = ${strify(val)}`);
             setValue.call(this, val);
           },
         });
-        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, val) {
+        Object.defineProperty(el, 'type', {
+          get: function () {
+            return getType.call(this);
+          },
+          set: function (val) {
+            log.push(`node.type = ${strify(val)}`);
+            setType.call(this, val);
+          },
+        });
+        spyOnDevAndProd(el, 'setAttribute').mockImplementation(function (
+          name,
+          val,
+        ) {
           log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
         });
       }
@@ -1782,14 +1926,14 @@ describe('ReactDOMInput', () => {
 
     if (disableInputAttributeSyncing) {
       expect(log).toEqual([
-        'node.setAttribute("type", "date")',
+        'node.type = "date"',
         'node.defaultValue = "1980-01-01"',
         // TODO: it's possible this reintroduces the bug because we don't assign `value` at all.
         // Need to check this on mobile Safari and Chrome.
       ]);
     } else {
       expect(log).toEqual([
-        'node.setAttribute("type", "date")',
+        'node.type = "date"',
         // value must be assigned before defaultValue. This fixes an issue where the
         // visually displayed value of date inputs disappears on mobile Safari and Chrome:
         // https://github.com/facebook/react/issues/7233
@@ -1799,7 +1943,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  describe('assigning the value attribute on controlled inputs', function() {
+  describe('assigning the value attribute on controlled inputs', function () {
     function getTestInput() {
       return class extends React.Component {
         state = {
@@ -1817,14 +1961,16 @@ describe('ReactDOMInput', () => {
       };
     }
 
-    it('always sets the attribute when values change on text inputs', function() {
+    it('always sets the attribute when values change on text inputs', function () {
       const Input = getTestInput();
       const stub = ReactDOM.render(<Input type="text" />, container);
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(false);
 
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.hasAttribute('value')).toBe(false);
       } else {
@@ -1839,12 +1985,14 @@ describe('ReactDOMInput', () => {
         container,
       );
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(true);
 
       node.focus();
 
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.hasAttribute('value')).toBe(false);
       } else {
@@ -1859,18 +2007,14 @@ describe('ReactDOMInput', () => {
         container,
       );
       const node = ReactDOM.findDOMNode(stub);
+      expect(isValueDirty(node)).toBe(true);
 
       node.focus();
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
+      expect(isValueDirty(node)).toBe(true);
       if (disableInputAttributeSyncing) {
         expect(node.value).toBe('2');
         expect(node.hasAttribute('value')).toBe(false);
@@ -1885,18 +2029,18 @@ describe('ReactDOMInput', () => {
         <input type="number" defaultValue="1" />,
         container,
       );
+      if (disableInputAttributeSyncing) {
+        expect(isValueDirty(node)).toBe(false);
+      } else {
+        expect(isValueDirty(node)).toBe(true);
+      }
 
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
+      expect(isValueDirty(node)).toBe(true);
       expect(node.getAttribute('value')).toBe('1');
     });
 
@@ -1905,18 +2049,18 @@ describe('ReactDOMInput', () => {
         <input type="text" defaultValue="1" />,
         container,
       );
+      if (disableInputAttributeSyncing) {
+        expect(isValueDirty(node)).toBe(false);
+      } else {
+        expect(isValueDirty(node)).toBe(true);
+      }
 
       node.focus();
       setUntrackedValue.call(node, 4);
       dispatchEventOnNode(node, 'input');
-      // TODO: it is unclear why blur must be triggered twice,
-      // manual testing in the fixtures shows that the active element
-      // is no longer the input, however blur() + a blur event seem to
-      // be the only way to remove focus in JSDOM
       node.blur();
-      dispatchEventOnNode(node, 'blur');
-      dispatchEventOnNode(node, 'focusout');
 
+      expect(isValueDirty(node)).toBe(true);
       expect(node.getAttribute('value')).toBe('1');
     });
   });
@@ -1956,7 +2100,7 @@ describe('ReactDOMInput', () => {
       if (disableInputAttributeSyncing) {
         expect(input.getAttribute('value')).toBe(null);
       } else {
-        expect(input.getAttribute('value')).toBe('first');
+        expect(input.getAttribute('value')).toBe('latest');
       }
     });
 
@@ -2004,9 +2148,9 @@ describe('ReactDOMInput', () => {
         'A component is changing a controlled input to be uncontrolled.',
       ]);
       if (disableInputAttributeSyncing) {
-        expect(input.hasAttribute('value')).toBe(false);
+        expect(input.getAttribute('value')).toBe(null);
       } else {
-        expect(input.getAttribute('value')).toBe('first');
+        expect(input.getAttribute('value')).toBe('latest');
       }
     });
 
@@ -2021,8 +2165,8 @@ describe('ReactDOMInput', () => {
     });
   });
 
-  describe('When given a Symbol value', function() {
-    it('treats initial Symbol value as an empty string', function() {
+  describe('When given a Symbol value', function () {
+    it('treats initial Symbol value as an empty string', function () {
       expect(() =>
         ReactDOM.render(
           <input value={Symbol('foobar')} onChange={() => {}} />,
@@ -2039,7 +2183,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats updated Symbol value as an empty string', function() {
+    it('treats updated Symbol value as an empty string', function () {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -2057,7 +2201,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats initial Symbol defaultValue as an empty string', function() {
+    it('treats initial Symbol defaultValue as an empty string', function () {
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
@@ -2066,7 +2210,7 @@ describe('ReactDOMInput', () => {
       // TODO: we should warn here.
     });
 
-    it('treats updated Symbol defaultValue as an empty string', function() {
+    it('treats updated Symbol defaultValue as an empty string', function () {
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
@@ -2081,8 +2225,8 @@ describe('ReactDOMInput', () => {
     });
   });
 
-  describe('When given a function value', function() {
-    it('treats initial function value as an empty string', function() {
+  describe('When given a function value', function () {
+    it('treats initial function value as an empty string', function () {
       expect(() =>
         ReactDOM.render(
           <input value={() => {}} onChange={() => {}} />,
@@ -2099,7 +2243,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats updated function value as an empty string', function() {
+    it('treats updated function value as an empty string', function () {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -2117,7 +2261,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats initial function defaultValue as an empty string', function() {
+    it('treats initial function defaultValue as an empty string', function () {
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
@@ -2126,7 +2270,7 @@ describe('ReactDOMInput', () => {
       // TODO: we should warn here.
     });
 
-    it('treats updated function defaultValue as an empty string', function() {
+    it('treats updated function defaultValue as an empty string', function () {
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
@@ -2142,12 +2286,12 @@ describe('ReactDOMInput', () => {
     });
   });
 
-  describe('checked inputs without a value property', function() {
+  describe('checked inputs without a value property', function () {
     // In absence of a value, radio and checkboxes report a value of "on".
     // Between 16 and 16.2, we assigned a node's value to it's current
     // value in order to "dettach" it from defaultValue. This had the unfortunate
     // side-effect of assigning value="on" to radio and checkboxes
-    it('does not add "on" in absence of value on a checkbox', function() {
+    it('does not add "on" in absence of value on a checkbox', function () {
       ReactDOM.render(
         <input type="checkbox" defaultChecked={true} />,
         container,
@@ -2158,12 +2302,60 @@ describe('ReactDOMInput', () => {
       expect(node.hasAttribute('value')).toBe(false);
     });
 
-    it('does not add "on" in absence of value on a radio', function() {
+    it('does not add "on" in absence of value on a radio', function () {
       ReactDOM.render(<input type="radio" defaultChecked={true} />, container);
       const node = container.firstChild;
 
       expect(node.value).toBe('on');
       expect(node.hasAttribute('value')).toBe(false);
     });
+  });
+
+  it('should remove previous `defaultValue`', () => {
+    const node = ReactDOM.render(
+      <input type="text" defaultValue="0" />,
+      container,
+    );
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<input type="text" />, container);
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should treat `defaultValue={null}` as missing', () => {
+    const node = ReactDOM.render(
+      <input type="text" defaultValue="0" />,
+      container,
+    );
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+
+    ReactDOM.render(<input type="text" defaultValue={null} />, container);
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should notice input changes when reverting back to original value', () => {
+    const log = [];
+    function onChange(e) {
+      log.push(e.target.value);
+    }
+    ReactDOM.render(
+      <input type="text" value="" onChange={onChange} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="a" onChange={onChange} />,
+      container,
+    );
+
+    const node = container.firstChild;
+    setUntrackedValue.call(node, '');
+    dispatchEventOnNode(node, 'input');
+
+    expect(log).toEqual(['']);
+    expect(node.value).toBe('a');
   });
 });
