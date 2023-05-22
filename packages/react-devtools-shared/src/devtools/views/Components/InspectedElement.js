@@ -232,11 +232,9 @@ export default function InspectedElementWrapper(_: Props) {
       fetch(url);
     } else {
       // fix https://github.com/facebook/react/issues/24731
-      chrome.runtime.sendMessage({
-        payload: {
-          type: 'openInEditorByNewTab',
-          url,
-        },
+      chrome.tabs.create({
+        url,
+        active: true,
       });
     }
   }, [inspectedElement, editorURL]);
