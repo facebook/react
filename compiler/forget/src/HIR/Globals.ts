@@ -85,6 +85,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: null,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       // https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
@@ -104,6 +105,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Object", shapeId: BuiltInArrayId },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Mutable,
         }),
       ],
     ]),
@@ -122,6 +124,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
     ]),
@@ -138,6 +141,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       [
@@ -147,6 +151,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       [
@@ -156,6 +161,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       [
@@ -165,6 +171,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       [
@@ -174,6 +181,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
       [
@@ -183,6 +191,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           restParam: Effect.Read,
           returnType: { kind: "Primitive" },
           calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Immutable,
         }),
       ],
     ]),
@@ -194,6 +203,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Immutable,
     }),
   ],
   [
@@ -203,6 +213,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Immutable,
     }),
   ],
   [
@@ -212,6 +223,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
       restParam: Effect.Read,
       returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Immutable,
     }),
   ],
   // TODO: rest of Global objects

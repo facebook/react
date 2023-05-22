@@ -729,6 +729,8 @@ function inferBlock(
 
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
+        const returnValueKind =
+          signature !== null ? signature.returnValueKind : ValueKind.Mutable;
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
@@ -749,7 +751,7 @@ function inferBlock(
           state.reference(instrValue.callee, Effect.Mutate);
         }
 
-        state.initialize(instrValue, ValueKind.Mutable);
+        state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Mutate;
         continue;

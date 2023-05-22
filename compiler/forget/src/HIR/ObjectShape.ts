@@ -6,7 +6,7 @@
  */
 
 import invariant from "invariant";
-import { Effect } from "./HIR";
+import { Effect, ValueKind } from "./HIR";
 import {
   BuiltInType,
   FunctionType,
@@ -100,6 +100,7 @@ export type FunctionSignature = {
   positionalParams: Array<Effect>;
   restParam: Effect | null;
   returnType: BuiltInType | PolyType;
+  returnValueKind: ValueKind;
   calleeEffect: Effect;
 };
 
@@ -138,6 +139,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       restParam: null,
       returnType: { kind: "Poly" },
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable,
     }),
   ],
   [
@@ -150,6 +152,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
         shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable,
     }),
   ],
   ["length", PRIMITIVE_TYPE],
@@ -160,6 +163,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       restParam: Effect.Capture,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Immutable,
     }),
   ],
   // TODO: rest of Array properties
@@ -174,6 +178,7 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
       restParam: null,
       returnType: PRIMITIVE_TYPE,
       calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Immutable,
     }),
   ],
   // TODO:
