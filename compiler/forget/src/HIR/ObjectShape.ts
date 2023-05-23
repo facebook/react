@@ -33,14 +33,36 @@ function createAnonId(): string {
 }
 
 /**
- * Add a function to an existing ShapeRegistry.
+ * Add a non-hook function to an existing ShapeRegistry.
  *
  * @returns a {@link FunctionType} representing the added function.
  */
 export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  fn: FunctionSignature
+  fn: Omit<FunctionSignature, "hookKind">
+): FunctionType {
+  const shapeId = createAnonId();
+  addShape(registry, shapeId, properties, {
+    ...fn,
+    hookKind: null,
+  });
+  return {
+    kind: "Function",
+    return: fn.returnType,
+    shapeId,
+  };
+}
+
+/**
+ * Add a hook to an existing ShapeRegistry.
+ *
+ * @returns a {@link FunctionType} representing the added hook function.
+ */
+export function addHook(
+  registry: ShapeRegistry,
+  properties: Iterable<[string, BuiltInType | PolyType]>,
+  fn: FunctionSignature & { hookKind: HookKind }
 ): FunctionType {
   const shapeId = createAnonId();
   addShape(registry, shapeId, properties, fn);
@@ -88,6 +110,16 @@ function addShape(
   return shape;
 }
 
+export type HookKind =
+  | "useContext"
+  | "useState"
+  | "useRef"
+  | "useEffect"
+  | "useLayoutEffect"
+  | "useMemo"
+  | "useCallback"
+  | "Custom";
+
 /**
  * Call signature of a function, used for type and effect inference.
  *
@@ -102,6 +134,7 @@ export type FunctionSignature = {
   returnType: BuiltInType | PolyType;
   returnValueKind: ValueKind;
   calleeEffect: Effect;
+  hookKind: HookKind | null;
 };
 
 /**
@@ -184,3 +217,21 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
   // TODO:
   // hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
 ]);
+
+export const DefaultMutatingHook = addHook(BUILTIN_SHAPES, [], {
+  positionalParams: [],
+  restParam: Effect.Mutate,
+  returnType: { kind: "Poly" },
+  calleeEffect: Effect.Read,
+  hookKind: "Custom",
+  returnValueKind: ValueKind.Mutable,
+});
+
+export const DefaultNonmutatingHook = addHook(BUILTIN_SHAPES, [], {
+  positionalParams: [],
+  restParam: Effect.Freeze,
+  returnType: { kind: "Poly" },
+  calleeEffect: Effect.Read,
+  hookKind: "Custom",
+  returnValueKind: ValueKind.Frozen,
+});

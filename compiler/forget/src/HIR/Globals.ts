@@ -6,15 +6,15 @@
  */
 
 import { Effect, ValueKind } from "./HIR";
-import { Hook } from "./Hooks";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
   ShapeRegistry,
   addFunction,
+  addHook,
   addObject,
 } from "./ObjectShape";
-import { BuiltInType, HookType, PolyType } from "./Types";
+import { BuiltInType, FunctionType, PolyType } from "./Types";
 
 /**
  * This file exports types and defaults for JavaScript global objects.
@@ -229,85 +229,91 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   // TODO: rest of Global objects
 ];
 
-const BUILTIN_HOOKS: Array<[string, Hook]> = [
+// TODO(mofeiZ): We currently only store rest param effects for hooks
+// until FeatureFlag `enableTreatHooksAsFunctions` is removed
+const BUILTIN_HOOKS: Array<[string, FunctionType]> = [
   [
     "useContext",
-    {
-      kind: "State",
-      name: "useContext",
-      effectKind: Effect.Read,
-      valueKind: ValueKind.Mutable,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useContext",
+      returnValueKind: ValueKind.Mutable,
+    }),
   ],
   [
     "useState",
-    {
-      kind: "State",
-      name: "useState",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useState",
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
   [
     "useRef",
-    {
-      kind: "Ref",
-      name: "useRef",
-      effectKind: Effect.Capture,
-      valueKind: ValueKind.Mutable,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Capture,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useRef",
+      returnValueKind: ValueKind.Mutable,
+    }),
   ],
   [
     "useMemo",
-    {
-      kind: "Memo",
-      name: "useMemo",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useMemo",
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
   [
     "useCallback",
-    {
-      kind: "Memo",
-      name: "useCallback",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useCallback",
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
   [
     "useEffect",
-    {
-      kind: "Memo",
-      name: "useEffect",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useEffect",
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
   [
     "useLayoutEffect",
-    {
-      kind: "Memo",
-      name: "useLayoutEffect",
-      effectKind: Effect.Freeze,
-      valueKind: ValueKind.Frozen,
-    },
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useLayoutEffect",
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
 ];
 
-export type Global = BuiltInType | HookType | PolyType;
+export type Global = BuiltInType | PolyType;
 export type GlobalRegistry = Map<string, Global>;
-export const DEFAULT_GLOBALS: GlobalRegistry = new Map(
-  BUILTIN_HOOKS.map(([hookName, hook]) => {
-    return [
-      hookName,
-      {
-        kind: "Hook",
-        definition: hook,
-      },
-    ];
-  })
-);
+export const DEFAULT_GLOBALS: GlobalRegistry = new Map(BUILTIN_HOOKS);
 
 // Hack until we add ObjectShapes for all globals
 for (const name of UNTYPED_GLOBALS) {

@@ -17,15 +17,27 @@ import {
 import {
   BlockId,
   BuiltInType,
+  Effect,
   FunctionType,
   IdentifierId,
   ObjectType,
   PolyType,
+  ValueKind,
   makeBlockId,
   makeIdentifierId,
 } from "./HIR";
-import { Hook } from "./Hooks";
-import { FunctionSignature, ShapeRegistry } from "./ObjectShape";
+import {
+  DefaultMutatingHook,
+  DefaultNonmutatingHook,
+  FunctionSignature,
+  ShapeRegistry,
+  addHook,
+} from "./ObjectShape";
+
+export type Hook = {
+  effectKind: Effect;
+  valueKind: ValueKind;
+};
 
 // TODO(mofeiZ): User defined global types (with corresponding shapes).
 // User defined global types should have inline ObjectShapes instead of directly
@@ -107,7 +119,7 @@ export class Environment {
     config: EnvironmentConfig | null,
     contextIdentifiers: Set<t.Identifier>
   ) {
-    this.#shapes = DEFAULT_SHAPES;
+    this.#shapes = new Map(DEFAULT_SHAPES);
 
     if (config?.customHooks) {
       this.#globals = new Map(DEFAULT_GLOBALS);
@@ -116,10 +128,17 @@ export class Environment {
           !this.#globals.has(hookName),
           `[Globals] Found existing definition in global registry for custom hook ${hookName}`
         );
-        this.#globals.set(hookName, {
-          kind: "Hook",
-          definition: hook,
-        });
+        this.#globals.set(
+          hookName,
+          addHook(this.#shapes, [], {
+            positionalParams: [],
+            restParam: hook.effectKind,
+            returnType: { kind: "Poly" },
+            returnValueKind: hook.valueKind,
+            calleeEffect: Effect.Read,
+            hookKind: "Custom",
+          })
+        );
       }
     } else {
       this.#globals = DEFAULT_GLOBALS;
@@ -150,10 +169,11 @@ export class Environment {
     if (resolvedGlobal === null) {
       // Hack, since we don't track module level declarations and imports
       if (isHookName(name)) {
-        return {
-          kind: "Hook",
-          definition: null,
-        };
+        if (this.enableAssumeHooksFollowRulesOfReact) {
+          return DefaultNonmutatingHook;
+        } else {
+          return DefaultMutatingHook;
+        }
       } else {
         log(() => `Undefined global '${name}'`);
       }

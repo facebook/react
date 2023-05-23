@@ -13,7 +13,7 @@ import {
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 import { PostDominator, computePostDominatorTree } from "./Dominator";
-import { BlockId, HIRFunction, isHookType } from "./HIR";
+import { BlockId, HIRFunction, getHookKind } from "./HIR";
 
 /**
  * Validates that the function honors the [Rules of Hooks](https://react.dev/warnings/invalid-hook-call-warning)
@@ -85,7 +85,7 @@ export function validateUnconditionalHooks(
     for (const instr of block.instructions) {
       if (
         instr.value.kind === "CallExpression" &&
-        isHookType(instr.value.callee.identifier)
+        getHookKind(fn.env, instr.value.callee.identifier) != null
       ) {
         const loc = instr.loc;
         // TODO: the current ESLint rule has different error messages for code that is called conditionally, in a loop, etc.

@@ -74,8 +74,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   [
     "useFragment",
     {
-      name: "useFragment",
-      kind: "Custom",
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
     },
@@ -83,8 +81,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   [
     "usePaginationFragment",
     {
-      name: "usePaginationFragment",
-      kind: "Custom",
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
     },
@@ -92,8 +88,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   [
     "useRefetchableFragment",
     {
-      name: "useRefetchableFragment",
-      kind: "Custom",
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
     },
@@ -101,8 +95,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   [
     "useLazyLoadQuery",
     {
-      name: "useLazyLoadQuery",
-      kind: "Custom",
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
     },
@@ -110,8 +102,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   [
     "usePreloadedQuery",
     {
-      name: "usePreloadedQuery",
-      kind: "Custom",
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
     },

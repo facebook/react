@@ -24,7 +24,11 @@ import {
   Type,
   ValueKind,
 } from "../HIR/HIR";
-import { FunctionSignature } from "../HIR/ObjectShape";
+import {
+  DefaultMutatingHook,
+  DefaultNonmutatingHook,
+  FunctionSignature,
+} from "../HIR/ObjectShape";
 import {
   printIdentifier,
   printMixedHIR,
@@ -708,25 +712,33 @@ function inferBlock(
         continue;
       }
       case "CallExpression": {
-        if (instrValue.callee.identifier.type.kind === "Hook") {
-          const definition = instrValue.callee.identifier.type.definition;
-          if (definition !== null) {
-            effectKind = definition.effectKind;
-            valueKind = definition.valueKind;
-          } else if (env.enableAssumeHooksFollowRulesOfReact) {
-            effectKind = Effect.Freeze;
-            valueKind = ValueKind.Frozen;
-          } else {
-            effectKind = Effect.Mutate;
-            valueKind = ValueKind.Mutable;
-          }
+        let signature = getFunctionCallSignature(
+          env,
+          instrValue.callee.identifier.type
+        );
+        signature =
+          env.enableFunctionCallSignatureOptimizations ||
+          signature?.hookKind != null
+            ? signature
+            : null;
+
+        if (
+          signature &&
+          signature.hookKind != null &&
+          !env.enableTreatHooksAsFunctions
+        ) {
+          effectKind = signature.restParam;
+          valueKind = signature.returnValueKind;
           break;
         }
 
-        const signature = env.enableFunctionCallSignatureOptimizations
-          ? getFunctionCallSignature(env, instrValue.callee.identifier.type)
-          : null;
-
+        // We currently always check reference effects of typed functions
+        // (i.e. call `referenceAndCheckError`). However, default custom hooks
+        // should not assert reference effects, since their signatures are only
+        // assumptions / defaults.
+        const isDefaultCustomHook =
+          instrValue.callee.identifier.type === DefaultMutatingHook ||
+          instrValue.callee.identifier.type === DefaultNonmutatingHook;
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
@@ -735,9 +747,13 @@ function inferBlock(
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
           if (effects !== null) {
-            // If effects are inferred for an argument, we should fail invalid
-            // mutating effects
-            state.referenceAndCheckError(place, effects[i]);
+            if (isDefaultCustomHook) {
+              state.reference(place, effects[i]);
+            } else {
+              // If effects are inferred for an argument, we should fail invalid
+              // mutating effects
+              state.referenceAndCheckError(place, effects[i]);
+            }
           } else {
             state.reference(place, Effect.Mutate);
           }

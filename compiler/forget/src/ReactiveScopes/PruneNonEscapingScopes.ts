@@ -9,10 +9,9 @@ import invariant from "invariant";
 import prettyFormat from "pretty-format";
 import { CompilerError } from "../CompilerError";
 import {
+  Environment,
   IdentifierId,
   InstructionId,
-  isHookType,
-  isMutableEffect,
   Pattern,
   Place,
   ReactiveFunction,
@@ -23,6 +22,8 @@ import {
   ReactiveTerminalStatement,
   ReactiveValue,
   ScopeId,
+  getHookKind,
+  isMutableEffect,
 } from "../HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { log } from "../Utils/logger";
@@ -30,10 +31,10 @@ import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 import { printReactiveFunction } from "./PrintReactiveFunction";
 import {
-  eachReactiveValueOperand,
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
   Transformed,
+  eachReactiveValueOperand,
   visitReactiveFunction,
 } from "./visitors";
 
@@ -116,7 +117,7 @@ export function pruneNonEscapingScopes(
 ): void {
   // First build up a map of which instructions are involved in creating which values,
   // and which values are returned.
-  const state = new State();
+  const state = new State(fn.env);
   if (fn.id !== null) {
     state.declare(fn.id.id);
   }
@@ -200,6 +201,7 @@ type ScopeNode = {
 
 // Stores the identifier and scope graphs, set of returned identifiers, etc
 class State {
+  env: Environment;
   // Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
   // in subsequent lvalues/rvalues
   definitions: Map<IdentifierId, IdentifierId> = new Map();
@@ -207,6 +209,10 @@ class State {
   identifiers: Map<IdentifierId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
   escapingValues: Set<IdentifierId> = new Set();
+
+  constructor(env: Environment) {
+    this.env = env;
+  }
 
   /**
    * Declare a new identifier, used for function id and params
@@ -715,7 +721,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       );
     } else if (instruction.value.kind === "CallExpression") {
       const callee = instruction.value.callee;
-      if (isHookType(callee.identifier)) {
+      if (getHookKind(state.env, callee.identifier)) {
         for (const operand of eachInstructionValueOperand(instruction.value)) {
           state.escapingValues.add(operand.identifier.id);
         }

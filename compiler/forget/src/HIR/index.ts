@@ -7,7 +7,7 @@
 
 export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
-export { Environment } from "./Environment";
+export { Environment, Hook } from "./Environment";
 export * from "./HIR";
 export {
   markInstructionIds,
@@ -15,7 +15,6 @@ export {
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
 } from "./HIRBuilder";
-export { Hook } from "./Hooks";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
 export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";

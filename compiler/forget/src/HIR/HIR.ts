@@ -8,6 +8,7 @@
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { Environment } from "./Environment";
+import { HookKind } from "./ObjectShape";
 import { Type } from "./Types";
 
 // *******************************************************************************************
@@ -951,8 +952,13 @@ export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === "Primitive";
 }
 
-export function isHookType(id: Identifier): boolean {
-  return id.type.kind === "Hook";
+export function getHookKind(env: Environment, id: Identifier): HookKind | null {
+  const idType = id.type;
+  if (idType.kind === "Function") {
+    const signature = env.getFunctionSignature(idType);
+    return signature?.hookKind ?? null;
+  }
+  return null;
 }
 
 export * from "./Types";

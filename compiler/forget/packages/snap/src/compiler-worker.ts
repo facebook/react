@@ -134,8 +134,6 @@ export async function compile(
           [
             "useFreeze",
             {
-              name: "useFreeze",
-              kind: "Custom",
               valueKind: "frozen",
               effectKind: "freeze",
             },

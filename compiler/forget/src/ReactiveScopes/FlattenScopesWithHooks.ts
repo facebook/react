@@ -6,12 +6,13 @@
  */
 
 import {
+  Environment,
   InstructionId,
-  isHookType,
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveStatement,
   ReactiveValue,
+  getHookKind,
 } from "../HIR";
 import {
   ReactiveFunctionTransform,
@@ -31,17 +32,26 @@ import {
  * to ensure the hook call does not inadvertently become conditional.
  */
 export function flattenScopesWithHooks(fn: ReactiveFunction): void {
-  visitReactiveFunction(fn, new Transform(), { hasHook: false });
+  visitReactiveFunction(fn, new Transform(), {
+    env: fn.env,
+    hasHook: false,
+  });
 }
 
-type State = { hasHook: boolean };
+type State = {
+  env: Environment;
+  hasHook: boolean;
+};
 
 class Transform extends ReactiveFunctionTransform<State> {
   override transformScope(
     scope: ReactiveScopeBlock,
     outerState: State
   ): Transformed<ReactiveStatement> {
-    const innerState: State = { hasHook: false };
+    const innerState: State = {
+      env: outerState.env,
+      hasHook: false,
+    };
     this.visitScope(scope, innerState);
     outerState.hasHook ||= innerState.hasHook;
     if (innerState.hasHook) {
@@ -59,7 +69,7 @@ class Transform extends ReactiveFunctionTransform<State> {
     this.traverseValue(id, value, state);
     if (
       value.kind === "CallExpression" &&
-      isHookType(value.callee.identifier)
+      getHookKind(state.env, value.callee.identifier) != null
     ) {
       state.hasHook = true;
     }

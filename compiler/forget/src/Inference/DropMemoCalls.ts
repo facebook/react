@@ -5,17 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, HIRFunction, HookType, isHookType } from "../HIR";
+import { Effect, HIRFunction, getHookKind } from "../HIR";
 
 export default function (func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case "CallExpression": {
-          if (isHookType(instr.value.callee.identifier)) {
-            const name = (instr.value.callee.identifier.type as HookType)
-              .definition?.name;
-            if (name === "useMemo") {
+          const hookKind = getHookKind(func.env, instr.value.callee.identifier);
+          if (hookKind != null) {
+            if (hookKind === "useMemo") {
               const [fn] = instr.value.args;
 
               // TODO(gsn): Consider inlining the function passed to useMemo,
@@ -38,7 +37,7 @@ export default function (func: HIRFunction): void {
                   loc: instr.value.loc,
                 };
               }
-            } else if (name === "useCallback") {
+            } else if (hookKind === "useCallback") {
               const [fn] = instr.value.args;
 
               // Instead of a Call, just alias the callback directly.

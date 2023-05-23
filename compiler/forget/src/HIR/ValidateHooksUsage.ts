@@ -11,7 +11,7 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { hasBackEdge } from "../Optimization/DeadCodeElimination";
-import { HIRFunction, IdentifierId, Place, isHookType } from "./HIR";
+import { HIRFunction, IdentifierId, Place, getHookKind } from "./HIR";
 import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
 /**
@@ -56,7 +56,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
       for (const instr of block.instructions) {
         if (
           instr.value.kind === "LoadGlobal" &&
-          isHookType(instr.lvalue.identifier)
+          getHookKind(fn.env, instr.lvalue.identifier) != null
         ) {
           hooks.add(instr.lvalue.identifier.id);
         } else if (instr.value.kind === "CallExpression") {

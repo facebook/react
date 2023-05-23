@@ -6,26 +6,32 @@
  */
 
 import { CompilerError } from "../CompilerError";
+import { Environment } from "../HIR";
 import {
   Effect,
   IdentifierId,
-  isHookType,
   ReactiveFunction,
   ReactiveInstruction,
+  getHookKind,
 } from "../HIR/HIR";
 import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import {
-  eachReactiveValueOperand,
   ReactiveFunctionVisitor,
+  eachReactiveValueOperand,
   visitReactiveFunction,
 } from "./visitors";
 
 type IdentifierReactivity = Map<IdentifierId, boolean>;
 
 class State {
+  env: Environment;
   reactivityMap: IdentifierReactivity = new Map();
   temporaries: Map<IdentifierId, IdentifierId> = new Map();
+
+  constructor(env: Environment) {
+    this.env = env;
+  }
 }
 
 class Visitor extends ReactiveFunctionVisitor<State> {
@@ -65,7 +71,7 @@ class Visitor extends ReactiveFunctionVisitor<State> {
     if (
       !hasReactiveInput &&
       instr.value.kind === "CallExpression" &&
-      isHookType(instr.value.callee.identifier)
+      getHookKind(state.env, instr.value.callee.identifier) != null
     ) {
       // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
       // they are not guaranteed to memoize their return value, and their result
@@ -169,7 +175,7 @@ export function inferReactiveIdentifiers(
   fn: ReactiveFunction
 ): Set<IdentifierId> {
   const visitor = new Visitor();
-  const state = new State();
+  const state = new State(fn.env);
   for (const param of fn.params) {
     state.reactivityMap.set(param.identifier.id, true);
   }

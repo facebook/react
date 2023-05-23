@@ -6,22 +6,11 @@
  */
 
 import invariant from "invariant";
-import { Hook } from "./Hooks";
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
-export type Type =
-  | BuiltInType
-  | HookType
-  | PhiType
-  | TypeVar
-  | PolyType
-  | PropType;
+export type Type = BuiltInType | PhiType | TypeVar | PolyType | PropType;
 export type PrimitiveType = { kind: "Primitive" };
-export type HookType = {
-  kind: "Hook";
-  definition: Hook | null;
-};
 
 /**
  * An {@link FunctionType} or {@link ObjectType} (also a JS object) may be associated with an
@@ -93,7 +82,6 @@ export function typeEquals(tA: Type, tB: Type): boolean {
   return (
     typeVarEquals(tA, tB) ||
     funcTypeEquals(tA, tB) ||
-    hookTypeEquals(tA, tB) ||
     objectTypeEquals(tA, tB) ||
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB) ||
@@ -129,12 +117,6 @@ function funcTypeEquals(tA: Type, tB: Type): boolean {
     return false;
   }
   return typeEquals(tA.return, tB.return);
-}
-
-function hookTypeEquals(tA: Type, tB: Type): boolean {
-  return (
-    tA.kind === "Hook" && tB.kind === "Hook" && tA.definition === tB.definition
-  );
 }
 
 function phiTypeEquals(tA: Type, tB: Type): boolean {
