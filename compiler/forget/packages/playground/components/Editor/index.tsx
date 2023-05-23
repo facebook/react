@@ -122,9 +122,11 @@ function compile(source: string): CompilerOutput {
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
-        validateHooksUsage: true,
+        enableAssumeHooksFollowRulesOfReact: true,
+        enableFunctionCallSignatureOptimizations: true,
         inlineUseMemo: true,
         memoizeJsxElements: true,
+        validateHooksUsage: true,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
