@@ -103,7 +103,7 @@ export default function generateTestsFromFixtures(
         let panicOnBailout = true;
         let memoizeJsxElements = true;
         let enableAssumeHooksFollowRulesOfReact = false;
-        let enableTreatHooksAsFunctions = false;
+        let enableTreatHooksAsFunctions = true;
 
         if (inputFile != null) {
           input = fs.readFileSync(inputFile, "utf8");
@@ -153,8 +153,8 @@ export default function generateTestsFromFixtures(
           ) {
             enableAssumeHooksFollowRulesOfReact = true;
           }
-          if (lines[0]!.indexOf("@enableTreatHooksAsFunctions true") !== -1) {
-            enableTreatHooksAsFunctions = true;
+          if (lines[0]!.indexOf("@enableTreatHooksAsFunctions false") !== -1) {
+            enableTreatHooksAsFunctions = false;
           }
         }
 

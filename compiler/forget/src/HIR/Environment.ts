@@ -99,7 +99,7 @@ export type EnvironmentConfig = Partial<{
    * Enabling this may change inference to have a higher confidence level
    * and create more bailouts (e.g. for mutable effects to immutable values).
    *
-   * Defaults to false
+   * Defaults to true
    */
   enableTreatHooksAsFunctions: boolean;
 }>;
@@ -149,7 +149,7 @@ export class Environment {
     this.enableAssumeHooksFollowRulesOfReact =
       config?.enableAssumeHooksFollowRulesOfReact ?? false;
     this.enableTreatHooksAsFunctions =
-      config?.enableTreatHooksAsFunctions ?? false;
+      config?.enableTreatHooksAsFunctions ?? true;
     this.#contextIdentifiers = contextIdentifiers;
   }
 
