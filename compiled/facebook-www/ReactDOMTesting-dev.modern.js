@@ -111,7 +111,6 @@ var disableInputAttributeSyncing =
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
@@ -34102,12 +34101,7 @@ function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
 
-    if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
-      !enableSyncDefaultUpdates || // Only for internal experiments.
-      concurrentUpdatesByDefaultOverride
-    ) {
+    {
       mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
@@ -34627,11 +34621,7 @@ function createFiberRoot(
   } // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
 
-  var uninitializedFiber = createHostRootFiber(
-    tag,
-    isStrictMode,
-    concurrentUpdatesByDefaultOverride
-  );
+  var uninitializedFiber = createHostRootFiber(tag, isStrictMode);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
@@ -34659,7 +34649,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-b0d631a6";
+var ReactVersion = "18.3.0-www-modern-e25cdc86";
 
 function createPortal$1(
   children,

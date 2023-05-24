@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-0351539c";
+var ReactVersion = "18.3.0-www-classic-623297f6";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -171,7 +171,6 @@ var replayFailedUnitOfWorkWithInvokeGuardedCallback =
   enableUseRefAccessWarning = dynamicFeatureFlags.enableUseRefAccessWarning,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableSyncDefaultUpdates = dynamicFeatureFlags.enableSyncDefaultUpdates,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
@@ -28023,12 +28022,7 @@ function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
 
-    if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
-      !enableSyncDefaultUpdates || // Only for internal experiments.
-      concurrentUpdatesByDefaultOverride
-    ) {
+    {
       mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
@@ -28529,11 +28523,7 @@ function createFiberRoot(
   } // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
 
-  var uninitializedFiber = createHostRootFiber(
-    tag,
-    isStrictMode,
-    concurrentUpdatesByDefaultOverride
-  );
+  var uninitializedFiber = createHostRootFiber(tag, isStrictMode);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
