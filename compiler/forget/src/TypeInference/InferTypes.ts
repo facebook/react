@@ -201,9 +201,39 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "Destructure": {
+      const pattern = value.lvalue.pattern;
+      if (pattern.kind === "ArrayPattern") {
+        for (let i = 0; i < pattern.items.length; i++) {
+          const item = pattern.items[i];
+          if (item.kind === "Identifier") {
+            // To simulate tuples we use properties with `String(<index>)`, eg "0".
+            const propertyName = String(i);
+            yield equation(item.identifier.type, {
+              kind: "Property",
+              object: value.value.identifier.type,
+              propertyName,
+            });
+          } else {
+            break;
+          }
+        }
+      } else {
+        for (const property of pattern.properties) {
+          if (property.kind === "ObjectProperty") {
+            yield equation(property.place.identifier.type, {
+              kind: "Property",
+              object: value.value.identifier.type,
+              propertyName: property.name,
+            });
+          }
+        }
+      }
+      break;
+    }
+
     case "DeclareLocal":
     case "DeclareContext":
-    case "Destructure":
     case "NewExpression":
     case "TypeCastExpression":
     case "JsxExpression":
