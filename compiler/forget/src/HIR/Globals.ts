@@ -9,6 +9,8 @@ import { Effect, ValueKind } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInUseRefId,
+  BuiltInUseStateId,
   ShapeRegistry,
   addFunction,
   addHook,
@@ -248,7 +250,7 @@ const BUILTIN_HOOKS: Array<[string, FunctionType]> = [
     addHook(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
+      returnType: { kind: "Object", shapeId: BuiltInUseStateId },
       calleeEffect: Effect.Read,
       hookKind: "useState",
       returnValueKind: ValueKind.Frozen,
@@ -259,7 +261,7 @@ const BUILTIN_HOOKS: Array<[string, FunctionType]> = [
     addHook(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Capture,
-      returnType: { kind: "Poly" },
+      returnType: { kind: "Object", shapeId: BuiltInUseRefId },
       calleeEffect: Effect.Read,
       hookKind: "useRef",
       returnValueKind: ValueKind.Mutable,

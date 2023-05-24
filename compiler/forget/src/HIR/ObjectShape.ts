@@ -40,9 +40,10 @@ function createAnonId(): string {
 export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  fn: Omit<FunctionSignature, "hookKind">
+  fn: Omit<FunctionSignature, "hookKind">,
+  id: string | null = null
 ): FunctionType {
-  const shapeId = createAnonId();
+  const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, {
     ...fn,
     hookKind: null,
@@ -157,6 +158,10 @@ export type ObjectShape = {
 export type ShapeRegistry = Map<string, ObjectShape>;
 export const BuiltInArrayId = "BuiltInArray";
 export const BuiltInObjectId = "BuiltInObject";
+export const BuiltInUseStateId = "BuiltInUseState";
+export const BuiltInSetStateId = "BuiltInSetState";
+export const BuiltInUseRefId = "BuiltInUseRefId";
+export const BuiltInRefValueId = "BuiltInRefValue";
 
 /**
  * ShapeRegistry with default definitions for built-ins.
@@ -217,6 +222,31 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
   // TODO:
   // hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
 ]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
+  ["0", { kind: "Poly" }],
+  [
+    "1",
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Immutable,
+      },
+      BuiltInSetStateId
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
+  ["current", { kind: "Object", shapeId: BuiltInRefValueId }],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInRefValueId, []);
 
 export const DefaultMutatingHook = addHook(BUILTIN_SHAPES, [], {
   positionalParams: [],
