@@ -6,7 +6,12 @@ jest.mock('shared/ReactFeatureFlags', () => {
     () => jest.requireActual('shared/forks/ReactFeatureFlags.www-dynamic'),
     {virtual: true}
   );
-  return jest.requireActual('shared/forks/ReactFeatureFlags.www');
+  const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
+
+  // This flag is only used by tests, it should never be set elsewhere.
+  actual.enableSyncDefaultUpdates = __VARIANT__;
+
+  return actual;
 });
 
 jest.mock('scheduler/src/SchedulerFeatureFlags', () => {

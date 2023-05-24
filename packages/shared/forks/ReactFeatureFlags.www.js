@@ -23,7 +23,6 @@ export const {
   enableDebugTracing,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
-  enableSyncDefaultUpdates,
   enableUnifiedSyncLane,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
@@ -105,6 +104,9 @@ export const enableUseMutableSource = true;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
+
+// This is only used in VARIANT tests, setting it to true does nothing.
+export const enableSyncDefaultUpdates = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
