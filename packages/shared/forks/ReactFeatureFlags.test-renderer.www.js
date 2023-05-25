@@ -68,6 +68,7 @@ export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 export const enableHostSingletons = true;
+export const enableCreateCatch = false;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = false;

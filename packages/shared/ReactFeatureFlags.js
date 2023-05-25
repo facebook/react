@@ -106,6 +106,8 @@ export const enableHostSingletons = true;
 
 export const enableFloat = true;
 
+export const enableCreateCatch = __EXPERIMENTAL__;
+
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;
