@@ -151,32 +151,11 @@ jobs:
       - setup_node_modules
       - run:
           name: Download artifacts for base revision
-          # TODO: The download-experimental-build.js script works by fetching
-          # artifacts from CI. CircleCI recently updated this endpoint to
-          # require an auth token. This is a problem for PR branches, where
-          # sizebot needs to run, because we don't want to leak the token to
-          # arbitrary code written by an outside contributor.
-          #
-          # This only affects PR branches. CI workflows that run on the main
-          # branch are allowed to access environment variables, because only those
-          # with push access can land code in main.
-          #
-          # As a temporary workaround, we'll fetch the assets from a mirror.
-          # Need to figure out a longer term solution for this.
-          #
-          # Original code
-          #
-          # command: |
-          #     git fetch origin main
-          #     cd ./scripts/release && yarn && cd ../../
-          #     scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
-          #     mv ./build ./base-build
-          #
-          # Workaround. Fetch the artifacts from react-builds.vercel.app. This
-          # is the same app that hosts the sizebot diff previews.
           command: |
-            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
-              mv ./build ./base-build
+            git fetch origin main
+            cd ./scripts/release && yarn && cd ../../
+            scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+            mv ./build ./base-build
 
       - run:
           # TODO: The `download-experimental-build` script copies the npm
