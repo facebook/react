@@ -1339,6 +1339,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [staticState] = useState({ hello: "world" });
+          useEffect(() => {
+            staticState;
+          }, []);
+        }
+      `,
+    },
     // Ignore arguments keyword for arrow functions.
     {
       code: normalizeIndent`
@@ -4256,7 +4266,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          const [skillsCount] = useState();
+          const [skillsCount, setSkillsCount] = useState();
           useEffect(() => {
             if (skillsCount === 0 && !props.isEditMode) {
               props.toggleEditMode();
@@ -4278,7 +4288,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [skillsCount, props.isEditMode, props.toggleEditMode, props]',
               output: normalizeIndent`
                 function MyComponent(props) {
-                  const [skillsCount] = useState();
+                  const [skillsCount, setSkillsCount] = useState();
                   useEffect(() => {
                     if (skillsCount === 0 && !props.isEditMode) {
                       props.toggleEditMode();
@@ -4294,7 +4304,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          const [skillsCount] = useState();
+          const [skillsCount, setSkillsCount] = useState();
           useEffect(() => {
             if (skillsCount === 0 && !props.isEditMode) {
               props.toggleEditMode();
@@ -4316,7 +4326,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [props, skillsCount]',
               output: normalizeIndent`
                 function MyComponent(props) {
-                  const [skillsCount] = useState();
+                  const [skillsCount, setSkillsCount] = useState();
                   useEffect(() => {
                     if (skillsCount === 0 && !props.isEditMode) {
                       props.toggleEditMode();
