@@ -699,7 +699,7 @@ function inferBlock(
             operand,
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect
           );
-          hasMutableOperand ||= isMutableEffect(operand.effect);
+          hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
         }
         // If a closure did not capture any mutable values, then we can consider it to be
         // frozen, which allows it to be independently memoized.
@@ -808,7 +808,7 @@ function inferBlock(
       case "PropertyDelete": {
         // `delete` returns a boolean (immutable) and modifies the object
         valueKind = ValueKind.Immutable;
-        effectKind = Effect.ConditionallyMutate;
+        effectKind = Effect.Mutate;
         break;
       }
       case "PropertyLoad": {
@@ -837,7 +837,7 @@ function inferBlock(
         state.reference(instrValue.object, Effect.Mutate);
         state.reference(instrValue.property, Effect.Read);
         state.initialize(instrValue, ValueKind.Immutable);
-        state.reference(instr.lvalue, Effect.ConditionallyMutate);
+        state.reference(instr.lvalue, Effect.Mutate);
         continue;
       }
       case "ComputedLoad": {
@@ -927,7 +927,10 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
-        // state.reference(instrValue.lvalue.place, Effect.Store);
+        // NOTE: *not* using state.reference since this is an assignment.
+        // reference() checks if the effect is valid given the value kind,
+        // but here the previous value kind doesn't matter since we are
+        // replacing it
         instrValue.lvalue.place.effect = Effect.Store;
         continue;
       }
@@ -958,7 +961,10 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
           state.alias(place, instrValue.value);
-          // state.reference(place, Effect.Store);
+          // NOTE: *not* using state.reference since this is an assignment.
+          // reference() checks if the effect is valid given the value kind,
+          // but here the previous value kind doesn't matter since we are
+          // replacing it
           place.effect = Effect.Store;
         }
         continue;

@@ -594,7 +594,7 @@ function computeMemoizationInputs(
       // reachable from a return value. Any mutable rvalue may alias any other rvalue
       const operands = [...eachReactiveValueOperand(value)];
       const lvalues = operands
-        .filter((operand) => isMutableEffect(operand.effect))
+        .filter((operand) => isMutableEffect(operand.effect, operand.loc))
         .map((place) => ({ place, level: MemoizationLevel.Memoized }));
       if (lvalue !== null) {
         lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });

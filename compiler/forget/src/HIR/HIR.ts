@@ -863,7 +863,10 @@ export enum Effect {
   Store = "store",
 }
 
-export function isMutableEffect(effect: Effect): boolean {
+export function isMutableEffect(
+  effect: Effect,
+  location: SourceLocation
+): boolean {
   switch (effect) {
     case Effect.Capture:
     case Effect.Store:
@@ -874,11 +877,11 @@ export function isMutableEffect(effect: Effect): boolean {
       // All conditional mutations should be resolved into some other effect after InferReferenceEffects
       CompilerError.invariant(
         "Unexpected conditional mutation effect",
-        GeneratedSource
+        location
       );
     }
     case Effect.Unknown: {
-      CompilerError.invariant("Unexpected unknown effect", GeneratedSource);
+      CompilerError.invariant("Unexpected unknown effect", location);
     }
     case Effect.Read:
     case Effect.Freeze: {
