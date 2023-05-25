@@ -63,7 +63,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
         lvalue: {
           kind: "Identifier",
           identifier: phi.id,
-          effect: Effect.Mutate,
+          effect: Effect.ConditionallyMutate,
           loc: GeneratedSource,
         },
         value: {

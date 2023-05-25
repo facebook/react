@@ -390,7 +390,7 @@ export function leaveSSA(fn: HIRFunction): void {
           };
           block.instructions.push({
             id: block.terminal.id,
-            lvalue: { ...initValue, effect: Effect.Mutate },
+            lvalue: { ...initValue, effect: Effect.ConditionallyMutate },
             value: {
               kind: "Primitive",
               // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
@@ -411,7 +411,7 @@ export function leaveSSA(fn: HIRFunction): void {
           place: {
             kind: "Identifier",
             identifier: phi.id,
-            effect: Effect.Mutate,
+            effect: Effect.ConditionallyMutate,
             loc: GeneratedSource,
           },
           kind: InstructionKind.Let,
@@ -433,7 +433,7 @@ export function leaveSSA(fn: HIRFunction): void {
               scope: null,
               type: phi.id.type,
             },
-            effect: Effect.Mutate,
+            effect: Effect.ConditionallyMutate,
             loc: GeneratedSource,
           },
           value: {

@@ -293,7 +293,10 @@ class InferenceState {
           place.loc
         );
       }
-      place.effect = effectKind === Effect.Mutate ? Effect.Mutate : Effect.Read;
+      place.effect =
+        effectKind === Effect.ConditionallyMutate
+          ? Effect.ConditionallyMutate
+          : Effect.Read;
       return;
     }
     let valueKind: ValueKind | null = this.kind(place);
@@ -313,12 +316,12 @@ class InferenceState {
         }
         break;
       }
-      case Effect.Mutate: {
+      case Effect.ConditionallyMutate: {
         if (
           valueKind === ValueKind.Mutable ||
           valueKind === ValueKind.Context
         ) {
-          effect = Effect.Mutate;
+          effect = Effect.ConditionallyMutate;
         } else {
           if (shouldError) {
             CompilerError.invalidInput(
@@ -354,7 +357,9 @@ class InferenceState {
         //   valueKind === ValueKind.Mutable,
         //   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
         // );
-        effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
+        effect = isObjectType(place.identifier)
+          ? Effect.Store
+          : Effect.ConditionallyMutate;
         break;
       }
       case Effect.Capture: {
@@ -616,7 +621,7 @@ function inferBlock(
   for (const instr of block.instructions) {
     const instrValue = instr.value;
     let effectKind: Effect | null = null;
-    let lvalueEffect = Effect.Mutate;
+    let lvalueEffect = Effect.ConditionallyMutate;
     let valueKind: ValueKind;
     switch (instrValue.kind) {
       case "BinaryExpression": {
@@ -634,7 +639,7 @@ function inferBlock(
       }
       case "NewExpression": {
         valueKind = ValueKind.Mutable;
-        effectKind = Effect.Mutate;
+        effectKind = Effect.ConditionallyMutate;
         break;
       }
       case "ObjectExpression": {
@@ -669,7 +674,7 @@ function inferBlock(
       }
       case "TaggedTemplateExpression": {
         valueKind = ValueKind.Mutable;
-        effectKind = Effect.Mutate;
+        effectKind = Effect.ConditionallyMutate;
         break;
       }
       case "TemplateLiteral": {
@@ -682,7 +687,7 @@ function inferBlock(
       case "RegExpLiteral": {
         // RegExp instances are mutable objects
         valueKind = ValueKind.Mutable;
-        effectKind = Effect.Mutate;
+        effectKind = Effect.ConditionallyMutate;
         break;
       }
       case "Debugger":
@@ -755,7 +760,7 @@ function inferBlock(
               state.referenceAndCheckError(place, effects[i]);
             }
           } else {
-            state.reference(place, Effect.Mutate);
+            state.reference(place, Effect.ConditionallyMutate);
           }
         }
         if (signature !== null) {
@@ -764,12 +769,12 @@ function inferBlock(
             signature.calleeEffect
           );
         } else {
-          state.reference(instrValue.callee, Effect.Mutate);
+          state.reference(instrValue.callee, Effect.ConditionallyMutate);
         }
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.Mutate;
+        instr.lvalue.effect = Effect.ConditionallyMutate;
         continue;
       }
       case "MethodCall": {
@@ -794,7 +799,7 @@ function inferBlock(
             // mutating effects
             state.referenceAndCheckError(place, effects[i]);
           } else {
-            state.reference(place, Effect.Mutate);
+            state.reference(place, Effect.ConditionallyMutate);
           }
         }
         if (signature !== null) {
@@ -803,18 +808,18 @@ function inferBlock(
             signature.calleeEffect
           );
         } else {
-          state.reference(instrValue.receiver, Effect.Mutate);
+          state.reference(instrValue.receiver, Effect.ConditionallyMutate);
         }
 
         state.initialize(instrValue, ValueKind.Mutable);
         state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.Mutate;
+        instr.lvalue.effect = Effect.ConditionallyMutate;
         continue;
       }
       case "PropertyStore": {
         const effect =
           state.kind(instrValue.object) === ValueKind.Context
-            ? Effect.Mutate
+            ? Effect.ConditionallyMutate
             : Effect.Capture;
         state.reference(instrValue.value, effect);
         state.reference(instrValue.object, Effect.Store);
@@ -827,13 +832,13 @@ function inferBlock(
       case "PropertyDelete": {
         // `delete` returns a boolean (immutable) and modifies the object
         valueKind = ValueKind.Immutable;
-        effectKind = Effect.Mutate;
+        effectKind = Effect.ConditionallyMutate;
         break;
       }
       case "PropertyLoad": {
         state.reference(instrValue.object, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
         continue;
@@ -841,7 +846,7 @@ function inferBlock(
       case "ComputedStore": {
         const effect =
           state.kind(instrValue.object) === ValueKind.Context
-            ? Effect.Mutate
+            ? Effect.ConditionallyMutate
             : Effect.Capture;
         state.reference(instrValue.value, effect);
         state.reference(instrValue.property, Effect.Capture);
@@ -853,17 +858,17 @@ function inferBlock(
         continue;
       }
       case "ComputedDelete": {
-        state.reference(instrValue.object, Effect.Mutate);
+        state.reference(instrValue.object, Effect.ConditionallyMutate);
         state.reference(instrValue.property, Effect.Read);
         state.initialize(instrValue, ValueKind.Immutable);
-        state.reference(instr.lvalue, Effect.Mutate);
+        state.reference(instr.lvalue, Effect.ConditionallyMutate);
         continue;
       }
       case "ComputedLoad": {
         state.reference(instrValue.object, Effect.Read);
         state.reference(instrValue.property, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
         continue;
@@ -873,9 +878,9 @@ function inferBlock(
         // Awaiting a value causes it to change state (go from unresolved to resolved or error)
         // It also means that any side-effects which would occur as part of the promise evaluation
         // will occur.
-        state.reference(instrValue.value, Effect.Mutate);
+        state.reference(instrValue.value, Effect.ConditionallyMutate);
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         state.alias(lvalue, instrValue.value);
         continue;
       }
@@ -890,7 +895,7 @@ function inferBlock(
         state.initialize(instrValue, state.kind(instrValue.value));
         state.reference(instrValue.value, Effect.Read);
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         state.alias(lvalue, instrValue.value);
         continue;
       }
@@ -898,10 +903,10 @@ function inferBlock(
         const lvalue = instr.lvalue;
         const effect =
           state.isDefined(lvalue) && state.kind(lvalue) === ValueKind.Context
-            ? Effect.Mutate
+            ? Effect.ConditionallyMutate
             : Effect.Capture;
         state.reference(instrValue.place, effect);
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         // direct aliasing: `a = b`;
         state.alias(lvalue, instrValue.place);
         continue;
@@ -909,7 +914,7 @@ function inferBlock(
       case "LoadContext": {
         state.reference(instrValue.place, Effect.Capture);
         const lvalue = instr.lvalue;
-        lvalue.effect = Effect.Mutate;
+        lvalue.effect = Effect.ConditionallyMutate;
         const valueKind = state.kind(instrValue.place);
         invariant(
           valueKind === ValueKind.Mutable || valueKind === ValueKind.Context,
@@ -938,7 +943,7 @@ function inferBlock(
         const effect =
           state.isDefined(instrValue.lvalue.place) &&
           state.kind(instrValue.lvalue.place) === ValueKind.Context
-            ? Effect.Mutate
+            ? Effect.ConditionallyMutate
             : Effect.Capture;
         state.reference(instrValue.value, effect);
 
@@ -950,8 +955,8 @@ function inferBlock(
         continue;
       }
       case "StoreContext": {
-        state.reference(instrValue.value, Effect.Mutate);
-        state.reference(instrValue.lvalue.place, Effect.Mutate);
+        state.reference(instrValue.value, Effect.ConditionallyMutate);
+        state.reference(instrValue.lvalue.place, Effect.ConditionallyMutate);
 
         const lvalue = instr.lvalue;
         state.alias(lvalue, instrValue.value);
@@ -965,7 +970,7 @@ function inferBlock(
             state.isDefined(place) &&
             state.kind(place) === ValueKind.Context
           ) {
-            effect = Effect.Mutate;
+            effect = Effect.ConditionallyMutate;
             break;
           }
         }
@@ -1012,7 +1017,7 @@ function inferBlock(
         state.isDefined(operand) &&
         state.kind(operand) === ValueKind.Context
       ) {
-        effect = Effect.Mutate;
+        effect = Effect.ConditionallyMutate;
       } else {
         effect = Effect.Freeze;
       }

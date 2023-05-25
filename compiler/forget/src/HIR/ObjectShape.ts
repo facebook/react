@@ -250,7 +250,7 @@ addObject(BUILTIN_SHAPES, BuiltInRefValueId, []);
 
 export const DefaultMutatingHook = addHook(BUILTIN_SHAPES, [], {
   positionalParams: [],
-  restParam: Effect.Mutate,
+  restParam: Effect.ConditionallyMutate,
   returnType: { kind: "Poly" },
   calleeEffect: Effect.Read,
   hookKind: "Custom",

@@ -847,8 +847,16 @@ export enum Effect {
   Read = "read",
   // This reference reads and stores the value
   Capture = "capture",
-  // This reference may write to (mutate) the value
-  Mutate = "mutate",
+  // This reference *may* write to (mutate) the value. This covers two similar cases:
+  // - The compiler is being conservative and assuming that a value *may* be mutated
+  // - The effect is polymorphic: mutable values may be mutated, non-mutable values
+  //   will not be mutated.
+  // In both cases, we conservatively assume that mutable values will be mutated.
+  // But we do not error if the value is known to be immutable.
+  ConditionallyMutate = "mutate?",
+  // This reference *does* write to (mutate) the value. It is an error (invalid input)
+  // if an immutable value flows into a location with this effect.
+  // DefiniitelyMutate = "mutate",
   // This reference may alias to (mutate) the value
   Store = "store",
 }
@@ -856,7 +864,7 @@ export enum Effect {
 export function isMutableEffect(effect: Effect): boolean {
   switch (effect) {
     case Effect.Capture:
-    case Effect.Mutate:
+    case Effect.ConditionallyMutate:
     case Effect.Store: {
       return true;
     }
