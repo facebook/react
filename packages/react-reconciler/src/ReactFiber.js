@@ -39,6 +39,7 @@ import {
   enableDebugTracing,
   enableFloat,
   enableHostSingletons,
+  enableCreateCatch,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -69,6 +70,8 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  CatchComponent,
+  TypedCatchComponent,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberOffscreenComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -105,6 +108,8 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_CATCH_TYPE,
+  REACT_TYPED_CATCH_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -573,6 +578,12 @@ export function createFiberFromTypeAndProps(
           break;
         }
       // Fall through
+      case REACT_CATCH_TYPE:
+        if (enableCreateCatch) {
+          fiberTag = CatchComponent;
+          break;
+        }
+      // Fall through
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -583,6 +594,12 @@ export function createFiberFromTypeAndProps(
               // This is a consumer
               fiberTag = ContextConsumer;
               break getTag;
+            case REACT_TYPED_CATCH_TYPE:
+              if (enableCreateCatch) {
+                fiberTag = TypedCatchComponent;
+                break getTag;
+              }
+            // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               if (__DEV__) {

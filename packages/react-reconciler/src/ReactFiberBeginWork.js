@@ -74,6 +74,8 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  CatchComponent,
+  TypedCatchComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -111,6 +113,7 @@ import {
   enableHostSingletons,
   enableFormActions,
   enableAsyncActions,
+  enableCreateCatch,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -1423,6 +1426,20 @@ function finishClassComponent(
     invalidateContextProvider(workInProgress, Component, true);
   }
 
+  return workInProgress.child;
+}
+
+function updateCatchComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+): Fiber | null {
+  if (!enableCreateCatch || !(workInProgress.mode & ConcurrentMode)) {
+    throw new Error('Not implemented.');
+  }
+  // TODO: Catch is not implemented yet.
+  const nextChildren = workInProgress.pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
 
@@ -4274,6 +4291,13 @@ function beginWork(
           workInProgress,
           renderLanes,
         );
+      }
+      break;
+    }
+    case CatchComponent:
+    case TypedCatchComponent: {
+      if (enableCreateCatch) {
+        return updateCatchComponent(current, workInProgress, renderLanes);
       }
       break;
     }

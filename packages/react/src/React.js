@@ -31,6 +31,7 @@ import {
   cloneElement as cloneElementProd,
   isValidElement,
 } from './ReactElement';
+import {Catch, createCatch, raise} from './ReactCatch';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
@@ -97,6 +98,9 @@ export {
   createRef,
   Component,
   PureComponent,
+  Catch as experimental_Catch,
+  createCatch as experimental_createCatch,
+  raise as experimental_raise,
   createContext,
   createServerContext,
   forwardRef,

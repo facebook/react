@@ -72,6 +72,8 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  CatchComponent,
+  TypedCatchComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -178,6 +180,7 @@ import {
   popRootMarkerInstance,
 } from './ReactFiberTracingMarkerComponent';
 import {suspendCommit} from './ReactFiberThenable';
+import {enableCreateCatch} from '../../shared/ReactFeatureFlags';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1867,6 +1870,13 @@ function completeWork(
         bubbleProperties(workInProgress);
       }
       return null;
+    }
+    case CatchComponent:
+    case TypedCatchComponent: {
+      if (enableCreateCatch) {
+        bubbleProperties(workInProgress);
+        return null;
+      }
     }
   }
 
