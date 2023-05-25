@@ -204,6 +204,32 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       returnValueKind: ValueKind.Immutable,
     }),
   ],
+  [
+    "map",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      // callee is ConditionallyMutate because items of the array
+      // flow into the lambda and may be mutated there, even though
+      // the array object itself is not modified
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
+    "filter",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      // callee is ConditionallyMutate because items of the array
+      // flow into the lambda and may be mutated there, even though
+      // the array object itself is not modified
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
   // TODO: rest of Array properties
 ]);
 
