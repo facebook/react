@@ -24,11 +24,7 @@ import {
   Type,
   ValueKind,
 } from "../HIR/HIR";
-import {
-  DefaultMutatingHook,
-  DefaultNonmutatingHook,
-  FunctionSignature,
-} from "../HIR/ObjectShape";
+import { FunctionSignature } from "../HIR/ObjectShape";
 import {
   printIdentifier,
   printMixedHIR,
@@ -87,7 +83,10 @@ import { assertExhaustive } from "../Utils/utils";
  * When control flow paths converge the types of values are merged together, with the value
  * types forming a lattice to ensure convergence.
  */
-export default function inferReferenceEffects(fn: HIRFunction): void {
+export default function inferReferenceEffects(
+  fn: HIRFunction,
+  options: { isFunctionExpression: boolean } = { isFunctionExpression: false }
+): void {
   // Initial state contains function params
   // TODO: include module declarations here as well
   const initialState = InferenceState.empty();
@@ -118,13 +117,16 @@ export default function inferReferenceEffects(fn: HIRFunction): void {
     initialState.define(ref, value);
   }
 
+  const paramKind = options.isFunctionExpression
+    ? ValueKind.Mutable
+    : ValueKind.Frozen;
   for (const param of fn.params) {
     const value: InstructionValue = {
       kind: "Primitive",
       loc: param.loc,
       value: undefined,
     };
-    initialState.initialize(value, ValueKind.Frozen);
+    initialState.initialize(value, paramKind);
     initialState.define(param, value);
   }
 
@@ -273,18 +275,6 @@ class InferenceState {
    * value is already frozen or is immutable.
    */
   reference(place: Place, effectKind: Effect): void {
-    this.#referenceImpl(place, effectKind, false);
-  }
-
-  /**
-   * Throwing version of {@link reference}, which throws with an error
-   * if we record a mutate effect on an immutable value.
-   */
-  referenceAndCheckError(place: Place, effectKind: Effect): void {
-    this.#referenceImpl(place, effectKind, true);
-  }
-
-  #referenceImpl(place: Place, effectKind: Effect, shouldError: boolean): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
       if (effectKind === Effect.Store) {
@@ -321,26 +311,33 @@ class InferenceState {
           valueKind === ValueKind.Mutable ||
           valueKind === ValueKind.Context
         ) {
-          effect = Effect.ConditionallyMutate;
+          effect = Effect.Mutate;
         } else {
-          if (shouldError) {
-            CompilerError.invalidInput(
-              `InferReferenceEffects: inferred mutation of known immutable value`,
-              place.loc,
-              `Found mutation of ${printIdentifier(
-                place.identifier
-              )}${printType(place.identifier.type)} (${valueKind})`
-            );
-          }
           effect = Effect.Read;
+        }
+        break;
+      }
+      case Effect.Mutate: {
+        if (
+          valueKind === ValueKind.Mutable ||
+          valueKind === ValueKind.Context
+        ) {
+          effect = Effect.Mutate;
+        } else {
+          CompilerError.invalidInput(
+            `InferReferenceEffects: inferred mutation of known immutable value`,
+            place.loc,
+            `Found mutation of ${printIdentifier(place.identifier)}${printType(
+              place.identifier.type
+            )} (${valueKind})`
+          );
         }
         break;
       }
       case Effect.Store: {
         if (
           valueKind !== ValueKind.Mutable &&
-          valueKind !== ValueKind.Context &&
-          shouldError
+          valueKind !== ValueKind.Context
         ) {
           CompilerError.invalidInput(
             `InferReferenceEffects: inferred mutation of known immutable value`,
@@ -357,9 +354,7 @@ class InferenceState {
         //   valueKind === ValueKind.Mutable,
         //   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
         // );
-        effect = isObjectType(place.identifier)
-          ? Effect.Store
-          : Effect.ConditionallyMutate;
+        effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
         break;
       }
       case Effect.Capture: {
@@ -737,13 +732,6 @@ function inferBlock(
           break;
         }
 
-        // We currently always check reference effects of typed functions
-        // (i.e. call `referenceAndCheckError`). However, default custom hooks
-        // should not assert reference effects, since their signatures are only
-        // assumptions / defaults.
-        const isDefaultCustomHook =
-          instrValue.callee.identifier.type === DefaultMutatingHook ||
-          instrValue.callee.identifier.type === DefaultNonmutatingHook;
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
@@ -752,22 +740,13 @@ function inferBlock(
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
           if (effects !== null) {
-            if (isDefaultCustomHook) {
-              state.reference(place, effects[i]);
-            } else {
-              // If effects are inferred for an argument, we should fail invalid
-              // mutating effects
-              state.referenceAndCheckError(place, effects[i]);
-            }
+            state.reference(place, effects[i]);
           } else {
             state.reference(place, Effect.ConditionallyMutate);
           }
         }
         if (signature !== null) {
-          state.referenceAndCheckError(
-            instrValue.callee,
-            signature.calleeEffect
-          );
+          state.reference(instrValue.callee, signature.calleeEffect);
         } else {
           state.reference(instrValue.callee, Effect.ConditionallyMutate);
         }
@@ -797,16 +776,13 @@ function inferBlock(
           if (effects !== null) {
             // If effects are inferred for an argument, we should fail invalid
             // mutating effects
-            state.referenceAndCheckError(place, effects[i]);
+            state.reference(place, effects[i]);
           } else {
             state.reference(place, Effect.ConditionallyMutate);
           }
         }
         if (signature !== null) {
-          state.referenceAndCheckError(
-            instrValue.receiver,
-            signature.calleeEffect
-          );
+          state.reference(instrValue.receiver, signature.calleeEffect);
         } else {
           state.reference(instrValue.receiver, Effect.ConditionallyMutate);
         }
@@ -858,7 +834,7 @@ function inferBlock(
         continue;
       }
       case "ComputedDelete": {
-        state.reference(instrValue.object, Effect.ConditionallyMutate);
+        state.reference(instrValue.object, Effect.Mutate);
         state.reference(instrValue.property, Effect.Read);
         state.initialize(instrValue, ValueKind.Immutable);
         state.reference(instr.lvalue, Effect.ConditionallyMutate);
@@ -951,12 +927,13 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
-        state.reference(instrValue.lvalue.place, Effect.Store);
+        // state.reference(instrValue.lvalue.place, Effect.Store);
+        instrValue.lvalue.place.effect = Effect.Store;
         continue;
       }
       case "StoreContext": {
         state.reference(instrValue.value, Effect.ConditionallyMutate);
-        state.reference(instrValue.lvalue.place, Effect.ConditionallyMutate);
+        state.reference(instrValue.lvalue.place, Effect.Mutate);
 
         const lvalue = instr.lvalue;
         state.alias(lvalue, instrValue.value);
@@ -981,7 +958,8 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
           state.alias(place, instrValue.value);
-          state.reference(place, Effect.Store);
+          // state.reference(place, Effect.Store);
+          place.effect = Effect.Store;
         }
         continue;
       }

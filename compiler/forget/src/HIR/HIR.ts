@@ -7,6 +7,8 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
+import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
 import { HookKind } from "./ObjectShape";
 import { Type } from "./Types";
@@ -856,7 +858,7 @@ export enum Effect {
   ConditionallyMutate = "mutate?",
   // This reference *does* write to (mutate) the value. It is an error (invalid input)
   // if an immutable value flows into a location with this effect.
-  // DefiniitelyMutate = "mutate",
+  Mutate = "mutate",
   // This reference may alias to (mutate) the value
   Store = "store",
 }
@@ -864,12 +866,26 @@ export enum Effect {
 export function isMutableEffect(effect: Effect): boolean {
   switch (effect) {
     case Effect.Capture:
-    case Effect.ConditionallyMutate:
-    case Effect.Store: {
+    case Effect.Store:
+    case Effect.Mutate: {
       return true;
     }
-    default: {
+    case Effect.ConditionallyMutate: {
+      // All conditional mutations should be resolved into some other effect after InferReferenceEffects
+      CompilerError.invariant(
+        "Unexpected conditional mutation effect",
+        GeneratedSource
+      );
+    }
+    case Effect.Unknown: {
+      CompilerError.invariant("Unexpected unknown effect", GeneratedSource);
+    }
+    case Effect.Read:
+    case Effect.Freeze: {
       return false;
+    }
+    default: {
+      assertExhaustive(effect, `Unexpected effect '${effect}'`);
     }
   }
 }

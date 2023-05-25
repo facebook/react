@@ -3,8 +3,9 @@
 
 ```javascript
 function foo(a, b, c) {
-  a[b] = c[b];
-  a[1 + 2] = c[b * 4];
+  const x = { ...a };
+  x[b] = c[b];
+  x[1 + 2] = c[b * 4];
 }
 
 ```
@@ -13,8 +14,9 @@ function foo(a, b, c) {
 
 ```javascript
 function foo(a, b, c) {
-  a[b] = c[b];
-  a[3] = c[b * 4];
+  const x = { ...a };
+  x[b] = c[b];
+  x[3] = c[b * 4];
 }
 
 ```

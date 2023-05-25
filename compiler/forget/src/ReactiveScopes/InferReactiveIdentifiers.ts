@@ -91,7 +91,8 @@ class Visitor extends ReactiveFunctionVisitor<State> {
         switch (operand.effect) {
           case Effect.Capture:
           case Effect.Store:
-          case Effect.ConditionallyMutate: {
+          case Effect.ConditionallyMutate:
+          case Effect.Mutate: {
             const resolvedId: IdentifierId =
               state.temporaries.get(operand.identifier.id) ??
               operand.identifier.id;

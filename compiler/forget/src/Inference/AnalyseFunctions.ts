@@ -94,7 +94,7 @@ function lower(func: HIRFunction): void {
   constantPropagation(func);
   inferTypes(func);
   analyseFunctions(func);
-  inferReferenceEffects(func);
+  inferReferenceEffects(func, { isFunctionExpression: true });
   inferMutableRanges(func);
   logHIRFunction("AnalyseFunction (inner)", func);
 }

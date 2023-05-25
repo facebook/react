@@ -1,4 +1,5 @@
 function foo(a, b, c) {
-  a[b] = c[b];
-  a[1 + 2] = c[b * 4];
+  const x = { ...a };
+  x[b] = c[b];
+  x[1 + 2] = c[b * 4];
 }

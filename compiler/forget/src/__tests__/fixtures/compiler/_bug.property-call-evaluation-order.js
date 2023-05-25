@@ -1,11 +1,10 @@
 // Should print A, arg, original
 
-function changeF(o) {
-  o.f = () => console.log("new");
-}
-
 function Component() {
-  let x = {
+  const changeF = (o) => {
+    o.f = () => console.log("new");
+  };
+  const x = {
     f: () => console.log("original"),
   };
 

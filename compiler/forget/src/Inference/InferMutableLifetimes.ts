@@ -86,7 +86,8 @@ function inferPlace(
         infer(place, instrId);
       }
       return;
-    case Effect.ConditionallyMutate: {
+    case Effect.ConditionallyMutate:
+    case Effect.Mutate: {
       infer(place, instrId);
       return;
     }

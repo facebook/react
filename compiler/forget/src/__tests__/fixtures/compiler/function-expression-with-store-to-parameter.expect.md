@@ -1,0 +1,48 @@
+
+## Input
+
+```javascript
+function Component(props) {
+  const mutate = (object, key, value) => {
+    object.updated = true;
+    object[key] = value;
+  };
+  const x = makeObject(props);
+  mutate(x);
+  return x;
+}
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(props) {
+  const $ = useMemoCache(3);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = (object, key, value) => {
+      object.updated = true;
+      object[key] = value;
+    };
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const mutate = t0;
+  const c_1 = $[1] !== props;
+  let x;
+  if (c_1) {
+    x = makeObject(props);
+    mutate(x);
+    $[1] = props;
+    $[2] = x;
+  } else {
+    x = $[2];
+  }
+  return x;
+}
+
+```
+      
