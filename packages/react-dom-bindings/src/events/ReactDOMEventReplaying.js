@@ -80,7 +80,7 @@ type QueuedHydrationTarget = {
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: EventPriority,
-  callback: null | (true => void),
+  callback: null | (void => void),
 };
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -304,7 +304,15 @@ function attemptExplicitHydrationTarget(
   // Try to unify them. It's a bit tricky since it would require two return
   // values.
   const targetInst = getClosestInstanceFromNode(queuedTarget.target);
-  if (targetInst !== null) {
+  if (targetInst === null) {
+    const callbacks = queuedTarget.callbacks;
+    if (callbacks) {
+      callbacks[1](
+        'Cannot schedule hydration, target is not a React component.',
+      );
+      queuedTarget.callbacks = null;
+    }
+  } else {
     const nearestMounted = getNearestMountedFiber(targetInst);
     if (nearestMounted !== null) {
       const tag = nearestMounted.tag;
@@ -330,18 +338,22 @@ function attemptExplicitHydrationTarget(
         }
       }
     }
-  }
-  queuedTarget.blockedOn = null;
-  if (queuedTarget.callback) {
-    queuedTarget.callback(true);
-    queuedTarget.callback = null;
+    queuedTarget.blockedOn = null;
+    const callbacks = queuedTarget.callbacks;
+    if (callbacks) {
+      callbacks[0]();
+      queuedTarget.callbacks = null;
+    }
   }
 }
 
 export async function queueExplicitHydrationTarget(
   target: Node,
 ): Promise<true> {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
+    if (!target) {
+      reject('Cannot schedule hydration, target is undefined.');
+    }
     // TODO: This will read the priority if it's dispatched by the React
     // event system but not native events. Should read window.event.type, like
     // we do for updates (getCurrentEventPriority).
@@ -350,7 +362,7 @@ export async function queueExplicitHydrationTarget(
       blockedOn: null,
       target: target,
       priority: updatePriority,
-      callback: resolve,
+      callbacks: [resolve, reject],
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
@@ -528,9 +540,19 @@ export function retryIfBlockedOn(
     const queuedTarget = queuedExplicitHydrationTargets[i];
     if (queuedTarget.blockedOn === unblocked) {
       queuedTarget.blockedOn = null;
-      if (queuedTarget.callback) {
-        queuedTarget.callback(true);
-        queuedTarget.callback = null;
+      const targetInst = getClosestInstanceFromNode(queuedTarget.target);
+      if (targetInst == null) {
+        const callbacks = queuedTarget.callbacks;
+        if (callbacks) {
+          callbacks[1]('Target was removed before hydration.');
+          queuedTarget.callbacks = null;
+        }
+      } else {
+        const callbacks = queuedTarget.callbacks;
+        if (callbacks) {
+          callbacks[0]();
+          queuedTarget.callbacks = null;
+        }
       }
     }
   }
