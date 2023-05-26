@@ -33484,7 +33484,12 @@ function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
 
-    {
+    if (
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
+      // Only for internal experiments.
+      concurrentUpdatesByDefaultOverride
+    ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
@@ -34004,7 +34009,11 @@ function createFiberRoot(
   } // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
 
-  var uninitializedFiber = createHostRootFiber(tag, isStrictMode);
+  var uninitializedFiber = createHostRootFiber(
+    tag,
+    isStrictMode,
+    concurrentUpdatesByDefaultOverride
+  );
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 
@@ -34032,7 +34041,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-46bc165c";
+var ReactVersion = "18.3.0-www-modern-27051227";
 
 function createPortal$1(
   children,

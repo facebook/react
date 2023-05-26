@@ -12801,20 +12801,22 @@ function createFiberRoot(
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
   1 === tag
-    ? ((tag = 1), !0 === isStrictMode && (tag |= 24), (tag |= 32))
+    ? ((tag = 1),
+      !0 === isStrictMode && (tag |= 24),
+      concurrentUpdatesByDefaultOverride && (tag |= 32))
     : (tag = 0);
   isDevToolsPresent && (tag |= 2);
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
-  tag = createCache();
-  tag.refCount++;
-  containerInfo.pooledCache = tag;
-  tag.refCount++;
+  concurrentUpdatesByDefaultOverride = createCache();
+  concurrentUpdatesByDefaultOverride.refCount++;
+  containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
+  concurrentUpdatesByDefaultOverride.refCount++;
   isStrictMode.memoizedState = {
     element: initialChildren,
     isDehydrated: hydrate,
-    cache: tag
+    cache: concurrentUpdatesByDefaultOverride
   };
   initializeUpdateQueue(isStrictMode);
   return containerInfo;
@@ -17422,7 +17424,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1912 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-7941f014",
+  version: "18.3.0-www-classic-c0d8bc44",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17466,7 +17468,7 @@ var devToolsConfig$jscomp$inline_1912 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-7941f014"
+  reconcilerVersion: "18.3.0-www-classic-c0d8bc44"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17696,7 +17698,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-7941f014";
+exports.version = "18.3.0-www-classic-c0d8bc44";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

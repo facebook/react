@@ -11837,19 +11837,21 @@ function createFiberRoot(
   enableTransitionTracing &&
     (containerInfo.transitionCallbacks = transitionCallbacks);
   1 === tag
-    ? ((tag = 1), !0 === isStrictMode && (tag |= 24), (tag |= 32))
+    ? ((tag = 1),
+      !0 === isStrictMode && (tag |= 24),
+      concurrentUpdatesByDefaultOverride && (tag |= 32))
     : (tag = 0);
   isStrictMode = createFiber(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
-  tag = createCache();
-  tag.refCount++;
-  containerInfo.pooledCache = tag;
-  tag.refCount++;
+  concurrentUpdatesByDefaultOverride = createCache();
+  concurrentUpdatesByDefaultOverride.refCount++;
+  containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
+  concurrentUpdatesByDefaultOverride.refCount++;
   isStrictMode.memoizedState = {
     element: initialChildren,
     isDehydrated: hydrate,
-    cache: tag
+    cache: concurrentUpdatesByDefaultOverride
   };
   initializeUpdateQueue(isStrictMode);
   return containerInfo;
@@ -16174,7 +16176,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1786 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-e5a05134",
+  version: "18.3.0-www-modern-29fda94c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2165 = {
@@ -16205,7 +16207,7 @@ var internals$jscomp$inline_2165 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-e5a05134"
+  reconcilerVersion: "18.3.0-www-modern-29fda94c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2166 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16376,4 +16378,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-e5a05134";
+exports.version = "18.3.0-www-modern-29fda94c";
