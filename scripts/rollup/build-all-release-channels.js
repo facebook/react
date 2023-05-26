@@ -13,7 +13,7 @@ const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
-  nextChannelLabel,
+  canaryChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -36,7 +36,7 @@ let dateString = String(
 
 // On CI environment, this string is wrapped with quotes '...'s
 if (dateString.startsWith("'")) {
-  dateString = dateString.substr(1, 8);
+  dateString = dateString.slice(1, 9);
 }
 
 // Build the artifacts using a placeholder React version. We'll then do a string
@@ -127,7 +127,7 @@ function processStable(buildDir) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        version + '-' + canaryChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -140,7 +140,7 @@ function processStable(buildDir) {
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/oss-stable',
-      ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+      ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
     );
 
     // Now do the semver ones
@@ -173,14 +173,34 @@ function processStable(buildDir) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + hash.digest('hex').substr(0, 8)
+      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
     );
   }
 
-  // Update remaining placeholders with next channel version
+  const reactNativeBuildDir = buildDir + '/react-native/implementations/';
+  if (fs.existsSync(reactNativeBuildDir)) {
+    const hash = crypto.createHash('sha1');
+    for (const fileName of fs.readdirSync(reactNativeBuildDir).sort()) {
+      const filePath = reactNativeBuildDir + fileName;
+      const stats = fs.statSync(filePath);
+      if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
+      }
+    }
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      reactNativeBuildDir,
+      ReactVersion +
+        '-' +
+        canaryChannelLabel +
+        '-' +
+        hash.digest('hex').slice(0, 8)
+    );
+  }
+
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {
@@ -227,14 +247,14 @@ function processExperimental(buildDir, version) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + hash.digest('hex').substr(0, 8)
+      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
     );
   }
 
-  // Update remaining placeholders with next channel version
+  // Update remaining placeholders with canary channel version
   updatePlaceholderReactVersionInCompiledArtifacts(
     buildDir,
-    ReactVersion + '-' + nextChannelLabel + '-' + sha + '-' + dateString
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
   );
 
   if (fs.existsSync(buildDir + '/sizes')) {

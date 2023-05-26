@@ -253,7 +253,7 @@ const bundles = [
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
-    entry: 'react-server-dom-relay/src/ReactDOMServerFB.js',
+    entry: 'react-server-dom-fb/src/ReactDOMServerFB.js',
     global: 'ReactDOMServerStreaming',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -386,7 +386,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -395,7 +395,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util'],
+    externals: ['react', 'react-dom', 'util'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -404,7 +404,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util'],
+    externals: ['react', 'react-dom', 'util'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -413,7 +413,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react'],
+    externals: ['react', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Plugin *******/
@@ -448,70 +448,6 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['url', 'module'],
-  },
-
-  /******* React Server DOM Relay Writer *******/
-  {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server-dom-relay/server',
-    global: 'ReactFlightDOMRelayServer',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: [
-      'react',
-      'ReactFlightDOMRelayServerIntegration',
-      'JSResourceReferenceImpl',
-    ],
-  },
-
-  /******* React Server DOM Relay Reader *******/
-  {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server-dom-relay',
-    global: 'ReactFlightDOMRelayClient',
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: false,
-    externals: [
-      'react',
-      'ReactFlightDOMRelayClientIntegration',
-      'JSResourceReferenceImpl',
-    ],
-  },
-
-  /******* React Server Native Relay Writer *******/
-  {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server-native-relay/server',
-    global: 'ReactFlightNativeRelayServer',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: [
-      'react',
-      'ReactFlightNativeRelayServerIntegration',
-      'JSResourceReferenceImpl',
-      'ReactNativeInternalFeatureFlags',
-      'util',
-      'async_hooks',
-    ],
-  },
-
-  /******* React Server Native Relay Reader *******/
-  {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server-native-relay',
-    global: 'ReactFlightNativeRelayClient',
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: false,
-    externals: [
-      'react',
-      'ReactFlightNativeRelayClientIntegration',
-      'JSResourceReferenceImpl',
-      'ReactNativeInternalFeatureFlags',
-    ],
   },
 
   /******* React Suspense Test Utils *******/
@@ -930,6 +866,17 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_mock',
     global: 'SchedulerMock',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['ReactNativeInternalFeatureFlags'],
+  },
+
+  /******* React Scheduler Native *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/index.native',
+    global: 'SchedulerNative',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['ReactNativeInternalFeatureFlags'],

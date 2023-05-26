@@ -8,7 +8,10 @@
  */
 
 import isArray from 'shared/isArray';
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  type EventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
@@ -41,6 +44,7 @@ export type NoTimeout = -1;
 export type EventResponder = any;
 
 export type RendererInspectionConfig = $ReadOnly<{}>;
+export type TransitionStatus = mixed;
 
 export * from 'react-reconciler/src/ReactFiberConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
@@ -210,8 +214,11 @@ export function createTextInstance(
   };
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   return DefaultEventPriority;
+}
+export function shouldAttemptEagerTransition(): boolean {
+  return false;
 }
 
 export const isPrimaryRenderer = false;
@@ -341,10 +348,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

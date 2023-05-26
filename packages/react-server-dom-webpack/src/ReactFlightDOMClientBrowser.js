@@ -9,7 +9,7 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
+import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
@@ -20,9 +20,12 @@ import {
   processStringChunk,
   processBinaryChunk,
   close,
-} from 'react-client/src/ReactFlightClientStream';
+} from 'react-client/src/ReactFlightClient';
 
-import {processReply} from 'react-client/src/ReactFlightReplyClient';
+import {
+  processReply,
+  createServerReference,
+} from 'react-client/src/ReactFlightReplyClient';
 
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
@@ -121,8 +124,14 @@ function encodeReply(
   string | URLSearchParams | FormData,
 > /* We don't use URLSearchParams yet but maybe */ {
   return new Promise((resolve, reject) => {
-    processReply(value, resolve, reject);
+    processReply(value, '', resolve, reject);
   });
 }
 
-export {createFromXHR, createFromFetch, createFromReadableStream, encodeReply};
+export {
+  createFromXHR,
+  createFromFetch,
+  createFromReadableStream,
+  encodeReply,
+  createServerReference,
+};

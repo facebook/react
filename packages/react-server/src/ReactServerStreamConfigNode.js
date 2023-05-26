@@ -8,8 +8,8 @@
  */
 
 import type {Writable} from 'stream';
+
 import {TextEncoder} from 'util';
-import {AsyncLocalStorage} from 'async_hooks';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -33,10 +33,6 @@ export function flushBuffered(destination: Destination) {
     destination.flush();
   }
 }
-
-export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  new AsyncLocalStorage();
 
 const VIEW_SIZE = 2048;
 let currentView = null;

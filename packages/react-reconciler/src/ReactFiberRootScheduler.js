@@ -20,6 +20,9 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
+  markRootEntangled,
+  mergeLanes,
+  claimNextTransitionLane,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -49,7 +52,11 @@ import {
   IdleEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities';
-import {supportsMicrotasks, scheduleMicrotask} from './ReactFiberConfig';
+import {
+  supportsMicrotasks,
+  scheduleMicrotask,
+  shouldAttemptEagerTransition,
+} from './ReactFiberConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
@@ -71,6 +78,8 @@ let didScheduleMicrotask_act: boolean = false;
 let mightHavePendingSyncWork: boolean = false;
 
 let isFlushingWork: boolean = false;
+
+let currentEventTransitionLane: Lane = NoLane;
 
 export function ensureRootIsScheduled(root: FiberRoot): void {
   // This function is called whenever a root receives an update. It does two
@@ -238,6 +247,14 @@ function processRootScheduleInMicrotask() {
   let root = firstScheduledRoot;
   while (root !== null) {
     const next = root.next;
+
+    if (
+      currentEventTransitionLane !== NoLane &&
+      shouldAttemptEagerTransition()
+    ) {
+      markRootEntangled(root, mergeLanes(currentEventTransitionLane, SyncLane));
+    }
+
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
     if (nextLanes === NoLane) {
       // This root has no more pending work. Remove it from the schedule. To
@@ -266,6 +283,8 @@ function processRootScheduleInMicrotask() {
     }
     root = next;
   }
+
+  currentEventTransitionLane = NoLane;
 
   // At the end of the microtask, flush any pending synchronous work. This has
   // to come at the end, because it does actual rendering work that might throw.
@@ -471,4 +490,19 @@ function scheduleImmediateTask(cb: () => mixed) {
     // If microtasks are not supported, use Scheduler.
     Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
   }
+}
+
+export function requestTransitionLane(): Lane {
+  // The algorithm for assigning an update to a lane should be stable for all
+  // updates at the same priority within the same event. To do this, the
+  // inputs to the algorithm must be the same.
+  //
+  // The trick we use is to cache the first of each of these inputs within an
+  // event. Then reset the cached values once we can be sure the event is
+  // over. Our heuristic for that is whenever we enter a concurrent work loop.
+  if (currentEventTransitionLane === NoLane) {
+    // All transitions within the same event are assigned the same lane.
+    currentEventTransitionLane = claimNextTransitionLane();
+  }
+  return currentEventTransitionLane;
 }

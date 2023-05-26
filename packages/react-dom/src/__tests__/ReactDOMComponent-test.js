@@ -512,25 +512,17 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('href')).toBe(false);
       });
 
-      it('should not add an empty action attribute', () => {
+      it('should allow an empty action attribute', () => {
         const container = document.createElement('div');
-        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to action instead of an empty string.',
-        );
+        ReactDOM.render(<form action="" />, container);
         const node = container.firstChild;
-        expect(node.hasAttribute('action')).toBe(false);
+        expect(node.getAttribute('action')).toBe('');
 
         ReactDOM.render(<form action="abc" />, container);
         expect(node.hasAttribute('action')).toBe(true);
 
-        expect(() => ReactDOM.render(<form action="" />, container)).toErrorDev(
-          'An empty string ("") was passed to the action attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to action instead of an empty string.',
-        );
-        expect(node.hasAttribute('action')).toBe(false);
+        ReactDOM.render(<form action="" />, container);
+        expect(node.getAttribute('action')).toBe('');
       });
 
       it('allows empty string of a formAction to override the default of a parent', () => {
@@ -1143,7 +1135,8 @@ describe('ReactDOMComponent', () => {
           'the value changing from a defined to undefined, which should not happen. Decide between ' +
           'using a controlled or uncontrolled input element for the lifetime of the component.',
       );
-      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
+      // This leaves the current checked value in place, just like text inputs.
+      expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
       expect(() => {
         ReactDOM.render(
@@ -1156,13 +1149,13 @@ describe('ReactDOMComponent', () => {
           'using a controlled or uncontrolled input element for the lifetime of the component.',
       );
 
-      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(
         <input type="checkbox" onChange={onChange} checked={true} />,
         container,
       );
-      expect(nodeValueSetter).toHaveBeenCalledTimes(3);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
     it('should ignore attribute list for elements with the "is" attribute', () => {

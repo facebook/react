@@ -21,7 +21,9 @@ let webpackMap;
 let webpackServerMap;
 let act;
 let React;
+let ReactDOM;
 let ReactDOMClient;
+let ReactDOMFizzServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
@@ -37,7 +39,9 @@ describe('ReactFlightDOMBrowser', () => {
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ReactDOMFizzServer = require('react-dom/server.browser');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     Suspense = React.Suspense;
@@ -75,12 +79,35 @@ describe('ReactFlightDOMBrowser', () => {
   }
 
   function requireServerRef(ref) {
-    const metaData = webpackServerMap[ref];
-    const mod = __webpack_require__(metaData.id);
-    if (metaData.name === '*') {
+    let name = '';
+    let resolvedModuleData = webpackServerMap[ref];
+    if (resolvedModuleData) {
+      // The potentially aliased name.
+      name = resolvedModuleData.name;
+    } else {
+      // We didn't find this specific export name but we might have the * export
+      // which contains this name as well.
+      // TODO: It's unfortunate that we now have to parse this string. We should
+      // probably go back to encoding path and name separately on the client reference.
+      const idx = ref.lastIndexOf('#');
+      if (idx !== -1) {
+        name = ref.slice(idx + 1);
+        resolvedModuleData = webpackServerMap[ref.slice(0, idx)];
+      }
+      if (!resolvedModuleData) {
+        throw new Error(
+          'Could not find the module "' +
+            ref +
+            '" in the React Client Manifest. ' +
+            'This is probably a bug in the React Server Components bundler.',
+        );
+      }
+    }
+    const mod = __webpack_require__(resolvedModuleData.id);
+    if (name === '*') {
       return mod;
     }
-    return mod[metaData.name];
+    return mod[name];
   }
 
   async function callServer(actionId, body) {
@@ -155,7 +182,6 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
-  // @gate enableUseHook
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -465,7 +491,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(isDone).toBeTruthy();
   });
 
-  // @gate enableUseHook
   it('should be able to complete after aborting and throw the reason client-side', async () => {
     const reportedErrors = [];
 
@@ -549,7 +574,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
-  // @gate enableUseHook
   it('basic use(promise)', async () => {
     function Server() {
       return (
@@ -578,7 +602,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
-  // @gate enableUseHook
   it('basic use(context)', async () => {
     const ContextA = React.createServerContext('ContextA', '');
     const ContextB = React.createServerContext('ContextB', 'B');
@@ -612,7 +635,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('AB');
   });
 
-  // @gate enableUseHook
   it('use(promise) in multiple components', async () => {
     function Child({prefix}) {
       return prefix + use(Promise.resolve('C')) + use(Promise.resolve('D'));
@@ -643,7 +665,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABCD');
   });
 
-  // @gate enableUseHook
   it('using a rejected promise will throw', async () => {
     const promiseA = Promise.resolve('A');
     const promiseB = Promise.reject(new Error('Oops!'));
@@ -705,7 +726,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors[0].message).toBe('Oops!');
   });
 
-  // @gate enableUseHook
   it("use a promise that's already been instrumented and resolved", async () => {
     const thenable = {
       status: 'fulfilled',
@@ -733,7 +753,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('Hi');
   });
 
-  // @gate enableUseHook
   it('unwraps thenable that fulfills synchronously without suspending', async () => {
     function Server() {
       const thenable = {
@@ -819,6 +838,116 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('Click Me');
     expect(typeof actionProxy).toBe('function');
     expect(actionProxy).not.toBe(boundFn);
+
+    const result = await actionProxy('hi');
+    expect(result).toBe('Hello HI');
+  });
+
+  it('can call a module split server function', async () => {
+    let actionProxy;
+
+    function Client({action}) {
+      actionProxy = action;
+      return 'Click Me';
+    }
+
+    function greet(text) {
+      return 'Hello ' + text;
+    }
+
+    const ServerModule = serverExports({
+      // This gets split into another module
+      split: greet,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={ServerModule.split} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy).toBe('function');
+
+    const result = await actionProxy('Split');
+    expect(result).toBe('Hello Split');
+  });
+
+  it('can pass a server function by importing from client back to server', async () => {
+    function greet(transform, text) {
+      return 'Hello ' + transform(text);
+    }
+
+    function upper(text) {
+      return text.toUpperCase();
+    }
+
+    const ServerModuleA = serverExports({
+      greet,
+    });
+    const ServerModuleB = serverExports({
+      upper,
+    });
+
+    let actionProxy;
+
+    // This is a Proxy representing ServerModuleB in the Client bundle.
+    const ServerModuleBImportedOnClient = {
+      upper: ReactServerDOMClient.createServerReference(
+        ServerModuleB.upper.$$id,
+        async function (ref, args) {
+          const body = await ReactServerDOMClient.encodeReply(args);
+          return callServer(ref, body);
+        },
+      ),
+    };
+
+    function Client({action}) {
+      // Client side pass a Server Reference into an action.
+      actionProxy = text => action(ServerModuleBImportedOnClient.upper, text);
+      return 'Click Me';
+    }
+
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={ServerModuleA.greet} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
 
     const result = await actionProxy('hi');
     expect(result).toBe('Hello HI');
@@ -928,5 +1057,119 @@ describe('ReactFlightDOMBrowser', () => {
 
       expect(thrownError.digest).toBe('test-error-digest');
     }
+  });
+
+  it('supports Float hints before the first await in server components in Fiber', async () => {
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(stream);
+      }
+      return response;
+    }
+
+    function App() {
+      return getResponse();
+    }
+
+    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
+    // we aren't operating separate module graphs for flight and fiber. In a real app
+    // each would have their own dispatcher and there would be no cross dispatching.
+    await 1;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(document.head.innerHTML).toBe(
+      '<link href="before" rel="preload" as="style">',
+    );
+    expect(container.innerHTML).toBe('<p>hello world</p>');
+  });
+
+  it('Does not support Float hints in server components anywhere in Fizz', async () => {
+    // In environments that do not support AsyncLocalStorage the Flight client has no ability
+    // to scope hint dispatching to a specific Request. In Fiber this isn't a problem because
+    // the Browser scope acts like a singleton and we can dispatch away. But in Fizz we need to have
+    // a reference to Resources and this is only possible during render unless you support AsyncLocalStorage.
+    function Component() {
+      return <p>hello world</p>;
+    }
+
+    const ClientComponent = clientExports(Component);
+
+    async function ServerComponent() {
+      ReactDOM.preload('before', {as: 'style'});
+      await 1;
+      ReactDOM.preload('after', {as: 'style'});
+      return <ClientComponent />;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+
+    let response = null;
+    function getResponse() {
+      if (response === null) {
+        response = ReactServerDOMClient.createFromReadableStream(stream);
+      }
+      return response;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>{getResponse()}</body>
+        </html>
+      );
+    }
+
+    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
+    // we aren't operating separate module graphs for flight and fiber. In a real app
+    // each would have their own dispatcher and there would be no cross dispatching.
+    await 1;
+
+    let fizzStream;
+    await act(async () => {
+      fizzStream = await ReactDOMFizzServer.renderToReadableStream(<App />);
+    });
+
+    const decoder = new TextDecoder();
+    const reader = fizzStream.getReader();
+    let content = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        content += decoder.decode();
+        break;
+      }
+      content += decoder.decode(value, {stream: true});
+    }
+
+    expect(content).toEqual(
+      '<!DOCTYPE html><html><head>' +
+        '</head><body><p>hello world</p></body></html>',
+    );
   });
 });

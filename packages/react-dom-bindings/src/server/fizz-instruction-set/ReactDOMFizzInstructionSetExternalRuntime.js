@@ -6,7 +6,10 @@ import {
   clientRenderBoundary,
   completeBoundary,
   completeSegment,
+  listenToFormSubmissionsForReplaying,
 } from './ReactDOMFizzInstructionSetShared';
+
+import {enableFormActions} from 'shared/ReactFeatureFlags';
 
 export {clientRenderBoundary, completeBoundary, completeSegment};
 
@@ -135,4 +138,8 @@ export function completeBoundaryWithStyles(
       'Resource failed to load',
     ),
   );
+}
+
+if (enableFormActions) {
+  listenToFormSubmissionsForReplaying();
 }

@@ -42,7 +42,7 @@ module.exports = {
   },
   output: {
     path: __dirname + '/build',
-    filename: 'react_devtools_backend.js',
+    filename: 'react_devtools_backend_compact.js',
   },
   node: {
     // Don't define a polyfill on window.setImmediate

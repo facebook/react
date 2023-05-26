@@ -82,7 +82,17 @@ async function publishToNPM() {
     // If so we might be resuming from a previous run.
     // We could infer this by comparing the build-info.json,
     // But for now the easiest way is just to ask if this is expected.
-    const info = await execRead(`npm view ${npmPackage}@${version}`);
+    const info = await execRead(`npm view ${npmPackage}@${version}`)
+      // Early versions of npm view gives empty response, but newer versions give 404 error.
+      // Catch the error to keep it consistent.
+      .catch(childProcessError => {
+        if (childProcessError.stderr.startsWith('npm ERR! code E404')) {
+          return null;
+        }
+
+        throw childProcessError;
+      });
+
     if (info) {
       console.log('');
       console.log(

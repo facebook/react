@@ -7,11 +7,13 @@
  * @flow
  */
 
+import type {HostDispatcher} from './ReactDOMDispatcher';
+
 type InternalsType = {
   usingClientEntryPoint: boolean,
   Events: [any, any, any, any, any, any],
   Dispatcher: {
-    current: mixed,
+    current: null | HostDispatcher,
   },
 };
 

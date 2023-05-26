@@ -31,6 +31,7 @@ export {
   unstable_createEventHandle,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  useFormStatus as experimental_useFormStatus,
   prefetchDNS,
   preconnect,
   preload,

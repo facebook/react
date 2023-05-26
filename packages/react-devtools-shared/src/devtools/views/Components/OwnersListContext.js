@@ -45,7 +45,6 @@ const resource: Resource<
   (element: Element) => {
     const request = inProgressRequests.get(element);
     if (request != null) {
-      // $FlowFixMe[incompatible-call] found when upgrading Flow
       return request.promise;
     }
 

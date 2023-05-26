@@ -1779,10 +1779,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await resolveText('B');
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
-      // Restart and render the complete content. The tree will finish but we
-      // won't commit the result yet because the fallback appeared recently.
+      // Restart and render the complete content.
       await waitForAll(['A', 'B']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
+
+      if (gate(flags => flags.alwaysThrottleRetries)) {
+        // Correct behavior:
+        //
+        // The tree will finish but we won't commit the result yet because the fallback appeared recently.
+        expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
+      } else {
+        // Old behavior, gated until this rolls out at Meta:
+        //
+        // TODO: Because this render was the result of a retry, and a fallback
+        // was shown recently, we should suspend and remain on the fallback for
+        // little bit longer. We currently only do this if there's still
+        // remaining fallbacks in the tree, but we should do it for all retries.
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="A" />
+            <span prop="B" />
+          </>,
+        );
+      }
     });
     assertLog([]);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -1791,6 +1809,102 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <span prop="B" />
       </>,
     );
+  });
+
+  // @gate enableLegacyCache
+  it('throttles content from appearing if a fallback was filled in recently', async () => {
+    function Foo() {
+      Scheduler.log('Foo');
+      return (
+        <>
+          <Suspense fallback={<Text text="Loading A..." />}>
+            <AsyncText text="A" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B..." />}>
+            <AsyncText text="B" />
+          </Suspense>
+        </>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    // Start rendering
+    await waitForAll([
+      'Foo',
+      'Suspend! [A]',
+      'Loading A...',
+      'Suspend! [B]',
+      'Loading B...',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span prop="Loading A..." />
+        <span prop="Loading B..." />
+      </>,
+    );
+
+    // Resolve only A. B will still be loading.
+    await act(async () => {
+      await resolveText('A');
+
+      // If we didn't advance the time here, A would not commit; it would
+      // be throttled because the fallback would have appeared too recently.
+      Scheduler.unstable_advanceTime(10000);
+      jest.advanceTimersByTime(10000);
+      await waitForPaint(['A']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span prop="A" />
+          <span prop="Loading B..." />
+        </>,
+      );
+    });
+
+    // Advance by a small amount of time. For testing purposes, this is meant
+    // to be just under the throttling interval. It's a heurstic, though, so
+    // if we adjust the heuristic we might have to update this test, too.
+    Scheduler.unstable_advanceTime(200);
+    jest.advanceTimersByTime(200);
+
+    // Now resolve B.
+    await act(async () => {
+      await resolveText('B');
+      await waitForPaint(['B']);
+
+      if (gate(flags => flags.alwaysThrottleRetries)) {
+        // B should not commit yet. Even though it's been a long time since its
+        // fallback was shown, it hasn't been long since A appeared. So B's
+        // appearance is throttled to reduce jank.
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="A" />
+            <span prop="Loading B..." />
+          </>,
+        );
+
+        // Advance time a little bit more. Now it commits because enough time
+        // has passed.
+        Scheduler.unstable_advanceTime(100);
+        jest.advanceTimersByTime(100);
+        await waitForAll([]);
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="A" />
+            <span prop="B" />
+          </>,
+        );
+      } else {
+        // Old behavior, gated until this rolls out at Meta:
+        //
+        // B appears immediately, without being throttled.
+        expect(ReactNoop).toMatchRenderedOutput(
+          <>
+            <span prop="A" />
+            <span prop="B" />
+          </>,
+        );
+      }
+    });
   });
 
   // TODO: flip to "warns" when this is implemented again.

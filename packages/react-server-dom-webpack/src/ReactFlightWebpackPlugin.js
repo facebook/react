@@ -247,10 +247,6 @@ export default class ReactFlightWebpackPlugin {
                 return;
               }
 
-              const moduleProvidedExports = compilation.moduleGraph
-                .getExportsInfo(module)
-                .getProvidedExports();
-
               const href = pathToFileURL(module.resource).href;
 
               if (href !== undefined) {
@@ -267,6 +263,13 @@ export default class ReactFlightWebpackPlugin {
                   specifier: href,
                   name: '*',
                 };
+
+                // TODO: If this module ends up split into multiple modules, then
+                // we should encode each the chunks needed for the specific export.
+                // When the module isn't split, it doesn't matter and we can just
+                // encode the id of the whole module. This code doesn't currently
+                // deal with module splitting so is likely broken from ESM anyway.
+                /*
                 clientManifest[href + '#'] = {
                   id,
                   chunks: chunkIds,
@@ -276,6 +279,10 @@ export default class ReactFlightWebpackPlugin {
                   specifier: href,
                   name: '',
                 };
+
+                const moduleProvidedExports = compilation.moduleGraph
+                  .getExportsInfo(module)
+                  .getProvidedExports();
 
                 if (Array.isArray(moduleProvidedExports)) {
                   moduleProvidedExports.forEach(function (name) {
@@ -290,6 +297,7 @@ export default class ReactFlightWebpackPlugin {
                     };
                   });
                 }
+                */
 
                 ssrManifest[id] = ssrExports;
               }

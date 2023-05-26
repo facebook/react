@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -74,7 +74,13 @@ if (enableCache && enableFetchInstrumentation) {
         url = resource;
       } else {
         // Normalize the request.
-        const request = new Request(resource, options);
+        // if resource is not a string or a URL (its an instance of Request)
+        // then do not instantiate a new Request but instead
+        // reuse the request as to not disturb the body in the event it's a ReadableStream.
+        const request =
+          typeof resource === 'string' || resource instanceof URL
+            ? new Request(resource, options)
+            : resource;
         if (
           (request.method !== 'GET' && request.method !== 'HEAD') ||
           // $FlowFixMe[prop-missing]: keepalive is real
