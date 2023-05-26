@@ -260,23 +260,15 @@ describe('useMutableSourceHydration', () => {
 
     await expect(async () => {
       await act(async () => {
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            ReactDOMClient.hydrateRoot(container, <TestComponent />, {
-              mutableSources: [mutableSource],
-              onRecoverableError(error) {
-                Scheduler.log('Log error: ' + error.message);
-              },
-            });
-          });
-        } else {
+        React.startTransition(() => {
           ReactDOMClient.hydrateRoot(container, <TestComponent />, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
               Scheduler.log('Log error: ' + error.message);
             },
           });
-        }
+        });
+
         await waitFor(['a:one']);
         source.value = 'two';
       });
