@@ -74,12 +74,11 @@ type ReactTestRendererJSON = {
 };
 type ReactTestRendererNode = ReactTestRendererJSON | string;
 
-type FindOptions = $Shape<{
+type FindOptions = {
   // performs a "greedy" search: if a matching node is found, will continue
   // to search within the matching node's children. (default: true)
-  deep: boolean,
-  ...
-}>;
+  deep?: boolean,
+};
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
 
