@@ -34,7 +34,9 @@ const childProc = fork(require.resolve("./runner.js"), hideBin(process.argv), {
   // when we `inherit` stdin.
   // pipe stdout and stderr so we can silence child process after parent exits
   stdio: ["pipe", "pipe", "pipe", "ipc"],
-  env: { FORCE_COLOR: "true" },
+  // forward existing env variables, like `NODE_OPTIONS` which VSCode uses to attach
+  // its debugger
+  env: { ...process.env, FORCE_COLOR: "true" },
 });
 
 invariant(
