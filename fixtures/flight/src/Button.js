@@ -1,25 +1,26 @@
 'use client';
 
 import * as React from 'react';
+import {experimental_useFormStatus as useFormStatus} from 'react-dom';
+import ErrorBoundary from './ErrorBoundary.js';
 
-export default function Button({action, children}) {
-  const [isPending, setIsPending] = React.useState(false);
-
+function ButtonDisabledWhilePending({action, children}) {
+  const {pending} = useFormStatus();
   return (
-    <button
-      disabled={isPending}
-      onClick={async () => {
-        setIsPending(true);
-        try {
-          const result = await action();
-          console.log(result);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setIsPending(false);
-        }
-      }}>
+    <button disabled={pending} formAction={action}>
       {children}
     </button>
+  );
+}
+
+export default function Button({action, children}) {
+  return (
+    <ErrorBoundary>
+      <form>
+        <ButtonDisabledWhilePending action={action}>
+          {children}
+        </ButtonDisabledWhilePending>
+      </form>
+    </ErrorBoundary>
   );
 }

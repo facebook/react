@@ -18,6 +18,7 @@ import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
+import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
 
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
@@ -85,11 +86,53 @@ export function updateInput(
   element: Element,
   value: ?string,
   defaultValue: ?string,
+  lastDefaultValue: ?string,
   checked: ?boolean,
   defaultChecked: ?boolean,
   type: ?string,
+  name: ?string,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  // Temporarily disconnect the input from any radio buttons.
+  // Changing the type or name as the same time as changing the checked value
+  // needs to be atomically applied. We can only ensure that by disconnecting
+  // the name while do the mutations and then reapply the name after that's done.
+  node.name = '';
+
+  if (
+    type != null &&
+    typeof type !== 'function' &&
+    typeof type !== 'symbol' &&
+    typeof type !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(type, 'type');
+    }
+    node.type = type;
+  } else {
+    node.removeAttribute('type');
+  }
+
+  if (value != null) {
+    if (type === 'number') {
+      if (
+        // $FlowFixMe[incompatible-type]
+        (value === 0 && node.value === '') ||
+        // We explicitly want to coerce to number here if possible.
+        // eslint-disable-next-line
+        node.value != (value: any)
+      ) {
+        node.value = toString(getToStringValue(value));
+      }
+    } else if (node.value !== toString(getToStringValue(value))) {
+      node.value = toString(getToStringValue(value));
+    }
+  } else if (type === 'submit' || type === 'reset') {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute('value');
+  }
 
   if (disableInputAttributeSyncing) {
     // When not syncing the value attribute, React only assigns a new value
@@ -97,7 +140,7 @@ export function updateInput(
     // React does nothing
     if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
   } else {
@@ -110,7 +153,7 @@ export function updateInput(
       setDefaultValue(node, type, getToStringValue(value));
     } else if (defaultValue != null) {
       setDefaultValue(node, type, getToStringValue(defaultValue));
-    } else {
+    } else if (lastDefaultValue != null) {
       node.removeAttribute('value');
     }
   }
@@ -136,25 +179,18 @@ export function updateInput(
     node.checked = checked;
   }
 
-  if (value != null) {
-    if (type === 'number') {
-      if (
-        // $FlowFixMe[incompatible-type]
-        (value === 0 && node.value === '') ||
-        // We explicitly want to coerce to number here if possible.
-        // eslint-disable-next-line
-        node.value != (value: any)
-      ) {
-        node.value = toString(getToStringValue(value));
-      }
-    } else if (node.value !== toString(getToStringValue(value))) {
-      node.value = toString(getToStringValue(value));
+  if (
+    name != null &&
+    typeof name !== 'function' &&
+    typeof name !== 'symbol' &&
+    typeof name !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
     }
-  } else if (type === 'submit' || type === 'reset') {
-    // Submit/reset inputs need the attribute removed completely to avoid
-    // blank-text buttons.
-    node.removeAttribute('value');
-    return;
+    node.name = toString(getToStringValue(name));
+  } else {
+    node.removeAttribute('name');
   }
 }
 
@@ -165,9 +201,22 @@ export function initInput(
   checked: ?boolean,
   defaultChecked: ?boolean,
   type: ?string,
+  name: ?string,
   isHydrating: boolean,
 ) {
   const node: HTMLInputElement = (element: any);
+
+  if (
+    type != null &&
+    typeof type !== 'function' &&
+    typeof type !== 'symbol' &&
+    typeof type !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(type, 'type');
+    }
+    node.type = type;
+  }
 
   if (value != null || defaultValue != null) {
     const isButton = type === 'submit' || type === 'reset';
@@ -234,10 +283,6 @@ export function initInput(
   // will sometimes influence the value of checked (even after detachment).
   // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
   // We need to temporarily unset name to avoid disrupting radio button groups.
-  const name = node.name;
-  if (name !== '') {
-    node.name = '';
-  }
 
   const checkedOrDefault = checked != null ? checked : defaultChecked;
   // TODO: This 'function' or 'symbol' check isn't replicated in other places
@@ -275,7 +320,16 @@ export function initInput(
     node.defaultChecked = !!initialChecked;
   }
 
-  if (name !== '') {
+  // Name needs to be set at the end so that it applies atomically to connected radio buttons.
+  if (
+    name != null &&
+    typeof name !== 'function' &&
+    typeof name !== 'symbol' &&
+    typeof name !== 'boolean'
+  ) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
     node.name = name;
   }
 }
@@ -286,9 +340,11 @@ export function restoreControlledInputState(element: Element, props: Object) {
     rootNode,
     props.value,
     props.defaultValue,
+    props.defaultValue,
     props.checked,
     props.defaultChecked,
     props.type,
+    props.name,
   );
   const name = props.name;
   if (props.type === 'radio' && name != null) {
@@ -309,7 +365,9 @@ export function restoreControlledInputState(element: Element, props: Object) {
       checkAttributeStringCoercion(name, 'name');
     }
     const group = queryRoot.querySelectorAll(
-      'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
+      'input[name="' +
+        escapeSelectorAttributeValueInsideDoubleQuotes('' + name) +
+        '"][type="radio"]',
     );
 
     for (let i = 0; i < group.length; i++) {
@@ -341,9 +399,11 @@ export function restoreControlledInputState(element: Element, props: Object) {
         otherNode,
         otherProps.value,
         otherProps.defaultValue,
+        otherProps.defaultValue,
         otherProps.checked,
         otherProps.defaultChecked,
         otherProps.type,
+        otherProps.name,
       );
     }
   }

@@ -21,11 +21,6 @@ export function flushBuffered(destination: Destination) {
   // transform streams. https://github.com/whatwg/streams/issues/960
 }
 
-// For now, we get this from the global scope, but this will likely move to a module.
-export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
-export const requestStorage: AsyncLocalStorage<Map<Function, mixed>> =
-  supportsRequestStorage ? new AsyncLocalStorage() : (null: any);
-
 const VIEW_SIZE = 512;
 let currentView = null;
 let writtenBytes = 0;

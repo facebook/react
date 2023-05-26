@@ -9,6 +9,7 @@
 
 import type {
   BootstrapScriptDescriptor,
+  ExternalRuntimeScript,
   FormatContext,
   StreamingFormat,
   InstructionState,
@@ -31,6 +32,10 @@ import type {
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import type {FormStatus} from '../shared/ReactDOMFormActions';
+
+import {NotPending} from '../shared/ReactDOMFormActions';
+
 export const isPrimaryRenderer = false;
 
 export type ResponseState = {
@@ -44,7 +49,7 @@ export type ResponseState = {
   streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
   instructions: InstructionState,
-  externalRuntimeConfig: BootstrapScriptDescriptor | null,
+  externalRuntimeScript: null | ExternalRuntimeScript,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   hasBody: boolean,
@@ -81,7 +86,7 @@ export function createResponseState(
     streamingFormat: responseState.streamingFormat,
     startInlineScript: responseState.startInlineScript,
     instructions: responseState.instructions,
-    externalRuntimeConfig: responseState.externalRuntimeConfig,
+    externalRuntimeScript: responseState.externalRuntimeScript,
     htmlChunks: responseState.htmlChunks,
     headChunks: responseState.headChunks,
     hasBody: responseState.hasBody,
@@ -137,8 +142,7 @@ export {
   writePostamble,
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
-  prepareToRender,
-  cleanupAfterRender,
+  prepareHostDispatcher,
 } from './ReactFizzConfigDOM';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
@@ -227,3 +231,6 @@ export function writeEndClientRenderedSuspenseBoundary(
   }
   return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
 }
+
+export type TransitionStatus = FormStatus;
+export const NotPendingTransition: TransitionStatus = NotPending;

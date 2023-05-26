@@ -9,7 +9,10 @@ import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+import {
+  enableCustomElementPropertySupport,
+  enableFormActions,
+} from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
 const EVENT_NAME_REGEX = /^on./;
@@ -36,6 +39,21 @@ function validateProperty(tagName, name, value, eventRegistry) {
       );
       warnedProperties[name] = true;
       return true;
+    }
+
+    if (enableFormActions) {
+      // Actions are special because unlike events they can have other value types.
+      if (typeof value === 'function') {
+        if (tagName === 'form' && name === 'action') {
+          return true;
+        }
+        if (tagName === 'input' && name === 'formAction') {
+          return true;
+        }
+        if (tagName === 'button' && name === 'formAction') {
+          return true;
+        }
+      }
     }
 
     // We can't rely on the event system being injected on the server.

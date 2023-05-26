@@ -24,7 +24,10 @@ import {
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  type EventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -43,6 +46,7 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -216,9 +220,10 @@ export function getChildHostContext(
   }
 }
 
-export function getPublicInstance(instance: Instance): * {
+export function getPublicInstance(instance: Instance): PublicInstance {
   // $FlowExpectedError[prop-missing] For compatibility with Fabric
   if (instance.canonical != null && instance.canonical.publicInstance != null) {
+    // $FlowFixMe[incompatible-return]
     return instance.canonical.publicInstance;
   }
 
@@ -261,8 +266,12 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   return DefaultEventPriority;
+}
+
+export function shouldAttemptEagerTransition(): boolean {
+  return false;
 }
 
 // -------------------
@@ -539,10 +548,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender(): void {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

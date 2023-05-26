@@ -27,7 +27,6 @@ describe('ReactDOMFiberAsync', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -40,6 +39,7 @@ describe('ReactDOMFiberAsync', () => {
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
+    window.event = undefined;
   });
 
   afterEach(() => {
@@ -565,5 +565,140 @@ describe('ReactDOMFiberAsync', () => {
     ref.current.click();
 
     expect(container.textContent).toBe('new');
+  });
+
+  it('should synchronously render the transition lane scheduled in a popState', async () => {
+    function App() {
+      const [syncState, setSyncState] = React.useState(false);
+      const [hasNavigated, setHasNavigated] = React.useState(false);
+      function onPopstate() {
+        Scheduler.log(`popState`);
+        React.startTransition(() => {
+          setHasNavigated(true);
+        });
+        setSyncState(true);
+      }
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => {
+          window.removeEventListener('popstate', onPopstate);
+        };
+      }, []);
+      Scheduler.log(`render:${hasNavigated}/${syncState}`);
+      return null;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['render:false/false']);
+
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+      // Jest is not emulating window.event correctly in the microtask
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
+    });
+
+    assertLog(['popState', 'render:true/true']);
+    await act(() => {
+      root.unmount();
+    });
+  });
+
+  it('Should not flush transition lanes if there is no transition scheduled in popState', async () => {
+    let setHasNavigated;
+    function App() {
+      const [syncState, setSyncState] = React.useState(false);
+      const [hasNavigated, _setHasNavigated] = React.useState(false);
+      setHasNavigated = _setHasNavigated;
+      function onPopstate() {
+        setSyncState(true);
+      }
+
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => {
+          window.removeEventListener('popstate', onPopstate);
+        };
+      }, []);
+
+      Scheduler.log(`render:${hasNavigated}/${syncState}`);
+      return null;
+    }
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['render:false/false']);
+
+    React.startTransition(() => {
+      setHasNavigated(true);
+    });
+    await act(async () => {
+      const popStateEvent = new Event('popstate');
+      // Jest is not emulating window.event correctly in the microtask
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
+    });
+    assertLog(['render:false/true', 'render:true/true']);
+    await act(() => {
+      root.unmount();
+    });
+  });
+
+  it('transition lane in popState should yield if it suspends', async () => {
+    const never = {then() {}};
+    let _setText;
+
+    function App() {
+      const [shouldSuspend, setShouldSuspend] = React.useState(false);
+      const [text, setText] = React.useState('0');
+      _setText = setText;
+      if (shouldSuspend) {
+        Scheduler.log('Suspend!');
+        throw never;
+      }
+      function onPopstate() {
+        React.startTransition(() => {
+          setShouldSuspend(val => !val);
+        });
+      }
+      React.useEffect(() => {
+        window.addEventListener('popstate', onPopstate);
+        return () => window.removeEventListener('popstate', onPopstate);
+      }, []);
+      Scheduler.log(`Child:${shouldSuspend}/${text}`);
+      return text;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<App />);
+    });
+    assertLog(['Child:false/0']);
+
+    await act(() => {
+      const popStateEvent = new Event('popstate');
+      window.event = popStateEvent;
+      window.dispatchEvent(popStateEvent);
+      queueMicrotask(() => {
+        window.event = undefined;
+      });
+    });
+    assertLog(['Suspend!']);
+
+    await act(async () => {
+      _setText('1');
+    });
+    assertLog(['Child:false/1', 'Suspend!']);
+
+    root.unmount();
   });
 });

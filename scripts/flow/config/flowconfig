@@ -18,17 +18,11 @@
 
 %REACT_RENDERER_FLOW_IGNORES%
 
-[include]
-./node_modules/
-./packages/
-./scripts/
-
 [libs]
 ./node_modules/fbjs/flow/lib/dev.js
 ./scripts/flow/environment.js
 ./scripts/flow/react-devtools.js
 ./scripts/flow/react-native-host-hooks.js
-./scripts/flow/react-relay-hooks.js
 ./scripts/flow/xplat.js
 
 [lints]
@@ -37,10 +31,9 @@ untyped-type-import=error
 [options]
 %CI_MAX_WORKERS%
 munge_underscores=false
-inference_mode=lti
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 [version]
-^0.202.0
+^0.206.0

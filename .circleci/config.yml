@@ -151,32 +151,11 @@ jobs:
       - setup_node_modules
       - run:
           name: Download artifacts for base revision
-          # TODO: The download-experimental-build.js script works by fetching
-          # artifacts from CI. CircleCI recently updated this endpoint to
-          # require an auth token. This is a problem for PR branches, where
-          # sizebot needs to run, because we don't want to leak the token to
-          # arbitrary code written by an outside contributor.
-          #
-          # This only affects PR branches. CI workflows that run on the main
-          # branch are allowed to access environment variables, because only those
-          # with push access can land code in main.
-          #
-          # As a temporary workaround, we'll fetch the assets from a mirror.
-          # Need to figure out a longer term solution for this.
-          #
-          # Original code
-          #
-          # command: |
-          #     git fetch origin main
-          #     cd ./scripts/release && yarn && cd ../../
-          #     scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
-          #     mv ./build ./base-build
-          #
-          # Workaround. Fetch the artifacts from react-builds.vercel.app. This
-          # is the same app that hosts the sizebot diff previews.
           command: |
-            curl -L --retry 60 --retry-delay 10 --retry-max-time 600 https://react-builds.vercel.app/api/commits/$(git merge-base HEAD origin/main)/artifacts/build.tgz | tar -xz
-              mv ./build ./base-build
+            git fetch origin main
+            cd ./scripts/release && yarn && cd ../../
+            scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
+            mv ./build ./base-build
 
       - run:
           # TODO: The `download-experimental-build` script copies the npm
@@ -426,7 +405,6 @@ jobs:
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
 workflows:
-  version: 2
 
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -605,10 +583,20 @@ workflows:
     when: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - publish_prerelease:
-          name: Publish to Next channel
+          name: Publish to Canary channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
-          dist_tag: "next"
+          # The tags to use when publishing canaries. The main one we should
+          # always include is "canary" but we can use multiple (e.g. alpha,
+          # beta, rc). To declare multiple, use a comma-separated string, like
+          # this:
+          #   dist_tag: "canary,alpha,beta,rc"
+          #
+          # TODO: We currently tag canaries with "next" in addition to "canary"
+          # because this used to be called the "next" channel and some
+          # downstream consumers might still expect that tag. We can remove this
+          # after some time has elapsed and the change has been communicated.
+          dist_tag: "canary,next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -616,7 +604,7 @@ workflows:
             # will sometimes fail if you try to concurrently publish two
             # different versions of the same package, even if they use different
             # dist tags.
-            - Publish to Next channel
+            - Publish to Canary channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: experimental
           dist_tag: experimental
@@ -634,10 +622,10 @@ workflows:
                 - main
     jobs:
       - publish_prerelease:
-          name: Publish to Next channel
+          name: Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "next"
+          dist_tag: "canary,next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -645,7 +633,7 @@ workflows:
             # will sometimes fail if you try to concurrently publish two
             # different versions of the same package, even if they use different
             # dist tags.
-            - Publish to Next channel
+            - Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental

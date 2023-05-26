@@ -16,6 +16,8 @@ const devToolsConfig = './scripts/jest/config.build-devtools.js';
 const persistentConfig = './scripts/jest/config.source-persistent.js';
 const buildConfig = './scripts/jest/config.build.js';
 
+const {ReactVersion} = require('../../ReactVersions');
+
 const argv = yargs
   .parserConfiguration({
     // Important: This option tells yargs to move all other options not
@@ -45,7 +47,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'www-modern',
+      default: 'experimental',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -179,9 +181,13 @@ function validateOptions() {
       success = false;
     }
 
-    if (argv.reactVersion && !semver.validRange(argv.reactVersion)) {
-      success = false;
-      logError('please specify a valid version range for --reactVersion');
+    if (argv.reactVersion) {
+      if (!semver.validRange(argv.reactVersion)) {
+        success = false;
+        logError('please specify a valid version range for --reactVersion');
+      }
+    } else {
+      argv.reactVersion = ReactVersion;
     }
   } else {
     if (argv.compactConsole) {

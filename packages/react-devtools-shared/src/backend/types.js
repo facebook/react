@@ -22,9 +22,15 @@ import type {
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/types';
-import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {
+  ResolveNativeStyle,
+  SetupNativeStyleEditor,
+} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 import type {BrowserTheme} from 'react-devtools-shared/src/types';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type Agent from './agent';
 
 type BundleType =
   | 0 // PROD
@@ -464,10 +470,18 @@ export type DevToolsProfilingHooks = {
   markComponentPassiveEffectUnmountStopped: () => void,
 };
 
+export type DevToolsBackend = {
+  Agent: Class<Agent>,
+  Bridge: Class<BackendBridge>,
+  initBackend: InitBackend,
+  setupNativeStyleEditor?: SetupNativeStyleEditor,
+};
+
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
+  backends: Map<string, DevToolsBackend>,
 
   emit: (event: string, data: any) => void,
   getFiberRoots: (rendererID: RendererID) => Set<Object>,

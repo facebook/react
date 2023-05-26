@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -135,7 +135,22 @@ describe('ReactFetch', () => {
     expect(fetchCount).toBe(1);
   });
 
-  // @gate enableUseHook
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches using URL and not', async () => {
+    const url = 'http://example.com/';
+    function Component() {
+      const response = use(fetch(url));
+      const text = use(response.text());
+      const response2 = use(fetch(new URL(url)));
+      const text2 = use(response2.text());
+      return text + ' ' + text2;
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET ${url} [] GET ${url} []"`,
+    );
+    expect(fetchCount).toBe(1);
+  });
+
   it('can opt-out of deduping fetches inside of render with custom signal', async () => {
     const controller = new AbortController();
     function useCustomHook() {
@@ -154,7 +169,6 @@ describe('ReactFetch', () => {
     expect(fetchCount).not.toBe(1);
   });
 
-  // @gate enableUseHook
   it('opts out of deduping for POST requests', async () => {
     function useCustomHook() {
       return use(

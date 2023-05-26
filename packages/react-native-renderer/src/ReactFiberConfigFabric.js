@@ -13,6 +13,7 @@ import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
   DefaultEventPriority,
   DiscreteEventPriority,
+  type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import {HostText} from 'react-reconciler/src/ReactWorkTags';
 
@@ -90,6 +91,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type TransitionStatus = mixed;
 
 export type RendererInspectionConfig = $ReadOnly<{
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -316,7 +318,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): * {
+export function getCurrentEventPriority(): EventPriority {
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -332,6 +334,10 @@ export function getCurrentEventPriority(): * {
   }
 
   return DefaultEventPriority;
+}
+
+export function shouldAttemptEagerTransition(): boolean {
+  return false;
 }
 
 // The Fabric renderer is secondary to the existing React Native renderer.
@@ -486,10 +492,4 @@ export function waitForCommitToBeReady(): null {
   return null;
 }
 
-export function prepareRendererToRender(container: Container): void {
-  // noop
-}
-
-export function resetRendererAfterRender() {
-  // noop
-}
+export const NotPendingTransition: TransitionStatus = null;

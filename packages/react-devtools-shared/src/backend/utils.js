@@ -14,6 +14,15 @@ import isArray from 'shared/isArray';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
+// TODO: update this to the first React version that has a corresponding DevTools backend
+const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
+export function hasAssignedBackend(version?: string): boolean {
+  if (version == null || version === '') {
+    return false;
+  }
+  return gte(version, FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER);
+}
+
 export function cleanForBridge(
   data: Object | null,
   isPathAllowed: (path: Array<string | number>) => boolean,

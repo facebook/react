@@ -23,6 +23,9 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
+import type {Request} from 'react-server/src/ReactFizzServer';
+import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
+
 declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
@@ -30,8 +33,12 @@ export opaque type Resources = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
+export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
+
+export const supportsRequestStorage = false;
+export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export const getChildFormatContext = $$$config.getChildFormatContext;
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
@@ -68,8 +75,8 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
-export const prepareToRender = $$$config.prepareToRender;
-export const cleanupAfterRender = $$$config.cleanupAfterRender;
+export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
+export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------------
 //     Resources

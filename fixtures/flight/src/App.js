@@ -7,8 +7,11 @@ import {Counter as Counter2} from './Counter2.js';
 
 import ShowMore from './ShowMore.js';
 import Button from './Button.js';
+import Form from './Form.js';
 
-import {like} from './actions.js';
+import {like, greet} from './actions.js';
+
+import {getServerState} from './ServerState.js';
 
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
@@ -22,7 +25,7 @@ export default async function App() {
       </head>
       <body>
         <Container>
-          <h1>Hello, world</h1>
+          <h1>{getServerState()}</h1>
           <Counter />
           <Counter2 />
           <ul>
@@ -33,6 +36,7 @@ export default async function App() {
           <ShowMore>
             <p>Lorem ipsum</p>
           </ShowMore>
+          <Form action={greet} />
           <div>
             <Button action={like}>Like</Button>
           </div>

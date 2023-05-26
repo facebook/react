@@ -46,7 +46,6 @@ if (document.body != null) {
     }
   });
   // documentElement must already exist at this point
-  // $FlowFixMe[incompatible-call]
   domBodyObserver.observe(document.documentElement, {childList: true});
 }
 

@@ -15,6 +15,7 @@ import type {
   ReactRenderer,
   RendererID,
   RendererInterface,
+  DevToolsBackend,
 } from './backend/types';
 
 declare var window: any;
@@ -506,10 +507,13 @@ export function installHook(target: any): DevToolsHook | null {
   const rendererInterfaces = new Map<RendererID, RendererInterface>();
   const listeners: {[string]: Array<Handler>} = {};
   const renderers = new Map<RendererID, ReactRenderer>();
+  const backends = new Map<string, DevToolsBackend>();
 
   const hook: DevToolsHook = {
     rendererInterfaces,
     listeners,
+
+    backends,
 
     // Fast Refresh for web relies on this.
     renderers,

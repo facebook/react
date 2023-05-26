@@ -125,3 +125,84 @@ export function completeSegment(containerID, placeholderID) {
   }
   placeholderNode.parentNode.removeChild(placeholderNode);
 }
+
+// This is the exact URL string we expect that Fizz renders if we provide a function action.
+// We use this for hydration warnings. It needs to be in sync with Fizz. Maybe makes sense
+// as a shared module for that reason.
+const EXPECTED_FORM_ACTION_URL =
+  // eslint-disable-next-line no-script-url
+  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+
+export function listenToFormSubmissionsForReplaying() {
+  // A global replay queue ensures actions are replayed in order.
+  // This event listener should be above the React one. That way when
+  // we preventDefault in React's handling we also prevent this event
+  // from queing it. Since React listens to the root and the top most
+  // container you can use is the document, the window is fine.
+  // eslint-disable-next-line no-restricted-globals
+  addEventListener('submit', event => {
+    if (event.defaultPrevented) {
+      // We let earlier events to prevent the action from submitting.
+      return;
+    }
+    const form = event.target;
+    const submitter = event['submitter'];
+    let action = form.action;
+    let formDataSubmitter = submitter;
+    if (submitter) {
+      const submitterAction = submitter.getAttribute('formAction');
+      if (submitterAction != null) {
+        // The submitter overrides the action.
+        action = submitterAction;
+        // If the submitter overrides the action, and it passes the test below,
+        // that means that it was a function action which conceptually has no name.
+        // Therefore, we exclude the submitter from the formdata.
+        formDataSubmitter = null;
+      }
+    }
+    if (action !== EXPECTED_FORM_ACTION_URL) {
+      // The form is a regular form action, we can bail.
+      return;
+    }
+
+    // Prevent native navigation.
+    // This will also prevent other React's on the same page from listening.
+    event.preventDefault();
+
+    // Take a snapshot of the FormData at the time of the event.
+    let formData;
+    if (formDataSubmitter) {
+      // The submitter's value should be included in the FormData.
+      // It should be in the document order in the form.
+      // Since the FormData constructor invokes the formdata event it also
+      // needs to be available before that happens so after construction it's too
+      // late. We use a temporary fake node for the duration of this event.
+      // TODO: FormData takes a second argument that it's the submitter but this
+      // is fairly new so not all browsers support it yet. Switch to that technique
+      // when available.
+      const temp = document.createElement('input');
+      temp.name = formDataSubmitter.name;
+      temp.value = formDataSubmitter.value;
+      formDataSubmitter.parentNode.insertBefore(temp, formDataSubmitter);
+      formData = new FormData(form);
+      temp.parentNode.removeChild(temp);
+    } else {
+      formData = new FormData(form);
+    }
+
+    // Queue for replaying later. This field could potentially be shared with multiple
+    // Reacts on the same page since each one will preventDefault for the next one.
+    // This means that this protocol is shared with any React version that shares the same
+    // javascript: URL placeholder value. So we might not be the first to declare it.
+    // We attach it to the form's root node, which is the shared environment context
+    // where we preserve sequencing and where we'll pick it up from during hydration.
+    // In practice, this is just the same as document but we might support shadow trees
+    // in the future.
+    const root = form.getRootNode();
+    (root['$$reactFormReplay'] = root['$$reactFormReplay'] || []).push(
+      form,
+      submitter,
+      formData,
+    );
+  });
+}

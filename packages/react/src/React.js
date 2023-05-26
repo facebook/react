@@ -59,6 +59,7 @@ import {
   useCacheRefresh,
   use,
   useMemoCache,
+  useOptimistic,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -112,6 +113,7 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  useOptimistic as experimental_useOptimistic,
   useSyncExternalStore,
   useReducer,
   useRef,

@@ -54,6 +54,7 @@ import {
   enableScopeAPI,
   enableFloat,
   enableHostSingletons,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -72,6 +73,7 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
 
 type DispatchListener = {
   instance: null | Fiber,
@@ -173,6 +175,17 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
+    if (enableFormActions) {
+      FormActionEventPlugin.extractEvents(
+        dispatchQueue,
+        domEventName,
+        targetInst,
+        nativeEvent,
+        nativeEventTarget,
+        eventSystemFlags,
+        targetContainer,
+      );
+    }
   }
 }
 
@@ -459,7 +472,6 @@ function addTrappedEventListener(
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
     // $FlowFixMe[missing-this-annot]
-    // $FlowFixMe[definition-cycle]
     listener = function (...p) {
       removeEventListener(
         targetContainer,
