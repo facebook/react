@@ -3,7 +3,7 @@
 const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
-const rimraf = require('rimraf');
+const rimraf = require('rimraf').rimraf;
 const exec = require('child_process').exec;
 const targz = require('targz');
 
@@ -63,15 +63,7 @@ function asyncMkDirP(filepath) {
 }
 
 function asyncRimRaf(filepath) {
-  return new Promise((resolve, reject) =>
-    rimraf(filepath, error => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    })
-  );
+  return rimraf(filepath);
 }
 
 function resolvePath(filepath) {
