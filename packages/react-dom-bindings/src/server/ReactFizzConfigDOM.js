@@ -1965,21 +1965,6 @@ function pushLink(
             }
           }
         }
-        let resource = resources.preloadsMap.get(key);
-        if (!resource) {
-          resource = {
-            type: 'preload',
-            chunks: ([]: Array<Chunk | PrecomputedChunk>),
-            state: NoState,
-            props: preloadAsStylePropsFromProps(href, props),
-          };
-          resources.preloadsMap.set(key, resource);
-          if (__DEV__) {
-            markAsImplicitResourceDEV(resource, props, resource.props);
-          }
-        }
-        pushLinkImpl(resource.chunks, resource.props);
-        resources.usedStylesheets.set(key, resource);
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
@@ -4251,21 +4236,6 @@ export function writePreamble(
   // Flush unblocked stylesheets by precedence
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
 
-  resources.usedStylesheets.forEach((resource, key) => {
-    if (resources.stylesMap.has(key)) {
-      // The underlying stylesheet is represented both as a used stylesheet
-      // (a regular component we will attempt to preload) and as a StylesheetResource.
-      // We don't want to emit two preloads for the same href so we defer
-      // the preload rules of the StylesheetResource when there is a conflict
-    } else {
-      const chunks = resource.chunks;
-      for (i = 0; i < chunks.length; i++) {
-        writeChunk(destination, chunks[i]);
-      }
-    }
-  });
-  resources.usedStylesheets.clear();
-
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
 
@@ -4345,21 +4315,6 @@ export function writeHoistables(
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
   resources.precedences.forEach(preloadLateStyles, destination);
-
-  resources.usedStylesheets.forEach((resource, key) => {
-    if (resources.stylesMap.has(key)) {
-      // The underlying stylesheet is represented both as a used stylesheet
-      // (a regular component we will attempt to preload) and as a StylesheetResource.
-      // We don't want to emit two preloads for the same href so we defer
-      // the preload rules of the StylesheetResource when there is a conflict
-    } else {
-      const chunks = resource.chunks;
-      for (i = 0; i < chunks.length; i++) {
-        writeChunk(destination, chunks[i]);
-      }
-    }
-  });
-  resources.usedStylesheets.clear();
 
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
@@ -4917,7 +4872,6 @@ export type Resources = {
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
-  usedStylesheets: Map<string, PreloadResource>,
   scripts: Set<ScriptResource>,
   usedScripts: Set<PreloadResource>,
   explicitStylesheetPreloads: Set<PreloadResource>,
@@ -4945,7 +4899,6 @@ export function createResources(): Resources {
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
-    usedStylesheets: new Map(),
     scripts: new Set(),
     usedScripts: new Set(),
     explicitStylesheetPreloads: new Set(),
