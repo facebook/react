@@ -184,7 +184,7 @@ class Context {
     this.#dependencies.addDepsFromInnerScope(
       scopedDependencies,
       this.#inConditionalWithinScope,
-      this.#checkValidDependencyId.bind(this)
+      this.#checkValidDependency.bind(this)
     );
     return minInnerScopeDependencies;
   }
@@ -313,7 +313,8 @@ class Context {
   }
 
   // Checks if identifier is a valid dependency in the current scope
-  #checkValidDependencyId(identifier: Identifier): boolean {
+  #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
+    const identifier = maybeDependency.identifier;
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.
     const currentDeclaration =
@@ -390,7 +391,7 @@ class Context {
       });
     }
 
-    if (this.#checkValidDependencyId(maybeDependency.identifier)) {
+    if (this.#checkValidDependency(maybeDependency)) {
       this.#depsInCurrentConditional.add(maybeDependency, true);
       // Add info about this dependency to the existing tree
       // We do not try to join/reduce dependencies here due to missing info

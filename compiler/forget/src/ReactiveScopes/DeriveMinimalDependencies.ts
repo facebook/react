@@ -143,10 +143,10 @@ export class ReactiveScopeDependencyTree {
   addDepsFromInnerScope(
     depsFromInnerScope: ReactiveScopeDependencyTree,
     innerScopeInConditionalWithinParent: boolean,
-    checkValidDepIdFn: (id: Identifier) => boolean
+    checkValidDepIdFn: (dep: ReactiveScopeDependency) => boolean
   ): void {
     for (const [id, otherRoot] of depsFromInnerScope.#roots) {
-      if (!checkValidDepIdFn(id)) {
+      if (!checkValidDepIdFn({ identifier: id, path: [] })) {
         continue;
       }
       let currRoot = this.#getOrCreateRoot(id);
