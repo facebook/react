@@ -9053,6 +9053,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           i[internalHoistableMarker] ||
             "HEAD" === nodeName ||
             "BODY" === nodeName ||
+            "SCRIPT" === nodeName ||
             "STYLE" === nodeName ||
             ("LINK" === nodeName && "stylesheet" === i.rel.toLowerCase()) ||
             hoistableRoot.removeChild(i);
@@ -16105,6 +16106,7 @@ function clearContainerSparingly(container) {
         clearContainerSparingly(node);
         detachDeletedInstance(node);
         continue;
+      case "SCRIPT":
       case "STYLE":
         continue;
       case "LINK":
@@ -16945,7 +16947,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1871 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-33083caa",
+  version: "18.3.0-www-modern-c632454d",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16990,7 +16992,7 @@ var devToolsConfig$jscomp$inline_1871 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-33083caa"
+  reconcilerVersion: "18.3.0-www-modern-c632454d"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17148,7 +17150,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-33083caa";
+exports.version = "18.3.0-www-modern-c632454d";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

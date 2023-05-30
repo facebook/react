@@ -8759,6 +8759,7 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           i[internalHoistableMarker] ||
             "HEAD" === nodeName ||
             "BODY" === nodeName ||
+            "SCRIPT" === nodeName ||
             "STYLE" === nodeName ||
             ("LINK" === nodeName && "stylesheet" === i.rel.toLowerCase()) ||
             hoistableRoot.removeChild(i);
@@ -15380,6 +15381,7 @@ function clearContainerSparingly(container) {
         clearContainerSparingly(node);
         detachDeletedInstance(node);
         continue;
+      case "SCRIPT":
       case "STYLE":
         continue;
       case "LINK":
@@ -16978,7 +16980,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1856 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-17e80e9f",
+  version: "18.3.0-www-classic-4b575629",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2235 = {
@@ -17008,7 +17010,7 @@ var internals$jscomp$inline_2235 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-17e80e9f"
+  reconcilerVersion: "18.3.0-www-classic-4b575629"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2236 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17402,4 +17404,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-17e80e9f";
+exports.version = "18.3.0-www-classic-4b575629";

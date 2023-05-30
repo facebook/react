@@ -34813,7 +34813,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-482d05c5";
+var ReactVersion = "18.3.0-www-classic-4a7abc07";
 
 function createPortal$1(
   children,
@@ -43549,10 +43549,24 @@ function clearContainerSparingly(container) {
         detachDeletedInstance(element);
         continue;
       }
+      // Script tags are retained to avoid an edge case bug. Normally scripts will execute if they
+      // are ever inserted into the DOM. However when streaming if a script tag is opened but not
+      // yet closed some browsers create and insert the script DOM Node but the script cannot execute
+      // yet until the closing tag is parsed. If something causes React to call clearContainer while
+      // this DOM node is in the document but not yet executable the DOM node will be removed from the
+      // document and when the script closing tag comes in the script will not end up running. This seems
+      // to happen in Chrome/Firefox but not Safari at the moment though this is not necessarily specified
+      // behavior so it could change in future versions of browsers. While leaving all scripts is broader
+      // than strictly necessary this is the least amount of additional code to avoid this breaking
+      // edge case.
+      //
+      // Style tags are retained because they may likely come from 3rd party scripts and extensions
 
+      case "SCRIPT":
       case "STYLE": {
         continue;
       }
+      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
 
       case "LINK": {
         if (node.rel.toLowerCase() === "stylesheet") {
@@ -44361,6 +44375,7 @@ function clearSingleton(instance) {
       isMarkedHoistable(node) ||
       nodeName === "HEAD" ||
       nodeName === "BODY" ||
+      nodeName === "SCRIPT" ||
       nodeName === "STYLE" ||
       (nodeName === "LINK" && node.rel.toLowerCase() === "stylesheet")
     );
