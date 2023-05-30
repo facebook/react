@@ -8,7 +8,6 @@
  */
 
 export * from 'react-client/src/ReactFlightClientConfigBrowser';
-export * from 'react-client/src/ReactFlightClientConfigStream';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 
 export type Response = any;

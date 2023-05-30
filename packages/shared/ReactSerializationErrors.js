@@ -164,7 +164,6 @@ export function describeObjectForErrorMessage(
         if (typeof value === 'string') {
           substr = value;
         } else if (typeof value === 'object' && value !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           substr = '{' + describeObjectForErrorMessage(value) + '}';
         } else {
           substr = '{' + describeValueForErrorMessage(value) + '}';
@@ -191,7 +190,6 @@ export function describeObjectForErrorMessage(
         const value = array[i];
         let substr;
         if (typeof value === 'object' && value !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           substr = describeObjectForErrorMessage(value);
         } else {
           substr = describeValueForErrorMessage(value);
@@ -228,7 +226,6 @@ export function describeObjectForErrorMessage(
           typeof value === 'object' &&
           value !== null
         ) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           substr = describeObjectForErrorMessage(value);
         } else {
           substr = describeValueForErrorMessage(value);
@@ -261,7 +258,6 @@ export function describeObjectForErrorMessage(
         const value = object[name];
         let substr;
         if (typeof value === 'object' && value !== null) {
-          // $FlowFixMe[incompatible-call] found when upgrading Flow
           substr = describeObjectForErrorMessage(value);
         } else {
           substr = describeValueForErrorMessage(value);

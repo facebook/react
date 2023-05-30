@@ -9,7 +9,7 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClientStream';
+import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
 import type {SSRManifest} from './ReactFlightClientConfigWebpackBundler';
 
@@ -19,7 +19,7 @@ import {
   reportGlobalError,
   processBinaryChunk,
   close,
-} from 'react-client/src/ReactFlightClientStream';
+} from 'react-client/src/ReactFlightClient';
 
 function noServerCall() {
   throw new Error(

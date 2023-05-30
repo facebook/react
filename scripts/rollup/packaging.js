@@ -93,8 +93,6 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
             /\.js$/,
             '.fb.js'
           )}`;
-        case 'react-server-native-relay':
-          return `build/facebook-relay/flight/${filename}`;
         default:
           throw new Error('Unknown RN package.');
       }

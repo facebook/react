@@ -47,7 +47,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'www-modern',
+      default: 'experimental',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {

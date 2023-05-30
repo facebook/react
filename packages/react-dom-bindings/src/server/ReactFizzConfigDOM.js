@@ -5510,6 +5510,7 @@ function preloadAsStylePropsFromProps(href: string, props: any): PreloadProps {
     as: 'style',
     href: href,
     crossOrigin: props.crossOrigin,
+    fetchPriority: props.fetchPriority,
     integrity: props.integrity,
     media: props.media,
     hrefLang: props.hrefLang,
@@ -5523,7 +5524,9 @@ function preloadAsScriptPropsFromProps(href: string, props: any): PreloadProps {
     as: 'script',
     href,
     crossOrigin: props.crossOrigin,
+    fetchPriority: props.fetchPriority,
     integrity: props.integrity,
+    nonce: props.nonce,
     referrerPolicy: props.referrerPolicy,
   };
 }
