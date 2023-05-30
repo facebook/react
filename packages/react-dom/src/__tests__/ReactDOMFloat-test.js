@@ -4532,6 +4532,43 @@ body {
     });
 
     // @gate enableFloat
+    it('respects attributes defined on the stylesheet element when preloading stylesheets during server rendering', async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <head>
+              <link rel="stylesheet" fetchPriority="high" href="foo" />
+            </head>
+            <body>
+              <link rel="stylesheet" fetchPriority="low" href="notaresource" />
+              <div>hello world</div>
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="style" fetchpriority="high" href="foo" />
+            <link
+              rel="preload"
+              as="style"
+              fetchpriority="low"
+              href="notaresource"
+            />
+            <link rel="stylesheet" fetchpriority="high" href="foo" />
+          </head>
+          <body>
+            <link rel="stylesheet" fetchpriority="low" href="notaresource" />
+            <div>hello world</div>
+          </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
     it('hoists stylesheet resources to the correct precedence', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -5909,6 +5946,45 @@ background-color: green;
             <script src="baz" data-meaningful="" />
             hello world
           </body>
+        </html>,
+      );
+    });
+
+    // @gate enableFloat
+    it('respects attributes defined on the script element when preloading scripts during server rendering', async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <html>
+            <head />
+            <body>
+              <script src="foo" fetchPriority="high" nonce="1234" />
+              <script src="bar" fetchPriority="low" nonce="1234" />
+              hello world
+            </body>
+          </html>,
+        );
+        pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="preload"
+              href="foo"
+              fetchpriority="high"
+              nonce="1234"
+              as="script"
+            />
+            <link
+              rel="preload"
+              href="bar"
+              fetchpriority="low"
+              nonce="1234"
+              as="script"
+            />
+          </head>
+          <body>hello world</body>
         </html>,
       );
     });

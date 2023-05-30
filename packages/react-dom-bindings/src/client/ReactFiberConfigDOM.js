@@ -1068,11 +1068,21 @@ export function canHydrateInstance(
       if (
         enableFormActions &&
         type === 'input' &&
-        (element: any).type === 'hidden' &&
-        anyProps.type !== 'hidden'
+        (element: any).type === 'hidden'
       ) {
-        // Skip past hidden inputs unless that's what we're looking for. This allows us
-        // embed extra form data in the original form.
+        if (__DEV__) {
+          checkAttributeStringCoercion(anyProps.name, 'name');
+        }
+        const name = anyProps.name == null ? null : '' + anyProps.name;
+        if (
+          anyProps.type !== 'hidden' ||
+          element.getAttribute('name') !== name
+        ) {
+          // Skip past hidden inputs unless that's what we're looking for. This allows us
+          // embed extra form data in the original form.
+        } else {
+          return element;
+        }
       } else {
         return element;
       }
