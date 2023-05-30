@@ -319,7 +319,6 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'ratechange':
     case 'reset':
     case 'resize':
-    case 'scrollend':
     case 'seeked':
     case 'submit':
     case 'touchcancel':
