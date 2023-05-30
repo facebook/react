@@ -456,12 +456,12 @@ describe('ReactDOMFloat', () => {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
           <noscript>&lt;link rel="icon" href="icon"&gt;</noscript>
           <base target="foo" href="bar" />
+          <script async="" src="foo" />
         </head>
         <body>foo</body>
       </html>,
@@ -487,7 +487,6 @@ describe('ReactDOMFloat', () => {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
@@ -2668,8 +2667,6 @@ body {
           {/* Hoisted Resources and elements */}
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
           <meta name="foo" content="foo" />
           <title>title</title>
@@ -2678,6 +2675,7 @@ body {
           <link rel="stylesheet" href="stylesheet" />
           <script src="sync rendered" data-meaningful="" />
           <style>{'body { background-color: red; }'}</style>
+          <script src="async rendered" async="" />
           <noscript>&lt;meta name="noscript" content="noscript"&gt;</noscript>
           <link rel="foo" href="foo" />
         </head>
@@ -2734,8 +2732,6 @@ body {
           <style>{'body { background-color: blue; }'}</style>
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
           <meta name="foo" content="foo" />
           <title>title</title>
@@ -2780,8 +2776,6 @@ body {
           <style>{'body { background-color: blue; }'}</style>
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <style>{'body { background-color: blue; }'}</style>
           <div />
           <script async="" src="injected" />
@@ -6061,6 +6055,7 @@ background-color: green;
               <script src="foo" async={true} />
               <script src="bar" async={true} onLoad={() => {}} />
               <script src="baz" data-meaningful="" />
+              <script src="qux" defer={true} data-meaningful="" />
               hello world
             </body>
           </html>,
@@ -6076,17 +6071,17 @@ background-color: green;
         <html>
           <head>
             <script src="foo" async="" />
-            <link rel="preload" href="bar" as="script" />
-            <link rel="preload" href="baz" as="script" />
           </head>
           <body>
+            <script src="bar" async="" />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer="" data-meaningful="" />
             hello world
           </body>
         </html>,
       );
 
-      ReactDOMClient.hydrateRoot(
+      const root = ReactDOMClient.hydrateRoot(
         document,
         <html>
           <head />
@@ -6094,6 +6089,7 @@ background-color: green;
             <script src="foo" async={true} />
             <script src="bar" async={true} onLoad={() => {}} />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer={true} data-meaningful="" />
             hello world
           </body>
         </html>,
@@ -6105,53 +6101,26 @@ background-color: green;
         <html>
           <head>
             <script src="foo" async="" />
-            <link rel="preload" href="bar" as="script" />
-            <link rel="preload" href="baz" as="script" />
           </head>
           <body>
             <script src="bar" async="" />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer="" data-meaningful="" />
             hello world
           </body>
         </html>,
       );
-    });
 
-    // @gate enableFloat
-    it('respects attributes defined on the script element when preloading scripts during server rendering', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <script src="foo" fetchPriority="high" nonce="1234" />
-              <script src="bar" fetchPriority="low" nonce="1234" />
-              hello world
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
+      root.unmount();
+      // When we unmount we expect to retain singletons and any content that is not cleared within them.
+      // The foo script is a resource so it sticks around. The other scripts are regular HostComponents
+      // so they unmount and are removed from the DOM.
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
-            <link
-              rel="preload"
-              href="foo"
-              fetchpriority="high"
-              nonce="1234"
-              as="script"
-            />
-            <link
-              rel="preload"
-              href="bar"
-              fetchpriority="low"
-              nonce="1234"
-              as="script"
-            />
+            <script src="foo" async="" />
           </head>
-          <body>hello world</body>
+          <body />
         </html>,
       );
     });
