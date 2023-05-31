@@ -25,7 +25,6 @@ import {
   getHookKind,
   isMutableEffect,
 } from "../HIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
 import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
@@ -722,8 +721,9 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     } else if (instruction.value.kind === "CallExpression") {
       const callee = instruction.value.callee;
       if (getHookKind(state.env, callee.identifier)) {
-        for (const operand of eachInstructionValueOperand(instruction.value)) {
-          state.escapingValues.add(operand.identifier.id);
+        for (const operand of instruction.value.args) {
+          const place = operand.kind === "Spread" ? operand.place : operand;
+          state.escapingValues.add(place.identifier.id);
         }
       }
     }
