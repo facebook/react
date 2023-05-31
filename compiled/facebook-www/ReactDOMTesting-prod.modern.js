@@ -15967,7 +15967,8 @@ function preinit$1(href, options) {
             rel: "stylesheet",
             href: href,
             "data-precedence": precedence,
-            crossOrigin: options.crossOrigin
+            crossOrigin: options.crossOrigin,
+            integrity: options.integrity
           };
           (options = preloadPropsMap.get(key)) &&
             adoptPreloadPropsForStylesheet(href, options);
@@ -16562,7 +16563,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1815 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1948588f",
+  version: "18.3.0-www-modern-335642a1",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2199 = {
@@ -16593,7 +16594,7 @@ var internals$jscomp$inline_2199 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-1948588f"
+  reconcilerVersion: "18.3.0-www-modern-335642a1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2200 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16915,4 +16916,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-1948588f";
+exports.version = "18.3.0-www-modern-335642a1";

@@ -16352,7 +16352,8 @@ function preinit$1(href, options) {
             rel: "stylesheet",
             href: href,
             "data-precedence": precedence,
-            crossOrigin: options.crossOrigin
+            crossOrigin: options.crossOrigin,
+            integrity: options.integrity
           };
           (options = preloadPropsMap.get(key)) &&
             adoptPreloadPropsForStylesheet(href, options);
@@ -16947,7 +16948,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1871 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-c632454d",
+  version: "18.3.0-www-modern-ad540229",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16992,7 +16993,7 @@ var devToolsConfig$jscomp$inline_1871 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-c632454d"
+  reconcilerVersion: "18.3.0-www-modern-ad540229"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17150,7 +17151,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-c632454d";
+exports.version = "18.3.0-www-modern-ad540229";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
