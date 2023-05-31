@@ -40,6 +40,7 @@ import {
   mergeOverlappingReactiveScopes,
   promoteUsedTemporaries,
   propagateScopeDependencies,
+  pruneAllReactiveScopes,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
   pruneUnusedLabels,
@@ -158,6 +159,15 @@ export function* run(
     name: "BuildReactiveBlocks",
     value: reactiveFunction,
   });
+
+  if (env.disableAllMemoization) {
+    pruneAllReactiveScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PruneAllReactiveScopes",
+      value: reactiveFunction,
+    });
+  }
 
   flattenReactiveLoops(reactiveFunction);
   yield log({

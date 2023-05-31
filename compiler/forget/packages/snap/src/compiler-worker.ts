@@ -95,6 +95,7 @@ export async function compile(
     let memoizeJsxElements = true;
     let enableAssumeHooksFollowRulesOfReact = false;
     let enableTreatHooksAsFunctions = true;
+    let disableAllMemoization = false;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
@@ -128,6 +129,9 @@ export async function compile(
     if (firstLine.indexOf("@enableTreatHooksAsFunctions false") !== -1) {
       enableTreatHooksAsFunctions = false;
     }
+    if (firstLine.indexOf("@disableAllMemoization true") !== -1) {
+      disableAllMemoization = true;
+    }
 
     const language = parseLanguage(firstLine);
 
@@ -143,12 +147,13 @@ export async function compile(
             },
           ],
         ]),
-        validateHooksUsage: true,
-        enableFunctionCallSignatureOptimizations: true,
         enableAssumeHooksFollowRulesOfReact,
+        enableFunctionCallSignatureOptimizations: true,
+        disableAllMemoization,
+        enableTreatHooksAsFunctions,
         inlineUseMemo: true,
         memoizeJsxElements,
-        enableTreatHooksAsFunctions,
+        validateHooksUsage: true,
       },
       logger: null,
       gating,

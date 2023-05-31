@@ -102,6 +102,15 @@ export type EnvironmentConfig = Partial<{
    * Defaults to true
    */
   enableTreatHooksAsFunctions: boolean;
+
+  /**
+   * When enabled, removes *all* memoization from the function: this includes
+   * removing manually added useMemo/useCallback as well as not adding Forget's
+   * usual useMemoCache-based memoization.
+   *
+   * Defaults to false (ie, by default memoization is enabled)
+   */
+  disableAllMemoization: boolean;
 }>;
 
 export class Environment {
@@ -113,6 +122,7 @@ export class Environment {
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
+  disableAllMemoization: boolean;
   #contextIdentifiers: Set<t.Identifier>;
 
   constructor(
@@ -150,6 +160,7 @@ export class Environment {
       config?.enableAssumeHooksFollowRulesOfReact ?? false;
     this.enableTreatHooksAsFunctions =
       config?.enableTreatHooksAsFunctions ?? true;
+    this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.#contextIdentifiers = contextIdentifiers;
   }
 
