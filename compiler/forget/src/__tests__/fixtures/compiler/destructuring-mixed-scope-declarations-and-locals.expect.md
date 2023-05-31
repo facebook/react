@@ -17,7 +17,7 @@ function Component(props) {
     if (!comments.length) {
       return;
     }
-    log(comments.length);
+    console.log(comments.length);
   };
   allUrls.push(...urls);
   return <Media media={media} onClick={onClick} />;
@@ -38,8 +38,8 @@ function Component(props) {
   if (c_0) {
     const allUrls = [];
 
-    const { media: t83, comments, urls } = post;
-    media = t83;
+    const { media: t85, comments, urls } = post;
+    media = t85;
     const c_3 = $[3] !== comments.length;
     let t0;
     if (c_3) {
@@ -47,7 +47,7 @@ function Component(props) {
         if (!comments.length) {
           return;
         }
-        log(comments.length);
+        console.log(comments.length);
       };
       $[3] = comments.length;
       $[4] = t0;

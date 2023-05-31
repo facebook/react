@@ -13,7 +13,7 @@ function Component(props) {
     if (!comments.length) {
       return;
     }
-    log(comments.length);
+    console.log(comments.length);
   };
   allUrls.push(...urls);
   return <Media media={media} onClick={onClick} />;

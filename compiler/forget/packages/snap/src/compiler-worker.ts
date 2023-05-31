@@ -159,6 +159,7 @@ export async function compile(
         memoizeJsxElements,
         validateHooksUsage: true,
         validateRefAccessDuringRender,
+        validateFrozenLambdas: true,
       },
       logger: null,
       gating,

@@ -18,6 +18,7 @@ export {
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
 export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";
+export { validateFrozenLambdas } from "./ValidateFrozenLambdas";
 export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateNoRefAccessInRender } from "./ValidateNoRefAccesInRender";
 export { validateTerminalSuccessors } from "./ValidateTerminalSuccessors";

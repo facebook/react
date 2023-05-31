@@ -75,6 +75,14 @@ export type EnvironmentConfig = Partial<{
   validateRefAccessDuringRender: boolean;
 
   /**
+   * Validate that mutable lambdas are not passed where a frozen value is expected, since mutable
+   * lambdas cannot be frozen. The only mutation allowed inside a frozen lambda is of ref values.
+   *
+   * Defaults to false
+   */
+  validateFrozenLambdas: boolean;
+
+  /**
    * Enable inlining of `useMemo()` function expressions so that they can be more optimally
    * compiled.
    *
@@ -127,6 +135,7 @@ export class Environment {
   #nextBlock: number = 0;
   validateHooksUsage: boolean;
   validateRefAccessDuringRender: boolean;
+  validateFrozenLambdas: boolean;
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
@@ -164,6 +173,7 @@ export class Environment {
     this.validateHooksUsage = config?.validateHooksUsage ?? false;
     this.validateRefAccessDuringRender =
       config?.validateRefAccessDuringRender ?? false;
+    this.validateFrozenLambdas = config?.validateFrozenLambdas ?? false;
     this.enableFunctionCallSignatureOptimizations =
       config?.enableFunctionCallSignatureOptimizations ?? false;
     this.enableAssumeHooksFollowRulesOfReact =

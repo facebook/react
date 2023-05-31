@@ -13,6 +13,7 @@ import {
   mergeConsecutiveBlocks,
   ReactiveFunction,
   validateConsistentIdentifiers,
+  validateFrozenLambdas,
   validateHooksUsage,
   validateNoRefAccessInRender,
   validateTerminalSuccessors,
@@ -115,6 +116,10 @@ export function* run(
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
+
+  if (env.validateFrozenLambdas) {
+    validateFrozenLambdas(hir);
+  }
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
