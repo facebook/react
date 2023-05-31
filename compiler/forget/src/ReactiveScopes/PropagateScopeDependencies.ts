@@ -11,6 +11,7 @@ import {
   IdentifierId,
   InstructionId,
   InstructionKind,
+  isUseRefType,
   makeInstructionId,
   Place,
   ReactiveFunction,
@@ -314,6 +315,14 @@ class Context {
 
   // Checks if identifier is a valid dependency in the current scope
   #checkValidDependency(maybeDependency: ReactiveScopeDependency): boolean {
+    // ref.current access is not a valid dep
+    if (
+      isUseRefType(maybeDependency.identifier) &&
+      maybeDependency.path.at(0) === "current"
+    ) {
+      return false;
+    }
+
     const identifier = maybeDependency.identifier;
     // If this operand is used in a scope, has a dynamic value, and was defined
     // before this scope, then its a dependency of the scope.

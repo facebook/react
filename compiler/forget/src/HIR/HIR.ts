@@ -979,6 +979,14 @@ export function isPrimitiveType(id: Identifier): boolean {
   return id.type.kind === "Primitive";
 }
 
+export function isRefValueType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInRefValue";
+}
+
+export function isUseRefType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseRefId";
+}
+
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   const idType = id.type;
   if (idType.kind === "Function") {
