@@ -130,6 +130,11 @@ class Visitor extends ReactiveFunctionVisitor<State> {
           state.temporaries.get(instr.value.object.identifier.id) ??
           instr.value.object.identifier.id;
         state.temporaries.set(instr.lvalue.identifier.id, resolvedId);
+      } else if (instr.value.kind === "LoadContext") {
+        state.temporaries.set(
+          instr.lvalue.identifier.id,
+          instr.value.place.identifier.id
+        );
       }
     }
   }
