@@ -19,6 +19,8 @@ type SubscriptionData = {
   supportsReloadAndProfile: boolean,
 };
 
+const listenerEvents = ['recordChangeDescriptions', 'supportsReloadAndProfile'];
+
 export default function ReloadAndProfileButton({
   disabled,
 }: {
@@ -34,11 +36,13 @@ export default function ReloadAndProfileButton({
         supportsReloadAndProfile: store.supportsReloadAndProfile,
       }),
       subscribe: (callback: Function) => {
-        store.addListener('recordChangeDescriptions', callback);
-        store.addListener('supportsReloadAndProfile', callback);
+        listenerEvents.forEach(event => {
+          store.addListener(event, callback);
+        });
         return () => {
-          store.removeListener('recordChangeDescriptions', callback);
-          store.removeListener('supportsReloadAndProfile', callback);
+          listenerEvents.forEach(event => {
+            store.removeListener(event, callback);
+          });
         };
       },
     }),
