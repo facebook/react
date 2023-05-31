@@ -68,6 +68,13 @@ export type EnvironmentConfig = Partial<{
   validateHooksUsage: boolean;
 
   /**
+   * Validate that ref values (`ref.current`) are not accessed during render.
+   *
+   * Defaults to false
+   */
+  validateRefAccessDuringRender: boolean;
+
+  /**
    * Enable inlining of `useMemo()` function expressions so that they can be more optimally
    * compiled.
    *
@@ -119,6 +126,7 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   validateHooksUsage: boolean;
+  validateRefAccessDuringRender: boolean;
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
@@ -154,6 +162,8 @@ export class Environment {
       this.#globals = DEFAULT_GLOBALS;
     }
     this.validateHooksUsage = config?.validateHooksUsage ?? false;
+    this.validateRefAccessDuringRender =
+      config?.validateRefAccessDuringRender ?? false;
     this.enableFunctionCallSignatureOptimizations =
       config?.enableFunctionCallSignatureOptimizations ?? false;
     this.enableAssumeHooksFollowRulesOfReact =

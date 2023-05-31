@@ -14,6 +14,7 @@ import {
   ReactiveFunction,
   validateConsistentIdentifiers,
   validateHooksUsage,
+  validateNoRefAccessInRender,
   validateTerminalSuccessors,
   validateUnconditionalHooks,
 } from "./HIR";
@@ -93,6 +94,9 @@ export function* run(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
+  if (env.validateRefAccessDuringRender) {
+    validateNoRefAccessInRender(hir);
+  }
   if (env.validateHooksUsage) {
     validateHooksUsage(hir);
     const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();

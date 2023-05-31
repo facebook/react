@@ -1,5 +1,5 @@
 function Component(props) {
-  const x = useRef;
-  const ref = x(null);
-  return ref.current;
+  const x = useState;
+  const state = x(null);
+  return state[0];
 }

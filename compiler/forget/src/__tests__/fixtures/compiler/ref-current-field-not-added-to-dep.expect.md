@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateRefAccessDuringRender false
 function VideoTab() {
   const ref = useRef();
   let x = () => {
@@ -16,7 +17,7 @@ function VideoTab() {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @validateRefAccessDuringRender false
 function VideoTab() {
   const $ = useMemoCache(3);
   const ref = useRef();
