@@ -1,0 +1,47 @@
+
+## Input
+
+```javascript
+function Foo({ a }) {
+  const ref = useRef();
+  const val = ref.current;
+  const x = { a, val };
+
+  return <VideoList videos={x} />;
+}
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Foo(t21) {
+  const $ = useMemoCache(4);
+  const { a } = t21;
+  const ref = useRef();
+  const val = ref.current;
+  const c_0 = $[0] !== a;
+  let t0;
+  if (c_0) {
+    t0 = { a, val };
+    $[0] = a;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const x = t0;
+  const c_2 = $[2] !== x;
+  let t1;
+  if (c_2) {
+    t1 = <VideoList videos={x} />;
+    $[2] = x;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  return t1;
+}
+
+```
+      

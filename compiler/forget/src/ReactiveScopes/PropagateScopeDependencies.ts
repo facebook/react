@@ -11,6 +11,7 @@ import {
   IdentifierId,
   InstructionId,
   InstructionKind,
+  isRefValueType,
   isUseRefType,
   makeInstructionId,
   Place,
@@ -320,6 +321,11 @@ class Context {
       isUseRefType(maybeDependency.identifier) &&
       maybeDependency.path.at(0) === "current"
     ) {
+      return false;
+    }
+
+    // ref value is not a valid dep
+    if (isRefValueType(maybeDependency.identifier)) {
       return false;
     }
 
