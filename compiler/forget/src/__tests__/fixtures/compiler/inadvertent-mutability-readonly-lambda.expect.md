@@ -23,29 +23,27 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(3);
   const [value, setValue] = useState(null);
-  const c_0 = $[0] !== setValue;
   let t0;
-  if (c_0) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => setValue((value_0) => value_0 + e.target.value);
-    $[0] = setValue;
-    $[1] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
   const onChange = t0;
 
   useOtherHook();
-  const c_2 = $[2] !== onChange;
+  const c_1 = $[1] !== onChange;
   let x;
-  if (c_2) {
+  if (c_1) {
     x = {};
     foo(x, onChange);
-    $[2] = onChange;
-    $[3] = x;
+    $[1] = onChange;
+    $[2] = x;
   } else {
-    x = $[3];
+    x = $[2];
   }
   return x;
 }

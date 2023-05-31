@@ -16,28 +16,26 @@ function component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(4);
   const [count, setCount] = useState(0);
-  const c_0 = $[0] !== setCount;
-  const c_1 = $[1] !== count;
+  const c_0 = $[0] !== count;
   let t0;
-  if (c_0 || c_1) {
+  if (c_0) {
     t0 = () => setCount(count + 1);
-    $[0] = setCount;
-    $[1] = count;
-    $[2] = t0;
+    $[0] = count;
+    $[1] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[1];
   }
   const increment = t0;
-  const c_3 = $[3] !== increment;
+  const c_2 = $[2] !== increment;
   let t1;
-  if (c_3) {
+  if (c_2) {
     t1 = <Foo onClick={increment} />;
-    $[3] = increment;
-    $[4] = t1;
+    $[2] = increment;
+    $[3] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[3];
   }
   return t1;
 }

@@ -15,28 +15,26 @@ function component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(4);
   const [x, setX] = useState(0);
-  const c_0 = $[0] !== setX;
   let t0;
-  if (c_0) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (event) => setX(event.target.value);
-    $[0] = setX;
-    $[1] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
   const handler = t0;
-  const c_2 = $[2] !== handler;
-  const c_3 = $[3] !== x;
+  const c_1 = $[1] !== handler;
+  const c_2 = $[2] !== x;
   let t1;
-  if (c_2 || c_3) {
+  if (c_1 || c_2) {
     t1 = <input onChange={handler} value={x} />;
-    $[2] = handler;
-    $[3] = x;
-    $[4] = t1;
+    $[1] = handler;
+    $[2] = x;
+    $[3] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[3];
   }
   return t1;
 }

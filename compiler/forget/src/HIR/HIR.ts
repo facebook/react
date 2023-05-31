@@ -987,6 +987,14 @@ export function isUseRefType(id: Identifier): boolean {
   return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseRefId";
 }
 
+export function isUseStateType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseState";
+}
+
+export function isSetStateType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
+}
+
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   const idType = id.type;
   if (idType.kind === "Function") {

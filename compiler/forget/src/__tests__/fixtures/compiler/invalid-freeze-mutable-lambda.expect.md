@@ -19,7 +19,7 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(7);
+  const $ = useMemoCache(6);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = { value: "" };
@@ -29,31 +29,29 @@ function Component(props) {
   }
   const [x, setX] = useState(t0);
   const c_1 = $[1] !== x;
-  const c_2 = $[2] !== setX;
   let t1;
-  if (c_1 || c_2) {
+  if (c_1) {
     t1 = (e) => {
       // INVALID! should use copy-on-write and pass the new value
       x.value = e.target.value;
       setX(x);
     };
     $[1] = x;
-    $[2] = setX;
-    $[3] = t1;
+    $[2] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[2];
   }
   const onChange = t1;
-  const c_4 = $[4] !== x.value;
-  const c_5 = $[5] !== onChange;
+  const c_3 = $[3] !== x.value;
+  const c_4 = $[4] !== onChange;
   let t2;
-  if (c_4 || c_5) {
+  if (c_3 || c_4) {
     t2 = <input value={x.value} onChange={onChange} />;
-    $[4] = x.value;
-    $[5] = onChange;
-    $[6] = t2;
+    $[3] = x.value;
+    $[4] = onChange;
+    $[5] = t2;
   } else {
-    t2 = $[6];
+    t2 = $[5];
   }
   return t2;
 }
