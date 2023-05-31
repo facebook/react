@@ -4409,6 +4409,71 @@ body {
         </html>,
       );
     });
+
+    it('accepts an `integrity` option for `as: "style"`', async () => {
+      function Component({src, hash}) {
+        ReactDOM.preinit(src, {as: 'style', integrity: hash});
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component src="foo" hash="foo hash" />
+            </body>
+          </html>,
+          {
+            nonce: 'R4nD0m',
+          },
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              integrity="foo hash"
+              data-precedence="default"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <body>
+              <Component src="bar" hash="bar hash" />
+            </body>
+          </html>,
+        );
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              integrity="foo hash"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="bar"
+              integrity="bar hash"
+              data-precedence="default"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
   });
 
   describe('Stylesheet Resources', () => {

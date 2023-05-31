@@ -2394,6 +2394,7 @@ function stylesheetPropsFromPreinitOptions(
     href,
     'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
   };
 }
 
