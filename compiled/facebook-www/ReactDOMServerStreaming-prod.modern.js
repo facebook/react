@@ -3508,7 +3508,8 @@ function flushCompletedQueues(request, destination) {
           (request.completedRootSegment = null),
           writeBootstrap(destination, request.responseState);
       else return;
-    else writeHoistables(destination, request.resources, request.responseState);
+    else if (0 < request.pendingRootTasks) return;
+    writeHoistables(destination, request.resources, request.responseState);
     var clientRenderedBoundaries = request.clientRenderedBoundaries;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       var boundary = clientRenderedBoundaries[i];
@@ -3817,6 +3818,23 @@ exports.renderNextChunk = function (stream) {
 };
 exports.renderToStream = function (children, options) {
   var destination = { buffer: "", done: !1, fatal: !1, error: null },
+    resources = {
+      preloadsMap: new Map(),
+      preconnectsMap: new Map(),
+      stylesMap: new Map(),
+      scriptsMap: new Map(),
+      preconnects: new Set(),
+      fontPreloads: new Set(),
+      precedences: new Map(),
+      stylePrecedences: new Map(),
+      usedStylesheets: new Set(),
+      scripts: new Set(),
+      usedScripts: new Set(),
+      explicitStylesheetPreloads: new Set(),
+      explicitScriptPreloads: new Set(),
+      explicitOtherPreloads: new Set(),
+      boundaryResources: null
+    },
     identifierPrefix = options ? options.identifierPrefix : void 0,
     bootstrapScriptContent = options ? options.bootstrapScriptContent : void 0,
     bootstrapScripts = options ? options.bootstrapScripts : void 0,
@@ -3860,23 +3878,30 @@ exports.renderToStream = function (children, options) {
       bootstrapScriptContent < bootstrapScripts.length;
       bootstrapScriptContent++
     ) {
-      externalRuntimeConfig = bootstrapScripts[bootstrapScriptContent];
-      var integrity =
-        "string" === typeof externalRuntimeConfig
-          ? void 0
-          : externalRuntimeConfig.integrity;
+      var scriptConfig = bootstrapScripts[bootstrapScriptContent];
+      externalRuntimeConfig =
+        "string" === typeof scriptConfig ? scriptConfig : scriptConfig.src;
+      scriptConfig =
+        "string" === typeof scriptConfig ? void 0 : scriptConfig.integrity;
+      var props = {
+          rel: "preload",
+          href: externalRuntimeConfig,
+          as: "script",
+          nonce: void 0,
+          integrity: scriptConfig
+        },
+        resource = { type: "preload", chunks: [], state: 0, props: props };
+      resources.preloadsMap.set("[script]" + externalRuntimeConfig, resource);
+      resources.explicitScriptPreloads.add(resource);
+      pushLinkImpl(resource.chunks, props);
       JSCompiler_inline_result.push(
         '<script src="',
-        escapeTextForBrowser(
-          "string" === typeof externalRuntimeConfig
-            ? externalRuntimeConfig
-            : externalRuntimeConfig.src
-        )
+        escapeTextForBrowser(externalRuntimeConfig)
       );
-      integrity &&
+      scriptConfig &&
         JSCompiler_inline_result.push(
           '" integrity="',
-          escapeTextForBrowser(integrity)
+          escapeTextForBrowser(scriptConfig)
         );
       JSCompiler_inline_result.push('" async="">\x3c/script>');
     }
@@ -3932,24 +3957,7 @@ exports.renderToStream = function (children, options) {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   options = [];
   identifierPrefix = new Set();
-  bootstrapScripts = {
-    preloadsMap: new Map(),
-    preconnectsMap: new Map(),
-    stylesMap: new Map(),
-    scriptsMap: new Map(),
-    preconnects: new Set(),
-    fontPreloads: new Set(),
-    precedences: new Map(),
-    stylePrecedences: new Map(),
-    usedStylesheets: new Set(),
-    scripts: new Set(),
-    usedScripts: new Set(),
-    explicitStylesheetPreloads: new Set(),
-    explicitScriptPreloads: new Set(),
-    explicitOtherPreloads: new Set(),
-    boundaryResources: null
-  };
-  JSCompiler_inline_result = {
+  resources = {
     destination: null,
     flushScheduled: !1,
     responseState: JSCompiler_inline_result,
@@ -3960,7 +3968,7 @@ exports.renderToStream = function (children, options) {
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
-    resources: bootstrapScripts,
+    resources: resources,
     completedRootSegment: null,
     abortableTasks: identifierPrefix,
     pingedTasks: options,
@@ -3974,7 +3982,7 @@ exports.renderToStream = function (children, options) {
     onFatalError: noop
   };
   bootstrapModules = createPendingSegment(
-    JSCompiler_inline_result,
+    resources,
     0,
     null,
     bootstrapModules,
@@ -3983,7 +3991,7 @@ exports.renderToStream = function (children, options) {
   );
   bootstrapModules.parentFlushed = !0;
   children = createTask(
-    JSCompiler_inline_result,
+    resources,
     null,
     children,
     null,
@@ -3994,8 +4002,7 @@ exports.renderToStream = function (children, options) {
     emptyTreeContext
   );
   options.push(children);
-  JSCompiler_inline_result.flushScheduled =
-    null !== JSCompiler_inline_result.destination;
+  resources.flushScheduled = null !== resources.destination;
   if (destination.fatal) throw destination.error;
-  return { destination: destination, request: JSCompiler_inline_result };
+  return { destination: destination, request: resources };
 };

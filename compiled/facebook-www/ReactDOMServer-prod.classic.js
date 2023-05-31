@@ -2117,28 +2117,26 @@ function hoistStyleResource(resource) {
   this.add(resource);
 }
 function createResponseState(
+  resources,
   generateStaticMarkup,
   identifierPrefix,
   externalRuntimeConfig
 ) {
-  identifierPrefix = void 0 === identifierPrefix ? "" : identifierPrefix;
-  var externalRuntimeScript = null,
-    streamingFormat = 0;
+  resources = void 0 === identifierPrefix ? "" : identifierPrefix;
+  identifierPrefix = null;
+  var streamingFormat = 0;
   void 0 !== externalRuntimeConfig &&
     ((streamingFormat = 1),
     "string" === typeof externalRuntimeConfig
-      ? ((externalRuntimeScript = { src: externalRuntimeConfig, chunks: [] }),
-        pushScriptImpl(externalRuntimeScript.chunks, {
+      ? ((identifierPrefix = { src: externalRuntimeConfig, chunks: [] }),
+        pushScriptImpl(identifierPrefix.chunks, {
           src: externalRuntimeConfig,
           async: !0,
           integrity: void 0,
           nonce: void 0
         }))
-      : ((externalRuntimeScript = {
-          src: externalRuntimeConfig.src,
-          chunks: []
-        }),
-        pushScriptImpl(externalRuntimeScript.chunks, {
+      : ((identifierPrefix = { src: externalRuntimeConfig.src, chunks: [] }),
+        pushScriptImpl(identifierPrefix.chunks, {
           src: externalRuntimeConfig.src,
           async: !0,
           integrity: externalRuntimeConfig.integrity,
@@ -2146,15 +2144,15 @@ function createResponseState(
         })));
   return {
     bootstrapChunks: [],
-    placeholderPrefix: identifierPrefix + "P:",
-    segmentPrefix: identifierPrefix + "S:",
-    boundaryPrefix: identifierPrefix + "B:",
-    idPrefix: identifierPrefix,
+    placeholderPrefix: resources + "P:",
+    segmentPrefix: resources + "S:",
+    boundaryPrefix: resources + "B:",
+    idPrefix: resources,
     nextSuspenseID: 0,
     streamingFormat: streamingFormat,
     startInlineScript: "<script>",
     instructions: 0,
-    externalRuntimeScript: externalRuntimeScript,
+    externalRuntimeScript: identifierPrefix,
     htmlChunks: null,
     headChunks: null,
     hasBody: !1,
@@ -2688,6 +2686,7 @@ function defaultErrorHandler(error) {
 function noop() {}
 function createRequest(
   children,
+  resources,
   responseState,
   rootFormatContext,
   progressiveChunkSize,
@@ -2699,25 +2698,8 @@ function createRequest(
 ) {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   var pingedTasks = [],
-    abortSet = new Set(),
-    resources = {
-      preloadsMap: new Map(),
-      preconnectsMap: new Map(),
-      stylesMap: new Map(),
-      scriptsMap: new Map(),
-      preconnects: new Set(),
-      fontPreloads: new Set(),
-      precedences: new Map(),
-      stylePrecedences: new Map(),
-      usedStylesheets: new Set(),
-      scripts: new Set(),
-      usedScripts: new Set(),
-      explicitStylesheetPreloads: new Set(),
-      explicitScriptPreloads: new Set(),
-      explicitOtherPreloads: new Set(),
-      boundaryResources: null
-    };
-  responseState = {
+    abortSet = new Set();
+  resources = {
     destination: null,
     flushScheduled: !1,
     responseState: responseState,
@@ -2742,7 +2724,7 @@ function createRequest(
     onFatalError: void 0 === onFatalError ? noop : onFatalError
   };
   rootFormatContext = createPendingSegment(
-    responseState,
+    resources,
     0,
     null,
     rootFormatContext,
@@ -2751,7 +2733,7 @@ function createRequest(
   );
   rootFormatContext.parentFlushed = !0;
   children = createTask(
-    responseState,
+    resources,
     null,
     children,
     null,
@@ -2762,7 +2744,7 @@ function createRequest(
     emptyTreeContext
   );
   pingedTasks.push(children);
-  return responseState;
+  return resources;
 }
 var currentRequest = null;
 function createTask(
@@ -3759,7 +3741,8 @@ function flushCompletedQueues(request, destination) {
           (request.completedRootSegment = null),
           writeBootstrap(destination, request.responseState);
       else return;
-    else writeHoistables(destination, request.resources, request.responseState);
+    else if (0 < request.pendingRootTasks) return;
+    writeHoistables(destination, request.resources, request.responseState);
     var clientRenderedBoundaries = request.clientRenderedBoundaries;
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       var boundary = clientRenderedBoundaries[i];
@@ -3956,10 +3939,29 @@ function renderToStringImpl(
         fatalError$jscomp$0 = error;
       }
     },
-    readyToStream = !1;
+    readyToStream = !1,
+    resources = {
+      preloadsMap: new Map(),
+      preconnectsMap: new Map(),
+      stylesMap: new Map(),
+      scriptsMap: new Map(),
+      preconnects: new Set(),
+      fontPreloads: new Set(),
+      precedences: new Map(),
+      stylePrecedences: new Map(),
+      usedStylesheets: new Set(),
+      scripts: new Set(),
+      usedScripts: new Set(),
+      explicitStylesheetPreloads: new Set(),
+      explicitScriptPreloads: new Set(),
+      explicitOtherPreloads: new Set(),
+      boundaryResources: null
+    };
   children = createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       generateStaticMarkup,
       options ? options.identifierPrefix : void 0,
       unstable_externalRuntimeSrc
@@ -4014,4 +4016,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-15c0e05f";
+exports.version = "18.3.0-www-classic-0354aaeb";

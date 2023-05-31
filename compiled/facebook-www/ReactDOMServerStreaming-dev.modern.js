@@ -2397,6 +2397,7 @@ var scriptReplacer = function (match, prefix, s, suffix) {
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 
 function createResponseState(
+  resources,
   identifierPrefix,
   nonce,
   bootstrapScriptContent,
@@ -2460,6 +2461,7 @@ function createResponseState(
         typeof scriptConfig === "string" ? scriptConfig : scriptConfig.src;
       var integrity =
         typeof scriptConfig === "string" ? undefined : scriptConfig.integrity;
+      preloadBootstrapScript(resources, src, nonce, integrity);
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src))
@@ -7474,6 +7476,42 @@ function preinit(href, options) {
       }
     }
   }
+} // This function is only safe to call at Request start time since it assumes
+// that each script has not already been preloaded. If we find a need to preload
+// scripts at any other point in time we will need to check whether the preload
+// already exists and not assume it
+
+function preloadBootstrapScript(resources, src, nonce, integrity) {
+  var key = getResourceKey("script", src);
+
+  {
+    if (resources.preloadsMap.has(key)) {
+      // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
+      // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
+      // rather than instruct the user to not preload their bootstrap scripts themselves
+      error(
+        'Internal React Error: React expected bootstrap script with src "%s" to not have been preloaded already. please file an issue',
+        src
+      );
+    }
+  }
+
+  var props = {
+    rel: "preload",
+    href: src,
+    as: "script",
+    nonce: nonce,
+    integrity: integrity
+  };
+  var resource = {
+    type: "preload",
+    chunks: [],
+    state: NoState,
+    props: props
+  };
+  resources.preloadsMap.set(key, resource);
+  resources.explicitScriptPreloads.add(resource);
+  pushLinkImpl(resource.chunks, props);
 }
 
 function internalPreinitScript(resources, src, chunks) {
@@ -9964,6 +10002,7 @@ function noop() {}
 
 function createRequest(
   children,
+  resources,
   responseState,
   rootFormatContext,
   progressiveChunkSize,
@@ -9976,7 +10015,6 @@ function createRequest(
   prepareHostDispatcher();
   var pingedTasks = [];
   var abortSet = new Set();
-  var resources = createResources();
   var request = {
     destination: null,
     flushScheduled: false,
@@ -11898,7 +11936,12 @@ function flushCompletedQueues(request, destination) {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
-    } else if (enableFloat) {
+    } else if (request.pendingRootTasks > 0) {
+      // We have not yet flushed the root segment so we early return
+      return;
+    }
+
+    if (enableFloat) {
       writeHoistables(destination, request.resources, request.responseState);
     } // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
@@ -12078,9 +12121,12 @@ function renderToStream(children, options) {
     fatal: false,
     error: null
   };
+  var resources = createResources();
   var request = createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       options ? options.identifierPrefix : undefined,
       undefined,
       options ? options.bootstrapScriptContent : undefined,
