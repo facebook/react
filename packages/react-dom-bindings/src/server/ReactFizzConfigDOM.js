@@ -296,6 +296,8 @@ export function createResponseState(
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
 
+      preloadBootstrapModule(resources, src, nonce, integrity);
+
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(src)),
@@ -1977,7 +1979,7 @@ function pushLink(
           }
         }
         pushLinkImpl(resource.chunks, resource.props);
-        resources.usedStylesheets.add(resource);
+        resources.usedStylesheets.set(key, resource);
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
@@ -4249,8 +4251,7 @@ export function writePreamble(
   // Flush unblocked stylesheets by precedence
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
 
-  resources.usedStylesheets.forEach(resource => {
-    const key = getResourceKey(resource.props.as, resource.props.href);
+  resources.usedStylesheets.forEach((resource, key) => {
     if (resources.stylesMap.has(key)) {
       // The underlying stylesheet is represented both as a used stylesheet
       // (a regular component we will attempt to preload) and as a StylesheetResource.
@@ -4345,8 +4346,7 @@ export function writeHoistables(
   // but we want to kick off preloading as soon as possible
   resources.precedences.forEach(preloadLateStyles, destination);
 
-  resources.usedStylesheets.forEach(resource => {
-    const key = getResourceKey(resource.props.as, resource.props.href);
+  resources.usedStylesheets.forEach((resource, key) => {
     if (resources.stylesMap.has(key)) {
       // The underlying stylesheet is represented both as a used stylesheet
       // (a regular component we will attempt to preload) and as a StylesheetResource.
@@ -4861,12 +4861,18 @@ type PreconnectProps = {
 };
 type PreconnectResource = TResource<'preconnect', null>;
 
-type PreloadProps = {
+type PreloadAsProps = {
   rel: 'preload',
   as: string,
   href: string,
   [string]: mixed,
 };
+type PreloadModuleProps = {
+  rel: 'modulepreload',
+  href: string,
+  [string]: mixed,
+};
+type PreloadProps = PreloadAsProps | PreloadModuleProps;
 type PreloadResource = TResource<'preload', PreloadProps>;
 
 type StylesheetProps = {
@@ -4911,7 +4917,7 @@ export type Resources = {
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
-  usedStylesheets: Set<PreloadResource>,
+  usedStylesheets: Map<string, PreloadResource>,
   scripts: Set<ScriptResource>,
   usedScripts: Set<PreloadResource>,
   explicitStylesheetPreloads: Set<PreloadResource>,
@@ -4939,7 +4945,7 @@ export function createResources(): Resources {
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
-    usedStylesheets: new Set(),
+    usedStylesheets: new Map(),
     scripts: new Set(),
     usedScripts: new Set(),
     explicitStylesheetPreloads: new Set(),
@@ -5510,6 +5516,46 @@ function preloadBootstrapScript(
   resources.preloadsMap.set(key, resource);
   resources.explicitScriptPreloads.add(resource);
   pushLinkImpl(resource.chunks, props);
+}
+
+// This function is only safe to call at Request start time since it assumes
+// that each module has not already been preloaded. If we find a need to preload
+// scripts at any other point in time we will need to check whether the preload
+// already exists and not assume it
+function preloadBootstrapModule(
+  resources: Resources,
+  src: string,
+  nonce: ?string,
+  integrity: ?string,
+): void {
+  const key = getResourceKey('script', src);
+  if (__DEV__) {
+    if (resources.preloadsMap.has(key)) {
+      // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
+      // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
+      // rather than instruct the user to not preload their bootstrap scripts themselves
+      console.error(
+        'Internal React Error: React expected bootstrap module with src "%s" to not have been preloaded already. please file an issue',
+        src,
+      );
+    }
+  }
+  const props: PreloadModuleProps = {
+    rel: 'modulepreload',
+    href: src,
+    nonce,
+    integrity,
+  };
+  const resource: PreloadResource = {
+    type: 'preload',
+    chunks: [],
+    state: NoState,
+    props,
+  };
+  resources.preloadsMap.set(key, resource);
+  resources.explicitScriptPreloads.add(resource);
+  pushLinkImpl(resource.chunks, props);
+  return;
 }
 
 function internalPreinitScript(
