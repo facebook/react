@@ -1594,14 +1594,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
         if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-          await waitFor([
-            'Count: 0',
-            'Sync effect',
-            'Schedule update [1]',
-            'Count: 1',
-          ]);
-        } else {
           expect(ReactNoop).toMatchRenderedOutput(
             <span prop="Count: (empty)" />,
           );
@@ -1611,6 +1603,14 @@ describe('ReactHooksWithNoopRenderer', () => {
           ReactNoop.flushPassiveEffects();
           assertLog(['Schedule update [1]']);
           await waitForAll(['Count: 1']);
+        } else {
+          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+          await waitFor([
+            'Count: 0',
+            'Sync effect',
+            'Schedule update [1]',
+            'Count: 1',
+          ]);
         }
 
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);

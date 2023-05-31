@@ -327,7 +327,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
+  // @gate forceConcurrentByDefaultForTesting
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +

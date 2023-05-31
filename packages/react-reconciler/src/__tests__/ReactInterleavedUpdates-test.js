@@ -86,7 +86,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('222');
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
+  // @gate forceConcurrentByDefaultForTesting
   test('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than
     // the in-progress render.

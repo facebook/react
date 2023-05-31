@@ -3501,7 +3501,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  // @gate !forceConcurrentByDefaultForTesting
+  // @gate forceConcurrentByDefaultForTesting
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;
 
