@@ -2233,9 +2233,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await waitForAll(['Foo', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
 
-    React.startTransition(() => {
+    if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
       ReactNoop.render(<Foo showB={true} />);
-    });
+    } else {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo showB={true} />);
+      });
+    }
 
     await waitForAll(['Foo', 'A', 'Suspend! [B]', 'Loading B...']);
 

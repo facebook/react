@@ -156,12 +156,23 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-
-    React.startTransition(() => {
+    if (
+      gate(
+        flags =>
+          !flags.forceConcurrentByDefaultForTesting ||
+          flags.enableUnifiedSyncLane,
+      )
+    ) {
+      React.startTransition(() => {
+        instance.setState(createUpdate('a'));
+        instance.setState(createUpdate('b'));
+        instance.setState(createUpdate('c'));
+      });
+    } else {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    });
+    }
 
     // Begin the updates but don't flush them yet
     await waitFor(['a', 'b', 'c']);

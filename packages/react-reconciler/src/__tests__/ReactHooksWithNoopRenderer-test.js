@@ -1585,11 +1585,17 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
 
         // Rendering again should flush the previous commit's effects
-        React.startTransition(() => {
+        if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
           ReactNoop.render(<Counter count={1} />, () =>
             Scheduler.log('Sync effect'),
           );
-        });
+        } else {
+          React.startTransition(() => {
+            ReactNoop.render(<Counter count={1} />, () =>
+              Scheduler.log('Sync effect'),
+            );
+          });
+        }
 
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
