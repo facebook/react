@@ -19,6 +19,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
@@ -70,9 +71,15 @@ function renderToNodeStreamImpl(
     startFlowing(request, destination);
   }
   const destination = new ReactMarkupReadableStream();
+  const resources = createResources();
   const request = createRequest(
     children,
-    createResponseState(false, options ? options.identifierPrefix : undefined),
+    resources,
+    createResponseState(
+      resources,
+      false,
+      options ? options.identifierPrefix : undefined,
+    ),
     createRootFormatContext(),
     Infinity,
     onError,

@@ -201,6 +201,7 @@ export type ExternalRuntimeScript = {
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 export function createResponseState(
+  resources: Resources,
   identifierPrefix: string | void,
   nonce: string | void,
   bootstrapScriptContent: string | void,
@@ -265,6 +266,8 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+
+      preloadBootstrapScript(resources, src, nonce, integrity);
 
       bootstrapChunks.push(
         startScriptSrc,
@@ -5467,6 +5470,46 @@ function preinit(href: string, options: PreinitOptions): void {
       }
     }
   }
+}
+
+// This function is only safe to call at Request start time since it assumes
+// that each script has not already been preloaded. If we find a need to preload
+// scripts at any other point in time we will need to check whether the preload
+// already exists and not assume it
+function preloadBootstrapScript(
+  resources: Resources,
+  src: string,
+  nonce: ?string,
+  integrity: ?string,
+): void {
+  const key = getResourceKey('script', src);
+  if (__DEV__) {
+    if (resources.preloadsMap.has(key)) {
+      // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
+      // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
+      // rather than instruct the user to not preload their bootstrap scripts themselves
+      console.error(
+        'Internal React Error: React expected bootstrap script with src "%s" to not have been preloaded already. please file an issue',
+        src,
+      );
+    }
+  }
+  const props: PreloadProps = {
+    rel: 'preload',
+    href: src,
+    as: 'script',
+    nonce,
+    integrity,
+  };
+  const resource: PreloadResource = {
+    type: 'preload',
+    chunks: [],
+    state: NoState,
+    props,
+  };
+  resources.preloadsMap.set(key, resource);
+  resources.explicitScriptPreloads.add(resource);
+  pushLinkImpl(resource.chunks, props);
 }
 
 function internalPreinitScript(
