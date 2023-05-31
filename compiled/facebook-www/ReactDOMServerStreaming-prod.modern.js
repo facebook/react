@@ -546,7 +546,7 @@ function pushLink(
           }),
           resources.preloadsMap.set(responseState, textEmbedded)),
         pushLinkImpl(textEmbedded.chunks, textEmbedded.props),
-        resources.usedStylesheets.add(textEmbedded),
+        resources.usedStylesheets.set(responseState, textEmbedded),
         pushLinkImpl(target, props)
       );
     href = resources.stylesMap.get(responseState);
@@ -1703,12 +1703,8 @@ function writePreamble(
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear();
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
-  resources.usedStylesheets.forEach(function (resource) {
-    if (
-      !resources.stylesMap.has(
-        "[" + resource.props.as + "]" + resource.props.href
-      )
-    )
+  resources.usedStylesheets.forEach(function (resource, key) {
+    if (!resources.stylesMap.has(key))
       for (resource = resource.chunks, i = 0; i < resource.length; i++)
         destination.buffer += resource[i];
   });
@@ -1754,12 +1750,8 @@ function writeHoistables(destination, resources, responseState) {
   resources.fontPreloads.forEach(flushResourceLate, destination);
   resources.fontPreloads.clear();
   resources.precedences.forEach(preloadLateStyles, destination);
-  resources.usedStylesheets.forEach(function (resource) {
-    if (
-      !resources.stylesMap.has(
-        "[" + resource.props.as + "]" + resource.props.href
-      )
-    )
+  resources.usedStylesheets.forEach(function (resource, key) {
+    if (!resources.stylesMap.has(key))
       for (resource = resource.chunks, i = 0; i < resource.length; i++)
         destination.buffer += resource[i];
   });
@@ -3827,7 +3819,7 @@ exports.renderToStream = function (children, options) {
       fontPreloads: new Set(),
       precedences: new Map(),
       stylePrecedences: new Map(),
-      usedStylesheets: new Set(),
+      usedStylesheets: new Map(),
       scripts: new Set(),
       usedScripts: new Set(),
       explicitStylesheetPreloads: new Set(),
@@ -3911,18 +3903,33 @@ exports.renderToStream = function (children, options) {
       bootstrapScripts < bootstrapModules.length;
       bootstrapScripts++
     )
-      (bootstrapScriptContent = bootstrapModules[bootstrapScripts]),
+      (externalRuntimeConfig = bootstrapModules[bootstrapScripts]),
+        (bootstrapScriptContent =
+          "string" === typeof externalRuntimeConfig
+            ? externalRuntimeConfig
+            : externalRuntimeConfig.src),
         (externalRuntimeConfig =
-          "string" === typeof bootstrapScriptContent
+          "string" === typeof externalRuntimeConfig
             ? void 0
-            : bootstrapScriptContent.integrity),
+            : externalRuntimeConfig.integrity),
+        (scriptConfig = {
+          rel: "modulepreload",
+          href: bootstrapScriptContent,
+          nonce: void 0,
+          integrity: externalRuntimeConfig
+        }),
+        (props = {
+          type: "preload",
+          chunks: [],
+          state: 0,
+          props: scriptConfig
+        }),
+        resources.preloadsMap.set("[script]" + bootstrapScriptContent, props),
+        resources.explicitScriptPreloads.add(props),
+        pushLinkImpl(props.chunks, scriptConfig),
         JSCompiler_inline_result.push(
           '<script type="module" src="',
-          escapeTextForBrowser(
-            "string" === typeof bootstrapScriptContent
-              ? bootstrapScriptContent
-              : bootstrapScriptContent.src
-          )
+          escapeTextForBrowser(bootstrapScriptContent)
         ),
         externalRuntimeConfig &&
           JSCompiler_inline_result.push(

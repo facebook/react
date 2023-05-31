@@ -537,7 +537,7 @@ function pushLink(
           }),
           resources.preloadsMap.set(responseState, textEmbedded)),
         pushLinkImpl(textEmbedded.chunks, textEmbedded.props),
-        resources.usedStylesheets.add(textEmbedded),
+        resources.usedStylesheets.set(responseState, textEmbedded),
         pushLinkImpl(target, props)
       );
     href = resources.stylesMap.get(responseState);
@@ -1665,12 +1665,8 @@ function writePreamble(
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear();
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
-  resources.usedStylesheets.forEach(function (resource) {
-    if (
-      !resources.stylesMap.has(
-        "[" + resource.props.as + "]" + resource.props.href
-      )
-    )
+  resources.usedStylesheets.forEach(function (resource, key) {
+    if (!resources.stylesMap.has(key))
       for (resource = resource.chunks, i = 0; i < resource.length; i++)
         destination.push(resource[i]);
   });
@@ -1712,12 +1708,8 @@ function writeHoistables(destination, resources, responseState) {
   resources.fontPreloads.forEach(flushResourceLate, destination);
   resources.fontPreloads.clear();
   resources.precedences.forEach(preloadLateStyles, destination);
-  resources.usedStylesheets.forEach(function (resource) {
-    if (
-      !resources.stylesMap.has(
-        "[" + resource.props.as + "]" + resource.props.href
-      )
-    )
+  resources.usedStylesheets.forEach(function (resource, key) {
+    if (!resources.stylesMap.has(key))
       for (resource = resource.chunks, i = 0; i < resource.length; i++)
         destination.push(resource[i]);
   });
@@ -3847,7 +3839,7 @@ function renderToStringImpl(
       fontPreloads: new Set(),
       precedences: new Map(),
       stylePrecedences: new Map(),
-      usedStylesheets: new Set(),
+      usedStylesheets: new Map(),
       scripts: new Set(),
       usedScripts: new Set(),
       explicitStylesheetPreloads: new Set(),
@@ -3914,4 +3906,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-d90171db";
+exports.version = "18.3.0-www-modern-7ad5a939";
