@@ -460,7 +460,7 @@ export function createHostRootFiber(
     }
     if (
       // We only use this flag for our repo tests to check both behaviors.
-      !forceConcurrentByDefaultForTesting
+      forceConcurrentByDefaultForTesting
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     } else if (
