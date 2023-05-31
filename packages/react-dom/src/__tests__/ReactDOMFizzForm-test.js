@@ -524,6 +524,7 @@ describe('ReactDOMFizzForm', () => {
 
   // @gate enableFormActions
   it('can provide a custom action on buttons the server for actions', async () => {
+    const hiddenRef = React.createRef();
     const inputRef = React.createRef();
     const buttonRef = React.createRef();
     let foo;
@@ -546,7 +547,7 @@ describe('ReactDOMFizzForm', () => {
     function App() {
       return (
         <form>
-          <input type="hidden" name="foo" value="bar" />
+          <input type="hidden" name="foo" value="bar" ref={hiddenRef} />
           <input
             type="submit"
             formAction={action}
@@ -588,6 +589,8 @@ describe('ReactDOMFizzForm', () => {
       ReactDOMClient.hydrateRoot(container, <App />);
     });
 
+    expect(hiddenRef.current.name).toBe('foo');
+
     submit(inputRef.current);
 
     expect(foo).toBe('bar');
@@ -597,5 +600,54 @@ describe('ReactDOMFizzForm', () => {
     submit(buttonRef.current);
 
     expect(foo).toBe('bar');
+  });
+
+  // @gate enableFormActions
+  it('can hydrate hidden fields in the beginning of a form', async () => {
+    const hiddenRef = React.createRef();
+
+    let invoked = false;
+    function action(formData) {
+      invoked = true;
+    }
+    action.$$FORM_ACTION = function (identifierPrefix) {
+      const extraFields = new FormData();
+      extraFields.append(identifierPrefix + 'hello', 'world');
+      return {
+        action: '',
+        name: identifierPrefix,
+        method: 'POST',
+        encType: 'multipart/form-data',
+        data: extraFields,
+      };
+    };
+    function App() {
+      return (
+        <form action={action}>
+          <input type="hidden" name="bar" defaultValue="baz" ref={hiddenRef} />
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>
+      );
+    }
+
+    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    await readIntoContainer(stream);
+
+    const barField = container.querySelector('[name=bar]');
+
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+
+    expect(hiddenRef.current).toBe(barField);
+
+    expect(hiddenRef.current.name).toBe('bar');
+    expect(hiddenRef.current.value).toBe('baz');
+
+    expect(container.querySelectorAll('[name=bar]').length).toBe(1);
+
+    submit(hiddenRef.current.form);
+
+    expect(invoked).toBe(true);
   });
 });
