@@ -3794,7 +3794,11 @@ describe('ReactDOMFizzServer', () => {
             },
             {
               src: 'baz',
-              crossOrigin: 'anonymous',
+              crossOrigin: '',
+            },
+            {
+              src: 'qux',
+              crossOrigin: 'defaults-to-empty',
             },
           ],
           bootstrapModules: [
@@ -3828,7 +3832,8 @@ describe('ReactDOMFizzServer', () => {
     ).toEqual([
       '<script src="foo" async=""></script>',
       '<script src="bar" async=""></script>',
-      '<script src="baz" crossorigin="anonymous" async=""></script>',
+      '<script src="baz" crossorigin="" async=""></script>',
+      '<script src="qux" crossorigin="" async=""></script>',
       '<script type="module" src="quux" async=""></script>',
       '<script type="module" src="corge" async=""></script>',
       '<script type="module" src="grault" crossorigin="use-credentials" async=""></script>',

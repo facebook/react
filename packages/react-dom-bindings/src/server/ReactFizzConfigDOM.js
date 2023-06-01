@@ -268,7 +268,11 @@ export function createResponseState(
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       const crossOrigin =
-        typeof scriptConfig === 'string' ? undefined : scriptConfig.crossOrigin;
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
       bootstrapChunks.push(
         startScriptSrc,
@@ -286,7 +290,7 @@ export function createResponseState(
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
-      if (crossOrigin) {
+      if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
@@ -303,7 +307,11 @@ export function createResponseState(
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
       const crossOrigin =
-        typeof scriptConfig === 'string' ? undefined : scriptConfig.crossOrigin;
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
       bootstrapChunks.push(
         startModuleSrc,
@@ -322,7 +330,7 @@ export function createResponseState(
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
-      if (crossOrigin) {
+      if (typeof crossOrigin === 'string') {
         bootstrapChunks.push(
           scriptCrossOrigin,
           stringToChunk(escapeTextForBrowser(crossOrigin)),
