@@ -16089,7 +16089,8 @@ function preload$1(href, options) {
         as: as,
         crossOrigin: "font" === as ? "" : options.crossOrigin,
         integrity: options.integrity,
-        type: options.type
+        type: options.type,
+        fetchPriority: options.fetchPriority
       }),
       preloadPropsMap.set(key, href),
       null !== ownerDocument.querySelector(limitedEscapedHref) ||
@@ -16131,7 +16132,8 @@ function preinit$1(href, options) {
             href: href,
             "data-precedence": precedence,
             crossOrigin: options.crossOrigin,
-            integrity: options.integrity
+            integrity: options.integrity,
+            fetchPriority: options.fetchPriority
           };
           (options = preloadPropsMap.get(key)) &&
             adoptPreloadPropsForStylesheet(href, options);
@@ -16171,7 +16173,8 @@ function preinit$1(href, options) {
                 async: !0,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity,
-                nonce: options.nonce
+                nonce: options.nonce,
+                fetchPriority: options.fetchPriority
               }),
               (options = preloadPropsMap.get(key)) &&
                 adoptPreloadPropsForScript(href, options),
@@ -17427,7 +17430,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1907 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-b3787f70",
+  version: "18.3.0-www-classic-808eab78",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17471,7 +17474,7 @@ var devToolsConfig$jscomp$inline_1907 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b3787f70"
+  reconcilerVersion: "18.3.0-www-classic-808eab78"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17701,7 +17704,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-b3787f70";
+exports.version = "18.3.0-www-classic-808eab78";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

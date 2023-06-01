@@ -1993,7 +1993,8 @@ function preload(href, options) {
             href: href,
             crossOrigin: "font" === as ? "" : options.crossOrigin,
             integrity: options.integrity,
-            type: options.type
+            type: options.type,
+            fetchPriority: options.fetchPriority
           }
         }),
         resources.preloadsMap.set(key, resource),
@@ -2044,7 +2045,8 @@ function preinit(href, options) {
                 href: href,
                 "data-precedence": as,
                 crossOrigin: options.crossOrigin,
-                integrity: options.integrity
+                integrity: options.integrity,
+                fetchPriority: options.fetchPriority
               }
             };
             resources.stylesMap.set(key, resource);
@@ -2075,7 +2077,8 @@ function preinit(href, options) {
                 async: !0,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity,
-                nonce: options.nonce
+                nonce: options.nonce,
+                fetchPriority: options.fetchPriority
               }),
               resources.scripts.add(as),
               pushScriptImpl(as.chunks, href),
@@ -4008,4 +4011,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-bb704388";
+exports.version = "18.3.0-www-classic-3ec35755";

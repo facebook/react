@@ -2047,7 +2047,8 @@ function preload(href, options) {
             href: href,
             crossOrigin: "font" === as ? "" : options.crossOrigin,
             integrity: options.integrity,
-            type: options.type
+            type: options.type,
+            fetchPriority: options.fetchPriority
           }
         }),
         resources.preloadsMap.set(key, resource),
@@ -2098,7 +2099,8 @@ function preinit(href, options) {
                 href: href,
                 "data-precedence": as,
                 crossOrigin: options.crossOrigin,
-                integrity: options.integrity
+                integrity: options.integrity,
+                fetchPriority: options.fetchPriority
               }
             };
             resources.stylesMap.set(key, resource);
@@ -2129,7 +2131,8 @@ function preinit(href, options) {
                 async: !0,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity,
-                nonce: options.nonce
+                nonce: options.nonce,
+                fetchPriority: options.fetchPriority
               }),
               resources.scripts.add(as),
               pushScriptImpl(as.chunks, href),

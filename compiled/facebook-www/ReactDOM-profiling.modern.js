@@ -16311,7 +16311,8 @@ function preload$1(href, options) {
         as: as,
         crossOrigin: "font" === as ? "" : options.crossOrigin,
         integrity: options.integrity,
-        type: options.type
+        type: options.type,
+        fetchPriority: options.fetchPriority
       }),
       preloadPropsMap.set(key, href),
       null !== ownerDocument.querySelector(limitedEscapedHref) ||
@@ -16353,7 +16354,8 @@ function preinit$1(href, options) {
             href: href,
             "data-precedence": precedence,
             crossOrigin: options.crossOrigin,
-            integrity: options.integrity
+            integrity: options.integrity,
+            fetchPriority: options.fetchPriority
           };
           (options = preloadPropsMap.get(key)) &&
             adoptPreloadPropsForStylesheet(href, options);
@@ -16393,7 +16395,8 @@ function preinit$1(href, options) {
                 async: !0,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity,
-                nonce: options.nonce
+                nonce: options.nonce,
+                fetchPriority: options.fetchPriority
               }),
               (options = preloadPropsMap.get(key)) &&
                 adoptPreloadPropsForScript(href, options),
@@ -16948,7 +16951,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1866 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-c229356b",
+  version: "18.3.0-www-modern-e321cbd2",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16993,7 +16996,7 @@ var devToolsConfig$jscomp$inline_1866 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-c229356b"
+  reconcilerVersion: "18.3.0-www-modern-e321cbd2"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17151,7 +17154,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-c229356b";
+exports.version = "18.3.0-www-modern-e321cbd2";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-d2e90a0e";
+var ReactVersion = "18.3.0-www-classic-77da47da";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -7565,7 +7565,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     href: href,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
-    type: options.type
+    type: options.type,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -7602,7 +7603,8 @@ function stylesheetPropsFromPreinitOptions(href, precedence, options) {
     href: href,
     "data-precedence": precedence,
     crossOrigin: options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -7626,7 +7628,8 @@ function scriptPropsFromPreinitOptions(src, options) {
     async: true,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
-    nonce: options.nonce
+    nonce: options.nonce,
+    fetchPriority: options.fetchPriority
   };
 }
 

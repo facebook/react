@@ -7572,7 +7572,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     href: href,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
-    type: options.type
+    type: options.type,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -7609,7 +7610,8 @@ function stylesheetPropsFromPreinitOptions(href, precedence, options) {
     href: href,
     "data-precedence": precedence,
     crossOrigin: options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -7633,7 +7635,8 @@ function scriptPropsFromPreinitOptions(src, options) {
     async: true,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
-    nonce: options.nonce
+    nonce: options.nonce,
+    fetchPriority: options.fetchPriority
   };
 }
 

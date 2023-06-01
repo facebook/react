@@ -15643,7 +15643,8 @@ function preload$1(href, options) {
         as: as,
         crossOrigin: "font" === as ? "" : options.crossOrigin,
         integrity: options.integrity,
-        type: options.type
+        type: options.type,
+        fetchPriority: options.fetchPriority
       }),
       preloadPropsMap.set(key, href),
       null !== ownerDocument.querySelector(limitedEscapedHref) ||
@@ -15685,7 +15686,8 @@ function preinit$1(href, options) {
             href: href,
             "data-precedence": precedence,
             crossOrigin: options.crossOrigin,
-            integrity: options.integrity
+            integrity: options.integrity,
+            fetchPriority: options.fetchPriority
           };
           (options = preloadPropsMap.get(key)) &&
             adoptPreloadPropsForStylesheet(href, options);
@@ -15725,7 +15727,8 @@ function preinit$1(href, options) {
                 async: !0,
                 crossOrigin: options.crossOrigin,
                 integrity: options.integrity,
-                nonce: options.nonce
+                nonce: options.nonce,
+                fetchPriority: options.fetchPriority
               }),
               (options = preloadPropsMap.get(key)) &&
                 adoptPreloadPropsForScript(href, options),
@@ -16981,7 +16984,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1851 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-f881705e",
+  version: "18.3.0-www-classic-37168c1b",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2230 = {
@@ -17011,7 +17014,7 @@ var internals$jscomp$inline_2230 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-f881705e"
+  reconcilerVersion: "18.3.0-www-classic-37168c1b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2231 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17405,4 +17408,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-f881705e";
+exports.version = "18.3.0-www-classic-37168c1b";

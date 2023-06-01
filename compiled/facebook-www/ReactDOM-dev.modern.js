@@ -34033,7 +34033,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-675a1233";
+var ReactVersion = "18.3.0-www-modern-c632da18";
 
 function createPortal$1(
   children,
@@ -44355,7 +44355,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     as: as,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
-    type: options.type
+    type: options.type,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -44492,7 +44493,8 @@ function stylesheetPropsFromPreinitOptions(href, precedence, options) {
     href: href,
     "data-precedence": precedence,
     crossOrigin: options.crossOrigin,
-    integrity: options.integrity
+    integrity: options.integrity,
+    fetchPriority: options.fetchPriority
   };
 }
 
@@ -44502,7 +44504,8 @@ function scriptPropsFromPreinitOptions(src, options) {
     async: true,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
-    nonce: options.nonce
+    nonce: options.nonce,
+    fetchPriority: options.fetchPriority
   };
 } // This function is called in begin work and we should always have a currentDocument set
 
