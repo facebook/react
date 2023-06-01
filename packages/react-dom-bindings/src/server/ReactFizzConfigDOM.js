@@ -2671,7 +2671,13 @@ function pushScript(
 
     const src = props.src;
     const key = getResourceKey('script', src);
-    if (props.async !== true || props.onLoad || props.onError) {
+
+    const isAsync =
+      props.async &&
+      typeof props.async !== 'function' &&
+      typeof props.async !== 'symbol';
+
+    if (!isAsync || props.onLoad || props.onError) {
       // we don't want to preload nomodule scripts
       if (props.noModule !== true) {
         // We can't resourcify scripts with load listeners. To avoid ambiguity with
@@ -2696,7 +2702,7 @@ function pushScript(
         }
       }
 
-      if (props.async !== true) {
+      if (!isAsync) {
         // This is not an async script, we can preloaded it but it still needs to
         // be emitted in place since it needs to hydrate on the client
         pushScriptImpl(target, props);
