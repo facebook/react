@@ -21,7 +21,7 @@
     "@parcel/watcher": "^2.1.0",
     "chalk": "4",
     "readline": "^1.3.0",
-    "typescript": "^4.8.3",
+    "typescript": "^5.1.0",
     "yargs": "^17.7.1"
   },
   "devDependencies": {

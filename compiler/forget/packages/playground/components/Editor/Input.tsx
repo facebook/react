@@ -88,7 +88,7 @@ export default function Input({ errors }: Props) {
     const reactLib = [
       React$Types,
       "file:///node_modules/@types/react/index.d.ts",
-    ] as const;
+    ] as [any, string];
     monaco.languages.typescript.javascriptDefaults.addExtraLib(...reactLib);
     monaco.languages.typescript.typescriptDefaults.addExtraLib(...reactLib);
 

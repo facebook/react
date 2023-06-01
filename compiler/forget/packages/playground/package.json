@@ -43,7 +43,7 @@
     "eslint-config-next": "13.0.4",
     "postcss": "^8.4.19",
     "tailwindcss": "^3.2.4",
-    "typescript": "4.9.3"
+    "typescript": "^5.1.0"
   },
   "resolutions": {
     "./**/@babel/parser": "7.7.4",
