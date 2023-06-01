@@ -17081,13 +17081,11 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   }
 
   if (typeof instance.componentDidMount === "function") {
-    var fiberFlags = Update | LayoutStatic;
+    workInProgress.flags |= Update | LayoutStatic;
+  }
 
-    if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
-      fiberFlags |= MountLayoutDev;
-    }
-
-    workInProgress.flags |= fiberFlags;
+  if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
+    workInProgress.flags |= MountLayoutDev;
   }
 }
 
@@ -17142,13 +17140,11 @@ function resumeMountClassInstance(workInProgress, ctor, newProps, renderLanes) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === "function") {
-      var fiberFlags = Update | LayoutStatic;
+      workInProgress.flags |= Update | LayoutStatic;
+    }
 
-      if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
-        fiberFlags |= MountLayoutDev;
-      }
-
-      workInProgress.flags |= fiberFlags;
+    if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
+      workInProgress.flags |= MountLayoutDev;
     }
 
     return false;
@@ -17194,25 +17190,21 @@ function resumeMountClassInstance(workInProgress, ctor, newProps, renderLanes) {
     }
 
     if (typeof instance.componentDidMount === "function") {
-      var _fiberFlags = Update | LayoutStatic;
+      workInProgress.flags |= Update | LayoutStatic;
+    }
 
-      if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
-        _fiberFlags |= MountLayoutDev;
-      }
-
-      workInProgress.flags |= _fiberFlags;
+    if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
+      workInProgress.flags |= MountLayoutDev;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === "function") {
-      var _fiberFlags2 = Update | LayoutStatic;
+      workInProgress.flags |= Update | LayoutStatic;
+    }
 
-      if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
-        _fiberFlags2 |= MountLayoutDev;
-      }
-
-      workInProgress.flags |= _fiberFlags2;
+    if ((workInProgress.mode & StrictEffectsMode) !== NoMode) {
+      workInProgress.flags |= MountLayoutDev;
     } // If shouldComponentUpdate returned false, we should still update the
     // memoized state to indicate that this work can be reused.
 
@@ -29121,10 +29113,12 @@ function invokeLayoutEffectMountInDEV(fiber) {
       case ClassComponent: {
         var instance = fiber.stateNode;
 
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
+        if (typeof instance.componentDidMount === "function") {
+          try {
+            instance.componentDidMount();
+          } catch (error) {
+            captureCommitPhaseError(fiber, fiber.return, error);
+          }
         }
 
         break;
@@ -34039,7 +34033,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-7cf6b354";
+var ReactVersion = "18.3.0-www-modern-675a1233";
 
 function createPortal$1(
   children,
