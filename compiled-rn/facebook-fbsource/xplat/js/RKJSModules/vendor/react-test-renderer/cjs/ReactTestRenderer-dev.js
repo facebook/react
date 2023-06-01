@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ca59e5754dbc2396cdc2b7d218cedd13>>
+ * @generated SignedSource<<e2649a21f4471fab672f885dc7d27434>>
  */
 
 'use strict';
@@ -23529,8 +23529,6 @@ function createHostRootFiber(
     }
 
     if (
-      // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
       // Only for internal experiments.
       concurrentUpdatesByDefaultOverride
     ) {
@@ -23930,7 +23928,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-ae31d2ea3-20230531";
+var ReactVersion = "18.3.0-canary-018c58c9c-20230601";
 
 // Might add PROFILE later.
 
