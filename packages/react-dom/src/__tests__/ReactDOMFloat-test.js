@@ -3789,6 +3789,7 @@ body {
           as: 'style',
           crossOrigin: 'use-credentials',
           integrity: 'some hash',
+          fetchPriority: 'low',
         });
         return (
           <html>
@@ -3908,6 +3909,113 @@ body {
       }).toErrorDev([
         'ReactDOM.preload(): For `href` "foo", The options provided conflict with props on a matching <link rel="stylesheet" ... /> element. When the preload options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call may be extraneous. Try removing the call, otherwise try adjusting both the props on the <link rel="stylesheet" ... /> and the options passed to `ReactDOM.preload()` to agree.\n  "integrity" missing from options, underlying prop value: "some hash"\n  "media" missing from options, underlying prop value: "print"\n  "crossOrigin" option value: "use-credentials", missing from underlying props',
       ]);
+    });
+
+    it('supports fetchPriority', async () => {
+      function Component({isServer}) {
+        ReactDOM.preload(isServer ? 'highserver' : 'highclient', {
+          as: 'script',
+          fetchPriority: 'high',
+        });
+        ReactDOM.preload(isServer ? 'lowserver' : 'lowclient', {
+          as: 'style',
+          fetchPriority: 'low',
+        });
+        ReactDOM.preload(isServer ? 'autoserver' : 'autoclient', {
+          as: 'style',
+          fetchPriority: 'auto',
+        });
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component isServer={true} />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="preload"
+              as="style"
+              href="lowserver"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoserver"
+              fetchpriority="auto"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      );
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="preload"
+              as="style"
+              href="lowserver"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoserver"
+              fetchpriority="auto"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highclient"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="lowclient"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoclient"
+              fetchpriority="auto"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
     });
   });
 
@@ -4442,7 +4550,6 @@ body {
           <body>hello</body>
         </html>,
       );
-
       await clientAct(() => {
         ReactDOMClient.hydrateRoot(
           document,
@@ -4453,7 +4560,6 @@ body {
           </html>,
         );
       });
-
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -4469,6 +4575,97 @@ body {
               integrity="bar hash"
               data-precedence="default"
             />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
+
+    it('supports fetchPriority', async () => {
+      function Component({isServer}) {
+        ReactDOM.preinit(isServer ? 'highserver' : 'highclient', {
+          as: 'script',
+          fetchPriority: 'high',
+        });
+        ReactDOM.preinit(isServer ? 'lowserver' : 'lowclient', {
+          as: 'style',
+          fetchPriority: 'low',
+        });
+        ReactDOM.preinit(isServer ? 'autoserver' : 'autoclient', {
+          as: 'style',
+          fetchPriority: 'auto',
+        });
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component isServer={true} />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="lowserver"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoserver"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <script async="" src="highserver" fetchpriority="high" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      );
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="lowserver"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoserver"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="lowclient"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoclient"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <script async="" src="highserver" fetchpriority="high" />
+            <script async="" src="highclient" fetchpriority="high" />
           </head>
           <body>hello</body>
         </html>,

@@ -2173,6 +2173,7 @@ type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
@@ -2245,6 +2246,7 @@ function preloadPropsFromPreloadOptions(
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -2254,6 +2256,7 @@ type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
   nonce?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
@@ -2395,6 +2398,7 @@ function stylesheetPropsFromPreinitOptions(
     'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -2408,6 +2412,7 @@ function scriptPropsFromPreinitOptions(
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
     nonce: options.nonce,
+    fetchPriority: options.fetchPriority,
   };
 }
 

@@ -5102,6 +5102,7 @@ type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 export function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
@@ -5247,6 +5248,7 @@ type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
   nonce?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 function preinit(href: string, options: PreinitOptions): void {
   if (!enableFloat) {
@@ -5590,6 +5592,7 @@ function preloadPropsFromPreloadOptions(
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -5631,6 +5634,7 @@ function stylesheetPropsFromPreinitOptions(
     'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -5662,6 +5666,7 @@ function scriptPropsFromPreinitOptions(
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
     nonce: options.nonce,
+    fetchPriority: options.fetchPriority,
   };
 }
 
