@@ -118,6 +118,9 @@ export function useEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (typeof deps === "undefined") {
+    console.warn("Missing dependency array in useEffect. This will lead to an infinite loop. To fix, please add a dependency array to useEffect. Docs: https://react.dev/reference/react/useEffect");
+  }
   const dispatcher = resolveDispatcher();
   return dispatcher.useEffect(create, deps);
 }
