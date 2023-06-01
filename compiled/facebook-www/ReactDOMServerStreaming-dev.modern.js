@@ -4693,141 +4693,112 @@ function pushScript(
   noscriptTagInScope
 ) {
   {
+    var asyncProp = props.async;
+
     if (
+      typeof props.src !== "string" ||
+      !props.src ||
+      !(
+        asyncProp &&
+        typeof asyncProp !== "function" &&
+        typeof asyncProp !== "symbol"
+      ) ||
+      props.onLoad ||
+      props.onError ||
       insertionMode === SVG_MODE ||
       noscriptTagInScope ||
-      props.itemProp != null ||
-      typeof props.src !== "string" ||
-      !props.src
+      props.itemProp != null
     ) {
-      // This script will not be a resource nor can it be preloaded, we bailout early
-      // and emit it in place.
+      // This script will not be a resource, we bailout early and emit it in place.
       return pushScriptImpl(target, props);
     }
 
     var src = props.src;
-    var key = getResourceKey("script", src);
+    var key = getResourceKey("script", src); // We can make this <script> into a ScriptResource
 
-    if (props.async !== true || props.onLoad || props.onError) {
-      // we don't want to preload nomodule scripts
-      if (props.noModule !== true) {
-        // We can't resourcify scripts with load listeners. To avoid ambiguity with
-        // other Resourcified async scripts on the server we omit them from the server
-        // stream and expect them to be inserted during hydration on the client.
-        // We can still preload them however so the client can start fetching the script
-        // as soon as possible
-        var resource = resources.preloadsMap.get(key);
+    var resource = resources.scriptsMap.get(key);
 
-        if (!resource) {
-          resource = {
-            type: "preload",
-            chunks: [],
-            state: NoState,
-            props: preloadAsScriptPropsFromProps(props.src, props)
-          };
-          resources.preloadsMap.set(key, resource);
+    {
+      var devResource = getAsResourceDEV(resource);
 
-          {
-            markAsImplicitResourceDEV(resource, props, resource.props);
+      if (devResource) {
+        switch (devResource.__provenance) {
+          case "rendered": {
+            var differenceDescription = describeDifferencesForScripts(
+              // Diff the props from the JSX element, not the derived resource props
+              props,
+              devResource.__originalProps
+            );
+
+            if (differenceDescription) {
+              error(
+                'React encountered a <script async={true} src="%s" .../> that has props that conflict' +
+                  " with another hoistable script with the same `src`. When rendering hoistable scripts (async scripts without any loading handlers)" +
+                  " the props from the first encountered instance will be used and props from later instances will be ignored." +
+                  " Update the props on both <script async={true} .../> instance so they agree.%s",
+                src,
+                differenceDescription
+              );
+            }
+
+            break;
           }
 
-          resources.usedScripts.add(resource);
-          pushLinkImpl(resource.chunks, resource.props);
-        }
-      }
-
-      if (props.async !== true) {
-        // This is not an async script, we can preloaded it but it still needs to
-        // be emitted in place since it needs to hydrate on the client
-        pushScriptImpl(target, props);
-        return null;
-      }
-    } else {
-      // We can make this <script> into a ScriptResource
-      var _resource = resources.scriptsMap.get(key);
-
-      {
-        var devResource = getAsResourceDEV(_resource);
-
-        if (devResource) {
-          switch (devResource.__provenance) {
-            case "rendered": {
-              var differenceDescription = describeDifferencesForScripts(
+          case "preinit": {
+            var _differenceDescription2 =
+              describeDifferencesForScriptOverPreinit(
                 // Diff the props from the JSX element, not the derived resource props
                 props,
-                devResource.__originalProps
+                devResource.__propsEquivalent
               );
 
-              if (differenceDescription) {
-                error(
-                  'React encountered a <script async={true} src="%s" .../> that has props that conflict' +
-                    " with another hoistable script with the same `src`. When rendering hoistable scripts (async scripts without any loading handlers)" +
-                    " the props from the first encountered instance will be used and props from later instances will be ignored." +
-                    " Update the props on both <script async={true} .../> instance so they agree.%s",
-                  src,
-                  differenceDescription
-                );
-              }
-
-              break;
+            if (_differenceDescription2) {
+              error(
+                'React encountered a <script async={true} src="%s" .../> with props that conflict' +
+                  ' with the options provided to `ReactDOM.preinit("%s", { as: "script", ... })`. React will use the first props or preinitialization' +
+                  " options encountered when rendering a hoistable script with a particular `src` and will ignore any newer props or" +
+                  " options. The first instance of this script resource was created using the `ReactDOM.preinit()` function." +
+                  " Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support" +
+                  " arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering" +
+                  " <script> tags only.%s",
+                src,
+                src,
+                _differenceDescription2
+              );
             }
 
-            case "preinit": {
-              var _differenceDescription2 =
-                describeDifferencesForScriptOverPreinit(
-                  // Diff the props from the JSX element, not the derived resource props
-                  props,
-                  devResource.__propsEquivalent
-                );
-
-              if (_differenceDescription2) {
-                error(
-                  'React encountered a <script async={true} src="%s" .../> with props that conflict' +
-                    ' with the options provided to `ReactDOM.preinit("%s", { as: "script", ... })`. React will use the first props or preinitialization' +
-                    " options encountered when rendering a hoistable script with a particular `src` and will ignore any newer props or" +
-                    " options. The first instance of this script resource was created using the `ReactDOM.preinit()` function." +
-                    " Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support" +
-                    " arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering" +
-                    " <script> tags only.%s",
-                  src,
-                  src,
-                  _differenceDescription2
-                );
-              }
-
-              break;
-            }
+            break;
           }
         }
       }
+    }
 
-      if (!_resource) {
-        _resource = {
-          type: "script",
-          chunks: [],
-          state: NoState,
-          props: null
-        };
-        resources.scriptsMap.set(key, _resource);
+    if (!resource) {
+      resource = {
+        type: "script",
+        chunks: [],
+        state: NoState,
+        props: null
+      };
+      resources.scriptsMap.set(key, resource);
 
-        {
-          markAsRenderedResourceDEV(_resource, props);
-        } // Add to the script flushing queue
+      {
+        markAsRenderedResourceDEV(resource, props);
+      } // Add to the script flushing queue
 
-        resources.scripts.add(_resource);
-        var scriptProps = props;
-        var preloadResource = resources.preloadsMap.get(key);
+      resources.scripts.add(resource);
+      var scriptProps = props;
+      var preloadResource = resources.preloadsMap.get(key);
 
-        if (preloadResource) {
-          // If we already had a preload we don't want that resource to flush directly.
-          // We let the newly created resource govern flushing.
-          preloadResource.state |= Blocked;
-          scriptProps = assign({}, props);
-          adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
-        } // encode the tag as Chunks
+      if (preloadResource) {
+        // If we already had a preload we don't want that resource to flush directly.
+        // We let the newly created resource govern flushing.
+        preloadResource.state |= Blocked;
+        scriptProps = assign({}, props);
+        adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
+      } // encode the tag as Chunks
 
-        pushScriptImpl(_resource.chunks, scriptProps);
-      }
+      pushScriptImpl(resource.chunks, scriptProps);
     }
 
     if (textEmbedded) {
@@ -6289,8 +6260,6 @@ function writePreamble(
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
-  resources.usedScripts.forEach(flushResourceInPreamble, destination);
-  resources.usedScripts.clear();
   resources.explicitStylesheetPreloads.forEach(
     flushResourceInPreamble,
     destination
@@ -6356,8 +6325,6 @@ function writeHoistables(destination, resources, responseState) {
   resources.precedences.forEach(preloadLateStyles, destination);
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
-  resources.usedScripts.forEach(flushResourceLate, destination);
-  resources.usedScripts.clear();
   resources.explicitStylesheetPreloads.forEach(flushResourceLate, destination);
   resources.explicitStylesheetPreloads.clear();
   resources.explicitScriptPreloads.forEach(flushResourceLate, destination);
@@ -6846,7 +6813,6 @@ function createResources() {
     precedences: new Map(),
     stylePrecedences: new Map(),
     scripts: new Set(),
-    usedScripts: new Set(),
     explicitStylesheetPreloads: new Set(),
     // explicitImagePreloads: new Set(),
     explicitScriptPreloads: new Set(),
@@ -7345,10 +7311,10 @@ function preinit(href, options) {
 
         var _key = getResourceKey(as, src);
 
-        var _resource2 = resources.scriptsMap.get(_key);
+        var _resource = resources.scriptsMap.get(_key);
 
         {
-          var _devResource = getAsResourceDEV(_resource2);
+          var _devResource = getAsResourceDEV(_resource);
 
           if (_devResource) {
             var _propsEquivalent = scriptPropsFromPreinitOptions(src, options);
@@ -7402,20 +7368,20 @@ function preinit(href, options) {
           }
         }
 
-        if (!_resource2) {
-          _resource2 = {
+        if (!_resource) {
+          _resource = {
             type: "script",
             chunks: [],
             state: NoState,
             props: null
           };
-          resources.scriptsMap.set(_key, _resource2);
+          resources.scriptsMap.set(_key, _resource);
 
           var _resourceProps = scriptPropsFromPreinitOptions(src, options);
 
           {
             markAsImperativeResourceDEV(
-              _resource2,
+              _resource,
               "preinit",
               href,
               options,
@@ -7423,8 +7389,8 @@ function preinit(href, options) {
             );
           }
 
-          resources.scripts.add(_resource2);
-          pushScriptImpl(_resource2.chunks, _resourceProps);
+          resources.scripts.add(_resource);
+          pushScriptImpl(_resource.chunks, _resourceProps);
           flushResources(request);
         }
 
@@ -7550,19 +7516,6 @@ function preloadAsStylePropsFromProps(href, props) {
   };
 }
 
-function preloadAsScriptPropsFromProps(href, props) {
-  return {
-    rel: "preload",
-    as: "script",
-    href: href,
-    crossOrigin: props.crossOrigin,
-    fetchPriority: props.fetchPriority,
-    integrity: props.integrity,
-    nonce: props.nonce,
-    referrerPolicy: props.referrerPolicy
-  };
-}
-
 function stylesheetPropsFromPreinitOptions(href, precedence, options) {
   return {
     rel: "stylesheet",
@@ -7649,20 +7602,6 @@ function markAsImperativeResourceDEV(
     devResource.__originalHref = originalHref;
     devResource.__originalOptions = originalOptions;
     devResource.__propsEquivalent = propsEquivalent;
-  }
-}
-
-function markAsImplicitResourceDEV(resource, underlyingProps, impliedProps) {
-  {
-    var devResource = resource;
-
-    if (typeof devResource.__provenance === "string") {
-      error("Resource already marked for DEV type. This is a bug in React.");
-    }
-
-    devResource.__provenance = "implicit";
-    devResource.__underlyingProps = underlyingProps;
-    devResource.__impliedProps = impliedProps;
   }
 }
 

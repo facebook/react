@@ -862,57 +862,57 @@ function pushStartInstance(
         selected =
         resources =
         textEmbedded =
-        propKey =
+        formatContext =
         propKey$jscomp$1 =
           null;
       for (propValue in props)
-        if (hasOwnProperty.call(props, propValue)) {
-          var propValue$jscomp$1 = props[propValue];
-          if (null != propValue$jscomp$1)
-            switch (propValue) {
-              case "children":
-              case "dangerouslySetInnerHTML":
-                throw Error(
-                  "input is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
-                );
-              case "name":
-                name = propValue$jscomp$1;
-                break;
-              case "formAction":
-                propKey$jscomp$0 = propValue$jscomp$1;
-                break;
-              case "formEncType":
-                formEncType = propValue$jscomp$1;
-                break;
-              case "formMethod":
-                propKey$jscomp$1 = propValue$jscomp$1;
-                break;
-              case "formTarget":
-                propKey = propValue$jscomp$1;
-                break;
-              case "defaultChecked":
-                propValue$jscomp$0 = propValue$jscomp$1;
-                break;
-              case "defaultValue":
-                resources = propValue$jscomp$1;
-                break;
-              case "checked":
-                selected = propValue$jscomp$1;
-                break;
-              case "value":
-                textEmbedded = propValue$jscomp$1;
-                break;
-              default:
-                pushAttribute(target, propValue, propValue$jscomp$1);
-            }
-        }
+        if (
+          hasOwnProperty.call(props, propValue) &&
+          ((propKey = props[propValue]), null != propKey)
+        )
+          switch (propValue) {
+            case "children":
+            case "dangerouslySetInnerHTML":
+              throw Error(
+                "input is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
+              );
+            case "name":
+              name = propKey;
+              break;
+            case "formAction":
+              propKey$jscomp$0 = propKey;
+              break;
+            case "formEncType":
+              formEncType = propKey;
+              break;
+            case "formMethod":
+              propKey$jscomp$1 = propKey;
+              break;
+            case "formTarget":
+              formatContext = propKey;
+              break;
+            case "defaultChecked":
+              propValue$jscomp$0 = propKey;
+              break;
+            case "defaultValue":
+              resources = propKey;
+              break;
+            case "checked":
+              selected = propKey;
+              break;
+            case "value":
+              textEmbedded = propKey;
+              break;
+            default:
+              pushAttribute(target, propValue, propKey);
+          }
       props = pushFormActionAttribute(
         target,
         responseState,
         propKey$jscomp$0,
         formEncType,
         propKey$jscomp$1,
-        propKey,
+        formatContext,
         name
       );
       null !== selected
@@ -1068,48 +1068,24 @@ function pushStartInstance(
         formatContext.noscriptTagInScope
       );
     case "script":
-      a: if (
+      responseState = props.async;
+      if (
+        "string" !== typeof props.src ||
+        !props.src ||
+        !responseState ||
+        "function" === typeof responseState ||
+        "symbol" === typeof responseState ||
+        props.onLoad ||
+        props.onError ||
         3 === formatContext.insertionMode ||
         formatContext.noscriptTagInScope ||
-        null != props.itemProp ||
-        "string" !== typeof props.src ||
-        !props.src
+        null != props.itemProp
       )
         target = pushScriptImpl(target, props);
       else {
         selected = "[script]" + props.src;
-        if (!0 !== props.async || props.onLoad || props.onError) {
-          if (
-            (!0 !== props.noModule &&
-              ((responseState = resources.preloadsMap.get(selected)),
-              responseState ||
-                ((responseState = {
-                  type: "preload",
-                  chunks: [],
-                  state: 0,
-                  props: {
-                    rel: "preload",
-                    as: "script",
-                    href: props.src,
-                    crossOrigin: props.crossOrigin,
-                    fetchPriority: props.fetchPriority,
-                    integrity: props.integrity,
-                    nonce: props.nonce,
-                    referrerPolicy: props.referrerPolicy
-                  }
-                }),
-                resources.preloadsMap.set(selected, responseState),
-                resources.usedScripts.add(responseState),
-                pushLinkImpl(responseState.chunks, responseState.props))),
-            !0 !== props.async)
-          ) {
-            pushScriptImpl(target, props);
-            target = null;
-            break a;
-          }
-        } else if (
-          ((responseState = resources.scriptsMap.get(selected)), !responseState)
-        ) {
+        responseState = resources.scriptsMap.get(selected);
+        if (!responseState) {
           responseState = { type: "script", chunks: [], state: 0, props: null };
           resources.scriptsMap.set(selected, responseState);
           resources.scripts.add(responseState);
@@ -1240,12 +1216,12 @@ function pushStartInstance(
     case "pre":
       target.push(startChunkForTag(type));
       textEmbedded = responseState = null;
-      for (propValue$jscomp$1 in props)
+      for (var propKey$jscomp$3 in props)
         if (
-          hasOwnProperty.call(props, propValue$jscomp$1) &&
-          ((propValue = props[propValue$jscomp$1]), null != propValue)
+          hasOwnProperty.call(props, propKey$jscomp$3) &&
+          ((propValue = props[propKey$jscomp$3]), null != propValue)
         )
-          switch (propValue$jscomp$1) {
+          switch (propKey$jscomp$3) {
             case "children":
               responseState = propValue;
               break;
@@ -1253,7 +1229,7 @@ function pushStartInstance(
               textEmbedded = propValue;
               break;
             default:
-              pushAttribute(target, propValue$jscomp$1, propValue);
+              pushAttribute(target, propKey$jscomp$3, propValue);
           }
       target.push(">");
       if (null != textEmbedded) {
@@ -1326,10 +1302,10 @@ function pushStartInstance(
       if (-1 !== type.indexOf("-")) {
         target.push(startChunkForTag(type));
         textEmbedded = responseState = null;
-        for (var propKey$jscomp$3 in props)
+        for (var propKey$jscomp$4 in props)
           if (
-            hasOwnProperty.call(props, propKey$jscomp$3) &&
-            ((propValue = props[propKey$jscomp$3]),
+            hasOwnProperty.call(props, propKey$jscomp$4) &&
+            ((propValue = props[propKey$jscomp$4]),
             !(
               null == propValue ||
               (enableCustomElementPropertySupport &&
@@ -1343,9 +1319,9 @@ function pushStartInstance(
                 !0 === propValue &&
                 (propValue = ""),
               enableCustomElementPropertySupport &&
-                "className" === propKey$jscomp$3 &&
-                (propKey$jscomp$3 = "class"),
-              propKey$jscomp$3)
+                "className" === propKey$jscomp$4 &&
+                (propKey$jscomp$4 = "class"),
+              propKey$jscomp$4)
             ) {
               case "children":
                 responseState = propValue;
@@ -1360,12 +1336,12 @@ function pushStartInstance(
               case "suppressHydrationWarning":
                 break;
               default:
-                isAttributeNameSafe(propKey$jscomp$3) &&
+                isAttributeNameSafe(propKey$jscomp$4) &&
                   "function" !== typeof propValue &&
                   "symbol" !== typeof propValue &&
                   target.push(
                     " ",
-                    propKey$jscomp$3,
+                    propKey$jscomp$4,
                     '="',
                     escapeTextForBrowser(propValue),
                     '"'
@@ -3422,8 +3398,6 @@ function flushCompletedQueues(request, destination) {
         resources.precedences.forEach(flushAllStylesInPreamble, destination);
         resources.scripts.forEach(flushResourceInPreamble, destination);
         resources.scripts.clear();
-        resources.usedScripts.forEach(flushResourceInPreamble, destination);
-        resources.usedScripts.clear();
         resources.explicitStylesheetPreloads.forEach(
           flushResourceInPreamble,
           destination
@@ -3483,8 +3457,6 @@ function flushCompletedQueues(request, destination) {
     resources$jscomp$0.precedences.forEach(preloadLateStyles, destination);
     resources$jscomp$0.scripts.forEach(flushResourceLate, destination);
     resources$jscomp$0.scripts.clear();
-    resources$jscomp$0.usedScripts.forEach(flushResourceLate, destination);
-    resources$jscomp$0.usedScripts.clear();
     resources$jscomp$0.explicitStylesheetPreloads.forEach(
       flushResourceLate,
       destination
@@ -3599,13 +3571,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$15 = partialBoundaries[i];
+      var boundary$14 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$15.resources;
-        var completedSegments = boundary$15.completedSegments;
+          boundary$14.resources;
+        var completedSegments = boundary$14.completedSegments;
         for (
           responseState$jscomp$1 = 0;
           responseState$jscomp$1 < completedSegments.length;
@@ -3615,7 +3587,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$15,
+              boundary$14,
               completedSegments[responseState$jscomp$1]
             )
           ) {
@@ -3627,7 +3599,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$15.resources,
+          boundary$14.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3687,8 +3659,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$17) {
-    logRecoverableError(request, error$17), fatalError(request, error$17);
+  } catch (error$16) {
+    logRecoverableError(request, error$16), fatalError(request, error$16);
   }
 }
 exports.abortStream = function (stream) {
@@ -3835,7 +3807,6 @@ exports.renderToStream = function (children, options) {
       precedences: new Map(),
       stylePrecedences: new Map(),
       scripts: new Set(),
-      usedScripts: new Set(),
       explicitStylesheetPreloads: new Set(),
       explicitScriptPreloads: new Set(),
       explicitOtherPreloads: new Set(),

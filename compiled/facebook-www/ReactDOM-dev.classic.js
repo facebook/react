@@ -8196,16 +8196,6 @@ function tryToClaimNextHydratableInstance(fiber) {
     return;
   }
 
-  {
-    if (!isHydratableType(fiber.type, fiber.pendingProps)) {
-      // This fiber never hydrates from the DOM and always does an insert
-      fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-      isHydrating = false;
-      hydrationParentFiber = fiber;
-      return;
-    }
-  }
-
   var initialInstance = nextHydratableInstance;
   var nextInstance = nextHydratableInstance;
 
@@ -34188,7 +34178,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-632e744f";
+var ReactVersion = "18.3.0-www-classic-494075fe";
 
 function createPortal$1(
   children,
@@ -42955,20 +42945,6 @@ function clearContainerSparingly(container) {
 
   return;
 } // Making this so we can eventually move all of the instance caching to the commit phase.
-// inserted without breaking hydration
-
-function isHydratableType(type, props) {
-  {
-    if (type === "script") {
-      var async = props.async,
-        onLoad = props.onLoad,
-        onError = props.onError;
-      return !(async && (onLoad || onError));
-    }
-
-    return true;
-  }
-}
 function isHydratableText(text) {
   return text !== "";
 }
@@ -43059,21 +43035,22 @@ function canHydrateInstance(instance, type, props, inRootOrSingleton) {
           var srcAttr = element.getAttribute("src");
 
           if (
-            srcAttr &&
-            element.hasAttribute("async") &&
-            !element.hasAttribute("itemprop")
-          ) {
-            // This is an async script resource
-            break;
-          } else if (
             srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
             element.getAttribute("type") !==
               (anyProps.type == null ? null : anyProps.type) ||
             element.getAttribute("crossorigin") !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
           ) {
-            // This script is for a different src
-            break;
+            // This script is for a different src/type/crossOrigin. It may be a script resource
+            // or it may just be a mistmatch
+            if (
+              srcAttr &&
+              element.hasAttribute("async") &&
+              !element.hasAttribute("itemprop")
+            ) {
+              // This is an async script resource
+              break;
+            }
           }
 
           return element;

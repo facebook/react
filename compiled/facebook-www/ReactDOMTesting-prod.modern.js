@@ -11486,38 +11486,28 @@ beginWork = function (current, workInProgress, renderLanes) {
         pushHostContext(workInProgress),
         null === current &&
           isHydrating &&
-          (((Component = workInProgress.pendingProps),
-          "script" === workInProgress.type
-            ? ((init = Component.onLoad),
-              (prevState = Component.onError),
-              (Component = !(Component.async && (init || prevState))))
-            : (Component = !0),
-          Component)
-            ? ((init = Component = nextHydratableInstance), init)
-              ? tryHydrateInstance(workInProgress, init) ||
-                (shouldClientRenderOnMismatch(workInProgress) &&
-                  throwOnHydrationMismatch(),
-                (nextHydratableInstance = getNextHydratable(init.nextSibling)),
-                (prevState = hydrationParentFiber),
-                nextHydratableInstance &&
-                tryHydrateInstance(workInProgress, nextHydratableInstance)
-                  ? deleteHydratableInstance(prevState, init)
-                  : (insertNonHydratedInstance(
-                      hydrationParentFiber,
-                      workInProgress
-                    ),
-                    (isHydrating = !1),
-                    (hydrationParentFiber = workInProgress),
-                    (nextHydratableInstance = Component)))
-              : (shouldClientRenderOnMismatch(workInProgress) &&
-                  throwOnHydrationMismatch(),
-                insertNonHydratedInstance(hydrationParentFiber, workInProgress),
-                (isHydrating = !1),
-                (hydrationParentFiber = workInProgress),
-                (nextHydratableInstance = Component))
-            : ((workInProgress.flags = (workInProgress.flags & -4097) | 2),
+          (((init = Component = nextHydratableInstance), init)
+            ? tryHydrateInstance(workInProgress, init) ||
+              (shouldClientRenderOnMismatch(workInProgress) &&
+                throwOnHydrationMismatch(),
+              (nextHydratableInstance = getNextHydratable(init.nextSibling)),
+              (prevState = hydrationParentFiber),
+              nextHydratableInstance &&
+              tryHydrateInstance(workInProgress, nextHydratableInstance)
+                ? deleteHydratableInstance(prevState, init)
+                : (insertNonHydratedInstance(
+                    hydrationParentFiber,
+                    workInProgress
+                  ),
+                  (isHydrating = !1),
+                  (hydrationParentFiber = workInProgress),
+                  (nextHydratableInstance = Component)))
+            : (shouldClientRenderOnMismatch(workInProgress) &&
+                throwOnHydrationMismatch(),
+              insertNonHydratedInstance(hydrationParentFiber, workInProgress),
               (isHydrating = !1),
-              (hydrationParentFiber = workInProgress))),
+              (hydrationParentFiber = workInProgress),
+              (nextHydratableInstance = Component))),
         (Component = workInProgress.type),
         (init = workInProgress.pendingProps),
         (prevState = null !== current ? current.memoizedProps : null),
@@ -13311,14 +13301,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$369;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1599 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1599) {
-      var element$jscomp$inline_1600 = document.createElement("div");
-      element$jscomp$inline_1600.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1599 =
-        "function" === typeof element$jscomp$inline_1600.oninput;
+    var isSupported$jscomp$inline_1592 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1592) {
+      var element$jscomp$inline_1593 = document.createElement("div");
+      element$jscomp$inline_1593.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1592 =
+        "function" === typeof element$jscomp$inline_1593.oninput;
     }
-    JSCompiler_inline_result$jscomp$369 = isSupported$jscomp$inline_1599;
+    JSCompiler_inline_result$jscomp$369 = isSupported$jscomp$inline_1592;
   } else JSCompiler_inline_result$jscomp$369 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$369 &&
@@ -13630,20 +13620,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1640 = 0;
-  i$jscomp$inline_1640 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1640++
+  var i$jscomp$inline_1633 = 0;
+  i$jscomp$inline_1633 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1633++
 ) {
-  var eventName$jscomp$inline_1641 =
-      simpleEventPluginEvents[i$jscomp$inline_1640],
-    domEventName$jscomp$inline_1642 =
-      eventName$jscomp$inline_1641.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1643 =
-      eventName$jscomp$inline_1641[0].toUpperCase() +
-      eventName$jscomp$inline_1641.slice(1);
+  var eventName$jscomp$inline_1634 =
+      simpleEventPluginEvents[i$jscomp$inline_1633],
+    domEventName$jscomp$inline_1635 =
+      eventName$jscomp$inline_1634.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1636 =
+      eventName$jscomp$inline_1634[0].toUpperCase() +
+      eventName$jscomp$inline_1634.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1642,
-    "on" + capitalizedEvent$jscomp$inline_1643
+    domEventName$jscomp$inline_1635,
+    "on" + capitalizedEvent$jscomp$inline_1636
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15707,18 +15697,18 @@ function canHydrateInstance(instance, type, props, inRootOrSingleton) {
             if (instance.hasAttribute("data-precedence")) break;
             return instance;
           case "script":
+            rel = instance.getAttribute("src");
             if (
-              (rel = instance.getAttribute("src")) &&
+              (rel !== (null == anyProps.src ? null : anyProps.src) ||
+                instance.getAttribute("type") !==
+                  (null == anyProps.type ? null : anyProps.type) ||
+                instance.getAttribute("crossorigin") !==
+                  (null == anyProps.crossOrigin
+                    ? null
+                    : anyProps.crossOrigin)) &&
+              rel &&
               instance.hasAttribute("async") &&
               !instance.hasAttribute("itemprop")
-            )
-              break;
-            else if (
-              rel !== (null == anyProps.src ? null : anyProps.src) ||
-              instance.getAttribute("type") !==
-                (null == anyProps.type ? null : anyProps.type) ||
-              instance.getAttribute("crossorigin") !==
-                (null == anyProps.crossOrigin ? null : anyProps.crossOrigin)
             )
               break;
             return instance;
@@ -16563,17 +16553,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1810 = {
+var devToolsConfig$jscomp$inline_1803 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-c2caceb8",
+  version: "18.3.0-www-modern-c6e529af",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2194 = {
-  bundleType: devToolsConfig$jscomp$inline_1810.bundleType,
-  version: devToolsConfig$jscomp$inline_1810.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1810.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1810.rendererConfig,
+var internals$jscomp$inline_2182 = {
+  bundleType: devToolsConfig$jscomp$inline_1803.bundleType,
+  version: devToolsConfig$jscomp$inline_1803.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1803.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1803.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16590,26 +16580,26 @@ var internals$jscomp$inline_2194 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1810.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1803.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-c2caceb8"
+  reconcilerVersion: "18.3.0-www-modern-c6e529af"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2195 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2183 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2195.isDisabled &&
-    hook$jscomp$inline_2195.supportsFiber
+    !hook$jscomp$inline_2183.isDisabled &&
+    hook$jscomp$inline_2183.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2195.inject(
-        internals$jscomp$inline_2194
+      (rendererID = hook$jscomp$inline_2183.inject(
+        internals$jscomp$inline_2182
       )),
-        (injectedHook = hook$jscomp$inline_2195);
+        (injectedHook = hook$jscomp$inline_2183);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16919,4 +16909,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-c2caceb8";
+exports.version = "18.3.0-www-modern-c6e529af";
