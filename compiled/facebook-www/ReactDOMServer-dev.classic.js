@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-77da47da";
+var ReactVersion = "18.3.0-www-classic-f953f2d4";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -4067,31 +4067,13 @@ function pushLink(
           }
         }
 
-        var resource = resources.preloadsMap.get(key);
-
-        if (!resource) {
-          resource = {
-            type: "preload",
-            chunks: [],
-            state: NoState,
-            props: preloadAsStylePropsFromProps(href, props)
-          };
-          resources.preloadsMap.set(key, resource);
-
-          {
-            markAsImplicitResourceDEV(resource, props, resource.props);
-          }
-        }
-
-        pushLinkImpl(resource.chunks, resource.props);
-        resources.usedStylesheets.set(key, resource);
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        var _resource = resources.stylesMap.get(key);
+        var resource = resources.stylesMap.get(key);
 
         {
-          var devResource = getAsResourceDEV(_resource);
+          var devResource = getAsResourceDEV(resource);
 
           if (devResource) {
             switch (devResource.__provenance) {
@@ -4146,7 +4128,7 @@ function pushLink(
           }
         }
 
-        if (!_resource) {
+        if (!resource) {
           var resourceProps = stylesheetPropsFromRawProps(props);
           var preloadResource = resources.preloadsMap.get(key);
           var state = NoState;
@@ -4165,16 +4147,16 @@ function pushLink(
             }
           }
 
-          _resource = {
+          resource = {
             type: "stylesheet",
             chunks: [],
             state: state,
             props: resourceProps
           };
-          resources.stylesMap.set(key, _resource);
+          resources.stylesMap.set(key, resource);
 
           {
-            markAsRenderedResourceDEV(_resource, props);
+            markAsRenderedResourceDEV(resource, props);
           }
 
           var precedenceSet = resources.precedences.get(precedence);
@@ -4205,11 +4187,11 @@ function pushLink(
             resources.stylePrecedences.set(precedence, emptyStyleResource);
           }
 
-          precedenceSet.add(_resource);
+          precedenceSet.add(resource);
         }
 
         if (resources.boundaryResources) {
-          resources.boundaryResources.add(_resource);
+          resources.boundaryResources.add(resource);
         }
 
         if (textEmbedded) {
@@ -4755,10 +4737,10 @@ function pushScript(
       }
     } else {
       // We can make this <script> into a ScriptResource
-      var _resource2 = resources.scriptsMap.get(key);
+      var _resource = resources.scriptsMap.get(key);
 
       {
-        var devResource = getAsResourceDEV(_resource2);
+        var devResource = getAsResourceDEV(_resource);
 
         if (devResource) {
           switch (devResource.__provenance) {
@@ -4812,20 +4794,20 @@ function pushScript(
         }
       }
 
-      if (!_resource2) {
-        _resource2 = {
+      if (!_resource) {
+        _resource = {
           type: "script",
           chunks: [],
           state: NoState,
           props: null
         };
-        resources.scriptsMap.set(key, _resource2);
+        resources.scriptsMap.set(key, _resource);
 
         {
-          markAsRenderedResourceDEV(_resource2, props);
+          markAsRenderedResourceDEV(_resource, props);
         } // Add to the script flushing queue
 
-        resources.scripts.add(_resource2);
+        resources.scripts.add(_resource);
         var scriptProps = props;
         var preloadResource = resources.preloadsMap.get(key);
 
@@ -4837,7 +4819,7 @@ function pushScript(
           adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
         } // encode the tag as Chunks
 
-        pushScriptImpl(_resource2.chunks, scriptProps);
+        pushScriptImpl(_resource.chunks, scriptProps);
       }
     }
 
@@ -6298,17 +6280,6 @@ function writePreamble(
   resources.fontPreloads.clear(); // Flush unblocked stylesheets by precedence
 
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
-  resources.usedStylesheets.forEach(function (resource, key) {
-    if (resources.stylesMap.has(key));
-    else {
-      var _chunks = resource.chunks;
-
-      for (i = 0; i < _chunks.length; i++) {
-        writeChunk(destination, _chunks[i]);
-      }
-    }
-  });
-  resources.usedStylesheets.clear();
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
   resources.usedScripts.forEach(flushResourceInPreamble, destination);
@@ -6376,17 +6347,6 @@ function writeHoistables(destination, resources, responseState) {
   // but we want to kick off preloading as soon as possible
 
   resources.precedences.forEach(preloadLateStyles, destination);
-  resources.usedStylesheets.forEach(function (resource, key) {
-    if (resources.stylesMap.has(key));
-    else {
-      var chunks = resource.chunks;
-
-      for (i = 0; i < chunks.length; i++) {
-        writeChunk(destination, chunks[i]);
-      }
-    }
-  });
-  resources.usedStylesheets.clear();
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
   resources.usedScripts.forEach(flushResourceLate, destination);
@@ -6878,7 +6838,6 @@ function createResources() {
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
-    usedStylesheets: new Map(),
     scripts: new Set(),
     usedScripts: new Set(),
     explicitStylesheetPreloads: new Set(),
@@ -7379,10 +7338,10 @@ function preinit(href, options) {
 
         var _key = getResourceKey(as, src);
 
-        var _resource3 = resources.scriptsMap.get(_key);
+        var _resource2 = resources.scriptsMap.get(_key);
 
         {
-          var _devResource = getAsResourceDEV(_resource3);
+          var _devResource = getAsResourceDEV(_resource2);
 
           if (_devResource) {
             var _propsEquivalent = scriptPropsFromPreinitOptions(src, options);
@@ -7436,20 +7395,20 @@ function preinit(href, options) {
           }
         }
 
-        if (!_resource3) {
-          _resource3 = {
+        if (!_resource2) {
+          _resource2 = {
             type: "script",
             chunks: [],
             state: NoState,
             props: null
           };
-          resources.scriptsMap.set(_key, _resource3);
+          resources.scriptsMap.set(_key, _resource2);
 
           var _resourceProps = scriptPropsFromPreinitOptions(src, options);
 
           {
             markAsImperativeResourceDEV(
-              _resource3,
+              _resource2,
               "preinit",
               href,
               options,
@@ -7457,8 +7416,8 @@ function preinit(href, options) {
             );
           }
 
-          resources.scripts.add(_resource3);
-          pushScriptImpl(_resource3.chunks, _resourceProps);
+          resources.scripts.add(_resource2);
+          pushScriptImpl(_resource2.chunks, _resourceProps);
           flushResources(request);
         }
 
