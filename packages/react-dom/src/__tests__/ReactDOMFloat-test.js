@@ -3881,36 +3881,6 @@ body {
       ]);
     });
 
-    // @gate enableFloat
-    it('warns if you pass incompatible options to two `ReactDOM.preload(...)` when an implicit preload already exists with the same href', async () => {
-      function Component() {
-        ReactDOM.preload('foo', {
-          as: 'style',
-          crossOrigin: 'use-credentials',
-        });
-      }
-
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  integrity="some hash"
-                  media="print"
-                />
-                <Component />
-              </body>
-            </html>,
-          );
-        });
-      }).toErrorDev([
-        'ReactDOM.preload(): For `href` "foo", The options provided conflict with props on a matching <link rel="stylesheet" ... /> element. When the preload options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call may be extraneous. Try removing the call, otherwise try adjusting both the props on the <link rel="stylesheet" ... /> and the options passed to `ReactDOM.preload()` to agree.\n  "integrity" missing from options, underlying prop value: "some hash"\n  "media" missing from options, underlying prop value: "print"\n  "crossOrigin" option value: "use-credentials", missing from underlying props',
-      ]);
-    });
-
     it('supports fetchPriority', async () => {
       function Component({isServer}) {
         ReactDOM.preload(isServer ? 'highserver' : 'highclient', {
@@ -4759,71 +4729,6 @@ body {
             <link rel="stylesheet" href="aresource" data-precedence="foo" />
           </head>
           <body>
-            <div>hello world</div>
-          </body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat
-    it('preloads stylesheets without a precedence prop when server rendering', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <link rel="stylesheet" href="notaresource" />
-              <div>hello world</div>
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="preload" as="style" href="notaresource" />
-          </head>
-          <body>
-            <link rel="stylesheet" href="notaresource" />
-            <div>hello world</div>
-          </body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat
-    it('respects attributes defined on the stylesheet element when preloading stylesheets during server rendering', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head>
-              <link rel="stylesheet" fetchPriority="high" href="foo" />
-            </head>
-            <body>
-              <link rel="stylesheet" fetchPriority="low" href="notaresource" />
-              <div>hello world</div>
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="preload" as="style" fetchpriority="high" href="foo" />
-            <link
-              rel="preload"
-              as="style"
-              fetchpriority="low"
-              href="notaresource"
-            />
-            <link rel="stylesheet" fetchpriority="high" href="foo" />
-          </head>
-          <body>
-            <link rel="stylesheet" fetchpriority="low" href="notaresource" />
             <div>hello world</div>
           </body>
         </html>,

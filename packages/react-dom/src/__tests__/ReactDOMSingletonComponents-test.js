@@ -245,9 +245,6 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-foo="foo">
         <head data-bar="bar">
-          <link rel="preload" href="resource" as="style" />
-          <link rel="preload" href="3rdparty" as="style" />
-          <link rel="preload" href="3rdparty2" as="style" />
           <title>a server title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
@@ -842,10 +839,7 @@ describe('ReactDOM HostSingleton', () => {
     await waitForAll([]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head>
-          <link rel="preload" as="style" href="before" />
-          <link rel="preload" as="style" href="after" />
-        </head>
+        <head />
         <body>
           <link rel="stylesheet" href="before" />
           <link rel="stylesheet" href="after" />
