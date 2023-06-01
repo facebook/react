@@ -1,7 +1,7 @@
 'use strict';
 
 const {resolve} = require('path');
-const {DefinePlugin} = require('webpack');
+const Webpack = require('webpack');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -36,7 +36,7 @@ const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-source-map' : 'nosources-cheap-source-map',
   entry: {
     backend: './src/backend.js',
   },
@@ -45,12 +45,7 @@ module.exports = {
     filename: 'react_devtools_backend_compact.js',
   },
   node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
+    global: false,
   },
   resolve: {
     alias: {
@@ -66,7 +61,10 @@ module.exports = {
     minimize: false,
   },
   plugins: [
-    new DefinePlugin({
+    new Webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
+    new Webpack.DefinePlugin({
       __DEV__: true,
       __PROFILE__: false,
       __DEV____DEV__: true,

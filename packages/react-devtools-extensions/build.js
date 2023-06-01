@@ -56,14 +56,7 @@ const build = async (tempPath, manifestPath) => {
   const binPath = join(tempPath, 'bin');
   const zipPath = join(tempPath, 'zip');
 
-  const webpackPath = join(
-    __dirname,
-    '..',
-    '..',
-    'node_modules',
-    '.bin',
-    'webpack',
-  );
+  const webpackPath = join(__dirname, 'node_modules', '.bin', 'webpack');
   execSync(
     `${webpackPath} --config webpack.config.js --output-path ${binPath}`,
     {
