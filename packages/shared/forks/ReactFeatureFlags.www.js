@@ -105,7 +105,7 @@ export const enableUseMutableSource = true;
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
-export const enableSyncDefaultUpdates = true;
+export const forceConcurrentByDefaultForTesting = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

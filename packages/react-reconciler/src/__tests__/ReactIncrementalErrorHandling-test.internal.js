@@ -97,25 +97,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('oops!');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <>
-            <ErrorBoundary>
-              <Indirection>
-                <Indirection>
-                  <Indirection>
-                    <BadRender />
-                  </Indirection>
-                </Indirection>
-              </Indirection>
-            </ErrorBoundary>
-            <Indirection />
-            <Indirection />
-          </>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <>
           <ErrorBoundary>
@@ -131,7 +113,7 @@ describe('ReactIncrementalErrorHandling', () => {
           <Indirection />
         </>,
       );
-    }
+    });
 
     // Start rendering asynchronously
     await waitFor([
@@ -214,25 +196,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('oops!');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <>
-            <ErrorBoundary>
-              <Indirection>
-                <Indirection>
-                  <Indirection>
-                    <BadRender />
-                  </Indirection>
-                </Indirection>
-              </Indirection>
-            </ErrorBoundary>
-            <Indirection />
-            <Indirection />
-          </>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <>
           <ErrorBoundary>
@@ -248,7 +212,7 @@ describe('ReactIncrementalErrorHandling', () => {
           <Indirection />
         </>,
       );
-    }
+    });
 
     // Start rendering asynchronously
     await waitFor([
@@ -416,13 +380,9 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent />, () => Scheduler.log('commit'));
-    }
+    });
 
     // Render the bad component asynchronously
     await waitFor(['Parent', 'BadRender']);
@@ -458,13 +418,9 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<App />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<App />);
-    }
+    });
 
     // Render part of the tree
     await waitFor(['A', 'B']);
@@ -595,21 +551,13 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            <BrokenRender />
-          </ErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <BrokenRender />
         </ErrorBoundary>,
       );
-    }
+    });
 
     await waitFor(['ErrorBoundary render success']);
     expect(ReactNoop).toMatchRenderedOutput(null);
@@ -783,21 +731,13 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <RethrowErrorBoundary>
           <BrokenRender />
         </RethrowErrorBoundary>,
       );
-    }
+    });
 
     await waitFor(['RethrowErrorBoundary render']);
 
@@ -1856,13 +1796,9 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<Oops />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<Oops />);
-      }
+      });
 
       // Render past the component that throws, then yield.
       await waitFor(['Oops']);
