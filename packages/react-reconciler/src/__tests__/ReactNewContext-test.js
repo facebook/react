@@ -1737,4 +1737,165 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         'a future major release. Did you mean to render <Context.Provider> instead?',
     );
   });
+
+  it('should skip consumers to re-render without filter', async () => {
+    const BarContext = React.createContext({
+      value: 'Hello World',
+      valueStatic: 'Static Value',
+    });
+
+    const ComponentToRender = props => {
+      const {name} = props;
+      // const filterCallback = React.useCallback(
+      //   (prevState, nextState) => {
+      //     console.log('called', name, prevState, nextState);
+
+      //     return prevState[name] !== nextState[name];
+      //   },
+      //   [name],
+      // );
+
+      // const data = useContext(BarContext, filterCallback);
+      const data = useContext(BarContext);
+
+      Scheduler.log(`Component#ComponentToRender-${name}`);
+
+      return <div>{data[name]}</div>;
+    };
+
+    const ComponentParentToRender = () => {
+      return (
+        <div>
+          <ComponentToRender name="value" />
+          <ComponentToRender name="valueStatic" />
+        </div>
+      );
+    };
+
+    const Component = props => {
+      const {value, valueStatic} = props;
+      const contextData = React.useMemo(
+        () => ({value, valueStatic}),
+        [value, valueStatic],
+      );
+
+      const parentMemo = React.useMemo(() => <ComponentParentToRender />, []);
+
+      Scheduler.log('Component');
+
+      return (
+        <BarContext.Provider value={contextData}>
+          {parentMemo}
+        </BarContext.Provider>
+      );
+    };
+
+    // Initial mount
+    ReactNoop.render(
+      <Component value="Hello World" valueStatic="Static Value" />,
+    );
+    await waitForAll([
+      'Component',
+      'Component#ComponentToRender-value',
+      'Component#ComponentToRender-valueStatic',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <div>Hello World</div>
+        <div>Static Value</div>
+      </div>,
+    );
+
+    // Update
+    ReactNoop.render(<Component value="Good Bye" valueStatic="Static Value" />);
+    await waitForAll([
+      'Component',
+      'Component#ComponentToRender-value',
+      'Component#ComponentToRender-valueStatic',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <div>Good Bye</div>
+        <div>Static Value</div>
+      </div>,
+    );
+  });
+
+  it('should skip consumers to re-render', async () => {
+    const BarContext = React.createContext({
+      value: 'Hello World',
+      valueStatic: 'Static Value',
+    });
+
+    const ComponentToRender = props => {
+      const {name} = props;
+      const filterCallback = React.useCallback(
+        (prevState, nextState) => {
+          console.log('called', name, prevState, nextState);
+
+          return prevState[name] !== nextState[name];
+        },
+        [name],
+      );
+
+      const data = useContext(BarContext, filterCallback);
+
+      Scheduler.log(`Component#ComponentToRender-${name}`);
+
+      return <div>{data[name]}</div>;
+    };
+
+    const ComponentParentToRender = () => {
+      return (
+        <div>
+          <ComponentToRender name="value" />
+          <ComponentToRender name="valueStatic" />
+        </div>
+      );
+    };
+
+    const Component = props => {
+      const {value, valueStatic} = props;
+      const contextData = React.useMemo(
+        () => ({value, valueStatic}),
+        [value, valueStatic],
+      );
+
+      const parentMemo = React.useMemo(() => <ComponentParentToRender />, []);
+
+      Scheduler.log('Component');
+
+      return (
+        <BarContext.Provider value={contextData}>
+          {parentMemo}
+        </BarContext.Provider>
+      );
+    };
+
+    // Initial mount
+    ReactNoop.render(
+      <Component value="Hello World" valueStatic="Static Value" />,
+    );
+    await waitForAll([
+      'Component',
+      'Component#ComponentToRender-value',
+      'Component#ComponentToRender-valueStatic',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <div>Hello World</div>
+        <div>Static Value</div>
+      </div>,
+    );
+
+    // Update
+    ReactNoop.render(<Component value="Good Bye" valueStatic="Static Value" />);
+    await waitForAll(['Component', 'Component#ComponentToRender-value']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <div>Good Bye</div>
+        <div>Static Value</div>
+      </div>,
+    );
+  });
 });
