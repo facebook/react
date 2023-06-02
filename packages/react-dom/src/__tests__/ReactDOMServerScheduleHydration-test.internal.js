@@ -18,6 +18,7 @@ let assertLog;
 let waitForAll;
 let waitFor;
 let act;
+let container;
 
 function dispatchClickEvent(target) {
   const mouseOutEvent = document.createEvent('MouseEvents');
@@ -57,6 +58,13 @@ describe('ReactDOMServerScheduleHydration', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitFor = InternalTestUtils.waitFor;
     act = InternalTestUtils.act;
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   describe('with no boundary', () => {
@@ -87,7 +95,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
@@ -138,7 +145,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
@@ -200,7 +206,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
@@ -252,7 +257,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
@@ -317,7 +321,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A', 'B', 'C']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
       const spanB = container.getElementsByTagName('span')[1];
@@ -405,7 +408,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A', 'B', 'C']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
       const spanB = container.getElementsByTagName('span')[1];
@@ -495,7 +497,6 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       assertLog(['App', 'A', 'B', 'C']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
       const spanC = container.getElementsByTagName('span')[2];
@@ -541,7 +542,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const finalHTML = ReactDOMServer.renderToString(<App />);
       assertLog(['App', 'A']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
       const root = ReactDOMClient.hydrateRoot(container, <App />);
@@ -624,7 +624,6 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       assertLog(['App', 'A', 'B']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
       const spanB = container.getElementsByTagName('span')[1];
@@ -667,7 +666,6 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       assertLog(['App']);
 
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
       const spanA = container.getElementsByTagName('span')[0];
