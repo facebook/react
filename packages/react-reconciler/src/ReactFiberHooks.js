@@ -3374,7 +3374,10 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
       return readContext(context, filterCallback);
@@ -3547,7 +3550,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
       return readContext(context, filterCallback);
@@ -3716,7 +3722,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
       return readContext(context, filterCallback);
@@ -3887,7 +3896,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
       return readContext(context, filterCallback);
@@ -4063,7 +4075,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -4257,7 +4272,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -4454,7 +4472,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+    useContext<T>(
+      context: ReactContext<T>,
+      filterCallback: (prevState: any, nextState: any) => boolean,
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();

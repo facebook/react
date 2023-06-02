@@ -72,7 +72,10 @@ export function getCacheForType<T>(resourceType: () => T): T {
   return dispatcher.getCacheForType(resourceType);
 }
 
-export function useContext<T>(Context: ReactContext<T>, filterCallback: (prevState: any, nextState: any) => boolean): T {
+export function useContext<T>(
+  Context: ReactContext<T>,
+  filterCallback: (prevState: any, nextState: any) => boolean,
+): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
     // TODO: add a more generic warning for invalid values.

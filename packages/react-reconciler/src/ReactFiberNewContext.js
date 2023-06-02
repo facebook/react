@@ -273,7 +273,15 @@ function propagateContextChange_eager<T>(
       let dependency = list.firstContext;
       while (dependency !== null) {
         // Check if the context matches.
-        if (dependency.context === context && (typeof dependency.filterCallback === 'function' && dependency.filterCallback(dependency.memoizedValue, workInProgress.pendingProps.value) !== false) || typeof dependency.filterCallback !== 'function') {
+        if (
+          (dependency.context === context &&
+            typeof dependency.filterCallback === 'function' &&
+            dependency.filterCallback(
+              dependency.memoizedValue,
+              workInProgress.pendingProps.value,
+            ) !== false) ||
+          typeof dependency.filterCallback !== 'function'
+        ) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
@@ -710,7 +718,10 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T>(context: ReactContext<T>, filterContext: any): T {
+export function readContext<T>(
+  context: ReactContext<T>,
+  filterContext: any,
+): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
@@ -723,7 +734,11 @@ export function readContext<T>(context: ReactContext<T>, filterContext: any): T 
       );
     }
   }
-  return readContextForConsumer(currentlyRenderingFiber, context, filterContext);
+  return readContextForConsumer(
+    currentlyRenderingFiber,
+    context,
+    filterContext,
+  );
 }
 
 export function readContextDuringReconcilation<T>(
