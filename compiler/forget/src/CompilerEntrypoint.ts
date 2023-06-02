@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath, PluginPass } from "@babel/core";
+import { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 import {
   CompilerError,
@@ -21,9 +21,10 @@ import {
   parsePluginOptions,
 } from "./CompilerOptions";
 
-type BabelPluginPass = {
+export type CompilerPass = {
   opts: PluginOptions;
   filename: string | null;
+  comments: (t.CommentBlock | t.CommentLine)[];
 };
 
 function hasUseForgetDirective(directive: t.Directive): boolean {
@@ -41,13 +42,13 @@ function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
 
 export function compileProgram(
   program: NodePath<t.Program>,
-  pass: PluginPass
+  pass: CompilerPass
 ): void {
   let hasForgetCompiledCode: boolean = false;
 
   function visitFn(
     fn: NodePath<t.FunctionDeclaration>,
-    pass: BabelPluginPass
+    pass: CompilerPass
   ): void {
     try {
       const compiled = compile(fn, pass.opts.environment);
@@ -147,7 +148,7 @@ export function compileProgram(
   const visitor = {
     FunctionDeclaration(
       fn: NodePath<t.FunctionDeclaration>,
-      pass: BabelPluginPass
+      pass: CompilerPass
     ): void {
       if (!shouldCompile(fn, pass)) {
         return;
@@ -158,7 +159,7 @@ export function compileProgram(
 
     ArrowFunctionExpression(
       fn: NodePath<t.ArrowFunctionExpression>,
-      pass: BabelPluginPass
+      pass: CompilerPass
     ): void {
       if (!shouldCompile(fn, pass)) {
         return;
@@ -190,7 +191,7 @@ export function compileProgram(
   const options = parsePluginOptions(pass.opts);
 
   const violations = [];
-  const fileComments = pass.file.ast.comments;
+  const fileComments = pass.comments;
   let fileHasUseForgetDirective = false;
   if (Array.isArray(fileComments)) {
     for (const comment of fileComments) {
@@ -340,7 +341,7 @@ export function compileProgram(
 
 function shouldCompile(
   fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
-  pass: BabelPluginPass
+  pass: CompilerPass
 ): boolean {
   if (pass.opts.enableOnlyOnUseForgetDirective) {
     const body = fn.get("body");
