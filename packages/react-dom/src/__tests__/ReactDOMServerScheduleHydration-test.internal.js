@@ -9,8 +9,6 @@
 
 'use strict';
 
-import {enableSyncDefaultUpdates} from 'shared/forks/ReactFeatureFlags.www-dynamic';
-
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -67,21 +65,23 @@ describe('ReactDOMServerScheduleHydration', () => {
     it('resolves immediately for already hydrated content with no boundary', async () => {
       function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span onClick={onClick}>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
-        const [text, setText] = React.useState('A');
+        const [_, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
-            <Child
-              text={text}
-              onClick={() => {
-                Scheduler.log('Clicked ' + text);
-                setText('B');
-              }}
-            />
+            <Child text="A" onClick={setText} />
           </div>
         );
       }
@@ -110,20 +110,29 @@ describe('ReactDOMServerScheduleHydration', () => {
         assertLog(['Clicked A']);
       });
 
-      assertLog(['App', 'B']);
+      assertLog(['App', 'A']);
     });
 
     it('resolves after content is hydrated with no boundary', async () => {
-      function Child({text}) {
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [_, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
-            <Child text="A" />
+            <Child text="A" onClick={setText} />
           </div>
         );
       }
@@ -135,9 +144,10 @@ describe('ReactDOMServerScheduleHydration', () => {
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
-      let hydrated = false;
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      const scheduleHydrationA = root
+
+      let hydrated = false;
+      const scheduleHydrationOnA = root
         .unstable_scheduleHydration(spanA)
         .then(() => (hydrated = true));
 
@@ -147,25 +157,43 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       // Hydrate everything
       await waitForAll(['App', 'A']);
-      await scheduleHydrationA;
+      await scheduleHydrationOnA;
 
       expect(hydrated).toBe(true);
+
+      await act(() => {
+        const result = dispatchClickEvent(spanA);
+        expect(result).toBe(true);
+
+        assertLog(['Clicked A']);
+      });
+
+      assertLog(['App', 'A']);
     });
   });
 
   describe('with a boundary', () => {
     it('resolves immediately for already hydrated content', async () => {
-      function Child({text}) {
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [text, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
             <Suspense fallback="Loading...">
-              <Child text="A" />
+              <Child text="A" onClick={setText} />
             </Suspense>
           </div>
         );
@@ -185,23 +213,39 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       // Hydrate everything
       await waitForAll(['App', 'A']);
+      await root.unstable_scheduleHydration(spanA);
 
-      const hydrated = await root.unstable_scheduleHydration(spanA);
-      expect(hydrated).toBe(undefined);
+      await act(() => {
+        const result = dispatchClickEvent(spanA);
+        expect(result).toBe(true);
+
+        assertLog(['Clicked A']);
+      });
+
+      assertLog(['App', 'A']);
     });
 
     it('resolves after content is hydrated', async () => {
-      function Child({text}) {
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [text, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
             <Suspense fallback="Loading...">
-              <Child text="A" />
+              <Child text="A" onClick={setText} />
             </Suspense>
           </div>
         );
@@ -214,8 +258,9 @@ describe('ReactDOMServerScheduleHydration', () => {
       container.innerHTML = finalHTML;
       const spanA = container.getElementsByTagName('span')[0];
 
-      let hydrated = false;
       const root = ReactDOMClient.hydrateRoot(container, <App />);
+
+      let hydrated = false;
       const scheduleHydrationA = root
         .unstable_scheduleHydration(spanA)
         .then(() => (hydrated = true));
@@ -229,26 +274,43 @@ describe('ReactDOMServerScheduleHydration', () => {
       await scheduleHydrationA;
 
       expect(hydrated).toBe(true);
+
+      const result = dispatchClickEvent(spanA);
+      expect(result).toBe(true);
+
+      assertLog(['Clicked A']);
+
+      waitForAll(['App', 'A']);
     });
   });
 
   describe('with multiple boundaries', () => {
     it('resolve immediately for already hydrated content', async () => {
-      function Child({text}) {
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={e => {
+              e.preventDefault();
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [_, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
-            <Child text="A" />
+            <Child text="A" onClick={setText} />
             <Suspense fallback="Loading...">
-              <Child text="B" />
+              <Child text="B" onClick={setText} />
             </Suspense>
             <Suspense fallback="Loading...">
-              <Child text="C" />
+              <Child text="C" onClick={setText} />
             </Suspense>
           </div>
         );
@@ -273,42 +335,71 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         // For sync by default, hydration is immediately observable.
-        const hydratedA = await root.unstable_scheduleHydration(spanA);
-        expect(hydratedA).toBe(undefined);
+        await root.unstable_scheduleHydration(spanA);
+
+        const resultA = dispatchClickEvent(spanA);
+        expect(resultA).toBe(true);
+
+        assertLog(['Clicked A']);
 
         // Hydrate everything else
-        await waitForAll(['B', 'C']);
+        await waitForAll([
+          'App',
+          'A',
+          'B',
+          'App',
+          'A',
+          'B',
+          'C',
+          'App',
+          'A',
+          'B',
+          'C',
+        ]);
       } else {
         // For concurrent by default, we need to finish flushing everything.
         await waitForAll(['B', 'C']);
 
-        const hydratedA = await root.unstable_scheduleHydration(spanA);
-        expect(hydratedA).toBe(undefined);
+        await root.unstable_scheduleHydration(spanA);
       }
 
-      const hydratedB = await root.unstable_scheduleHydration(spanB);
-      expect(hydratedB).toBe(undefined);
+      await root.unstable_scheduleHydration(spanB);
+      await waitForAll([]);
+      dispatchClickEvent(spanB);
+      assertLog(['Clicked B']);
+      await waitForAll(['App', 'A', 'B', 'C']);
 
-      const hydratedC = await root.unstable_scheduleHydration(spanC);
-      expect(hydratedC).toBe(undefined);
+      await root.unstable_scheduleHydration(spanC);
+      dispatchClickEvent(spanC);
+      assertLog(['Clicked C']);
+      await waitForAll(['App', 'A', 'B', 'C']);
     });
 
     it('resolve after content is hydrated', async () => {
-      function Child({text}) {
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [_, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
-            <Child text="A" />
+            <Child text="A" onClick={setText} />
             <Suspense fallback="Loading...">
-              <Child text="B" />
+              <Child text="B" onClick={setText} />
             </Suspense>
             <Suspense fallback="Loading...">
-              <Child text="C" />
+              <Child text="C" onClick={setText} />
             </Suspense>
           </div>
         );
@@ -325,16 +416,16 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       const root = ReactDOMClient.hydrateRoot(container, <App />);
       let hydratedA = false;
-      let hydratedB = false;
-      let hydratedC = false;
       const scheduleHydrationA = root
         .unstable_scheduleHydration(spanA)
         .then(() => (hydratedA = true));
+
+      let hydratedB = false;
       const scheduleHydrationB = root
         .unstable_scheduleHydration(spanB)
-        .then(() => {
-          hydratedB = true;
-        });
+        .then(() => (hydratedB = true));
+
+      let hydratedC = false;
       const scheduleHydrationC = root
         .unstable_scheduleHydration(spanC)
         .then(() => (hydratedC = true));
@@ -345,7 +436,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       expect(hydratedB).toBe(false);
       expect(hydratedC).toBe(false);
 
-      // Hydrate just A
+      // Hydrate everything
       await waitForAll(['App', 'A', 'C', 'B']);
 
       await scheduleHydrationA;
@@ -356,26 +447,52 @@ describe('ReactDOMServerScheduleHydration', () => {
       expect(hydratedA).toBe(true);
       expect(hydratedB).toBe(true);
       expect(hydratedC).toBe(true);
+
+      const resultA = dispatchClickEvent(spanA);
+      expect(resultA).toBe(true);
+      assertLog(['Clicked A']);
+      await waitForAll(['App', 'A', 'B', 'C']);
+
+      const resultB = dispatchClickEvent(spanB);
+      expect(resultB).toBe(true);
+      assertLog(['Clicked B']);
+      await waitForAll(['App', 'A', 'B', 'C']);
+
+      const resultC = dispatchClickEvent(spanC);
+      expect(resultC).toBe(true);
+      assertLog(['Clicked C']);
+      await waitForAll(['App', 'A', 'B', 'C']);
     });
 
     it('resolve out of order content', async () => {
-      function Child({text}) {
+      '' +
+        gate(flags => {
+          console.log(flags);
+        });
+      function Child({text, onClick}) {
         Scheduler.log(text);
-        return <span>{text}</span>;
+        return (
+          <span
+            onClick={() => {
+              Scheduler.log('Clicked ' + text);
+              onClick(text);
+            }}>
+            {text}
+          </span>
+        );
       }
 
       function App() {
+        const [_, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
+            <Child text="A" onClick={setText} />
             <Suspense fallback="Loading...">
-              <Child text="A" />
+              <Child text="B" onClick={setText} />
             </Suspense>
             <Suspense fallback="Loading...">
-              <Child text="B" />
-            </Suspense>
-            <Suspense fallback="Loading...">
-              <Child text="C" />
+              <Child text="C" onClick={setText} />
             </Suspense>
           </div>
         );
@@ -388,41 +505,27 @@ describe('ReactDOMServerScheduleHydration', () => {
       const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
-      const spanA = container.getElementsByTagName('span')[0];
-      const spanB = container.getElementsByTagName('span')[1];
       const spanC = container.getElementsByTagName('span')[2];
 
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      let hydratedA = false;
-      let hydratedB = false;
-      let hydratedC = false;
 
-      const scheduleHydrationB = root
-        .unstable_scheduleHydration(spanB)
-        .then(() => (hydratedB = true));
+      let hydratedC = false;
       const scheduleHydrationC = root
         .unstable_scheduleHydration(spanC)
         .then(() => (hydratedC = true));
-      const scheduleHydrationA = root
-        .unstable_scheduleHydration(spanA)
-        .then(() => (hydratedA = true));
 
       // Nothing has been hydrated so far.
       assertLog([]);
 
-      expect(hydratedA).toBe(false);
-      expect(hydratedB).toBe(false);
       expect(hydratedC).toBe(false);
 
       await waitForAll(['App', 'A', 'C', 'B']);
-
-      await scheduleHydrationA;
-      await scheduleHydrationB;
       await scheduleHydrationC;
+      const resultC = dispatchClickEvent(spanC);
+      expect(resultC).toBe(true);
+      assertLog(['Clicked C']);
 
-      expect(hydratedA).toBe(true);
-      expect(hydratedB).toBe(true);
-      expect(hydratedC).toBe(true);
+      await waitForAll(['App', 'A', 'B', 'C']);
     });
   });
 
@@ -453,15 +556,14 @@ describe('ReactDOMServerScheduleHydration', () => {
       // Nothing has been hydrated so far.
       assertLog([]);
 
-      try {
-        await root.unstable_scheduleHydration(undefined);
-      } catch (e) {
-        expect(e.message).toMatch(
-          'Cannot schedule hydration, target is undefined.',
-        );
-      }
+      let hydrationError = null;
+      await root
+        .unstable_scheduleHydration(undefined)
+        .catch(error => (hydrationError = error));
 
-      expect.assertions(1);
+      expect(hydrationError.message).toMatch(
+        'Cannot schedule hydration, target is undefined.',
+      );
     });
 
     it('rejects if target node is not in this root', async () => {
@@ -491,15 +593,14 @@ describe('ReactDOMServerScheduleHydration', () => {
       // Nothing has been hydrated so far.
       assertLog([]);
 
-      try {
-        await root.unstable_scheduleHydration(nodeOutsideContainer);
-      } catch (e) {
-        expect(e.message).toMatch(
-          'Cannot schedule hydration, target is not a React component.',
-        );
-      }
+      let hydrationError = null;
+      await root
+        .unstable_scheduleHydration(nodeOutsideContainer)
+        .catch(error => (hydrationError = error));
 
-      expect.assertions(1);
+      expect(hydrationError.message).toMatch(
+        'Cannot schedule hydration, target is not a React component.',
+      );
     });
 
     it('rejects if target node is deleted before successfully hydrated', async () => {
@@ -533,7 +634,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
-      const spanA = container.getElementsByTagName('span')[0];
       const spanB = container.getElementsByTagName('span')[1];
 
       const root = ReactDOMClient.hydrateRoot(container, <App />);
@@ -587,17 +687,17 @@ describe('ReactDOMServerScheduleHydration', () => {
       await waitFor(['App']);
 
       let hydrated;
-      const hydrate = root
+      const scheduleHydration = root
         .unstable_scheduleHydration(spanA)
         .then(() => (hydrated = true));
 
       try {
         await waitForAll(['B', 'B']);
       } catch (e) {
-        //
+        // ignore hydration mismatch
       }
 
-      await hydrate;
+      await scheduleHydration;
 
       expect(hydrated).toBe(true);
     });
