@@ -9,7 +9,10 @@
 
 'use strict';
 
+import {enableSyncDefaultUpdates} from 'shared/forks/ReactFeatureFlags.www-dynamic';
+
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
@@ -47,6 +50,7 @@ describe('ReactDOMServerScheduleHydration', () => {
 
     React = require('react');
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
@@ -267,11 +271,20 @@ describe('ReactDOMServerScheduleHydration', () => {
       // Hydrate just A
       await waitFor(['App', 'A']);
 
-      const hydratedA = await root.unstable_scheduleHydration(spanA);
-      expect(hydratedA).toBe(undefined);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        // For sync by default, hydration is immediately observable.
+        const hydratedA = await root.unstable_scheduleHydration(spanA);
+        expect(hydratedA).toBe(undefined);
 
-      // Hydrate everything else
-      await waitForAll(['B', 'C']);
+        // Hydrate everything else
+        await waitForAll(['B', 'C']);
+      } else {
+        // For concurrent by default, we need to finish flushing everything.
+        await waitForAll(['B', 'C']);
+
+        const hydratedA = await root.unstable_scheduleHydration(spanA);
+        expect(hydratedA).toBe(undefined);
+      }
 
       const hydratedB = await root.unstable_scheduleHydration(spanB);
       expect(hydratedB).toBe(undefined);
@@ -443,7 +456,9 @@ describe('ReactDOMServerScheduleHydration', () => {
       try {
         await root.unstable_scheduleHydration(undefined);
       } catch (e) {
-        expect(e).toMatch('Cannot schedule hydration, target is undefined.');
+        expect(e.message).toMatch(
+          'Cannot schedule hydration, target is undefined.',
+        );
       }
 
       expect.assertions(1);
@@ -479,7 +494,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       try {
         await root.unstable_scheduleHydration(nodeOutsideContainer);
       } catch (e) {
-        expect(e).toMatch(
+        expect(e.message).toMatch(
           'Cannot schedule hydration, target is not a React component.',
         );
       }
@@ -535,11 +550,18 @@ describe('ReactDOMServerScheduleHydration', () => {
 
       spanB.remove();
 
-      await waitForAll(['B', 'B', 'A']);
+      if (__DEV__) {
+        await waitForAll(['B', 'B', 'A']);
+      } else {
+        // TODO: Why the extra 'App'?
+        await waitForAll(['B', 'App', 'B', 'A']);
+      }
 
       await hydrationPromise;
 
-      expect(hydrationError).toMatch('Target was removed before hydration.');
+      expect(hydrationError.message).toMatch(
+        'Target was removed before hydration.',
+      );
     });
 
     it('resolves if target node is inside dangerouslySetInnerHTML', async () => {

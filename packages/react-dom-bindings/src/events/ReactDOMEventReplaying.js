@@ -80,7 +80,8 @@ type QueuedHydrationTarget = {
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: EventPriority,
-  callback: null | (void => void),
+  resolve: null | (() => void),
+  reject: null | (Error => void),
 };
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -305,12 +306,14 @@ function attemptExplicitHydrationTarget(
   // values.
   const targetInst = getClosestInstanceFromNode(queuedTarget.target);
   if (targetInst === null) {
-    const callbacks = queuedTarget.callbacks;
-    if (callbacks) {
-      callbacks[1](
-        'Cannot schedule hydration, target is not a React component.',
+    const reject = queuedTarget.reject;
+    if (reject) {
+      reject(
+        new Error(
+          'Cannot schedule hydration, target is not a React component.',
+        ),
       );
-      queuedTarget.callbacks = null;
+      queuedTarget.resolve = queuedTarget.reject = null;
     }
   } else {
     const nearestMounted = getNearestMountedFiber(targetInst);
@@ -325,7 +328,6 @@ function attemptExplicitHydrationTarget(
           attemptHydrationAtPriority(queuedTarget.priority, () => {
             attemptHydrationAtCurrentPriority(nearestMounted);
           });
-
           return;
         }
       } else if (tag === HostRoot) {
@@ -339,20 +341,20 @@ function attemptExplicitHydrationTarget(
       }
     }
     queuedTarget.blockedOn = null;
-    const callbacks = queuedTarget.callbacks;
-    if (callbacks) {
-      callbacks[0]();
-      queuedTarget.callbacks = null;
+    const resolve = queuedTarget.resolve;
+    if (resolve) {
+      resolve();
+      queuedTarget.resolve = queuedTarget.reject = null;
     }
   }
 }
 
 export async function queueExplicitHydrationTarget(
   target: Node,
-): Promise<true> {
+): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!target) {
-      reject('Cannot schedule hydration, target is undefined.');
+      reject(new Error('Cannot schedule hydration, target is undefined.'));
     }
     // TODO: This will read the priority if it's dispatched by the React
     // event system but not native events. Should read window.event.type, like
@@ -362,7 +364,8 @@ export async function queueExplicitHydrationTarget(
       blockedOn: null,
       target: target,
       priority: updatePriority,
-      callbacks: [resolve, reject],
+      resolve,
+      reject,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
@@ -379,6 +382,7 @@ export async function queueExplicitHydrationTarget(
     queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
     if (i === 0) {
       attemptExplicitHydrationTarget(queuedTarget);
+    } else {
     }
   });
 }
@@ -542,16 +546,16 @@ export function retryIfBlockedOn(
       queuedTarget.blockedOn = null;
       const targetInst = getClosestInstanceFromNode(queuedTarget.target);
       if (targetInst == null) {
-        const callbacks = queuedTarget.callbacks;
-        if (callbacks) {
-          callbacks[1]('Target was removed before hydration.');
-          queuedTarget.callbacks = null;
+        const reject = queuedTarget.reject;
+        if (reject) {
+          reject(new Error('Target was removed before hydration.'));
+          queuedTarget.resolve = queuedTarget.reject = null;
         }
       } else {
-        const callbacks = queuedTarget.callbacks;
-        if (callbacks) {
-          callbacks[0]();
-          queuedTarget.callbacks = null;
+        const resolve = queuedTarget.resolve;
+        if (resolve) {
+          resolve();
+          queuedTarget.resolve = queuedTarget.reject = null;
         }
       }
     }
