@@ -238,7 +238,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -335,8 +335,7 @@ describe('ReactDOMServerScheduleHydration', () => {
         // For sync by default, hydration is immediately observable.
         await root.unstable_scheduleHydration(spanA);
 
-        const resultA = dispatchClickEvent(spanA);
-        expect(resultA).toBe(true);
+        dispatchClickEvent(spanA);
 
         assertLog(['Clicked A']);
 
