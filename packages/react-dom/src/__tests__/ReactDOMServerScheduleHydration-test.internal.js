@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
@@ -48,7 +47,6 @@ describe('ReactDOMServerScheduleHydration', () => {
 
     React = require('react');
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
@@ -77,7 +75,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [_, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -128,7 +126,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [_, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -188,7 +186,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [text, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -240,7 +238,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [text, setText] = React.useState('UNSET');
+        const [setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -301,7 +299,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [_, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -390,7 +388,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [_, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -465,10 +463,6 @@ describe('ReactDOMServerScheduleHydration', () => {
     });
 
     it('resolve out of order content', async () => {
-      '' +
-        gate(flags => {
-          console.log(flags);
-        });
       function Child({text, onClick}) {
         Scheduler.log(text);
         return (
@@ -483,7 +477,7 @@ describe('ReactDOMServerScheduleHydration', () => {
       }
 
       function App() {
-        const [_, setText] = React.useState('UNSET');
+        const [, setText] = React.useState('UNSET');
         Scheduler.log('App');
         return (
           <div>
@@ -667,7 +661,7 @@ describe('ReactDOMServerScheduleHydration', () => {
     it('resolves if target node is inside dangerouslySetInnerHTML', async () => {
       function App() {
         Scheduler.log('App');
-        return <div dangerouslySetInnerHTML={{__html: '<span>A</span>'}}></div>;
+        return <div dangerouslySetInnerHTML={{__html: '<span>A</span>'}} />;
       }
 
       const finalHTML = ReactDOMServer.renderToString(<App />);

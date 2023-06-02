@@ -466,5 +466,8 @@
   "478": "Thenable should have already resolved. This is a bug in React.",
   "479": "Cannot update optimistic state while rendering.",
   "480": "File/Blob fields are not yet supported in progressive forms. It probably means you are closing over binary data or FormData in a Server Action.",
-  "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React."
+  "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React.",
+  "482": "Target was removed before hydration.",
+  "483": "Cannot schedule hydration, target is not a React component.",
+  "484": "Cannot schedule hydration, target is undefined."
 }
