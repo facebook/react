@@ -755,7 +755,7 @@ export function readContextDuringReconcilation<T>(
 function readContextForConsumer<T>(
   consumer: Fiber | null,
   context: ReactContext<T>,
-  filterCallback: any,
+  filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
 ): T {
   const value = isPrimaryRenderer
     ? context._currentValue

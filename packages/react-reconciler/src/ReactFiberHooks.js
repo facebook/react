@@ -3376,7 +3376,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
@@ -3552,7 +3555,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -3724,7 +3730,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -3898,7 +3907,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -4077,7 +4089,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
@@ -4274,7 +4289,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
@@ -4474,7 +4492,10 @@ if (__DEV__) {
     },
     useContext<T>(
       context: ReactContext<T>,
-      filterCallback: (prevState: any, nextState: any) => boolean,
+      filterCallback:
+        | ((prevState: any, nextState: any) => boolean)
+        | void
+        | null,
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();

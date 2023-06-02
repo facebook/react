@@ -74,7 +74,7 @@ export function getCacheForType<T>(resourceType: () => T): T {
 
 export function useContext<T>(
   Context: ReactContext<T>,
-  filterCallback: (prevState: any, nextState: any) => boolean,
+  filterCallback: ((prevState: any, nextState: any) => boolean) | void | null,
 ): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
