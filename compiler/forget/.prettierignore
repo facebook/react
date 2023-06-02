@@ -1,5 +1,5 @@
-/packages/demo-*
-/packages/js-framework-benchmark
+fixtures/
+bench/
 **/dist
 **/__tests__/fixtures/**/*.expect.md
 **/__tests__/fixtures/**/*.flow.js
