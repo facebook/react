@@ -578,7 +578,6 @@ describe('ReactDOMServerScheduleHydration', () => {
       assertLog(['App', 'A']);
 
       const nodeOutsideContainer = document.createElement('span');
-      const container = document.createElement('div');
       container.innerHTML = finalHTML;
 
       const root = ReactDOMClient.hydrateRoot(container, <App />);
