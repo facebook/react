@@ -11,15 +11,11 @@ import {
   CompilerError,
   CompilerErrorDetail,
   ErrorSeverity,
-} from "./CompilerError";
-import { compile } from "./CompilerPipeline";
-import { GeneratedSource } from "./HIR";
-import { addInstrumentForget } from "./CompilerInstrumentation";
-import {
-  ExternalFunction,
-  PluginOptions,
-  parsePluginOptions,
-} from "./CompilerOptions";
+} from "../CompilerError";
+import { compileFn } from "./Pipeline";
+import { GeneratedSource } from "../HIR";
+import { addInstrumentForget } from "./Instrumentation";
+import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -51,7 +47,7 @@ export function compileProgram(
     pass: CompilerPass
   ): void {
     try {
-      const compiled = compile(fn, pass.opts.environment);
+      const compiled = compileFn(fn, pass.opts.environment);
       if (fn.node.id == null) {
         CompilerError.invariant(
           "FunctionDeclaration must have a name",

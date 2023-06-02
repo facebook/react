@@ -11,7 +11,7 @@ import * as parser from "@babel/parser";
 import invariant from "invariant";
 import prettier from "prettier";
 import ReactForgetBabelPlugin from "./BabelPlugin";
-import type { PluginOptions } from "../CompilerOptions";
+import type { PluginOptions } from "../Entrypoint";
 
 type ReactForgetBabelPluginResult = {
   ast: BabelCore.BabelFileResult["ast"];

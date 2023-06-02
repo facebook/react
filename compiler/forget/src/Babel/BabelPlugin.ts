@@ -9,8 +9,7 @@
 
 import jsx from "@babel/plugin-syntax-jsx";
 import type * as BabelCore from "@babel/core";
-import { compileProgram } from "../CompilerEntrypoint";
-import { parsePluginOptions } from "../CompilerOptions";
+import { compileProgram, parsePluginOptions } from "../Entrypoint";
 
 /**
  * The React Forget Babel Plugin

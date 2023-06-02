@@ -18,17 +18,17 @@ import {
   validateNoRefAccessInRender,
   validateTerminalSuccessors,
   validateUnconditionalHooks,
-} from "./HIR";
-import { Environment, EnvironmentConfig } from "./HIR/Environment";
-import { findContextIdentifiers } from "./HIR/FindContextIdentifiers";
+} from "../HIR";
+import { Environment, EnvironmentConfig } from "../HIR/Environment";
+import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
   dropMemoCalls,
   inferMutableRanges,
   inferReferenceEffects,
   inlineUseMemo,
-} from "./Inference";
-import { constantPropagation, deadCodeElimination } from "./Optimization";
+} from "../Inference";
+import { constantPropagation, deadCodeElimination } from "../Optimization";
 import {
   alignReactiveScopesToBlockScopes,
   buildReactiveBlocks,
@@ -49,11 +49,11 @@ import {
   pruneUnusedLValues,
   pruneUnusedScopes,
   renameVariables,
-} from "./ReactiveScopes";
-import { eliminateRedundantPhi, enterSSA, leaveSSA } from "./SSA";
-import { inferTypes } from "./TypeInference";
-import { logHIRFunction, logReactiveFunction } from "./Utils/logger";
-import { assertExhaustive } from "./Utils/utils";
+} from "../ReactiveScopes";
+import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
+import { inferTypes } from "../TypeInference";
+import { logHIRFunction, logReactiveFunction } from "../Utils/logger";
+import { assertExhaustive } from "../Utils/utils";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: t.FunctionDeclaration }
@@ -263,7 +263,7 @@ export function* run(
   return ast;
 }
 
-export function compile(
+export function compileFn(
   func: NodePath<t.FunctionDeclaration>,
   options?: Partial<EnvironmentConfig> | null
 ): t.FunctionDeclaration {

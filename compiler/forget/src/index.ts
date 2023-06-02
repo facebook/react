@@ -11,7 +11,7 @@ export {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "./CompilerError";
-export { CompilerPipelineValue, compile, run } from "./CompilerPipeline";
+export { CompilerPipelineValue, compileFn as compile, run } from "./Entrypoint";
 export { Effect, Hook, ValueKind, printHIR } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
