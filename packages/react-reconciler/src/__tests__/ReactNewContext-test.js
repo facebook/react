@@ -1748,7 +1748,6 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       const {name} = props;
       // const filterCallback = React.useCallback(
       //   (prevState, nextState) => {
-      //     console.log('called', name, prevState, nextState);
 
       //     return prevState[name] !== nextState[name];
       //   },
@@ -1831,7 +1830,6 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       const {name} = props;
       const filterCallback = React.useCallback(
         (prevState, nextState) => {
-          console.log('called', name, prevState, nextState);
 
           return prevState[name] !== nextState[name];
         },
