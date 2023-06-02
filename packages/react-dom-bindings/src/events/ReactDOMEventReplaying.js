@@ -349,9 +349,7 @@ function attemptExplicitHydrationTarget(
   }
 }
 
-export async function queueExplicitHydrationTarget(
-  target: Node,
-): Promise<void> {
+export function queueExplicitHydrationTarget(target: Node): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!target) {
       reject(new Error('Cannot schedule hydration, target is undefined.'));
