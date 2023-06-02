@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type * as BabelCore from "@babel/core";
-import jsx from "@babel/plugin-syntax-jsx";
+import { NodePath, PluginPass } from "@babel/core";
 import * as t from "@babel/types";
 import {
   CompilerError,
@@ -20,7 +19,7 @@ import {
   ExternalFunction,
   PluginOptions,
   parsePluginOptions,
-} from "./Babel/PluginOptions";
+} from "./CompilerOptions";
 
 type BabelPluginPass = {
   opts: PluginOptions;
@@ -40,18 +39,14 @@ function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
   return false;
 }
 
-/**
- * The React Forget Babel Plugin
- * @param {*} _babel
- * @returns
- */
-export default function ReactForgetBabelPlugin(
-  _babel: typeof BabelCore
-): BabelCore.PluginObj {
+export function compileProgram(
+  program: NodePath<t.Program>,
+  pass: PluginPass
+): void {
   let hasForgetCompiledCode: boolean = false;
 
   function visitFn(
-    fn: BabelCore.NodePath<t.FunctionDeclaration>,
+    fn: NodePath<t.FunctionDeclaration>,
     pass: BabelPluginPass
   ): void {
     try {
@@ -151,7 +146,7 @@ export default function ReactForgetBabelPlugin(
 
   const visitor = {
     FunctionDeclaration(
-      fn: BabelCore.NodePath<t.FunctionDeclaration>,
+      fn: NodePath<t.FunctionDeclaration>,
       pass: BabelPluginPass
     ): void {
       if (!shouldCompile(fn, pass)) {
@@ -162,7 +157,7 @@ export default function ReactForgetBabelPlugin(
     },
 
     ArrowFunctionExpression(
-      fn: BabelCore.NodePath<t.ArrowFunctionExpression>,
+      fn: NodePath<t.ArrowFunctionExpression>,
       pass: BabelPluginPass
     ): void {
       if (!shouldCompile(fn, pass)) {
@@ -192,172 +187,159 @@ export default function ReactForgetBabelPlugin(
     },
   };
 
-  return {
-    name: "react-forget",
-    inherits: jsx,
-    visitor: {
-      // Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
-      // prior to B, if A does not have a Program visitor and B does, B will run first. We always
-      // want Forget to run true to source as possible.
-      Program(path, pass): void {
-        const options = parsePluginOptions(pass.opts);
+  const options = parsePluginOptions(pass.opts);
 
-        const violations = [];
-        const fileComments = pass.file.ast.comments;
-        let fileHasUseForgetDirective = false;
-        if (Array.isArray(fileComments)) {
-          for (const comment of fileComments) {
-            if (
-              /eslint-disable(-next-line)? react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
-                comment.value
-              )
-            ) {
-              violations.push(comment);
-            }
-          }
-        }
+  const violations = [];
+  const fileComments = pass.file.ast.comments;
+  let fileHasUseForgetDirective = false;
+  if (Array.isArray(fileComments)) {
+    for (const comment of fileComments) {
+      if (
+        /eslint-disable(-next-line)? react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
+          comment.value
+        )
+      ) {
+        violations.push(comment);
+      }
+    }
+  }
 
-        if (violations.length > 0) {
-          path.traverse({
-            Directive(path) {
-              if (hasUseForgetDirective(path.node)) {
-                fileHasUseForgetDirective = true;
-              }
-            },
-          });
-
-          const reason = `One or more React eslint rules is disabled`;
-          const error = new CompilerError();
-          for (const violation of violations) {
-            if (options.logger != null) {
-              options.logger.logEvent("err", {
-                reason,
-                filename: pass.filename,
-                violation,
-              });
-            }
-
-            error.pushErrorDetail(
-              new CompilerErrorDetail({
-                reason,
-                description: violation.value.trim(),
-                severity: ErrorSeverity.UnsafeInput,
-                codeframe: null,
-                loc: violation.loc ?? null,
-              })
-            );
-          }
-
-          if (fileHasUseForgetDirective) {
-            if (options.panicOnBailout || error.isCritical()) {
-              throw error;
-            } else {
-              if (options.isDev) {
-                log(error, pass.filename ?? null);
-              }
-            }
-          }
-
-          return;
-        }
-
-        path.traverse(visitor, {
-          ...pass,
-          opts: { ...pass.opts, ...options },
-          filename: pass.filename ?? null,
-        });
-
-        // If there isn't already an import of * as React, insert it so useMemoCache doesn't
-        // throw
-        if (hasForgetCompiledCode) {
-          let didInsertUseMemoCache = false;
-          let hasExistingReactImport = false;
-          path.traverse({
-            CallExpression(callExprPath) {
-              const callee = callExprPath.get("callee");
-              const args = callExprPath.get("arguments");
-              if (
-                callee.isIdentifier() &&
-                callee.node.name === "useMemoCache" &&
-                args.length === 1 &&
-                args[0].isNumericLiteral()
-              ) {
-                didInsertUseMemoCache = true;
-              }
-            },
-            ImportDeclaration(importDeclPath) {
-              if (isNonNamespacedImportOfReact(importDeclPath)) {
-                hasExistingReactImport = true;
-              }
-            },
-          });
-          // If Forget did successfully compile inject/update an import of
-          // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
-          // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
-          if (didInsertUseMemoCache) {
-            if (hasExistingReactImport) {
-              let didUpdateImport = false;
-              path.traverse({
-                ImportDeclaration(importDeclPath) {
-                  if (isNonNamespacedImportOfReact(importDeclPath)) {
-                    importDeclPath.pushContainer(
-                      "specifiers",
-                      t.importSpecifier(
-                        t.identifier("useMemoCache"),
-                        t.identifier("unstable_useMemoCache")
-                      )
-                    );
-                    didUpdateImport = true;
-                  }
-                },
-              });
-              if (didUpdateImport === false) {
-                throw new Error(
-                  "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
-                );
-              }
-            } else {
-              path.unshiftContainer(
-                "body",
-                t.importDeclaration(
-                  [
-                    t.importSpecifier(
-                      t.identifier("useMemoCache"),
-                      t.identifier("unstable_useMemoCache")
-                    ),
-                  ],
-                  t.stringLiteral("react")
-                )
-              );
-            }
-          }
-          // TODO: check for duplicate import specifiers
-          if (options.gating != null) {
-            path.unshiftContainer(
-              "body",
-              buildImportForExternalFunction(options.gating)
-            );
-          }
-          if (options.instrumentForget != null) {
-            path.unshiftContainer(
-              "body",
-              buildImportForExternalFunction(options.instrumentForget.gating)
-            );
-            path.unshiftContainer(
-              "body",
-              buildImportForExternalFunction(
-                options.instrumentForget.instrumentFn
-              )
-            );
-          }
+  if (violations.length > 0) {
+    program.traverse({
+      Directive(directive) {
+        if (hasUseForgetDirective(directive.node)) {
+          fileHasUseForgetDirective = true;
         }
       },
-    },
-  };
+    });
+
+    const reason = `One or more React eslint rules is disabled`;
+    const error = new CompilerError();
+    for (const violation of violations) {
+      if (options.logger != null) {
+        options.logger.logEvent("err", {
+          reason,
+          filename: pass.filename,
+          violation,
+        });
+      }
+
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason,
+          description: violation.value.trim(),
+          severity: ErrorSeverity.UnsafeInput,
+          codeframe: null,
+          loc: violation.loc ?? null,
+        })
+      );
+    }
+
+    if (fileHasUseForgetDirective) {
+      if (options.panicOnBailout || error.isCritical()) {
+        throw error;
+      } else {
+        if (options.isDev) {
+          log(error, pass.filename ?? null);
+        }
+      }
+    }
+
+    return;
+  }
+
+  program.traverse(visitor, {
+    ...pass,
+    opts: { ...pass.opts, ...options },
+    filename: pass.filename ?? null,
+  });
+
+  // If there isn't already an import of * as React, insert it so useMemoCache doesn't
+  // throw
+  if (hasForgetCompiledCode) {
+    let didInsertUseMemoCache = false;
+    let hasExistingReactImport = false;
+    program.traverse({
+      CallExpression(callExprPath) {
+        const callee = callExprPath.get("callee");
+        const args = callExprPath.get("arguments");
+        if (
+          callee.isIdentifier() &&
+          callee.node.name === "useMemoCache" &&
+          args.length === 1 &&
+          args[0].isNumericLiteral()
+        ) {
+          didInsertUseMemoCache = true;
+        }
+      },
+      ImportDeclaration(importDeclPath) {
+        if (isNonNamespacedImportOfReact(importDeclPath)) {
+          hasExistingReactImport = true;
+        }
+      },
+    });
+    // If Forget did successfully compile inject/update an import of
+    // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
+    // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
+    if (didInsertUseMemoCache) {
+      if (hasExistingReactImport) {
+        let didUpdateImport = false;
+        program.traverse({
+          ImportDeclaration(importDeclPath) {
+            if (isNonNamespacedImportOfReact(importDeclPath)) {
+              importDeclPath.pushContainer(
+                "specifiers",
+                t.importSpecifier(
+                  t.identifier("useMemoCache"),
+                  t.identifier("unstable_useMemoCache")
+                )
+              );
+              didUpdateImport = true;
+            }
+          },
+        });
+        if (didUpdateImport === false) {
+          throw new Error(
+            "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
+          );
+        }
+      } else {
+        program.unshiftContainer(
+          "body",
+          t.importDeclaration(
+            [
+              t.importSpecifier(
+                t.identifier("useMemoCache"),
+                t.identifier("unstable_useMemoCache")
+              ),
+            ],
+            t.stringLiteral("react")
+          )
+        );
+      }
+    }
+    // TODO: check for duplicate import specifiers
+    if (options.gating != null) {
+      program.unshiftContainer(
+        "body",
+        buildImportForExternalFunction(options.gating)
+      );
+    }
+    if (options.instrumentForget != null) {
+      program.unshiftContainer(
+        "body",
+        buildImportForExternalFunction(options.instrumentForget.gating)
+      );
+      program.unshiftContainer(
+        "body",
+        buildImportForExternalFunction(options.instrumentForget.instrumentFn)
+      );
+    }
+  }
 }
 
 function shouldCompile(
-  fn: BabelCore.NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
+  fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
   pass: BabelPluginPass
 ): boolean {
   if (pass.opts.enableOnlyOnUseForgetDirective) {
@@ -407,8 +389,8 @@ function makeError(
 }
 
 function buildFunctionDeclaration(
-  fn: BabelCore.NodePath<t.ArrowFunctionExpression>
-): BabelCore.NodePath<t.FunctionDeclaration> | CompilerError {
+  fn: NodePath<t.ArrowFunctionExpression>
+): NodePath<t.FunctionDeclaration> | CompilerError {
   if (!fn.parentPath.isVariableDeclarator()) {
     return makeError(
       "ArrowFunctionExpression must be declared in variable declaration",
@@ -447,7 +429,7 @@ function buildFunctionDeclaration(
 }
 
 function buildBlockStatement(
-  fn: BabelCore.NodePath<t.ArrowFunctionExpression>
+  fn: NodePath<t.ArrowFunctionExpression>
 ): t.BlockStatement {
   const body = fn.get("body");
   if (body.isExpression()) {
@@ -469,7 +451,7 @@ function buildBlockStatement(
 }
 
 type GatingTestOptions = {
-  originalFnDecl: BabelCore.NodePath<t.FunctionDeclaration>;
+  originalFnDecl: NodePath<t.FunctionDeclaration>;
   compiledIdent: t.Identifier;
   originalIdent: t.Identifier;
   gating: ExternalFunction;
@@ -534,7 +516,7 @@ function buildSpecifierIdent(gating: ExternalFunction): t.Identifier {
  * but not `import * as React from 'react';`
  */
 function isNonNamespacedImportOfReact(
-  importDeclPath: BabelCore.NodePath<t.ImportDeclaration>
+  importDeclPath: NodePath<t.ImportDeclaration>
 ): boolean {
   return (
     importDeclPath.get("source").node.value === "react" &&

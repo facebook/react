@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { EnvironmentConfig } from "../HIR/Environment";
+import { EnvironmentConfig } from "./HIR/Environment";
 
 export type ExternalFunction = {
   /**
