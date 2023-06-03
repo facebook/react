@@ -229,7 +229,7 @@ export function scheduleContextWorkOnParentPath(
 
 function readContextValue<T>(context: ReactContext<T>): any {
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
-};
+}
 
 export function propagateContextChange<T>(
   workInProgress: Fiber,
@@ -732,7 +732,7 @@ export function prepareToReadContext(
 
 export function readContext<T>(
   context: ReactContext<T>,
-  filterContext: any,
+  filterCallback: any,
 ): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
@@ -749,7 +749,7 @@ export function readContext<T>(
   return readContextForConsumer(
     currentlyRenderingFiber,
     context,
-    filterContext,
+    filterCallback,
   );
 }
 
