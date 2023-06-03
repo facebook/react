@@ -227,6 +227,10 @@ export function scheduleContextWorkOnParentPath(
   }
 }
 
+const readContextValue = (context: ReactContext<T>) => {
+  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+};
+
 export function propagateContextChange<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
@@ -278,7 +282,7 @@ function propagateContextChange_eager<T>(
             typeof dependency.filterCallback === 'function' &&
             dependency.filterCallback(
               dependency.memoizedValue,
-              workInProgress.pendingProps.value,
+              readContextValue(dependency.context),
             ) !== false) ||
           typeof dependency.filterCallback !== 'function'
         ) {
@@ -425,7 +429,15 @@ function propagateContextChanges<T>(
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
-          if (dependency.context === context) {
+          if (
+            (dependency.context === context &&
+              typeof dependency.filterCallback === 'function' &&
+              dependency.filterCallback(
+                dependency.memoizedValue,
+                readContextValue(dependency.context),
+              ) !== false) ||
+            typeof dependency.filterCallback !== 'function'
+          ) {
             // Match! Schedule an update on this fiber.
 
             // In the lazy implementation, don't mark a dirty flag on the

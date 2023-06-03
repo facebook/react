@@ -1829,8 +1829,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     const ComponentToRender = props => {
       const {name} = props;
       const filterCallback = React.useCallback(
-        (prevState, nextState) => {
-
+        (prevState = {}, nextState = {}) => {
           return prevState[name] !== nextState[name];
         },
         [name],
