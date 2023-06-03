@@ -660,7 +660,7 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-classic-14fbbcad";
+exports.version = "18.3.0-www-classic-e9e36727";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
