@@ -1843,6 +1843,8 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     };
 
     const ComponentParentToRender = () => {
+      Scheduler.log('Component#ComponentParentToRender');
+
       return (
         <div>
           <ComponentToRender name="value" />
@@ -1875,6 +1877,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     );
     await waitForAll([
       'Component',
+      'Component#ComponentParentToRender',
       'Component#ComponentToRender-value',
       'Component#ComponentToRender-valueStatic',
     ]);
@@ -1887,7 +1890,10 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     // Update
     ReactNoop.render(<Component value="Good Bye" valueStatic="Static Value" />);
-    await waitForAll(['Component', 'Component#ComponentToRender-value']);
+    await waitForAll([
+      'Component',
+      'Component#ComponentToRender-value',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
         <div>Good Bye</div>
