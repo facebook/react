@@ -1890,10 +1890,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     // Update
     ReactNoop.render(<Component value="Good Bye" valueStatic="Static Value" />);
-    await waitForAll([
-      'Component',
-      'Component#ComponentToRender-value',
-    ]);
+    await waitForAll(['Component', 'Component#ComponentToRender-value']);
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
         <div>Good Bye</div>
