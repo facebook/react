@@ -227,7 +227,7 @@ export function scheduleContextWorkOnParentPath(
   }
 }
 
-const readContextValue = (context: ReactContext<T>) => {
+function readContextValue<T>(context: ReactContext<T>): any {
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
 };
 
