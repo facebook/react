@@ -278,13 +278,13 @@ function propagateContextChange_eager<T>(
       while (dependency !== null) {
         // Check if the context matches.
         if (
-          (dependency.context === context &&
-            typeof dependency.filterCallback === 'function' &&
+          dependency.context === context &&
+          ((typeof dependency.filterCallback === 'function' &&
             dependency.filterCallback(
               dependency.memoizedValue,
               readContextValue(dependency.context),
             ) !== false) ||
-          typeof dependency.filterCallback !== 'function'
+            typeof dependency.filterCallback !== 'function')
         ) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
@@ -430,13 +430,13 @@ function propagateContextChanges<T>(
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
           if (
-            (dependency.context === context &&
-              typeof dependency.filterCallback === 'function' &&
+            dependency.context === context &&
+            ((typeof dependency.filterCallback === 'function' &&
               dependency.filterCallback(
                 dependency.memoizedValue,
                 readContextValue(dependency.context),
               ) !== false) ||
-            typeof dependency.filterCallback !== 'function'
+              typeof dependency.filterCallback !== 'function')
           ) {
             // Match! Schedule an update on this fiber.
 
