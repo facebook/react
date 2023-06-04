@@ -13,7 +13,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] Invariant: Did not expect any arguments to useMemo callback (2:2)
+[ReactForget] InvalidInput: useMemo callbacks may not accept any arguments (2:2)
 ```
           
       
