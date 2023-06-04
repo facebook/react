@@ -40,6 +40,15 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case "PropertyLoad":
+        case "LoadLocal":
+        case "StoreLocal":
+        case "Destructure": {
+          // These instructions are necessary for storing the results of a useRef into
+          // a variable and referencing them in functions. We can propagate type info
+          // for these instructions so they ensure we have a complete analysis.
+          break;
+        }
         case "FunctionExpression": {
           // For now we assume *all* function expressions are safe, eventually we can
           // be more precise and disallow ref access in functions that may be called
@@ -57,6 +66,7 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
         default: {
           for (const operand of eachInstructionValueOperand(instr.value)) {
             validateNonRefValue(error, operand);
+            validateNonRefObject(error, operand);
           }
         }
       }
