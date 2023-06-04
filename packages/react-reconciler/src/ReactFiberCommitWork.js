@@ -4572,10 +4572,12 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
       }
       case ClassComponent: {
         const instance = fiber.stateNode;
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
+        if (typeof instance.componentDidMount === 'function') {
+          try {
+            instance.componentDidMount();
+          } catch (error) {
+            captureCommitPhaseError(fiber, fiber.return, error);
+          }
         }
         break;
       }

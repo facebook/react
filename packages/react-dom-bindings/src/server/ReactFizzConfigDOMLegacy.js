@@ -8,6 +8,7 @@
  */
 
 import type {
+  Resources,
   BootstrapScriptDescriptor,
   ExternalRuntimeScript,
   FormatContext,
@@ -63,11 +64,13 @@ export type ResponseState = {
 };
 
 export function createResponseState(
+  resources: Resources,
   generateStaticMarkup: boolean,
   identifierPrefix: string | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
 ): ResponseState {
   const responseState = createResponseStateImpl(
+    resources,
     identifierPrefix,
     undefined,
     undefined,
