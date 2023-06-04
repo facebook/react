@@ -19,7 +19,7 @@ function component(a) {
 ## Error
 
 ```
-[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undfined (7:7)
+[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undefined (7:7)
 ```
           
       

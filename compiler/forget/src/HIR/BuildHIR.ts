@@ -2439,6 +2439,41 @@ function getLoadKind(
   return isContext ? "LoadContext" : "LoadLocal";
 }
 
+function lowerIdentifierForAssignment(
+  builder: HIRBuilder,
+  loc: SourceLocation,
+  kind: InstructionKind,
+  path: NodePath<t.Identifier>
+): Place | null {
+  const identifier = builder.resolveIdentifier(path);
+  if (identifier == null) {
+    if (kind === InstructionKind.Reassign) {
+      // Trying to reassign a global is not allowed
+      builder.errors.push({
+        reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
+        severity: ErrorSeverity.InvalidInput,
+        nodePath: path,
+      });
+    } else {
+      // Else its an internal error bc we couldn't find the binding
+      builder.errors.push({
+        reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
+        severity: ErrorSeverity.Invariant,
+        nodePath: path,
+      });
+    }
+    return null;
+  }
+
+  const place: Place = {
+    kind: "Identifier",
+    identifier: identifier,
+    effect: Effect.Unknown,
+    loc,
+  };
+  return place;
+}
+
 function lowerAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
@@ -2450,36 +2485,14 @@ function lowerAssignment(
   switch (lvalueNode.type) {
     case "Identifier": {
       const lvalue = lvaluePath as NodePath<t.Identifier>;
-      const identifier = builder.resolveIdentifier(lvalue);
-      if (identifier == null) {
-        if (kind === InstructionKind.Reassign) {
-          // Trying to reassign a global is not allowed
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
-            severity: ErrorSeverity.InvalidInput,
-            nodePath: lvalue,
-          });
-        } else {
-          // Else its an internal error bc we couldn't find the binding
-          builder.errors.push({
-            reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
-            severity: ErrorSeverity.Invariant,
-            nodePath: lvalue,
-          });
-        }
+      const place = lowerIdentifierForAssignment(builder, loc, kind, lvalue);
+      if (place === null) {
         return {
           kind: "UnsupportedNode",
           loc: lvalue.node.loc ?? GeneratedSource,
           node: lvalue.node,
         };
       }
-
-      const place: Place = {
-        kind: "Identifier",
-        identifier: identifier,
-        effect: Effect.Unknown,
-        loc: lvalue.node.loc ?? GeneratedSource,
-      };
 
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
@@ -2585,13 +2598,29 @@ function lowerAssignment(
             });
             continue;
           }
-          const identifier = lowerIdentifier(builder, argument);
+          const identifier = lowerIdentifierForAssignment(
+            builder,
+            element.node.loc ?? GeneratedSource,
+            kind,
+            argument
+          );
+          if (identifier === null) {
+            continue;
+          }
           items.push({
             kind: "Spread",
             place: identifier,
           });
         } else if (element.isIdentifier()) {
-          const identifier = lowerIdentifier(builder, element);
+          const identifier = lowerIdentifierForAssignment(
+            builder,
+            element.node.loc ?? GeneratedSource,
+            kind,
+            element
+          );
+          if (identifier === null) {
+            continue;
+          }
           items.push(identifier);
         } else {
           const temp = buildTemporaryPlace(
@@ -2636,7 +2665,15 @@ function lowerAssignment(
             });
             continue;
           }
-          const identifier = lowerIdentifier(builder, argument);
+          const identifier = lowerIdentifierForAssignment(
+            builder,
+            property.node.loc ?? GeneratedSource,
+            kind,
+            argument
+          );
+          if (identifier === null) {
+            continue;
+          }
           properties.push({
             kind: "Spread",
             place: identifier,
@@ -2678,7 +2715,15 @@ function lowerAssignment(
             continue;
           }
           if (element.isIdentifier()) {
-            const identifier = lowerIdentifier(builder, element);
+            const identifier = lowerIdentifierForAssignment(
+              builder,
+              element.node.loc ?? GeneratedSource,
+              kind,
+              element
+            );
+            if (identifier === null) {
+              continue;
+            }
             properties.push({
               kind: "ObjectProperty",
               name: key.node.name,

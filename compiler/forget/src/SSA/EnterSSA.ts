@@ -88,7 +88,7 @@ class SSABuilder {
       CompilerError.invariant(
         `EnterSSA: Expected identifier to be defined before being used`,
         oldPlace.loc,
-        `Identifier ${printIdentifier(oldId)} is undfined`
+        `Identifier ${printIdentifier(oldId)} is undefined`
       );
     }
 
