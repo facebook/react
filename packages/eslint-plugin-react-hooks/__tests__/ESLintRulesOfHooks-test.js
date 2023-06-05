@@ -596,6 +596,16 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function ComponentWithOptionalChainingHook() {
+          useHook?.();
+        }
+      `,
+      errors: [conditionalError('useHook')],
+    },
+    {
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         function ComponentWithHookInsideCallback() {

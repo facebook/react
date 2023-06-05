@@ -556,7 +556,7 @@ export default {
       // `CallExpression`s and check that _every use_ of a hook name is valid.
       // But that gets complicated and enters type-system territory, so we're
       // only being strict about hook calls for now.
-      CallExpression(node) {
+      'CallExpression, OptionalCallExpression'(node) {
         if (isHook(node.callee)) {
           // Add the hook node to a map keyed by the code path segment. We will
           // do full code path analysis at the end of our code path.
@@ -568,6 +568,14 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
+
+          if (node.optional) {
+            const message =
+              `React Hook "${context.getSource(node.callee)}" is called ` +
+              'conditionally. React Hooks must be called in the exact ' +
+              'same order in every component render.';
+            context.report({node, message});
+          }
         }
 
         // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
