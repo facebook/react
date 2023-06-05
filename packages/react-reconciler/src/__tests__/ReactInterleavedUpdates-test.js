@@ -65,25 +65,17 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('000');
 
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateChildren(1);
-        });
-      } else {
+      React.startTransition(() => {
         updateChildren(1);
-      }
+      });
       // Partially render the children. Only the first one.
       await waitFor([1]);
 
       // In an interleaved event, schedule an update on each of the children.
       // Including the two that haven't rendered yet.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateChildren(2);
-        });
-      } else {
+      React.startTransition(() => {
         updateChildren(2);
-      }
+      });
 
       // We should continue rendering without including the interleaved updates.
       await waitForPaint([1, 1]);
@@ -94,7 +86,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('222');
   });
 
-  // @gate !enableSyncDefaultUpdates
+  // @gate forceConcurrentByDefaultForTesting
   test('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than
     // the in-progress render.

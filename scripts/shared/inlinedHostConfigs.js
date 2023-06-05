@@ -156,6 +156,39 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-esm',
+    entryPoints: [
+      'react-server-dom-esm/client.browser',
+      'react-server-dom-esm/server.node',
+      'react-server-dom-esm/client.node',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-esm',
+      'react-server-dom-esm/client.browser',
+      'react-server-dom-esm/client.node',
+      'react-server-dom-esm/server',
+      'react-server-dom-esm/server.node',
+      'react-server-dom-esm/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-legacy',
     entryPoints: [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser

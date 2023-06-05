@@ -20,6 +20,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
@@ -61,9 +62,12 @@ function renderToStringImpl(
   function onShellReady() {
     readyToStream = true;
   }
+  const resources = createResources();
   const request = createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
       unstable_externalRuntimeSrc,

@@ -75,13 +75,9 @@ describe('ReactIncremental', () => {
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo />, () => Scheduler.log('callback'));
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo />, () => Scheduler.log('callback'));
-    }
+    });
     // Do one step of work.
     await waitFor(['Foo']);
 
@@ -168,26 +164,18 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="foo" />);
     await waitForAll(['Foo', 'Bar', 'Bar']);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="bar" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="bar" />);
-    }
+    });
     // Flush part of the work
     await waitFor(['Foo', 'Bar']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(null));
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo text="baz" />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Foo text="baz" />);
-    }
+    });
 
     // Flush part of the new work
     await waitFor(['Foo', 'Bar']);
@@ -221,17 +209,7 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo />);
     await waitForAll([]);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.log('setState1');
-            return {text: 'bar'};
-          },
-          () => Scheduler.log('callback1'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.log('setState1');
@@ -239,24 +217,14 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.log('callback1'),
       );
-    }
+    });
 
     // Flush part of the work
     await waitFor(['setState1']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        inst.setState(
-          () => {
-            Scheduler.log('setState2');
-            return {text2: 'baz'};
-          },
-          () => Scheduler.log('callback2'),
-        );
-      });
-    } else {
+    React.startTransition(() => {
       inst.setState(
         () => {
           Scheduler.log('setState2');
@@ -264,7 +232,7 @@ describe('ReactIncremental', () => {
         },
         () => Scheduler.log('callback2'),
       );
-    }
+    });
 
     // Flush the rest of the work which now includes the low priority
     await waitForAll(['setState1', 'setState2', 'callback1', 'callback2']);
@@ -1825,18 +1793,7 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"de"}',
       'ShowBoth {"locale":"de"}',
     ]);
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <Intl locale="sv">
-            <ShowLocale />
-            <div>
-              <ShowBoth />
-            </div>
-          </Intl>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <Intl locale="sv">
           <ShowLocale />
@@ -1845,7 +1802,7 @@ describe('ReactIncremental', () => {
           </div>
         </Intl>,
       );
-    }
+    });
     await waitFor(['Intl {}']);
 
     ReactNoop.render(
@@ -1977,22 +1934,7 @@ describe('ReactIncremental', () => {
       }
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(
-          <Intl locale="fr">
-            <ShowLocale />
-            <LegacyHiddenDiv mode="hidden">
-              <ShowLocale />
-              <Intl locale="ru">
-                <ShowLocale />
-              </Intl>
-            </LegacyHiddenDiv>
-            <ShowLocale />
-          </Intl>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(
         <Intl locale="fr">
           <ShowLocale />
@@ -2005,7 +1947,8 @@ describe('ReactIncremental', () => {
           <ShowLocale />
         </Intl>,
       );
-    }
+    });
+
     await waitFor([
       'Intl {}',
       'ShowLocale {"locale":"fr"}',
@@ -2682,13 +2625,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     await waitFor(['Parent: 1']);
 
     // Interrupt at same priority
@@ -2708,13 +2647,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     await waitFor(['Parent: 1']);
 
     // Interrupt at lower priority
@@ -2735,13 +2670,9 @@ describe('ReactIncremental', () => {
       return null;
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<Parent step={1} />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<Parent step={1} />);
-    }
+    });
     await waitFor(['Parent: 1']);
 
     // Interrupt at higher priority

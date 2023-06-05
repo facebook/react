@@ -2497,13 +2497,9 @@ describe('ReactSuspenseList', () => {
 
     await act(async () => {
       // Add a few items at the end.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          updateLowPri(true);
-        });
-      } else {
+      React.startTransition(() => {
         updateLowPri(true);
-      }
+      });
 
       // Flush partially through.
       await waitFor(['B', 'C']);
@@ -2639,13 +2635,9 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<App />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<App />);
-    }
+    });
 
     await waitFor(['App', 'First Pass A', 'Mount A', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
@@ -2707,13 +2699,9 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        ReactNoop.render(<App />);
-      });
-    } else {
+    React.startTransition(() => {
       ReactNoop.render(<App />);
-    }
+    });
 
     await waitFor([
       'App',

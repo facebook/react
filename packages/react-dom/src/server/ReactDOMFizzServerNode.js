@@ -23,6 +23,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -59,9 +60,12 @@ type PipeableStream = {
 };
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
+  const resources = createResources();
   return createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       options ? options.identifierPrefix : undefined,
       options ? options.nonce : undefined,
       options ? options.bootstrapScriptContent : undefined,
