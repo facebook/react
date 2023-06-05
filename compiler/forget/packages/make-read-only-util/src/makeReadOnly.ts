@@ -12,9 +12,9 @@ type ROViolationType =
   | "FORGET_DELETE_PROP_IMMUT"
   | "FORGET_CHANGE_PROP_IMMUT"
   | "FORGET_ADD_PROP_IMMUT";
-type ROModeChecker = () => boolean;
 type ROViolationLogger = (
   violation: ROViolationType,
+  source: string,
   key: string,
   value?: any
 ) => void;
@@ -52,15 +52,15 @@ function getOrInsertDefault(
 
 function buildMakeReadOnly(
   logger: ROViolationLogger,
-  skippedClasses: string[],
-  isInROMode: ROModeChecker
-): <T>(val: T) => T {
+  skippedClasses: string[]
+): <T>(val: T, source: string) => T {
   // All saved proxys
   const savedROObjects: SavedROObjects = new WeakMap();
 
   // Overwrites an object property with its proxy and saves its original value
   function addProperty(
     obj: Object,
+    source: string,
     key: string,
     prop: PropertyDescriptor,
     savedEntries: Map<string, SavedEntry>
@@ -68,12 +68,10 @@ function buildMakeReadOnly(
     const proxy: PropertyDescriptor & { get(): unknown } = {
       get() {
         // read from backing cache entry
-        return makeReadOnly(savedEntries.get(key)!.savedVal);
+        return makeReadOnly(savedEntries.get(key)!.savedVal, source);
       },
       set(newVal: unknown) {
-        if (isInROMode()) {
-          logger("FORGET_MUTATE_IMMUT", key, newVal);
-        }
+        logger("FORGET_MUTATE_IMMUT", source, key, newVal);
         // update backing cache entry
         savedEntries.get(key)!.savedVal = newVal;
       },
@@ -90,10 +88,13 @@ function buildMakeReadOnly(
   }
 
   // Changes an object to be read-only, returns its input
-  function makeReadOnly<T>(o: T): T {
+  function makeReadOnly<T>(o: T, source: string): T {
     if (typeof o !== "object" || o == null) {
       return o;
-    } else if (skippedClasses.includes(o.constructor.name)) {
+    } else if (
+      o.constructor?.name != null &&
+      skippedClasses.includes(o.constructor.name)
+    ) {
       return o;
     }
 
@@ -114,13 +115,11 @@ function buildMakeReadOnly(
         //    (meaning that new value is not proxied,
         //     and the current proxied value is stale)
         cache.delete(k);
-        if (!currentProp && isInROMode()) {
-          logger("FORGET_DELETE_PROP_IMMUT", k);
+        if (!currentProp) {
+          logger("FORGET_DELETE_PROP_IMMUT", source, k);
         } else if (currentProp) {
-          if (isInROMode()) {
-            logger("FORGET_CHANGE_PROP_IMMUT", k);
-          }
-          addProperty(o, k, currentProp, cache);
+          logger("FORGET_CHANGE_PROP_IMMUT", source, k);
+          addProperty(o, source, k, currentProp, cache);
         }
       }
     }
@@ -128,10 +127,17 @@ function buildMakeReadOnly(
       Object.getOwnPropertyDescriptors(o)
     )) {
       if (!cache.has(k) && isWriteable(prop)) {
-        if (isInROMode() && existed) {
-          logger("FORGET_ADD_PROP_IMMUT", k);
+        if (prop.hasOwnProperty("set") || prop.hasOwnProperty("get") || k === "current") {
+          // - we currently don't handle accessor properties
+          // - we currently have no other way of checking whether an object
+          // is a `ref` (i.e. returned by useRef).
+          continue;
         }
-        addProperty(o, k, prop, cache);
+
+        if (existed) {
+          logger("FORGET_ADD_PROP_IMMUT", source, k);
+        }
+        addProperty(o, source, k, prop, cache);
       }
     }
     return o;
