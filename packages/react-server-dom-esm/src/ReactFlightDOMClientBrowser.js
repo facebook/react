@@ -29,12 +29,13 @@ import {
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
+  moduleBaseURL?: string,
   callServer?: CallServerCallback,
 };
 
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
-    null,
+    options && options.moduleBaseURL ? options.moduleBaseURL : '',
     options && options.callServer ? options.callServer : undefined,
   );
 }
