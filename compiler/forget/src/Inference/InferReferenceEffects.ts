@@ -837,7 +837,8 @@ function inferBlock(
         state.reference(instrValue.object, Effect.Mutate);
         state.reference(instrValue.property, Effect.Read);
         state.initialize(instrValue, ValueKind.Immutable);
-        state.reference(instr.lvalue, Effect.Mutate);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Mutate;
         continue;
       }
       case "ComputedLoad": {

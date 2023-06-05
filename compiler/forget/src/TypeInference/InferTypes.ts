@@ -108,6 +108,7 @@ function* generateInstructionTypes(
   const left = lvalue.identifier.type;
 
   switch (value.kind) {
+    case "TemplateLiteral":
     case "JSXText":
     case "Primitive": {
       yield equation(left, { kind: "Primitive" });
@@ -232,21 +233,28 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "TypeCastExpression": {
+      yield equation(left, value.value.identifier.type);
+      break;
+    }
+
+    case "PropertyDelete":
+    case "ComputedDelete": {
+      yield equation(left, { kind: "Primitive" });
+      break;
+    }
+
     case "DeclareLocal":
     case "DeclareContext":
     case "NewExpression":
-    case "TypeCastExpression":
     case "JsxExpression":
     case "JsxFragment":
     case "RegExpLiteral":
     case "PropertyStore":
-    case "PropertyDelete":
     case "ComputedStore":
     case "ComputedLoad":
-    case "ComputedDelete":
     case "FunctionExpression":
     case "TaggedTemplateExpression":
-    case "TemplateLiteral":
     case "Await":
     case "NextIterableOf":
     case "ExpressionStatement":
