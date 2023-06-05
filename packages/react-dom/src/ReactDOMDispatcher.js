@@ -14,6 +14,7 @@ export type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 export type PreinitOptions = {
   as: string,
@@ -21,6 +22,7 @@ export type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
   nonce?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 
 export type HostDispatcher = {
