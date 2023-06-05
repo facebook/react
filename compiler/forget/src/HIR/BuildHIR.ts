@@ -1171,7 +1171,7 @@ function lowerExpression(
       const continuationBlock = builder.reserve(builder.currentBlockKind());
       const place = buildTemporaryPlace(builder, exprLoc);
 
-      const sequenceBlock = builder.enter("value", (_) => {
+      const sequenceBlock = builder.enter("sequence", (_) => {
         let last: Place | null = null;
         for (const item of expr.get("expressions")) {
           last = lowerExpressionToTemporary(builder, item);

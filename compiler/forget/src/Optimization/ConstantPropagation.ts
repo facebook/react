@@ -113,7 +113,13 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
       }
     }
 
-    for (const instr of block.instructions) {
+    for (let i = 0; i < block.instructions.length; i++) {
+      if (block.kind === "sequence" && i === block.instructions.length - 1) {
+        // evaluating the last value of a value block can break order of evaluation,
+        // skip these instructions
+        continue;
+      }
+      const instr = block.instructions[i]!;
       const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
