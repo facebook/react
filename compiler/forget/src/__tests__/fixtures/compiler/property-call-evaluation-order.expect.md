@@ -46,10 +46,7 @@ function Component() {
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = { f: t1 };
 
-    console.log("A");
-    changeF(x);
-    console.log("arg");
-    x.f(1);
+    (console.log("A"), x).f((changeF(x), console.log("arg"), 1));
     $[2] = x;
   } else {
     x = $[2];

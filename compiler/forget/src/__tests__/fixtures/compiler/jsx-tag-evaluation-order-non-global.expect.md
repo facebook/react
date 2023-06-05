@@ -36,8 +36,7 @@ function Component(props) {
 
     T0 = Tag;
     t1 = "\n      ";
-    Tag = props.alternateComponent;
-    t2 = maybeMutate(maybeMutable);
+    t2 = ((Tag = props.alternateComponent), maybeMutate(maybeMutable));
     $[0] = props.component;
     $[1] = props.alternateComponent;
     $[2] = Tag;

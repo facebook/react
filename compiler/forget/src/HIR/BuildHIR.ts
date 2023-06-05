@@ -1168,23 +1168,48 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.SequenceExpression>;
       const exprLoc = expr.node.loc ?? GeneratedSource;
 
-      let last: Place | null = null;
-      for (const item of expr.get("expressions")) {
-        last = lowerExpressionToTemporary(builder, item);
-      }
-      if (last === null) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Expected SequenceExpression to have at least one expression`,
-          severity: ErrorSeverity.InvalidInput,
-          nodePath: expr,
-        });
-        return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
-      }
-      return {
-        kind: "LoadLocal", // TODO: LoadTemp
-        place: last,
-        loc: last.loc,
-      };
+      const continuationBlock = builder.reserve(builder.currentBlockKind());
+      const place = buildTemporaryPlace(builder, exprLoc);
+
+      const sequenceBlock = builder.enter("value", (_) => {
+        let last: Place | null = null;
+        for (const item of expr.get("expressions")) {
+          last = lowerExpressionToTemporary(builder, item);
+        }
+        if (last === null) {
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Expected SequenceExpression to have at least one expression`,
+            severity: ErrorSeverity.InvalidInput,
+            nodePath: expr,
+          });
+        } else {
+          lowerValueToTemporary(builder, {
+            kind: "StoreLocal",
+            lvalue: { kind: InstructionKind.Const, place: { ...place } },
+            value: last,
+            loc: exprLoc,
+          });
+        }
+        return {
+          kind: "goto",
+          id: makeInstructionId(0),
+          block: continuationBlock.id,
+          loc: exprLoc,
+          variant: GotoVariant.Break,
+        };
+      });
+
+      builder.terminateWithContinuation(
+        {
+          kind: "sequence",
+          block: sequenceBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc: exprLoc,
+        },
+        continuationBlock
+      );
+      return { kind: "LoadLocal", place, loc: place.loc };
     }
     case "ConditionalExpression": {
       const expr = exprPath as NodePath<t.ConditionalExpression>;

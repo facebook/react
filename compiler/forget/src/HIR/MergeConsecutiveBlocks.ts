@@ -44,7 +44,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       "Expected predecessor %s to exist",
       predecessorId
     );
-    if (predecessor.terminal.kind !== "goto") {
+    if (predecessor.terminal.kind !== "goto" || predecessor.kind !== "block") {
       // The predecessor is not guaranteed to transfer control to this block,
       // they aren't consecutive.
       continue;

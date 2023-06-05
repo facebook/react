@@ -771,6 +771,15 @@ class Driver {
     id: InstructionId;
   } {
     switch (terminal.kind) {
+      case "sequence": {
+        const block = this.visitValueBlock(terminal.block, terminal.loc);
+        return {
+          value: block.value,
+          place: block.place,
+          fallthrough: terminal.fallthrough,
+          id: terminal.id,
+        };
+      }
       case "optional": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
