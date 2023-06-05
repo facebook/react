@@ -81,6 +81,23 @@ export function constantPropagation(fn: HIRFunction): void {
 }
 
 function applyConstantPropagation(fn: HIRFunction): boolean {
+  // Track the set of identifiers which are used as dependencies for function expressions
+  // in order to avoid propagating these constants. This is necessary because the function
+  // itself will still reference the original value. If the dependency is propagated but the
+  // function still refers to the original value, this can create a situation where DCE
+  // will think the original expression is unused. Until we are able to propagate constants
+  // into function expression bodies, we disable propagation of function deps.
+  const functionDependencies = new Set<IdentifierId>();
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === "FunctionExpression") {
+        for (const operand of instr.value.dependencies) {
+          functionDependencies.add(operand.identifier.id);
+        }
+      }
+    }
+  }
+
   let hasChanges = false;
 
   const constants: Constants = new Map();
@@ -120,6 +137,10 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
         continue;
       }
       const instr = block.instructions[i]!;
+      // Don't propagate constants used as function expression dependencies
+      if (functionDependencies.has(instr.lvalue.identifier.id)) {
+        continue;
+      }
       const value = evaluateInstruction(constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
