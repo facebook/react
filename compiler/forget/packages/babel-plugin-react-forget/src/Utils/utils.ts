@@ -44,3 +44,16 @@ export function retainWhere<T>(
   }
   array.length = writeIndex;
 }
+
+export function getOrInsertDefault<U, V>(
+  m: Map<U, V>,
+  key: U,
+  defaultValue: V
+): V {
+  if (m.has(key)) {
+    return m.get(key) as V;
+  } else {
+    m.set(key, defaultValue);
+    return defaultValue;
+  }
+}

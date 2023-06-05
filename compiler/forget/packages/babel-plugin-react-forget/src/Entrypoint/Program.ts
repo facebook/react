@@ -16,6 +16,7 @@ import { GeneratedSource } from "../HIR";
 import { addInstrumentForget } from "./Instrumentation";
 import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
+import { getOrInsertDefault } from "../Utils/utils";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -81,36 +82,17 @@ export function compileProgram(
           })
         );
         if (pass.opts.instrumentForget != null) {
-          const gatingIdentifierName =
-            pass.opts.instrumentForget.gating.importSpecifierName;
           const instrumentFnName =
-            pass.opts.instrumentForget.instrumentFn.importSpecifierName;
-          addInstrumentForget(
-            fn,
-            originalIdent.name,
-            gatingIdentifierName,
-            instrumentFnName
-          );
-          addInstrumentForget(
-            compiledFn,
-            originalIdent.name,
-            gatingIdentifierName,
-            instrumentFnName
-          );
+            pass.opts.instrumentForget.importSpecifierName;
+          addInstrumentForget(fn, originalIdent.name, instrumentFnName);
+          addInstrumentForget(compiledFn, originalIdent.name, instrumentFnName);
         }
       } else {
         fn.replaceWith(compiled);
         if (pass.opts.instrumentForget != null) {
-          const gatingIdentifierName =
-            pass.opts.instrumentForget.gating.importSpecifierName;
           const instrumentFnName =
-            pass.opts.instrumentForget.instrumentFn.importSpecifierName;
-          addInstrumentForget(
-            fn,
-            originalIdent.name,
-            gatingIdentifierName,
-            instrumentFnName
-          );
+            pass.opts.instrumentForget.importSpecifierName;
+          addInstrumentForget(fn, originalIdent.name, instrumentFnName);
         }
       }
 
@@ -315,29 +297,18 @@ export function compileProgram(
         );
       }
     }
+    const externalFunctions = [];
     // TODO: check for duplicate import specifiers
     if (options.gating != null) {
-      program.unshiftContainer(
-        "body",
-        buildImportForExternalFunction(options.gating)
-      );
+      externalFunctions.push(options.gating);
     }
     if (options.instrumentForget != null) {
-      program.unshiftContainer(
-        "body",
-        buildImportForExternalFunction(options.instrumentForget.gating)
-      );
-      program.unshiftContainer(
-        "body",
-        buildImportForExternalFunction(options.instrumentForget.instrumentFn)
-      );
+      externalFunctions.push(options.instrumentForget);
     }
     if (options.environment?.enableEmitFreeze != null) {
-      program.unshiftContainer(
-        "body",
-        buildImportForExternalFunction(options.environment?.enableEmitFreeze)
-      );
+      externalFunctions.push(options.environment.enableEmitFreeze);
     }
+    addImportsToProgram(program, externalFunctions);
   }
 }
 
@@ -453,6 +424,49 @@ function buildBlockStatement(
   return body.node;
 }
 
+function addImportsToProgram(
+  path: NodePath<t.Program>,
+  importList: Array<ExternalFunction>
+): void {
+  const identifiers: Set<string> = new Set();
+  const sortedImports: Map<string, Array<string>> = new Map();
+  for (const { importSpecifierName, source } of importList) {
+    // Codegen currently does not rename import specifiers, so we do additional
+    // validation here
+    if (identifiers.has(importSpecifierName)) {
+      CompilerError.invalidInput(
+        `[InvalidConfig] Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
+        GeneratedSource
+      );
+    }
+    if (path.scope.hasBinding(importSpecifierName)) {
+      CompilerError.invalidInput(
+        `[InvalidConfig] Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
+        GeneratedSource
+      );
+    }
+    identifiers.add(importSpecifierName);
+
+    const importSpecifierNameList = getOrInsertDefault(
+      sortedImports,
+      source,
+      []
+    );
+    importSpecifierNameList.push(importSpecifierName);
+  }
+
+  const stmts: Array<t.ImportDeclaration> = [];
+  for (const [source, importSpecifierNameList] of sortedImports) {
+    const importSpecifiers = importSpecifierNameList.map((name) => {
+      const id = t.identifier(name);
+      return t.importSpecifier(id, id);
+    });
+
+    stmts.push(t.importDeclaration(importSpecifiers, t.stringLiteral(source)));
+  }
+  path.unshiftContainer("body", stmts);
+}
+
 type GatingTestOptions = {
   originalFnDecl: NodePath<t.FunctionDeclaration>;
   compiledIdent: t.Identifier;
@@ -469,7 +483,7 @@ function buildGatingTest({
     t.variableDeclarator(
       originalIdent,
       t.conditionalExpression(
-        t.callExpression(buildSpecifierIdent(gating), []),
+        t.callExpression(t.identifier(gating.importSpecifierName), []),
         compiledIdent,
         originalFnDecl.node.id!
       )
@@ -498,20 +512,6 @@ function buildGatingTest({
 
 function addSuffix(id: t.Identifier, suffix: string): t.Identifier {
   return t.identifier(`${id.name}${suffix}`);
-}
-
-function buildImportForExternalFunction(
-  gating: ExternalFunction
-): t.ImportDeclaration {
-  const specifierIdent = buildSpecifierIdent(gating);
-  return t.importDeclaration(
-    [t.importSpecifier(specifierIdent, specifierIdent)],
-    t.stringLiteral(gating.source)
-  );
-}
-
-function buildSpecifierIdent(gating: ExternalFunction): t.Identifier {
-  return t.identifier(gating.importSpecifierName);
 }
 
 /**

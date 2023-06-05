@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @instrumentForget @forgetDirective
+// @instrumentForget @forgetDirective @gating
 
 function Bar(props) {
   "use forget";
@@ -23,12 +23,17 @@ function Foo(props) {
 ## Code
 
 ```javascript
+import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { useRenderCounter } from "react-forget-runtime";
-import { isInstrumentForgetEnabled_Fixtures } from "ReactInstrumentForgetFeatureFlag";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @forgetDirective
+import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @forgetDirective @gating
 
-function Bar(props) {
-  if (__DEV__ && isInstrumentForgetEnabled_Fixtures) useRenderCounter("Bar");
+function Bar_uncompiled(props) {
+  "use forget";
+  if (__DEV__) useRenderCounter("Bar");
+  return <div>{props.bar}</div>;
+}
+function Bar_forget(props) {
+  if (__DEV__) useRenderCounter("Bar");
   const $ = useMemoCache(2);
   const c_0 = $[0] !== props.bar;
   let t0;
@@ -41,13 +46,19 @@ function Bar(props) {
   }
   return t0;
 }
+const Bar = isForgetEnabled_Fixtures() ? Bar_forget : Bar_uncompiled;
 
 function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
 }
 
-function Foo(props) {
-  if (__DEV__ && isInstrumentForgetEnabled_Fixtures) useRenderCounter("Foo");
+function Foo_uncompiled(props) {
+  "use forget";
+  if (__DEV__) useRenderCounter("Foo");
+  return <Foo>{props.bar}</Foo>;
+}
+function Foo_forget(props) {
+  if (__DEV__) useRenderCounter("Foo");
   const $ = useMemoCache(2);
   const c_0 = $[0] !== props.bar;
   let t0;
@@ -60,6 +71,7 @@ function Foo(props) {
   }
   return t0;
 }
+const Foo = isForgetEnabled_Fixtures() ? Foo_forget : Foo_uncompiled;
 
 ```
       

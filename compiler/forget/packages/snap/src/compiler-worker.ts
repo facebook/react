@@ -109,14 +109,8 @@ export async function compile(
     }
     if (firstLine.indexOf("@instrumentForget") !== -1) {
       instrumentForget = {
-        gating: {
-          source: "ReactInstrumentForgetFeatureFlag",
-          importSpecifierName: "isInstrumentForgetEnabled_Fixtures",
-        },
-        instrumentFn: {
-          source: "react-forget-runtime",
-          importSpecifierName: "useRenderCounter",
-        },
+        source: "react-forget-runtime",
+        importSpecifierName: "useRenderCounter",
       };
     }
     if (firstLine.indexOf("@panicOnBailout false") !== -1) {
@@ -139,7 +133,7 @@ export async function compile(
     }
     if (firstLine.indexOf("@enableEmitFreeze") !== -1) {
       enableEmitFreeze = {
-        source: "react-forget-runtime-emit-freeze",
+        source: "react-forget-runtime",
         importSpecifierName: "makeReadOnly",
       };
     }
