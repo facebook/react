@@ -46,15 +46,13 @@ import HIRBuilder, { Bindings } from "./HIRBuilder";
 // *******************************************************************************************
 
 /**
- * Lower a function declaration into a control flow graph that models aspects of
- * control flow that are necessary for memoization. Notably, only control flow
- * that occurs at statement granularity is modeled (eg `if`, `for`, `return`
- * statements), not control flow at the expression level (ternaries or boolean
- * short-circuiting). Throw semantics are also not modeled: in general exceptions
- * are treated as exceptional conditions that invalidate memoization.
- *
- * TODO: consider modeling control-flow at expression level for even more fine-
- * grained reactivity.
+ * Converts a function into a high-level intermediate form (HIR) which represents
+ * the code as a control-flow graph. All normal control-flow is modeled as accurately
+ * as possible to allow precise, expression-level memoization. The main exceptions are
+ * try/catch statements and exceptions: we currently bail out (skip compilation) for
+ * try/catch and do not attempt to model control flow of exceptions, which can occur
+ * ~anywhere in JavaScript. The compiler assumes that exceptions will be handled by
+ * the runtime, ie by invalidating memoization.
  */
 export function lower(
   func: NodePath<t.Function>,
