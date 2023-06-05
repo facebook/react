@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "preinstall": "./scripts/setup.sh",
     "dev": "NODE_ENV=development && next dev",
     "build": "next build && node ./scripts/downloadFonts.js",
+    "vercel-build": "yarn workspaces run build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -22,6 +22,7 @@
     "@heroicons/react": "^1.0.6",
     "@monaco-editor/react": "^4.4.6",
     "@use-gesture/react": "^10.2.22",
+    "babel-plugin-react-forget": "*",
     "hermes-eslint": "^0.9.0",
     "invariant": "^2.2.4",
     "monaco-editor": "^0.34.1",

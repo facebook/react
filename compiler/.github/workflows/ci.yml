@@ -17,15 +17,13 @@ jobs:
           cache-dependency-path: forget/yarn.lock
       - run: yarn install --immutable --immutable-cache
         working-directory: forget
-      - run: yarn prettier:ci
+      - run: yarn workspace babel-plugin-react-forget run prettier:ci
         working-directory: forget
-      - run: yarn build
+      - run: yarn workspace babel-plugin-react-forget run build
         working-directory: forget
-      - run: yarn lint
+      - run: yarn workspace babel-plugin-react-forget run lint
         working-directory: forget
-      - run: yarn test
+      - run: yarn workspace babel-plugin-react-forget run test
         working-directory: forget
-      - run: yarn install --immutable --immutable-cache
-        working-directory: forget/packages/snap
-      - run: yarn snap:build && yarn snap
+      - run: yarn workspace babel-plugin-react-forget run snap:build && yarn workspace babel-plugin-react-forget run snap
         working-directory: forget

@@ -65,7 +65,7 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
   root: true,
-  ignorePatterns: ["src/__tests__/**/*", "src/**/*.d.ts", "packages/**/*"],
+  ignorePatterns: ["src/__tests__/**/*", "src/**/*.d.ts"],
 
   // If rules need to be disabled then the rule is insufficiently high signal
   // and should be diasbled altogether or customized (in either case via a standalone PR)

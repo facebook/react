@@ -10,4 +10,4 @@
 // helps to keep the codebase size small.
 // This approach is inspired by ESLint's playground:
 // https://github.com/eslint/playground/blob/f3b1f78cc1c06dadfe7bb50c6c0f913c0d23670d/src/playground/components/CodeEditor.js#L8
-export { Linter } from "../node_modules/eslint/lib/linter";
+export { Linter } from "../../../node_modules/eslint/lib/linter";

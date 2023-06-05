@@ -6,5 +6,8 @@
   "license": "MIT",
   "files": [
     "index.js"
-  ]
+  ],
+  "scripts": {
+    "build": ":"
+  }
 }

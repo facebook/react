@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Node, NodePath } from "@babel/traverse";
-import { SourceLocation as BabelSourceLocation } from "@babel/types";
-import { SourceLocation } from "./HIR";
-import { ExtractClassProperties } from "./Utils/types";
+import type { Node, NodePath } from "@babel/traverse";
+import type { SourceLocation as BabelSourceLocation } from "@babel/types";
+import type { SourceLocation } from "./HIR";
+import type { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {

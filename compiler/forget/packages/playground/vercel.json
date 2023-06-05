@@ -1,5 +1,5 @@
 {
-  "headers": [
+ "headers": [
     {
       "source": "/fonts/(.*).woff2",
       "headers": [
