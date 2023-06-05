@@ -79,6 +79,7 @@ export function printMixedHIR(
     return printInstruction(value);
   }
   switch (value.kind) {
+    case "sequence":
     case "label":
     case "optional":
     case "branch":
@@ -218,6 +219,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `[${terminal.id}] Label block=bb${terminal.block} fallthrough=${
         terminal.fallthrough ? `bb${terminal.fallthrough}` : ""
       }`;
+      break;
+    }
+    case "sequence": {
+      value = `[${terminal.id}] Sequence block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "unsupported": {

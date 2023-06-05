@@ -279,7 +279,8 @@ export type Terminal =
   | LogicalTerminal
   | TernaryTerminal
   | OptionalTerminal
-  | LabelTerminal;
+  | LabelTerminal
+  | SequenceTerminal;
 
 function _staticInvariantTerminalHasLocation(
   terminal: Terminal
@@ -298,7 +299,6 @@ function _staticInvariantTerminalHasInstructionId(
 /**
  * Terminal nodes allowed for a value block
  */
-export type ValueTerminal = IfTerminal | GotoTerminal;
 // A terminal that couldn't be lowered correctly.
 export type UnsupportedTerminal = {
   kind: "unsupported";
@@ -432,6 +432,14 @@ export type OptionalTerminal = {
   // an optional chain.
   optional: boolean;
   test: BlockId;
+  fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type SequenceTerminal = {
+  kind: "sequence";
+  block: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
   loc: SourceLocation;

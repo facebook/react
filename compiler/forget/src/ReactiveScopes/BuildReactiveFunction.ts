@@ -570,6 +570,7 @@ class Driver {
 
         break;
       }
+      case "sequence":
       case "optional":
       case "ternary":
       case "logical": {

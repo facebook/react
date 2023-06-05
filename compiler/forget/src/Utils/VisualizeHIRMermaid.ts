@@ -135,6 +135,10 @@ function printTerminalLabel(terminal: Terminal): string {
       buffer.push("Label");
       break;
     }
+    case "sequence": {
+      buffer.push("Sequence");
+      break;
+    }
     case "unsupported": {
       break;
     }
@@ -235,6 +239,11 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
           printJumpArrow(blockId, terminal.fallthrough, "fallthrough")
         );
       }
+      break;
+    }
+    case "sequence": {
+      buffer.push(printJumpArrow(blockId, terminal.block, "block"));
+      buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;
     }
     case "throw":
