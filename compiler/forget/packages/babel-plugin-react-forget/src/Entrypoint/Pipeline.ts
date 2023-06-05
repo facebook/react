@@ -95,9 +95,6 @@ export function* run(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
-  if (env.validateRefAccessDuringRender) {
-    validateNoRefAccessInRender(hir);
-  }
   if (env.validateHooksUsage) {
     validateHooksUsage(hir);
     const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
@@ -127,6 +124,10 @@ export function* run(
 
   inferMutableRanges(hir);
   yield log({ kind: "hir", name: "InferMutableRanges", value: hir });
+
+  if (env.validateRefAccessDuringRender) {
+    validateNoRefAccessInRender(hir);
+  }
 
   leaveSSA(hir);
   yield log({ kind: "hir", name: "LeaveSSA", value: hir });

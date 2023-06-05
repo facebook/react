@@ -53,6 +53,13 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
           // For now we assume *all* function expressions are safe, eventually we can
           // be more precise and disallow ref access in functions that may be called
           // during render
+          const mutableRange = instr.lvalue.identifier.mutableRange;
+          if (mutableRange.end > mutableRange.start + 1) {
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              validateNonRefValue(error, operand);
+              validateNonRefObject(error, operand);
+            }
+          }
           break;
         }
         case "CallExpression":

@@ -11,6 +11,8 @@ import {
   FunctionExpression,
   HIRFunction,
   Identifier,
+  isRefValueType,
+  isUseRefType,
   mergeConsecutiveBlocks,
   Place,
   ReactiveScopeDependency,
@@ -122,6 +124,13 @@ function infer(
     }
 
     if (name !== null && mutations.has(name)) {
+      dep.effect = Effect.Capture;
+    } else if (isUseRefType(dep.identifier) || isRefValueType(dep.identifier)) {
+      // TODO: this is a hack to ensure we treat functions which reference refs
+      // as having a capture and therefore being considered mutable. this ensures
+      // the function gets a mutable range which accounts for anywhere that it
+      // could be called, and allows us to help ensure it isn't called during
+      // render
       dep.effect = Effect.Capture;
     }
   }

@@ -5,7 +5,8 @@
 function Component(props) {
   const ref = useRef(null);
   const onChange = (e) => {
-    ref.current = e.target.value;
+    const newValue = e.target.value ?? ref.current;
+    ref.current = newValue;
   };
   useEffect(() => {
     console.log(ref.current);
@@ -25,7 +26,8 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => {
-      ref.current = e.target.value;
+      const newValue = e.target.value ?? ref.current;
+      ref.current = newValue;
     };
     $[0] = t0;
   } else {

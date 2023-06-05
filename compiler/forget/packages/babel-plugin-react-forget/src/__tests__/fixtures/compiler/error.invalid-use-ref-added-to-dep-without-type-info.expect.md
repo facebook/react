@@ -21,7 +21,7 @@ function Foo({ a }) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: Ref values may not be passed to functions because they could read the ref value (`current` property) during render. Cannot access ref object at <unknown> $30:TObject<BuiltInUseRefId> (4:4)
+[ReactForget] InvalidInput: Ref values may not be passed to functions because they could read the ref value (`current` property) during render. Cannot access ref object at capture $30:TObject<BuiltInUseRefId> (4:4)
 ```
           
       
