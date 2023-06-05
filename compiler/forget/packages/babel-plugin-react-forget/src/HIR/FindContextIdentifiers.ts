@@ -6,7 +6,9 @@ import { GeneratedSource } from "./HIR";
 type FindContextIdentifierState = {
   inLambda: number;
   currentLambda: Array<
-    NodePath<t.FunctionExpression> | NodePath<t.ArrowFunctionExpression>
+    | NodePath<t.FunctionDeclaration>
+    | NodePath<t.FunctionExpression>
+    | NodePath<t.ArrowFunctionExpression>
   >;
   contextIdentifiers: Set<t.Identifier>;
 };
@@ -22,6 +24,20 @@ export function findContextIdentifiers(
 
   func.traverse<FindContextIdentifierState>(
     {
+      FunctionDeclaration: {
+        enter(
+          fn: NodePath<t.FunctionDeclaration>,
+          state: FindContextIdentifierState
+        ): void {
+          state.currentLambda.push(fn);
+        },
+        exit(
+          fn: NodePath<t.FunctionDeclaration>,
+          state: FindContextIdentifierState
+        ): void {
+          state.currentLambda.pop();
+        },
+      },
       FunctionExpression: {
         enter(
           fn: NodePath<t.FunctionExpression>,
@@ -69,6 +85,7 @@ export function findContextIdentifiers(
 
 function handleAssignment(
   currentLambda:
+    | NodePath<t.FunctionDeclaration>
     | NodePath<t.FunctionExpression>
     | NodePath<t.ArrowFunctionExpression>,
   contextIdentifiers: Set<t.Identifier>,
