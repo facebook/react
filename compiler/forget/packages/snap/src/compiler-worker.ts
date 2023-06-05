@@ -97,6 +97,7 @@ export async function compile(
     let enableTreatHooksAsFunctions = true;
     let disableAllMemoization = false;
     let validateRefAccessDuringRender = true;
+    let enableEmitFreeze = null;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
@@ -136,6 +137,12 @@ export async function compile(
     if (firstLine.indexOf("@validateRefAccessDuringRender false") !== -1) {
       validateRefAccessDuringRender = false;
     }
+    if (firstLine.indexOf("@enableEmitFreeze") !== -1) {
+      enableEmitFreeze = {
+        source: "react-forget-runtime-emit-freeze",
+        importSpecifierName: "makeReadOnly",
+      };
+    }
 
     const language = parseLanguage(firstLine);
 
@@ -160,6 +167,7 @@ export async function compile(
         validateHooksUsage: true,
         validateRefAccessDuringRender,
         validateFrozenLambdas: true,
+        enableEmitFreeze,
       },
       logger: null,
       gating,

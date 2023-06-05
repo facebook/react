@@ -33,6 +33,7 @@ import {
   ShapeRegistry,
   addHook,
 } from "./ObjectShape";
+import { ExternalFunction } from "../Entrypoint/Options";
 
 export type Hook = {
   effectKind: Effect;
@@ -126,6 +127,29 @@ export type EnvironmentConfig = Partial<{
    * Defaults to false (ie, by default memoization is enabled)
    */
   disableAllMemoization: boolean;
+
+  /**
+   * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
+   * to values that Forget assumes are immutable (for Forget compiled code).
+   * For example:
+   *  emitFreeze: {
+   *    source: 'ReactForgetRuntime',
+   *    importSpecifierName: 'makeReadOnly',
+   *  }
+   *
+   * produces:
+   *  import {makeReadOnly} from 'ReactForgetRuntime';
+   *
+   *  function Component(props) {
+   *    if (c_0) {
+   *      // ...
+   *      $[0] = __DEV__ ? makeReadOnly(x) : x;
+   *    } else {
+   *      x = $[0];
+   *    }
+   *  }
+   */
+  enableEmitFreeze: ExternalFunction | null;
 }>;
 
 export class Environment {
@@ -140,6 +164,8 @@ export class Environment {
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
   disableAllMemoization: boolean;
+  enableEmitFreeze: ExternalFunction | null;
+
   #contextIdentifiers: Set<t.Identifier>;
 
   constructor(
@@ -181,6 +207,8 @@ export class Environment {
     this.enableTreatHooksAsFunctions =
       config?.enableTreatHooksAsFunctions ?? true;
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
+    this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
+
     this.#contextIdentifiers = contextIdentifiers;
   }
 

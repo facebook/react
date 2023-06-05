@@ -12,10 +12,10 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "../CompilerError";
-import { compileFn } from "./Pipeline";
 import { GeneratedSource } from "../HIR";
 import { addInstrumentForget } from "./Instrumentation";
 import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
+import { compileFn } from "./Pipeline";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -330,6 +330,12 @@ export function compileProgram(
       program.unshiftContainer(
         "body",
         buildImportForExternalFunction(options.instrumentForget.instrumentFn)
+      );
+    }
+    if (options.environment?.enableEmitFreeze != null) {
+      program.unshiftContainer(
+        "body",
+        buildImportForExternalFunction(options.environment?.enableEmitFreeze)
       );
     }
   }

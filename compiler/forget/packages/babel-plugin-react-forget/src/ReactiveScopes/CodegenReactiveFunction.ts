@@ -8,6 +8,7 @@
 import * as t from "@babel/types";
 import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
+import { Environment } from "../HIR";
 import {
   BlockId,
   GeneratedSource,
@@ -35,7 +36,7 @@ import { assertExhaustive } from "../Utils/utils";
 export function codegenReactiveFunction(
   fn: ReactiveFunction
 ): Result<t.FunctionDeclaration, CompilerError> {
-  const cx = new Context();
+  const cx = new Context(fn.env, fn.id?.name ?? "[[ anonymous ]]");
   if (fn.id !== null) {
     cx.temp.set(fn.id.id, null);
   }
@@ -84,11 +85,16 @@ export function codegenReactiveFunction(
 }
 
 class Context {
+  env: Environment;
+  fnName: string;
   #nextCacheIndex: number = 0;
   #declarations: Set<IdentifierId> = new Set();
   temp: Temporaries = new Map();
   errors: CompilerError = new CompilerError();
-
+  constructor(env: Environment, fnName: string) {
+    this.env = env;
+    this.fnName = fnName;
+  }
   get nextCacheIndex(): number {
     return this.#nextCacheIndex++;
   }
@@ -145,6 +151,22 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
     }
   }
   return t.blockStatement(statements);
+}
+
+function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
+  if (cx.env.enableEmitFreeze != null) {
+    // The import declaration for emitFreeze is inserted in the Babel plugin
+    return t.conditionalExpression(
+      t.identifier("__DEV__"),
+      t.callExpression(
+        t.identifier(cx.env.enableEmitFreeze.importSpecifierName),
+        [value, t.stringLiteral(cx.fnName)]
+      ),
+      value
+    );
+  } else {
+    return value;
+  }
 }
 
 function codegenReactiveScope(
@@ -212,7 +234,7 @@ function codegenReactiveScope(
         t.assignmentExpression(
           "=",
           t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
-          name
+          wrapCacheDep(cx, name)
         )
       )
     );
@@ -239,7 +261,7 @@ function codegenReactiveScope(
         t.assignmentExpression(
           "=",
           t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
-          name
+          wrapCacheDep(cx, name)
         )
       )
     );
