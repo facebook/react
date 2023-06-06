@@ -9,7 +9,7 @@ jest.mock('shared/ReactFeatureFlags', () => {
   const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
 
   // This flag is only used by tests, it should never be set elsewhere.
-  actual.enableSyncDefaultUpdates = __VARIANT__;
+  actual.forceConcurrentByDefaultForTesting = !__VARIANT__;
 
   return actual;
 });

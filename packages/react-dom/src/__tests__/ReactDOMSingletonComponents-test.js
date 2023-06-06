@@ -87,12 +87,14 @@ describe('ReactDOM HostSingleton', () => {
     let node = element.firstChild;
     while (node) {
       if (node.nodeType === 1) {
+        const el: Element = (node: any);
         if (
-          node.tagName !== 'SCRIPT' &&
-          node.tagName !== 'TEMPLATE' &&
-          node.tagName !== 'template' &&
-          !node.hasAttribute('hidden') &&
-          !node.hasAttribute('aria-hidden')
+          (el.tagName !== 'SCRIPT' &&
+            el.tagName !== 'TEMPLATE' &&
+            el.tagName !== 'template' &&
+            !el.hasAttribute('hidden') &&
+            !el.hasAttribute('aria-hidden')) ||
+          el.hasAttribute('data-meaningful')
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -243,9 +245,6 @@ describe('ReactDOM HostSingleton', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html data-foo="foo">
         <head data-bar="bar">
-          <link rel="preload" href="resource" as="style" />
-          <link rel="preload" href="3rdparty" as="style" />
-          <link rel="preload" href="3rdparty2" as="style" />
           <title>a server title</title>
           <link rel="stylesheet" href="resource" />
           <link rel="stylesheet" href="3rdparty" />
@@ -742,11 +741,13 @@ describe('ReactDOM HostSingleton', () => {
             <link rel="stylesheet" href="headbefore" />
             <title>this should be removed</title>
             <link rel="stylesheet" href="headafter" />
+            <script data-meaningful="">true</script>
           </head>
           <body>
             <link rel="stylesheet" href="bodybefore" />
             <div>this should be removed</div>
             <link rel="stylesheet" href="bodyafter" />
+            <script data-meaningful="">true</script>
           </body>
         </html>,
       );
@@ -771,11 +772,13 @@ describe('ReactDOM HostSingleton', () => {
         <head>
           <link rel="stylesheet" href="headbefore" />
           <link rel="stylesheet" href="headafter" />
+          <script data-meaningful="">true</script>
           <title>something new</title>
         </head>
         <body>
           <link rel="stylesheet" href="bodybefore" />
           <link rel="stylesheet" href="bodyafter" />
+          <script data-meaningful="">true</script>
           <div>something new</div>
         </body>
       </html>,
@@ -836,10 +839,7 @@ describe('ReactDOM HostSingleton', () => {
     await waitForAll([]);
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head>
-          <link rel="preload" as="style" href="before" />
-          <link rel="preload" as="style" href="after" />
-        </head>
+        <head />
         <body>
           <link rel="stylesheet" href="before" />
           <link rel="stylesheet" href="after" />

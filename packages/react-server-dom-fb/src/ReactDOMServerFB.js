@@ -23,6 +23,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-server/src/ReactFizzConfig';
@@ -49,9 +50,12 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
     fatal: false,
     error: null,
   };
+  const resources = createResources();
   const request = createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       options ? options.identifierPrefix : undefined,
       undefined,
       options ? options.bootstrapScriptContent : undefined,
