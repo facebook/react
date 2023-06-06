@@ -22,6 +22,7 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -78,10 +79,12 @@ function prerenderToNodeStreams(
       };
       resolve(result);
     }
-
+    const resources = createResources();
     const request = createRequest(
       children,
+      resources,
       createResponseState(
+        resources,
         options ? options.identifierPrefix : undefined,
         undefined,
         options ? options.bootstrapScriptContent : undefined,

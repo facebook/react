@@ -1036,19 +1036,6 @@ export function bindInstance(
 
 export const supportsHydration = true;
 
-// With Resources, some HostComponent types will never be server rendered and need to be
-// inserted without breaking hydration
-export function isHydratableType(type: string, props: Props): boolean {
-  if (enableFloat) {
-    if (type === 'script') {
-      const {async, onLoad, onError} = (props: any);
-      return !(async && (onLoad || onError));
-    }
-    return true;
-  } else {
-    return true;
-  }
-}
 export function isHydratableText(text: string): boolean {
   return text !== '';
 }
@@ -1164,21 +1151,22 @@ export function canHydrateInstance(
           // if we learn it is problematic
           const srcAttr = element.getAttribute('src');
           if (
-            srcAttr &&
-            element.hasAttribute('async') &&
-            !element.hasAttribute('itemprop')
-          ) {
-            // This is an async script resource
-            break;
-          } else if (
             srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
             element.getAttribute('type') !==
               (anyProps.type == null ? null : anyProps.type) ||
             element.getAttribute('crossorigin') !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
           ) {
-            // This script is for a different src
-            break;
+            // This script is for a different src/type/crossOrigin. It may be a script resource
+            // or it may just be a mistmatch
+            if (
+              srcAttr &&
+              element.hasAttribute('async') &&
+              !element.hasAttribute('itemprop')
+            ) {
+              // This is an async script resource
+              break;
+            }
           }
           return element;
         }
@@ -2173,6 +2161,7 @@ type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
@@ -2245,6 +2234,7 @@ function preloadPropsFromPreloadOptions(
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -2254,6 +2244,7 @@ type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
   nonce?: string,
+  fetchPriority?: 'high' | 'low' | 'auto',
 };
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
@@ -2394,6 +2385,8 @@ function stylesheetPropsFromPreinitOptions(
     href,
     'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -2407,6 +2400,7 @@ function scriptPropsFromPreinitOptions(
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
     nonce: options.nonce,
+    fetchPriority: options.fetchPriority,
   };
 }
 
