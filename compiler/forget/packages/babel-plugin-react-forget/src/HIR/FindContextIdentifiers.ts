@@ -1,25 +1,26 @@
 import type { NodePath } from "@babel/traverse";
 import type * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
+import { Set_union } from "../Utils/utils";
 import { GeneratedSource } from "./HIR";
 
 type FindContextIdentifierState = {
-  inLambda: number;
   currentLambda: Array<
     | NodePath<t.FunctionDeclaration>
     | NodePath<t.FunctionExpression>
     | NodePath<t.ArrowFunctionExpression>
   >;
-  contextIdentifiers: Set<t.Identifier>;
+  reassigned: Set<t.Identifier>;
+  referenced: Set<t.Identifier>;
 };
 
 export function findContextIdentifiers(
   func: NodePath<t.Function>
 ): Set<t.Identifier> {
   const state: FindContextIdentifierState = {
-    inLambda: 0,
     currentLambda: [],
-    contextIdentifiers: new Set(),
+    reassigned: new Set(),
+    referenced: new Set(),
   };
 
   func.traverse<FindContextIdentifierState>(
@@ -71,24 +72,42 @@ export function findContextIdentifiers(
         path: NodePath<t.AssignmentExpression>,
         state: FindContextIdentifierState
       ): void {
+        const left = path.get("left");
+        handleAssignment(state.reassigned, left);
+      },
+      Identifier(
+        path: NodePath<t.Identifier>,
+        state: FindContextIdentifierState
+      ): void {
         const currentLambda = state.currentLambda.at(-1);
-        if (currentLambda) {
-          const left = path.get("left");
-          handleAssignment(currentLambda, state.contextIdentifiers, left);
-        }
+        if (currentLambda !== undefined)
+          handleIdentifier(currentLambda, state.referenced, path);
       },
     },
     state
   );
-  return state.contextIdentifiers;
+  return Set_union(state.reassigned, state.referenced);
 }
 
-function handleAssignment(
+function handleIdentifier(
   currentLambda:
     | NodePath<t.FunctionDeclaration>
     | NodePath<t.FunctionExpression>
     | NodePath<t.ArrowFunctionExpression>,
-  contextIdentifiers: Set<t.Identifier>,
+  referenced: Set<t.Identifier>,
+  path: NodePath<t.Identifier>
+): void {
+  const name = path.node.name;
+  const binding = path.scope.getBinding(name);
+  const bindingAboveLambdaScope = currentLambda.scope.parent.getBinding(name);
+
+  if (binding != null && binding === bindingAboveLambdaScope) {
+    referenced.add(binding.identifier);
+  }
+}
+
+function handleAssignment(
+  reassigned: Set<t.Identifier>,
   lvalPath: NodePath<t.LVal>
 ): void {
   // Find all reassignments to identifiers declared outside of currentLambda
@@ -98,12 +117,9 @@ function handleAssignment(
     case "Identifier": {
       const path = lvalPath as NodePath<t.Identifier>;
       const name = path.node.name;
-      const ownBinding = path.scope.getBinding(name);
-      const bindingAboveLambdaScope =
-        currentLambda.scope.parent.getBinding(name);
-
-      if (ownBinding != null && ownBinding === bindingAboveLambdaScope) {
-        contextIdentifiers.add(ownBinding.identifier);
+      const binding = path.scope.getBinding(name);
+      if (binding != null) {
+        reassigned.add(binding.identifier);
       }
       break;
     }
@@ -111,7 +127,7 @@ function handleAssignment(
       const path = lvalPath as NodePath<t.ArrayPattern>;
       for (const element of path.get("elements")) {
         if (nonNull(element)) {
-          handleAssignment(currentLambda, contextIdentifiers, element);
+          handleAssignment(reassigned, element);
         }
       }
       break;
@@ -127,7 +143,7 @@ function handleAssignment(
               valuePath.node.loc ?? GeneratedSource
             );
           }
-          handleAssignment(currentLambda, contextIdentifiers, valuePath);
+          handleAssignment(reassigned, valuePath);
         } else {
           if (!property.isRestElement()) {
             CompilerError.invariant(
@@ -135,7 +151,7 @@ function handleAssignment(
               property.node.loc ?? GeneratedSource
             );
           }
-          handleAssignment(currentLambda, contextIdentifiers, property);
+          handleAssignment(reassigned, property);
         }
       }
       break;
@@ -143,12 +159,12 @@ function handleAssignment(
     case "AssignmentPattern": {
       const path = lvalPath as NodePath<t.AssignmentPattern>;
       const left = path.get("left");
-      handleAssignment(currentLambda, contextIdentifiers, left);
+      handleAssignment(reassigned, left);
       break;
     }
     case "RestElement": {
       const path = lvalPath as NodePath<t.RestElement>;
-      handleAssignment(currentLambda, contextIdentifiers, path.get("argument"));
+      handleAssignment(reassigned, path.get("argument"));
       break;
     }
     case "MemberExpression": {

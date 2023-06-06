@@ -57,3 +57,13 @@ export function getOrInsertDefault<U, V>(
     return defaultValue;
   }
 }
+
+export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
+  const union = new Set<T>();
+  for (const item of a) {
+    if (b.has(item)) {
+      union.add(item);
+    }
+  }
+  return union;
+}
