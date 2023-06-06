@@ -4,7 +4,8 @@
   "private": true,
   "main": "dist/main.js",
   "scripts": {
-    "build": "webpack --mode=development"
+    "build": "webpack --mode=development",
+    "test": ":"
   },
   "dependencies": {
     "eslint": "^8.25.0",

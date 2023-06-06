@@ -8,6 +8,7 @@
     "index.js"
   ],
   "scripts": {
-    "build": ":"
+    "build": ":",
+    "test": ":"
   }
 }

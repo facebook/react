@@ -13,6 +13,7 @@
     "next": "yarn workspace playground run dev",
     "build": "yarn workspaces run build",
     "dev": "concurrently --kill-others \"yarn workspace babel-plugin-react-forget run tsc --watch\" \"yarn workspace playground run dev\"",
+    "test": "yarn workspaces run test",
     "snap": "yarn workspace babel-plugin-react-forget run snap",
     "snap:build": "yarn workspace snap run build"
   },
