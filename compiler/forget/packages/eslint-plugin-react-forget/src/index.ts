@@ -9,6 +9,6 @@ import ReactForgetDiagnostics from "./rules/ReactForgetDiagnostics";
 
 module.exports = {
   rules: {
-    "react-forget-diagnoatics": ReactForgetDiagnostics,
+    "react-forget-diagnostics": ReactForgetDiagnostics,
   },
 };

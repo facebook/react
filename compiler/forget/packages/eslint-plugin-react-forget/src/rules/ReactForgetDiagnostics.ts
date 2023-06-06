@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export default {
+import type { Rule } from "eslint";
+
+const rule: Rule.RuleModule = {
   meta: {
     type: "problem",
     docs: {
@@ -13,7 +15,9 @@ export default {
       recommended: true,
     },
   },
-  create(context) {
+  create(_context: Rule.RuleContext) {
     return {};
   },
 };
+
+export default rule;

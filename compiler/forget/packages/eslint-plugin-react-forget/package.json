@@ -10,17 +10,18 @@
   "main": "./lib/index.js",
   "exports": "./lib/index.js",
   "scripts": {
-    "build": ":",
+    "build": "tsc",
     "lint": "npm-run-all \"lint:*\"",
     "lint:eslint-docs": "npm-run-all \"update:eslint-docs -- --check\"",
     "lint:js": "eslint .",
-    "test": "jest",
+    "test": "tsc && jest",
     "update:eslint-docs": "eslint-doc-generator"
   },
   "dependencies": {},
   "devDependencies": {
     "@babel/preset-env": "^7.22.4",
     "@babel/preset-typescript": "^7.18.6",
+    "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
     "eslint": "^8.19.0",
     "eslint-doc-generator": "^1.0.0",
