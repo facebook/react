@@ -22,7 +22,7 @@ jobs:
         working-directory: forget
       - id: test262
         name: Run test262
-        run: echo results="$(yarn run --silent test262:ci)" >> $GITHUB_OUTPUT
+        run: echo results=$(yarn --silent workspace babel-plugin-react-forget run --silent test262:ci) >> $GITHUB_OUTPUT
         working-directory: forget
       - id: format_test262_results
         name: Format test262 results
