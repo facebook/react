@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as parser from "@babel/parser";
+import traverse from "@babel/traverse";
+import { compileProgram, parsePluginOptions } from "babel-plugin-react-forget";
 import type { Rule } from "eslint";
 
 const rule: Rule.RuleModule = {
@@ -15,7 +18,19 @@ const rule: Rule.RuleModule = {
       recommended: true,
     },
   },
-  create(_context: Rule.RuleContext) {
+  create(context: Rule.RuleContext) {
+    const babelAST = parser.parse(context.sourceCode.text);
+    if (babelAST != null) {
+      traverse(babelAST, {
+        Program(prog) {
+          compileProgram(prog, {
+            opts: parsePluginOptions(null), // use defaults for now
+            filename: context.filename,
+            comments: babelAST.comments ?? [],
+          });
+        },
+      });
+    }
     return {};
   },
 };

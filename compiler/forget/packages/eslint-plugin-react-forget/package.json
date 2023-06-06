@@ -17,8 +17,14 @@
     "test": "tsc && jest",
     "update:eslint-docs": "eslint-doc-generator"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@babel/core": "^7.19.1",
+    "@babel/parser": "^7.19.1",
+    "@babel/traverse": "^7.19.1",
+    "babel-plugin-react-forget": "*"
+  },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.19.1",
     "@babel/preset-env": "^7.22.4",
     "@babel/preset-typescript": "^7.18.6",
     "@types/node": "^20.2.5",
