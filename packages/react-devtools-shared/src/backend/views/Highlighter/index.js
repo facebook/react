@@ -203,9 +203,9 @@ export default function setupHighlighter(
 
   function getEventTarget(event: MouseEvent): HTMLElement {
     if (event.composed) {
-      return event.composedPath()[0];
+      return (event.composedPath()[0]: any);
     }
 
-    return event.target;
+    return (event.target: any);
   }
 }
