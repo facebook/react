@@ -1,7 +1,7 @@
 {
   "private": true,
   "workspaces": {
-    "packages": ["packages/*"],
+    "packages": ["packages/*", "apps/*"],
     "nohoist": ["**/next", "**/next/**"]
   },
   "repository": {
