@@ -12,7 +12,12 @@ function normalizeIndent(strings: TemplateStringsArray): string {
   return codeLines.map((line) => line.slice(leftPadding.length)).join("\n");
 }
 
-const tests = {
+type ForgetTestCases = {
+  valid: ESLintTester.ValidTestCase[];
+  invalid: ESLintTester.InvalidTestCase[];
+};
+
+const tests: ForgetTestCases = {
   valid: [
     {
       name: "Basic example",
@@ -26,7 +31,20 @@ const tests = {
       `,
     },
   ],
-  invalid: [],
+  invalid: [
+    {
+      name: "Unsupported syntax",
+      code: normalizeIndent`
+        function foo(x) {
+          var y = 1;
+          return y * x;
+        }
+      `,
+      errors: [
+        "[ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)",
+      ],
+    },
+  ],
 };
 
 const eslintTester = new ESLintTester({

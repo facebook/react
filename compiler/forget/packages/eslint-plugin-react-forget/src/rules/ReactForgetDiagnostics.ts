@@ -7,7 +7,11 @@
 
 import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
-import { compileProgram, parsePluginOptions } from "babel-plugin-react-forget";
+import {
+  CompilerError,
+  compileProgram,
+  parsePluginOptions,
+} from "babel-plugin-react-forget";
 import type { Rule } from "eslint";
 
 const rule: Rule.RuleModule = {
@@ -23,11 +27,24 @@ const rule: Rule.RuleModule = {
     if (babelAST != null) {
       traverse(babelAST, {
         Program(prog) {
-          compileProgram(prog, {
-            opts: parsePluginOptions(null), // use defaults for now
-            filename: context.filename,
-            comments: babelAST.comments ?? [],
-          });
+          try {
+            compileProgram(prog, {
+              opts: parsePluginOptions(null), // use defaults for now
+              filename: context.filename,
+              comments: babelAST.comments ?? [],
+            });
+          } catch (err) {
+            if (err instanceof CompilerError) {
+              for (const detail of err.details) {
+                if (detail.loc != null) {
+                  context.report({
+                    message: detail.toString(),
+                    loc: detail.loc,
+                  });
+                }
+              }
+            }
+          }
         },
       });
     }
