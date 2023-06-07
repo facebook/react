@@ -151,11 +151,7 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    selectFiberForNode(
-      (((event.composed
-        ? event.composedPath()[0]
-        : event.target): any): HTMLElement),
-    );
+    selectFiberForNode(getEventTarget(event));
   }
 
   let lastHoveredNode: HTMLElement | null = null;
@@ -163,9 +159,7 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    const target: HTMLElement = ((event.composed
-      ? event.composedPath()[0]
-      : event.target): any);
+    const target: HTMLElement = getEventTarget(event);
     if (lastHoveredNode === target) return;
     lastHoveredNode = target;
 
@@ -206,4 +200,12 @@ export default function setupHighlighter(
     // because those are usually unintentional as you lift the cursor.
     {leading: false},
   );
+
+  function getEventTarget(event: MouseEvent): HTMLElement {
+    if (event.composed) {
+      return event.composedPath()[0];
+    }
+
+    return event.target;
+  }
 }
