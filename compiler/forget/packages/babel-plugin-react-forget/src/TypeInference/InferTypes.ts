@@ -65,8 +65,11 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       for (const place of eachInstructionOperand(instr)) {
         place.identifier.type = unifier.get(place.identifier.type);
       }
-      const { lvalue } = instr;
+      const { lvalue, value } = instr;
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
+      if (value.kind === "FunctionExpression") {
+        apply(value.loweredFunc, unifier);
+      }
     }
   }
 }
@@ -125,14 +128,13 @@ function* generateInstructionTypes(
       break;
     }
 
-    // For now, we won't infer types for context variables
-    case "StoreContext": {
-      break;
-    }
+    // We intentionally do not infer types for context variables
+    case "DeclareContext":
+    case "StoreContext":
     case "LoadContext": {
-      yield equation(left, value.place.identifier.type);
       break;
     }
+
     case "StoreLocal": {
       yield equation(left, value.value.identifier.type);
       yield equation(
@@ -245,12 +247,11 @@ function* generateInstructionTypes(
     }
 
     case "FunctionExpression": {
-      inferTypes(value.loweredFunc);
+      yield* generate(value.loweredFunc);
       break;
     }
 
     case "DeclareLocal":
-    case "DeclareContext":
     case "NewExpression":
     case "JsxExpression":
     case "JsxFragment":

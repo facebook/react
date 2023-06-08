@@ -46,13 +46,25 @@ class SSABuilder {
   #unknown: Set<Identifier> = new Set();
   #context: Set<Identifier> = new Set();
 
-  constructor(env: Environment, blocks: Map<BlockId, BasicBlock>) {
-    this.#blocks = blocks;
+  constructor(env: Environment, blocks: ReadonlyMap<BlockId, BasicBlock>) {
+    this.#blocks = new Map(blocks);
     this.#env = env;
   }
 
   get nextSsaId(): IdentifierId {
     return this.#env.nextIdentifierId;
+  }
+
+  defineFunction(func: HIRFunction): void {
+    for (const [id, block] of func.body.blocks) {
+      this.#blocks.set(id, block);
+    }
+  }
+
+  enter(fn: () => void): void {
+    const current = this.#current;
+    fn();
+    this.#current = current;
   }
 
   state(): State {
@@ -125,7 +137,9 @@ class SSABuilder {
     if (block.preds.size == 0) {
       // We're at the entry block and haven't found our defintion yet.
       // console.log(
-      //   `Unable to find "${printIdentifier(oldId)}", assuming it's a global`
+      //   `Unable to find "${printIdentifier(
+      //     oldId
+      //   )}" in bb${blockId}, assuming it's a global`
       // );
       this.#unknown.add(oldId);
       return oldId;
@@ -213,8 +227,16 @@ class SSABuilder {
 }
 
 export default function enterSSA(func: HIRFunction): void {
-  const visitedBlocks: Set<BasicBlock> = new Set();
   const builder = new SSABuilder(func.env, func.body.blocks);
+  enterSSAImpl(func, builder, func.body.entry);
+}
+
+function enterSSAImpl(
+  func: HIRFunction,
+  builder: SSABuilder,
+  rootEntry: BlockId
+): void {
+  const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
     invariant(
       !visitedBlocks.has(block),
@@ -224,8 +246,14 @@ export default function enterSSA(func: HIRFunction): void {
 
     builder.startBlock(block);
 
-    if (func.body.entry === blockId) {
-      func.context = func.context.map((p) => builder.defineContext(p));
+    if (blockId === rootEntry) {
+      // NOTE: func.context should be empty for the root function
+      if (func.context.length !== 0) {
+        CompilerError.invariant(
+          `Expected function context to be empty for outer function declarations`,
+          func.loc
+        );
+      }
       func.params = func.params.map((p) => builder.definePlace(p));
     }
 
@@ -234,7 +262,24 @@ export default function enterSSA(func: HIRFunction): void {
       mapInstructionOperands(instr, (place) => builder.getPlace(place));
 
       if (instr.value.kind === "FunctionExpression") {
-        enterSSA(instr.value.loweredFunc);
+        const loweredFunc = instr.value.loweredFunc;
+        const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
+        invariant(
+          entry.preds.size === 0,
+          "Expected function expression entry block to have zero predecessors"
+        );
+        entry.preds.add(blockId);
+        builder.defineFunction(loweredFunc);
+        builder.enter(() => {
+          loweredFunc.context = loweredFunc.context.map((p) =>
+            builder.getPlace(p)
+          );
+          loweredFunc.params = loweredFunc.params.map((p) =>
+            builder.definePlace(p)
+          );
+          enterSSAImpl(loweredFunc, builder, rootEntry);
+        });
+        entry.preds.clear();
       }
     }
 

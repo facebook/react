@@ -431,7 +431,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const deps = instrValue.dependencies
         .map((dep) => printPlace(dep))
         .join(",");
-      value = `Function @deps[${deps}]:\n${fn}`;
+      const context = instrValue.loweredFunc.context
+        .map((dep) => printPlace(dep))
+        .join(",");
+      value = `Function @deps[${deps}] @context[${context}]:\n${fn}`;
       break;
     }
     case "TaggedTemplateExpression": {
