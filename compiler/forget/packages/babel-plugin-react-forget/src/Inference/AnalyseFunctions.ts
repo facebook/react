@@ -16,7 +16,6 @@ import {
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
-import { inferTypes } from "../TypeInference";
 import { logHIRFunction } from "../Utils/logger";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
@@ -87,7 +86,6 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
-  inferTypes(func);
   analyseFunctions(func);
   inferReferenceEffects(func, { isFunctionExpression: true });
   inferMutableRanges(func);

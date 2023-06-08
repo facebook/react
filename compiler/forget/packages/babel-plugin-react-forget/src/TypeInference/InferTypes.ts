@@ -45,7 +45,7 @@ function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
   }
 }
 
-export default function (func: HIRFunction): void {
+export function inferTypes(func: HIRFunction): void {
   const unifier = new Unifier(func.env);
   for (const e of generate(func)) {
     unifier.unify(e.left, e.right);
@@ -244,6 +244,11 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "FunctionExpression": {
+      inferTypes(value.loweredFunc);
+      break;
+    }
+
     case "DeclareLocal":
     case "DeclareContext":
     case "NewExpression":
@@ -253,7 +258,6 @@ function* generateInstructionTypes(
     case "PropertyStore":
     case "ComputedStore":
     case "ComputedLoad":
-    case "FunctionExpression":
     case "TaggedTemplateExpression":
     case "Await":
     case "NextIterableOf":
