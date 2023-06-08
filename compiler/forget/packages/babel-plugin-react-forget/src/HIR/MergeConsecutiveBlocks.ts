@@ -31,6 +31,12 @@ import { mapOptionalFallthroughs } from "./visitors";
 export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   const merged = new MergedBlocks();
   for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === "FunctionExpression") {
+        mergeConsecutiveBlocks(instr.value.loweredFunc);
+      }
+    }
+
     // Can only merge blocks with a single predecessor, can't merge
     // value blocks
     if (block.kind !== "block" || block.preds.size !== 1) {

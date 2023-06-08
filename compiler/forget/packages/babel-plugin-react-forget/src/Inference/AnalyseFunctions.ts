@@ -13,7 +13,6 @@ import {
   Identifier,
   isRefValueType,
   isUseRefType,
-  mergeConsecutiveBlocks,
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
@@ -90,7 +89,6 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
-  mergeConsecutiveBlocks(func);
   enterSSA(func);
   eliminateRedundantPhi(func);
   constantPropagation(func);
