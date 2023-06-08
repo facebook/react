@@ -13,7 +13,7 @@ const originalConsoleError = console.error;
 // Try to avoid clearing the entire require cache, which (as of this PR)
 // contains ~1250 files. This assumes that no dependencies have global caches
 // that may need to be invalidated across Forget reloads.
-const invalidationSubpath = "react-forget/forget/dist";
+const invalidationSubpath = "packages/babel-plugin-react-forget/dist";
 let version: number | null = null;
 export function clearRequireCache() {
   Object.keys(require.cache).forEach(function (path) {
