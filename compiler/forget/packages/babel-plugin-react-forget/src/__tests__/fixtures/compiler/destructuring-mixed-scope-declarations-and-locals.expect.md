@@ -38,8 +38,8 @@ function Component(props) {
   if (c_0) {
     const allUrls = [];
 
-    const { media: t84, comments, urls } = post;
-    media = t84;
+    const { media: t85, comments, urls } = post;
+    media = t85;
     const c_3 = $[3] !== comments.length;
     let t0;
     if (c_3) {

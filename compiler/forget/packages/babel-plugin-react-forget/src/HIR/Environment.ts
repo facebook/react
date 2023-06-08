@@ -7,6 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { ExternalFunction } from "../Entrypoint/Options";
 import { log } from "../Utils/logger";
 import {
   DEFAULT_GLOBALS,
@@ -33,7 +34,6 @@ import {
   ShapeRegistry,
   addHook,
 } from "./ObjectShape";
-import { ExternalFunction } from "../Entrypoint/Options";
 
 export type Hook = {
   effectKind: Effect;
@@ -150,6 +150,15 @@ export type EnvironmentConfig = Partial<{
    *  }
    */
   enableEmitFreeze: ExternalFunction | null;
+
+  /**
+   * When enabled, function expression codegen uses a subset of the compiler pipeline
+   * to transform and optimize their contents. When disabled, function expression
+   * codegen uses the original, un-transformed function body.
+   *
+   * Defaults to false (use the un-transformed function body).
+   */
+  enableCodegenLoweredFunctionExpressions: boolean;
 }>;
 
 export class Environment {
@@ -165,6 +174,7 @@ export class Environment {
   enableTreatHooksAsFunctions: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
+  enableCodegenLoweredFunctionExpressions: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
 
@@ -208,6 +218,8 @@ export class Environment {
       config?.enableTreatHooksAsFunctions ?? true;
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
+    this.enableCodegenLoweredFunctionExpressions =
+      config?.enableCodegenLoweredFunctionExpressions ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
   }

@@ -98,40 +98,44 @@ export async function compile(
     let disableAllMemoization = false;
     let validateRefAccessDuringRender = true;
     let enableEmitFreeze = null;
+    let enableCodegenLoweredFunctionExpressions = false;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
-    if (firstLine.indexOf("@gating") !== -1) {
+    if (firstLine.includes("@gating")) {
       gating = {
         source: "ReactForgetFeatureFlag",
         importSpecifierName: "isForgetEnabled_Fixtures",
       };
     }
-    if (firstLine.indexOf("@instrumentForget") !== -1) {
+    if (firstLine.includes("@instrumentForget")) {
       instrumentForget = {
         source: "react-forget-runtime",
         importSpecifierName: "useRenderCounter",
       };
     }
-    if (firstLine.indexOf("@panicOnBailout false") !== -1) {
+    if (firstLine.includes("@panicOnBailout false")) {
       panicOnBailout = false;
     }
-    if (firstLine.indexOf("@memoizeJsxElements false") !== -1) {
+    if (firstLine.includes("@memoizeJsxElements false")) {
       memoizeJsxElements = false;
     }
-    if (firstLine.indexOf("@enableAssumeHooksFollowRulesOfReact true") !== -1) {
+    if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
       enableAssumeHooksFollowRulesOfReact = true;
     }
-    if (firstLine.indexOf("@enableTreatHooksAsFunctions false") !== -1) {
+    if (firstLine.includes("@enableTreatHooksAsFunctions false")) {
       enableTreatHooksAsFunctions = false;
     }
-    if (firstLine.indexOf("@disableAllMemoization true") !== -1) {
+    if (firstLine.includes("@disableAllMemoization true")) {
       disableAllMemoization = true;
     }
-    if (firstLine.indexOf("@validateRefAccessDuringRender false") !== -1) {
+    if (firstLine.includes("@validateRefAccessDuringRender false")) {
       validateRefAccessDuringRender = false;
     }
-    if (firstLine.indexOf("@enableEmitFreeze") !== -1) {
+    if (firstLine.includes("@enableCodegenLoweredFunctionExpressions")) {
+      enableCodegenLoweredFunctionExpressions = true;
+    }
+    if (firstLine.includes("@enableEmitFreeze")) {
       enableEmitFreeze = {
         source: "react-forget-runtime",
         importSpecifierName: "makeReadOnly",
@@ -162,6 +166,7 @@ export async function compile(
         validateRefAccessDuringRender,
         validateFrozenLambdas: true,
         enableEmitFreeze,
+        enableCodegenLoweredFunctionExpressions,
       },
       logger: null,
       gating,

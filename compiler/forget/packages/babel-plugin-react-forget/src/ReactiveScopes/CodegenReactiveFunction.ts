@@ -7,6 +7,7 @@
 
 import * as t from "@babel/types";
 import invariant from "invariant";
+import { pruneUnusedLValues, pruneUnusedLabels, renameVariables } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment } from "../HIR";
 import {
@@ -30,8 +31,10 @@ import {
 } from "../HIR/HIR";
 import { printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
+import { deadCodeElimination } from "../Optimization";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
+import { buildReactiveFunction } from "./BuildReactiveFunction";
 
 export function codegenReactiveFunction(
   fn: ReactiveFunction
@@ -957,7 +960,36 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      value = t.cloneNode(instrValue.expr, true, false);
+      if (cx.env.enableCodegenLoweredFunctionExpressions) {
+        const loweredFunc = instrValue.loweredFunc;
+        deadCodeElimination(loweredFunc);
+        const reactiveFunction = buildReactiveFunction(loweredFunc);
+        pruneUnusedLabels(reactiveFunction);
+        pruneUnusedLValues(reactiveFunction);
+        renameVariables(reactiveFunction);
+        const fn = codegenReactiveFunction(reactiveFunction).unwrap();
+        if (instrValue.expr.type === "ArrowFunctionExpression") {
+          let body: t.BlockStatement | t.Expression = fn.body;
+          if (body.body.length === 1) {
+            const stmt = body.body[0]!;
+            if (stmt.type === "ReturnStatement" && stmt.argument != null) {
+              body = stmt.argument;
+            }
+          }
+          value = t.arrowFunctionExpression(fn.params, body, fn.async);
+        } else {
+          value = t.functionExpression(
+            fn.id ??
+              (instrValue.name != null ? t.identifier(instrValue.name) : null),
+            fn.params,
+            fn.body,
+            fn.generator,
+            fn.async
+          );
+        }
+      } else {
+        value = t.cloneNode(instrValue.expr, true, false);
+      }
       break;
     }
     case "TaggedTemplateExpression": {

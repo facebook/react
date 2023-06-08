@@ -99,7 +99,11 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
         rewritePlace(instr.lvalue, rewrites);
 
         // visit function expressions on first iteration of each block
-        if (!hasBackEdge && instr.value.kind === "FunctionExpression") {
+        if (
+          !hasBackEdge &&
+          instr.value.kind === "FunctionExpression" &&
+          fn.env.enableCodegenLoweredFunctionExpressions
+        ) {
           eliminateRedundantPhi(instr.value.loweredFunc);
         }
       }

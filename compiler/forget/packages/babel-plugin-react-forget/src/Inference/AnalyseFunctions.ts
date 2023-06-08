@@ -13,9 +13,13 @@ import {
   Identifier,
   isRefValueType,
   isUseRefType,
+  mergeConsecutiveBlocks,
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
+import { constantPropagation } from "../Optimization";
+import { eliminateRedundantPhi, enterSSA } from "../SSA";
+import { inferTypes } from "../TypeInference";
 import { logHIRFunction } from "../Utils/logger";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
@@ -86,6 +90,14 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
+  if (!func.env.enableCodegenLoweredFunctionExpressions) {
+    mergeConsecutiveBlocks(func);
+    enterSSA(func);
+    eliminateRedundantPhi(func);
+    constantPropagation(func);
+    inferTypes(func);
+  }
+
   analyseFunctions(func);
   inferReferenceEffects(func, { isFunctionExpression: true });
   inferMutableRanges(func);

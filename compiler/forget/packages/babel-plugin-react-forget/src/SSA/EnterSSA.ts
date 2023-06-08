@@ -248,11 +248,15 @@ function enterSSAImpl(
 
     if (blockId === rootEntry) {
       // NOTE: func.context should be empty for the root function
-      if (func.context.length !== 0) {
-        CompilerError.invariant(
-          `Expected function context to be empty for outer function declarations`,
-          func.loc
-        );
+      if (func.env.enableCodegenLoweredFunctionExpressions) {
+        if (func.context.length !== 0) {
+          CompilerError.invariant(
+            `Expected function context to be empty for outer function declarations`,
+            func.loc
+          );
+        }
+      } else {
+        func.context = func.context.map((p) => builder.defineContext(p));
       }
       func.params = func.params.map((p) => builder.definePlace(p));
     }
@@ -261,7 +265,10 @@ function enterSSAImpl(
       mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
       mapInstructionOperands(instr, (place) => builder.getPlace(place));
 
-      if (instr.value.kind === "FunctionExpression") {
+      if (
+        instr.value.kind === "FunctionExpression" &&
+        func.env.enableCodegenLoweredFunctionExpressions
+      ) {
         const loweredFunc = instr.value.loweredFunc;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
         invariant(

@@ -7,6 +7,7 @@
 
 import { isValidIdentifier } from "@babel/types";
 import {
+  Environment,
   GotoVariant,
   HIRFunction,
   IdentifierId,
@@ -47,7 +48,12 @@ import { eliminateRedundantPhi } from "../SSA";
  * pass.
  */
 export function constantPropagation(fn: HIRFunction): void {
-  const haveTerminalsChanged = applyConstantPropagation(fn);
+  const constants: Constants = new Map();
+  constantPropagationImpl(fn, constants);
+}
+
+function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
+  const haveTerminalsChanged = applyConstantPropagation(fn, constants);
   if (haveTerminalsChanged) {
     // If terminals have changed then blocks may have become newly unreachable.
     // Re-run minification of the graph (incl reordering instruction ids)
@@ -80,7 +86,10 @@ export function constantPropagation(fn: HIRFunction): void {
   }
 }
 
-function applyConstantPropagation(fn: HIRFunction): boolean {
+function applyConstantPropagation(
+  fn: HIRFunction,
+  constants: Constants
+): boolean {
   // Track the set of identifiers which are used as dependencies for function expressions
   // in order to avoid propagating these constants. This is necessary because the function
   // itself will still reference the original value. If the dependency is propagated but the
@@ -99,8 +108,6 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
   }
 
   let hasChanges = false;
-
-  const constants: Constants = new Map();
   for (const [, block] of fn.body.blocks) {
     // Initialize phi values if all operands have the same known constant value.
     // Note that this analysis uses a single-pass only, so it will never fill in
@@ -137,11 +144,13 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
         continue;
       }
       const instr = block.instructions[i]!;
-      // Don't propagate constants used as function expression dependencies
-      if (functionDependencies.has(instr.lvalue.identifier.id)) {
-        continue;
+      if (!fn.env.enableCodegenLoweredFunctionExpressions) {
+        // Don't propagate constants used as function expression dependencies
+        if (functionDependencies.has(instr.lvalue.identifier.id)) {
+          continue;
+        }
       }
-      const value = evaluateInstruction(constants, instr);
+      const value = evaluateInstruction(fn.env, constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
       }
@@ -180,6 +189,7 @@ function applyConstantPropagation(fn: HIRFunction): boolean {
 }
 
 function evaluateInstruction(
+  env: Environment,
   constants: Constants,
   instr: Instruction
 ): Constant | null {
@@ -350,8 +360,9 @@ function evaluateInstruction(
       return placeValue;
     }
     case "FunctionExpression": {
-      // TODO: propagate constants in the outer scope into the function when traversing
-      constantPropagation(value.loweredFunc);
+      if (env.enableCodegenLoweredFunctionExpressions) {
+        constantPropagationImpl(value.loweredFunc, constants);
+      }
       return null;
     }
     default: {
