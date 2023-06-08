@@ -43,7 +43,7 @@ export default function InspectHostNodesToggle(): React.Node {
     <Toggle
       onChange={handleChange}
       isChecked={isInspecting}
-      title="Select an element in the page to inspect it">
+      title="Select an element in the page to inspect it (Cmd/Ctrl Shift X)">
       <ButtonIcon type="search" />
     </Toggle>
   );
