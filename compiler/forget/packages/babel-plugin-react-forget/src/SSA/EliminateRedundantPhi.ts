@@ -97,6 +97,11 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
           rewritePlace(place, rewrites);
         }
         rewritePlace(instr.lvalue, rewrites);
+
+        // visit function expressions on first iteration of each block
+        if (!hasBackEdge && instr.value.kind === "FunctionExpression") {
+          eliminateRedundantPhi(instr.value.loweredFunc);
+        }
       }
 
       // Rewrite all terminal operands
