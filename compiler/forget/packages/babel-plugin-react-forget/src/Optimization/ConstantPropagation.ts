@@ -349,6 +349,11 @@ function evaluateInstruction(
       }
       return placeValue;
     }
+    case "FunctionExpression": {
+      // TODO: propagate constants in the outer scope into the function when traversing
+      constantPropagation(value.loweredFunc);
+      return null;
+    }
     default: {
       // TODO: handle more cases
       return null;
