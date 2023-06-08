@@ -419,15 +419,12 @@ class Context {
    * current one as a {@link ReactiveScope.reassignments}
    */
   visitReassignment(place: Place): void {
-    const declaration = this.#declarations.get(place.identifier.id);
     if (
       this.currentScope.value != null &&
-      place.identifier.scope != null &&
-      declaration !== undefined &&
-      declaration.scope.value !== place.identifier.scope &&
       !Array.from(this.currentScope.value.reassignments).some(
-        (ident) => ident.id === place.identifier.id
-      )
+        (identifier) => identifier.id === place.identifier.id
+      ) &&
+      this.#checkValidDependency({ identifier: place.identifier, path: [] })
     ) {
       this.currentScope.value.reassignments.add(place.identifier);
     }

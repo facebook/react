@@ -25,7 +25,7 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(3);
   let x = 0;
   const c_0 = $[0] !== props;
   let values;
@@ -45,8 +45,10 @@ function Component(props) {
     values.push(x);
     $[0] = props;
     $[1] = values;
+    $[2] = x;
   } else {
     values = $[1];
+    x = $[2];
   }
   return values;
 }
