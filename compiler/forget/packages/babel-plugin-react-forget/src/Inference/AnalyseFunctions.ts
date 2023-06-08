@@ -17,7 +17,7 @@ import {
   ReactiveScopeDependency,
 } from "../HIR";
 import { constantPropagation } from "../Optimization";
-import { eliminateRedundantPhi, enterSSA } from "../SSA";
+import { eliminateRedundantPhi } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import { logHIRFunction } from "../Utils/logger";
 import { inferMutableRanges } from "./InferMutableRanges";
@@ -89,7 +89,6 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
-  enterSSA(func);
   eliminateRedundantPhi(func);
   constantPropagation(func);
   inferTypes(func);

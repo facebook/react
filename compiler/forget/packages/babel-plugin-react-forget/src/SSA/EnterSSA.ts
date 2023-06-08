@@ -232,6 +232,10 @@ export default function enterSSA(func: HIRFunction): void {
     for (const instr of block.instructions) {
       mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
       mapInstructionOperands(instr, (place) => builder.getPlace(place));
+
+      if (instr.value.kind === "FunctionExpression") {
+        enterSSA(instr.value.loweredFunc);
+      }
     }
 
     mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));
