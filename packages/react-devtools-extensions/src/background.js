@@ -246,8 +246,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 
 chrome.commands.onCommand.addListener(async command => {
   if (command === 'inspect_node') {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    chrome.tabs.sendMessage(tab.id, { command: 'inspect_node' });
+    const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
+    chrome.tabs.sendMessage(tab.id, {command: 'inspect_node'});
   }
 });
-

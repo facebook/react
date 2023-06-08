@@ -83,15 +83,17 @@ if (!backendInitialized) {
   }, 500);
 }
 
-chrome.runtime.onMessage.addListener(({ command }) => {
+chrome.runtime.onMessage.addListener(({command}) => {
   if (command) {
-    window.postMessage({
-      source: 'react-devtools-content-script',
-      payload: {
-        type: 'command',
-        command,
+    window.postMessage(
+      {
+        source: 'react-devtools-content-script',
+        payload: {
+          type: 'command',
+          command,
+        },
       },
-    }, '*');
+      '*',
+    );
   }
 });
-
