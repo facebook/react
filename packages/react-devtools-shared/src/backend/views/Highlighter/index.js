@@ -34,6 +34,9 @@ export default function setupHighlighter(
   bridge.addListener('startInspectingNative', startInspectingNative);
   bridge.addListener('stopInspectingNative', stopInspectingNative);
 
+  agent.startInspectingNative = startInspectingNative;
+  agent.stopInspectingNative = stopInspectingNative;
+
   function startInspectingNative() {
     registerListenersOnWindow(window);
   }
