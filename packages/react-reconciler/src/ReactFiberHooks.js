@@ -58,6 +58,7 @@ import {
   DebugTracingMode,
   StrictEffectsMode,
   StrictLegacyMode,
+  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -2257,7 +2258,8 @@ function mountEffect(
 ): void {
   if (
     __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
   ) {
     mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,

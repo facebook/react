@@ -104,6 +104,27 @@ describe('ReactStrictMode', () => {
         ]);
       });
 
+      it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect', async () => {
+        await act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOMClient.createRoot(container);
+          root.render(
+            <React.StrictMode unstable_disableStrictPassiveEffect={true}>
+              <Component label="A" />
+            </React.StrictMode>,
+          );
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'A: render',
+          'A: useLayoutEffect mount',
+          'A: useEffect mount',
+          'A: useLayoutEffect unmount',
+          'A: useLayoutEffect mount',
+        ]);
+      });
+
       it('should allow level to be increased with nesting', async () => {
         await act(() => {
           const container = document.createElement('div');
