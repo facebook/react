@@ -117,9 +117,11 @@ function getInspectorDataForInstance(
       selectedIndex,
       source,
     };
-  } else {
-    return (null: any);
   }
+
+  throw new Error(
+    'getInspectorDataForInstance() is not available in production',
+  );
 }
 
 function getOwnerHierarchy(instance: any) {
@@ -153,34 +155,11 @@ function traverseOwnerTreeUp(
   }
 }
 
-function getInspectorDataForViewTag(viewTag: number): Object {
+function getInspectorDataForViewTag(viewTag: number): InspectorData {
   if (__DEV__) {
     const closestInstance = getClosestInstanceFromNode(viewTag);
 
-    // Handle case where user clicks outside of ReactNative
-    if (!closestInstance) {
-      return {
-        hierarchy: [],
-        props: emptyObject,
-        selectedIndex: null,
-        source: null,
-      };
-    }
-
-    const fiber = findCurrentFiberUsingSlowPath(closestInstance);
-    const fiberHierarchy = getOwnerHierarchy(fiber);
-    const instance = lastNonHostInstance(fiberHierarchy);
-    const hierarchy = createHierarchy(fiberHierarchy);
-    const props = getHostProps(instance);
-    const source = instance._debugSource;
-    const selectedIndex = fiberHierarchy.indexOf(instance);
-
-    return {
-      hierarchy,
-      props,
-      selectedIndex,
-      source,
-    };
+    return getInspectorDataForInstance(closestInstance);
   } else {
     throw new Error(
       'getInspectorDataForViewTag() is not available in production',
