@@ -339,13 +339,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
 
       await waitFor(['Child: b-0']);
       expect(log).toEqual(['Parent.componentDidMount']);
@@ -447,13 +443,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
       await waitFor(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -632,21 +624,13 @@ describe('useSubscription', () => {
       // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          mutate('C');
-        });
-      } else {
+      React.startTransition(() => {
         mutate('C');
-      }
+      });
       await waitFor(['render:first:C', 'render:second:C']);
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          mutate('D');
-        });
-      } else {
+      React.startTransition(() => {
         mutate('D');
-      }
+      });
       await waitForAll(['render:first:D', 'render:second:D']);
 
       // No more pending updates

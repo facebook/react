@@ -17,7 +17,6 @@ import {
   createResponse,
   getRoot,
   reportGlobalError,
-  processStringChunk,
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
@@ -92,32 +91,6 @@ function createFromFetch<T>(
   return getRoot(response);
 }
 
-function createFromXHR<T>(
-  request: XMLHttpRequest,
-  options?: Options,
-): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
-  let processedLength = 0;
-  function progress(e: ProgressEvent): void {
-    const chunk = request.responseText;
-    processStringChunk(response, chunk, processedLength);
-    processedLength = chunk.length;
-  }
-  function load(e: ProgressEvent): void {
-    progress(e);
-    close(response);
-  }
-  function error(e: ProgressEvent): void {
-    reportGlobalError(response, new TypeError('Network error'));
-  }
-  request.addEventListener('progress', progress);
-  request.addEventListener('load', load);
-  request.addEventListener('error', error);
-  request.addEventListener('abort', error);
-  request.addEventListener('timeout', error);
-  return getRoot(response);
-}
-
 function encodeReply(
   value: ReactServerValue,
 ): Promise<
@@ -129,7 +102,6 @@ function encodeReply(
 }
 
 export {
-  createFromXHR,
   createFromFetch,
   createFromReadableStream,
   encodeReply,

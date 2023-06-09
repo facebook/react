@@ -456,12 +456,12 @@ describe('ReactDOMFloat', () => {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
           <noscript>&lt;link rel="icon" href="icon"&gt;</noscript>
           <base target="foo" href="bar" />
+          <script async="" src="foo" />
         </head>
         <body>foo</body>
       </html>,
@@ -487,7 +487,6 @@ describe('ReactDOMFloat', () => {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
           <meta property="foo" content="bar" />
           <title>foo</title>
           <link rel="foo" href="bar" />
@@ -2668,8 +2667,6 @@ body {
           {/* Hoisted Resources and elements */}
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
           <meta name="foo" content="foo" />
           <title>title</title>
@@ -2678,6 +2675,7 @@ body {
           <link rel="stylesheet" href="stylesheet" />
           <script src="sync rendered" data-meaningful="" />
           <style>{'body { background-color: red; }'}</style>
+          <script src="async rendered" async="" />
           <noscript>&lt;meta name="noscript" content="noscript"&gt;</noscript>
           <link rel="foo" href="foo" />
         </head>
@@ -2734,8 +2732,6 @@ body {
           <style>{'body { background-color: blue; }'}</style>
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <link rel="foo" href="foo" />
           <meta name="foo" content="foo" />
           <title>title</title>
@@ -2780,8 +2776,6 @@ body {
           <style>{'body { background-color: blue; }'}</style>
           <link rel="stylesheet" href="stylesheet" data-precedence="default" />
           <script async="" src="rendered" />
-          <link rel="preload" as="script" href="sync rendered" />
-          <link rel="preload" as="script" href="async rendered" />
           <style>{'body { background-color: blue; }'}</style>
           <div />
           <script async="" src="injected" />
@@ -3789,6 +3783,7 @@ body {
           as: 'style',
           crossOrigin: 'use-credentials',
           integrity: 'some hash',
+          fetchPriority: 'low',
         });
         return (
           <html>
@@ -3880,34 +3875,111 @@ body {
       ]);
     });
 
-    // @gate enableFloat
-    it('warns if you pass incompatible options to two `ReactDOM.preload(...)` when an implicit preload already exists with the same href', async () => {
-      function Component() {
-        ReactDOM.preload('foo', {
-          as: 'style',
-          crossOrigin: 'use-credentials',
+    it('supports fetchPriority', async () => {
+      function Component({isServer}) {
+        ReactDOM.preload(isServer ? 'highserver' : 'highclient', {
+          as: 'script',
+          fetchPriority: 'high',
         });
+        ReactDOM.preload(isServer ? 'lowserver' : 'lowclient', {
+          as: 'style',
+          fetchPriority: 'low',
+        });
+        ReactDOM.preload(isServer ? 'autoserver' : 'autoclient', {
+          as: 'style',
+          fetchPriority: 'auto',
+        });
+        return 'hello';
       }
 
-      await expect(async () => {
-        await act(() => {
-          renderToPipeableStream(
-            <html>
-              <body>
-                <link
-                  rel="stylesheet"
-                  href="foo"
-                  integrity="some hash"
-                  media="print"
-                />
-                <Component />
-              </body>
-            </html>,
-          );
-        });
-      }).toErrorDev([
-        'ReactDOM.preload(): For `href` "foo", The options provided conflict with props on a matching <link rel="stylesheet" ... /> element. When the preload options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call may be extraneous. Try removing the call, otherwise try adjusting both the props on the <link rel="stylesheet" ... /> and the options passed to `ReactDOM.preload()` to agree.\n  "integrity" missing from options, underlying prop value: "some hash"\n  "media" missing from options, underlying prop value: "print"\n  "crossOrigin" option value: "use-credentials", missing from underlying props',
-      ]);
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component isServer={true} />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="preload"
+              as="style"
+              href="lowserver"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoserver"
+              fetchpriority="auto"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      );
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="preload"
+              as="style"
+              href="lowserver"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoserver"
+              fetchpriority="auto"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
+              as="script"
+              href="highclient"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="lowclient"
+              fetchpriority="low"
+            />
+            <link
+              rel="preload"
+              as="style"
+              href="autoclient"
+              fetchpriority="auto"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
     });
   });
 
@@ -4409,6 +4481,160 @@ body {
         </html>,
       );
     });
+
+    it('accepts an `integrity` option for `as: "style"`', async () => {
+      function Component({src, hash}) {
+        ReactDOM.preinit(src, {as: 'style', integrity: hash});
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component src="foo" hash="foo hash" />
+            </body>
+          </html>,
+          {
+            nonce: 'R4nD0m',
+          },
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              integrity="foo hash"
+              data-precedence="default"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(
+          document,
+          <html>
+            <body>
+              <Component src="bar" hash="bar hash" />
+            </body>
+          </html>,
+        );
+      });
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="foo"
+              integrity="foo hash"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="bar"
+              integrity="bar hash"
+              data-precedence="default"
+            />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
+
+    it('supports fetchPriority', async () => {
+      function Component({isServer}) {
+        ReactDOM.preinit(isServer ? 'highserver' : 'highclient', {
+          as: 'script',
+          fetchPriority: 'high',
+        });
+        ReactDOM.preinit(isServer ? 'lowserver' : 'lowclient', {
+          as: 'style',
+          fetchPriority: 'low',
+        });
+        ReactDOM.preinit(isServer ? 'autoserver' : 'autoclient', {
+          as: 'style',
+          fetchPriority: 'auto',
+        });
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(
+          <html>
+            <body>
+              <Component isServer={true} />
+            </body>
+          </html>,
+        ).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="lowserver"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoserver"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <script async="" src="highserver" fetchpriority="high" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+      ReactDOMClient.hydrateRoot(
+        document,
+        <html>
+          <body>
+            <Component />
+          </body>
+        </html>,
+      );
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link
+              rel="stylesheet"
+              href="lowserver"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoserver"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="lowclient"
+              fetchpriority="low"
+              data-precedence="default"
+            />
+            <link
+              rel="stylesheet"
+              href="autoclient"
+              fetchpriority="auto"
+              data-precedence="default"
+            />
+            <script async="" src="highserver" fetchpriority="high" />
+            <script async="" src="highclient" fetchpriority="high" />
+          </head>
+          <body>hello</body>
+        </html>,
+      );
+    });
   });
 
   describe('Stylesheet Resources', () => {
@@ -4497,34 +4723,6 @@ body {
             <link rel="stylesheet" href="aresource" data-precedence="foo" />
           </head>
           <body>
-            <div>hello world</div>
-          </body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat
-    it('preloads stylesheets without a precedence prop when server rendering', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <link rel="stylesheet" href="notaresource" />
-              <div>hello world</div>
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="preload" as="style" href="notaresource" />
-          </head>
-          <body>
-            <link rel="stylesheet" href="notaresource" />
             <div>hello world</div>
           </body>
         </html>,
@@ -5857,6 +6055,7 @@ background-color: green;
               <script src="foo" async={true} />
               <script src="bar" async={true} onLoad={() => {}} />
               <script src="baz" data-meaningful="" />
+              <script src="qux" defer={true} data-meaningful="" />
               hello world
             </body>
           </html>,
@@ -5872,17 +6071,17 @@ background-color: green;
         <html>
           <head>
             <script src="foo" async="" />
-            <link rel="preload" href="bar" as="script" />
-            <link rel="preload" href="baz" as="script" />
           </head>
           <body>
+            <script src="bar" async="" />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer="" data-meaningful="" />
             hello world
           </body>
         </html>,
       );
 
-      ReactDOMClient.hydrateRoot(
+      const root = ReactDOMClient.hydrateRoot(
         document,
         <html>
           <head />
@@ -5890,6 +6089,7 @@ background-color: green;
             <script src="foo" async={true} />
             <script src="bar" async={true} onLoad={() => {}} />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer={true} data-meaningful="" />
             hello world
           </body>
         </html>,
@@ -5901,14 +6101,26 @@ background-color: green;
         <html>
           <head>
             <script src="foo" async="" />
-            <link rel="preload" href="bar" as="script" />
-            <link rel="preload" href="baz" as="script" />
           </head>
           <body>
             <script src="bar" async="" />
             <script src="baz" data-meaningful="" />
+            <script src="qux" defer="" data-meaningful="" />
             hello world
           </body>
+        </html>,
+      );
+
+      root.unmount();
+      // When we unmount we expect to retain singletons and any content that is not cleared within them.
+      // The foo script is a resource so it sticks around. The other scripts are regular HostComponents
+      // so they unmount and are removed from the DOM.
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script src="foo" async="" />
+          </head>
+          <body />
         </html>,
       );
     });

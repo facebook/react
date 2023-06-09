@@ -324,6 +324,7 @@ module.exports = {
         'packages/react-devtools-shared/**/*.js',
         'packages/react-noop-renderer/**/*.js',
         'packages/react-refresh/**/*.js',
+        'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',

@@ -106,6 +106,7 @@ exports.get = function (name: string): ViewConfig {
         'View config getter callback for component `%s` must be a function (received `%s`).%s',
         name,
         callback === null ? 'null' : typeof callback,
+        // $FlowFixMe[recursive-definition]
         typeof name[0] === 'string' && /[a-z]/.test(name[0])
           ? ' Make sure to start component names with a capital letter.'
           : '',
