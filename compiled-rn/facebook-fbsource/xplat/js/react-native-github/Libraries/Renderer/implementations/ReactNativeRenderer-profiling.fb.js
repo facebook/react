@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f0a013632d2405f8e16ea8f5deae7252>>
+ * @generated SignedSource<<cfcb912f31e0647799344c4530aa94d5>>
  */
 
 
@@ -10427,6 +10427,39 @@ function getHostProps(fiber) {
     ? fiber.memoizedProps || emptyObject
     : emptyObject;
 }
+function getInspectorDataForInstance(closestInstance) {
+  if (!closestInstance)
+    return {
+      hierarchy: [],
+      props: emptyObject,
+      selectedIndex: null,
+      source: null
+    };
+  var fiber = findCurrentFiberUsingSlowPath(closestInstance);
+  closestInstance = [];
+  traverseOwnerTreeUp(closestInstance, fiber);
+  a: {
+    for (fiber = closestInstance.length - 1; 1 < fiber; fiber--) {
+      var instance = closestInstance[fiber];
+      if (5 !== instance.tag) {
+        fiber = instance;
+        break a;
+      }
+    }
+    fiber = closestInstance[0];
+  }
+  instance = createHierarchy(closestInstance);
+  var props = getHostProps(fiber),
+    source = fiber._debugSource;
+  closestInstance = closestInstance.indexOf(fiber);
+  return {
+    closestInstance: fiber,
+    hierarchy: instance,
+    props: props,
+    selectedIndex: closestInstance,
+    source: source
+  };
+}
 function traverseOwnerTreeUp(hierarchy, instance) {
   instance &&
     (hierarchy.unshift(instance),
@@ -10458,9 +10491,10 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1189 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-69ff02f1",
+    version: "18.3.0-canary-c112e7e2",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
+      getInspectorDataForInstance: getInspectorDataForInstance,
       getInspectorDataForViewTag: function () {
         throw Error(
           "getInspectorDataForViewTag() is not available in production"
@@ -10513,7 +10547,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-69ff02f1"
+  reconcilerVersion: "18.3.0-canary-c112e7e2"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -10555,39 +10589,7 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
     : findHostInstance(componentOrHandle);
 };
 exports.findNodeHandle = findNodeHandle;
-exports.getInspectorDataForInstance = function (closestInstance) {
-  if (!closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      source: null
-    };
-  var fiber = findCurrentFiberUsingSlowPath(closestInstance);
-  closestInstance = [];
-  traverseOwnerTreeUp(closestInstance, fiber);
-  a: {
-    for (fiber = closestInstance.length - 1; 1 < fiber; fiber--) {
-      var instance = closestInstance[fiber];
-      if (5 !== instance.tag) {
-        fiber = instance;
-        break a;
-      }
-    }
-    fiber = closestInstance[0];
-  }
-  instance = createHierarchy(closestInstance);
-  var props = getHostProps(fiber),
-    source = fiber._debugSource;
-  closestInstance = closestInstance.indexOf(fiber);
-  return {
-    closestInstance: fiber,
-    hierarchy: instance,
-    props: props,
-    selectedIndex: closestInstance,
-    source: source
-  };
-};
+exports.getInspectorDataForInstance = getInspectorDataForInstance;
 exports.render = function (element, containerTag, callback) {
   var root = roots.get(containerTag);
   if (!root) {

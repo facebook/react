@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<029e8b4acf0f4d38ec2d835728fecafd>>
+ * @generated SignedSource<<4525ca8b79fb39404269c7e945572f4a>>
  */
 
 'use strict';
@@ -27752,7 +27752,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-b27413b0";
+var ReactVersion = "18.3.0-canary-225345a1";
 
 function createPortal$1(
   children,
@@ -28594,30 +28594,8 @@ function traverseOwnerTreeUp(hierarchy, instance) {
 
 function getInspectorDataForViewTag(viewTag) {
   {
-    var closestInstance = getInstanceFromTag(viewTag); // Handle case where user clicks outside of ReactNative
-
-    if (!closestInstance) {
-      return {
-        hierarchy: [],
-        props: emptyObject,
-        selectedIndex: null,
-        source: null
-      };
-    }
-
-    var fiber = findCurrentFiberUsingSlowPath(closestInstance);
-    var fiberHierarchy = getOwnerHierarchy(fiber);
-    var instance = lastNonHostInstance(fiberHierarchy);
-    var hierarchy = createHierarchy(fiberHierarchy);
-    var props = getHostProps(instance);
-    var source = instance._debugSource;
-    var selectedIndex = fiberHierarchy.indexOf(instance);
-    return {
-      hierarchy: hierarchy,
-      props: props,
-      selectedIndex: selectedIndex,
-      source: source
-    };
+    var closestInstance = getInstanceFromTag(viewTag);
+    return getInspectorDataForInstance(closestInstance);
   }
 }
 
@@ -28794,6 +28772,7 @@ injectIntoDevTools({
   version: ReactVersion,
   rendererPackageName: "react-native-renderer",
   rendererConfig: {
+    getInspectorDataForInstance: getInspectorDataForInstance,
     getInspectorDataForViewTag: getInspectorDataForViewTag,
     getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
       null,

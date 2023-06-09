@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fdb735ba84f432fe69ae562a741d9d9d>>
+ * @generated SignedSource<<fa95eb422bbf02624017fdab1fc74ea8>>
  */
 
 
@@ -10178,6 +10178,39 @@ function getHostProps(fiber) {
     ? fiber.memoizedProps || emptyObject
     : emptyObject;
 }
+function getInspectorDataForInstance(closestInstance) {
+  if (!closestInstance)
+    return {
+      hierarchy: [],
+      props: emptyObject,
+      selectedIndex: null,
+      source: null
+    };
+  var fiber = findCurrentFiberUsingSlowPath(closestInstance);
+  closestInstance = [];
+  traverseOwnerTreeUp(closestInstance, fiber);
+  a: {
+    for (fiber = closestInstance.length - 1; 1 < fiber; fiber--) {
+      var instance = closestInstance[fiber];
+      if (5 !== instance.tag) {
+        fiber = instance;
+        break a;
+      }
+    }
+    fiber = closestInstance[0];
+  }
+  instance = createHierarchy(closestInstance);
+  var props = getHostProps(fiber),
+    source = fiber._debugSource;
+  closestInstance = closestInstance.indexOf(fiber);
+  return {
+    closestInstance: fiber,
+    hierarchy: instance,
+    props: props,
+    selectedIndex: closestInstance,
+    source: source
+  };
+}
 function traverseOwnerTreeUp(hierarchy, instance) {
   instance &&
     (hierarchy.unshift(instance),
@@ -10202,9 +10235,10 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1134 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-d6461ff7",
+    version: "18.3.0-canary-946c3ff0",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
+      getInspectorDataForInstance: getInspectorDataForInstance,
       getInspectorDataForViewTag: function () {
         throw Error(
           "getInspectorDataForViewTag() is not available in production"
@@ -10257,7 +10291,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d6461ff7"
+  reconcilerVersion: "18.3.0-canary-946c3ff0"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10292,39 +10326,7 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
     : findHostInstance(componentOrHandle);
 };
 exports.findNodeHandle = findNodeHandle;
-exports.getInspectorDataForInstance = function (closestInstance) {
-  if (!closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      source: null
-    };
-  var fiber = findCurrentFiberUsingSlowPath(closestInstance);
-  closestInstance = [];
-  traverseOwnerTreeUp(closestInstance, fiber);
-  a: {
-    for (fiber = closestInstance.length - 1; 1 < fiber; fiber--) {
-      var instance = closestInstance[fiber];
-      if (5 !== instance.tag) {
-        fiber = instance;
-        break a;
-      }
-    }
-    fiber = closestInstance[0];
-  }
-  instance = createHierarchy(closestInstance);
-  var props = getHostProps(fiber),
-    source = fiber._debugSource;
-  closestInstance = closestInstance.indexOf(fiber);
-  return {
-    closestInstance: fiber,
-    hierarchy: instance,
-    props: props,
-    selectedIndex: closestInstance,
-    source: source
-  };
-};
+exports.getInspectorDataForInstance = getInspectorDataForInstance;
 exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
   return (
     internalInstanceHandle &&
