@@ -28,7 +28,6 @@ import {
   dispatchHint,
   readPartialStringChunk,
   readFinalStringChunk,
-  supportsBinaryStreams,
   createStringDecoder,
 } from './ReactFlightClientConfig';
 
@@ -667,12 +666,9 @@ export function createResponse(
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
     _partialRow: '',
-    _stringDecoder: (null: any),
+    _stringDecoder: createStringDecoder(),
     _fromJSON: (null: any),
   };
-  if (supportsBinaryStreams) {
-    response._stringDecoder = createStringDecoder();
-  }
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
   return response;
@@ -854,29 +850,10 @@ function processFullRow(response: Response, row: string): void {
   }
 }
 
-export function processStringChunk(
-  response: Response,
-  chunk: string,
-  offset: number,
-): void {
-  let linebreak = chunk.indexOf('\n', offset);
-  while (linebreak > -1) {
-    const fullrow = response._partialRow + chunk.slice(offset, linebreak);
-    processFullRow(response, fullrow);
-    response._partialRow = '';
-    offset = linebreak + 1;
-    linebreak = chunk.indexOf('\n', offset);
-  }
-  response._partialRow += chunk.slice(offset);
-}
-
 export function processBinaryChunk(
   response: Response,
   chunk: Uint8Array,
 ): void {
-  if (!supportsBinaryStreams) {
-    throw new Error("This environment don't support binary chunks.");
-  }
   const stringDecoder = response._stringDecoder;
   let linebreak = chunk.indexOf(10); // newline
   while (linebreak > -1) {
