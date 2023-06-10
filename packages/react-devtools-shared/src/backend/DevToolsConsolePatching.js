@@ -24,62 +24,52 @@ let prevError;
 let prevGroup;
 let prevGroupCollapsed;
 let prevGroupEnd;
+let patched;
 
 function disabledLog() {}
 disabledLog.__reactDisabledLog = true;
 
 export function disableLogs(): void {
   if (disabledDepth === 0) {
-    /* eslint-disable react-internal/no-production-logging */
-    prevLog = console.log;
-    prevInfo = console.info;
-    prevWarn = console.warn;
-    prevError = console.error;
-    prevGroup = console.group;
-    prevGroupCollapsed = console.groupCollapsed;
-    prevGroupEnd = console.groupEnd;
-    // https://github.com/facebook/react/issues/19099
-    const props = {
+    // In some environment, properties on console is not writable, even not configurable.
+    /* eslint-disable-next-line react-internal/no-production-logging */
+    const desc = Object.getOwnPropertyDescriptors(console);
+    prevLog = desc.log;
+    prevInfo = desc.info;
+    prevWarn = desc.warn;
+    prevError = desc.error;
+    prevGroup = desc.group;
+    prevGroupCollapsed = desc.groupCollapsed;
+    prevGroupEnd = desc.groupEnd;
+    const disabledDesc = {
       configurable: true,
       enumerable: true,
       value: disabledLog,
       writable: true,
     };
-    // $FlowFixMe[cannot-write] Flow thinks console is immutable.
-    Object.defineProperties(console, {
-      info: props,
-      log: props,
-      warn: props,
-      error: props,
-      group: props,
-      groupCollapsed: props,
-      groupEnd: props,
-    });
-    /* eslint-enable react-internal/no-production-logging */
+    configure('log', disabledDesc);
+    configure('info', disabledDesc);
+    configure('warn', disabledDesc);
+    configure('error', disabledDesc);
+    configure('group', disabledDesc);
+    configure('groupCollapsed', disabledDesc);
+    configure('groupEnd', disabledDesc);
+    patched = true;
   }
   disabledDepth++;
 }
 
 export function reenableLogs(): void {
   disabledDepth--;
-  if (disabledDepth === 0) {
-    /* eslint-disable react-internal/no-production-logging */
-    const props = {
-      configurable: true,
-      enumerable: true,
-      writable: true,
-    };
-    // $FlowFixMe[cannot-write] Flow thinks console is immutable.
-    Object.defineProperties(console, {
-      log: {...props, value: prevLog},
-      info: {...props, value: prevInfo},
-      warn: {...props, value: prevWarn},
-      error: {...props, value: prevError},
-      group: {...props, value: prevGroup},
-      groupCollapsed: {...props, value: prevGroupCollapsed},
-      groupEnd: {...props, value: prevGroupEnd},
-    });
-    /* eslint-enable react-internal/no-production-logging */
+  if (disabledDepth === 0 && patched) {
+    configure('log', prevLog);
+    configure('info', prevInfo);
+    configure('warn', prevWarn);
+    configure('error', prevError);
+    configure('group', prevGroup);
+    configure('groupCollapsed', prevGroupCollapsed);
+    configure('groupEnd', prevGroupEnd);
+    patched = false;
   }
   if (disabledDepth < 0) {
     console.error(
@@ -87,4 +77,13 @@ export function reenableLogs(): void {
         'This is a bug in React. Please file an issue.',
     );
   }
+}
+
+function configure(name, descriptor) {
+  if (!descriptor || !descriptor.configurable) return;
+  try {
+    // $FlowFixMe Flow thinks console is immutable.
+    /* eslint-disable-next-line react-internal/no-production-logging */
+    Object.defineProperty(console, name, descriptor);
+  } catch {}
 }
