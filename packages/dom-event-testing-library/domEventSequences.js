@@ -86,6 +86,10 @@ function getPointerType(payload) {
   return pointerType;
 }
 
+function isMousePointerType(pointerType) {
+  return pointerType === 'mouse';
+}
+
 /**
  * Pointer events sequences.
  *
@@ -144,7 +148,7 @@ export function contextmenu(
       }),
     );
     touchStore.removeTouch(touch);
-  } else if (pointerType === 'mouse') {
+  } else if (isMousePointerType(pointerType)) {
     if (modified === true) {
       const button = buttonType.primary;
       const buttons = buttonsType.primary;
@@ -185,7 +189,7 @@ export function pointercancel(target, defaultPayload) {
   if (hasPointerEvent()) {
     dispatchEvent(domEvents.pointercancel(payload));
   } else {
-    if (pointerType === 'mouse') {
+    if (isMousePointerType(pointerType)) {
       dispatchEvent(domEvents.dragstart(payload));
     } else {
       const touch = createTouch(target, payload);
@@ -208,7 +212,7 @@ export function pointerdown(target, defaultPayload) {
     ...defaultPayload,
   };
 
-  if (pointerType === 'mouse') {
+  if (isMousePointerType(pointerType)) {
     if (hasPointerEvent()) {
       dispatch(domEvents.pointerover(payload));
       dispatch(domEvents.pointerenter(payload));
@@ -302,7 +306,7 @@ export function pointermove(target, defaultPayload) {
       }),
     );
   } else {
-    if (pointerType === 'mouse') {
+    if (isMousePointerType(pointerType)) {
       dispatch(domEvents.mousemove(payload));
     } else {
       const touch = createTouch(target, payload);
@@ -323,7 +327,7 @@ export function pointerup(target, defaultPayload) {
     ...defaultPayload,
   };
 
-  if (pointerType === 'mouse') {
+  if (isMousePointerType(pointerType)) {
     if (hasPointerEvent()) {
       dispatch(domEvents.pointerup(payload));
     }
