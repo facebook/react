@@ -596,27 +596,67 @@ describe('ReactDOMFizzServer', () => {
           {
             nonce: 'R4nd0m',
             bootstrapScriptContent: 'function noop(){}',
-            bootstrapScripts: ['init.js'],
-            bootstrapModules: ['init.mjs'],
+            bootstrapScripts: [
+              'init.js',
+              {src: 'init2.js', integrity: 'init2hash'},
+            ],
+            bootstrapModules: [
+              'init.mjs',
+              {src: 'init2.mjs', integrity: 'init2hash'},
+            ],
           },
         );
         pipe(writable);
       });
 
-      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      expect(getVisibleChildren(container)).toEqual([
+        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
+        <link
+          rel="preload"
+          href="init2.js"
+          as="script"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <div>Loading...</div>,
+      ]);
 
-      // check that there are 4 scripts with a matching nonce:
-      // The runtime script, an inline bootstrap script, and two src scripts
+      // check that there are 6 scripts with a matching nonce:
+      // The runtime script, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
       expect(
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(4);
+      ).toEqual(6);
 
       await act(() => {
         resolve({default: Text});
       });
-      expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+      expect(getVisibleChildren(container)).toEqual([
+        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
+        <link
+          rel="preload"
+          href="init2.js"
+          as="script"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <div>Hello</div>,
+      ]);
     } finally {
       CSPnonce = null;
     }
@@ -3756,7 +3796,14 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head />
+        <head>
+          <link rel="preload" href="foo" as="script" />
+          <link rel="preload" href="bar" as="script" />
+          <link rel="preload" href="baz" as="script" integrity="qux" />
+          <link rel="modulepreload" href="quux" />
+          <link rel="modulepreload" href="corge" />
+          <link rel="modulepreload" href="grault" integrity="garply" />
+        </head>
         <body>
           <div>hello world</div>
         </body>

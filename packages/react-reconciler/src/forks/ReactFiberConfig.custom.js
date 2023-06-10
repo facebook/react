@@ -135,7 +135,6 @@ export const cloneHiddenTextInstance = $$$config.cloneHiddenTextInstance;
 //     Hydration
 //     (optional)
 // -------------------
-export const isHydratableType = $$$config.isHydratableType;
 export const isHydratableText = $$$config.isHydratableText;
 export const isSuspenseInstancePending = $$$config.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback = $$$config.isSuspenseInstanceFallback;

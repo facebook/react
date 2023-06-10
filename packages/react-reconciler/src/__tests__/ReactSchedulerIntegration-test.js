@@ -109,13 +109,9 @@ describe('ReactSchedulerIntegration', () => {
     scheduleCallback(NormalPriority, () => Scheduler.log('C'));
 
     // Schedule a React render. React will request a paint after committing it.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.render('Update');
-      });
-    } else {
+    React.startTransition(() => {
       root.render('Update');
-    }
+    });
 
     // Perform just a little bit of work. By now, the React task will have
     // already been scheduled, behind A, B, and C.
