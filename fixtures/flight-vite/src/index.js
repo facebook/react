@@ -24,7 +24,7 @@ async function callServer(id, args) {
     method: 'POST',
     headers: {
       Accept: 'text/x-component',
-      'rsc-action': JSON.stringify(id),
+      'rsc-action': id,
     },
     body: await encodeReply(args),
   });

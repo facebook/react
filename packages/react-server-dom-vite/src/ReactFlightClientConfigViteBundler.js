@@ -17,17 +17,9 @@ export type SSRManifest = string; // Module root path
 
 export type ServerManifest = string; // Module root path
 
-export type ServerReferenceId =
-  | [
-      string, // module path
-      string, // export name
-    ]
-  | string;
+export type ServerReferenceId = string;
 
-export opaque type ClientReferenceMetadata = [
-  string, // module path
-  string, // export name
-];
+export opaque type ClientReferenceMetadata = string;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
@@ -39,9 +31,10 @@ export function resolveClientReference<T>(
   bundlerConfig: SSRManifest,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
+  const [specifier, name] = metadata.split('#');
   return {
-    specifier: metadata[0],
-    name: metadata[1],
+    specifier,
+    name,
   };
 }
 
@@ -49,16 +42,10 @@ export function resolveServerReference<T>(
   config: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
-  if (typeof id === 'string') {
-    const [specifier, name] = id.split(',');
-    return {
-      specifier,
-      name,
-    };
-  }
+  const [specifier, name] = id.split('#');
   return {
-    specifier: id[0],
-    name: id[1],
+    specifier,
+    name,
   };
 }
 

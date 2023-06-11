@@ -197,7 +197,7 @@ export function createClientReference(
   const clientReference = Object.defineProperties(({}: any), {
     $$typeof: {value: CLIENT_REFERENCE},
     // Represents the whole Module object instead of a particular import.
-    $$id: {value: [moduleId, name], configurable: true},
+    $$id: {value: `${moduleId}#${name}`},
     $$async: {value: false},
   });
   return new Proxy(clientReference, proxyHandlers);
@@ -211,7 +211,7 @@ export function createServerReference(
   const serverReference = Object.defineProperties(fn, {
     $$typeof: {value: SERVER_REFERENCE},
     // Represents the whole Module object instead of a particular import.
-    $$id: {value: [moduleId, name], configurable: true},
+    $$id: {value: `${moduleId}#${name}`},
     $$bound: {value: null},
   });
   return serverReference;

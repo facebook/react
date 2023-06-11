@@ -66,7 +66,9 @@ async function createApp() {
 
     loadModule = async entry => {
       return await viteServer.ssrLoadModule(
-        path.resolve(viteServer.config.root, entry)
+        path.isAbsolute(entry)
+          ? entry
+          : path.join(viteServer.config.root, entry)
       );
     };
   } else {
@@ -124,7 +126,7 @@ async function createApp() {
     const serverReference = req.get('rsc-action');
     if (serverReference) {
       // This is the client-side case
-      const [filepath, name] = JSON.parse(serverReference);
+      const [filepath, name] = serverReference.split('#');
       const action = (await loadModule(filepath))[name];
       // Validate that this is actually a function we intended to expose and
       // not the client trying to invoke arbitrary functions. In a real app,
