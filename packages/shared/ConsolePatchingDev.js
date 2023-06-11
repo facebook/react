@@ -79,7 +79,7 @@ export function reenableLogs(): void {
   }
 }
 
-function configure(name, descriptor) {
+function configure(name: string, descriptor: PropertyDescriptor<any>) {
   if (!descriptor || !descriptor.configurable) return;
   try {
     // $FlowFixMe Flow thinks console is immutable.
