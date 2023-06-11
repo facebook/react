@@ -64,6 +64,11 @@ async function createApp() {
       return viteServer.ssrLoadModule(id);
     };
 
+    const {collectStyles} = require('./styles.js');
+    globalThis.__vite_find_assets__ = async entries => {
+      return Object.keys(await collectStyles(viteServer, entries));
+    };
+
     loadModule = async entry => {
       return await viteServer.ssrLoadModule(
         path.isAbsolute(entry)
@@ -92,8 +97,16 @@ async function createApp() {
 
     globalThis.__vite_module_cache__ = new Map();
     globalThis.__vite_require__ = id => {
+      console.log({id});
       return import(
         path.join(process.cwd(), 'build', 'react-server', id + '.js')
+      );
+    };
+    const {findAssetsInManifest} = require('./manifest.js');
+
+    globalThis.__vite_find_assets__ = async entries => {
+      return findAssetsInManifest(reactServerManifest, entries[0]).filter(
+        asset => asset.endsWith('.css')
       );
     };
   }

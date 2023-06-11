@@ -14,6 +14,17 @@ const REACT_REFRESH_PREAMBLE = `
   window.__vite_plugin_react_preamble_installed__ = true
 `;
 
+async function Assets() {
+  const styles = await __vite_find_assets__(['src/App.jsx']);
+  return (
+    <>
+      {styles.map(key => (
+        <link key={key} rel="stylesheet" href={key} />
+      ))}
+    </>
+  );
+}
+
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
@@ -23,7 +34,6 @@ export default async function App() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Flight</title>
-        <link rel="stylesheet" href="/src/style.css" />
         {import.meta.env.DEV ? (
           <>
             <script type="module" src="@vite/client" />
@@ -35,6 +45,7 @@ export default async function App() {
             />
           </>
         ) : null}
+        <Assets />
       </head>
       <body>
         <div>

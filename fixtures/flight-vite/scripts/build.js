@@ -168,6 +168,11 @@ async function build() {
       external: ['react', 'react-dom', 'react-server-dom-vite'],
     },
   });
+
+  // copy assets from react-server build to static build, this includes stylesheets improted from server components
+  await fs.promises.cp('build/react-server/assets', 'build/static/assets', {
+    recursive: true,
+  });
 }
 
 build();
