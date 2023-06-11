@@ -1,4 +1,4 @@
-# react-server-dom-esm
+# react-server-dom-vite
 
 Experimental React Flight bindings for DOM using ESM.
 

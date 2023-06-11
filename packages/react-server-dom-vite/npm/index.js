@@ -9,4 +9,4 @@
 
 'use strict';
 
-throw new Error('Use react-server-dom-esm/client instead.');
+throw new Error('Use react-server-dom-vite/client instead.');
