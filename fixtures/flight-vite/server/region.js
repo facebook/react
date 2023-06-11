@@ -34,7 +34,7 @@ async function createApp() {
       appType: 'custom',
       server: {middlewareMode: true, hmr: {port: 9898}},
       resolve: {
-        conditions: ['node', 'import', 'react-server', 'production'],
+        conditions: ['node', 'import', 'react-server', process.env.NODE_ENV],
       },
       plugins: [
         reactServer(),

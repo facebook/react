@@ -73,7 +73,7 @@ async function build() {
       outDir: 'build/react-server',
     },
     resolve: {
-      conditions: ['node', 'import', 'react-server', 'production'],
+      conditions: ['node', 'import', 'react-server', process.env.NODE_ENV],
     },
     plugins: [
       reactServer({
