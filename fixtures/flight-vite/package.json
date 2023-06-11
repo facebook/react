@@ -1,0 +1,33 @@
+{
+  "name": "flight-vite",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "body-parser": "^1.20.1",
+    "browserslist": "^4.18.1",
+    "busboy": "^1.6.0",
+    "compression": "^1.7.4",
+    "concurrently": "^7.3.0",
+    "nodemon": "^2.0.19",
+    "prompts": "^2.4.2",
+    "react": "experimental",
+    "react-dev-utils": "^12.0.1",
+    "react-dom": "experimental",
+    "undici": "^5.20.0",
+    "vite": "^4.3.9"
+  },
+  "scripts": {
+    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
+    "dev:global": "NODE_ENV=development BUILD_PATH=dist node server/global",
+    "dev:region": "NODE_ENV=development BUILD_PATH=dist node --inspect --conditions=react-server server/region",
+    "start": "concurrently \"npm run start:region\" \"npm run start:global\"",
+    "start:global": "NODE_ENV=production node server/global",
+    "start:region": "NODE_ENV=production node --conditions=react-server server/region",
+    "build": "node scripts/build.js"
+  }
+}

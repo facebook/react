@@ -489,6 +489,56 @@ const bundles = [
     externals: ['acorn'],
   },
 
+  /******* React Server DOM Vite Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/server.node',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+
+  /******* React Server DOM Vite Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/client.browser',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-vite/client.node',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom', 'util'],
+  },
+
+  /******* React Server DOM Vite Plugin *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-vite/plugin',
+    global: 'ReactServerVitePlugin',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['fs', 'path', 'url', 'vite'],
+  },
+
+  /******* React Server DOM Vite Runtime *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-server-dom-vite/runtime',
+    global: 'ReactServerViteRuntime',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: [],
+  },
+
   /******* React Suspense Test Utils *******/
   {
     bundleTypes: [NODE_ES2015],

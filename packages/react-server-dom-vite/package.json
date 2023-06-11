@@ -1,0 +1,60 @@
+{
+  "name": "react-server-dom-vite",
+  "description": "React Server Components bindings for DOM using Vite. This is intended to be integrated into meta-frameworks. It is not intended to be imported directly.",
+  "version": "18.2.0",
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://reactjs.org/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "client.js",
+    "client.browser.js",
+    "client.node.js",
+    "server.js",
+    "server.node.js",
+    "plugin.js",
+    "runtime.js",
+    "cjs/",
+    "esm/"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": {
+      "node": "./client.node.js",
+      "default": "./client.browser.js"
+    },
+    "./client.browser": "./client.browser.js",
+    "./client.node": "./client.node.js",
+    "./server": {
+      "react-server": "./server.node.js",
+      "default": "./server.js"
+    },
+    "./server.node": "./server.node.js",
+    "./plugin": "./plugin.js",
+    "./runtime": "./runtime.js",
+    "./src/*": "./src/*.js",
+    "./package.json": "./package.json"
+  },
+  "main": "index.js",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-server-dom-esm"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^4.3.0"
+  },
+  "dependencies": {
+    "acorn-loose": "^8.3.0"
+  }
+}

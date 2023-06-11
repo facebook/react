@@ -189,6 +189,39 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-vite',
+    entryPoints: [
+      'react-server-dom-vite/client.browser',
+      'react-server-dom-vite/server.node',
+      'react-server-dom-vite/client.node',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-vite',
+      'react-server-dom-vite/client.browser',
+      'react-server-dom-vite/client.node',
+      'react-server-dom-vite/server',
+      'react-server-dom-vite/server.node',
+      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-legacy',
     entryPoints: [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
