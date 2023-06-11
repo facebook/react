@@ -7,4 +7,6 @@
  * @flow
  */
 
-export {default} from './src/ReactFlightWebpackPlugin';
+const ReactFlightWebpackPlugin = require('./src/ReactFlightWebpackPlugin');
+module.exports = ReactFlightWebpackPlugin;
+

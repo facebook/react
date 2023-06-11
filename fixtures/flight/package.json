@@ -53,6 +53,7 @@
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.3.0",
     "semver": "^7.3.5",
+    "shx": "^0.3.4",
     "source-map-loader": "^3.0.0",
     "style-loader": "^3.3.1",
     "tailwindcss": "^3.0.2",
@@ -64,17 +65,21 @@
     "webpack-manifest-plugin": "^4.0.2"
   },
   "scripts": {
-    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
+    "predev": "if not exist public\\ (mkdir public\\) && copy ..\\..\\build\\oss-experimental\\react\\umd\\react.development.js public\\ && copy ..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom.development.js public\\ && copy ..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom-server-legacy.browser.development.js public\\",
+    "prebuild": "shx cp -r ../../build/oss-experimental/* ./node_modules/",
+    "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\" \"npm run dev:server\" \"npm run dev:bundler\"",
     "dev:global": "NODE_ENV=development BUILD_PATH=dist node --experimental-loader ./loader/global.js server/global",
     "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --experimental-loader ./loader/region.js --conditions=react-server server/region",
-    "start": "node scripts/build.js && concurrently \"npm run start:region\" \"npm run start:global\"",
+    "dev:server": "cross-env NODE_ENV=development nodemon -- --inspect server/server.js",
+    "dev:bundler": "cross-env NODE_ENV=development nodemon -- scripts/build.js",
+    "start": "node scripts/build.js && concurrently \"npm run start:region\" \"npm run start:global\" \"npm run start:server\" \"npm run start:bundler\"",
     "start:global": "NODE_ENV=production node --experimental-loader ./loader/global.js server/global",
     "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region",
+    "start:server": "cross-env NODE_ENV=production nodemon -- server/server.js",
+    "start:bundler": "cross-env NODE_ENV=production nodemon -- scripts/build.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"
-  },
+  },  
   "eslintConfig": {
     "extends": [
       "react-app",

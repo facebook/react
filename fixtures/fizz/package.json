@@ -29,8 +29,6 @@
     "prettier": "1.19.1"
   },
   "scripts": {
-    "predev": "shx cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prestart": "shx cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:bundler\"",
     "start": "concurrently \"npm run start:server\" \"npm run start:bundler\"",
     "dev:server": "cross-env NODE_ENV=development nodemon -- --inspect server/server.js",
