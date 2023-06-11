@@ -45,7 +45,7 @@ module.exports = {
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',
     __webpack_require__: 'readonly',
-    
+
     // Flight Vite
     __vite_require__: 'readonly',
     __vite_module_cache__: 'readonly',
