@@ -12,7 +12,11 @@ const SERVER_REFERENCE = Symbol.for('react.server.reference');
 const PROMISE_PROTOTYPE = Promise.prototype;
 
 const deepProxyHandlers = {
-  get: function (target, name, _receiver) {
+  get: function (
+    target: any,
+    name: string,
+    _receiver: Proxy<any> | Proxy<any>,
+  ) {
     switch (name) {
       // These names are read by the Flight runtime if you end up using the exports object.
       case '$$typeof':
@@ -35,7 +39,7 @@ const deepProxyHandlers = {
       case 'toJSON':
         return undefined;
       case Symbol.toPrimitive.toString():
-        // @ts-ignore
+        // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toPrimitive];
       case 'Provider':
         throw new Error(
@@ -59,8 +63,12 @@ const deepProxyHandlers = {
   },
 };
 
-const proxyHandlers = {
-  get: function (target, name, _receiver) {
+const proxyHandlers: any = {
+  get: function (
+    target: Function,
+    name: string,
+    _receiver: Proxy<Function>,
+  ): $FlowFixMe {
     switch (name) {
       // These names are read by the Flight runtime if you end up using the exports object.
       case '$$typeof':
@@ -79,21 +87,21 @@ const proxyHandlers = {
       case 'toJSON':
         return undefined;
       case Symbol.toPrimitive.toString():
-        // @ts-ignore
+        // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toPrimitive];
       case '__esModule':
         // Something is conditionally checking which export to use. We'll pretend to be
         // an ESM compat module but then we'll check again on the client.
         const moduleId = target.$$id;
         target.default = Object.defineProperties(
-          function () {
+          (function () {
             throw new Error(
               `Attempted to call the default export of ${moduleId} from the server ` +
                 `but it's on the client. It's not possible to invoke a client function from ` +
                 `the server, it can only be rendered as a Component or passed to props of a ` +
                 `Client Component.`,
             );
-          },
+          }: any),
           {
             $$typeof: {value: CLIENT_REFERENCE},
             // This a placeholder value that tells the client to conditionally use the
@@ -113,14 +121,11 @@ const proxyHandlers = {
           // we should resolve that with a client reference that unwraps the Promise on
           // the client.
 
-          const clientReference = Object.defineProperties(
-            {},
-            {
-              $$typeof: {value: CLIENT_REFERENCE},
-              $$id: {value: target.$$id},
-              $$async: {value: true},
-            },
-          );
+          const clientReference = Object.defineProperties(({}: any), {
+            $$typeof: {value: CLIENT_REFERENCE},
+            $$id: {value: target.$$id},
+            $$async: {value: true},
+          });
           const proxy = new Proxy(clientReference, proxyHandlers);
 
           // Treat this as a resolved Promise for React's use()
@@ -128,13 +133,13 @@ const proxyHandlers = {
           target.value = proxy;
 
           const then = (target.then = Object.defineProperties(
-            function then(resolve, _reject) {
+            (function then(resolve, _reject) {
               // Expose to React.
               return Promise.resolve(
                 // $FlowFixMe[incompatible-call] found when upgrading Flow
                 resolve(proxy),
               );
-            },
+            }: any),
             // If this is not used as a Promise but is treated as a reference to a `.then`
             // export then we should treat it as a reference to that name.
             {
@@ -156,7 +161,7 @@ const proxyHandlers = {
     let cachedReference = target[name];
     if (!cachedReference) {
       const reference = Object.defineProperties(
-        function () {
+        (function () {
           throw new Error(
             // eslint-disable-next-line react-internal/safe-string-coercion
             `Attempted to call ${String(name)}() from the server but ${String(
@@ -165,7 +170,7 @@ const proxyHandlers = {
               `It's not possible to invoke a client function from the server, it can ` +
               `only be rendered as a Component or passed to props of a Client Component.`,
           );
-        },
+        }: any),
         {
           $$typeof: {value: CLIENT_REFERENCE},
           $$id: {value: target.$$id + '#' + name},
@@ -176,7 +181,7 @@ const proxyHandlers = {
     }
     return cachedReference;
   },
-  getPrototypeOf(_target) {
+  getPrototypeOf(_target: Function): Object {
     // Pretend to be a Promise in case anyone asks.
     return PROMISE_PROTOTYPE;
   },
@@ -185,20 +190,24 @@ const proxyHandlers = {
   },
 };
 
-export function createClientReference(moduleId, name) {
-  const clientReference = Object.defineProperties(
-    {},
-    {
-      $$typeof: {value: CLIENT_REFERENCE},
-      // Represents the whole Module object instead of a particular import.
-      $$id: {value: [moduleId, name], configurable: true},
-      $$async: {value: false},
-    },
-  );
+export function createClientReference(
+  moduleId: string,
+  name: string,
+): Proxy<Function> {
+  const clientReference = Object.defineProperties(({}: any), {
+    $$typeof: {value: CLIENT_REFERENCE},
+    // Represents the whole Module object instead of a particular import.
+    $$id: {value: [moduleId, name], configurable: true},
+    $$async: {value: false},
+  });
   return new Proxy(clientReference, proxyHandlers);
 }
 
-export function createServerReference(fn, moduleId, name) {
+export function createServerReference(
+  fn: Function,
+  moduleId: string,
+  name: string,
+): Function {
   const serverReference = Object.defineProperties(fn, {
     $$typeof: {value: SERVER_REFERENCE},
     // Represents the whole Module object instead of a particular import.

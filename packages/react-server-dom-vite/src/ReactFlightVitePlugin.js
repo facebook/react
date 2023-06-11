@@ -14,7 +14,11 @@ export default function reactServer({
   hash = str => str,
   onClientReference = () => {},
   onServerReference = () => {},
-} = {}) {
+}: {
+  hash?: string => string,
+  onClientReference?: (id: string) => void,
+  onServerReference?: (id: string) => void,
+} = {}): any {
   let isBuild;
   return {
     name: 'react-server',
@@ -28,7 +32,10 @@ export default function reactServer({
     transform(code, id, options) {
       if (!options?.ssr) return;
 
-      async function transformModuleIfNeeded(moduleCode, moduleId) {
+      async function transformModuleIfNeeded(
+        moduleCode: string,
+        moduleId: string,
+      ) {
         // Do a quick check for the exact string. If it doesn't exist, don't
         // bother parsing.
         if (
@@ -75,11 +82,8 @@ export default function reactServer({
         return transformServerModule(moduleCode, body, moduleId);
       }
 
-      async function transformClientModule(moduleAst, moduleId) {
-        /**
-         * @type {string | any[]}
-         */
-        const names = [];
+      async function transformClientModule(moduleAst: any, moduleId: string) {
+        const names: string[] = [];
         onClientReference(moduleId);
         await parseExportNamesInto(moduleAst, names, moduleId);
 
@@ -96,12 +100,16 @@ export default function reactServer({
         return newSrc;
       }
 
-      function transformServerModule(moduleCode, moduleAst, moduleId) {
+      function transformServerModule(
+        moduleCode: string,
+        moduleAst: any,
+        moduleId: string,
+      ) {
         onServerReference(moduleId);
 
         // If the same local name is exported more than once, we only need one of the names.
-        const localNames = new Map();
-        const localTypes = new Map();
+        const localNames = new Map<string, any>();
+        const localTypes = new Map<string, any>();
 
         for (let i = 0; i < moduleAst.length; i++) {
           const node = moduleAst[i];
@@ -164,7 +172,11 @@ export default function reactServer({
         return newSrc;
       }
 
-      async function parseExportNamesInto(ast, names, parentURL) {
+      async function parseExportNamesInto(
+        ast: any,
+        names: string[],
+        parentURL: string,
+      ) {
         for (let i = 0; i < ast.length; i++) {
           const node = ast[i];
           switch (node.type) {
@@ -213,7 +225,7 @@ export default function reactServer({
         }
       }
 
-      function addLocalExportedNames(names, node) {
+      function addLocalExportedNames(names: Map<string, any>, node: any) {
         switch (node.type) {
           case 'Identifier':
             names.set(node.name, node.name);
@@ -243,11 +255,7 @@ export default function reactServer({
         }
       }
 
-      /**
-       * @param {any[]} names
-       * @param {any} node
-       */
-      function addExportNames(names, node) {
+      function addExportNames(names: string[], node: any) {
         switch (node.type) {
           case 'Identifier':
             names.push(node.name);
@@ -277,11 +285,7 @@ export default function reactServer({
         }
       }
 
-      /**
-       * @param {string} specifier
-       * @param {string | undefined} parentURL
-       */
-      async function resolveClientImport(specifier, parentURL) {
+      async function resolveClientImport(specifier: string, parentURL: string) {
         const resolved = await self.resolve(specifier, parentURL, {
           skipSelf: true,
         });
@@ -295,6 +299,7 @@ export default function reactServer({
         return {url: resolved.id};
       }
 
+      // $FlowFixMe[object-this-reference]
       const self = this;
 
       return transformModuleIfNeeded(code, id);

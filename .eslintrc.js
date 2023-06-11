@@ -429,7 +429,7 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-server-dom-webpack/**/*.js'],
+      files: ['packages/react-server-dom-vite/**/*.js'],
       globals: {
         __vite_require__: 'readonly',
         __vite_module_cache__: 'readonly',

@@ -32,7 +32,10 @@ export type ClientReferenceMetadata = [
   string, // export name
 ];
 
-export type ClientReferenceKey = string;
+export type ClientReferenceKey = [
+  string, // module path
+  string, // export name
+];
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
 const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
