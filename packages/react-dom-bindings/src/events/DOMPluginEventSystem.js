@@ -272,17 +272,34 @@ function processDispatchQueueItemsInOrder(
   }
 }
 
+function checkEventValidation(event: ReactSyntheticEvent) {
+  if (
+    event.nativeEvent.defaultPrevented &&
+    event.type === 'change' &&
+    event.nativeEvent.type === 'click'
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+
 export function processDispatchQueue(
   dispatchQueue: DispatchQueue,
   eventSystemFlags: EventSystemFlags,
 ): void {
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   for (let i = 0; i < dispatchQueue.length; i++) {
-    const {event, listeners} = dispatchQueue[i];
-    processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
+     const {event, listeners} = dispatchQueue[i];
+     if (checkEventValidation(event)) {
+      processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
+      // event system doesn't use pooling.
+    }
     //  event system doesn't use pooling.
   }
   // This would be a good time to rethrow if any of the event handlers threw.
+
   rethrowCaughtError();
 }
 
