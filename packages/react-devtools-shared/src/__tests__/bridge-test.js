@@ -37,6 +37,7 @@ describe('Bridge', () => {
     jest.runAllTimers();
     expect(wall.send).toHaveBeenCalledWith('update', '1');
     expect(wall.send).toHaveBeenCalledWith('update', '2');
+    expect(wall.send).toHaveBeenCalledWith('shutdown');
     expect(shutdownCallback).toHaveBeenCalledTimes(1);
 
     // Verify that the Bridge doesn't send messages after shutdown.

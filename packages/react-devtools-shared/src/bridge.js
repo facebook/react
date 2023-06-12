@@ -335,6 +335,7 @@ class Bridge<
 
     // Queue the shutdown outgoing message for subscribers.
     this.emit('shutdown');
+    this.send('shutdown');
 
     // Mark this bridge as destroyed, i.e. disable its public API.
     this._isShutdown = true;
