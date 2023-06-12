@@ -102,7 +102,7 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
         if (
           !hasBackEdge &&
           instr.value.kind === "FunctionExpression" &&
-          fn.env.enableCodegenLoweredFunctionExpressions
+          fn.env.enableOptimizeFunctionExpressions
         ) {
           eliminateRedundantPhi(instr.value.loweredFunc);
         }

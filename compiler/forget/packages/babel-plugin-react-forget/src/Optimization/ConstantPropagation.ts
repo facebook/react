@@ -144,7 +144,7 @@ function applyConstantPropagation(
         continue;
       }
       const instr = block.instructions[i]!;
-      if (!fn.env.enableCodegenLoweredFunctionExpressions) {
+      if (!fn.env.enableOptimizeFunctionExpressions) {
         // Don't propagate constants used as function expression dependencies
         if (functionDependencies.has(instr.lvalue.identifier.id)) {
           continue;
@@ -360,7 +360,7 @@ function evaluateInstruction(
       return placeValue;
     }
     case "FunctionExpression": {
-      if (env.enableCodegenLoweredFunctionExpressions) {
+      if (env.enableOptimizeFunctionExpressions) {
         constantPropagationImpl(value.loweredFunc, constants);
       }
       return null;

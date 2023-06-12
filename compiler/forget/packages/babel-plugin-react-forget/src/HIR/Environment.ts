@@ -158,7 +158,7 @@ export type EnvironmentConfig = Partial<{
    *
    * Defaults to false (use the un-transformed function body).
    */
-  enableCodegenLoweredFunctionExpressions: boolean;
+  enableOptimizeFunctionExpressions: boolean;
 }>;
 
 export class Environment {
@@ -174,7 +174,7 @@ export class Environment {
   enableTreatHooksAsFunctions: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
-  enableCodegenLoweredFunctionExpressions: boolean;
+  enableOptimizeFunctionExpressions: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
 
@@ -218,8 +218,8 @@ export class Environment {
       config?.enableTreatHooksAsFunctions ?? true;
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
-    this.enableCodegenLoweredFunctionExpressions =
-      config?.enableCodegenLoweredFunctionExpressions ?? false;
+    this.enableOptimizeFunctionExpressions =
+      config?.enableOptimizeFunctionExpressions ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
   }

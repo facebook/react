@@ -960,7 +960,7 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      if (cx.env.enableCodegenLoweredFunctionExpressions) {
+      if (cx.env.enableOptimizeFunctionExpressions) {
         const loweredFunc = instrValue.loweredFunc;
         deadCodeElimination(loweredFunc);
         const reactiveFunction = buildReactiveFunction(loweredFunc);

@@ -70,7 +70,7 @@ function apply(func: HIRFunction, unifier: Unifier): void {
 
       if (
         value.kind === "FunctionExpression" &&
-        func.env.enableCodegenLoweredFunctionExpressions
+        func.env.enableOptimizeFunctionExpressions
       ) {
         apply(value.loweredFunc, unifier);
       }
@@ -251,7 +251,7 @@ function* generateInstructionTypes(
     }
 
     case "FunctionExpression": {
-      if (env.enableCodegenLoweredFunctionExpressions) {
+      if (env.enableOptimizeFunctionExpressions) {
         yield* generate(value.loweredFunc);
       }
       break;

@@ -248,7 +248,7 @@ function enterSSAImpl(
 
     if (blockId === rootEntry) {
       // NOTE: func.context should be empty for the root function
-      if (func.env.enableCodegenLoweredFunctionExpressions) {
+      if (func.env.enableOptimizeFunctionExpressions) {
         if (func.context.length !== 0) {
           CompilerError.invariant(
             `Expected function context to be empty for outer function declarations`,
@@ -267,7 +267,7 @@ function enterSSAImpl(
 
       if (
         instr.value.kind === "FunctionExpression" &&
-        func.env.enableCodegenLoweredFunctionExpressions
+        func.env.enableOptimizeFunctionExpressions
       ) {
         const loweredFunc = instr.value.loweredFunc;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;

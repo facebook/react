@@ -90,7 +90,7 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
-  if (!func.env.enableCodegenLoweredFunctionExpressions) {
+  if (!func.env.enableOptimizeFunctionExpressions) {
     mergeConsecutiveBlocks(func);
     enterSSA(func);
     eliminateRedundantPhi(func);
