@@ -22,7 +22,6 @@ import {
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
-import {processStringChunk} from '../../react-client/src/ReactFlightClient';
 
 function noServerCall() {
   throw new Error(
@@ -45,11 +44,7 @@ function createFromNodeStream<T>(
 ): Thenable<T> {
   const response: Response = createResponse(moduleMap, noServerCall);
   stream.on('data', chunk => {
-    if (typeof chunk === 'string') {
-      processStringChunk(response, chunk, 0);
-    } else {
-      processBinaryChunk(response, chunk);
-    }
+    processBinaryChunk(response, chunk);
   });
   stream.on('error', error => {
     reportGlobalError(response, error);
