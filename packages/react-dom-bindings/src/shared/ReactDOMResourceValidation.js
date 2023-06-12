@@ -62,60 +62,6 @@ function propNamesListJoin(
   }
 }
 
-export function validatePreloadArguments(href: mixed, options: mixed) {
-  if (__DEV__) {
-    if (!href || typeof href !== 'string') {
-      const typeOfArg = getValueDescriptorExpectingObjectForWarning(href);
-      console.error(
-        'ReactDOM.preload() expected the first argument to be a string representing an href but found %s instead.',
-        typeOfArg,
-      );
-    } else if (typeof options !== 'object' || options === null) {
-      const typeOfArg = getValueDescriptorExpectingObjectForWarning(options);
-      console.error(
-        'ReactDOM.preload() expected the second argument to be an options argument containing at least an "as" property' +
-          ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".',
-        typeOfArg,
-        href,
-      );
-    } else {
-      const as = options.as;
-      switch (as) {
-        // Font specific validation of options
-        case 'font': {
-          if (options.crossOrigin === 'use-credentials') {
-            console.error(
-              'ReactDOM.preload() was called with an "as" type of "font" and with a "crossOrigin" option of "use-credentials".' +
-                ' Fonts preloading must use crossOrigin "anonymous" to be functional. Please update your font preload to omit' +
-                ' the crossOrigin option or change it to any other value than "use-credentials" (Browsers default all other values' +
-                ' to anonymous mode). The href for the preload call where this warning originated is "%s"',
-              href,
-            );
-          }
-          break;
-        }
-        case 'script':
-        case 'style': {
-          break;
-        }
-
-        // We have an invalid as type and need to warn
-        default: {
-          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
-          console.error(
-            'ReactDOM.preload() expected a valid "as" type in the options (second) argument but found %s instead.' +
-              ' Please use one of the following valid values instead: %s. The href for the preload call where this' +
-              ' warning originated is "%s".',
-            typeOfAs,
-            '"style", "font", or "script"',
-            href,
-          );
-        }
-      }
-    }
-  }
-}
-
 export function validatePreinitArguments(href: mixed, options: mixed) {
   if (__DEV__) {
     if (!href || typeof href !== 'string') {
