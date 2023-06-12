@@ -14,6 +14,7 @@ export type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  nonce?: string,
   fetchPriority?: 'high' | 'low' | 'auto',
 };
 export type PreinitOptions = {

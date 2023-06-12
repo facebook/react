@@ -3981,6 +3981,45 @@ body {
         </html>,
       );
     });
+
+    it('supports nonce', async () => {
+      function App({url}) {
+        ReactDOM.preload(url, {as: 'script', nonce: 'abc'});
+        return 'hello';
+      }
+
+      await act(() => {
+        renderToPipeableStream(<App url="server" />).pipe(writable);
+      });
+
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head />
+          <body>
+            <div id="container">
+              <link rel="preload" as="script" href="server" nonce="abc" />
+              hello
+            </div>
+          </body>
+        </html>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App url="client" />);
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="preload" as="script" href="client" nonce="abc" />
+          </head>
+          <body>
+            <div id="container">
+              <link rel="preload" as="script" href="server" nonce="abc" />
+              hello
+            </div>
+          </body>
+        </html>,
+      );
+    });
   });
 
   describe('ReactDOM.preinit(href, { as: ... })', () => {
