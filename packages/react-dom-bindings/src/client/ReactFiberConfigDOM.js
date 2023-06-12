@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/ReactDOMDispatcher';
+import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -19,6 +19,12 @@ import type {
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import type {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
@@ -2095,7 +2101,7 @@ function preconnectAs(
   }
 }
 
-function prefetchDNS(href: string, options?: mixed) {
+function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2125,7 +2131,7 @@ function prefetchDNS(href: string, options?: mixed) {
   preconnectAs('dns-prefetch', null, href);
 }
 
-function preconnect(href: string, options: ?{crossOrigin?: string}) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2156,13 +2162,6 @@ function preconnect(href: string, options: ?{crossOrigin?: string}) {
   preconnectAs('preconnect', crossOrigin, href);
 }
 
-type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
@@ -2238,14 +2237,6 @@ function preloadPropsFromPreloadOptions(
   };
 }
 
-type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
     return;
