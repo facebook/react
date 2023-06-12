@@ -59,8 +59,47 @@ async function createApp() {
     });
 
     globalThis.__vite_module_cache__ = new Map();
-    globalThis.__vite_require__ = id => {
-      return viteServer.ssrLoadModule(id);
+    globalThis.__vite_preload__ = metadata => {
+      const existingPromise = __vite_module_cache__.get(metadata.specifier);
+      if (existingPromise) {
+        if (existingPromise.status === 'fulfilled') {
+          return null;
+        }
+        return existingPromise;
+      } else {
+        const modulePromise = viteServer.ssrLoadModule(metadata.specifier);
+        modulePromise.then(
+          value => {
+            const fulfilledThenable = modulePromise;
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = value;
+          },
+          reason => {
+            const rejectedThenable = modulePromise;
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = reason;
+          }
+        );
+        __vite_module_cache__.set(metadata.specifier, modulePromise);
+        return modulePromise;
+      }
+    };
+
+    globalThis.__vite_require__ = metadata => {
+      let moduleExports;
+      // We assume that preloadModule has been called before, which
+      // should have added something to the module cache.
+      const promise = __vite_module_cache__.get(metadata.specifier);
+      if (promise) {
+        if (promise.status === 'fulfilled') {
+          moduleExports = promise.value;
+        } else {
+          throw promise.reason;
+        }
+        return moduleExports[metadata.name];
+      } else {
+        throw new Error('Module not found in cache: ' + id);
+      }
     };
 
     app.use('/__refresh', (req, res) => {
@@ -74,8 +113,22 @@ async function createApp() {
     };
   } else {
     globalThis.__vite_module_cache__ = new Map();
-    globalThis.__vite_require__ = id => {
-      return import(path.join(process.cwd(), 'build', 'server', id + '.js'));
+    globalThis.__vite_preload__ = metadata => {
+      return null;
+    };
+
+    globalThis.__vite_require__ = metadata => {
+      const module = require(path.join(
+        process.cwd(),
+        'build',
+        'server',
+        metadata.specifier + '.cjs'
+      ));
+
+      if (metadata.name === 'default') {
+        return module;
+      }
+      return module[metadata.name];
     };
 
     app.use(express.static('build/static'));
@@ -89,8 +142,6 @@ async function createApp() {
   }
 
   app.all('/', async function (req, res) {
-    //   await viteServer.middlewares(req, res, (req, res, next) => {
-    //   // Proxy the request to the regional server.
     const proxiedHeaders = {
       'X-Forwarded-Host': req.hostname,
       'X-Forwarded-For': req.ips,

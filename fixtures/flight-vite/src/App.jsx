@@ -5,6 +5,7 @@ import {like, greet} from './actions.js';
 import {getServerState} from './ServerState.js';
 import {Counter} from './Counter2.jsx';
 import './style.css';
+import {cache, useState} from 'react';
 
 const REACT_REFRESH_PREAMBLE = `
   import RefreshRuntime from "/@react-refresh"
@@ -25,9 +26,14 @@ async function Assets() {
   );
 }
 
+const data = cache(async () => {
+  return {foo: 'bar'};
+});
+
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
+  const cachedData = await data();
   return (
     <html lang="en">
       <head>
@@ -60,6 +66,7 @@ export default async function App() {
             <Button action={like}>Like</Button>
           </div>
           <Counter />
+          <pre>{JSON.stringify(cachedData)}</pre>
         </div>
       </body>
     </html>

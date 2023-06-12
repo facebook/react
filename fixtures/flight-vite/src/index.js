@@ -8,13 +8,53 @@ let updateRoot;
 
 if (typeof window !== 'undefined') {
   globalThis.__vite_module_cache__ = new Map();
-  globalThis.__vite_require__ = id => {
-    if (process.env.NODE_ENV === 'development') {
-      let moduleId = `/@fs${id}`;
-      return import(/* @vite-ignore */ moduleId);
+  globalThis.__vite_preload__ = metadata => {
+    const existingPromise = __vite_module_cache__.get(metadata.specifier);
+    if (existingPromise) {
+      if (existingPromise.status === 'fulfilled') {
+        return null;
+      }
+      return existingPromise;
     } else {
-      let moduleId = `/${id}.js`;
-      return import(/* @vite-ignore */ moduleId);
+      let moduleId;
+      if (process.env.NODE_ENV === 'development') {
+        moduleId = `/@fs${metadata.specifier}`;
+      } else {
+        moduleId = `/${metadata.specifier}.js`;
+      }
+
+      const modulePromise = import(/* @vite-ignore */ moduleId);
+      modulePromise.then(
+        value => {
+          const fulfilledThenable = modulePromise;
+          fulfilledThenable.status = 'fulfilled';
+          fulfilledThenable.value = value;
+        },
+        reason => {
+          const rejectedThenable = modulePromise;
+          rejectedThenable.status = 'rejected';
+          rejectedThenable.reason = reason;
+        }
+      );
+      __vite_module_cache__.set(metadata.specifier, modulePromise);
+      return modulePromise;
+    }
+  };
+
+  globalThis.__vite_require__ = metadata => {
+    let moduleExports;
+    // We assume that preloadModule has been called before, which
+    // should have added something to the module cache.
+    const promise = __vite_module_cache__.get(metadata.specifier);
+    if (promise) {
+      if (promise.status === 'fulfilled') {
+        moduleExports = promise.value;
+      } else {
+        throw promise.reason;
+      }
+      return moduleExports[metadata.name];
+    } else {
+      throw new Error('Module not found in cache: ' + id);
     }
   };
 }

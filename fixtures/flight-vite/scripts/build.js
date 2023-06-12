@@ -60,9 +60,10 @@ async function build() {
               return `${hash(chunk)}`;
             }
           },
+          format: 'cjs',
           // we want to control the chunk names so that we can load them
           // individually when server actions are called
-          chunkFileNames: '[name].js',
+          chunkFileNames: '[name].cjs',
         },
       },
       ssr: true,
@@ -113,13 +114,15 @@ async function build() {
         },
         output: {
           entryFileNames: chunk => {
-            return chunk.name + '.js';
+            return chunk.name + '.cjs';
           },
+          format: 'cjs',
         },
       },
       ssr: true,
       ssrManifest: true,
       ssrEmitAssets: true,
+      target: 'node18',
       manifest: true,
       outDir: 'build/server',
     },

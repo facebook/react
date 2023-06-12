@@ -60,48 +60,77 @@ async function createApp() {
     });
 
     globalThis.__vite_module_cache__ = new Map();
-    globalThis.__vite_require__ = id => {
-      return viteServer.ssrLoadModule(id);
+    globalThis.__vite_preload__ = metadata => {
+      const existingPromise = __vite_module_cache__.get(metadata.specifier);
+      if (existingPromise) {
+        if (existingPromise.status === 'fulfilled') {
+          return null;
+        }
+        return existingPromise;
+      } else {
+        const modulePromise = viteServer.ssrLoadModule(metadata.specifier);
+        modulePromise.then(
+          value => {
+            const fulfilledThenable = modulePromise;
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = value;
+          },
+          reason => {
+            const rejectedThenable = modulePromise;
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = reason;
+          }
+        );
+        __vite_module_cache__.set(metadata.specifier, modulePromise);
+        return modulePromise;
+      }
+    };
+
+    globalThis.__vite_require__ = metadata => {
+      let moduleExports;
+      // We assume that preloadModule has been called before, which
+      // should have added something to the module cache.
+      const promise = __vite_module_cache__.get(metadata.specifier);
+      if (promise) {
+        if (promise.status === 'fulfilled') {
+          moduleExports = promise.value;
+        } else {
+          throw promise.reason;
+        }
+        return moduleExports[metadata.name];
+      } else {
+        throw new Error('Module not found in cache: ' + id);
+      }
     };
 
     const {collectStyles} = require('./styles.js');
     globalThis.__vite_find_assets__ = async entries => {
       return Object.keys(await collectStyles(viteServer, entries));
     };
-
-    loadModule = async entry => {
-      return await viteServer.ssrLoadModule(
-        path.isAbsolute(entry)
-          ? entry
-          : path.join(viteServer.config.root, entry)
-      );
-    };
   } else {
     const reactServerManifest = JSON.parse(
       await readFile('build/react-server/manifest.json', 'utf8')
     );
 
-    loadModule = async entry => {
-      const id = reactServerManifest[entry];
-      if (id) {
-        return await import(
-          path.join(process.cwd(), 'build/react-server', id.file)
-        );
-      } else {
-        // this is probably a server action module
-        return await import(
-          path.join(process.cwd(), 'build/react-server', entry + '.js')
-        );
-      }
+    globalThis.__vite_module_cache__ = new Map();
+    globalThis.__vite_preload__ = metadata => {
+      return null;
     };
 
-    globalThis.__vite_module_cache__ = new Map();
-    globalThis.__vite_require__ = id => {
-      console.log({id});
-      return import(
-        path.join(process.cwd(), 'build', 'react-server', id + '.js')
-      );
+    globalThis.__vite_require__ = metadata => {
+      const module = require(path.join(
+        process.cwd(),
+        'build',
+        'server',
+        metadata.specifier + '.cjs'
+      ));
+
+      if (metadata.name === 'default') {
+        return module;
+      }
+      return module[metadata.name];
     };
+
     const {findAssetsInManifest} = require('./manifest.js');
 
     globalThis.__vite_find_assets__ = async entries => {
@@ -111,12 +140,23 @@ async function createApp() {
     };
   }
 
+  loadModule = async metadata => {
+    await __vite_preload__(metadata);
+    return __vite_require__(metadata);
+  };
+
   async function renderApp(res, returnValue) {
     const {renderToPipeableStream} = await import(
       'react-server-dom-vite/server'
     );
 
-    const {default: App} = await loadModule('src/App.jsx');
+    const App = await loadModule({
+      specifier:
+        process.env.NODE_ENV === 'development'
+          ? path.join(process.cwd(), 'src/App.jsx')
+          : 'App',
+      name: 'default',
+    });
     const root = React.createElement(App);
 
     // For client-invoked server actions we refresh the tree and return a return value.
@@ -140,7 +180,7 @@ async function createApp() {
     if (serverReference) {
       // This is the client-side case
       const [filepath, name] = serverReference.split('#');
-      const action = (await loadModule(filepath))[name];
+      const action = await loadModule({specifier: filepath, name});
       // Validate that this is actually a function we intended to expose and
       // not the client trying to invoke arbitrary functions. In a real app,
       // you'd have a manifest verifying this before even importing it.

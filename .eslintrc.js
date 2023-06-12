@@ -417,7 +417,7 @@ module.exports = {
     },
     {
       files: [
-        'packages/react-native-renderer/**/*.js',
+        'packages/react-native-renderer/**/*.js'
       ],
       globals: {
         nativeFabricUIManager: 'readonly',
@@ -433,8 +433,8 @@ module.exports = {
     {
       files: ['packages/react-server-dom-vite/**/*.js'],
       globals: {
+        __vite_preload__: 'readonly',
         __vite_require__: 'readonly',
-        __vite_module_cache__: 'readonly',
       },
     },
     {

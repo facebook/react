@@ -75,8 +75,14 @@ declare module 'EventListener' {
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
 declare function __webpack_require__(id: string): any;
-declare function __vite_require__(id: string): any;
-declare var __vite_module_cache__: Map<string, any>;
+declare function __vite_preload__(metadata: {
+  specifier: string,
+  name: string,
+}): any;
+declare function __vite_require__(metadata: {
+  specifier: string,
+  name: string,
+}): any;
 
 declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;
