@@ -137,10 +137,12 @@ export type ReactClientValue =
   | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
   | Set<ReactClientValue>
+  | Date
   | ReactClientObject
   | Promise<ReactClientValue>; // Thenable<ReactClientValue>
 

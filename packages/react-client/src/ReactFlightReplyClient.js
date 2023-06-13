@@ -59,10 +59,12 @@ export type ReactServerValue =
   | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactServerValue>
   | Array<ReactServerValue>
   | Map<ReactServerValue, ReactServerValue>
   | Set<ReactServerValue>
+  | Date
   | ReactServerObject
   | Promise<ReactServerValue>; // Thenable<ReactServerValue>
 
