@@ -274,15 +274,16 @@ function processDispatchQueueItemsInOrder(
 
 function checkEventValidation(event: ReactSyntheticEvent) {
   if (
-    event.nativeEvent.defaultPrevented &&
     event.type === 'change' &&
-    event.nativeEvent.type === 'click'
+    event.nativeEvent.type === 'click' &&
+    event.nativeEvent.defaultPrevented
   ) {
     return false;
   }
 
   return true;
 }
+
 
 
 export function processDispatchQueue(
@@ -296,7 +297,6 @@ export function processDispatchQueue(
       processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
       // event system doesn't use pooling.
     }
-    //  event system doesn't use pooling.
   }
   // This would be a good time to rethrow if any of the event handlers threw.
 

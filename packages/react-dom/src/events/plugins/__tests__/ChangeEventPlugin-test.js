@@ -235,7 +235,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should not fire change for checkbox input when preventDefault is called in onClick', () => {
+  it('should not trigger change event for checkbox input when preventDefault is called in onClick', () => {
     const handleReactChange = jest.fn();
     const handleNativeChange = jest.fn();
 
@@ -250,6 +250,7 @@ describe('ChangeEventPlugin', () => {
       />,
       container,
     );
+
     node.addEventListener('change', handleNativeChange);
 
     node.click();
