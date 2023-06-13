@@ -2368,6 +2368,7 @@ var startScriptSrc = stringToPrecomputedChunk('<script src="');
 var startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 var scriptNonce = stringToPrecomputedChunk('" nonce="');
 var scriptIntegirty = stringToPrecomputedChunk('" integrity="');
+var scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
 var endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 /**
  * This escaping function is designed to work with bootstrapScriptContent only.
@@ -2461,6 +2462,12 @@ function createResponseState(
         typeof scriptConfig === "string" ? scriptConfig : scriptConfig.src;
       var integrity =
         typeof scriptConfig === "string" ? undefined : scriptConfig.integrity;
+      var crossOrigin =
+        typeof scriptConfig === "string" || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === "use-credentials"
+          ? "use-credentials"
+          : "";
       preloadBootstrapScript(resources, src, nonce, integrity);
       bootstrapChunks.push(
         startScriptSrc,
@@ -2481,6 +2488,13 @@ function createResponseState(
         );
       }
 
+      if (typeof crossOrigin === "string") {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(crossOrigin))
+        );
+      }
+
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -2494,6 +2508,13 @@ function createResponseState(
 
       var _integrity =
         typeof _scriptConfig === "string" ? undefined : _scriptConfig.integrity;
+
+      var _crossOrigin =
+        typeof _scriptConfig === "string" || _scriptConfig.crossOrigin == null
+          ? undefined
+          : _scriptConfig.crossOrigin === "use-credentials"
+          ? "use-credentials"
+          : "";
 
       preloadBootstrapModule(resources, _src, nonce, _integrity);
       bootstrapChunks.push(
@@ -2512,6 +2533,13 @@ function createResponseState(
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(_integrity))
+        );
+      }
+
+      if (typeof _crossOrigin === "string") {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(_crossOrigin))
         );
       }
 

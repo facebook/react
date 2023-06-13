@@ -3571,13 +3571,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$14 = partialBoundaries[i];
+      var boundary$15 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.resources.boundaryResources =
-          boundary$14.resources;
-        var completedSegments = boundary$14.completedSegments;
+          boundary$15.resources;
+        var completedSegments = boundary$15.completedSegments;
         for (
           responseState$jscomp$1 = 0;
           responseState$jscomp$1 < completedSegments.length;
@@ -3587,7 +3587,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$14,
+              boundary$15,
               completedSegments[responseState$jscomp$1]
             )
           ) {
@@ -3599,7 +3599,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, responseState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$14.resources,
+          boundary$15.resources,
           clientRenderedBoundaries.responseState
         );
       }
@@ -3659,8 +3659,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$16) {
-    logRecoverableError(request, error$16), fatalError(request, error$16);
+  } catch (error$17) {
+    logRecoverableError(request, error$17), fatalError(request, error$17);
   }
 }
 exports.abortStream = function (stream) {
@@ -3858,14 +3858,20 @@ exports.renderToStream = function (children, options) {
       var scriptConfig = bootstrapScripts[bootstrapScriptContent];
       externalRuntimeConfig =
         "string" === typeof scriptConfig ? scriptConfig : scriptConfig.src;
-      scriptConfig =
+      var integrity =
         "string" === typeof scriptConfig ? void 0 : scriptConfig.integrity;
+      scriptConfig =
+        "string" === typeof scriptConfig || null == scriptConfig.crossOrigin
+          ? void 0
+          : "use-credentials" === scriptConfig.crossOrigin
+          ? "use-credentials"
+          : "";
       var props = {
           rel: "preload",
           href: externalRuntimeConfig,
           as: "script",
           nonce: void 0,
-          integrity: scriptConfig
+          integrity: integrity
         },
         resource = { type: "preload", chunks: [], state: 0, props: props };
       resources.preloadsMap.set("[script]" + externalRuntimeConfig, resource);
@@ -3875,9 +3881,14 @@ exports.renderToStream = function (children, options) {
         '<script src="',
         escapeTextForBrowser(externalRuntimeConfig)
       );
-      scriptConfig &&
+      integrity &&
         JSCompiler_inline_result.push(
           '" integrity="',
+          escapeTextForBrowser(integrity)
+        );
+      "string" === typeof scriptConfig &&
+        JSCompiler_inline_result.push(
+          '" crossorigin="',
           escapeTextForBrowser(scriptConfig)
         );
       JSCompiler_inline_result.push('" async="">\x3c/script>');
@@ -3888,15 +3899,17 @@ exports.renderToStream = function (children, options) {
       bootstrapScripts < bootstrapModules.length;
       bootstrapScripts++
     )
-      (externalRuntimeConfig = bootstrapModules[bootstrapScripts]),
+      (integrity = bootstrapModules[bootstrapScripts]),
         (bootstrapScriptContent =
-          "string" === typeof externalRuntimeConfig
-            ? externalRuntimeConfig
-            : externalRuntimeConfig.src),
+          "string" === typeof integrity ? integrity : integrity.src),
         (externalRuntimeConfig =
-          "string" === typeof externalRuntimeConfig
+          "string" === typeof integrity ? void 0 : integrity.integrity),
+        (integrity =
+          "string" === typeof integrity || null == integrity.crossOrigin
             ? void 0
-            : externalRuntimeConfig.integrity),
+            : "use-credentials" === integrity.crossOrigin
+            ? "use-credentials"
+            : ""),
         (scriptConfig = {
           rel: "modulepreload",
           href: bootstrapScriptContent,
@@ -3920,6 +3933,11 @@ exports.renderToStream = function (children, options) {
           JSCompiler_inline_result.push(
             '" integrity="',
             escapeTextForBrowser(externalRuntimeConfig)
+          ),
+        "string" === typeof integrity &&
+          JSCompiler_inline_result.push(
+            '" crossorigin="',
+            escapeTextForBrowser(integrity)
           ),
         JSCompiler_inline_result.push('" async="">\x3c/script>');
   JSCompiler_inline_result = {
