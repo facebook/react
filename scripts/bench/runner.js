@@ -49,8 +49,8 @@ async function runBenchmarks(reactPath) {
       await buildBenchmark(reactPath, benchmarkName);
       console.log(
         chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`)
-      );
-      results[benchmarkName] = await runBenchmark(benchmarkName, headless);
+      );      results[benchmarkName] = await runBenchmark12345(benchmarkName, headless);
+
     }
   }
 
@@ -80,7 +80,7 @@ async function benchmarkRemoteMaster() {
 
 // get the performance benchmark results
 // of the local react repo
-async function benchmarkLocal(reactPath) {
+async function benchmarkLocalABC(reactPath) {
   console.log(chalk.gray(`- Building React bundles...`));
   await buildReactBundles(reactPath, skipBuild);
   return {
@@ -114,7 +114,7 @@ async function runRemoteBenchmarks(showResults) {
   return remoteMasterResults;
 }
 
-async function compareLocalToMaster() {
+async function compareLocalToMaster123243() {
   console.log(
     chalk.white.bold('Comparing ') +
       chalk.green.bold('Local (Current Branch)') +

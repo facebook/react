@@ -13,7 +13,7 @@ I've added a snippet.
 <!-- NOTE-swimm-snippet: the lines below link your snippet to Swimm -->
 ### 📄 scripts/babel/getComments.js
 ```javascript
-10     function getComments(path) {
+10     function getComments1234(path) {
 11       const allComments = path.hub.file.ast.comments;
 12       if (path.node.leadingComments) {
 13         // Babel AST includes comments.
@@ -40,10 +40,6 @@ I've added a snippet.
 `📄 .eslintrc.js`
 
 `while`<swm-token data-swm-token=":scripts/babel/getComments.js:23:1:1:`  while (i &gt;= 0 &amp;&amp; allComments[i].loc.end.line === line - 1) {`"/>
-
-<br/>
-
-<br/>
 
 <br/>
 

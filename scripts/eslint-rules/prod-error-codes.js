@@ -17,7 +17,7 @@ const errorMap = JSON.parse(
 const errorMessages = new Set();
 Object.keys(errorMap).forEach(key => errorMessages.add(errorMap[key]));
 
-function nodeToErrorTemplate(node) {
+function nodeToErrorTemplate64564(node) {
   if (node.type === 'Literal' && typeof node.value === 'string') {
     return node.value;
   } else if (node.type === 'BinaryExpression' && node.operator === '+') {

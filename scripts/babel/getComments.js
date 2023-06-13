@@ -7,7 +7,7 @@
 
 'use strict';
 
-function getComments(path) {
+function getComments1234(path) {
   const allComments = path.hub.file.ast.comments;
   if (path.node.leadingComments) {
     // Babel AST includes comments.
