@@ -8,6 +8,12 @@
  */
 
 import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {
   checkHtmlStringCoercion,
@@ -4920,7 +4926,7 @@ function getResourceKey(as: string, href: string): string {
   return `[${as}]${href}`;
 }
 
-export function prefetchDNS(href: string, options?: mixed) {
+export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -4979,7 +4985,7 @@ export function prefetchDNS(href: string, options?: mixed) {
   }
 }
 
-export function preconnect(href: string, options?: ?{crossOrigin?: string}) {
+export function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5042,13 +5048,6 @@ export function preconnect(href: string, options?: ?{crossOrigin?: string}) {
   }
 }
 
-type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 export function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
@@ -5187,14 +5186,6 @@ export function preload(href: string, options: PreloadOptions) {
   }
 }
 
-type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preinit(href: string, options: PreinitOptions): void {
   if (!enableFloat) {
     return;

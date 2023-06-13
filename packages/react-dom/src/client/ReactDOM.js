@@ -55,7 +55,12 @@ import {
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
 import Internals from '../ReactDOMSharedInternals';
 
-export {prefetchDNS, preconnect, preload, preinit} from '../ReactDOMFloat';
+export {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preinit,
+} from '../shared/ReactDOMFloat';
 export {useFormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 if (__DEV__) {

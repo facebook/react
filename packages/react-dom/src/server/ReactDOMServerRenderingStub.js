@@ -7,7 +7,12 @@
  * @flow
  */
 
-export {preinit, preload, preconnect, prefetchDNS} from '../ReactDOMFloat';
+export {
+  preinit,
+  preload,
+  preconnect,
+  prefetchDNS,
+} from '../shared/ReactDOMFloat';
 export {useFormStatus as experimental_useFormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 export function createPortal() {
