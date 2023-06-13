@@ -24,6 +24,7 @@ export const enableLegacyCache = false;
 export const enableCacheElement = false;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Native
+export const enableBinaryFlight = true;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
