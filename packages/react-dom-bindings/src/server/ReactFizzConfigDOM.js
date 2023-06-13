@@ -163,6 +163,7 @@ const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 const scriptNonce = stringToPrecomputedChunk('" nonce="');
 const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
+const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
@@ -192,6 +193,7 @@ const scriptReplacer = (
 export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
+  crossOrigin?: string,
 };
 export type ExternalRuntimeScript = {
   src: string,
@@ -266,6 +268,12 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      const crossOrigin =
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
       preloadBootstrapScript(resources, src, nonce, integrity);
 
@@ -285,6 +293,12 @@ export function createResponseState(
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
+      if (typeof crossOrigin === 'string') {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(crossOrigin)),
+        );
+      }
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -295,6 +309,12 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      const crossOrigin =
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
       preloadBootstrapModule(resources, src, nonce, integrity);
 
@@ -313,6 +333,12 @@ export function createResponseState(
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+        );
+      }
+      if (typeof crossOrigin === 'string') {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(crossOrigin)),
         );
       }
       bootstrapChunks.push(endAsyncScript);

@@ -3824,6 +3824,69 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
+  it('accepts a crossOrigin property for bootstrapScripts and bootstrapModules', async () => {
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          bootstrapScripts: [
+            'foo',
+            {
+              src: 'bar',
+            },
+            {
+              src: 'baz',
+              crossOrigin: '',
+            },
+            {
+              src: 'qux',
+              crossOrigin: 'defaults-to-empty',
+            },
+          ],
+          bootstrapModules: [
+            'quux',
+            {
+              src: 'corge',
+            },
+            {
+              src: 'grault',
+              crossOrigin: 'use-credentials',
+            },
+          ],
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(
+      stripExternalRuntimeInNodes(
+        document.getElementsByTagName('script'),
+        renderOptions.unstable_externalRuntimeSrc,
+      ).map(n => n.outerHTML),
+    ).toEqual([
+      '<script src="foo" async=""></script>',
+      '<script src="bar" async=""></script>',
+      '<script src="baz" crossorigin="" async=""></script>',
+      '<script src="qux" crossorigin="" async=""></script>',
+      '<script type="module" src="quux" async=""></script>',
+      '<script type="module" src="corge" async=""></script>',
+      '<script type="module" src="grault" crossorigin="use-credentials" async=""></script>',
+    ]);
+  });
+
   describe('bootstrapScriptContent escaping', () => {
     it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       window.__test_outlet = '';
