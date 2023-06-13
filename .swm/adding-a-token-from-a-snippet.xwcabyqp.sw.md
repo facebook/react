@@ -9,7 +9,7 @@ This is another test
 
 `printFinalInstructions`<swm-token data-swm-token=":scripts/devtools/publish-release.js:41:4:4:`async function printFinalInstructions(buildID, archivePath) {`"/>
 
-`getCommitFromCurrentBuild12345`<swm-token data-swm-token=":scripts/release/utils.js:127:2:2:`const getCommitFromCurrentBuild12345 = async () =&gt; {`"/>
+[[sym-text:getCommitFromBuild12345(Z113ggf)]]
 
 <br/>
 
