@@ -3871,7 +3871,8 @@ exports.renderToStream = function (children, options) {
           href: externalRuntimeConfig,
           as: "script",
           nonce: void 0,
-          integrity: integrity
+          integrity: integrity,
+          crossOrigin: scriptConfig
         },
         resource = { type: "preload", chunks: [], state: 0, props: props };
       resources.preloadsMap.set("[script]" + externalRuntimeConfig, resource);
@@ -3914,7 +3915,8 @@ exports.renderToStream = function (children, options) {
           rel: "modulepreload",
           href: bootstrapScriptContent,
           nonce: void 0,
-          integrity: externalRuntimeConfig
+          integrity: externalRuntimeConfig,
+          crossOrigin: integrity
         }),
         (props = {
           type: "preload",

@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-81c3ac25";
+var ReactVersion = "18.3.0-www-classic-22ab72ab";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2471,7 +2471,7 @@ function createResponseState$1(
           : scriptConfig.crossOrigin === "use-credentials"
           ? "use-credentials"
           : "";
-      preloadBootstrapScript(resources, src, nonce, integrity);
+      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src))
@@ -2519,7 +2519,7 @@ function createResponseState$1(
           ? "use-credentials"
           : "";
 
-      preloadBootstrapModule(resources, _src, nonce, _integrity);
+      preloadBootstrapModule(resources, _src, nonce, _integrity, _crossOrigin);
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
@@ -7424,7 +7424,7 @@ function preinit(href, options) {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapScript(resources, src, nonce, integrity) {
+function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
   var key = getResourceKey("script", src);
 
   {
@@ -7444,7 +7444,8 @@ function preloadBootstrapScript(resources, src, nonce, integrity) {
     href: src,
     as: "script",
     nonce: nonce,
-    integrity: integrity
+    integrity: integrity,
+    crossOrigin: crossOrigin
   };
   var resource = {
     type: "preload",
@@ -7460,7 +7461,7 @@ function preloadBootstrapScript(resources, src, nonce, integrity) {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapModule(resources, src, nonce, integrity) {
+function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
   var key = getResourceKey("script", src);
 
   {
@@ -7479,7 +7480,8 @@ function preloadBootstrapModule(resources, src, nonce, integrity) {
     rel: "modulepreload",
     href: src,
     nonce: nonce,
-    integrity: integrity
+    integrity: integrity,
+    crossOrigin: crossOrigin
   };
   var resource = {
     type: "preload",

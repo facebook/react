@@ -2468,7 +2468,7 @@ function createResponseState(
           : scriptConfig.crossOrigin === "use-credentials"
           ? "use-credentials"
           : "";
-      preloadBootstrapScript(resources, src, nonce, integrity);
+      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src))
@@ -2516,7 +2516,7 @@ function createResponseState(
           ? "use-credentials"
           : "";
 
-      preloadBootstrapModule(resources, _src, nonce, _integrity);
+      preloadBootstrapModule(resources, _src, nonce, _integrity, _crossOrigin);
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
@@ -7431,7 +7431,7 @@ function preinit(href, options) {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapScript(resources, src, nonce, integrity) {
+function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
   var key = getResourceKey("script", src);
 
   {
@@ -7451,7 +7451,8 @@ function preloadBootstrapScript(resources, src, nonce, integrity) {
     href: src,
     as: "script",
     nonce: nonce,
-    integrity: integrity
+    integrity: integrity,
+    crossOrigin: crossOrigin
   };
   var resource = {
     type: "preload",
@@ -7467,7 +7468,7 @@ function preloadBootstrapScript(resources, src, nonce, integrity) {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapModule(resources, src, nonce, integrity) {
+function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
   var key = getResourceKey("script", src);
 
   {
@@ -7486,7 +7487,8 @@ function preloadBootstrapModule(resources, src, nonce, integrity) {
     rel: "modulepreload",
     href: src,
     nonce: nonce,
-    integrity: integrity
+    integrity: integrity,
+    crossOrigin: crossOrigin
   };
   var resource = {
     type: "preload",
