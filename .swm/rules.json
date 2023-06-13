@@ -52,19 +52,6 @@
                 }
             }
         },
-        "16b23e6f-8b7a-486d-8673-7a40af3be63f": {
-            "name": "5",
-            "rule": {
-                "type": "regex",
-                "regex": "5"
-            },
-            "actions": {
-                "ide": {
-                    "doc_id": "yuyt5zjb",
-                    "message": "5"
-                }
-            }
-        },
         "b811c6e8-804c-4e00-a42e-1e051678a541": {
             "name": "6",
             "rule": {
@@ -272,6 +259,175 @@
                     "message": "21"
                 }
             }
+        },
+        "42064c67-46aa-4a65-8e9e-aebc937d8cb7": {
+            "name": "21",
+            "rule": {
+                "type": "regex",
+                "regex": "21"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "y09ov8r6",
+                    "message": "21"
+                }
+            }
+        },
+        "b134eacd-287e-4b92-8122-7709bf32421f": {
+            "name": "22",
+            "rule": {
+                "type": "regex",
+                "regex": "22"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "4lfkvla9",
+                    "message": "22"
+                }
+            }
+        },
+        "2e8ff663-2bc4-4d87-a166-ff7a400cd84a": {
+            "name": "23",
+            "rule": {
+                "type": "regex",
+                "regex": "23"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "ytdysxuf",
+                    "message": "23"
+                }
+            }
+        },
+        "aa1c3182-fb76-4819-ad2e-5c6aab5005e8": {
+            "name": "24",
+            "rule": {
+                "type": "regex",
+                "regex": "24"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "n4xe5tua",
+                    "message": "24"
+                }
+            }
+        },
+        "b91e3323-7aec-4329-975a-f0598947d7c8": {
+            "name": "25",
+            "rule": {
+                "type": "regex",
+                "regex": "25"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "amqgh9ay",
+                    "message": "25"
+                }
+            }
+        },
+        "9f23c515-29fe-481a-a921-4b6e7ffe5d34": {
+            "name": "26",
+            "rule": {
+                "type": "regex",
+                "regex": "26"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "3vfzpkxf",
+                    "message": "26"
+                }
+            }
+        },
+        "1b66b355-de7b-434f-8fed-98e1fa98252c": {
+            "name": "27",
+            "rule": {
+                "type": "regex",
+                "regex": "27"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "ouyxki4y",
+                    "message": "27"
+                }
+            }
+        },
+        "e0323c60-462e-4ae6-a57a-d8b1646da9f2": {
+            "name": "28",
+            "rule": {
+                "type": "regex",
+                "regex": "28"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "w46bc82r",
+                    "message": "28"
+                }
+            }
+        },
+        "f40ccb9a-0b4c-4bab-8253-2e341d098811": {
+            "name": "29",
+            "rule": {
+                "type": "regex",
+                "regex": "29"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "thp4gkfo",
+                    "message": "29"
+                }
+            }
+        },
+        "84b8f245-07f5-4ffd-9cb6-2a58d79d1efd": {
+            "name": "30",
+            "rule": {
+                "type": "regex",
+                "regex": "30"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "14er14ua",
+                    "message": "30"
+                }
+            }
+        },
+        "18e4d9e8-25c0-47af-9855-20d1a35cc364": {
+            "name": "31",
+            "rule": {
+                "type": "regex",
+                "regex": "31"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "z9y56050",
+                    "message": "31"
+                }
+            }
+        },
+        "ce8ed914-8d7d-4dc0-8444-b79daa353895": {
+            "name": "*",
+            "rule": {
+                "type": "regex",
+                "regex": "/*"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "mjvylggw",
+                    "message": "*"
+                }
+            }
+        },
+        "d2938acd-b6d4-4cc6-9518-d3ccdb1c4013": {
+            "name": "75",
+            "rule": {
+                "type": "regex",
+                "regex": "75"
+            },
+            "actions": {
+                "ide": {
+                    "doc_id": "y09ov8r6",
+                    "message": "m75"
+                }
+            }
         }
     },
     "view_order": [
@@ -279,7 +435,6 @@
         "949619bc-e5a5-421c-9643-8287e8e18666",
         "cbc1b8ec-758e-4dc6-8bd3-8097933cced5",
         "d43714c6-bc35-4456-8bb8-4f6abfbd74cb",
-        "16b23e6f-8b7a-486d-8673-7a40af3be63f",
         "b811c6e8-804c-4e00-a42e-1e051678a541",
         "09b988ac-ac2c-46ce-8935-5037ebb6aaba",
         "d6960e1e-2246-4663-af05-1af04a3eb2ea",
@@ -295,6 +450,19 @@
         "f7db9fa8-a6b6-4359-9b0e-f06644392e6c",
         "bf9dcd22-e0cc-4f7b-83eb-bc433dbb1e60",
         "672d04bd-949b-4b19-a005-7a8823324ba2",
-        "72746da5-99bf-482e-89ec-14a500f55aa9"
+        "72746da5-99bf-482e-89ec-14a500f55aa9",
+        "42064c67-46aa-4a65-8e9e-aebc937d8cb7",
+        "b134eacd-287e-4b92-8122-7709bf32421f",
+        "2e8ff663-2bc4-4d87-a166-ff7a400cd84a",
+        "aa1c3182-fb76-4819-ad2e-5c6aab5005e8",
+        "b91e3323-7aec-4329-975a-f0598947d7c8",
+        "9f23c515-29fe-481a-a921-4b6e7ffe5d34",
+        "1b66b355-de7b-434f-8fed-98e1fa98252c",
+        "e0323c60-462e-4ae6-a57a-d8b1646da9f2",
+        "f40ccb9a-0b4c-4bab-8253-2e341d098811",
+        "84b8f245-07f5-4ffd-9cb6-2a58d79d1efd",
+        "18e4d9e8-25c0-47af-9855-20d1a35cc364",
+        "ce8ed914-8d7d-4dc0-8444-b79daa353895",
+        "d2938acd-b6d4-4cc6-9518-d3ccdb1c4013"
     ]
 }
