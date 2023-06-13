@@ -98,4 +98,25 @@ describe('ReactFlightDOMEdge', () => {
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
   });
+
+  it('should encode long string in a compact format', async () => {
+    const testString = '"\n\t'.repeat(500) + '🙃';
+
+    const stream = ReactServerDOMServer.renderToReadableStream({
+      text: testString,
+    });
+    const [stream1, stream2] = stream.tee();
+
+    const serializedContent = await readResult(stream1);
+    // The content should be compact an unescaped
+    expect(serializedContent.length).toBeLessThan(2000);
+    expect(serializedContent).not.toContain('\\n');
+    expect(serializedContent).not.toContain('\\t');
+    expect(serializedContent).not.toContain('\\"');
+    expect(serializedContent).toContain('\t');
+
+    const result = await ReactServerDOMClient.createFromReadableStream(stream2);
+    // Should still match the result when parsed
+    expect(result.text).toBe(testString);
+  });
 });

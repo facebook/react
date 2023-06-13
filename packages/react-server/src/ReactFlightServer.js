@@ -15,6 +15,7 @@ import {
   beginWriting,
   writeChunkAndReturn,
   stringToChunk,
+  byteLengthOfChunk,
   completeWriting,
   close,
   closeWithError,
@@ -171,7 +172,7 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedJSONChunks: Array<Chunk>,
+  completedRegularChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -230,7 +231,7 @@ export function createRequest(
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
     completedHintChunks: ([]: Array<Chunk>),
-    completedJSONChunks: ([]: Array<Chunk>),
+    completedRegularChunks: ([]: Array<Chunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),
@@ -715,9 +716,23 @@ function serializeServerReference(
     metadataId,
     serverReferenceMetadata,
   );
-  request.completedJSONChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
+}
+
+function serializeLargeTextString(request: Request, text: string): string {
+  request.pendingChunks += 2;
+  const textId = request.nextChunkId++;
+  const textChunk = stringToChunk(text);
+  const headerChunk = processTextHeader(
+    request,
+    textId,
+    text,
+    byteLengthOfChunk(textChunk),
+  );
+  request.completedRegularChunks.push(headerChunk, textChunk);
+  return serializeByValueID(textId);
 }
 
 function escapeStringValue(value: string): string {
@@ -960,7 +975,12 @@ function resolveModelToJSON(
         return serializeDateFromDateJSON(value);
       }
     }
-
+    if (value.length >= 1024) {
+      // For large strings, we encode them outside the JSON payload so that we
+      // don't have to double encode and double parse the strings. This can also
+      // be more compact in case the string has a lot of escaped characters.
+      return serializeLargeTextString(request, value);
+    }
     return escapeStringValue(value);
   }
 
@@ -1152,7 +1172,7 @@ function emitProviderChunk(
 ): void {
   const contextReference = serializeProviderReference(contextName);
   const processedChunk = processReferenceChunk(request, id, contextReference);
-  request.completedJSONChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function retryTask(request: Request, task: Task): void {
@@ -1216,7 +1236,7 @@ function retryTask(request: Request, task: Task): void {
     }
 
     const processedChunk = processModelChunk(request, task.id, value);
-    request.completedJSONChunks.push(processedChunk);
+    request.completedRegularChunks.push(processedChunk);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
@@ -1323,11 +1343,11 @@ function flushCompletedChunks(
     hintChunks.splice(0, i);
 
     // Next comes model data.
-    const jsonChunks = request.completedJSONChunks;
+    const regularChunks = request.completedRegularChunks;
     i = 0;
-    for (; i < jsonChunks.length; i++) {
+    for (; i < regularChunks.length; i++) {
       request.pendingChunks--;
-      const chunk = jsonChunks[i];
+      const chunk = regularChunks[i];
       const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
       if (!keepWriting) {
         request.destination = null;
@@ -1335,7 +1355,7 @@ function flushCompletedChunks(
         break;
       }
     }
-    jsonChunks.splice(0, i);
+    regularChunks.splice(0, i);
 
     // Finally, errors are sent. The idea is that it's ok to delay
     // any error messages and prioritize display of other parts of
@@ -1543,5 +1563,15 @@ function processHintChunk(
 ): Chunk {
   const json: string = stringify(model);
   const row = serializeRowHeader('H' + code, id) + json + '\n';
+  return stringToChunk(row);
+}
+
+function processTextHeader(
+  request: Request,
+  id: number,
+  text: string,
+  binaryLength: number,
+): Chunk {
+  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
   return stringToChunk(row);
 }

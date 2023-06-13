@@ -66,6 +66,10 @@ export function clonePrecomputedChunk(
   return chunk;
 }
 
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  return Buffer.byteLength(chunk, 'utf8');
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   if (typeof destination.error === 'function') {
     // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.

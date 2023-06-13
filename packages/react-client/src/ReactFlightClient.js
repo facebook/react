@@ -52,6 +52,14 @@ export type JSONValue =
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
 
+const ROW_ID = 0;
+const ROW_TAG = 1;
+const ROW_LENGTH = 2;
+const ROW_CHUNK_BY_NEWLINE = 3;
+const ROW_CHUNK_BY_LENGTH = 4;
+
+type RowParserState = 0 | 1 | 2 | 3 | 4;
+
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
 const RESOLVED_MODEL = 'resolved_model';
@@ -165,9 +173,13 @@ export type Response = {
   _bundlerConfig: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
-  _partialRow: string,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
+  _rowState: RowParserState,
+  _rowID: number, // parts of a row ID parsed so far
+  _rowTag: number, // 0 indicates that we're currently parsing the row ID
+  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
+  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -274,6 +286,14 @@ function createResolvedModuleChunk<T>(
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
+}
+
+function createInitializedTextChunk(
+  response: Response,
+  value: string,
+): InitializedChunk<string> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, value, null, response);
 }
 
 function resolveModelChunk<T>(
@@ -665,9 +685,13 @@ export function createResponse(
     _bundlerConfig: bundlerConfig,
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
-    _partialRow: '',
     _stringDecoder: createStringDecoder(),
     _fromJSON: (null: any),
+    _rowState: 0,
+    _rowID: 0,
+    _rowTag: 0,
+    _rowLength: 0,
+    _buffer: [],
   };
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
@@ -686,6 +710,13 @@ function resolveModel(
   } else {
     resolveModelChunk(chunk, model);
   }
+}
+
+function resolveText(response: Response, id: number, text: string): void {
+  const chunks = response._chunks;
+  // We assume that we always reference large strings after they've been
+  // emitted.
+  chunks.set(id, createInitializedTextChunk(response, text));
 }
 
 function resolveModule(
@@ -802,33 +833,40 @@ function resolveHint(
   code: string,
   model: UninitializedModel,
 ): void {
-  const hintModel = parseModel<HintModel>(response, model);
+  const hintModel: HintModel = parseModel(response, model);
   dispatchHint(code, hintModel);
 }
 
-function processFullRow(response: Response, row: string): void {
-  if (row === '') {
-    return;
+function processFullRow(
+  response: Response,
+  id: number,
+  tag: number,
+  buffer: Array<Uint8Array>,
+  lastChunk: string | Uint8Array,
+): void {
+  let row = '';
+  const stringDecoder = response._stringDecoder;
+  for (let i = 0; i < buffer.length; i++) {
+    const chunk = buffer[i];
+    row += readPartialStringChunk(stringDecoder, chunk);
   }
-  const colon = row.indexOf(':', 0);
-  const id = parseInt(row.slice(0, colon), 16);
-  const tag = row[colon + 1];
-  // When tags that are not text are added, check them here before
-  // parsing the row as text.
-  // switch (tag) {
-  // }
+  if (typeof lastChunk === 'string') {
+    row += lastChunk;
+  } else {
+    row += readFinalStringChunk(stringDecoder, lastChunk);
+  }
   switch (tag) {
-    case 'I': {
-      resolveModule(response, id, row.slice(colon + 2));
+    case 73 /* "I" */: {
+      resolveModule(response, id, row);
       return;
     }
-    case 'H': {
-      const code = row[colon + 2];
-      resolveHint(response, code, row.slice(colon + 3));
+    case 72 /* "H" */: {
+      const code = row[0];
+      resolveHint(response, code, row.slice(1));
       return;
     }
-    case 'E': {
-      const errorInfo = JSON.parse(row.slice(colon + 2));
+    case 69 /* "E" */: {
+      const errorInfo = JSON.parse(row);
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -842,9 +880,13 @@ function processFullRow(response: Response, row: string): void {
       }
       return;
     }
+    case 84 /* "T" */: {
+      resolveText(response, id, row);
+      return;
+    }
     default: {
       // We assume anything else is JSON.
-      resolveModel(response, id, row.slice(colon + 1));
+      resolveModel(response, id, row);
       return;
     }
   }
@@ -854,18 +896,96 @@ export function processBinaryChunk(
   response: Response,
   chunk: Uint8Array,
 ): void {
-  const stringDecoder = response._stringDecoder;
-  let linebreak = chunk.indexOf(10); // newline
-  while (linebreak > -1) {
-    const fullrow =
-      response._partialRow +
-      readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
-    processFullRow(response, fullrow);
-    response._partialRow = '';
-    chunk = chunk.subarray(linebreak + 1);
-    linebreak = chunk.indexOf(10); // newline
+  let i = 0;
+  let rowState = response._rowState;
+  let rowID = response._rowID;
+  let rowTag = response._rowTag;
+  let rowLength = response._rowLength;
+  const buffer = response._buffer;
+  const chunkLength = chunk.length;
+  while (i < chunkLength) {
+    let lastIdx = -1;
+    switch (rowState) {
+      case ROW_ID: {
+        const byte = chunk[i++];
+        if (byte === 58 /* ":" */) {
+          // Finished the rowID, next we'll parse the tag.
+          rowState = ROW_TAG;
+        } else {
+          rowID = (rowID << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_TAG: {
+        const resolvedRowTag = chunk[i];
+        if (resolvedRowTag === 84 /* "T" */) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_LENGTH;
+          i++;
+        } else if (resolvedRowTag > 64 && resolvedRowTag < 91 /* "A"-"Z" */) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          i++;
+        } else {
+          rowTag = 0;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          // This was an unknown tag so it was probably part of the data.
+        }
+        continue;
+      }
+      case ROW_LENGTH: {
+        const byte = chunk[i++];
+        if (byte === 44 /* "," */) {
+          // Finished the rowLength, next we'll buffer up to that length.
+          rowState = ROW_CHUNK_BY_LENGTH;
+        } else {
+          rowLength = (rowLength << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_CHUNK_BY_NEWLINE: {
+        // We're looking for a newline
+        lastIdx = chunk.indexOf(10 /* "\n" */, i);
+        break;
+      }
+      case ROW_CHUNK_BY_LENGTH: {
+        // We're looking for the remaining byte length
+        if (i + rowLength <= chunk.length) {
+          lastIdx = i + rowLength;
+        }
+        break;
+      }
+    }
+    if (lastIdx > -1) {
+      // We found the last chunk of the row
+      const offset = chunk.byteOffset + i;
+      const length = lastIdx - i;
+      const lastChunk = new Uint8Array(chunk.buffer, offset, length);
+      processFullRow(response, rowID, rowTag, buffer, lastChunk);
+      // Reset state machine for a new row
+      rowState = ROW_ID;
+      rowTag = 0;
+      rowID = 0;
+      rowLength = 0;
+      buffer.length = 0;
+      i = lastIdx + 1;
+    } else {
+      // The rest of this row is in a future chunk. We stash the rest of the
+      // current chunk until we can process the full row.
+      const offset = chunk.byteOffset + i;
+      const length = chunk.byteLength - i;
+      const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
+      buffer.push(remainingSlice);
+      // Update how many bytes we're still waiting for. If we're looking for
+      // a newline, this doesn't hurt since we'll just ignore it.
+      rowLength -= remainingSlice.byteLength;
+      break;
+    }
   }
-  response._partialRow += readPartialStringChunk(stringDecoder, chunk);
+  response._rowState = rowState;
+  response._rowID = rowID;
+  response._rowTag = rowTag;
+  response._rowLength = rowLength;
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {
