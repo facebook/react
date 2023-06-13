@@ -281,7 +281,7 @@ export function createResponseState(
           ? 'use-credentials'
           : '';
 
-      preloadBootstrapScript(resources, src, nonce, integrity);
+      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
 
       bootstrapChunks.push(
         startScriptSrc,
@@ -322,7 +322,7 @@ export function createResponseState(
           ? 'use-credentials'
           : '';
 
-      preloadBootstrapModule(resources, src, nonce, integrity);
+      preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin);
 
       bootstrapChunks.push(
         startModuleSrc,
@@ -5425,6 +5425,7 @@ function preloadBootstrapScript(
   src: string,
   nonce: ?string,
   integrity: ?string,
+  crossOrigin: ?string,
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
@@ -5444,6 +5445,7 @@ function preloadBootstrapScript(
     as: 'script',
     nonce,
     integrity,
+    crossOrigin,
   };
   const resource: PreloadResource = {
     type: 'preload',
@@ -5465,6 +5467,7 @@ function preloadBootstrapModule(
   src: string,
   nonce: ?string,
   integrity: ?string,
+  crossOrigin: ?string,
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
@@ -5483,6 +5486,7 @@ function preloadBootstrapModule(
     href: src,
     nonce,
     integrity,
+    crossOrigin,
   };
   const resource: PreloadResource = {
     type: 'preload',

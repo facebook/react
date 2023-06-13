@@ -3865,7 +3865,19 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head />
+        <head>
+          <link rel="preload" href="foo" as="script" />
+          <link rel="preload" href="bar" as="script" />
+          <link rel="preload" href="baz" as="script" crossorigin="" />
+          <link rel="preload" href="qux" as="script" crossorigin="" />
+          <link rel="modulepreload" href="quux" />
+          <link rel="modulepreload" href="corge" />
+          <link
+            rel="modulepreload"
+            href="grault"
+            crossorigin="use-credentials"
+          />
+        </head>
         <body>
           <div>hello world</div>
         </body>
