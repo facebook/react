@@ -88,7 +88,7 @@ export default function ComponentsSettings(_: {}): React.Node {
 
   const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
     'vscode' | 'custom',
-  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'vscode');
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
