@@ -255,6 +255,8 @@ export default function KeyValue({
       displayValue = 'null';
     } else if (value === undefined) {
       displayValue = 'undefined';
+    } else if (isNaN(value)) {
+      displayValue = 'NaN';
     }
 
     let shouldDisplayValueAsLink = false;
