@@ -38,7 +38,7 @@ function resolveDispatcher() {
     }
   }
   // Will result in a null access error if accessed outside render phase. We
-  // intentionally don't throw our own error because this is in a hot path.
+  // intentionally don't throw our own error because this is a hot path.
   // Also helps ensure this is inlined.
   return ((dispatcher: any): Dispatcher);
 }
