@@ -87,7 +87,7 @@
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.4",
-    "rimraf": "^3.0.0",
+    "rimraf": "^5.0.1",
     "rollup": "^3.17.1",
     "rollup-plugin-prettier": "^3.0.0",
     "rollup-plugin-strip-banner": "^3.0.0",

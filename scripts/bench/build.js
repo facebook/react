@@ -1,7 +1,7 @@
 'use strict';
 
 const Git = require('nodegit');
-const rimraf = require('rimraf');
+const rimraf = require('rimraf').rimraf;
 const ncp = require('ncp').ncp;
 const {existsSync} = require('fs');
 const exec = require('child_process').exec;
@@ -10,7 +10,7 @@ const {join} = require('path');
 const reactUrl = 'https://github.com/facebook/react.git';
 
 function cleanDir() {
-  return new Promise(_resolve => rimraf('remote-repo', _resolve));
+  return rimraf('remote-repo');
 }
 
 function executeCommand(command) {
