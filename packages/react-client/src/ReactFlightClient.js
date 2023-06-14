@@ -950,29 +950,33 @@ export function processBinaryChunk(
       }
       case ROW_CHUNK_BY_LENGTH: {
         // We're looking for the remaining byte length
-        if (i + rowLength <= chunk.length) {
-          lastIdx = i + rowLength;
+        lastIdx = i + rowLength;
+        if (lastIdx > chunk.length) {
+          lastIdx = -1;
         }
         break;
       }
     }
+    const offset = chunk.byteOffset + i;
     if (lastIdx > -1) {
       // We found the last chunk of the row
-      const offset = chunk.byteOffset + i;
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
       processFullRow(response, rowID, rowTag, buffer, lastChunk);
       // Reset state machine for a new row
+      i = lastIdx;
+      if (rowState === ROW_CHUNK_BY_NEWLINE) {
+        // If we're trailing by a newline we need to skip it.
+        i++;
+      }
       rowState = ROW_ID;
       rowTag = 0;
       rowID = 0;
       rowLength = 0;
       buffer.length = 0;
-      i = lastIdx + 1;
     } else {
       // The rest of this row is in a future chunk. We stash the rest of the
       // current chunk until we can process the full row.
-      const offset = chunk.byteOffset + i;
       const length = chunk.byteLength - i;
       const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
       buffer.push(remainingSlice);
