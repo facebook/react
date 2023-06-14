@@ -16,7 +16,7 @@ React has been designed for gradual adoption from the start, and **you can use a
 * [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
 * [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
 
-You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/package/react).
+You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html) or as a `react` package on [npm](https://www.npmjs.com/package/react).
 
 ## Documentation
 
@@ -56,7 +56,7 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 ## Contributing
 
-The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
+The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bug fixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.fb.com/codeofconduct)
 
@@ -64,11 +64,11 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 ### [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
 
-Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
+Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bug fixes and improvements, and how to build and test your changes to React.
 
 ### Good First Issues
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started.
+To help you get your feet wet and get familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started.
 
 ### License
 
