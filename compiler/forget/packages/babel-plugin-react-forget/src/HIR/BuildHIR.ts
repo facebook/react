@@ -2344,7 +2344,7 @@ function lowerFunctionExpression(
   if (expr.isFunctionExpression()) {
     name = expr.get("id")?.node?.name ?? null;
   }
-  const componentScope: Scope = expr.scope.parent.getFunctionParent()!;
+  const componentScope: Scope = builder.parentFunction.scope;
   const captured = gatherCapturedDeps(builder, expr, componentScope);
 
   // TODO(gsn): In the future, we could only pass in the context identifiers
