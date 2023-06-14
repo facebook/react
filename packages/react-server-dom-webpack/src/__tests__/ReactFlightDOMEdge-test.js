@@ -42,6 +42,37 @@ describe('ReactFlightDOMEdge', () => {
     use = React.use;
   });
 
+  function passThrough(stream) {
+    // Simulate more realistic network by splitting up and rejoining some chunks.
+    // This lets us test that we don't accidentally rely on particular bounds of the chunks.
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        let prevChunk = new Uint8Array(0);
+        function push() {
+          reader.read().then(({done, value}) => {
+            if (done) {
+              controller.enqueue(prevChunk);
+              controller.close();
+              return;
+            }
+            const chunk = new Uint8Array(prevChunk.length + value.length);
+            chunk.set(prevChunk, 0);
+            chunk.set(value, prevChunk.length);
+            if (chunk.length > 50) {
+              controller.enqueue(chunk.subarray(0, chunk.length - 50));
+              prevChunk = chunk.subarray(chunk.length - 50);
+            } else {
+              prevChunk = chunk;
+            }
+            push();
+          });
+        }
+        push();
+      },
+    });
+  }
+
   async function readResult(stream) {
     const reader = stream.getReader();
     let result = '';
@@ -101,15 +132,17 @@ describe('ReactFlightDOMEdge', () => {
 
   it('should encode long string in a compact format', async () => {
     const testString = '"\n\t'.repeat(500) + '🙃';
+    const testString2 = 'hello'.repeat(400);
 
     const stream = ReactServerDOMServer.renderToReadableStream({
       text: testString,
+      text2: testString2,
     });
-    const [stream1, stream2] = stream.tee();
+    const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
     // The content should be compact an unescaped
-    expect(serializedContent.length).toBeLessThan(2000);
+    expect(serializedContent.length).toBeLessThan(4000);
     expect(serializedContent).not.toContain('\\n');
     expect(serializedContent).not.toContain('\\t');
     expect(serializedContent).not.toContain('\\"');
@@ -118,5 +151,6 @@ describe('ReactFlightDOMEdge', () => {
     const result = await ReactServerDOMClient.createFromReadableStream(stream2);
     // Should still match the result when parsed
     expect(result.text).toBe(testString);
+    expect(result.text2).toBe(testString2);
   });
 });
