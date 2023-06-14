@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Chunk, Destination} from './ReactServerStreamConfig';
+import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
 import {
   scheduleWork,
@@ -176,7 +176,7 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedRegularChunks: Array<Chunk>,
+  completedRegularChunks: Array<Chunk | BinaryChunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -235,7 +235,7 @@ export function createRequest(
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
     completedHintChunks: ([]: Array<Chunk>),
-    completedRegularChunks: ([]: Array<Chunk>),
+    completedRegularChunks: ([]: Array<Chunk | BinaryChunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),

@@ -28,6 +28,7 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 
 export opaque type PrecomputedChunk = mixed; // eslint-disable-line no-undef
 export opaque type Chunk = mixed; // eslint-disable-line no-undef
+export opaque type BinaryChunk = mixed; // eslint-disable-line no-undef
 
 export const scheduleWork = $$$config.scheduleWork;
 export const beginWriting = $$$config.beginWriting;
@@ -39,5 +40,7 @@ export const close = $$$config.close;
 export const closeWithError = $$$config.closeWithError;
 export const stringToChunk = $$$config.stringToChunk;
 export const stringToPrecomputedChunk = $$$config.stringToPrecomputedChunk;
+export const typedArrayToBinaryChunk = $$$config.typedArrayToBinaryChunk;
 export const clonePrecomputedChunk = $$$config.clonePrecomputedChunk;
 export const byteLengthOfChunk = $$$config.byteLengthOfChunk;
+export const byteLengthOfBinaryChunk = $$$config.byteLengthOfBinaryChunk;

@@ -454,6 +454,7 @@ module.exports = {
     $PropertyType: 'readonly',
     $ReadOnly: 'readonly',
     $ReadOnlyArray: 'readonly',
+    $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
     AnimationFrameID: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
