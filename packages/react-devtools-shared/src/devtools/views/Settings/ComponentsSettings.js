@@ -16,7 +16,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+} from '../../../constants';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
@@ -83,10 +86,22 @@ export default function ComponentsSettings(_: {}): React.Node {
     [setParseHookNames],
   );
 
+  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
+    'vscode' | 'custom',
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
+
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
     getDefaultOpenInEditorURL(),
   );
+
+  useEffect(() => {
+    if (openInEditorURLPreset === 'vscode') {
+      setOpenInEditorURL('vscode://file/{path}:{line}');
+    } else {
+      setOpenInEditorURL('custom link');
+    }
+  }, [openInEditorURLPreset, setOpenInEditorURL]);
 
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
@@ -280,6 +295,15 @@ export default function ComponentsSettings(_: {}): React.Node {
 
       <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
+        <select
+          className={styles.Select}
+          value={openInEditorURLPreset}
+          onChange={({currentTarget}) =>
+            setOpenInEditorURLPreset(currentTarget.value)
+          }>
+          <option value="vscode">VS Code</option>
+          <option value="custom">Custom</option>
+        </select>
         <input
           className={styles.Input}
           type="text"
