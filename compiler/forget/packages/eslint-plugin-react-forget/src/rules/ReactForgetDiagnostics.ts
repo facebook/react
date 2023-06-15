@@ -34,7 +34,7 @@ const rule: Rule.RuleModule = {
         Program(prog) {
           try {
             compileProgram(prog, {
-              opts: parsePluginOptions(null), // use defaults for now
+              opts: parsePluginOptions({ panicOnBailout: false }),
               filename: context.filename,
               comments: babelAST.comments ?? [],
             });

@@ -30,8 +30,6 @@ const tests: ForgetTestCases = {
         }
       `,
     },
-  ],
-  invalid: [
     {
       name: "Unsupported syntax",
       code: normalizeIndent`
@@ -40,8 +38,31 @@ const tests: ForgetTestCases = {
           return y * x;
         }
       `,
+    },
+  ],
+  invalid: [
+    {
+      name: "[Invariant] Defined after use",
+      code: normalizeIndent`
+        function Component(props) {
+          let y = function () {
+            m(x);
+          };
+
+          let x = { a };
+          m(x);
+          return y;
+        }
+      `,
       errors: [
-        "[ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)",
+        {
+          message:
+            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undefined (7:7)",
+          line: 7,
+          column: 3,
+          endColumn: 17,
+          endLine: 7,
+        },
       ],
     },
   ],
