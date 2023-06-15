@@ -23,7 +23,9 @@ const rule: Rule.RuleModule = {
     },
   },
   create(context: Rule.RuleContext) {
-    const babelAST = parser.parse(context.sourceCode.text);
+    // Compat with older versions of eslint
+    const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
+    const babelAST = parser.parse(sourceCode);
     if (babelAST != null) {
       traverse(babelAST, {
         Program(prog) {
