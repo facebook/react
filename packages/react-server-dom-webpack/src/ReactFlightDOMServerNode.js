@@ -131,7 +131,11 @@ function decodeReplyFromBusboy<T>(
     close(response);
   });
   busboyStream.on('error', err => {
-    reportGlobalError(response, err);
+    reportGlobalError(
+      response,
+      // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      err,
+    );
   });
   return getRoot(response);
 }
