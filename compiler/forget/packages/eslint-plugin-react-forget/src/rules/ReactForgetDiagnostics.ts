@@ -25,7 +25,10 @@ const rule: Rule.RuleModule = {
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
     const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
-    const babelAST = parser.parse(sourceCode);
+    const babelAST = parser.parse(sourceCode, {
+      plugins: ["jsx", "flow"],
+      sourceType: "module",
+    });
     if (babelAST != null) {
       traverse(babelAST, {
         Program(prog) {
