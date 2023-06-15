@@ -1904,6 +1904,7 @@ function preload(href, options) {
             crossOrigin: "font" === as ? "" : options.crossOrigin,
             integrity: options.integrity,
             type: options.type,
+            nonce: options.nonce,
             fetchPriority: options.fetchPriority
           }
         }),

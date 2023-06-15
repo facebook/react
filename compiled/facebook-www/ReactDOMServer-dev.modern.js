@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-27b3679a";
+var ReactVersion = "18.3.0-www-modern-18f0b486";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -7521,6 +7521,7 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    nonce: options.nonce,
     fetchPriority: options.fetchPriority
   };
 }

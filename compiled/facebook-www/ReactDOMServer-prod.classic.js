@@ -1855,6 +1855,7 @@ function preload(href, options) {
             crossOrigin: "font" === as ? "" : options.crossOrigin,
             integrity: options.integrity,
             type: options.type,
+            nonce: options.nonce,
             fetchPriority: options.fetchPriority
           }
         }),
@@ -4001,4 +4002,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-43b0ed5e";
+exports.version = "18.3.0-www-classic-99c1dfc7";

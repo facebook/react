@@ -16078,6 +16078,7 @@ function preload$1(href, options) {
         crossOrigin: "font" === as ? "" : options.crossOrigin,
         integrity: options.integrity,
         type: options.type,
+        nonce: options.nonce,
         fetchPriority: options.fetchPriority
       }),
       preloadPropsMap.set(key, href),
@@ -17418,7 +17419,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1900 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-6cc31d50",
+  version: "18.3.0-www-classic-1233fa25",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17462,7 +17463,7 @@ var devToolsConfig$jscomp$inline_1900 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-6cc31d50"
+  reconcilerVersion: "18.3.0-www-classic-1233fa25"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17692,7 +17693,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-6cc31d50";
+exports.version = "18.3.0-www-classic-1233fa25";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
