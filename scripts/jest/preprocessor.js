@@ -86,12 +86,7 @@ module.exports = {
       const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
         babelOptions.plugins
       );
-      if (
-        isTestFile &&
-        isInDevToolsPackages &&
-        (process.env.REACT_VERSION ||
-          filePath.match(/\/transform-react-version-pragma-test/))
-      ) {
+      if (isTestFile && isInDevToolsPackages) {
         plugins.push(pathToTransformReactVersionPragma);
       }
       let sourceAst = hermesParser.parse(src, {babel: true});

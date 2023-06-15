@@ -938,7 +938,8 @@ describe('ProfilingCache', () => {
     }
   });
 
-  // @reactVersion = 17.0
+  // @reactVersion >= 17
+  // @reactVersion < 18
   it('should handle unexpectedly shallow suspense trees', () => {
     // This test only runs in v17 because it's a regression test for legacy
     // Suspense behavior, and the implementation details changed in v18.
@@ -967,7 +968,15 @@ describe('ProfilingCache', () => {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 0,
-          "updaters": null,
+          "updaters": [
+            {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ]
     `);

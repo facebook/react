@@ -5,6 +5,7 @@
 const getComments = require('./getComments');
 
 const GATE_VERSION_STR = '@reactVersion ';
+const REACT_VERSION_ENV = process.env.REACT_VERSION;
 
 function transform(babel) {
   const {types: t} = babel;
@@ -75,7 +76,7 @@ function transform(babel) {
                       ? '_test_react_version_focus'
                       : '_test_react_version';
                   expression.arguments = [condition, ...expression.arguments];
-                } else {
+                } else if (REACT_VERSION_ENV) {
                   callee.name = '_test_ignore_for_react_version';
                 }
               }
@@ -96,7 +97,7 @@ function transform(babel) {
                     t.identifier('_test_react_version_focus'),
                     [condition, ...expression.arguments]
                   );
-                } else {
+                } else if (REACT_VERSION_ENV) {
                   statement.expression = t.callExpression(
                     t.identifier('_test_ignore_for_react_version'),
                     expression.arguments
