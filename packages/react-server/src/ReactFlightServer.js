@@ -20,6 +20,8 @@ import {
   enableServerComponentLogs,
 } from 'shared/ReactFeatureFlags';
 
+import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
+
 import {
   scheduleWork,
   flushBuffered,
@@ -199,6 +201,8 @@ if (
 
 const ObjectPrototype = Object.prototype;
 
+const ASYNC_ITERATOR = Symbol.asyncIterator;
+
 type JSONValue =
   | string
   | boolean
@@ -236,6 +240,8 @@ export type ReactClientValue =
   | null
   | void
   | bigint
+  | ReadableStream
+  | AsyncIterable<ReactClientValue>
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
   | Map<ReactClientValue, ReactClientValue>
@@ -509,13 +515,149 @@ function serializeThenable(
         emitErrorChunk(request, newTask.id, digest, reason);
       }
       request.abortableTasks.delete(newTask);
-      if (request.destination !== null) {
-        flushCompletedChunks(request, request.destination);
-      }
+      enqueueFlush(request);
     },
   );
 
   return newTask.id;
+}
+
+function serializeReadableStream(
+  request: Request,
+  stream: ReadableStream,
+): string {
+  // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
+  // receiving side. It also implies that different chunks can be split up or merged as opposed
+  // to a readable stream that happens to have Uint8Array as the type which might expect it to be
+  // received in the same slices.
+  // $FlowFixMe: This is a Node.js extension.
+  let supportsBYOB: void | boolean = stream.supportsBYOB;
+  if (supportsBYOB === undefined) {
+    try {
+      // $FlowFixMe[extra-arg]: This argument is accepted.
+      stream.getReader({mode: 'byob'}).releaseLock();
+      supportsBYOB = true;
+    } catch (x) {
+      supportsBYOB = false;
+    }
+  }
+
+  const reader = stream.getReader();
+
+  request.pendingChunks += 2; // Start and Stop rows.
+  const streamId = request.nextChunkId++;
+  const startStreamRow =
+    streamId.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
+    if (entry.done) {
+      const endStreamRow = streamId.toString(16) + ':C\n';
+      request.pendingChunks++;
+      request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      enqueueFlush(request);
+    } else {
+      try {
+        const chunkId = outlineModel(request, entry.value);
+        const processedChunk = encodeReferenceChunk(
+          request,
+          streamId,
+          serializeByValueID(chunkId),
+        );
+        request.pendingChunks++;
+        request.completedRegularChunks.push(processedChunk);
+        enqueueFlush(request);
+        reader.read().then(progress, error);
+      } catch (x) {
+        error(x);
+      }
+    }
+  }
+  function error(reason: mixed) {
+    if (
+      enablePostpone &&
+      typeof reason === 'object' &&
+      reason !== null &&
+      (reason: any).$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (reason: any);
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, streamId, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, reason);
+      emitErrorChunk(request, streamId, digest, reason);
+    }
+    enqueueFlush(request);
+  }
+  // TODO: Handle cancellation when the Request is aborted.
+  reader.read().then(progress, error);
+  return serializeByValueID(streamId);
+}
+
+function serializeAsyncIterable(
+  request: Request,
+  iteratable: $AsyncIterable<ReactClientValue, ReactClientValue, void>,
+  iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
+): string {
+  // Generators/Iterators are Iterables but they're also their own iterator
+  // functions. If that's the case, we treat them as single-shot. Otherwise,
+  // we assume that this iterable might be a multi-shot and allow it to be
+  // iterated more than once on the client.
+  const isIterator = iteratable === iterator;
+
+  request.pendingChunks += 2; // Start and Stop rows.
+  const streamId = request.nextChunkId++;
+  const startStreamRow =
+    streamId.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
+  request.completedRegularChunks.push(stringToChunk(startStreamRow));
+
+  function progress(
+    entry:
+      | {done: false, +value: ReactClientValue, ...}
+      | {done: true, +value: ReactClientValue, ...},
+  ) {
+    try {
+      const chunkId = outlineModel(request, entry.value);
+      const processedChunk = encodeReferenceChunk(
+        request,
+        streamId,
+        serializeByValueID(chunkId),
+      );
+      request.pendingChunks++;
+      request.completedRegularChunks.push(processedChunk);
+      enqueueFlush(request);
+      iterator.next().then(progress, error);
+    } catch (x) {
+      error(x);
+    }
+    if (entry.done) {
+      // Unlike streams, the last entry is encoded as a row. Even if it's undefined,
+      // because it might not be.
+      const endStreamRow = streamId.toString(16) + ':C\n';
+      request.pendingChunks++;
+      request.completedRegularChunks.push(stringToChunk(endStreamRow));
+      enqueueFlush(request);
+    }
+  }
+  function error(reason: mixed) {
+    if (
+      enablePostpone &&
+      typeof reason === 'object' &&
+      reason !== null &&
+      (reason: any).$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (reason: any);
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, streamId, postponeInstance);
+    } else {
+      const digest = logRecoverableError(request, reason);
+      emitErrorChunk(request, streamId, digest, reason);
+    }
+    enqueueFlush(request);
+  }
+  // TODO: Handle cancellation when the Request is aborted.
+  iterator.next().then(progress, error);
+  return serializeByValueID(streamId);
 }
 
 export function emitHint<Code: HintCode>(
@@ -1265,9 +1407,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     const digest = logRecoverableError(request, reason);
     emitErrorChunk(request, newTask.id, digest, reason);
     request.abortableTasks.delete(newTask);
-    if (request.destination !== null) {
-      flushCompletedChunks(request, request.destination);
-    }
+    enqueueFlush(request);
   }
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
@@ -1665,6 +1805,22 @@ function renderModelDestructive(
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
       return renderFragment(request, task, Array.from((value: any)));
+    }
+
+    if (enableFlightReadableStream) {
+      // TODO: Blob is not available in old Node. Remove the typeof check later.
+      if (
+        typeof ReadableStream === 'function' &&
+        value instanceof ReadableStream
+      ) {
+        return serializeReadableStream(request, value);
+      }
+      const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+        (value: any)[ASYNC_ITERATOR];
+      if (typeof getAsyncIterator === 'function') {
+        const asyncIterator = getAsyncIterator.call(value);
+        return serializeAsyncIterable(request, (value: any), asyncIterator);
+      }
     }
 
     // Verify that this is a simple plain object.

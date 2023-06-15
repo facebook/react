@@ -42,6 +42,7 @@ import {
   enableBinaryFlight,
   enablePostpone,
   enableRefAsProp,
+  enableFlightReadableStream,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -137,10 +138,17 @@ type ResolvedModuleChunk<T> = {
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
-  reason: null,
+  reason: null | ReadableStreamController,
   _response: Response,
   _debugInfo?: null | ReactDebugInfo,
   then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+};
+type InitializedStreamChunk = {
+  status: 'fulfilled',
+  value: ReadableStream,
+  reason: ReadableStreamController,
+  _response: Response,
+  then(resolve: (ReadableStream) => mixed, reject: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
   status: 'rejected',
@@ -312,7 +320,14 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    // We already resolved. We didn't expect to see this.
+    if (enableFlightReadableStream) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk = (chunk: any);
+      const controller = streamChunk.reason;
+      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+      controller.error(error);
+    }
     return;
   }
   const listeners = chunk.reason;
@@ -356,12 +371,30 @@ function createInitializedBufferChunk(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
+function createInitializedStreamChunk(
+  response: Response,
+  value: ReadableStream,
+  controller: ReadableStreamController,
+): InitializedChunk<ReadableStream> {
+  // We use the reason field to stash the controller since we already have that
+  // field. It's a bit of a hack but efficient.
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, value, controller, response);
+}
+
 function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    // We already resolved. We didn't expect to see this.
+    if (enableFlightReadableStream) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk = (chunk: any);
+      const controller = streamChunk.reason;
+      const parsedValue: T = parseModel(chunk._response, value);
+      controller.enqueue(parsedValue);
+    }
     return;
   }
   const resolveListeners = chunk.value;
@@ -1035,6 +1068,57 @@ function resolveModule(
   }
 }
 
+function startReadableStream(
+  response: Response,
+  id: number,
+  type: void | 'bytes',
+): void {
+  const chunks = response._chunks;
+  let controller: ReadableStreamController = (null: any);
+  const stream = new ReadableStream({
+    type: type,
+    start(c) {
+      controller = c;
+    },
+  });
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createInitializedStreamChunk(response, stream, controller));
+    return;
+  }
+  if (chunk.status !== PENDING) {
+    // We already resolved. We didn't expect to see this.
+    return;
+  }
+  const resolveListeners = chunk.value;
+  const resolvedChunk: InitializedStreamChunk = (chunk: any);
+  resolvedChunk.status = INITIALIZED;
+  resolvedChunk.value = stream;
+  resolvedChunk.reason = controller;
+  if (resolveListeners !== null) {
+    wakeChunk(resolveListeners, chunk.value);
+  }
+}
+
+function startAsyncIterator(response: Response, id: number): void {
+  // TODO
+}
+
+function startAsyncIterable(response: Response, id: number): void {
+  // TODO
+}
+
+function stopStream(response: Response, id: number): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk || chunk.status !== INITIALIZED) {
+    // We didn't expect not to have an existing stream;
+  }
+  const streamChunk: InitializedStreamChunk = (chunk: any);
+  const controller = streamChunk.reason;
+  controller.close();
+}
+
 type ErrorWithDigest = Error & {digest?: string};
 function resolveErrorProd(
   response: Response,
@@ -1362,6 +1446,41 @@ function processFullRow(
           'matching versions on the server and the client.',
       );
     }
+    case 82 /* "R" */: {
+      if (enableFlightReadableStream) {
+        startReadableStream(response, id, undefined);
+        return;
+      }
+    }
+    // Fallthrough
+    case 114 /* "r" */: {
+      if (enableFlightReadableStream) {
+        startReadableStream(response, id, 'bytes');
+        return;
+      }
+    }
+    // Fallthrough
+    case 88 /* "X" */: {
+      if (enableFlightReadableStream) {
+        startAsyncIterable(response, id);
+        return;
+      }
+    }
+    // Fallthrough
+    case 120 /* "x" */: {
+      if (enableFlightReadableStream) {
+        startAsyncIterator(response, id);
+        return;
+      }
+    }
+    // Fallthrough
+    case 67 /* "C" */: {
+      if (enableFlightReadableStream) {
+        stopStream(response, id);
+        return;
+      }
+    }
+    // Fallthrough
     case 80 /* "P" */: {
       if (enablePostpone) {
         if (__DEV__) {
@@ -1433,7 +1552,11 @@ export function processBinaryChunk(
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
           i++;
-        } else if (resolvedRowTag > 64 && resolvedRowTag < 91 /* "A"-"Z" */) {
+        } else if (
+          (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 114 /* "r" */ ||
+          resolvedRowTag === 120 /* "x" */
+        ) {
           rowTag = resolvedRowTag;
           rowState = ROW_CHUNK_BY_NEWLINE;
           i++;

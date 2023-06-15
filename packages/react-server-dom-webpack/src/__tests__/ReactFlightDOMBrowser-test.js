@@ -1406,4 +1406,98 @@ describe('ReactFlightDOMBrowser', () => {
     expect(postponed).toBe('testing postpone');
     expect(error).toBe(null);
   });
+
+  function passThrough(stream) {
+    // Simulate more realistic network by splitting up and rejoining some chunks.
+    // This lets us test that we don't accidentally rely on particular bounds of the chunks.
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        function push() {
+          reader.read().then(({done, value}) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(value);
+            push();
+            return;
+          });
+        }
+        push();
+      },
+    });
+  }
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming ReadableStream with objects', async () => {
+    const errors = [];
+    let controller1;
+    let controller2;
+    const s1 = new ReadableStream({
+      start(c) {
+        controller1 = c;
+      },
+    });
+    const s2 = new ReadableStream({
+      start(c) {
+        controller2 = c;
+      },
+    });
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      {
+        s1,
+        s2,
+      },
+      {},
+      {
+        onError(x) {
+          errors.push(x);
+          return x;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+    const reader1 = result.s1.getReader();
+    const reader2 = result.s2.getReader();
+
+    controller1.enqueue({hello: 'world'});
+    controller2.enqueue({hi: 'there'});
+    expect(await reader1.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: {hi: 'there'},
+      done: false,
+    });
+
+    controller1.enqueue('text1');
+    controller2.enqueue('text2');
+    controller1.close();
+    controller2.error('rejected');
+
+    expect(await reader1.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader1.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(await reader2.read()).toEqual({
+      value: 'text2',
+      done: false,
+    });
+    let error = null;
+    try {
+      await reader2.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('rejected');
+    expect(errors).toEqual(['rejected']);
+  });
 });
