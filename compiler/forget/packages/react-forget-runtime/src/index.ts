@@ -8,6 +8,7 @@
 import * as React from "react";
 
 const {
+  // @ts-ignore
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     ReactCurrentDispatcher,
   },
@@ -15,9 +16,11 @@ const {
   useEffect,
 } = React;
 
+type MemoCache = Array<number | typeof $empty>;
+
 export const $empty = Symbol.for("react.memo_cache_sentinel");
 
-export function unstable_useMemoCache(size) {
+export function unstable_useMemoCache(size: number) {
   "use no forget";
   const $ = new Array(size);
   for (let ii = 0; ii < size; ii++) {
@@ -26,7 +29,7 @@ export function unstable_useMemoCache(size) {
   return useRef($).current;
 }
 
-export function $read(memoCache, index) {
+export function $read(memoCache: MemoCache, index: number) {
   const value = memoCache[index];
   if (value === $empty) {
     throw new Error("useMemoCache: read before write");
@@ -34,7 +37,7 @@ export function $read(memoCache, index) {
   return value;
 }
 
-const LazyGuardDispatcher = {};
+const LazyGuardDispatcher: { [key: string]: () => never } = {};
 [
   "readContext",
   "useCallback",
@@ -63,7 +66,7 @@ const LazyGuardDispatcher = {};
   };
 });
 
-let originalDispatcher = null;
+let originalDispatcher: unknown = null;
 
 export function $startLazy() {
   if (originalDispatcher !== null) {
@@ -81,7 +84,7 @@ export function $endLazy() {
   originalDispatcher = null;
 }
 
-export function $reset($) {
+export function $reset($: MemoCache) {
   for (let ii = 0; ii < $.length; ii++) {
     $[ii] = $empty;
   }
@@ -94,8 +97,10 @@ export function $makeReadOnly() {
 /**
  * Instrumentation to count rerenders in React components
  */
-export const renderCounterRegistry /*: Map<string,Set<{count: number}>>*/ =
-  new Map();
+export const renderCounterRegistry: Map<
+  string,
+  Set<{ count: number }>
+> = new Map();
 export function clearRenderCounterRegistry() {
   for (const counters of renderCounterRegistry.values()) {
     counters.forEach((counter) => {
@@ -104,7 +109,7 @@ export function clearRenderCounterRegistry() {
   }
 }
 
-function registerRenderCounter(name, val) {
+function registerRenderCounter(name: string, val: { count: number }) {
   let counters = renderCounterRegistry.get(name);
   if (counters == null) {
     counters = new Set();
@@ -113,7 +118,7 @@ function registerRenderCounter(name, val) {
   counters.add(val);
 }
 
-function removeRenderCounter(name, val): void {
+function removeRenderCounter(name: string, val: { count: number }): void {
   const counters = renderCounterRegistry.get(name);
   if (counters == null) {
     return;
@@ -121,8 +126,8 @@ function removeRenderCounter(name, val): void {
   counters.delete(val);
 }
 
-export function useRenderCounter(name): void {
-  const val = useRef(null);
+export function useRenderCounter(name: string): void {
+  const val = useRef<{ count: number }>(null);
 
   if (val.current != null) {
     val.current.count += 1;
@@ -132,6 +137,7 @@ export function useRenderCounter(name): void {
     if (val.current == null) {
       const counter = { count: 0 };
       registerRenderCounter(name, counter);
+      // @ts-ignore
       val.current = counter;
     }
     return () => {
