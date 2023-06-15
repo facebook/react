@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-4d7a4acb";
+var ReactVersion = "18.3.0-www-classic-0ce6ac3f";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -6997,20 +6997,31 @@ function preload(href, options) {
   var resources = getResources(request);
 
   {
+    var encountered = "";
+
     if (typeof href !== "string" || !href) {
+      encountered +=
+        " The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options == null || typeof options !== "object") {
+      encountered +=
+        " The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (typeof options.as !== "string" || !options.as) {
+      encountered +=
+        " The `as` option encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
       error(
-        "ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options == null || typeof options !== "object") {
-      error(
-        "ReactDOM.preload(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preloaded but encountered %s instead.",
-        getValueDescriptorExpectingEnumForWarning(options)
-      );
-    } else if (typeof options.as !== "string") {
-      error(
-        'ReactDOM.preload(): Expected the `as` property in the `options` argument (second) to contain a string value describing the type of resource to be preloaded but encountered %s instead. Values that are valid in for the `as` attribute of a `<link rel="preload" as="..." />` tag are valid here.',
-        getValueDescriptorExpectingEnumForWarning(options.as)
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
+        encountered
       );
     }
   }
@@ -7020,10 +7031,35 @@ function preload(href, options) {
     href &&
     typeof options === "object" &&
     options !== null &&
-    typeof options.as === "string"
+    typeof options.as === "string" &&
+    options.as
   ) {
     var as = options.as;
-    var key = getResourceKey(as, href);
+    var key;
+
+    if (as === "image") {
+      // For image preloads the key contains either the imageSrcSet + imageSizes or the href but not
+      // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
+      // by varying the href. this is an edge case but it is the most correct behavior.
+      var imageSrcSet = options.imageSrcSet,
+        imageSizes = options.imageSizes;
+      var uniquePart = "";
+
+      if (typeof imageSrcSet === "string" && imageSrcSet !== "") {
+        uniquePart += "[" + imageSrcSet + "]";
+
+        if (typeof imageSizes === "string") {
+          uniquePart += "[" + imageSizes + "]";
+        }
+      } else {
+        uniquePart += "[][]" + href;
+      }
+
+      key = getResourceKey(as, uniquePart);
+    } else {
+      key = getResourceKey(as, href);
+    }
+
     var resource = resources.preloadsMap.get(key);
 
     {
@@ -7517,12 +7553,18 @@ function preloadPropsFromPreloadOptions(href, as, options) {
   return {
     rel: "preload",
     as: as,
-    href: href,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === "image" && options.imageSrcSet ? undefined : href,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
     nonce: options.nonce,
-    fetchPriority: options.fetchPriority
+    fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes
   };
 }
 

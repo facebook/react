@@ -34178,7 +34178,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-3dccae4a";
+var ReactVersion = "18.3.0-www-classic-00cc677f";
 
 function createPortal$1(
   children,
@@ -42068,65 +42068,6 @@ function propNamesListJoin(list, combinator) {
   }
 }
 
-function validatePreloadArguments(href, options) {
-  {
-    if (!href || typeof href !== "string") {
-      var typeOfArg = getValueDescriptorExpectingObjectForWarning(href);
-
-      error(
-        "ReactDOM.preload() expected the first argument to be a string representing an href but found %s instead.",
-        typeOfArg
-      );
-    } else if (typeof options !== "object" || options === null) {
-      var _typeOfArg = getValueDescriptorExpectingObjectForWarning(options);
-
-      error(
-        'ReactDOM.preload() expected the second argument to be an options argument containing at least an "as" property' +
-          ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".',
-        _typeOfArg,
-        href
-      );
-    } else {
-      var as = options.as;
-
-      switch (as) {
-        // Font specific validation of options
-        case "font": {
-          if (options.crossOrigin === "use-credentials") {
-            error(
-              'ReactDOM.preload() was called with an "as" type of "font" and with a "crossOrigin" option of "use-credentials".' +
-                ' Fonts preloading must use crossOrigin "anonymous" to be functional. Please update your font preload to omit' +
-                ' the crossOrigin option or change it to any other value than "use-credentials" (Browsers default all other values' +
-                ' to anonymous mode). The href for the preload call where this warning originated is "%s"',
-              href
-            );
-          }
-
-          break;
-        }
-
-        case "script":
-        case "style": {
-          break;
-        }
-        // We have an invalid as type and need to warn
-
-        default: {
-          var typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
-
-          error(
-            'ReactDOM.preload() expected a valid "as" type in the options (second) argument but found %s instead.' +
-              " Please use one of the following valid values instead: %s. The href for the preload call where this" +
-              ' warning originated is "%s".',
-            typeOfAs,
-            '"style", "font", or "script"',
-            href
-          );
-        }
-      }
-    }
-  }
-}
 function validatePreinitArguments(href, options) {
   {
     if (!href || typeof href !== "string") {
@@ -42137,12 +42078,12 @@ function validatePreinitArguments(href, options) {
         typeOfArg
       );
     } else if (typeof options !== "object" || options === null) {
-      var _typeOfArg2 = getValueDescriptorExpectingObjectForWarning(options);
+      var _typeOfArg = getValueDescriptorExpectingObjectForWarning(options);
 
       error(
         'ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
           ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".',
-        _typeOfArg2,
+        _typeOfArg,
         href
       );
     } else {
@@ -43755,7 +43696,35 @@ function preconnect$1(href, options) {
 
 function preload$1(href, options) {
   {
-    validatePreloadArguments(href, options);
+    // TODO move this to ReactDOMFloat and expose a stricter function interface or possibly
+    // typed functions (preloadImage, preloadStyle, ...)
+    var encountered = "";
+
+    if (typeof href !== "string" || !href) {
+      encountered +=
+        "The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options == null || typeof options !== "object") {
+      encountered +=
+        "The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (typeof options.as !== "string" || !options.as) {
+      encountered +=
+        "The `as` option encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
+      error(
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. %s',
+        encountered
+      );
+    }
   }
 
   var ownerDocument = getDocumentForImperativeFloatMethods();
@@ -43765,13 +43734,42 @@ function preload$1(href, options) {
     href &&
     typeof options === "object" &&
     options !== null &&
+    typeof options.as === "string" &&
+    options.as &&
     ownerDocument
   ) {
     var as = options.as;
-    var limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
     var preloadSelector =
-      'link[rel="preload"][as="' + as + '"][href="' + limitedEscapedHref + '"]'; // Some preloads are keyed under their selector. This happens when the preload is for
+      'link[rel="preload"][as="' +
+      escapeSelectorAttributeValueInsideDoubleQuotes(as) +
+      '"]';
+
+    if (as === "image") {
+      var imageSrcSet = options.imageSrcSet,
+        imageSizes = options.imageSizes;
+
+      if (typeof imageSrcSet === "string" && imageSrcSet !== "") {
+        preloadSelector +=
+          '[imagesrcset="' +
+          escapeSelectorAttributeValueInsideDoubleQuotes(imageSrcSet) +
+          '"]';
+
+        if (typeof imageSizes === "string") {
+          preloadSelector +=
+            '[imagesizes="' +
+            escapeSelectorAttributeValueInsideDoubleQuotes(imageSizes) +
+            '"]';
+        }
+      } else {
+        preloadSelector +=
+          '[href="' +
+          escapeSelectorAttributeValueInsideDoubleQuotes(href) +
+          '"]';
+      }
+    } else {
+      preloadSelector +=
+        '[href="' + escapeSelectorAttributeValueInsideDoubleQuotes(href) + '"]';
+    } // Some preloads are keyed under their selector. This happens when the preload is for
     // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
     // Here we figure out which key to use to determine if we have a preload already.
 
@@ -43817,14 +43815,20 @@ function preload$1(href, options) {
 
 function preloadPropsFromPreloadOptions(href, as, options) {
   return {
-    href: href,
     rel: "preload",
     as: as,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === "image" && options.imageSrcSet ? undefined : href,
     crossOrigin: as === "font" ? "" : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
     nonce: options.nonce,
-    fetchPriority: options.fetchPriority
+    fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes
   };
 }
 

@@ -1837,41 +1837,54 @@ function preload(href, options) {
       href &&
       "object" === typeof options &&
       null !== options &&
-      "string" === typeof options.as
+      "string" === typeof options.as &&
+      options.as
     ) {
-      var as = options.as,
-        key = "[" + as + "]" + href,
-        resource = resources.preloadsMap.get(key);
-      resource ||
-        ((resource = {
+      var as = options.as;
+      if ("image" === as) {
+        var key = options.imageSrcSet;
+        var imageSizes = options.imageSizes,
+          uniquePart = "";
+        "string" === typeof key && "" !== key
+          ? ((uniquePart += "[" + key + "]"),
+            "string" === typeof imageSizes &&
+              (uniquePart += "[" + imageSizes + "]"))
+          : (uniquePart += "[][]" + href);
+        key = "[" + as + "]" + uniquePart;
+      } else key = "[" + as + "]" + href;
+      imageSizes = resources.preloadsMap.get(key);
+      imageSizes ||
+        ((imageSizes = {
           type: "preload",
           chunks: [],
           state: 0,
           props: {
             rel: "preload",
             as: as,
-            href: href,
+            href: "image" === as && options.imageSrcSet ? void 0 : href,
             crossOrigin: "font" === as ? "" : options.crossOrigin,
             integrity: options.integrity,
             type: options.type,
             nonce: options.nonce,
-            fetchPriority: options.fetchPriority
+            fetchPriority: options.fetchPriority,
+            imageSrcSet: options.imageSrcSet,
+            imageSizes: options.imageSizes
           }
         }),
-        resources.preloadsMap.set(key, resource),
-        pushLinkImpl(resource.chunks, resource.props));
+        resources.preloadsMap.set(key, imageSizes),
+        pushLinkImpl(imageSizes.chunks, imageSizes.props));
       switch (as) {
         case "font":
-          resources.fontPreloads.add(resource);
+          resources.fontPreloads.add(imageSizes);
           break;
         case "style":
-          resources.explicitStylesheetPreloads.add(resource);
+          resources.explicitStylesheetPreloads.add(imageSizes);
           break;
         case "script":
-          resources.explicitScriptPreloads.add(resource);
+          resources.explicitScriptPreloads.add(imageSizes);
           break;
         default:
-          resources.explicitOtherPreloads.add(resource);
+          resources.explicitOtherPreloads.add(imageSizes);
       }
       enqueueFlush(request);
     }
@@ -3900,4 +3913,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-7d85fe51";
+exports.version = "18.3.0-www-modern-8fc58e59";

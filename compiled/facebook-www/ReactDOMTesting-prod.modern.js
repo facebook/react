@@ -15892,40 +15892,64 @@ function preload$1(href, options) {
     href &&
     "object" === typeof options &&
     null !== options &&
+    "string" === typeof options.as &&
+    options.as &&
     ownerDocument
   ) {
     var as = options.as,
-      limitedEscapedHref = escapeSelectorAttributeValueInsideDoubleQuotes(href),
-      key = (limitedEscapedHref =
+      preloadSelector =
         'link[rel="preload"][as="' +
-        as +
-        '"][href="' +
-        limitedEscapedHref +
-        '"]');
+        escapeSelectorAttributeValueInsideDoubleQuotes(as) +
+        '"]';
+    if ("image" === as) {
+      var imageSrcSet = options.imageSrcSet,
+        imageSizes = options.imageSizes;
+      "string" === typeof imageSrcSet && "" !== imageSrcSet
+        ? ((preloadSelector +=
+            '[imagesrcset="' +
+            escapeSelectorAttributeValueInsideDoubleQuotes(imageSrcSet) +
+            '"]'),
+          "string" === typeof imageSizes &&
+            (preloadSelector +=
+              '[imagesizes="' +
+              escapeSelectorAttributeValueInsideDoubleQuotes(imageSizes) +
+              '"]'))
+        : (preloadSelector +=
+            '[href="' +
+            escapeSelectorAttributeValueInsideDoubleQuotes(href) +
+            '"]');
+    } else
+      preloadSelector +=
+        '[href="' + escapeSelectorAttributeValueInsideDoubleQuotes(href) + '"]';
+    imageSrcSet = preloadSelector;
     switch (as) {
       case "style":
-        key = getStyleKey(href);
+        imageSrcSet = getStyleKey(href);
         break;
       case "script":
-        key = getScriptKey(href);
+        imageSrcSet = getScriptKey(href);
     }
-    preloadPropsMap.has(key) ||
+    preloadPropsMap.has(imageSrcSet) ||
       ((href = {
-        href: href,
         rel: "preload",
         as: as,
+        href: "image" === as && options.imageSrcSet ? void 0 : href,
         crossOrigin: "font" === as ? "" : options.crossOrigin,
         integrity: options.integrity,
         type: options.type,
         nonce: options.nonce,
-        fetchPriority: options.fetchPriority
+        fetchPriority: options.fetchPriority,
+        imageSrcSet: options.imageSrcSet,
+        imageSizes: options.imageSizes
       }),
-      preloadPropsMap.set(key, href),
-      null !== ownerDocument.querySelector(limitedEscapedHref) ||
+      preloadPropsMap.set(imageSrcSet, href),
+      null !== ownerDocument.querySelector(preloadSelector) ||
         ("style" === as &&
-          ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) ||
+          ownerDocument.querySelector(
+            getStylesheetSelectorFromKey(imageSrcSet)
+          )) ||
         ("script" === as &&
-          ownerDocument.querySelector("script[async]" + key)) ||
+          ownerDocument.querySelector("script[async]" + imageSrcSet)) ||
         ((as = ownerDocument.createElement("link")),
         setInitialProperties(as, "link", href),
         markNodeAsHoistable(as),
@@ -16557,7 +16581,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1803 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-5fb44b73",
+  version: "18.3.0-www-modern-58022814",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2182 = {
@@ -16588,7 +16612,7 @@ var internals$jscomp$inline_2182 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-5fb44b73"
+  reconcilerVersion: "18.3.0-www-modern-58022814"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2183 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16910,4 +16934,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-5fb44b73";
+exports.version = "18.3.0-www-modern-58022814";
