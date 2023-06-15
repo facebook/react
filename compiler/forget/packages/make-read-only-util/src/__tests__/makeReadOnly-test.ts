@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import buildMakeReadOnly from "./makeReadOnly";
+import buildMakeReadOnly from "../makeReadOnly";
 
 describe("makeReadOnly", () => {
   let logger: jest.Func;

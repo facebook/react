@@ -1,17 +1,20 @@
 {
+  "extends": "@tsconfig/node16-strictest/tsconfig.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "allowJs": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": false,
-    "jsx": "preserve",
-    "incremental": true,
-    "outDir": "dist"
+    "declaration": true,
+    "outDir": "dist",
+    "jsx": "react-jsxdev",
+
+    // weaken strictness from preset
+    "importsNotUsedAsValues": "remove",
+    "noUncheckedIndexedAccess": false,
+    "noUnusedParameters": false,
+    "useUnknownInCatchVariables": false,
+    "target": "ES2015",
+    // ideally turn off only during dev, or on a per-file basis
+    "noUnusedLocals": false,
+    "sourceMap": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "include": ["src/**/*.ts"]
 }
