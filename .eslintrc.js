@@ -460,6 +460,8 @@ module.exports = {
     // For Flow type annotation. Only `BigInt` is valid at runtime.
     bigint: 'readonly',
     BigInt: 'readonly',
+    BigInt64Array: 'readonly',
+    BigUint64Array: 'readonly',
     Class: 'readonly',
     ClientRect: 'readonly',
     CopyInspectedElementPath: 'readonly',
