@@ -69,6 +69,8 @@ export const enableLegacyCache = true;
 export const enableFetchInstrumentation = false;
 
 export const enableBinaryFlight = false;
+export const enableFlightReadableStream = false;
+
 export const enableTaint = false;
 
 export const enablePostpone = false;
