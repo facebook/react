@@ -9,6 +9,7 @@ import * as parser from "@babel/parser";
 import traverse from "@babel/traverse";
 import {
   CompilerError,
+  PluginOptions,
   compileProgram,
   parsePluginOptions,
 } from "babel-plugin-react-forget";
@@ -33,8 +34,16 @@ const rule: Rule.RuleModule = {
       traverse(babelAST, {
         Program(prog) {
           try {
+            const opts: Partial<PluginOptions> = {
+              panicOnBailout: false,
+              environment: {
+                validateHooksUsage: true,
+                validateFrozenLambdas: true,
+                validateRefAccessDuringRender: true,
+              },
+            };
             compileProgram(prog, {
-              opts: parsePluginOptions({ panicOnBailout: false }),
+              opts: parsePluginOptions(opts),
               filename: context.filename,
               comments: babelAST.comments ?? [],
             });

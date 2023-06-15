@@ -13,6 +13,7 @@ export {
 } from "./CompilerError";
 export {
   CompilerPipelineValue,
+  PluginOptions,
   compileFn as compile,
   compileProgram,
   parsePluginOptions,

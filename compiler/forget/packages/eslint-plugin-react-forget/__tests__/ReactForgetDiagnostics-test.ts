@@ -42,6 +42,26 @@ const tests: ForgetTestCases = {
   ],
   invalid: [
     {
+      name: "[InvalidInput] Ref access during render",
+      code: normalizeIndent`
+        function Component(props) {
+          const ref = useRef(null);
+          const value = ref.current;
+          return value;
+        }
+      `,
+      errors: [
+        {
+          message:
+            "[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $23:TObject<BuiltInRefValue> (5:5)",
+          line: 5,
+          column: 10,
+          endColumn: 15,
+          endLine: 5,
+        },
+      ],
+    },
+    {
       name: "[Invariant] Defined after use",
       code: normalizeIndent`
         function Component(props) {
