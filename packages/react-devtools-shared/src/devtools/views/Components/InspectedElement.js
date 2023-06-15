@@ -220,10 +220,10 @@ export default function InspectedElementWrapper(_: Props): React.Node {
 
     const url = new URL(editorURL);
     url.href = url.href
-        .replace('{path}', source.fileName)
-        .replace('{line}', String(source.lineNumber))
-        .replace('%7Bpath%7D', source.fileName)
-        .replace('%7Bline%7D', String(source.lineNumber));
+      .replace('{path}', source.fileName)
+      .replace('{line}', String(source.lineNumber))
+      .replace('%7Bpath%7D', source.fileName)
+      .replace('%7Bline%7D', String(source.lineNumber));
     window.open(url);
   }, [inspectedElement, editorURL]);
 
