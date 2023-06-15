@@ -7677,6 +7677,16 @@ const testsFlow = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function Component() {
+          type LocalTypeAlias = string;
+          useEffect(() => {
+            const foo: LocalTypeAlias = "foo";
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {

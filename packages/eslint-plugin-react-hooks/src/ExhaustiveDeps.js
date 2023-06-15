@@ -447,7 +447,7 @@ export default {
             continue;
           }
           // Ignore Flow type parameters
-          if (def.type === 'TypeParameter') {
+          if (def.type === 'TypeParameter' || def.node.type === 'TypeAlias') {
             continue;
           }
 
