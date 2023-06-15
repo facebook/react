@@ -48,6 +48,8 @@ const rule: Rule.RuleModule = {
                   });
                 }
               }
+            } else {
+              throw new Error(err);
             }
           }
         },
