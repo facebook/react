@@ -9,8 +9,6 @@
   ],
   "scripts": {
     "build": "rimraf dist && tsc",
-    "bundle:meta": "scripts/bundle-meta.sh",
-    "hash": "scripts/hash-dist.sh",
     "test": "yarn jest && yarn snap:build && yarn snap",
     "jest": "tsc && jest",
     "snap": "node ../snap/dist/main.js",

@@ -9,6 +9,8 @@
     "url": "git+https://github.com/facebook/react-forget.git"
   },
   "scripts": {
+    "bundle:meta": "scripts/bundle-meta.sh",
+    "hash": "scripts/hash.sh",
     "start": "yarn workspace playground run start",
     "next": "yarn workspace playground run dev",
     "build": "yarn workspaces run build",
