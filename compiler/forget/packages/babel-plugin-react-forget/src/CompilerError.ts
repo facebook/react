@@ -17,12 +17,6 @@ export enum ErrorSeverity {
    */
   InvalidInput = "InvalidInput",
   /**
-   * User code contains unsafe React patterns that might not be safe to compile, but does not mean
-   * the compiler has bugs. This typically means we can skip over the affected files, but other
-   * files without these errors can still be compiled.
-   */
-  UnsafeInput = "UnsafeInput",
-  /**
    * Unhandled syntax that we don't support yet.
    */
   Todo = "Todo",
@@ -51,8 +45,6 @@ function mapSeverityToErrorCtor(severity: ErrorSeverity): CompilerErrorKind {
       return TodoError;
     case ErrorSeverity.Invariant:
       return InvariantError;
-    case ErrorSeverity.UnsafeInput:
-      return UnsafeInputError;
     default:
       assertExhaustive(severity, `Unhandled severity level: ${severity}`);
   }
@@ -73,12 +65,6 @@ class InvariantError extends Error {
   constructor(message: string) {
     super(message);
     this.name = `${ErrorSeverity.Invariant}Error`;
-  }
-}
-class UnsafeInputError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = `${ErrorSeverity.UnsafeInput}Error`;
   }
 }
 
@@ -240,7 +226,6 @@ export class CompilerError extends Error {
         case ErrorSeverity.InvalidInput:
           return true;
         case ErrorSeverity.Todo:
-        case ErrorSeverity.UnsafeInput:
           return false;
         default:
           assertExhaustive(detail.severity, "Unhandled error severity");

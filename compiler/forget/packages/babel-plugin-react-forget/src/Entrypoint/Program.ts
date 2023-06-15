@@ -13,10 +13,10 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { GeneratedSource } from "../HIR";
+import { getOrInsertDefault } from "../Utils/utils";
 import { addInstrumentForget } from "./Instrumentation";
 import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
-import { getOrInsertDefault } from "../Utils/utils";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -207,7 +207,7 @@ export function compileProgram(
         new CompilerErrorDetail({
           reason,
           description: violation.value.trim(),
-          severity: ErrorSeverity.UnsafeInput,
+          severity: ErrorSeverity.InvalidInput,
           codeframe: null,
           loc: violation.loc ?? null,
         })
