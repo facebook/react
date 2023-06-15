@@ -237,8 +237,8 @@ export class CompilerError extends Error {
     return this.details.some((detail) => {
       switch (detail.severity) {
         case ErrorSeverity.Invariant:
-          return true;
         case ErrorSeverity.InvalidInput:
+          return true;
         case ErrorSeverity.Todo:
         case ErrorSeverity.UnsafeInput:
           return false;
