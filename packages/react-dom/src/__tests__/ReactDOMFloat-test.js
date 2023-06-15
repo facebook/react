@@ -3545,6 +3545,147 @@ body {
     );
   });
 
+  it('uses imageSrcSet and imageSizes when keying image preloads', async () => {
+    function App({isClient}) {
+      // Will key off href in absense of imageSrcSet
+      ReactDOM.preload('foo', {as: 'image'});
+      ReactDOM.preload('foo', {as: 'image'});
+
+      // Will key off imageSrcSet + imageSizes
+      ReactDOM.preload('foo', {as: 'image', imageSrcSet: 'fooset'});
+      ReactDOM.preload('foo2', {as: 'image', imageSrcSet: 'fooset'});
+
+      // Will key off imageSrcSet + imageSizes
+      ReactDOM.preload('foo', {
+        as: 'image',
+        imageSrcSet: 'fooset',
+        imageSizes: 'foosizes',
+      });
+      ReactDOM.preload('foo2', {
+        as: 'image',
+        imageSrcSet: 'fooset',
+        imageSizes: 'foosizes',
+      });
+
+      // Will key off href in absense of imageSrcSet, imageSizes is ignored. these should match the
+      // first preloads not not emit a new preload tag
+      ReactDOM.preload('foo', {as: 'image', imageSizes: 'foosizes'});
+      ReactDOM.preload('foo', {as: 'image', imageSizes: 'foosizes'});
+
+      // These preloads are for something that isn't an image
+      // They should all key off the href
+      ReactDOM.preload('bar', {as: 'somethingelse'});
+      ReactDOM.preload('bar', {
+        as: 'somethingelse',
+        imageSrcSet: 'makes no sense',
+      });
+      ReactDOM.preload('bar', {
+        as: 'somethingelse',
+        imageSrcSet: 'makes no sense',
+        imageSizes: 'makes no sense',
+      });
+
+      if (isClient) {
+        // Will key off href in absense of imageSrcSet
+        ReactDOM.preload('client', {as: 'image'});
+        ReactDOM.preload('client', {as: 'image'});
+
+        // Will key off imageSrcSet + imageSizes
+        ReactDOM.preload('client', {as: 'image', imageSrcSet: 'clientset'});
+        ReactDOM.preload('client2', {as: 'image', imageSrcSet: 'clientset'});
+
+        // Will key off imageSrcSet + imageSizes
+        ReactDOM.preload('client', {
+          as: 'image',
+          imageSrcSet: 'clientset',
+          imageSizes: 'clientsizes',
+        });
+        ReactDOM.preload('client2', {
+          as: 'image',
+          imageSrcSet: 'clientset',
+          imageSizes: 'clientsizes',
+        });
+
+        // Will key off href in absense of imageSrcSet, imageSizes is ignored. these should match the
+        // first preloads not not emit a new preload tag
+        ReactDOM.preload('client', {as: 'image', imageSizes: 'clientsizes'});
+        ReactDOM.preload('client', {as: 'image', imageSizes: 'clientsizes'});
+      }
+
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="foo" />
+          <link rel="preload" as="image" imagesrcset="fooset" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="fooset"
+            imagesizes="foosizes"
+          />
+          <link rel="preload" as="somethingelse" href="bar" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="foo" />
+          <link rel="preload" as="image" imagesrcset="fooset" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="fooset"
+            imagesizes="foosizes"
+          />
+          <link rel="preload" as="somethingelse" href="bar" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    root.render(<App isClient={true} />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="foo" />
+          <link rel="preload" as="image" imagesrcset="fooset" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="fooset"
+            imagesizes="foosizes"
+          />
+          <link rel="preload" as="somethingelse" href="bar" />
+          <link rel="preload" as="image" href="client" />
+          <link rel="preload" as="image" imagesrcset="clientset" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="clientset"
+            imagesizes="clientsizes"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
@@ -3834,10 +3975,10 @@ body {
           renderToPipeableStream(<App />).pipe(writable);
         });
       }).toErrorDev([
-        'ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered `undefined` instead.',
-        'ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered an empty string instead.',
-        'ReactDOM.preload(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preloaded but encountered `null` instead.',
-        'ReactDOM.preload(): Expected the `as` property in the `options` argument (second) to contain a string value describing the type of resource to be preloaded but encountered `undefined` instead. Values that are valid in for the `as` attribute of a `<link rel="preload" as="..." />` tag are valid here.',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was `undefined`. The `options` argument encountered was `undefined`.',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `href` argument encountered was an empty string. The `options` argument encountered was `undefined`.',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `options` argument encountered was `null`.',
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. The `as` option encountered was `undefined`.',
       ]);
     });
 

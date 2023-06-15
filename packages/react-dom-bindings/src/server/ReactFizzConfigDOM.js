@@ -4819,12 +4819,12 @@ type PreconnectResource = TResource<'preconnect', null>;
 type PreloadAsProps = {
   rel: 'preload',
   as: string,
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 type PreloadModuleProps = {
   rel: 'modulepreload',
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 type PreloadProps = PreloadAsProps | PreloadModuleProps;
@@ -5063,20 +5063,25 @@ export function preload(href: string, options: PreloadOptions) {
   }
   const resources = getResources(request);
   if (__DEV__) {
+    let encountered = '';
     if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options == null || typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (typeof options.as !== 'string' || !options.as) {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
       console.error(
-        'ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
-        getValueDescriptorExpectingObjectForWarning(href),
-      );
-    } else if (options == null || typeof options !== 'object') {
-      console.error(
-        'ReactDOM.preload(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preloaded but encountered %s instead.',
-        getValueDescriptorExpectingEnumForWarning(options),
-      );
-    } else if (typeof options.as !== 'string') {
-      console.error(
-        'ReactDOM.preload(): Expected the `as` property in the `options` argument (second) to contain a string value describing the type of resource to be preloaded but encountered %s instead. Values that are valid in for the `as` attribute of a `<link rel="preload" as="..." />` tag are valid here.',
-        getValueDescriptorExpectingEnumForWarning(options.as),
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
+        encountered,
       );
     }
   }
@@ -5085,10 +5090,29 @@ export function preload(href: string, options: PreloadOptions) {
     href &&
     typeof options === 'object' &&
     options !== null &&
-    typeof options.as === 'string'
+    typeof options.as === 'string' &&
+    options.as
   ) {
     const as = options.as;
-    const key = getResourceKey(as, href);
+    let key: string;
+    if (as === 'image') {
+      // For image preloads the key contains either the imageSrcSet + imageSizes or the href but not
+      // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
+      // by varying the href. this is an edge case but it is the most correct behavior.
+      const {imageSrcSet, imageSizes} = options;
+      let uniquePart = '';
+      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+        uniquePart += '[' + imageSrcSet + ']';
+        if (typeof imageSizes === 'string') {
+          uniquePart += '[' + imageSizes + ']';
+        }
+      } else {
+        uniquePart += '[][]' + href;
+      }
+      key = getResourceKey(as, uniquePart);
+    } else {
+      key = getResourceKey(as, href);
+    }
     let resource = resources.preloadsMap.get(key);
     if (__DEV__) {
       const devResource = getAsResourceDEV(resource);
@@ -5528,12 +5552,18 @@ function preloadPropsFromPreloadOptions(
   return {
     rel: 'preload',
     as,
-    href,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === 'image' && options.imageSrcSet ? undefined : href,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes,
   };
 }
 

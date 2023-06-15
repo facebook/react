@@ -1190,8 +1190,8 @@ describe('ReactFlightDOM', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link href="before" rel="preload" as="style">' +
-        '<link href="after" rel="preload" as="style">',
+      '<link rel="preload" as="style" href="before">' +
+        '<link rel="preload" as="style" href="after">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
