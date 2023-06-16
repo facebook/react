@@ -311,7 +311,7 @@ class InferenceState {
           valueKind === ValueKind.Mutable ||
           valueKind === ValueKind.Context
         ) {
-          effect = Effect.Mutate;
+          effect = Effect.ConditionallyMutate;
         } else {
           effect = Effect.Read;
         }

@@ -878,16 +878,11 @@ export function isMutableEffect(
   switch (effect) {
     case Effect.Capture:
     case Effect.Store:
+    case Effect.ConditionallyMutate:
     case Effect.Mutate: {
       return true;
     }
-    case Effect.ConditionallyMutate: {
-      // All conditional mutations should be resolved into some other effect after InferReferenceEffects
-      CompilerError.invariant(
-        "Unexpected conditional mutation effect",
-        location
-      );
-    }
+
     case Effect.Unknown: {
       CompilerError.invariant("Unexpected unknown effect", location);
     }
