@@ -1,3 +1,4 @@
+// @debug
 function component(a, b) {
   let z = { a };
   let y = b;

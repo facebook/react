@@ -18,9 +18,11 @@ import {
   ReactiveScopeDependency,
 } from "../HIR";
 import { constantPropagation } from "../Optimization";
-import { eliminateRedundantPhi, enterSSA } from "../SSA";
+import { inferReactiveScopeVariables } from "../ReactiveScopes";
+import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import { logHIRFunction } from "../Utils/logger";
+import { inferMutableContextVariables } from "./InferMutableContextVariables";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
 
@@ -112,6 +114,9 @@ function lower(func: HIRFunction): void {
   analyseFunctions(func);
   inferReferenceEffects(func, { isFunctionExpression: true });
   inferMutableRanges(func);
+  leaveSSA(func);
+  inferReactiveScopeVariables(func);
+  inferMutableContextVariables(func);
   logHIRFunction("AnalyseFunction (inner)", func);
 }
 
@@ -120,12 +125,15 @@ function infer(
   state: IdentifierState,
   context: Place[]
 ): void {
-  const mutations = new Set(
-    value.loweredFunc.context
-      .filter((dep) => isMutatedOrReassigned(dep.identifier))
-      .map((m) => m.identifier.name)
-      .filter((m) => m !== null) as string[]
-  );
+  const mutations = new Map<string, Effect>();
+  for (const operand of value.loweredFunc.context) {
+    if (
+      isMutatedOrReassigned(operand.identifier) &&
+      operand.identifier.name !== null
+    ) {
+      mutations.set(operand.identifier.name, operand.effect);
+    }
+  }
 
   for (const dep of value.dependencies) {
     let name: string | null = null;
@@ -144,8 +152,11 @@ function infer(
       // could be called, and allows us to help ensure it isn't called during
       // render
       dep.effect = Effect.Capture;
-    } else if (name !== null && mutations.has(name)) {
-      dep.effect = Effect.Capture;
+    } else if (name !== null) {
+      const effect = mutations.get(name);
+      if (effect !== undefined) {
+        dep.effect = effect === Effect.Unknown ? Effect.Capture : effect;
+      }
     }
   }
 
@@ -161,8 +172,9 @@ function infer(
       "context refs should always have a name"
     );
 
-    if (mutations.has(place.identifier.name)) {
-      place.effect = Effect.Capture;
+    const effect = mutations.get(place.identifier.name);
+    if (effect !== undefined) {
+      place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
       value.dependencies.push(place);
     }
   }

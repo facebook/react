@@ -16,7 +16,6 @@ import {
   HIRFunction,
   IdentifierId,
   Place,
-  isMutableEffect,
   isRefValueType,
   isUseRefType,
 } from "./HIR";
@@ -106,7 +105,7 @@ function validateOperand(
       lambda !== undefined &&
       lambda.dependencies.some(
         (place) =>
-          isMutableEffect(place.effect, place.loc) &&
+          place.effect === Effect.Mutate &&
           !isRefValueType(place.identifier) &&
           !isUseRefType(place.identifier)
       )
