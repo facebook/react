@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<35eceb39002aa0301bede117a38f12c0>>
+ * @generated SignedSource<<686a43f16ce095ac9828d46ee7e914ff>>
  */
 
 'use strict';
@@ -14762,7 +14762,8 @@ function readContextForConsumer(consumer, context) {
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
     ? AbortController // $FlowFixMe[missing-this-annot]
-    : function AbortControllerShim() {
+    : // $FlowFixMe[prop-missing]
+      function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
           aborted: false,
@@ -23922,7 +23923,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-fc929cf4e-20230615";
+var ReactVersion = "18.3.0-canary-613e6f5fc-20230616";
 
 // Might add PROFILE later.
 
