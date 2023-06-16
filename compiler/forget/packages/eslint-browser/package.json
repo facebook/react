@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "webpack --mode=development",
-    "test": ":"
+    "test": "echo 'no tests'"
   },
   "dependencies": {
     "eslint": "^8.25.0",

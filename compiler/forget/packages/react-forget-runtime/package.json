@@ -8,6 +8,6 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": ":"
+    "test": "echo 'no tests'"
   }
 }
