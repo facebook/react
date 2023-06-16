@@ -70,7 +70,7 @@ export function lower(
       kind: "Identifier",
       identifier: builder.resolveBinding(ref),
       effect: Effect.Unknown,
-      loc: GeneratedSource,
+      loc: ref.loc ?? GeneratedSource,
     });
   }
 
