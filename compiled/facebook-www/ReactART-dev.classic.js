@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-26848b3f";
+var ReactVersion = "18.3.0-www-classic-5d5433b2";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -17889,7 +17889,8 @@ function readContextForConsumer(consumer, context) {
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
     ? AbortController // $FlowFixMe[missing-this-annot]
-    : function AbortControllerShim() {
+    : // $FlowFixMe[prop-missing]
+      function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
           aborted: false,

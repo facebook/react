@@ -22796,7 +22796,8 @@ function readContextForConsumer(consumer, context) {
 var AbortControllerLocal =
   typeof AbortController !== "undefined"
     ? AbortController // $FlowFixMe[missing-this-annot]
-    : function AbortControllerShim() {
+    : // $FlowFixMe[prop-missing]
+      function AbortControllerShim() {
         var listeners = [];
         var signal = (this.signal = {
           aborted: false,
@@ -34640,7 +34641,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-bd0def32";
+var ReactVersion = "18.3.0-www-modern-bf1393b4";
 
 function createPortal$1(
   children,
