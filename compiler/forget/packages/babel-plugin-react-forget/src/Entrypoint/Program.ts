@@ -144,8 +144,9 @@ export function compileProgram(
       }
 
       const loweredFn = buildFunctionDeclaration(fn);
-      if (loweredFn instanceof CompilerError) {
-        const error = loweredFn;
+      if (loweredFn instanceof CompilerErrorDetail) {
+        const error = new CompilerError();
+        error.pushErrorDetail(loweredFn);
 
         const options = parsePluginOptions(pass.opts);
         if (options.logger != null) {
@@ -345,48 +346,41 @@ function log(error: CompilerError, filename: string | null): void {
   );
 }
 
-function makeError(
-  reason: string,
-  loc: t.SourceLocation | null
-): CompilerError {
-  const error = new CompilerError();
-  error.pushErrorDetail(
-    new CompilerErrorDetail({
-      reason,
-      description: null,
-      severity: ErrorSeverity.InvalidInput,
-      codeframe: null,
-      loc,
-    })
-  );
-  return error;
-}
-
 function buildFunctionDeclaration(
   fn: NodePath<t.ArrowFunctionExpression>
-): NodePath<t.FunctionDeclaration> | CompilerError {
+): NodePath<t.FunctionDeclaration> | CompilerErrorDetail {
   if (!fn.parentPath.isVariableDeclarator()) {
-    return makeError(
-      "ArrowFunctionExpression must be declared in variable declaration",
-      fn.node.loc ?? null
-    );
+    return new CompilerErrorDetail({
+      reason:
+        "ArrowFunctionExpression was not declared in a variable declaration",
+      severity: ErrorSeverity.Todo,
+      description: `Handle ${fn.parentPath.type}`,
+      codeframe: null,
+      loc: fn.node.loc ?? null,
+    });
   }
   const variableDeclarator = fn.parentPath;
 
   if (!variableDeclarator.parentPath.isVariableDeclaration()) {
-    return makeError(
-      "ArrowFunctionExpression must be a single declaration",
-      fn.node.loc ?? null
-    );
+    return new CompilerErrorDetail({
+      reason: "ArrowFunctionExpression was not a single declaration",
+      severity: ErrorSeverity.Todo,
+      description: `Handle ${variableDeclarator.parentPath.type}`,
+      codeframe: null,
+      loc: fn.node.loc ?? null,
+    });
   }
   const variableDeclaration = variableDeclarator.parentPath;
 
   const id = variableDeclarator.get("id");
   if (!id.isIdentifier()) {
-    return makeError(
-      "ArrowFunctionExpression must have an id",
-      fn.node.loc ?? null
-    );
+    return new CompilerErrorDetail({
+      reason: "ArrowFunctionExpression was not an identifier",
+      severity: ErrorSeverity.Todo,
+      description: `Handle ${id.type}`,
+      codeframe: null,
+      loc: fn.node.loc ?? null,
+    });
   }
 
   const rewrittenFn = variableDeclaration.replaceWith(

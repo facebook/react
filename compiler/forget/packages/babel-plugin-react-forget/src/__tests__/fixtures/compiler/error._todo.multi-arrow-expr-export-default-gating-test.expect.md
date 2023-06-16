@@ -18,7 +18,7 @@ export default Renderer = (props) => (
 ## Error
 
 ```
-[ReactForget] InvalidInput: ArrowFunctionExpression must be declared in variable declaration (4:9)
+[ReactForget] Todo: ArrowFunctionExpression was not declared in a variable declaration. Handle AssignmentExpression (4:9)
 ```
           
       
