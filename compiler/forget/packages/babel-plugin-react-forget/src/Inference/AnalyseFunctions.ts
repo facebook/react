@@ -17,7 +17,7 @@ import {
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
-import { constantPropagation } from "../Optimization";
+import { constantPropagation, deadCodeElimination } from "../Optimization";
 import { inferReactiveScopeVariables } from "../ReactiveScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -113,6 +113,7 @@ function lower(func: HIRFunction): void {
 
   analyseFunctions(func);
   inferReferenceEffects(func, { isFunctionExpression: true });
+  deadCodeElimination(func);
   inferMutableRanges(func);
   leaveSSA(func);
   inferReactiveScopeVariables(func);
@@ -133,6 +134,7 @@ function infer(
     ) {
       mutations.set(operand.identifier.name, operand.effect);
     }
+    operand.identifier.mutableRange.end = operand.identifier.mutableRange.start;
   }
 
   for (const dep of value.dependencies) {

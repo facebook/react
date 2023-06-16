@@ -31,7 +31,6 @@ import {
 } from "../HIR/HIR";
 import { printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
-import { deadCodeElimination } from "../Optimization";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
@@ -962,7 +961,6 @@ function codegenInstructionValue(
     case "FunctionExpression": {
       if (cx.env.enableOptimizeFunctionExpressions) {
         const loweredFunc = instrValue.loweredFunc;
-        deadCodeElimination(loweredFunc);
         const reactiveFunction = buildReactiveFunction(loweredFunc);
         pruneUnusedLabels(reactiveFunction);
         pruneUnusedLValues(reactiveFunction);
