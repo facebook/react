@@ -6,5 +6,5 @@ function component(a, b) {
     y.b;
   };
   x();
-  return x;
+  return z;
 }

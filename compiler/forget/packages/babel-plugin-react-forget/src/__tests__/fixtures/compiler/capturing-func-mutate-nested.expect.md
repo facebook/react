@@ -8,7 +8,7 @@ function component(a) {
     y.b.a = 2;
   };
   x();
-  return x;
+  return y;
 }
 
 ```
@@ -20,19 +20,19 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
   const $ = useMemoCache(2);
   const c_0 = $[0] !== a;
-  let x;
+  let y;
   if (c_0) {
-    const y = { b: { a } };
-    x = function () {
+    y = { b: { a } };
+    const x = function () {
       y.b.a = 2;
     };
     x();
     $[0] = a;
-    $[1] = x;
+    $[1] = y;
   } else {
-    x = $[1];
+    y = $[1];
   }
-  return x;
+  return y;
 }
 
 ```

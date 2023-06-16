@@ -7,7 +7,7 @@ function component(a) {
   let x = function () {
     z.a.a();
   };
-  return x;
+  return z;
 }
 
 ```
@@ -17,7 +17,7 @@ function component(a) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
-  const $ = useMemoCache(6);
+  const $ = useMemoCache(4);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -37,19 +37,7 @@ function component(a) {
     t1 = $[3];
   }
   const z = t1;
-  const c_4 = $[4] !== z.a;
-  let t2;
-  if (c_4) {
-    t2 = function () {
-      z.a.a();
-    };
-    $[4] = z.a;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
-  }
-  const x = t2;
-  return x;
+  return z;
 }
 
 ```

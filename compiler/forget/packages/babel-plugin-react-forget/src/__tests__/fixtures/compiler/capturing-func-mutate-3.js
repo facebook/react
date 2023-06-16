@@ -5,5 +5,5 @@ function component(a, b) {
     z.a = 2;
     y.b;
   };
-  return x;
+  return z;
 }

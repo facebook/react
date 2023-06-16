@@ -3,5 +3,5 @@ function component(a) {
   let x = function () {
     z.a.a();
   };
-  return x;
+  return z;
 }

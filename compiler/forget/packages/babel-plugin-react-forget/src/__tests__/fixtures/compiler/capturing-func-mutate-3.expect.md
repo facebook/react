@@ -9,7 +9,7 @@ function component(a, b) {
     z.a = 2;
     y.b;
   };
-  return x;
+  return z;
 }
 
 ```
@@ -19,43 +19,18 @@ function component(a, b) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a, b) {
-  const $ = useMemoCache(7);
-  const c_0 = $[0] !== b;
+  const $ = useMemoCache(2);
+  const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
-    t0 = { b };
-    $[0] = b;
+    t0 = { a };
+    $[0] = a;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const y = t0;
-  const c_2 = $[2] !== a;
-  let t1;
-  if (c_2) {
-    t1 = { a };
-    $[2] = a;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const z = t1;
-  const c_4 = $[4] !== z.a;
-  const c_5 = $[5] !== y.b;
-  let t2;
-  if (c_4 || c_5) {
-    t2 = function () {
-      z.a = 2;
-      y.b;
-    };
-    $[4] = z.a;
-    $[5] = y.b;
-    $[6] = t2;
-  } else {
-    t2 = $[6];
-  }
-  const x = t2;
-  return x;
+  const z = t0;
+  return z;
 }
 
 ```

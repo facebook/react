@@ -4,5 +4,5 @@ function component(a) {
     y.b.a = 2;
   };
   x();
-  return x;
+  return y;
 }

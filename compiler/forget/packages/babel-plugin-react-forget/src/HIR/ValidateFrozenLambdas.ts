@@ -15,11 +15,12 @@ import {
   FunctionExpression,
   HIRFunction,
   IdentifierId,
+  Place,
   isMutableEffect,
   isRefValueType,
   isUseRefType,
 } from "./HIR";
-import { eachInstructionValueOperand } from "./visitors";
+import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
 /**
  * Various APIs in React take ownership of the values passed to them, such that it is invalid
@@ -47,56 +48,78 @@ import { eachInstructionValueOperand } from "./visitors";
  * the developer fix the mistake earlier.
  */
 export function validateFrozenLambdas(fn: HIRFunction): void {
-  const lambdas = new Map<IdentifierId, FunctionExpression>();
-  const temporaries = new Map<IdentifierId, IdentifierId>();
+  const state = new State();
 
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       if (instr.value.kind === "FunctionExpression") {
-        lambdas.set(instr.lvalue.identifier.id, instr.value);
+        state.lambdas.set(instr.lvalue.identifier.id, instr.value);
       } else if (instr.value.kind === "LoadLocal") {
         const resolvedId =
-          temporaries.get(instr.value.place.identifier.id) ??
+          state.temporaries.get(instr.value.place.identifier.id) ??
           instr.value.place.identifier.id;
-        temporaries.set(instr.lvalue.identifier.id, resolvedId);
+        state.temporaries.set(instr.lvalue.identifier.id, resolvedId);
       } else if (instr.value.kind === "StoreLocal") {
         const resolvedId =
-          temporaries.get(instr.value.value.identifier.id) ??
+          state.temporaries.get(instr.value.value.identifier.id) ??
           instr.value.value.identifier.id;
-        temporaries.set(instr.value.lvalue.place.identifier.id, resolvedId);
+        state.temporaries.set(
+          instr.value.lvalue.place.identifier.id,
+          resolvedId
+        );
       } else {
         for (const operand of eachInstructionValueOperand(instr.value)) {
-          if (operand.effect === Effect.Freeze) {
-            const operandId =
-              temporaries.get(operand.identifier.id) ?? operand.identifier.id;
-            const lambda = lambdas.get(operandId);
-            if (
-              lambda !== undefined &&
-              lambda.dependencies.some(
-                (place) =>
-                  isMutableEffect(place.effect, place.loc) &&
-                  !isRefValueType(place.identifier) &&
-                  !isUseRefType(place.identifier)
-              )
-            ) {
-              errors.pushErrorDetail(
-                new CompilerErrorDetail({
-                  codeframe: null,
-                  description: null,
-                  loc: typeof operand.loc !== "symbol" ? operand.loc : null,
-                  reason:
-                    "Cannot use a mutable function where an immutable value is expected",
-                  severity: ErrorSeverity.InvalidInput,
-                })
-              );
-            }
+          const operandError = validateOperand(operand, state);
+          if (operandError !== null) {
+            errors.pushErrorDetail(operandError);
           }
         }
+      }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      const operandError = validateOperand(operand, state);
+      if (operandError !== null) {
+        errors.pushErrorDetail(operandError);
       }
     }
   }
   if (errors.hasErrors()) {
     throw errors;
   }
+}
+
+class State {
+  lambdas: Map<IdentifierId, FunctionExpression> = new Map();
+  temporaries: Map<IdentifierId, IdentifierId> = new Map();
+}
+
+function validateOperand(
+  operand: Place,
+  state: State
+): CompilerErrorDetail | null {
+  if (operand.effect === Effect.Freeze) {
+    const operandId =
+      state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
+    const lambda = state.lambdas.get(operandId);
+    if (
+      lambda !== undefined &&
+      lambda.dependencies.some(
+        (place) =>
+          isMutableEffect(place.effect, place.loc) &&
+          !isRefValueType(place.identifier) &&
+          !isUseRefType(place.identifier)
+      )
+    ) {
+      return new CompilerErrorDetail({
+        codeframe: null,
+        description: null,
+        loc: typeof operand.loc !== "symbol" ? operand.loc : null,
+        reason:
+          "Cannot use a mutable function where an immutable value is expected",
+        severity: ErrorSeverity.InvalidInput,
+      });
+    }
+  }
+  return null;
 }
