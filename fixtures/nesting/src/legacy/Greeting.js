@@ -5,8 +5,8 @@ import {Link} from 'react-router-dom';
 import {connect} from 'react-redux';
 import {store} from '../store';
 
-import ThemeContext from './shared/ThemeContext';
-import Clock from './shared/Clock';
+import ThemeContext from '../shared/ThemeContext';
+import Clock from '../shared/Clock';
 
 store.subscribe(() => {
   console.log('Counter:', store.getState());
