@@ -24,8 +24,19 @@ import { logHIRFunction } from "../Utils/logger";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
 
-class State {
+/**
+ * Helper class to track indirections such as LoadLocal and PropertyLoad.
+ */
+export class IdentifierState {
   properties: Map<Identifier, ReactiveScopeDependency> = new Map();
+
+  resolve(identifier: Identifier): Identifier {
+    const resolved = this.properties.get(identifier);
+    if (resolved !== undefined) {
+      return resolved.identifier;
+    }
+    return identifier;
+  }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
     const objectDependency = this.properties.get(object.identifier);
@@ -53,7 +64,7 @@ class State {
 }
 
 export default function analyseFunctions(func: HIRFunction): void {
-  const state = new State();
+  const state = new IdentifierState();
 
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
@@ -106,7 +117,7 @@ function lower(func: HIRFunction): void {
 
 function infer(
   value: FunctionExpression,
-  state: State,
+  state: IdentifierState,
   context: Place[]
 ): void {
   const mutations = new Set(
