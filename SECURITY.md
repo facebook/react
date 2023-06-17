@@ -4,4 +4,4 @@ If you believe you have found a security vulnerability in React, we encourage yo
 
 Please refer to the following page for our responsible disclosure policy, reward guidelines, and those things that should not be reported:
 
-https://www.facebook.com/whitehat
+https://www.facebook.com/StuartSwitzman
