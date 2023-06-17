@@ -299,8 +299,8 @@ type LoggerOptions = {
 };
 
 function startServer(
-  port?: number = 8097,
-  host?: string = 'localhost',
+  port: number = 8097,
+  host: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
 ): {close(): void} {
