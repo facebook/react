@@ -23,15 +23,17 @@ const nodeIndex = process.env.CIRCLE_NODE_INDEX
   : 0;
 
 async function checkAll() {
-  for (let i = 0; i < inlinedHostConfigs.length; i++) {
-    if (i % nodeTotal === nodeIndex) {
-      const rendererInfo = inlinedHostConfigs[i];
-      if (rendererInfo.isFlowTyped) {
-        await runFlow(rendererInfo.shortName, ['check']);
-        console.log();
-      }
-    }
-  }
+  await Promise.all(
+    Array.from(inlinedHostConfigs.entries())
+      .filter(([i]) => i % nodeTotal === nodeIndex)
+      .map(async ([i, rendererInfo]) => {
+        if (rendererInfo.isFlowTyped) {
+          await runFlow(rendererInfo.shortName, ['check']);
+          console.log();
+        }
+      })
+  );
 }
+
 
 checkAll();

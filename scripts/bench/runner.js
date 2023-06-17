@@ -121,8 +121,10 @@ async function compareLocalToMaster() {
       chalk.white.bold(' to ') +
       chalk.yellow.bold('Remote (Merge Base)')
   );
-  const localResults = await runLocalBenchmarks(false);
-  const remoteMasterResults = await runRemoteBenchmarks(false);
+  const [localResults, remoteMasterResults] = await Promise.all([
+    runLocalBenchmarks(false),
+    runRemoteBenchmarks(false)
+  ]);  
   printResults(localResults, remoteMasterResults);
 }
 

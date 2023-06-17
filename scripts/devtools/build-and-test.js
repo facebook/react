@@ -49,12 +49,17 @@ async function main() {
     console.log(chalk.bold.green('  ' + pathToPrint));
   });
 
-  const archivePath = await archiveGitRevision();
-  const buildID = await downloadLatestReactBuild();
+  const [archivePath, buildID] = await Promise.all([
+    archiveGitRevision(),
+    downloadLatestReactBuild()
+  ]);
+  
 
-  await buildAndTestInlinePackage();
-  await buildAndTestStandalonePackage();
-  await buildAndTestExtensions();
+  await Promise.all([
+    buildAndTestInlinePackage(),
+    buildAndTestStandalonePackage(),
+    buildAndTestExtensions()
+  ])
 
   saveBuildMetadata({archivePath, buildID});
 
