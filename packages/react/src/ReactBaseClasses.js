@@ -6,7 +6,6 @@
  */
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
-import assign from 'shared/assign';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -140,7 +139,7 @@ function PureComponent(props, context, updater) {
 const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
-assign(pureComponentPrototype, Component.prototype);
+Object.assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
 export {Component, PureComponent};
