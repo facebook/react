@@ -1500,4 +1500,89 @@ describe('ReactFlightDOMBrowser', () => {
     expect(error.digest).toBe('rejected');
     expect(errors).toEqual(['rejected']);
   });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    let loggedReason;
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      s,
+      {},
+      {
+        onError(reason) {
+          loggedReason = reason;
+        },
+      },
+    );
+    const reader = rscStream.getReader();
+    controller.enqueue('hi');
+    const reason = new Error('aborted');
+    reader.cancel(reason);
+    await reader.read();
+    expect(cancelReason).toBe(reason);
+    expect(loggedReason).toBe(reason);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we abort', async () => {
+    const errors = [];
+    let controller;
+    let cancelReason;
+    const abortController = new AbortController();
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      s,
+      {},
+      {
+        signal: abortController.signal,
+        onError(x) {
+          errors.push(x);
+          return x.message;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+    const reader = result.getReader();
+    controller.enqueue('hi');
+
+    await 0;
+
+    const reason = new Error('aborted');
+    abortController.abort(reason);
+
+    // We should be able to read the part we already emitted before the abort
+    expect(await reader.read()).toEqual({
+      value: 'hi',
+      done: false,
+    });
+
+    expect(cancelReason).toBe(reason);
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
+  });
 });

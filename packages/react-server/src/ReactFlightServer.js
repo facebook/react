@@ -288,6 +288,7 @@ export type Request = {
   nextChunkId: number,
   pendingChunks: number,
   hints: Hints,
+  abortListeners: Set<(reason: mixed) => void>,
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
@@ -384,6 +385,7 @@ export function createRequest(
     nextChunkId: 0,
     pendingChunks: 0,
     hints,
+    abortListeners: new Set(),
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
@@ -550,12 +552,21 @@ function serializeReadableStream(
     streamId.toString(16) + ':' + (supportsBYOB ? 'r' : 'R') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
+  // There's a race condition between when the stream is aborted and when the promise
+  // resolves so we track whether we already aborted it to avoid writing twice.
+  let aborted = false;
   function progress(entry: {done: boolean, value: ReactClientValue, ...}) {
+    if (aborted) {
+      return;
+    }
+
     if (entry.done) {
+      request.abortListeners.delete(error);
       const endStreamRow = streamId.toString(16) + ':C\n';
       request.pendingChunks++;
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      aborted = true;
     } else {
       try {
         const chunkId = outlineModel(request, entry.value);
@@ -574,6 +585,11 @@ function serializeReadableStream(
     }
   }
   function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
     if (
       enablePostpone &&
       typeof reason === 'object' &&
@@ -588,8 +604,10 @@ function serializeReadableStream(
       emitErrorChunk(request, streamId, digest, reason);
     }
     enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
   }
-  // TODO: Handle cancellation when the Request is aborted.
+  request.abortListeners.add(error);
   reader.read().then(progress, error);
   return serializeByValueID(streamId);
 }
@@ -611,11 +629,18 @@ function serializeAsyncIterable(
     streamId.toString(16) + ':' + (isIterator ? 'x' : 'X') + '\n';
   request.completedRegularChunks.push(stringToChunk(startStreamRow));
 
+  // There's a race condition between when the stream is aborted and when the promise
+  // resolves so we track whether we already aborted it to avoid writing twice.
+  let aborted = false;
   function progress(
     entry:
       | {done: false, +value: ReactClientValue, ...}
       | {done: true, +value: ReactClientValue, ...},
   ) {
+    if (aborted) {
+      return;
+    }
+
     try {
       const chunkId = outlineModel(request, entry.value);
       const processedChunk = encodeReferenceChunk(
@@ -626,20 +651,29 @@ function serializeAsyncIterable(
       request.pendingChunks++;
       request.completedRegularChunks.push(processedChunk);
       enqueueFlush(request);
-      iterator.next().then(progress, error);
     } catch (x) {
       error(x);
+      return;
     }
     if (entry.done) {
       // Unlike streams, the last entry is encoded as a row. Even if it's undefined,
       // because it might not be.
+      request.abortListeners.delete(error);
       const endStreamRow = streamId.toString(16) + ':C\n';
       request.pendingChunks++;
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
+      aborted = true;
+    } else {
+      iterator.next().then(progress, error);
     }
   }
   function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
     if (
       enablePostpone &&
       typeof reason === 'object' &&
@@ -654,8 +688,13 @@ function serializeAsyncIterable(
       emitErrorChunk(request, streamId, digest, reason);
     }
     enqueueFlush(request);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
   }
-  // TODO: Handle cancellation when the Request is aborted.
+  request.abortListeners.add(error);
   iterator.next().then(progress, error);
   return serializeByValueID(streamId);
 }
@@ -1390,10 +1429,16 @@ function serializeBlob(request: Request, blob: Blob): string {
 
   const reader = blob.stream().getReader();
 
+  let aborted = false;
   function progress(
     entry: {done: false, value: Uint8Array} | {done: true, value: void},
   ): Promise<void> | void {
+    if (aborted) {
+      return;
+    }
     if (entry.done) {
+      request.abortListeners.delete(error);
+      aborted = true;
       pingTask(request, newTask);
       return;
     }
@@ -1404,11 +1449,21 @@ function serializeBlob(request: Request, blob: Blob): string {
   }
 
   function error(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(error);
     const digest = logRecoverableError(request, reason);
     emitErrorChunk(request, newTask.id, digest, reason);
     request.abortableTasks.delete(newTask);
     enqueueFlush(request);
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
   }
+
+  request.abortListeners.add(error);
+
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
 
@@ -2759,6 +2814,7 @@ function flushCompletedChunks(
       cleanupTaintQueue(request);
     }
     close(destination);
+    request.destination = null;
   }
 }
 
@@ -2816,9 +2872,9 @@ export function stopFlowing(request: Request): void {
 export function abort(request: Request, reason: mixed): void {
   try {
     const abortableTasks = request.abortableTasks;
+    // We have tasks to abort. We'll emit one error row and then emit a reference
+    // to that row from every row that's still remaining.
     if (abortableTasks.size > 0) {
-      // We have tasks to abort. We'll emit one error row and then emit a reference
-      // to that row from every row that's still remaining.
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
       if (
@@ -2842,6 +2898,30 @@ export function abort(request: Request, reason: mixed): void {
       }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
+    }
+    const abortListeners = request.abortListeners;
+    if (abortListeners.size > 0) {
+      let error;
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        // We aborted with a Postpone but since we're passing this to an
+        // external handler, passing this object would leak it outside React.
+        // We create an alternative reason for it instead.
+        error = new Error('The render was aborted due to being postponed.');
+      } else {
+        error =
+          reason === undefined
+            ? new Error(
+                'The render was aborted by the server without a reason.',
+              )
+            : reason;
+      }
+      abortListeners.forEach(callback => callback(error));
+      abortListeners.clear();
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
