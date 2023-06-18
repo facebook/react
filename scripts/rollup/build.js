@@ -117,8 +117,9 @@ const babelPlugins = [
   '@babel/plugin-transform-parameters',
   // TODO: Remove array destructuring from the source. Requires runtime.
   ['@babel/plugin-transform-destructuring', {loose: true, useBuiltIns: true}],
+  // TODO: Remove transform-object-assign
   // Transform Object spread to shared/assign
-  require('../babel/transform-object-assign'),
+  // require('../babel/transform-object-assign'),
 ];
 
 const babelToES5Plugins = [
