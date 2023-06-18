@@ -8,15 +8,19 @@ React is a JavaScript library for building user interfaces.
 
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using [React Native](https://reactnative.dev/).
 
-Want to get started with React quickly? Check out the [Quick Start Guide](https://react.dev/learn).
+## Quick Start
+---
+
+* Want to get started with React quickly? Check out the [Quick Start Guide](https://react.dev/learn).
+* Want to get a taste of React? Try editing the code in [this sandbox](https://react.dev/learn/installation#try-react).
 
 ## Installation
+---
 
 React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
 
-* Use [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
-* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
-* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
+* [Add React to an Existing Project](https://react.dev/learn/add-react-to-an-existing-project)
+* [Start a New React Project](https://react.dev/learn/start-a-new-react-project)
 
 You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/package/react).
 
