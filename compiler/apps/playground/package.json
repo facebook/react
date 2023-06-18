@@ -52,9 +52,5 @@
     "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4"
-  },
-  "resolutions": {
-    "./**/@babel/parser": "7.7.4",
-    "./**/@babel/types": "7.7.4"
   }
 }

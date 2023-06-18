@@ -5,16 +5,13 @@
     "main": "dist/index.js",
     "license": "MIT",
     "files": [
-      "src"
+        "src"
     ],
     "private": true,
     "scripts": {
-      "build": "napi build --platform --release --js-package-name @react/forget-napi --js dist/index.js --dts dist/index.d.ts && mv *.node dist/"
-    },
-    "dependencies": {
+        "build": "napi build --platform --release --js-package-name @react/forget-napi --js dist/index.js --dts dist/index.d.ts && mv *.node dist/"
     },
     "devDependencies": {
-      "@napi-rs/cli": "^2.15.2"
+        "@napi-rs/cli": "^2.15.2"
     }
-  }
-  
+}

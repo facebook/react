@@ -103,7 +103,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "16.x || 18.x || 20.x || 22.x"
+    "node": "18.x || 20.x || 22.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
@@ -134,14 +134,15 @@
     "publish-prereleases": "echo 'This command has been deprecated. Please refer to https://github.com/facebook/react/tree/main/scripts/release#trigger-an-automated-prerelease'",
     "download-build": "node ./scripts/release/download-experimental-build.js",
     "download-build-for-head": "node ./scripts/release/download-experimental-build.js --commit=$(git rev-parse HEAD)",
+    "install-berry": "yarn set version berry && yarn --immutable && cd scripts/release && yarn --immutable",
     "download-build-in-codesandbox-ci": "yarn build --type=node react/index react-dom/index react-dom/client react-dom/src/server react-dom/test-utils scheduler/index react/jsx-runtime react/jsx-dev-runtime",
     "check-release-dependencies": "node ./scripts/release/check-release-dependencies",
     "generate-inline-fizz-runtime": "node ./scripts/rollup/generate-inline-fizz-runtime.js",
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is",
+    "react-is": "npm:react-is@*",
     "jsdom": "22.1.0"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@4.5.0"
 }

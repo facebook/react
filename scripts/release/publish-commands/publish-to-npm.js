@@ -32,19 +32,19 @@ const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
     // Publish the package and tag it.
     if (!dry) {
       if (!ci) {
-        await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
+        await exec(`yarn npm publish --tag=${tags[0]} --otp=${otp}`, {
           cwd: packagePath,
         });
         console.log(theme.command(`  cd ${packagePath}`));
         console.log(
-          theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`)
+          theme.command(`  yarn npm publish --tag=${tags[0]} --otp=${otp}`)
         );
       } else {
-        await exec(`npm publish --tag=${tags[0]}`, {
+        await exec(`yarn npm publish --tag=${tags[0]}`, {
           cwd: packagePath,
         });
         console.log(theme.command(`  cd ${packagePath}`));
-        console.log(theme.command(`  npm publish --tag=${tags[0]}`));
+        console.log(theme.command(`  yarn npm publish --tag=${tags[0]}`));
       }
     }
 

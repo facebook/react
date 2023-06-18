@@ -57,9 +57,6 @@
     "ts-node": "^10.9.2"
   },
   "resolutions": {
-    "./**/@babel/parser": "7.7.4",
-    "./**/@babel/plugin-syntax-flow": "7.7.4",
-    "./**/@babel/types": "7.7.4",
     "@babel/core": "7.2.0",
     "@babel/generator": "7.2.0",
     "@babel/traverse": "7.7.4"

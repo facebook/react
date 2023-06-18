@@ -33,7 +33,7 @@ const main = async () => {
 
   console.log(chalk.green('\nYou can test this build by running:'));
   console.log(chalk.gray('\n# From the react-devtools root directory:'));
-  console.log('yarn run test:edge\n');
+  console.log('yarn test:edge\n');
 };
 
 main();

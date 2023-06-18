@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('api', {
     } catch (err) {
       alert(
         err.toString() +
-          '\n\nDid you run `yarn` and `yarn run build` in packages/react-devtools-core?',
+          '\n\nDid you run `yarn` and `yarn workspace react-devtools-core build`?',
       );
     }
     return devtools;
