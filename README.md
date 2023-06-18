@@ -22,28 +22,35 @@ React has been designed for gradual adoption from the start, and **you can use a
 * [Add React to an Existing Project](https://react.dev/learn/add-react-to-an-existing-project)
 * [Start a New React Project](https://react.dev/learn/start-a-new-react-project)
 
-You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/package/react).
 
 ## Documentation
+---
 
-You can find the React documentation [on the website](https://reactjs.org/).  
+Check out [React Documentation](https://react.dev/learn) to get started with React.
 
-Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) page for a quick overview.
+***Note**: The above documentation is on the new domain (https://react.dev) and includes docs on modern React with live examples. You can checkout the old website here at https://legacy.reactjs.org*
 
-The documentation is divided into several sections:
+Check out the [Quick Start Guide](https://react.dev/learn) page for a quick overview on React.
 
-* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
-* [Main Concepts](https://reactjs.org/docs/hello-world.html)
-* [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
-* [API Reference](https://reactjs.org/docs/react-api.html)
-* [Where to Get Support](https://reactjs.org/community/support.html)
-* [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+The documentation is divided into six sections:
 
-You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
+* [Quick Start](https://react.dev/learn)
+* [Installation](https://react.dev/learn/installation)
+* [Describing the UI](https://react.dev/learn/describing-the-ui)
+* [Adding Interactivity](https://react.dev/learn/adding-interactivity)
+* [Managing State (Intermediate)](https://react.dev/learn/managing-state)
+* [Escape Hatches (Advanced)](https://react.dev/learn/escape-hatches)
+
+You can check out the [API Reference](https://react.dev/reference/react) for more about React.
+
+You can improve the documentation by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
+
+For more updates from the React Team, check out the [React Blog](https://react.dev/blog)
 
 ## Examples
+---
 
-We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
+We have several examples on the [Official React website](https://react.dev). Here is the first one to get you started:
 
 ```jsx
 import { createRoot } from 'react-dom/client';
@@ -58,24 +65,29 @@ root.render(<HelloMessage name="Taylor" />);
 
 This example will render "Hello Taylor" into a container on the page.
 
-You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. If you're using React as a `<script>` tag, read [this section](https://reactjs.org/docs/add-react-to-a-website.html#optional-try-react-with-jsx) on integrating JSX; otherwise, the [recommended JavaScript toolchains](https://reactjs.org/docs/create-a-new-react-app.html) handle it automatically.
+You'll notice that we used an HTML-like syntax; we call it [JSX (JavaScript Syntax Extension)](https://react.dev/learn/writing-markup-with-jsx). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
 
 ## Contributing
+---
 
 The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.fb.com/codeofconduct)
+---
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.fb.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
 ### [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+---
 
 Read our [contributing guide](https://reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
 ### Good First Issues
+---
 
 To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started.
 
-### License
+### [License](./LICENSE)
+---
 
 React is [MIT licensed](./LICENSE).
