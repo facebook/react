@@ -1,5 +1,6 @@
 # Third party
 **/node_modules
+.yarn
 
 # Not written by hand
 packages/react-art/npm/lib

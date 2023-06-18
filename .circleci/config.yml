@@ -2,36 +2,23 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/openjdk:18.0-node
+    - image: cimg/node:18.18.2-browsers
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
-
-  - &restore_yarn_cache_fixtures_dom
-    restore_cache:
-      name: Restore yarn cache for fixtures/dom
-      keys:
-        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
 
   - &yarn_install_fixtures_dom
     run:
       name: Install dependencies in fixtures/dom
       working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+      command: yarn --immutable
 
   - &yarn_install_fixtures_dom_retry
     run:
       name: Install dependencies in fixtures/dom (retry)
       when: on_fail
       working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &save_yarn_cache_fixtures_dom
-    save_cache:
-      name: Save yarn cache for fixtures/dom
-      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-      paths:
-        - ~/.cache/yarn
+      command: yarn --immutable
 
   - &TEST_PARALLELISM 20
 
@@ -42,6 +29,9 @@ commands:
   setup_node_modules:
     description: "Restore node_modules"
     steps:
+      - run:
+          name: Enable corepack
+          command: sudo corepack enable
       - restore_cache:
           name: Restore yarn cache
           keys:
@@ -49,9 +39,9 @@ commands:
       - run:
           name: Install dependencies
           command: |
-            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            yarn --immutable
             if [ $? -ne 0 ]; then
-              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+              yarn --immutable
             fi
           environment:
           # If we start needing the Electron binary, please ensure the binary is cached in CI following https://www.electronjs.org/docs/latest/tutorial/installation
@@ -60,7 +50,7 @@ commands:
           name: Save yarn cache
           key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
           paths:
-            - ~/.cache/yarn
+            - ~/.yarn/berry
 
 # The CircleCI API doesn't yet support triggering a specific workflow, but it
 # does support triggering a pipeline. So as a workaround you can triggger the
@@ -229,8 +219,8 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
-            npx playwright install
-            sudo npx playwright install-deps
+            yarn dlx playwright install
+            sudo yarn dlx playwright install-deps
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -360,10 +350,8 @@ jobs:
       - attach_workspace:
           at: .
       - setup_node_modules
-      - *restore_yarn_cache_fixtures_dom
       - *yarn_install_fixtures_dom
       - *yarn_install_fixtures_dom_retry
-      - *save_yarn_cache_fixtures_dom
       - run:
           name: Run DOM fixture tests
           environment:
