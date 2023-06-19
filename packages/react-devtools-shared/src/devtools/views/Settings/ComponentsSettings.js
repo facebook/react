@@ -308,9 +308,7 @@ export default function ComponentsSettings(_: {}): React.Node {
           <input
             className={styles.Input}
             type="text"
-            placeholder={
-              process.env.EDITOR_URL ? process.env.EDITOR_URL : ''
-            }
+            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
             value={openInEditorURL}
             onChange={event => {
               setOpenInEditorURL(event.target.value);
