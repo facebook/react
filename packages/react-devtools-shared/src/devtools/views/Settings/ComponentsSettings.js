@@ -95,6 +95,8 @@ export default function ComponentsSettings(_: {}): React.Node {
     getDefaultOpenInEditorURL(),
   );
 
+  const vscodeFilepath = 'vscode://file/{path}:{line}';
+
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
   >(() => [...store.componentFilters]);
@@ -294,7 +296,7 @@ export default function ComponentsSettings(_: {}): React.Node {
             const selectedValue = currentTarget.value;
             setOpenInEditorURLPreset(selectedValue);
             if (selectedValue === 'vscode') {
-              setOpenInEditorURL('vscode://file/{path}:{line}');
+              setOpenInEditorURL(vscodeFilepath);
             } else if (selectedValue === 'custom') {
               setOpenInEditorURL('');
             }
