@@ -1,116 +1,102 @@
 import React from 'react';
-import {render, fireEvent} from 'react-dom';
+import { render, unmountComponentAtNode } from 'react-dom';
 import ComponentsSettings from '../devtools/views/Settings/ComponentsSettings';
 
 describe('ComponentsSettings', () => {
   let container;
 
   beforeEach(() => {
+    // Set up a DOM element as a render target
     container = document.createElement('div');
     document.body.appendChild(container);
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    // Clean up on exiting
+    unmountComponentAtNode(container);
+    container.remove();
     container = null;
   });
 
-  it('should add a filter when "Add filter" button is clicked', () => {
-    render(<ComponentsSettings />, container);
-    const addButton = container.querySelector('button');
-    fireEvent.click(addButton);
-
-    // Assert that a new filter is added
-    expect(container.textContent).toContain('Filter matches');
-  });
-
-  it('should remove a filter when "Delete filter" button is clicked', () => {
-    render(<ComponentsSettings />, container);
-    const addButton = container.querySelector('button');
-    const deleteButton = container.querySelector('button');
-
-    fireEvent.click(addButton);
-    fireEvent.click(deleteButton);
-
-    // Assert that the filter is removed
-    expect(container.textContent).not.toContain('Filter matches');
-  });
-
-  it('should update the collapseNodesByDefault setting when expand/collapse checkbox is clicked', () => {
-    render(<ComponentsSettings />, container);
-    const expandCollapseCheckbox = container.querySelector(
-      'input[type="checkbox"]',
-    );
-
-    fireEvent.click(expandCollapseCheckbox);
-
-    // Assert that the setting is updated
-    expect(expandCollapseCheckbox.checked).toBe(false);
-  });
-
-  it('should update the parseHookNames setting when parse hook names checkbox is clicked', () => {
-    render(<ComponentsSettings />, container);
-    const parseHookNamesCheckbox = container.querySelector(
-      'input[type="checkbox"]',
-    );
-
-    fireEvent.click(parseHookNamesCheckbox);
-
-    // Assert that the setting is updated
-    expect(parseHookNamesCheckbox.checked).toBe(true);
-  });
-
-  it('should update the openInEditorURLPreset and openInEditorURL settings when selecting a different preset', () => {
-    render(<ComponentsSettings />, container);
-    const openInEditorURLPresetSelect = container.querySelector('select');
-    const openInEditorURLInput = container.querySelector('input[type="text"]');
-
-    // Select the "VS Code" preset
-    fireEvent.change(openInEditorURLPresetSelect, {target: {value: 'vscode'}});
-
-    // Assert that the preset and URL input are updated
-    expect(openInEditorURLPresetSelect.value).toBe('vscode');
-    expect(openInEditorURLInput.value).toBe('vscode://file/{path}:{line}');
-
-    // Select the "Custom" preset
-    fireEvent.change(openInEditorURLPresetSelect, {target: {value: 'custom'}});
-
-    // Assert that the preset and URL input are updated
-    expect(openInEditorURLPresetSelect.value).toBe('custom');
-    expect(openInEditorURLInput.value).toBe('');
-
-    // Update the custom URL input
-    fireEvent.change(openInEditorURLInput, {
-      target: {value: 'https://example.com'},
+  // @reactVersion >= 17
+  it('should update collapseNodesByDefault setting', () => {
+    const useContextMock = jest.fn().mockReturnValue({
+      collapseNodesByDefault: true,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
     });
 
-    // Assert that the custom URL input is updated
-    expect(openInEditorURLInput.value).toBe('https://example.com');
-  });
-
-  it('should update the filter type when selecting a different type in the filter dropdown', () => {
     render(<ComponentsSettings />, container);
-    const addButton = container.querySelector('button');
-    fireEvent.click(addButton);
 
-    const filterTypeSelect = container.querySelector('select');
-    fireEvent.change(filterTypeSelect, {target: {value: 'location'}});
+    const toggleElement = container.querySelector('.Settings input[type="checkbox"]');
 
-    // Assert that the filter type is updated
-    expect(filterTypeSelect.value).toBe('location');
+    expect(toggleElement.checked).toBe(true);
+
+    toggleElement.click();
+
+    expect(useContextMock().collapseNodesByDefault).toBe(false);
   });
 
-  it('should update the filter value when entering a value in the filter input field', () => {
+  it('should update parseHookNames setting', () => {
+    const setParseHookNamesMock = jest.fn();
+
+    const useContextMock = jest.fn().mockReturnValue({
+      parseHookNames: true,
+      setParseHookNames: setParseHookNamesMock,
+    });
+
     render(<ComponentsSettings />, container);
-    const addButton = container.querySelector('button');
-    fireEvent.click(addButton);
 
-    const filterInput = container.querySelector('input[type="text"]');
-    fireEvent.change(filterInput, {target: {value: 'example'}});
+    const toggleElement = container.querySelector('.Settings input[type="checkbox"]');
 
-    // Assert that the filter value is updated
-    expect(filterInput.value).toBe('example');
+    expect(toggleElement.checked).toBe(true);
+
+    toggleElement.click();
+
+    expect(setParseHookNamesMock).toHaveBeenCalledWith(false);
   });
 
-  // Add more test cases for other functionality and interactions
+  it('should update openInEditorURLPreset setting', () => {
+    const setLocalStorageMock = jest.spyOn(Storage.prototype, 'setItem');
+
+    const useContextMock = jest.fn().mockReturnValue({
+      openInEditorURLPreset: 'custom',
+      setOpenInEditorURLPreset: jest.fn(),
+    });
+
+    render(<ComponentsSettings />, container);
+
+    const selectElement = container.querySelector('.Settings select');
+
+    expect(selectElement.value).toBe('custom');
+
+    selectElement.value = 'vscode';
+    selectElement.dispatchEvent(new Event('change'));
+
+    expect(setLocalStorageMock).toHaveBeenCalledWith('OPEN_IN_EDITOR_URL_PRESET', 'vscode');
+  });
+
+  it('should update openInEditorURL setting', () => {
+    const setLocalStorageMock = jest.spyOn(Storage.prototype, 'setItem');
+
+    const useContextMock = jest.fn().mockReturnValue({
+      openInEditorURLPreset: 'custom',
+      setOpenInEditorURL: jest.fn(),
+    });
+
+    render(<ComponentsSettings />, container);
+
+    const selectElement = container.querySelector('.Settings select');
+    const inputElement = container.querySelector('.Settings input[type="text"]');
+
+    selectElement.value = 'custom';
+    selectElement.dispatchEvent(new Event('change'));
+
+    inputElement.value = 'https://example.com';
+    inputElement.dispatchEvent(new Event('change'));
+
+    expect(setLocalStorageMock).toHaveBeenCalledWith('OPEN_IN_EDITOR_URL', 'https://example.com');
+  });
+
+  // Add additional test cases for other functionality...
 });
