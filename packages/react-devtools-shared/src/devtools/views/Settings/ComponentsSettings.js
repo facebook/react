@@ -309,7 +309,7 @@ export default function ComponentsSettings(_: {}): React.Node {
             className={styles.Input}
             type="text"
             placeholder={
-              process.env.EDITOR_URL ? 'vscode://file/{path}:{line}' : ''
+              process.env.EDITOR_URL ? process.env.EDITOR_URL : ''
             }
             value={openInEditorURL}
             onChange={event => {
