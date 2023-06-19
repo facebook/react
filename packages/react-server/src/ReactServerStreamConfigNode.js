@@ -215,6 +215,12 @@ export function clonePrecomputedChunk(
     : precomputedChunk;
 }
 
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  return typeof chunk === 'string'
+    ? Buffer.byteLength(chunk, 'utf8')
+    : chunk.byteLength;
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);

@@ -57,6 +57,10 @@ export function clonePrecomputedChunk(
   return chunk;
 }
 
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  throw new Error('Not implemented.');
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);

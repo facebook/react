@@ -18,10 +18,20 @@ import {readModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightClient from 'react-client/flight';
 
-type Source = Array<string>;
+type Source = Array<Uint8Array>;
 
-const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
-  supportsBinaryStreams: false,
+const decoderOptions = {stream: true};
+
+const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
+  createStringDecoder() {
+    return new TextDecoder();
+  },
+  readPartialStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+    return decoder.decode(buffer, decoderOptions);
+  },
+  readFinalStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+    return decoder.decode(buffer);
+  },
   resolveClientReference(bundlerConfig: null, idx: string) {
     return idx;
   },
@@ -37,7 +47,7 @@ const {createResponse, processStringChunk, getRoot, close} = ReactFlightClient({
 function read<T>(source: Source): Thenable<T> {
   const response = createResponse(source, null);
   for (let i = 0; i < source.length; i++) {
-    processStringChunk(response, source[i], 0);
+    processBinaryChunk(response, source[i], 0);
   }
   close(response);
   return getRoot(response);

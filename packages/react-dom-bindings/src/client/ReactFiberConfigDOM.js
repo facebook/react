@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/ReactDOMDispatcher';
+import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -19,6 +19,12 @@ import type {
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import type {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
@@ -99,7 +105,6 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {
-  validatePreloadArguments,
   validatePreinitArguments,
   validateLinkPropsForStyleResource,
   getValueDescriptorExpectingObjectForWarning,
@@ -2010,7 +2015,7 @@ type ScriptProps = {
 
 type PreloadProps = {
   rel: 'preload',
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 
@@ -2095,7 +2100,7 @@ function preconnectAs(
   }
 }
 
-function prefetchDNS(href: string, options?: mixed) {
+function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2125,7 +2130,7 @@ function prefetchDNS(href: string, options?: mixed) {
   preconnectAs('dns-prefetch', null, href);
 }
 
-function preconnect(href: string, options: ?{crossOrigin?: string}) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2156,19 +2161,34 @@ function preconnect(href: string, options: ?{crossOrigin?: string}) {
   preconnectAs('preconnect', crossOrigin, href);
 }
 
-type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
   }
   if (__DEV__) {
-    validatePreloadArguments(href, options);
+    // TODO move this to ReactDOMFloat and expose a stricter function interface or possibly
+    // typed functions (preloadImage, preloadStyle, ...)
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += `The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options == null || typeof options !== 'object') {
+      encountered += `The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (typeof options.as !== 'string' || !options.as) {
+      encountered += `The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. %s',
+        encountered,
+      );
+    }
   }
   const ownerDocument = getDocumentForImperativeFloatMethods();
   if (
@@ -2176,13 +2196,35 @@ function preload(href: string, options: PreloadOptions) {
     href &&
     typeof options === 'object' &&
     options !== null &&
+    typeof options.as === 'string' &&
+    options.as &&
     ownerDocument
   ) {
     const as = options.as;
-    const limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    const preloadSelector = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
-
+    let preloadSelector = `link[rel="preload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
+      as,
+    )}"]`;
+    if (as === 'image') {
+      const {imageSrcSet, imageSizes} = options;
+      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+        preloadSelector += `[imagesrcset="${escapeSelectorAttributeValueInsideDoubleQuotes(
+          imageSrcSet,
+        )}"]`;
+        if (typeof imageSizes === 'string') {
+          preloadSelector += `[imagesizes="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            imageSizes,
+          )}"]`;
+        }
+      } else {
+        preloadSelector += `[href="${escapeSelectorAttributeValueInsideDoubleQuotes(
+          href,
+        )}"]`;
+      }
+    } else {
+      preloadSelector += `[href="${escapeSelectorAttributeValueInsideDoubleQuotes(
+        href,
+      )}"]`;
+    }
     // Some preloads are keyed under their selector. This happens when the preload is for
     // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
     // Here we figure out which key to use to determine if we have a preload already.
@@ -2228,24 +2270,23 @@ function preloadPropsFromPreloadOptions(
   options: PreloadOptions,
 ): PreloadProps {
   return {
-    href,
     rel: 'preload',
     as,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === 'image' && options.imageSrcSet ? undefined : href,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    nonce: options.nonce,
     fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes,
   };
 }
 
-type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
     return;
