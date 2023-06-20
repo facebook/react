@@ -23,6 +23,7 @@ const tests: ForgetTestCases = {
       name: "Basic example",
       code: normalizeIndent`
         function foo(x, y) {
+          'use forget';
           if (x) {
             return foo(false, y);
           }
@@ -34,6 +35,7 @@ const tests: ForgetTestCases = {
       name: "Unsupported syntax",
       code: normalizeIndent`
         function foo(x) {
+          'use forget';
           var y = 1;
           return y * x;
         }
@@ -45,6 +47,7 @@ const tests: ForgetTestCases = {
       name: "[InvalidInput] Ref access during render",
       code: normalizeIndent`
         function Component(props) {
+          'use forget';
           const ref = useRef(null);
           const value = ref.current;
           return value;
@@ -53,11 +56,11 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $23:TObject<BuiltInRefValue> (5:5)",
-          line: 5,
+            "[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $23:TObject<BuiltInRefValue> (6:6)",
+          line: 6,
           column: 10,
           endColumn: 15,
-          endLine: 5,
+          endLine: 6,
         },
       ],
     },
@@ -65,6 +68,7 @@ const tests: ForgetTestCases = {
       name: "[Invariant] Defined after use",
       code: normalizeIndent`
         function Component(props) {
+          'use forget';
           let y = function () {
             m(x);
           };
@@ -77,11 +81,11 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undefined (7:7)",
-          line: 7,
+            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undefined (8:8)",
+          line: 8,
           column: 3,
           endColumn: 17,
-          endLine: 7,
+          endLine: 8,
         },
       ],
     },

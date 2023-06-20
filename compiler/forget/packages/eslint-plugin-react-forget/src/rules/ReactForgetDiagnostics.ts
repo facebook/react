@@ -27,6 +27,7 @@ const rule: Rule.RuleModule = {
     const filename = context.filename ?? context.getFilename();
 
     const opts: Partial<PluginOptions> = {
+      enableOnlyOnUseForgetDirective: true,
       panicOnBailout: false,
       environment: {
         validateHooksUsage: true,
