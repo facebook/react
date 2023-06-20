@@ -109,7 +109,7 @@ describe('ReactStrictMode', () => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container);
           root.render(
-            <React.StrictMode unstable_disableStrictPassiveEffect={true}>
+            <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
               <Component label="A" />
             </React.StrictMode>,
           );

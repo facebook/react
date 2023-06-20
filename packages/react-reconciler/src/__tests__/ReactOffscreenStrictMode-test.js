@@ -59,7 +59,7 @@ describe('ReactOffscreenStrictMode', () => {
   it('should trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
     await act(() => {
       ReactNoop.render(
-        <React.StrictMode unstable_disableStrictPassiveEffect={true}>
+        <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
           <Offscreen>
             <Component label="A" />
           </Offscreen>

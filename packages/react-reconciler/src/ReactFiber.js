@@ -540,7 +540,7 @@ export function createFiberFromTypeAndProps(
         if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
-          if (pendingProps.unstable_disableStrictPassiveEffect) {
+          if (pendingProps.DO_NOT_USE_disableStrictPassiveEffect) {
             mode |= NoStrictPassiveEffectsMode;
           }
         }
