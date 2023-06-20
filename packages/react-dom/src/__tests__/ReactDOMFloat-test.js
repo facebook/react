@@ -7084,5 +7084,26 @@ background-color: green;
         </html>,
       );
     });
+
+    // @gate enableFloat
+    it('can update title tags', async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<title data-foo="foo">a title</title>);
+      });
+      await waitForAll([]);
+
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title data-foo="foo">a title</title>,
+      );
+
+      await act(() => {
+        root.render(<title data-foo="bar">another title</title>);
+      });
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document.head)).toEqual(
+        <title data-foo="bar">another title</title>,
+      );
+    });
   });
 });
