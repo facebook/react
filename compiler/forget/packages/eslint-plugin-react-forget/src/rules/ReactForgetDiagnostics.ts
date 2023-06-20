@@ -13,6 +13,10 @@ import ReactForgetBabelPlugin, {
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
+function isReactForgetCompilerError(err: Error): err is CompilerError {
+  return err.name === "ReactForgetCompilerError";
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: "problem",
@@ -55,7 +59,7 @@ const rule: Rule.RuleModule = {
           sourceType: "module",
         });
       } catch (err) {
-        if (err instanceof CompilerError) {
+        if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
             if (detail.loc != null) {
               context.report({
@@ -65,7 +69,7 @@ const rule: Rule.RuleModule = {
             }
           }
         } else {
-          throw new Error(err);
+          throw err;
         }
       }
     }
