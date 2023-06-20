@@ -49,10 +49,18 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
           // for these instructions so they ensure we have a complete analysis.
           break;
         }
+        case "JsxExpression": {
+          // It's okay to pass refs to JSX, but not ref *values*
+          for (const operand of eachInstructionValueOperand(instr.value)) {
+            validateNonRefValue(error, operand);
+          }
+          break;
+        }
         case "FunctionExpression": {
-          // For now we assume *all* function expressions are safe, eventually we can
-          // be more precise and disallow ref access in functions that may be called
-          // during render
+          // functions are allowed to capture refs, so long as the function is not called
+          // during render. see AnalyzeFunctions for how we ensure that functions which
+          // capture refs get assigned a mutable range so we know here whether the function
+          // is called or not
           const mutableRange = instr.lvalue.identifier.mutableRange;
           if (mutableRange.end > mutableRange.start + 1) {
             for (const operand of eachInstructionValueOperand(instr.value)) {
