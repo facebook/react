@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export { assertConsistentIdentifiers } from "./AssertConsistentIdentifiers";
+export { assertTerminalSuccessorsExist } from "./AssertTerminalSuccessorsExist";
 export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
 export { Environment, Hook } from "./Environment";
@@ -17,9 +19,3 @@ export {
 } from "./HIRBuilder";
 export { mergeConsecutiveBlocks } from "./MergeConsecutiveBlocks";
 export { printFunction, printHIR } from "./PrintHIR";
-export { validateConsistentIdentifiers } from "./ValidateConsistentIdentifiers";
-export { validateFrozenLambdas } from "./ValidateFrozenLambdas";
-export { validateHooksUsage } from "./ValidateHooksUsage";
-export { validateNoRefAccessInRender } from "./ValidateNoRefAccesInRender";
-export { validateTerminalSuccessors } from "./ValidateTerminalSuccessors";
-export { validateUnconditionalHooks } from "./ValidateUnconditionalHooks";

@@ -14,15 +14,15 @@ import {
   Instruction,
   InstructionValue,
   LoadGlobal,
+  Place,
+  Primitive,
+  assertConsistentIdentifiers,
+  assertTerminalSuccessorsExist,
   markInstructionIds,
   markPredecessors,
   mergeConsecutiveBlocks,
-  Place,
-  Primitive,
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
-  validateConsistentIdentifiers,
-  validateTerminalSuccessors,
 } from "../HIR";
 import {
   removeDeadDoWhileStatements,
@@ -81,8 +81,8 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
     // consecutively
     mergeConsecutiveBlocks(fn);
 
-    validateConsistentIdentifiers(fn);
-    validateTerminalSuccessors(fn);
+    assertConsistentIdentifiers(fn);
+    assertTerminalSuccessorsExist(fn);
   }
 }
 

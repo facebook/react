@@ -10,7 +10,7 @@ import { GeneratedSource, HIRFunction } from "./HIR";
 import { printTerminal } from "./PrintHIR";
 import { mapTerminalSuccessors } from "./visitors";
 
-export function validateTerminalSuccessors(fn: HIRFunction): void {
+export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     mapTerminalSuccessors(block.terminal, (successor) => {
       if (!fn.body.blocks.has(successor)) {

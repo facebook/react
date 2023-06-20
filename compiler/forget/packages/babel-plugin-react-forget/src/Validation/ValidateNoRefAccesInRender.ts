@@ -10,9 +10,12 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "../CompilerError";
-import { HIRFunction, Place, isRefValueType, isUseRefType } from "./HIR";
-import { printPlace } from "./PrintHIR";
-import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
+import { HIRFunction, Place, isRefValueType, isUseRefType } from "../HIR/HIR";
+import { printPlace } from "../HIR/PrintHIR";
+import {
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 
 /**
  * Validates that ref values (the `current` property) are not accessed during render.

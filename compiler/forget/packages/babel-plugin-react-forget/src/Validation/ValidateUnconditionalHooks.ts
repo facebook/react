@@ -10,10 +10,10 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "../CompilerError";
+import { PostDominator, computePostDominatorTree } from "../HIR/Dominator";
+import { BlockId, HIRFunction, getHookKind } from "../HIR/HIR";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
-import { PostDominator, computePostDominatorTree } from "./Dominator";
-import { BlockId, HIRFunction, getHookKind } from "./HIR";
 
 /**
  * Validates that the function honors the [Rules of Hooks](https://react.dev/warnings/invalid-hook-call-warning)

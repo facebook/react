@@ -18,8 +18,11 @@ import {
   Place,
   isRefValueType,
   isUseRefType,
-} from "./HIR";
-import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
+} from "../HIR/HIR";
+import {
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 
 /**
  * Various APIs in React take ownership of the values passed to them, such that it is invalid

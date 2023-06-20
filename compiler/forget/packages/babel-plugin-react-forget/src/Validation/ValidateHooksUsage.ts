@@ -10,9 +10,12 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "../CompilerError";
+import { HIRFunction, IdentifierId, Place, getHookKind } from "../HIR/HIR";
+import {
+  eachInstructionValueOperand,
+  eachTerminalOperand,
+} from "../HIR/visitors";
 import { hasBackEdge } from "../Optimization/DeadCodeElimination";
-import { HIRFunction, IdentifierId, Place, getHookKind } from "./HIR";
-import { eachInstructionValueOperand, eachTerminalOperand } from "./visitors";
 
 /**
  * Validates that the function honors the [Rules of Hooks](https://react.dev/warnings/invalid-hook-call-warning)

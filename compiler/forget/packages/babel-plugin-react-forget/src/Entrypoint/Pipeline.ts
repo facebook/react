@@ -9,15 +9,11 @@ import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import {
   HIRFunction,
+  ReactiveFunction,
+  assertConsistentIdentifiers,
+  assertTerminalSuccessorsExist,
   lower,
   mergeConsecutiveBlocks,
-  ReactiveFunction,
-  validateConsistentIdentifiers,
-  validateFrozenLambdas,
-  validateHooksUsage,
-  validateNoRefAccessInRender,
-  validateTerminalSuccessors,
-  validateUnconditionalHooks,
 } from "../HIR";
 import { Environment, EnvironmentConfig } from "../HIR/Environment";
 import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
@@ -45,8 +41,8 @@ import {
   pruneAllReactiveScopes,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
-  pruneUnusedLabels,
   pruneUnusedLValues,
+  pruneUnusedLabels,
   pruneUnusedScopes,
   renameVariables,
 } from "../ReactiveScopes";
@@ -54,6 +50,12 @@ import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import { logHIRFunction, logReactiveFunction } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
+import {
+  validateFrozenLambdas,
+  validateHooksUsage,
+  validateNoRefAccessInRender,
+  validateUnconditionalHooks,
+} from "../Validation";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: t.FunctionDeclaration }
@@ -78,8 +80,8 @@ export function* run(
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
-  validateConsistentIdentifiers(hir);
-  validateTerminalSuccessors(hir);
+  assertConsistentIdentifiers(hir);
+  assertTerminalSuccessorsExist(hir);
 
   enterSSA(hir);
   yield log({ kind: "hir", name: "SSA", value: hir });
@@ -87,7 +89,7 @@ export function* run(
   eliminateRedundantPhi(hir);
   yield log({ kind: "hir", name: "EliminateRedundantPhi", value: hir });
 
-  validateConsistentIdentifiers(hir);
+  assertConsistentIdentifiers(hir);
 
   constantPropagation(hir);
   yield log({ kind: "hir", name: "ConstantPropagation", value: hir });

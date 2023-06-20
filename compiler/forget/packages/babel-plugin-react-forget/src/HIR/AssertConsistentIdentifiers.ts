@@ -24,7 +24,7 @@ import {
  * Validation pass to check that there is a 1:1 mapping between Identifier objects and IdentifierIds,
  * ie there can only be one Identifier instance per IdentifierId.
  */
-export function validateConsistentIdentifiers(fn: HIRFunction): void {
+export function assertConsistentIdentifiers(fn: HIRFunction): void {
   const identifiers: Identifiers = new Map();
   const assignments: Set<IdentifierId> = new Set();
   for (const [, block] of fn.body.blocks) {
