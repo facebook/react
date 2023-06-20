@@ -2667,14 +2667,14 @@ function commitMutationEffectsOnFiber(
             }
           } else if (currentResource !== newResource) {
             // We are moving to or from Hoistable Resource, or between different Hoistable Resources
-            if (currentResource === null) {
+            if (empty(currentResource )) {
               if (current.stateNode !== null) {
                 unmountHoistable(current.stateNode);
               }
             } else {
               releaseResource(currentResource);
             }
-            if (newResource === null) {
+            if (empty(newResource)) {
               mountHoistable(
                 hoistableRoot,
                 finishedWork.type,
@@ -2687,7 +2687,7 @@ function commitMutationEffectsOnFiber(
                 finishedWork.memoizedProps,
               );
             }
-          } else if (newResource === null && finishedWork.stateNode !== null) {
+          } else if (empty(newResource)  && finishedWork.stateNode !== null) {
             // We may have an update on a Hoistable element
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
