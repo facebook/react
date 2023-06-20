@@ -28,12 +28,12 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  let t22 = undefined;
+  let t21 = undefined;
   bb10: {
     let y = undefined;
     bb2: switch (props.switch) {
       case "foo": {
-        t22 = "foo";
+        t21 = "foo";
         break bb10;
       }
       case "bar": {
@@ -45,9 +45,9 @@ function Component(props) {
       }
     }
 
-    t22 = y;
+    t21 = y;
   }
-  const x = t22;
+  const x = t21;
   return x;
 }
 

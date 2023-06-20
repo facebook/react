@@ -18,7 +18,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at capture $43[6:16]:TObject<BuiltInRefValue> (5:5)
+[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at capture $42[6:16]:TObject<BuiltInRefValue> (5:5)
 ```
           
       

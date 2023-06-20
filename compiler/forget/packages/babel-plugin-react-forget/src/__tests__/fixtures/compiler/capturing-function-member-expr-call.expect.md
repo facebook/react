@@ -20,9 +20,9 @@ function component({ mutator }) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function component(t27) {
+function component(t26) {
   const $ = useMemoCache(7);
-  const { mutator } = t27;
+  const { mutator } = t26;
   const c_0 = $[0] !== mutator;
   let t0;
   if (c_0) {

@@ -56,7 +56,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $23:TObject<BuiltInRefValue> (6:6)",
+            "[ReactForget] InvalidInput: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $22:TObject<BuiltInRefValue> (6:6)",
           line: 6,
           column: 10,
           endColumn: 15,
@@ -81,7 +81,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$2 is undefined (8:8)",
+            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$1 is undefined (8:8)",
           line: 8,
           column: 3,
           endColumn: 17,

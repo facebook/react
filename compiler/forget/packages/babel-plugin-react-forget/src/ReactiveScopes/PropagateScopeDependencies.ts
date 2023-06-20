@@ -49,12 +49,6 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new FindPromotedTemporaries(), escapingTemporaries);
 
   const context = new Context(escapingTemporaries.usedOutsideDeclaringScope);
-  if (fn.id !== null) {
-    context.declare(fn.id, {
-      id: makeInstructionId(0),
-      scope: empty(),
-    });
-  }
   for (const param of fn.params) {
     context.declare(param.identifier, {
       id: makeInstructionId(0),

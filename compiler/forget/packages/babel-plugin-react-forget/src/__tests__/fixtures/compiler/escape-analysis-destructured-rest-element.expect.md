@@ -21,8 +21,8 @@ function Component(props) {
   const c_0 = $[0] !== props.a;
   let b;
   if (c_0) {
-    const { a, ...t30 } = props.a;
-    b = t30;
+    const { a, ...t29 } = props.a;
+    b = t29;
     $[0] = props.a;
     $[1] = b;
   } else {
@@ -31,8 +31,8 @@ function Component(props) {
   const c_2 = $[2] !== props.c;
   let d;
   if (c_2) {
-    const [c, ...t31] = props.c;
-    d = t31;
+    const [c, ...t30] = props.c;
+    d = t30;
     $[2] = props.c;
     $[3] = d;
   } else {

@@ -19,7 +19,7 @@ function component(a, b) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a, b) {
   const $ = useMemoCache(2);
-  let t14 = undefined;
+  let t13 = undefined;
   bb6: {
     if (a) {
       const c_0 = $[0] !== b;
@@ -31,12 +31,12 @@ function component(a, b) {
       } else {
         t0 = $[1];
       }
-      t14 = t0;
+      t13 = t0;
       break bb6;
     }
-    t14 = undefined;
+    t13 = undefined;
   }
-  const x = t14;
+  const x = t13;
   return x;
 }
 

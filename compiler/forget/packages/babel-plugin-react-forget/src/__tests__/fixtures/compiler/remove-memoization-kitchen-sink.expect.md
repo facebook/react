@@ -29,8 +29,8 @@ function Component(props) {
   const object = { x, onChange };
 
   const { x: x_0, onChange: onChange_0 } = object;
-  const t44 = <input value={x_0} onChange={onChange_0} />;
-  return t44;
+  const t43 = <input value={x_0} onChange={onChange_0} />;
+  return t43;
 }
 
 ```

@@ -24,8 +24,8 @@ function component(a) {
   } else {
     t0 = $[1];
   }
-  const t10 = t0;
-  const x = t10;
+  const t9 = t0;
+  const x = t9;
   const c_2 = $[2] !== x;
   let t1;
   if (c_2) {

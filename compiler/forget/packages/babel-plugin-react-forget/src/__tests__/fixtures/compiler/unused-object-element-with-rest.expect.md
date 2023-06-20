@@ -19,8 +19,8 @@ function Foo(props) {
   const c_0 = $[0] !== props.a;
   let rest;
   if (c_0) {
-    const { unused, ...t16 } = props.a;
-    rest = t16;
+    const { unused, ...t15 } = props.a;
+    rest = t15;
     $[0] = props.a;
     $[1] = rest;
   } else {

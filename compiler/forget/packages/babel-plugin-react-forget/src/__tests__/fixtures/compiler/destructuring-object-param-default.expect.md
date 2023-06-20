@@ -11,9 +11,9 @@ function Component({ a = 2 }) {
 ## Code
 
 ```javascript
-function Component(t14) {
-  const { a: t15 } = t14;
-  const a = t15 === undefined ? 2 : t15;
+function Component(t13) {
+  const { a: t14 } = t13;
+  const a = t14 === undefined ? 2 : t14;
   return a;
 }
 

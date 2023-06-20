@@ -117,9 +117,6 @@ export function pruneNonEscapingScopes(
   // First build up a map of which instructions are involved in creating which values,
   // and which values are returned.
   const state = new State(fn.env);
-  if (fn.id !== null) {
-    state.declare(fn.id.id);
-  }
   for (const param of fn.params) {
     state.declare(param.identifier.id);
   }

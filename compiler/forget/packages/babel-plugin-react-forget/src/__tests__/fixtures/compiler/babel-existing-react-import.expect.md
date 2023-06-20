@@ -41,8 +41,8 @@ function Component(props) {
   } else {
     t0 = $[1];
   }
-  const t16 = t0;
-  const expensiveNumber = t16;
+  const t15 = t0;
+  const expensiveNumber = t15;
   const c_2 = $[2] !== expensiveNumber;
   let t1;
   if (c_2) {
@@ -67,8 +67,8 @@ function Component2(props) {
   } else {
     t0 = $[1];
   }
-  const t16 = t0;
-  const expensiveNumber = t16;
+  const t15 = t0;
+  const expensiveNumber = t15;
   const c_2 = $[2] !== expensiveNumber;
   let t1;
   if (c_2) {

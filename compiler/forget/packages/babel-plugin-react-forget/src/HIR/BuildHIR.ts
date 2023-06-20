@@ -23,7 +23,6 @@ import {
   GeneratedSource,
   GotoVariant,
   HIRFunction,
-  Identifier,
   IfTerminal,
   InstructionKind,
   InstructionValue,
@@ -77,9 +76,9 @@ export function lower(
   // Internal babel is on an older version that does not have hasNode (v7.17)
   // See https://github.com/babel/babel/pull/13940/files for impl
   // TODO: write helper function for NodePath.node != null
-  let id: Identifier | null = null;
+  let id: string | null = null;
   if (func.isFunctionDeclaration() && func.get("id").node != null) {
-    id = builder.resolveIdentifier(func.get("id") as NodePath<t.Identifier>);
+    id = (func.get("id") as NodePath<t.Identifier>).node.name;
   }
   const params: Array<Place> = [];
   func.get("params").forEach((param) => {

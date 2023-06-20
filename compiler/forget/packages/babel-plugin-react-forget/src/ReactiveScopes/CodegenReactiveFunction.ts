@@ -38,10 +38,7 @@ import { buildReactiveFunction } from "./BuildReactiveFunction";
 export function codegenReactiveFunction(
   fn: ReactiveFunction
 ): Result<t.FunctionDeclaration, CompilerError> {
-  const cx = new Context(fn.env, fn.id?.name ?? "[[ anonymous ]]");
-  if (fn.id !== null) {
-    cx.temp.set(fn.id.id, null);
-  }
+  const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]");
   for (const param of fn.params) {
     cx.temp.set(param.identifier.id, null);
   }
@@ -77,7 +74,7 @@ export function codegenReactiveFunction(
   return Ok(
     createFunctionDeclaration(
       fn.loc,
-      fn.id !== null ? convertIdentifier(fn.id) : null,
+      fn.id !== null ? t.identifier(fn.id) : null,
       params,
       body,
       fn.generator,

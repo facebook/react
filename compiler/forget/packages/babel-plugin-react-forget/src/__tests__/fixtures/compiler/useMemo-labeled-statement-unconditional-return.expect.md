@@ -17,8 +17,8 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const t9 = props.value;
-  const x = t9;
+  const t8 = props.value;
+  const x = t8;
   return x;
 }
 

@@ -24,9 +24,7 @@ import { assertExhaustive } from "../Utils/utils";
 
 export function printReactiveFunction(fn: ReactiveFunction): string {
   const writer = new Writer();
-  writer.writeLine(
-    `function ${fn.id !== null ? printIdentifier(fn.id) : "<unknown>"}(`
-  );
+  writer.writeLine(`function ${fn.id !== null ? fn.id : "<unknown>"}(`);
   writer.indented(() => {
     for (const param of fn.params) {
       writer.writeLine(`${printPlace(param)},`);

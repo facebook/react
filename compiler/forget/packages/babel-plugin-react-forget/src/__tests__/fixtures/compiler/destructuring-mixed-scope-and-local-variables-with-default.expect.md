@@ -38,7 +38,7 @@ function Component(props) {
   if (c_0) {
     const allUrls = [];
 
-    const { media: t0, comments: t2, urls: t82 } = post;
+    const { media: t0, comments: t2, urls: t81 } = post;
     const c_3 = $[3] !== t0;
     let t1;
     if (c_3) {
@@ -59,7 +59,7 @@ function Component(props) {
       t3 = $[6];
     }
     const comments = t3;
-    const urls = t82 === undefined ? [] : t82;
+    const urls = t81 === undefined ? [] : t81;
     const c_7 = $[7] !== comments.length;
     let t4;
     if (c_7) {

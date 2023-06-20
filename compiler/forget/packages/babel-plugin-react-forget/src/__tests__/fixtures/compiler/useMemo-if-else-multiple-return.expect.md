@@ -20,7 +20,7 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
-  let t21 = undefined;
+  let t20 = undefined;
   bb7: {
     if (props.cond) {
       const c_0 = $[0] !== props.a;
@@ -32,7 +32,7 @@ function Component(props) {
       } else {
         t0 = $[1];
       }
-      t21 = t0;
+      t20 = t0;
       break bb7;
     }
     const c_2 = $[2] !== props.b;
@@ -44,9 +44,9 @@ function Component(props) {
     } else {
       t1 = $[3];
     }
-    t21 = t1;
+    t20 = t1;
   }
-  const x = t21;
+  const x = t20;
   return x;
 }
 

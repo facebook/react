@@ -48,7 +48,7 @@ export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
  */
 export type ReactiveFunction = {
   loc: SourceLocation;
-  id: Identifier | null;
+  id: string | null;
   params: Array<Place>;
   generator: boolean;
   async: boolean;
@@ -216,7 +216,7 @@ export type ReactiveLabelTerminal = {
  */
 export type HIRFunction = {
   loc: SourceLocation;
-  id: Identifier | null;
+  id: string | null;
   env: Environment;
   params: Array<Place>;
   context: Array<Place>;

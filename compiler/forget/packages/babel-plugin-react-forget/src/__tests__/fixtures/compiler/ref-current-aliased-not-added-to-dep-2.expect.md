@@ -17,9 +17,9 @@ function Foo({ a }) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // @validateRefAccessDuringRender false
-function Foo(t21) {
+function Foo(t20) {
   const $ = useMemoCache(4);
-  const { a } = t21;
+  const { a } = t20;
   const ref = useRef();
   const val = ref.current;
   const c_0 = $[0] !== a;

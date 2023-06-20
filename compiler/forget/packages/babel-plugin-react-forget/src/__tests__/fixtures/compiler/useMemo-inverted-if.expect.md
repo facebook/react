@@ -21,20 +21,20 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  let t17 = undefined;
+  let t16 = undefined;
   bb10: {
     bb5: {
       if (props.cond) {
         break bb5;
       }
 
-      t17 = props.a;
+      t16 = props.a;
       break bb10;
     }
 
-    t17 = props.b;
+    t16 = props.b;
   }
-  const x = t17;
+  const x = t16;
   return x;
 }
 

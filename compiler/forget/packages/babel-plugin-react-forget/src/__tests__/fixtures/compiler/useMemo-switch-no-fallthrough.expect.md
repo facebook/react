@@ -22,17 +22,17 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  let t18 = undefined;
+  let t17 = undefined;
   bb8: switch (props.key) {
     case "key": {
-      t18 = props.value;
+      t17 = props.value;
       break bb8;
     }
     default: {
-      t18 = props.defaultValue;
+      t17 = props.defaultValue;
     }
   }
-  const x = t18;
+  const x = t17;
   return x;
 }
 

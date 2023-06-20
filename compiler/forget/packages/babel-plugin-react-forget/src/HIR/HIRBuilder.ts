@@ -171,23 +171,11 @@ export default class HIRBuilder {
     if (binding == null) {
       return null;
     }
-    // If the binding is from the parent function's outer scope, then
-    // we treat it equivalently to a global.
-    //
-    // TODO: remove the exception that resolves references to the
-    // parent function itself. We don't need to support self-recursion,
-    // so we can treat such references as globals.
+    // Check if the binding is from module scope, if so return null
     const outerBinding =
       this.parentFunction.scope.parent.getBinding(originalName);
     if (binding === outerBinding) {
-      const func = this.parentFunction;
-      const isParentFunctionReference =
-        func.isFunctionDeclaration() &&
-        func.get("id").node != null &&
-        func.get("id").node!.name === originalName;
-      if (!isParentFunctionReference) {
-        return null;
-      }
+      return null;
     }
     return binding;
   }

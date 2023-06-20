@@ -96,15 +96,6 @@ export default function inferReferenceEffects(
     value: undefined,
   };
   initialState.initialize(value, ValueKind.Frozen);
-  if (fn.id !== null) {
-    const id: Place = {
-      kind: "Identifier",
-      identifier: fn.id,
-      loc: fn.loc,
-      effect: Effect.Freeze,
-    };
-    initialState.define(id, value);
-  }
 
   for (const ref of fn.context) {
     // TODO(gsn): This is a hack.

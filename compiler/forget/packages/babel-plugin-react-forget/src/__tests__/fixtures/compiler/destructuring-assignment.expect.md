@@ -30,14 +30,14 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c) {
   const $ = useMemoCache(5);
 
-  const [d, t47] = a;
-  const [t49] = t47;
-  const { e: t51 } = t49;
-  const { f: g } = t51;
-  const { l: t56, o } = b;
-  const { m: t59 } = t56;
-  const [t61] = t59;
-  const [n] = t61;
+  const [d, t46] = a;
+  const [t48] = t46;
+  const { e: t50 } = t48;
+  const { f: g } = t50;
+  const { l: t55, o } = b;
+  const { m: t58 } = t55;
+  const [t60] = t58;
+  const [n] = t60;
   const c_0 = $[0] !== d;
   const c_1 = $[1] !== g;
   const c_2 = $[2] !== n;

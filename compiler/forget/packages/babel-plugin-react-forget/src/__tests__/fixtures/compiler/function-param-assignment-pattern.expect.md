@@ -12,9 +12,9 @@ function Component(x = "default", y = [{}]) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Component(t24, t0) {
+function Component(t23, t0) {
   const $ = useMemoCache(5);
-  const x = t24 === undefined ? "default" : t24;
+  const x = t23 === undefined ? "default" : t23;
   const c_0 = $[0] !== t0;
   let t1;
   if (c_0) {
