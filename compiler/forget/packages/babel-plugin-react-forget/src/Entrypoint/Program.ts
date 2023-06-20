@@ -132,7 +132,7 @@ export function compileProgram(
       fn: NodePath<t.FunctionDeclaration>,
       pass: CompilerPass
     ): void {
-      if (!shouldCompile(fn, pass)) {
+      if (!shouldVisitNode(fn, pass)) {
         return;
       }
 
@@ -143,7 +143,7 @@ export function compileProgram(
       fn: NodePath<t.ArrowFunctionExpression>,
       pass: CompilerPass
     ): void {
-      if (!shouldCompile(fn, pass)) {
+      if (!shouldVisitNode(fn, pass)) {
         return;
       }
 
@@ -317,7 +317,7 @@ export function compileProgram(
   }
 }
 
-function shouldCompile(
+function shouldVisitNode(
   fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
   pass: CompilerPass
 ): boolean {
