@@ -24,6 +24,8 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_CATCH_TYPE,
+  REACT_TYPED_CATCH_TYPE,
 } from 'shared/ReactSymbols';
 import {
   enableScopeAPI,
@@ -31,6 +33,7 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
+  enableCreateCatch,
 } from './ReactFeatureFlags';
 
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
@@ -52,7 +55,8 @@ export default function isValidElementType(type: mixed): boolean {
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
     (enableCacheElement && type === REACT_CACHE_TYPE) ||
-    (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
+    (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+    (enableCreateCatch && type === REACT_CATCH_TYPE)
   ) {
     return true;
   }
@@ -64,6 +68,7 @@ export default function isValidElementType(type: mixed): boolean {
       type.$$typeof === REACT_PROVIDER_TYPE ||
       type.$$typeof === REACT_CONTEXT_TYPE ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      (enableCreateCatch && type.$$typeof === REACT_TYPED_CATCH_TYPE) ||
       // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used

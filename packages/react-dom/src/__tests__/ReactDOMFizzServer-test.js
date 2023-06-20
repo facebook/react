@@ -25,6 +25,8 @@ let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
+let Catch;
+let createCatch;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let use;
@@ -79,6 +81,8 @@ describe('ReactDOMFizzServer', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
+    Catch = React.experimental_Catch;
+    createCatch = React.experimental_createCatch;
     use = React.use;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.SuspenseList;
@@ -1239,6 +1243,35 @@ describe('ReactDOMFizzServer', () => {
 
     const b = container.getElementsByTagName('b')[0];
     expect(ref.current).toBe(b);
+  });
+
+  // TODO: This API is not fully implemented yet. This test just confirms that
+  // the API is exposed and the component type is recognized by React.
+  // @gate enableCreateCatch
+  it('renders <Catch> boundary', async () => {
+    const TypedCatch = createCatch();
+
+    function App() {
+      return (
+        <Catch>
+          <TypedCatch>
+            <Text text="Hi!" />
+          </TypedCatch>
+        </Catch>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual('Hi!');
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(getVisibleChildren(container)).toEqual('Hi!');
   });
 
   // @gate enableSuspenseList

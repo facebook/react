@@ -41,6 +41,8 @@ export const REACT_CACHE_TYPE: symbol = Symbol.for('react.cache');
 export const REACT_TRACING_MARKER_TYPE: symbol = Symbol.for(
   'react.tracing_marker',
 );
+export const REACT_CATCH_TYPE: symbol = Symbol.for('react.catch');
+export const REACT_TYPED_CATCH_TYPE: symbol = Symbol.for('react.typed_catch');
 export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED: symbol = Symbol.for(
   'react.default_value',
 );

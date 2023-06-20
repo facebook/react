@@ -128,6 +128,8 @@ import {
   REACT_SERVER_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
+  REACT_CATCH_TYPE,
+  REACT_TYPED_CATCH_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -137,6 +139,7 @@ import {
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
   enableCache,
+  enableCreateCatch,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -1250,6 +1253,12 @@ function renderElement(
       }
       return;
     }
+    case REACT_CATCH_TYPE: {
+      if (enableCreateCatch) {
+        renderNodeDestructive(request, task, null, props.children);
+        return;
+      }
+    }
   }
 
   if (typeof type === 'object' && type !== null) {
@@ -1273,6 +1282,12 @@ function renderElement(
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, prevThenableState, type, props);
         return;
+      }
+      case REACT_TYPED_CATCH_TYPE: {
+        if (enableCreateCatch) {
+          renderNodeDestructive(request, task, null, props.children);
+          return;
+        }
       }
     }
   }

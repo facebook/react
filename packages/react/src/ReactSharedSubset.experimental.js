@@ -28,6 +28,7 @@ export {
   lazy,
   memo,
   cache,
+  experimental_raise,
   startTransition,
   unstable_DebugTracingMode,
   unstable_getCacheSignal,

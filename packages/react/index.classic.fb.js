@@ -20,6 +20,9 @@ export {
   SuspenseList,
   SuspenseList as unstable_SuspenseList, // TODO: Remove once call sights updated to SuspenseList
   cloneElement,
+  experimental_Catch,
+  experimental_createCatch,
+  experimental_raise,
   createContext,
   createElement,
   createFactory,

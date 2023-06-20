@@ -76,6 +76,11 @@ export type ReactContext<T> = {
   ...
 };
 
+// eslint-disable-next-line no-unused-vars
+export type ReactCatch<T> = {
+  $$typeof: symbol,
+};
+
 export type ServerContextJSONValue =
   | string
   | boolean
