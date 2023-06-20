@@ -32,7 +32,7 @@ const rule: Rule.RuleModule = {
       panicOnBailout: false,
       environment: {
         validateHooksUsage: true,
-        validateFrozenLambdas: true,
+        validateFrozenLambdas: false,
         validateRefAccessDuringRender: true,
       },
     };
