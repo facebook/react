@@ -104,14 +104,20 @@ export default function setupHighlighter(
     const renderer = agent.rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+
+      hideOverlay(agent);
+      return;
     }
 
-    let nodes: ?Array<HTMLElement> = null;
-    if (renderer != null) {
-      nodes = ((renderer.findNativeNodesForFiberID(
-        id,
-      ): any): ?Array<HTMLElement>);
+    // In some cases fiber may already be unmounted
+    if (!renderer.hasFiberWithId(id)) {
+      hideOverlay(agent);
+      return;
     }
+
+    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForFiberID(
+      id,
+    ): any);
 
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];
