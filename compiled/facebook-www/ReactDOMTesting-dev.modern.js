@@ -23865,11 +23865,18 @@ function completeWork(current, workInProgress, renderLanes) {
             return null;
           } else {
             // This is a Hoistable Instance
-            //
-            // We may have props to update on the Hoistable instance. We use the
-            // updateHostComponent path becuase it produces the update queue
-            // we need for Hoistables.
-            updateHostComponent(current, workInProgress, type, newProps); // This must come at the very end of the complete phase.
+            // We may have props to update on the Hoistable instance.
+            if (diffInCommitPhase && supportsMutation) {
+              var oldProps = current.memoizedProps;
+
+              if (oldProps !== newProps) {
+                markUpdate(workInProgress);
+              }
+            } else {
+              // We use the updateHostComponent path becuase it produces
+              // the update queue we need for Hoistables.
+              updateHostComponent(current, workInProgress, type, newProps);
+            } // This must come at the very end of the complete phase.
 
             bubbleProperties(workInProgress);
             preloadInstanceAndSuspendIfNeeded(workInProgress);
@@ -23886,7 +23893,15 @@ function completeWork(current, workInProgress, renderLanes) {
         var _type = workInProgress.type;
 
         if (current !== null && workInProgress.stateNode != null) {
-          updateHostComponent(current, workInProgress, _type, newProps);
+          if (diffInCommitPhase && supportsMutation) {
+            var _oldProps2 = current.memoizedProps;
+
+            if (_oldProps2 !== newProps) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            updateHostComponent(current, workInProgress, _type, newProps);
+          }
 
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
@@ -27350,7 +27365,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (updatePayload !== null) {
+            if (updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   finishedWork.stateNode,
@@ -34641,7 +34656,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-bf1393b4";
+var ReactVersion = "18.3.0-www-modern-bcd39561";
 
 function createPortal$1(
   children,
@@ -43717,6 +43732,10 @@ function handleErrorInNextTick(error) {
     throw error;
   });
 } // -------------------
+//     Mutation
+// -------------------
+
+var supportsMutation = true;
 function commitMount(domElement, type, newProps, internalInstanceHandle) {
   // Despite the naming that might imply otherwise, this method only
   // fires if there is an `Update` effect scheduled during mounting.
