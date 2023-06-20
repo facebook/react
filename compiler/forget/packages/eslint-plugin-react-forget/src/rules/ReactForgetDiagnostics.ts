@@ -6,12 +6,12 @@
  */
 
 import { transformFromAstSync } from "@babel/core";
-import * as parser from "@babel/parser";
 import ReactForgetBabelPlugin, {
   CompilerError,
   type PluginOptions,
 } from "babel-plugin-react-forget";
 import type { Rule } from "eslint";
+import * as HermesParser from "hermes-parser";
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -35,9 +35,9 @@ const rule: Rule.RuleModule = {
         validateRefAccessDuringRender: true,
       },
     };
-    const babelAST = parser.parse(sourceCode, {
+    const babelAST = HermesParser.parse(sourceCode, {
+      babel: true,
       sourceFilename: filename,
-      plugins: ["jsx", "flow"],
       sourceType: "module",
     });
     if (babelAST != null) {

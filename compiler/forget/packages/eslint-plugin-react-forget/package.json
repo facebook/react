@@ -23,7 +23,8 @@
     "@babel/traverse": "^7.19.1",
     "babel-plugin-fbt": "^1.0.0",
     "babel-plugin-fbt-runtime": "^1.0.0",
-    "babel-plugin-react-forget": "*"
+    "babel-plugin-react-forget": "*",
+    "hermes-parser": "^0.12.1"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
