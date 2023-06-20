@@ -49,6 +49,10 @@ export function compileProgram(
   ): void {
     try {
       const compiled = compileFn(fn, pass.opts.environment);
+      if (pass.opts.noEmit === true) {
+        return;
+      }
+
       if (fn.node.id == null) {
         CompilerError.invariant(
           "FunctionDeclaration must have a name",

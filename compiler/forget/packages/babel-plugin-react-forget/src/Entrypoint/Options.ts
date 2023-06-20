@@ -79,6 +79,14 @@ export type PluginOptions = {
   panicOnBailout: boolean;
 
   isDev: boolean;
+
+  /**
+   * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
+   * passes.
+   *
+   * Defaults to false
+   */
+  noEmit: boolean;
 };
 
 export type Logger = {
@@ -93,6 +101,7 @@ export const defaultOptions: PluginOptions = {
   gating: null,
   isDev: false,
   instrumentForget: null,
+  noEmit: false,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {
