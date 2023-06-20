@@ -51,27 +51,54 @@ export function validateFrozenLambdas(fn: HIRFunction): void {
 
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
+    for (const phi of block.phis) {
+      for (const [, operand] of phi.operands) {
+        const resolvedId = state.temporaries.get(operand.id) ?? operand.id;
+        const lambda = state.lambdas.get(resolvedId);
+        if (lambda !== undefined) {
+          state.lambdas.set(phi.id.id, lambda);
+          break;
+        }
+      }
+    }
     for (const instr of block.instructions) {
-      if (instr.value.kind === "FunctionExpression") {
-        state.lambdas.set(instr.lvalue.identifier.id, instr.value);
-      } else if (instr.value.kind === "LoadLocal") {
-        const resolvedId =
-          state.temporaries.get(instr.value.place.identifier.id) ??
-          instr.value.place.identifier.id;
-        state.temporaries.set(instr.lvalue.identifier.id, resolvedId);
-      } else if (instr.value.kind === "StoreLocal") {
-        const resolvedId =
-          state.temporaries.get(instr.value.value.identifier.id) ??
-          instr.value.value.identifier.id;
-        state.temporaries.set(
-          instr.value.lvalue.place.identifier.id,
-          resolvedId
-        );
-      } else {
-        for (const operand of eachInstructionValueOperand(instr.value)) {
-          const operandError = validateOperand(operand, state);
-          if (operandError !== null) {
-            errors.pushErrorDetail(operandError);
+      switch (instr.value.kind) {
+        case "FunctionExpression": {
+          if (
+            instr.value.dependencies.some(
+              (place) =>
+                place.effect === Effect.Mutate &&
+                !isRefValueType(place.identifier) &&
+                !isUseRefType(place.identifier)
+            )
+          ) {
+            state.lambdas.set(instr.lvalue.identifier.id, instr.value);
+          }
+          break;
+        }
+        case "LoadLocal": {
+          const resolvedId =
+            state.temporaries.get(instr.value.place.identifier.id) ??
+            instr.value.place.identifier.id;
+          state.temporaries.set(instr.lvalue.identifier.id, resolvedId);
+          break;
+        }
+        case "StoreLocal": {
+          const resolvedId =
+            state.temporaries.get(instr.value.value.identifier.id) ??
+            instr.value.value.identifier.id;
+          state.temporaries.set(
+            instr.value.lvalue.place.identifier.id,
+            resolvedId
+          );
+          break;
+        }
+        default: {
+          for (const operand of eachInstructionValueOperand(instr.value)) {
+            const operandError = validateOperand(operand, state);
+            if (operandError !== null) {
+              errors.pushErrorDetail(operandError);
+            }
           }
         }
       }
@@ -101,15 +128,7 @@ function validateOperand(
     const operandId =
       state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
     const lambda = state.lambdas.get(operandId);
-    if (
-      lambda !== undefined &&
-      lambda.dependencies.some(
-        (place) =>
-          place.effect === Effect.Mutate &&
-          !isRefValueType(place.identifier) &&
-          !isUseRefType(place.identifier)
-      )
-    ) {
+    if (lambda !== undefined) {
       return new CompilerErrorDetail({
         codeframe: null,
         description: null,
