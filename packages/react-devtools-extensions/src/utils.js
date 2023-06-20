@@ -1,10 +1,31 @@
 /* global chrome */
 
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type { BrowserTheme } from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export const IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
-export const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
-export const IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
+let IS_EDGE, IS_FIREFOX, IS_CHROME;
+
+async function getBrowserData() {
+  if (navigator.userAgentData) {
+    const userAgentData = await navigator.userAgentData.getHighEntropyValues(['brands']);
+    userAgentData.brands.forEach(brand => {
+      switch (brand.brand.toLowerCase()) {
+        case 'google chrome':
+          IS_CHROME = true;
+          break;
+        case 'firefox':
+          IS_FIREFOX = true;
+          break;
+        case 'edge':
+          IS_EDGE = true;
+          break;
+      }
+    });
+  } else {
+    throw new Error('navigator.userAgentData is not supported in this browser.');
+  }
+}
+
+getBrowserData();
 
 export type BrowserName = 'Chrome' | 'Firefox' | 'Edge';
 
@@ -18,9 +39,7 @@ export function getBrowserName(): BrowserName {
   if (IS_CHROME) {
     return 'Chrome';
   }
-  throw new Error(
-    'Expected browser name to be one of Chrome, Edge or Firefox.',
-  );
+  throw new Error('Expected browser name to be one of Chrome, Edge or Firefox.');
 }
 
 export function getBrowserTheme(): BrowserTheme {
