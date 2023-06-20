@@ -1,0 +1,41 @@
+
+## Input
+
+```javascript
+function App({text, hasDeps}) {
+  const resolvedText = useMemo(
+    () => {
+      return text.toUpperCase();
+    },
+    hasDeps ? null : [text], // should be DCE'd
+  );
+  return resolvedText;
+}
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function App(t26) {
+  const $ = useMemoCache(2);
+  const { text, hasDeps } = t26;
+
+  hasDeps ? null : [text];
+  const c_0 = $[0] !== text;
+  let t0;
+  if (c_0) {
+    t0 = text.toUpperCase();
+    $[0] = text;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const t19 = t0;
+  const resolvedText = t19;
+  return resolvedText;
+}
+
+```
+      
