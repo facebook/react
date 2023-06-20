@@ -2,11 +2,15 @@
 
 import type { BrowserTheme } from 'react-devtools-shared/src/devtools/views/DevTools';
 
-let IS_EDGE, IS_FIREFOX, IS_CHROME;
+let IS_EDGE;
+let IS_FIREFOX;
+let IS_CHROME;
 
 async function getBrowserData() {
   if (navigator.userAgentData) {
-    const userAgentData = await navigator.userAgentData.getHighEntropyValues(['brands']);
+    const userAgentData = await navigator.userAgentData.getHighEntropyValues([
+      'brands',
+    ]);
     userAgentData.brands.forEach(brand => {
       switch (brand.brand.toLowerCase()) {
         case 'google chrome':
@@ -39,7 +43,9 @@ export function getBrowserName(): BrowserName {
   if (IS_CHROME) {
     return 'Chrome';
   }
-  throw new Error('Expected browser name to be one of Chrome, Edge or Firefox.');
+  throw new Error(
+    'Expected browser name to be one of Chrome, Edge or Firefox.'
+  );
 }
 
 export function getBrowserTheme(): BrowserTheme {
