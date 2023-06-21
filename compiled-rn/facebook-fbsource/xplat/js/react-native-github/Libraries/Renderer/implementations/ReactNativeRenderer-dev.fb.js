@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4525ca8b79fb39404269c7e945572f4a>>
+ * @generated SignedSource<<14c435eed21e626d0548f1265b3a2ab8>>
  */
 
 'use strict';
@@ -4737,6 +4737,9 @@ var StrictEffectsMode =
 var ConcurrentUpdatesByDefaultMode =
   /* */
   32;
+var NoStrictPassiveEffectsMode =
+  /*     */
+  64;
 
 // TODO: This is pretty well supported by browsers. Maybe we can drop it.
 var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback; // Count leading zeros.
@@ -12273,7 +12276,10 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
 }
 
 function mountEffect(create, deps) {
-  if ((currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode) {
+  if (
+    (currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber$1.mode & NoStrictPassiveEffectsMode) === NoMode
+  ) {
     mountEffectImpl(
       MountPassiveDev | Passive$1 | PassiveStatic,
       Passive,
@@ -27533,6 +27539,11 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
+  {
+    // StrictMode in Offscreen should always run double passive effects
+    mode &= ~NoStrictPassiveEffectsMode;
+  }
+
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
@@ -27752,7 +27763,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-225345a1";
+var ReactVersion = "18.3.0-canary-a48d7fee";
 
 function createPortal$1(
   children,
