@@ -39,6 +39,7 @@ import {
   enableDebugTracing,
   enableFloat,
   enableHostSingletons,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -540,7 +541,10 @@ export function createFiberFromTypeAndProps(
         if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
-          if (pendingProps.DO_NOT_USE_disableStrictPassiveEffect) {
+          if (
+            enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
+          ) {
             mode |= NoStrictPassiveEffectsMode;
           }
         }

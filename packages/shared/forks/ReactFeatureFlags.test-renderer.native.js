@@ -66,6 +66,7 @@ export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
 export const diffInCommitPhase = true;

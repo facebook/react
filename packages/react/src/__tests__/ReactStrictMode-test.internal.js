@@ -104,6 +104,7 @@ describe('ReactStrictMode', () => {
         ]);
       });
 
+      // @gate enableDO_NOT_USE_disableStrictPassiveEffect
       it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect', async () => {
         await act(() => {
           const container = document.createElement('div');
