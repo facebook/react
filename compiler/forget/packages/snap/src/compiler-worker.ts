@@ -167,6 +167,7 @@ export async function compile(
         validateFrozenLambdas: true,
         enableEmitFreeze,
         enableOptimizeFunctionExpressions,
+        assertValidMutableRanges: true,
       },
       logger: null,
       gating,

@@ -12,6 +12,7 @@ import {
   ReactiveFunction,
   assertConsistentIdentifiers,
   assertTerminalSuccessorsExist,
+  assertValidMutableRanges,
   lower,
   mergeConsecutiveBlocks,
 } from "../HIR";
@@ -126,6 +127,10 @@ export function* run(
 
   inferMutableRanges(hir);
   yield log({ kind: "hir", name: "InferMutableRanges", value: hir });
+
+  if (env.assertValidMutableRanges) {
+    assertValidMutableRanges(hir);
+  }
 
   if (env.validateRefAccessDuringRender) {
     validateNoRefAccessInRender(hir);

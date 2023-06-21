@@ -159,6 +159,13 @@ export type EnvironmentConfig = Partial<{
    * Defaults to false (use the un-transformed function body).
    */
   enableOptimizeFunctionExpressions: boolean;
+
+  /**
+   * Enable validation of mutable ranges
+   *
+   * Defaults to false
+   */
+  assertValidMutableRanges: boolean;
 }>;
 
 export class Environment {
@@ -175,6 +182,7 @@ export class Environment {
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
   enableOptimizeFunctionExpressions: boolean;
+  assertValidMutableRanges: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
 
@@ -220,6 +228,7 @@ export class Environment {
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
     this.enableOptimizeFunctionExpressions =
       config?.enableOptimizeFunctionExpressions ?? false;
+    this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
   }

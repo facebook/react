@@ -127,6 +127,7 @@ function compile(source: string): CompilerOutput {
         inlineUseMemo: true,
         memoizeJsxElements: true,
         validateHooksUsage: true,
+        assertValidMutableRanges: true,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
