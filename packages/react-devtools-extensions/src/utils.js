@@ -1,6 +1,6 @@
 /* global chrome */
 
-import type { BrowserTheme } from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export let IS_EDGE;
 export let IS_FIREFOX;
