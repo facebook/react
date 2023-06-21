@@ -6,7 +6,7 @@ export let IS_EDGE;
 export let IS_FIREFOX;
 export let IS_CHROME;
 
-async function getBrowserData() {
+function getBrowserData() {
   if (navigator.userAgentData) {
     navigator.userAgentData.brands.forEach(item => {
       switch (item.brand.toLowerCase()) {
