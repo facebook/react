@@ -2,6 +2,9 @@
 
 const {resolve} = require('path');
 const Webpack = require('webpack');
+const DevToolsIgnorePlugin = require('devtools-ignore-webpack-plugin');
+
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -12,7 +15,6 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('./utils');
-const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -77,6 +79,15 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+    }),
+    new DevToolsIgnorePlugin({
+      shouldIgnorePath: function (path) {
+        if (!__DEV__) {
+          return true;
+        }
+
+        return path.includes('/node_modules/') || path.includes('/webpack/');
+      },
     }),
   ],
   module: {
