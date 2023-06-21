@@ -17,6 +17,10 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+// Don't wait before processing work on the server.
+// TODO: we can replace this with FlightServer.act().
+global.setTimeout = cb => cb();
+
 let container;
 let serverExports;
 let webpackServerMap;
@@ -25,16 +29,16 @@ let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 
-describe('ReactFlightDOMReply', () => {
+describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
     jest.resetModules();
     const WebpackMock = require('./utils/WebpackMock');
     serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
-    ReactServerDOMClient = require('react-server-dom-webpack/client');
-    ReactDOMServer = require('react-dom/server.browser');
+    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
+    ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
+    ReactDOMServer = require('react-dom/server.edge');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
