@@ -22,9 +22,9 @@ function getBrowserData() {
       }
     });
 } else {
-  IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
-  IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
-  IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
+    IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
+    IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
+    IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
   }
 }
 
@@ -43,7 +43,7 @@ export function getBrowserName(): BrowserName {
     return 'Chrome';
   }
   throw new Error(
-    'Expected browser name to be one of Chrome, Edge or Firefox.'
+    'Expected browser name to be one of Chrome, Edge or Firefox.',
   );
 }
 
