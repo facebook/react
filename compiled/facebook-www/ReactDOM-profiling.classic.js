@@ -66,6 +66,8 @@ var ReactSharedInternals =
   diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect =
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   enableProfilerNestedUpdateScheduledHook =
     dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
@@ -12561,7 +12563,11 @@ function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = 8;
         mode |= 8;
-        0 !== (mode & 1) && (mode |= 16);
+        0 !== (mode & 1) &&
+          ((mode |= 16),
+          enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
+            (mode |= 64));
         break;
       case REACT_PROFILER_TYPE:
         return (
@@ -17452,7 +17458,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1901 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-61b0d65c",
+  version: "18.3.0-www-classic-00ecd0b3",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17496,7 +17502,7 @@ var devToolsConfig$jscomp$inline_1901 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-61b0d65c"
+  reconcilerVersion: "18.3.0-www-classic-00ecd0b3"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17726,7 +17732,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-61b0d65c";
+exports.version = "18.3.0-www-classic-00ecd0b3";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

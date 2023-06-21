@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-5d5433b2";
+var ReactVersion = "18.3.0-www-classic-786512bb";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -177,7 +177,9 @@ var replayFailedUnitOfWorkWithInvokeGuardedCallback =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-  alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries; // On WWW, false is used for a new modern build.
+  alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect =
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect; // On WWW, false is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -1536,6 +1538,9 @@ var StrictEffectsMode =
 var ConcurrentUpdatesByDefaultMode =
   /* */
   32;
+var NoStrictPassiveEffectsMode =
+  /*     */
+  64;
 
 // TODO: This is pretty well supported by browsers. Maybe we can drop it.
 var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback; // Count leading zeros.
@@ -9671,7 +9676,10 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
 }
 
 function mountEffect(create, deps) {
-  if ((currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode) {
+  if (
+    (currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber$1.mode & NoStrictPassiveEffectsMode) === NoMode
+  ) {
     mountEffectImpl(
       MountPassiveDev | Passive$1 | PassiveStatic,
       Passive,
@@ -28076,6 +28084,13 @@ function createFiberFromTypeAndProps(
         if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
+
+          if (
+            enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
+          ) {
+            mode |= NoStrictPassiveEffectsMode;
+          }
         }
 
         break;
@@ -28277,6 +28292,11 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
+  {
+    // StrictMode in Offscreen should always run double passive effects
+    mode &= ~NoStrictPassiveEffectsMode;
+  }
+
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;

@@ -58,6 +58,8 @@ var assign = Object.assign,
   diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect =
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   valueStack = [],
@@ -11931,7 +11933,11 @@ function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = 8;
         mode |= 8;
-        0 !== (mode & 1) && (mode |= 16);
+        0 !== (mode & 1) &&
+          ((mode |= 16),
+          enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
+            (mode |= 64));
         break;
       case REACT_PROFILER_TYPE:
         return (
@@ -16590,7 +16596,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1804 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-20bf6d53",
+  version: "18.3.0-www-modern-df20a6fc",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2183 = {
@@ -16621,7 +16627,7 @@ var internals$jscomp$inline_2183 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-20bf6d53"
+  reconcilerVersion: "18.3.0-www-modern-df20a6fc"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2184 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16943,4 +16949,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-20bf6d53";
+exports.version = "18.3.0-www-modern-df20a6fc";

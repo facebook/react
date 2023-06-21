@@ -74,6 +74,8 @@ var ReactSharedInternals =
   diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect =
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -9803,7 +9805,11 @@ function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = 8;
         mode |= 8;
-        0 !== (mode & 1) && (mode |= 16);
+        0 !== (mode & 1) &&
+          ((mode |= 16),
+          enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
+            (mode |= 64));
         break;
       case REACT_PROFILER_TYPE:
         return (
@@ -10193,7 +10199,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-f2045cca",
+    version: "18.3.0-www-classic-3cdb3aa3",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1318 = {
@@ -10224,7 +10230,7 @@ var internals$jscomp$inline_1318 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-f2045cca"
+  reconcilerVersion: "18.3.0-www-classic-3cdb3aa3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1319 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

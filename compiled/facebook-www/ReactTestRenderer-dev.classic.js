@@ -1127,6 +1127,9 @@ var StrictEffectsMode =
 var ConcurrentUpdatesByDefaultMode =
   /* */
   32;
+var NoStrictPassiveEffectsMode =
+  /*     */
+  64;
 
 // TODO: This is pretty well supported by browsers. Maybe we can drop it.
 var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback; // Count leading zeros.
@@ -8337,7 +8340,10 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
 }
 
 function mountEffect(create, deps) {
-  if ((currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode) {
+  if (
+    (currentlyRenderingFiber$1.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber$1.mode & NoStrictPassiveEffectsMode) === NoMode
+  ) {
     mountEffectImpl(
       MountPassiveDev | Passive$1 | PassiveStatic,
       Passive,
@@ -24386,6 +24392,11 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
+  {
+    // StrictMode in Offscreen should always run double passive effects
+    mode &= ~NoStrictPassiveEffectsMode;
+  }
+
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
@@ -24554,7 +24565,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ad4112c4";
+var ReactVersion = "18.3.0-www-classic-0b64f941";
 
 // Might add PROFILE later.
 
