@@ -55,6 +55,30 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
+  // @gate __DEV__ && enableOffscreen
+  it('should trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
+          <Offscreen>
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(log).toEqual([
+      'A: render',
+      'A: render',
+      'A: useLayoutEffect mount',
+      'A: useEffect mount',
+      'A: useLayoutEffect unmount',
+      'A: useEffect unmount',
+      'A: useLayoutEffect mount',
+      'A: useEffect mount',
+    ]);
+  });
+
   // @gate __DEV__ && enableOffscreen && useModernStrictMode
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {

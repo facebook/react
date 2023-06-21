@@ -39,6 +39,7 @@ import {
   enableDebugTracing,
   enableFloat,
   enableHostSingletons,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -87,6 +88,7 @@ import {
   StrictLegacyMode,
   StrictEffectsMode,
   ConcurrentUpdatesByDefaultMode,
+  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -539,6 +541,12 @@ export function createFiberFromTypeAndProps(
         if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
+          if (
+            enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
+          ) {
+            mode |= NoStrictPassiveEffectsMode;
+          }
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -752,6 +760,10 @@ export function createFiberFromOffscreen(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
+  if (__DEV__) {
+    // StrictMode in Offscreen should always run double passive effects
+    mode &= ~NoStrictPassiveEffectsMode;
+  }
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
