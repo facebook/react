@@ -8,8 +8,8 @@ export let IS_CHROME;
 
 async function getBrowserData() {
   if (navigator.userAgentData) {
-    navigator.userAgentData.brands.forEach(brand => {
-      switch (brand.brand.toLowerCase()) {
+    navigator.userAgentData.brands.forEach(item => {
+      switch (item.brand.toLowerCase()) {
         case 'google chrome':
           IS_CHROME = true;
           break;
