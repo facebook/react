@@ -2,9 +2,9 @@
 
 import type { BrowserTheme } from 'react-devtools-shared/src/devtools/views/DevTools';
 
-let IS_EDGE;
-let IS_FIREFOX;
-let IS_CHROME;
+export let IS_EDGE;
+export let IS_FIREFOX;
+export let IS_CHROME;
 
 async function getBrowserData() {
   if (navigator.userAgentData) {
