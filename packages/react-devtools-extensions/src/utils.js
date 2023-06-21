@@ -24,8 +24,10 @@ async function getBrowserData() {
           break;
       }
     });
-  } else {
-    throw new Error('navigator.userAgentData is not supported in this browser.');
+} else {
+  IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
+  IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
+  IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
   }
 }
 
