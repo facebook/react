@@ -760,10 +760,6 @@ export function createFiberFromOffscreen(
   lanes: Lanes,
   key: null | string,
 ): Fiber {
-  if (__DEV__) {
-    // StrictMode in Offscreen should always run double passive effects
-    mode &= ~NoStrictPassiveEffectsMode;
-  }
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
