@@ -44,6 +44,17 @@ function isReportableDiagnostic(
   );
 }
 
+const COMPILER_OPTIONS: Partial<PluginOptions> = {
+  noEmit: true,
+  enableOnlyOnUseForgetDirective: true,
+  panicOnBailout: false,
+  environment: {
+    validateHooksUsage: true,
+    validateFrozenLambdas: false,
+    validateRefAccessDuringRender: true,
+  },
+};
+
 const rule: Rule.RuleModule = {
   meta: {
     type: "problem",
@@ -57,16 +68,6 @@ const rule: Rule.RuleModule = {
     const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
     const filename = context.filename ?? context.getFilename();
 
-    const opts: Partial<PluginOptions> = {
-      noEmit: true,
-      enableOnlyOnUseForgetDirective: true,
-      panicOnBailout: false,
-      environment: {
-        validateHooksUsage: true,
-        validateFrozenLambdas: false,
-        validateRefAccessDuringRender: true,
-      },
-    };
     const babelAST = HermesParser.parse(sourceCode, {
       babel: true,
       sourceFilename: filename,
@@ -79,7 +80,7 @@ const rule: Rule.RuleModule = {
           highlightCode: false,
           retainLines: true,
           plugins: [
-            [ReactForgetBabelPlugin, opts],
+            [ReactForgetBabelPlugin, COMPILER_OPTIONS],
             "babel-plugin-fbt",
             "babel-plugin-fbt-runtime",
           ],
