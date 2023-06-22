@@ -137,20 +137,18 @@ function handleAssignment(
       for (const property of path.get("properties")) {
         if (property.isObjectProperty()) {
           const valuePath = property.get("value");
-          if (!valuePath.isLVal()) {
-            CompilerError.invariant(
-              `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
-              valuePath.node.loc ?? GeneratedSource
-            );
-          }
+          CompilerError.invariant(
+            valuePath.isLVal(),
+            `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
+            valuePath.node.loc ?? GeneratedSource
+          );
           handleAssignment(reassigned, valuePath);
         } else {
-          if (!property.isRestElement()) {
-            CompilerError.invariant(
-              `[FindContextIdentifiers] Invalid assumptions for babel types.`,
-              property.node.loc ?? GeneratedSource
-            );
-          }
+          CompilerError.invariant(
+            property.isRestElement(),
+            `[FindContextIdentifiers] Invalid assumptions for babel types.`,
+            property.node.loc ?? GeneratedSource
+          );
           handleAssignment(reassigned, property);
         }
       }

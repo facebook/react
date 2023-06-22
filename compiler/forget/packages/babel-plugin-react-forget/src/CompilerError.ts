@@ -70,20 +70,23 @@ export class CompilerError extends Error {
   details: CompilerErrorDetail[] = [];
 
   static invariant(
+    condition: unknown,
     reason: string,
     loc: SourceLocation,
     description: string | null = null
-  ): never {
-    const errors = new CompilerError();
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        description,
-        loc,
-        reason,
-        severity: ErrorSeverity.Invariant,
-      })
-    );
-    throw errors;
+  ): asserts condition {
+    if (!condition) {
+      const errors = new CompilerError();
+      errors.pushErrorDetail(
+        new CompilerErrorDetail({
+          description,
+          loc,
+          reason,
+          severity: ErrorSeverity.Invariant,
+        })
+      );
+      throw errors;
+    }
   }
 
   static todo(

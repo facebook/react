@@ -459,22 +459,20 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         // OptionalExpression value is a SequenceExpression where the instructions
         // represent the code prior to the `?` and the final value represents the
         // conditional code that follows.
-        if (inner.kind === "SequenceExpression") {
-          // Instructions are the unconditionally executed portion before the `?`
-          for (const instr of inner.instructions) {
-            this.visitInstruction(instr, context);
-          }
-          // The final value is the conditional portion following the `?`
-          context.enterConditional(() => {
-            this.visitReactiveValue(context, id, inner.value);
-          });
-        } else {
-          CompilerError.invariant(
-            "Expected OptionalExpression value to be a SequenceExpression",
-            value.loc,
-            `Found a '${value.kind}'`
-          );
+        CompilerError.invariant(
+          inner.kind === "SequenceExpression",
+          "Expected OptionalExpression value to be a SequenceExpression",
+          value.loc,
+          `Found a '${value.kind}'`
+        );
+        // Instructions are the unconditionally executed portion before the `?`
+        for (const instr of inner.instructions) {
+          this.visitInstruction(instr, context);
         }
+        // The final value is the conditional portion following the `?`
+        context.enterConditional(() => {
+          this.visitReactiveValue(context, id, inner.value);
+        });
         break;
       }
       case "LogicalExpression": {

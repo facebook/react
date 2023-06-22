@@ -601,7 +601,7 @@ function computeMemoizationInputs(
       };
     }
     case "UnsupportedNode": {
-      CompilerError.invariant(`Unexpected unsupported node`, value.loc);
+      CompilerError.invariant(false, `Unexpected unsupported node`, value.loc);
     }
     default: {
       assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);

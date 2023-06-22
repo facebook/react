@@ -884,7 +884,7 @@ export function isMutableEffect(
     }
 
     case Effect.Unknown: {
-      CompilerError.invariant("Unexpected unknown effect", location);
+      CompilerError.invariant(false, "Unexpected unknown effect", location);
     }
     case Effect.Read:
     case Effect.Freeze: {

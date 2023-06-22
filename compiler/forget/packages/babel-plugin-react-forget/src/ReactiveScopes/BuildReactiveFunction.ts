@@ -543,12 +543,11 @@ class Driver {
         let block: ReactiveBlock;
         if (this.cx.isScheduled(terminal.block)) {
           const break_ = this.visitBreak(terminal.block, null);
-          if (break_ === null) {
-            CompilerError.invariant(
-              "Expected a break target for a label whose body is already scheduled",
-              terminal.loc
-            );
-          }
+          CompilerError.invariant(
+            break_ !== null,
+            "Expected a break target for a label whose body is already scheduled",
+            terminal.loc
+          );
           block = [break_];
         } else {
           block = this.traverseBlock(this.cx.ir.blocks.get(terminal.block)!);

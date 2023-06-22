@@ -215,13 +215,12 @@ class InferenceState {
       const kind = this.#values.get(value)!;
       mergedKind = mergedKind !== null ? mergeValues(mergedKind, kind) : kind;
     }
-    if (mergedKind === null) {
-      CompilerError.invariant(
-        `InferReferenceEffects::kind: Expected at least one value`,
-        place.loc,
-        `No value found at '${printPlace(place)}'`
-      );
-    }
+    CompilerError.invariant(
+      mergedKind !== null,
+      `InferReferenceEffects::kind: Expected at least one value`,
+      place.loc,
+      `No value found at '${printPlace(place)}'`
+    );
     return mergedKind;
   }
 
@@ -268,12 +267,11 @@ class InferenceState {
   reference(place: Place, effectKind: Effect): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
-      if (effectKind === Effect.Store) {
-        CompilerError.invariant(
-          "[InferReferenceEffects] Unhandled store reference effect",
-          place.loc
-        );
-      }
+      CompilerError.invariant(
+        effectKind !== Effect.Store,
+        "[InferReferenceEffects] Unhandled store reference effect",
+        place.loc
+      );
       place.effect =
         effectKind === Effect.ConditionallyMutate
           ? Effect.ConditionallyMutate

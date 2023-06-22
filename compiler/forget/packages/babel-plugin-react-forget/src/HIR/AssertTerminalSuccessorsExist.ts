@@ -13,15 +13,14 @@ import { mapTerminalSuccessors } from "./visitors";
 export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     mapTerminalSuccessors(block.terminal, (successor) => {
-      if (!fn.body.blocks.has(successor)) {
-        CompilerError.invariant(
-          `Terminal successor references unknown block`,
-          (block.terminal as any).loc ?? GeneratedSource,
-          `Block bb${successor} does not exist for terminal '${printTerminal(
-            block.terminal
-          )}'`
-        );
-      }
+      CompilerError.invariant(
+        fn.body.blocks.has(successor),
+        `Terminal successor references unknown block`,
+        (block.terminal as any).loc ?? GeneratedSource,
+        `Block bb${successor} does not exist for terminal '${printTerminal(
+          block.terminal
+        )}'`
+      );
       return successor;
     });
   }

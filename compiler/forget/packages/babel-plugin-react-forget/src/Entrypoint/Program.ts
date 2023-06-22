@@ -53,12 +53,11 @@ export function compileProgram(
         return;
       }
 
-      if (fn.node.id == null) {
-        CompilerError.invariant(
-          "FunctionDeclaration must have a name",
-          fn.node.loc ?? GeneratedSource
-        );
-      }
+      CompilerError.invariant(
+        fn.node.id != null,
+        "FunctionDeclaration must have a name",
+        fn.node.loc ?? GeneratedSource
+      );
       const originalIdent = fn.node.id;
 
       if (pass.opts.gating != null) {
@@ -66,12 +65,11 @@ export function compileProgram(
         fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
         // Rename and append compiled function
-        if (compiled.id == null) {
-          CompilerError.invariant(
-            "FunctionDeclaration must produce a name",
-            fn.node.loc ?? GeneratedSource
-          );
-        }
+        CompilerError.invariant(
+          compiled.id != null,
+          "FunctionDeclaration must produce a name",
+          fn.node.loc ?? GeneratedSource
+        );
         compiled.id = addSuffix(compiled.id, "_forget");
         const compiledFn = fn.insertAfter(compiled)[0];
         compiledFn.skip();
@@ -409,12 +407,12 @@ function buildBlockStatement(
     return wrappedBody.node;
   }
 
-  if (!body.isBlockStatement()) {
-    CompilerError.invariant(
-      "Body must be a BlockStatement",
-      body.node.loc ?? GeneratedSource
-    );
-  }
+  CompilerError.invariant(
+    body.isBlockStatement(),
+    "Body must be a BlockStatement",
+    body.node.loc ?? GeneratedSource
+  );
+
   return body.node;
 }
 

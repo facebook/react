@@ -96,13 +96,12 @@ class SSABuilder {
 
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
-    if (this.#unknown.has(oldId)) {
-      CompilerError.invariant(
-        `EnterSSA: Expected identifier to be defined before being used`,
-        oldPlace.loc,
-        `Identifier ${printIdentifier(oldId)} is undefined`
-      );
-    }
+    CompilerError.invariant(
+      !this.#unknown.has(oldId),
+      `EnterSSA: Expected identifier to be defined before being used`,
+      oldPlace.loc,
+      `Identifier ${printIdentifier(oldId)} is undefined`
+    );
 
     // Do not redefine context references.
     if (this.#context.has(oldId)) {
@@ -249,12 +248,11 @@ function enterSSAImpl(
     if (blockId === rootEntry) {
       // NOTE: func.context should be empty for the root function
       if (func.env.enableOptimizeFunctionExpressions) {
-        if (func.context.length !== 0) {
-          CompilerError.invariant(
-            `Expected function context to be empty for outer function declarations`,
-            func.loc
-          );
-        }
+        CompilerError.invariant(
+          func.context.length === 0,
+          `Expected function context to be empty for outer function declarations`,
+          func.loc
+        );
       } else {
         func.context = func.context.map((p) => builder.defineContext(p));
       }

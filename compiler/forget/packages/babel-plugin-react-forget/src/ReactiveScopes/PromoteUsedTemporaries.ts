@@ -75,12 +75,11 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
 }
 
 function promoteTemporary(identifier: Identifier, state: VisitorState): void {
-  if (identifier.name !== null) {
-    CompilerError.invariant(
-      "promoteTemporary: Expected to be called only for temporary variables",
-      GeneratedSource
-    );
-  }
+  CompilerError.invariant(
+    identifier.name === null,
+    "promoteTemporary: Expected to be called only for temporary variables",
+    GeneratedSource
+  );
   if (state.tags.has(identifier.id)) {
     identifier.name = `T${state.nextId++}`;
   } else {

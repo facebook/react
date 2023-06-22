@@ -35,20 +35,18 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
       }
     }
     for (const instr of block.instructions) {
-      if (instr.lvalue.identifier.name !== null) {
-        CompilerError.invariant(
-          `Expected all lvalues to be temporaries`,
-          instr.lvalue.loc,
-          `Found named lvalue '${instr.lvalue.identifier.name}'`
-        );
-      }
-      if (assignments.has(instr.lvalue.identifier.id)) {
-        CompilerError.invariant(
-          `Expected lvalues to be assigned exactly once`,
-          instr.lvalue.loc,
-          `Found duplicate assignment of '${printPlace(instr.lvalue)}'`
-        );
-      }
+      CompilerError.invariant(
+        instr.lvalue.identifier.name === null,
+        `Expected all lvalues to be temporaries`,
+        instr.lvalue.loc,
+        `Found named lvalue '${instr.lvalue.identifier.name}'`
+      );
+      CompilerError.invariant(
+        !assignments.has(instr.lvalue.identifier.id),
+        `Expected lvalues to be assigned exactly once`,
+        instr.lvalue.loc,
+        `Found duplicate assignment of '${printPlace(instr.lvalue)}'`
+      );
       assignments.add(instr.lvalue.identifier.id);
       for (const operand of eachInstructionLValue(instr)) {
         validate(identifiers, operand.identifier, operand.loc);
@@ -73,8 +71,9 @@ function validate(
   const previous = identifiers.get(identifier.id);
   if (previous === undefined) {
     identifiers.set(identifier.id, identifier);
-  } else if (identifier !== previous) {
+  } else {
     CompilerError.invariant(
+      identifier === previous,
       `Duplicate identifier object`,
       loc ?? GeneratedSource,
       `Found duplicate identifier object for id ${identifier.id}`

@@ -345,13 +345,12 @@ function codegenTerminal(
       );
     }
     case "for-of": {
-      if (terminal.init.kind !== "SequenceExpression") {
-        CompilerError.invariant(
-          `Expected a sequence expression init for ForOf`,
-          terminal.init.loc,
-          `Got '${terminal.init.kind}' expression instead`
-        );
-      }
+      CompilerError.invariant(
+        terminal.init.kind === "SequenceExpression",
+        `Expected a sequence expression init for ForOf`,
+        terminal.init.loc,
+        `Got '${terminal.init.kind}' expression instead`
+      );
       if (terminal.init.instructions.length !== 2) {
         CompilerError.todo(
           "Support non-trivial ForOf inits",
@@ -372,6 +371,7 @@ function codegenTerminal(
         }
         default:
           CompilerError.invariant(
+            false,
             `Expected a StoreLocal or Destructure to be assigned to the collection`,
             iterableItem.value.loc,
             `Found ${iterableItem.value.kind}`
@@ -387,6 +387,7 @@ function codegenTerminal(
           break;
         case InstructionKind.Reassign:
           CompilerError.invariant(
+            false,
             "Destructure should never be Reassign as it would be an Object/ArrayPattern",
             iterableItem.loc
           );
@@ -510,6 +511,7 @@ function codegenInstructionNullable(
       }
       if (hasReasign && hasDeclaration) {
         CompilerError.invariant(
+          false,
           "Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)",
           instr.loc
         );
@@ -520,23 +522,21 @@ function codegenInstructionNullable(
     }
     switch (kind) {
       case InstructionKind.Const: {
-        if (instr.lvalue !== null) {
-          CompilerError.invariant(
-            `Const declaration cannot be referenced as an expression`,
-            instr.value.loc
-          );
-        }
+        CompilerError.invariant(
+          instr.lvalue === null,
+          `Const declaration cannot be referenced as an expression`,
+          instr.value.loc
+        );
         return createVariableDeclaration(instr.loc, "const", [
           t.variableDeclarator(codegenLValue(lvalue), value),
         ]);
       }
       case InstructionKind.Let: {
-        if (instr.lvalue !== null) {
-          CompilerError.invariant(
-            `Const declaration cannot be referenced as an expression`,
-            instr.value.loc
-          );
-        }
+        CompilerError.invariant(
+          instr.lvalue === null,
+          `Const declaration cannot be referenced as an expression`,
+          instr.value.loc
+        );
         return createVariableDeclaration(instr.loc, "let", [
           t.variableDeclarator(codegenLValue(lvalue), value),
         ]);
@@ -768,6 +768,7 @@ function codegenInstructionValue(
         }
         default: {
           CompilerError.invariant(
+            false,
             "Expected an optional value to resolve to a call expression or member expression",
             instrValue.loc,
             `Got a '${optionalValue.type}'`
@@ -1097,6 +1098,7 @@ function codegenInstructionValue(
     case "StoreLocal":
     case "StoreContext": {
       CompilerError.invariant(
+        false,
         `Unexpected ${instrValue.kind} in codegenInstructionValue`,
         instrValue.loc
       );
@@ -1276,13 +1278,12 @@ function codegenPlace(cx: Context, place: Place): t.Expression {
   if (tmp != null) {
     return tmp;
   }
-  if (place.identifier.name === null && tmp === undefined) {
-    CompilerError.invariant(
-      `[Codegen] No value found for temporary`,
-      place.loc,
-      `Value for '${printPlace(place)}' was not set in the codegen context`
-    );
-  }
+  CompilerError.invariant(
+    place.identifier.name !== null || tmp !== undefined,
+    `[Codegen] No value found for temporary`,
+    place.loc,
+    `Value for '${printPlace(place)}' was not set in the codegen context`
+  );
   const identifier = convertIdentifier(place.identifier);
   identifier.loc = place.loc as any;
   return identifier;
