@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 
 /**
  * Represents items which form disjoint sets.
@@ -20,7 +20,11 @@ export default class DisjointSet<T> {
    */
   union(items: Array<T>): void {
     const first = items.shift();
-    invariant(first != null, "Expected set to be non-empty");
+    CompilerError.invariant(
+      first != null,
+      "Expected set to be non-empty",
+      null
+    );
     // determine an arbitrary "root" for this set: if the first
     // item already has a root then use that, otherwise the first item
     // will be the new root.

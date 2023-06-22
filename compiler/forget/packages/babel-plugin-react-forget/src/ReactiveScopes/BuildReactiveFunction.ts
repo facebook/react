@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
@@ -66,9 +65,10 @@ class Driver {
   }
 
   visitBlock(block: BasicBlock, blockValue: ReactiveBlock): void {
-    invariant(
+    CompilerError.invariant(
       !this.cx.emitted.has(block.id),
-      `Cannot emit the same block twice: bb${block.id}`
+      `Cannot emit the same block twice: bb${block.id}`,
+      null
     );
     this.cx.emitted.add(block.id);
     for (const instruction of block.instructions) {
@@ -252,9 +252,10 @@ class Driver {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
           const break_ = this.visitBreak(terminal.loop, null);
-          invariant(
+          CompilerError.invariant(
             break_ !== null,
-            "If loop body is already scheduled it must be a break"
+            "If loop body is already scheduled it must be a break",
+            null
           );
           loopBody = [break_];
         }
@@ -308,9 +309,10 @@ class Driver {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
           const break_ = this.visitBreak(terminal.loop, null);
-          invariant(
+          CompilerError.invariant(
             break_ !== null,
-            "If loop body is already scheduled it must be a break"
+            "If loop body is already scheduled it must be a break",
+            null
           );
           loopBody = [break_];
         }
@@ -392,9 +394,10 @@ class Driver {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
           const break_ = this.visitBreak(terminal.loop, null);
-          invariant(
+          CompilerError.invariant(
             break_ !== null,
-            "If loop body is already scheduled it must be a break"
+            "If loop body is already scheduled it must be a break",
+            null
           );
           loopBody = [break_];
         }
@@ -467,9 +470,10 @@ class Driver {
           loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
         } else {
           const break_ = this.visitBreak(terminal.loop, null);
-          invariant(
+          CompilerError.invariant(
             break_ !== null,
-            "If loop body is already scheduled it must be a break"
+            "If loop body is already scheduled it must be a break",
+            null
           );
           loopBody = [break_];
         }
@@ -626,7 +630,11 @@ class Driver {
         break;
       }
       case "unsupported": {
-        invariant(false, "Unexpected unsupported terminal");
+        CompilerError.invariant(
+          false,
+          "Unexpected unsupported terminal",
+          terminal.loc
+        );
       }
       default: {
         assertExhaustive(terminal, "Unexpected terminal");
@@ -654,10 +662,11 @@ class Driver {
         };
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
-        invariant(
+        CompilerError.invariant(
           instr.lvalue.identifier.id ===
             defaultBlock.terminal.test.identifier.id,
-          "Expected branch block to end in an instruction that sets the test value"
+          "Expected branch block to end in an instruction that sets the test value",
+          instr.lvalue.loc
         );
         return {
           block: defaultBlock.id,
@@ -684,9 +693,10 @@ class Driver {
     } else if (defaultBlock.terminal.kind === "goto") {
       const instructions = defaultBlock.instructions;
       if (instructions.length === 0) {
-        invariant(
+        CompilerError.invariant(
           false,
-          "Expected goto value block to have at least one instruction"
+          "Expected goto value block to have at least one instruction",
+          null
         );
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
@@ -782,10 +792,10 @@ class Driver {
       case "optional": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        invariant(
+        CompilerError.invariant(
           testBlock.terminal.kind === "branch",
-          "Unexpected terminal kind '%s' for optional call test block",
-          testBlock.terminal.kind
+          `Unexpected terminal kind '${testBlock.terminal.kind}' for optional call test block`,
+          testBlock.terminal.loc
         );
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
@@ -821,10 +831,10 @@ class Driver {
       case "logical": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        invariant(
+        CompilerError.invariant(
           testBlock.terminal.kind === "branch",
-          "Unexpected terminal kind '%s' for logical test block",
-          testBlock.terminal.kind
+          `Unexpected terminal kind '${testBlock.terminal.kind}' for logical test block`,
+          testBlock.terminal.loc
         );
 
         const leftFinal = this.visitValueBlock(
@@ -866,10 +876,10 @@ class Driver {
       case "ternary": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        invariant(
+        CompilerError.invariant(
           testBlock.terminal.kind === "branch",
-          "Unexpected terminal kind '%s' for ternary test block",
-          testBlock.terminal.kind
+          `Unexpected terminal kind '${testBlock.terminal.kind}' for ternary test block`,
+          testBlock.terminal.loc
         );
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
@@ -895,10 +905,10 @@ class Driver {
         };
       }
       default: {
-        invariant(
+        CompilerError.invariant(
           false,
-          "Unexpected value block terminal kind '%s'",
-          terminal.kind
+          `Unexpected value block terminal kind '${terminal.kind}'`,
+          terminal.loc
         );
       }
     }
@@ -914,7 +924,7 @@ class Driver {
   ): ReactiveTerminalStatement<ReactiveBreakTerminal> {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
-      invariant(false, "Expected a break target");
+      CompilerError.invariant(false, "Expected a break target", null);
     }
     switch (target.type) {
       case "implicit": {
@@ -952,9 +962,10 @@ class Driver {
     id: InstructionId
   ): ReactiveTerminalStatement<ReactiveContinueTerminal> {
     const target = this.cx.getContinueTarget(block);
-    invariant(
+    CompilerError.invariant(
       target !== null,
-      `Expected continue target to be scheduled for bb${block}`
+      `Expected continue target to be scheduled for bb${block}`,
+      null
     );
     switch (target.type) {
       case "implicit": {
@@ -1035,9 +1046,10 @@ class Context {
    */
   schedule(block: BlockId, type: "if" | "switch" | "case"): number {
     const id = this.#nextScheduleId++;
-    invariant(
+    CompilerError.invariant(
       !this.#scheduled.has(block),
-      `Break block is already scheduled: bb${block}`
+      `Break block is already scheduled: bb${block}`,
+      null
     );
     this.#scheduled.add(block);
     this.#controlFlowStack.push({ block, id, type });
@@ -1052,9 +1064,10 @@ class Context {
     const id = this.#nextScheduleId++;
     const ownsBlock = !this.#scheduled.has(fallthroughBlock);
     this.#scheduled.add(fallthroughBlock);
-    invariant(
+    CompilerError.invariant(
       !this.#scheduled.has(continueBlock),
-      `Continue block is already scheduled: bb${continueBlock}`
+      `Continue block is already scheduled: bb${continueBlock}`,
+      null
     );
     this.#scheduled.add(continueBlock);
     let ownsLoop = false;
@@ -1080,9 +1093,10 @@ class Context {
    */
   unschedule(scheduleId: number): void {
     const last = this.#controlFlowStack.pop();
-    invariant(
+    CompilerError.invariant(
       last !== undefined && last.id === scheduleId,
-      "Can only unschedule the last target"
+      "Can only unschedule the last target",
+      null
     );
     if (last.type !== "loop" || last.ownsBlock !== null) {
       this.#scheduled.delete(last.block);

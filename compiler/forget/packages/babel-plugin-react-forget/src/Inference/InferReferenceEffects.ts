@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import { Environment } from "../HIR";
 import {
@@ -192,9 +191,10 @@ class InferenceState {
    * (Re)initializes a @param value with its default @param kind.
    */
   initialize(value: InstructionValue, kind: ValueKind): void {
-    invariant(
+    CompilerError.invariant(
       value.kind !== "LoadLocal",
-      "Expected all top-level identifiers to be defined as variables, not values"
+      "Expected all top-level identifiers to be defined as variables, not values",
+      value.loc
     );
     this.#values.set(value, kind);
   }
@@ -204,11 +204,12 @@ class InferenceState {
    */
   kind(place: Place): ValueKind {
     const values = this.#variables.get(place.identifier.id);
-    invariant(
+    CompilerError.invariant(
       values != null,
       `Expected value kind to be initialized at '${printSourceLocation(
         place.loc
-      )}'`
+      )}'`,
+      place.loc
     );
     let mergedKind: ValueKind | null = null;
     for (const value of values) {
@@ -229,10 +230,10 @@ class InferenceState {
    */
   alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
-    invariant(
+    CompilerError.invariant(
       values != null,
-      "Expected value for identifier `%s` to be initialized.",
-      value.identifier.id
+      `Expected value for identifier \`${value.identifier.id}\` to be initialized.`,
+      value.loc
     );
     this.#variables.set(place.identifier.id, new Set(values));
   }
@@ -241,9 +242,10 @@ class InferenceState {
    * Defines (initializing or updating) a variable with a specific kind of value.
    */
   define(place: Place, value: InstructionValue): void {
-    invariant(
+    CompilerError.invariant(
       this.#values.has(value),
-      `Expected value to be initialized at '${printSourceLocation(value.loc)}'`
+      `Expected value to be initialized at '${printSourceLocation(value.loc)}'`,
+      value.loc
     );
     this.#variables.set(place.identifier.id, new Set([value]));
   }
@@ -363,9 +365,10 @@ class InferenceState {
         break;
       }
       case Effect.Unknown: {
-        invariant(
+        CompilerError.invariant(
           false,
-          "Unexpected unknown effect, expected to infer a precise effect kind"
+          "Unexpected unknown effect, expected to infer a precise effect kind",
+          place.loc
         );
       }
       default: {
@@ -375,7 +378,11 @@ class InferenceState {
         );
       }
     }
-    invariant(effect !== null, "Expected effect to be set");
+    CompilerError.invariant(
+      effect !== null,
+      "Expected effect to be set",
+      place.loc
+    );
     place.effect = effect;
   }
 
@@ -746,9 +753,10 @@ function inferBlock(
         continue;
       }
       case "MethodCall": {
-        invariant(
+        CompilerError.invariant(
           state.isDefined(instrValue.receiver),
-          "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad"
+          "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad",
+          instrValue.loc
         );
         state.reference(instrValue.property, Effect.Read);
 
@@ -882,9 +890,10 @@ function inferBlock(
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         const valueKind = state.kind(instrValue.place);
-        invariant(
+        CompilerError.invariant(
           valueKind === ValueKind.Mutable || valueKind === ValueKind.Context,
-          "[InferReferenceEffects] Context variables are always mutable."
+          "[InferReferenceEffects] Context variables are always mutable.",
+          instrValue.loc
         );
         state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
@@ -971,10 +980,10 @@ function inferBlock(
     }
 
     for (const operand of eachInstructionOperand(instr)) {
-      invariant(
+      CompilerError.invariant(
         effectKind != null,
-        "effectKind must be set for instruction value `%s`",
-        instrValue.kind
+        `effectKind must be set for instruction value \`${instrValue.kind}\``,
+        instrValue.loc
       );
       state.reference(operand, effectKind);
     }

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   Effect,
   FunctionExpression,
@@ -169,9 +169,10 @@ function infer(
   // In practice this never really matters because the Component function has no
   // context refs, so it will never have duplicate deps.
   for (const place of context) {
-    invariant(
+    CompilerError.invariant(
       place.identifier.name !== null,
-      "context refs should always have a name"
+      "context refs should always have a name",
+      place.loc
     );
 
     const effect = mutations.get(place.identifier.name);

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { Effect, ValueKind } from "./HIR";
 import {
   BuiltInType,
@@ -103,9 +103,10 @@ function addShape(
     functionType,
   };
 
-  invariant(
+  CompilerError.invariant(
     !registry.has(id),
-    `[ObjectShape] Could not add shape to registry: name ${id} already exists.`
+    `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
+    null
   );
   registry.set(id, shape);
   return shape;

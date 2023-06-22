@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
@@ -62,9 +62,10 @@ const opaqueTypeId = Symbol();
 export type TypeId = number & { [opaqueTypeId]: "IdentifierId" };
 
 export function makeTypeId(id: number): TypeId {
-  invariant(
+  CompilerError.invariant(
     id >= 0 && Number.isInteger(id),
-    "Expected instruction id to be a non-negative integer"
+    "Expected instruction id to be a non-negative integer",
+    null
   );
   return id as TypeId;
 }

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BlockId,
   Effect,
@@ -47,10 +47,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     const originalPredecessorId = Array.from(block.preds)[0]!;
     const predecessorId = merged.get(originalPredecessorId);
     const predecessor = fn.body.blocks.get(predecessorId);
-    invariant(
+    CompilerError.invariant(
       predecessor !== undefined,
-      "Expected predecessor %s to exist",
-      predecessorId
+      `Expected predecessor ${predecessorId} to exist`,
+      null
     );
     if (predecessor.terminal.kind !== "goto" || predecessor.kind !== "block") {
       // The predecessor is not guaranteed to transfer control to this block,
@@ -60,10 +60,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
 
     // Replace phis in the merged block with canonical assignments to the single operand value
     for (const phi of block.phis) {
-      invariant(
+      CompilerError.invariant(
         phi.operands.size === 1,
-        "Found a block with a single predecessor but where a phi has multiple (%s) operands",
-        phi.operands.size
+        `Found a block with a single predecessor but where a phi has multiple (${phi.operands.size}) operands`,
+        null
       );
       const operand = Array.from(phi.operands.values())[0]!;
       const instr: Instruction = {

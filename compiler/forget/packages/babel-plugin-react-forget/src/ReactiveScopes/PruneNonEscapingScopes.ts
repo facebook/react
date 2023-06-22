@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import prettyFormat from "pretty-format";
 import { CompilerError } from "../CompilerError";
 import {
@@ -244,9 +243,10 @@ class State {
         this.scopes.set(scope.id, node);
       }
       const identifierNode = this.identifiers.get(identifier);
-      invariant(
+      CompilerError.invariant(
         identifierNode !== undefined,
-        "Expected identifier to be initialized"
+        "Expected identifier to be initialized",
+        place.loc
       );
       identifierNode.scopes.add(scope.id);
     }
@@ -264,9 +264,10 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   // Visit an identifier, optionally forcing it to be memoized
   function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
-    invariant(
+    CompilerError.invariant(
       node !== undefined,
-      `Expected a node for all identifiers, none found for '${id}'`
+      `Expected a node for all identifiers, none found for '${id}'`,
+      null
     );
     if (node.seen) {
       return node.memoized;
@@ -302,7 +303,11 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   // Force all the scope's optionally-memoizeable dependencies (not "Never") to be memoized
   function forceMemoizeScopeDependencies(id: ScopeId): void {
     const node = state.scopes.get(id);
-    invariant(node !== undefined, "Expected a node for all scopes");
+    CompilerError.invariant(
+      node !== undefined,
+      "Expected a node for all scopes",
+      null
+    );
     if (node.seen) {
       return;
     }

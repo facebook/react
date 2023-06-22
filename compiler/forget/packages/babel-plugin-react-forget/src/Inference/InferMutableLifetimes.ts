@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   Effect,
   HIRFunction,
@@ -108,9 +108,10 @@ export function inferMutableLifetimes(
         start = Math.min(start, operand.mutableRange.start);
         end = Math.max(end, operand.mutableRange.end);
       }
-      invariant(
+      CompilerError.invariant(
         start !== Number.MAX_SAFE_INTEGER,
-        "Expected phi to have a start range value"
+        "Expected phi to have a start range value",
+        null
       );
       phi.id.mutableRange = {
         start: makeInstructionId(start),

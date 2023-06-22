@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   Identifier,
   IdentifierId,
@@ -103,6 +103,6 @@ class Scopes {
     this.#stack.push(next);
     fn();
     const last = this.#stack.pop();
-    invariant(last === next, "Mismatch push/pop calls");
+    CompilerError.invariant(last === next, "Mismatch push/pop calls", null);
   }
 }

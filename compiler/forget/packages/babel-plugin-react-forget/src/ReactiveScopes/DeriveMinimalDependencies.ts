@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { Identifier, ReactiveScopeDependency } from "../HIR";
 import { printIdentifier } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
@@ -122,11 +122,12 @@ export class ReactiveScopeDependencyTree {
     const results = new Set<ReactiveScopeDependency>();
     for (const [rootId, rootNode] of this.#roots.entries()) {
       const deps = deriveMinimalDependenciesInSubtree(rootNode);
-      invariant(
+      CompilerError.invariant(
         deps.every(
           (dep) => dep.accessType === PropertyAccessType.UnconditionalDependency
         ),
-        "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies."
+        "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies.",
+        null
       );
 
       for (const dep of deps) {
@@ -162,9 +163,10 @@ export class ReactiveScopeDependencyTree {
   promoteDepsFromExhaustiveConditionals(
     trees: Array<ReactiveScopeDependencyTree>
   ): void {
-    invariant(
+    CompilerError.invariant(
       trees.length > 1,
-      "Expected trees to be at least 2 elements long."
+      "Expected trees to be at least 2 elements long.",
+      null
     );
 
     for (const [id, root] of this.#roots) {
@@ -456,16 +458,18 @@ function addSubtreeIntersection(
   otherProperties: Array<Map<string, DependencyNode>>,
   currProperties: Map<string, DependencyNode>
 ): void {
-  invariant(
+  CompilerError.invariant(
     otherProperties.length > 1,
-    "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long."
+    "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long.",
+    null
   );
 
   otherProperties.forEach((properties) =>
     properties.forEach((node, _) =>
-      invariant(
+      CompilerError.invariant(
         !isUnconditional(node.accessType),
-        "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!"
+        "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!",
+        null
       )
     )
   );

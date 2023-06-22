@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { BlockId, HIRFunction, Identifier, Place } from "../HIR/HIR";
 import {
   eachInstructionLValue,
@@ -83,7 +83,11 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
             same = operand;
           }
         }
-        invariant(same !== null, "Expected phis to be non-empty");
+        CompilerError.invariant(
+          same !== null,
+          "Expected phis to be non-empty",
+          null
+        );
         rewrites.set(phi.id, same);
         block.phis.delete(phi);
       }

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   ReactiveFunction,
   ReactiveScopeBlock,
@@ -226,7 +226,11 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
           writer.writeLine(`${prefix}: {`);
           writer.indented(() => {
             const block = case_.block;
-            invariant(block != null, "Expected case to have a block");
+            CompilerError.invariant(
+              block != null,
+              "Expected case to have a block",
+              case_.test?.loc ?? null
+            );
             printReactiveInstructions(writer, block);
           });
           writer.writeLine("}");

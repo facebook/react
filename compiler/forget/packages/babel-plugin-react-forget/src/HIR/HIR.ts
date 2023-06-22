@@ -6,7 +6,6 @@
  */
 
 import * as t from "@babel/types";
-import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
@@ -922,9 +921,10 @@ const opaqueBlockId = Symbol();
 export type BlockId = number & { [opaqueBlockId]: "BlockId" };
 
 export function makeBlockId(id: number): BlockId {
-  invariant(
+  CompilerError.invariant(
     id >= 0 && Number.isInteger(id),
-    "Expected block id to be a non-negative integer"
+    "Expected block id to be a non-negative integer",
+    null
   );
   return id as BlockId;
 }
@@ -937,9 +937,10 @@ const opaqueScopeId = Symbol();
 export type ScopeId = number & { [opaqueScopeId]: "ScopeId" };
 
 export function makeScopeId(id: number): ScopeId {
-  invariant(
+  CompilerError.invariant(
     id >= 0 && Number.isInteger(id),
-    "Expected block id to be a non-negative integer"
+    "Expected block id to be a non-negative integer",
+    null
   );
   return id as ScopeId;
 }
@@ -952,9 +953,10 @@ const opaqueIdentifierId = Symbol();
 export type IdentifierId = number & { [opaqueIdentifierId]: "IdentifierId" };
 
 export function makeIdentifierId(id: number): IdentifierId {
-  invariant(
+  CompilerError.invariant(
     id >= 0 && Number.isInteger(id),
-    "Expected identifier id to be a non-negative integer"
+    "Expected identifier id to be a non-negative integer",
+    null
   );
   return id as IdentifierId;
 }
@@ -967,9 +969,10 @@ const opaqueInstructionId = Symbol();
 export type InstructionId = number & { [opaqueInstructionId]: "IdentifierId" };
 
 export function makeInstructionId(id: number): InstructionId {
-  invariant(
+  CompilerError.invariant(
     id >= 0 && Number.isInteger(id),
-    "Expected instruction id to be a non-negative integer"
+    "Expected instruction id to be a non-negative integer",
+    null
   );
   return id as InstructionId;
 }

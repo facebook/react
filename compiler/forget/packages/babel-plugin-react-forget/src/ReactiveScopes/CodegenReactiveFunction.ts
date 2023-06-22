@@ -6,7 +6,6 @@
  */
 
 import * as t from "@babel/types";
-import invariant from "invariant";
 import { pruneUnusedLValues, pruneUnusedLabels, renameVariables } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment } from "../HIR";
@@ -216,10 +215,10 @@ function codegenReactiveScope(
       firstOutputIndex = index;
     }
 
-    invariant(
+    CompilerError.invariant(
       identifier.name != null,
-      "Expected identifier '@%s' to be named",
-      identifier.id
+      `Expected identifier '@${identifier.id}' to be named`,
+      null
     );
 
     const name = convertIdentifier(identifier);
@@ -284,10 +283,10 @@ function codegenReactiveScope(
     null as t.Expression | null
   );
   if (testCondition === null) {
-    invariant(
+    CompilerError.invariant(
       firstOutputIndex !== null,
-      "Expected scope '@%s' to have at least one declaration",
-      scope.id
+      `Expected scope '@${scope.id}' to have at least one declaration`,
+      null
     );
     testCondition = t.binaryExpression(
       "===",
@@ -542,7 +541,11 @@ function codegenInstructionNullable(
         ]);
       }
       case InstructionKind.Reassign: {
-        invariant(value !== null, "Expected a value for reassignment");
+        CompilerError.invariant(
+          value !== null,
+          "Expected a value for reassignment",
+          instr.value.loc
+        );
         const expr = t.assignmentExpression("=", codegenLValue(lvalue), value);
         if (instr.lvalue !== null) {
           if (instr.value.kind !== "StoreContext") {
@@ -589,9 +592,10 @@ function codegenForInit(
       }))
     ).body;
     const declaration = body[0]!;
-    invariant(
+    CompilerError.invariant(
       declaration.type === "VariableDeclaration",
-      "Expected a variable declaration"
+      "Expected a variable declaration",
+      declaration.loc ?? null
     );
     return declaration;
   } else {
@@ -740,9 +744,10 @@ function codegenInstructionValue(
       switch (optionalValue.type) {
         case "OptionalCallExpression":
         case "CallExpression": {
-          invariant(
+          CompilerError.invariant(
             t.isExpression(optionalValue.callee),
-            "v8 intrinsics are validated during lowering"
+            "v8 intrinsics are validated during lowering",
+            optionalValue.callee.loc ?? null
           );
           value = t.optionalCallExpression(
             optionalValue.callee,
@@ -754,9 +759,10 @@ function codegenInstructionValue(
         case "OptionalMemberExpression":
         case "MemberExpression": {
           const property = optionalValue.property;
-          invariant(
+          CompilerError.invariant(
             t.isExpression(property),
-            "Private names are validated during lowering"
+            "Private names are validated during lowering",
+            property.loc ?? null
           );
           value = t.optionalMemberExpression(
             optionalValue.object,
@@ -779,19 +785,21 @@ function codegenInstructionValue(
     }
     case "MethodCall": {
       const memberExpr = codegenPlace(cx, instrValue.property);
-      invariant(
+      CompilerError.invariant(
         t.isMemberExpression(memberExpr) ||
           t.isOptionalMemberExpression(memberExpr),
         "[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression. " +
-          `Got a '${memberExpr.type}'`
+          `Got a '${memberExpr.type}'`,
+        memberExpr.loc ?? null
       );
-      invariant(
+      CompilerError.invariant(
         t.isNodesEquivalent(
           memberExpr.object,
           codegenPlace(cx, instrValue.receiver)
         ),
         "[Codegen] Internal error: Forget should always generate MethodCall::property " +
-          "as a MemberExpression of MethodCall::receiver"
+          "as a MemberExpression of MethodCall::receiver",
+        memberExpr.loc ?? null
       );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, memberExpr, args);
@@ -843,10 +851,10 @@ function codegenInstructionValue(
       } else if (tagValue.type === "MemberExpression") {
         tag = convertMemberExpressionToJsx(tagValue);
       } else {
-        invariant(
+        CompilerError.invariant(
           tagValue.type === "StringLiteral",
-          "Expected JSX tag to be an identifier or string, got '%s'",
-          tagValue.type
+          `Expected JSX tag to be an identifier or string, got '${tagValue.type}'`,
+          tagValue.loc ?? null
         );
         if (tagValue.value.indexOf(":") >= 0) {
           const [namespace, name] = tagValue.value.split(":", 2);
@@ -1185,17 +1193,19 @@ function codegenJsxElement(
 function convertMemberExpressionToJsx(
   expr: t.MemberExpression
 ): t.JSXMemberExpression {
-  invariant(
+  CompilerError.invariant(
     expr.property.type === "Identifier",
-    "Expected JSX member expression property to be a string"
+    "Expected JSX member expression property to be a string",
+    expr.loc ?? null
   );
   const property = t.jsxIdentifier(expr.property.name);
   if (expr.object.type === "Identifier") {
     return t.jsxMemberExpression(t.jsxIdentifier(expr.object.name), property);
   } else {
-    invariant(
+    CompilerError.invariant(
       expr.object.type === "MemberExpression",
-      "Expected JSX member expression to be an identifier or nested member expression"
+      "Expected JSX member expression to be an identifier or nested member expression",
+      expr.object.loc ?? null
     );
     const object = convertMemberExpressionToJsx(expr.object);
     return t.jsxMemberExpression(object, property);

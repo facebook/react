@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import {
   BlockId,
   InstructionId,
@@ -70,7 +70,11 @@ class Context {
     this.#builders.push(builder);
     fn();
     const popped = this.#builders.pop();
-    invariant(popped === builder, "Expected push/pop to be called 1:1");
+    CompilerError.invariant(
+      popped === builder,
+      "Expected push/pop to be called 1:1",
+      null
+    );
     return builder.complete();
   }
 }
@@ -90,7 +94,11 @@ class Builder {
 
   append(item: ReactiveStatement, label: BlockId | null): void {
     if (label !== null) {
-      invariant(item.kind === "terminal", "Only terminals may have a label");
+      CompilerError.invariant(
+        item.kind === "terminal",
+        "Only terminals may have a label",
+        null
+      );
       item.label = label;
     }
     this.#instructions.push(item);
@@ -130,9 +138,10 @@ class Builder {
     //   "Expected all scopes to be closed when exiting a block"
     // );
     const first = this.#stack[0]!;
-    invariant(
+    CompilerError.invariant(
       first.kind === "block",
-      "Expected first stack item to be a basic block"
+      "Expected first stack item to be a basic block",
+      null
     );
     return first.block;
   }
@@ -164,9 +173,10 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         break;
       }
       case "scope": {
-        invariant(
+        CompilerError.invariant(
           false,
-          "Expected the function to not have scopes already assigned"
+          "Expected the function to not have scopes already assigned",
+          null
         );
       }
       default: {
@@ -182,10 +192,11 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 export function getInstructionScope(
   instr: ReactiveInstruction
 ): ReactiveScope | null {
-  invariant(
+  CompilerError.invariant(
     instr.lvalue !== null,
     "Expected lvalues to not be null when assigning scopes. " +
-      "Pruning lvalues too early can result in missing scope information."
+      "Pruning lvalues too early can result in missing scope information.",
+    instr.loc
   );
   for (const operand of eachInstructionLValue(instr)) {
     const operandScope = getPlaceScope(instr.id, operand);

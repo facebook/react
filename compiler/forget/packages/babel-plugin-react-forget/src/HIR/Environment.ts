@@ -6,7 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { ExternalFunction } from "../Entrypoint/Options";
 import { log } from "../Utils/logger";
 import {
@@ -195,9 +195,10 @@ export class Environment {
     if (config?.customHooks) {
       this.#globals = new Map(DEFAULT_GLOBALS);
       for (const [hookName, hook] of config.customHooks) {
-        invariant(
+        CompilerError.invariant(
           !this.#globals.has(hookName),
-          `[Globals] Found existing definition in global registry for custom hook ${hookName}`
+          `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
+          null
         );
         this.#globals.set(
           hookName,
@@ -270,9 +271,10 @@ export class Environment {
       // If an object or function has a shapeId, it must have been assigned
       // by Forget (and be present in a builtin or user-defined registry)
       const shape = this.#shapes.get(shapeId);
-      invariant(
+      CompilerError.invariant(
         shape !== undefined,
-        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
+        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        null
       );
       return shape.properties.get(property) ?? null;
     } else {
@@ -284,9 +286,10 @@ export class Environment {
     const { shapeId } = type;
     if (shapeId !== null) {
       const shape = this.#shapes.get(shapeId);
-      invariant(
+      CompilerError.invariant(
         shape !== undefined,
-        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`
+        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        null
       );
       return shape.functionType;
     }

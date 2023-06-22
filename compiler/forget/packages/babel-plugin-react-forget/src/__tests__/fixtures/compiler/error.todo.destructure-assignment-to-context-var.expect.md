@@ -18,7 +18,7 @@ function useFoo(props) {
 ## Error
 
 ```
-[InferReferenceEffects] Context variables are always mutable.
+[ReactForget] Invariant: [InferReferenceEffects] Context variables are always mutable. (5:5)
 ```
           
       

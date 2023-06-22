@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import { Environment } from "../HIR/Environment";
 import {
@@ -68,9 +67,10 @@ class SSABuilder {
   }
 
   state(): State {
-    invariant(
+    CompilerError.invariant(
       this.#current !== null,
-      "we need to be in a block to access state!"
+      "we need to be in a block to access state!",
+      null
     );
     return this.#states.get(this.#current)!;
   }
@@ -237,9 +237,10 @@ function enterSSAImpl(
 ): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
-    invariant(
+    CompilerError.invariant(
       !visitedBlocks.has(block),
-      `found a cycle! visiting bb${block.id} again`
+      `found a cycle! visiting bb${block.id} again`,
+      null
     );
     visitedBlocks.add(block);
 
@@ -269,9 +270,10 @@ function enterSSAImpl(
       ) {
         const loweredFunc = instr.value.loweredFunc;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
-        invariant(
+        CompilerError.invariant(
           entry.preds.size === 0,
-          "Expected function expression entry block to have zero predecessors"
+          "Expected function expression entry block to have zero predecessors",
+          null
         );
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);

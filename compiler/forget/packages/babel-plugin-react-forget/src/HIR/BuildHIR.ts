@@ -8,7 +8,6 @@
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { Expression } from "@babel/types";
-import invariant from "invariant";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
@@ -769,9 +768,10 @@ function lowerStatement(
     case "FunctionDeclaration": {
       const stmt = stmtPath as NodePath<t.FunctionDeclaration>;
       stmt.skip();
-      invariant(
+      CompilerError.invariant(
         stmt.get("id").type === "Identifier",
-        "function declarations must have a name"
+        "function declarations must have a name",
+        stmt.node.loc ?? null
       );
       const id = stmt.get("id") as NodePath<t.Identifier>;
 
@@ -795,9 +795,10 @@ function lowerStatement(
           ),
         ])
       );
-      invariant(
+      CompilerError.invariant(
         desugared.length === 1,
-        "only one declaration is created from desugaring function declaration"
+        "only one declaration is created from desugaring function declaration",
+        stmt.node.loc ?? null
       );
       lowerStatement(builder, desugared.at(0)!);
       return;
@@ -843,9 +844,10 @@ function lowerStatement(
       let test: Place;
       if (left.isVariableDeclaration()) {
         const declarations = left.get("declarations");
-        invariant(
+        CompilerError.invariant(
           declarations.length === 1,
-          `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`
+          `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
+          left.node.loc ?? null
         );
         const id = declarations[0].get("id");
         const nextIterableOf = lowerValueToTemporary(builder, {
@@ -1517,7 +1519,11 @@ function lowerExpression(
             });
           }
         } else {
-          invariant(namePath.isJSXNamespacedName(), "Refinement");
+          CompilerError.invariant(
+            namePath.isJSXNamespacedName(),
+            "Refinement",
+            namePath.node.loc ?? null
+          );
           const namespace = namePath.node.namespace.name;
           const name = namePath.node.name.name;
           propName = `${namespace}:${name}`;
@@ -1586,9 +1592,10 @@ function lowerExpression(
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
-      invariant(
+      CompilerError.invariant(
         expr.get("quasi").get("quasis").length == 1,
-        "there should be only one quasi as we don't support interpolations yet"
+        "there should be only one quasi as we don't support interpolations yet",
+        expr.node.loc ?? null
       );
       const value = expr.get("quasi").get("quasis").at(0)!.node.value;
       if (value.raw !== value.cooked) {
@@ -1836,7 +1843,7 @@ function lowerOptionalMemberExpression(
       loc,
     };
   });
-  invariant(object !== null, "Satisfy type checker");
+  CompilerError.invariant(object !== null, "Satisfy type checker", null);
 
   // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
   // the semantic of conditional evaluation depending on the callee
@@ -2268,10 +2275,10 @@ function lowerJsxMemberExpression(
   if (object.isJSXMemberExpression()) {
     objectPlace = lowerJsxMemberExpression(builder, object);
   } else {
-    invariant(
+    CompilerError.invariant(
       object.isJSXIdentifier(),
-      "TypeScript refinement fail: expected 'JsxIdentifier', got '%s'",
-      object.node.type
+      `TypeScript refinement fail: expected 'JsxIdentifier', got '${object.node.type}'`,
+      object.node.loc ?? null
     );
     objectPlace = lowerIdentifier(builder, object);
   }
@@ -2303,9 +2310,10 @@ function lowerJsxElement(
     if (expression.isJSXEmptyExpression()) {
       return null;
     } else {
-      invariant(
+      CompilerError.invariant(
         expression.isExpression(),
-        `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`
+        `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`,
+        expression.node.loc ?? null
       );
       return lowerExpressionToTemporary(builder, expression);
     }
@@ -2554,9 +2562,10 @@ function lowerAssignment(
     }
     case "MemberExpression": {
       // This can only occur because of a coding error, parsers enforce this condition
-      invariant(
+      CompilerError.invariant(
         kind === InstructionKind.Reassign,
-        "MemberExpression may only appear in an assignment expression"
+        "MemberExpression may only appear in an assignment expression",
+        lvaluePath.node.loc ?? null
       );
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get("property");

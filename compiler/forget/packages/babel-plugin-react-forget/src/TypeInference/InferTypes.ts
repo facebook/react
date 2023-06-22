@@ -6,7 +6,7 @@
  */
 
 import * as t from "@babel/types";
-import invariant from "invariant";
+import { CompilerError } from "../CompilerError";
 import { Environment } from "../HIR";
 import {
   HIRFunction,
@@ -342,7 +342,11 @@ class Unifier {
     if (type.kind === "Phi") {
       const operands = new Set(type.operands.map((i) => this.get(i).kind));
 
-      invariant(operands.size > 0, "there should be at least one operand");
+      CompilerError.invariant(
+        operands.size > 0,
+        "there should be at least one operand",
+        null
+      );
       const kind = operands.values().next().value;
 
       // there's only one unique type and it's not a type var

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
@@ -220,7 +219,11 @@ export function leaveSSA(fn: HIRFunction): void {
             }
           }
         }
-        invariant(kind !== null, "Expected at least one operand");
+        CompilerError.invariant(
+          kind !== null,
+          "Expected at least one operand",
+          null
+        );
         value.lvalue.kind = kind;
       }
       rewritePlace(lvalue, rewrites, declarations);
@@ -353,9 +356,10 @@ export function leaveSSA(fn: HIRFunction): void {
 
       // If we never saw a declaration for this phi, it may have been pruned by DCE, so synthesize
       // a new Let binding
-      invariant(
+      CompilerError.invariant(
         phi.id.name != null,
-        "Expected reassignment phis to have a name"
+        "Expected reassignment phis to have a name",
+        null
       );
       const declaration = declarations.get(phi.id.name);
       if (declaration === undefined) {

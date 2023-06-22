@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
 import prettyFormat from "pretty-format";
+import { CompilerError } from "../CompilerError";
 import { BlockId, HIRFunction } from "./HIR";
 import { eachTerminalSuccessor } from "./visitors";
 
@@ -88,7 +88,7 @@ export class Dominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    invariant(dominator !== undefined, "Unknown node");
+    CompilerError.invariant(dominator !== undefined, "Unknown node", null);
     return dominator === id ? null : dominator;
   }
 
@@ -119,7 +119,7 @@ export class PostDominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    invariant(dominator !== undefined, "Unknown node");
+    CompilerError.invariant(dominator !== undefined, "Unknown node", null);
     return dominator === id ? null : dominator;
   }
 
@@ -159,9 +159,10 @@ function computeImmediateDominators<T>(graph: Graph<T>): Map<T, T> {
           break;
         }
       }
-      invariant(
+      CompilerError.invariant(
         newIdom !== null,
-        `At least one predecessor must have been visited for block ${id}`
+        `At least one predecessor must have been visited for block ${id}`,
+        null
       );
 
       for (const pred of node.preds) {
