@@ -1039,14 +1039,14 @@ function codegenInstructionValue(
                 (declarator.id as t.Identifier).name
               }'`,
               severity: ErrorSeverity.Todo,
-              nodePath: null,
+              loc: declarator.loc ?? null,
             });
             return t.stringLiteral(`TODO handle ${declarator.id}`);
           } else {
             cx.errors.push({
               reason: `(CodegenReactiveFunction::codegenInstructionValue) Handle conversion of ${stmt.type} to expression`,
               severity: ErrorSeverity.Todo,
-              nodePath: null,
+              loc: stmt.loc ?? null,
             });
             return t.stringLiteral(`TODO handle ${stmt.type}`);
           }

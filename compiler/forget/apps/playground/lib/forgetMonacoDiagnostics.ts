@@ -30,7 +30,7 @@ function mapForgetDiagnosticToMonacoMarker(
   detail: CompilerErrorDetail,
   monaco: Monaco
 ): editor.IMarkerData | null {
-  if (detail.loc == null) {
+  if (detail.loc == null || typeof detail.loc === "symbol") {
     return null;
   }
   const severity = mapForgetSeverityToMonaco(detail.severity, monaco);

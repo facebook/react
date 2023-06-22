@@ -83,219 +83,53 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
-> 1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-    |                                                  ^^^^^^^
-  2 |   let i = 0;
-  3 |   var x = [];
-  4 |
+[ReactForget] Todo: (BuildHIR::lower) Handle RestElement params (1:1)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration
-  1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
-  2 |   let i = 0;
-> 3 |   var x = [];
-    |   ^^^^^^^^^^^
-  4 |
-  5 |   class Bar {
-  6 |     #secretSauce = 42;
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ClassDeclaration statements
-  3 |   var x = [];
-  4 |
-> 5 |   class Bar {
-    |   ^
-  6 |     #secretSauce = 42;
-  7 |     constructor() {
-  8 |       console.log(this.#secretSauce);
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression
-  10 |   }
-  11 |
-> 12 |   const g = { b() {}, c: () => {} };
-     |               ^^^^^^
-  13 |   const { z, aa = "aa" } = useCustom();
-  14 |
-  15 |   <Button haha={1}></Button>;
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression (12:12)
 
-[ReactForget] TodoError: (BuildHIR::lower) Handle RestElement params
-  16 |   <Button>{/** empty */}</Button>;
-  17 |
-> 18 |   const j = function bar([quz, qux], ...args) {};
-     |                                      ^^^^^^^
-  19 |
-  20 |   for (; i < 3; i += 1) {
-  21 |     x.push(i);
+[ReactForget] Todo: (BuildHIR::lower) Handle RestElement params (18:18)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  18 |   const j = function bar([quz, qux], ...args) {};
-  19 |
-> 20 |   for (; i < 3; i += 1) {
-     |   ^
-  21 |     x.push(i);
-  22 |   }
-  23 |   for (; i < 3; ) {
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  21 |     x.push(i);
-  22 |   }
-> 23 |   for (; i < 3; ) {
-     |   ^
-  24 |     break;
-  25 |   }
-  26 |   for (;;) {
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (23:25)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement
-  24 |     break;
-  25 |   }
-> 26 |   for (;;) {
-     |   ^
-  27 |     break;
-  28 |   }
-  29 |
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (26:28)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle empty test in ForStatement
-  24 |     break;
-  25 |   }
-> 26 |   for (;;) {
-     |   ^
-  27 |     break;
-  28 |   }
-  29 |
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle empty test in ForStatement (26:28)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template with interpolations
-  28 |   }
-  29 |
-> 30 |   graphql`
-     |   ^
-  31 |     ${g}
-  32 |   `;
-  33 |
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle tagged template with interpolations (30:32)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value
-  32 |   `;
-  33 |
-> 34 |   graphql`\\t\n`;
-     |   ^^^^^^^^^^^^^^
-  35 |
-  36 |   for (c of [1, 2]) {
-  37 |   }
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value (34:34)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement
-  34 |   graphql`\\t\n`;
-  35 |
-> 36 |   for (c of [1, 2]) {
-     |        ^
-  37 |   }
-  38 |   for ([v] of [[1], [2]]) {
-  39 |   }
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle Identifier inits in ForOfStatement (36:36)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement
-  36 |   for (c of [1, 2]) {
-  37 |   }
-> 38 |   for ([v] of [[1], [2]]) {
-     |        ^^^
-  39 |   }
-  40 |   for ({ v } of [{ v: 1 }, { v: 2 }]) {
-  41 |   }
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38:38)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement
-  38 |   for ([v] of [[1], [2]]) {
-  39 |   }
-> 40 |   for ({ v } of [{ v: 1 }, { v: 2 }]) {
-     |        ^^^^^
-  41 |   }
-  42 |
-  43 |   for (let x in { a: 1 }) {
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
 
-[ReactForget] TodoError: (BuildHIR::lowerStatement) Handle ForInStatement statements
-  41 |   }
-  42 |
-> 43 |   for (let x in { a: 1 }) {
-     |   ^
-  44 |   }
-  45 |
-  46 |   let updateIdentifier = 0;
+[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ForInStatement statements (43:44)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  45 |
-  46 |   let updateIdentifier = 0;
-> 47 |   --updateIdentifier;
-     |   ^^^^^^^^^^^^^^^^^^
-  48 |   ++updateIdentifier;
-  49 |   updateIdentifier.y++;
-  50 |   updateIdentifier.y--;
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle prefix UpdateExpression (47:47)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle prefix UpdateExpression
-  46 |   let updateIdentifier = 0;
-  47 |   --updateIdentifier;
-> 48 |   ++updateIdentifier;
-     |   ^^^^^^^^^^^^^^^^^^
-  49 |   updateIdentifier.y++;
-  50 |   updateIdentifier.y--;
-  51 |
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle prefix UpdateExpression (48:48)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  47 |   --updateIdentifier;
-  48 |   ++updateIdentifier;
-> 49 |   updateIdentifier.y++;
-     |   ^^^^^^^^^^^^^^^^^^^^
-  50 |   updateIdentifier.y--;
-  51 |
-  52 |   switch (i) {
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
 
-[ReactForget] TodoError: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument
-  48 |   ++updateIdentifier;
-  49 |   updateIdentifier.y++;
-> 50 |   updateIdentifier.y--;
-     |   ^^^^^^^^^^^^^^^^^^^^
-  51 |
-  52 |   switch (i) {
-  53 |     case 1 + 1: {
+[ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
 
-[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered
-  55 |     case foo(): {
-  56 |     }
-> 57 |     case x.y: {
-     |          ^^^
-  58 |     }
-  59 |     default: {
-  60 |     }
+[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
 
-[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered
-  53 |     case 1 + 1: {
-  54 |     }
-> 55 |     case foo(): {
-     |          ^^^^^
-  56 |     }
-  57 |     case x.y: {
-  58 |     }
+[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered (55:55)
 
-[ReactForget] TodoError: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered
-  51 |
-  52 |   switch (i) {
-> 53 |     case 1 + 1: {
-     |          ^^^^^
-  54 |     }
-  55 |     case foo(): {
-  56 |     }
+[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
 
-[ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  62 |
-  63 |   // Cannot assign to globals
-> 64 |   someUnknownGlobal = true;
-     |   ^^^^^^^^^^^^^^^^^
-  65 |   moduleLocal = true;
-  66 |
-  67 |   function component(a) {
+[ReactForget] InvalidInput: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (64:64)
 
-[ReactForget] InvalidInputError: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.
-  63 |   // Cannot assign to globals
-  64 |   someUnknownGlobal = true;
-> 65 |   moduleLocal = true;
-     |   ^^^^^^^^^^^
-  66 |
-  67 |   function component(a) {
-  68 |     // Add support for function declarations once we support `var` hoisting.
+[ReactForget] InvalidInput: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (65:65)
 ```
           
       

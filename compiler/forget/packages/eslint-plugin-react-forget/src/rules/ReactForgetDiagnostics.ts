@@ -61,7 +61,7 @@ const rule: Rule.RuleModule = {
       } catch (err) {
         if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
-            if (detail.loc != null) {
+            if (detail.loc != null && typeof detail.loc !== "symbol") {
               context.report({
                 message: detail.toString(),
                 loc: detail.loc,

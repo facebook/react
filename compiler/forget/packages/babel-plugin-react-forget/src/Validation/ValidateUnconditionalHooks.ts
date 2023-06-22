@@ -93,11 +93,10 @@ export function validateUnconditionalHooks(
         // and walk upward to determine whether each error location was due to a loop, if, etc.
         errors.pushErrorDetail(
           new CompilerErrorDetail({
-            codeframe: null,
             description: null,
             reason:
               "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
-            loc: typeof loc !== "symbol" ? loc : null,
+            loc,
             severity: ErrorSeverity.InvalidInput,
           })
         );

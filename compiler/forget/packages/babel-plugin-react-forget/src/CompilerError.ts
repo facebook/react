@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Node, NodePath } from "@babel/traverse";
-import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import type { SourceLocation } from "./HIR";
 import type { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
@@ -31,59 +29,9 @@ export type CompilerErrorOptions = {
   reason: string;
   description?: string | null | undefined;
   severity: ErrorSeverity;
-  nodePath: AnyNodePath | null;
+  loc: SourceLocation | null;
 };
-type AnyNodePath = NodePath<Node | null | undefined>;
-type CompilerErrorKind = typeof InvalidInputError | typeof TodoError;
 type CompilerErrorDetailOptions = ExtractClassProperties<CompilerErrorDetail>;
-
-function mapSeverityToErrorCtor(severity: ErrorSeverity): CompilerErrorKind {
-  switch (severity) {
-    case ErrorSeverity.InvalidInput:
-      return InvalidInputError;
-    case ErrorSeverity.Todo:
-      return TodoError;
-    case ErrorSeverity.Invariant:
-      return InvariantError;
-    default:
-      assertExhaustive(severity, `Unhandled severity level: ${severity}`);
-  }
-}
-class InvalidInputError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = `${ErrorSeverity.InvalidInput}Error`;
-  }
-}
-class TodoError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = `${ErrorSeverity.Todo}Error`;
-  }
-}
-class InvariantError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = `${ErrorSeverity.Invariant}Error`;
-  }
-}
-
-export function tryPrintCodeFrame(
-  options: CompilerErrorOptions
-): string | null {
-  if (options.nodePath == null) return null;
-  try {
-    return options.nodePath
-      .buildCodeFrameError(
-        options.reason +
-          (options.description != null ? `. ${options.description}` : ""),
-        mapSeverityToErrorCtor(options.severity)
-      )
-      .toString();
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
@@ -93,26 +41,21 @@ export class CompilerErrorDetail {
   reason: string;
   description: string | null;
   severity: ErrorSeverity;
-  codeframe: string | null;
-  loc: BabelSourceLocation | null;
+  loc: SourceLocation | null;
 
   constructor(options: CompilerErrorDetailOptions) {
     this.reason = options.reason;
     this.description = options.description;
     this.severity = options.severity;
-    this.codeframe = options.codeframe;
     this.loc = options.loc;
   }
 
   printErrorMessage(): string {
-    if (this.codeframe != null) {
-      return this.codeframe;
-    }
     const buffer = [`${this.severity}: ${this.reason}`];
     if (this.description !== null) {
       buffer.push(`. ${this.description}`);
     }
-    if (this.loc != null) {
+    if (this.loc != null && typeof this.loc !== "symbol") {
       buffer.push(` (${this.loc.start.line}:${this.loc.end.line})`);
     }
     return buffer.join("");
@@ -134,9 +77,8 @@ export class CompilerError extends Error {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        codeframe: null,
         description,
-        loc: typeof loc === "symbol" ? null : loc,
+        loc,
         reason,
         severity: ErrorSeverity.Invariant,
       })
@@ -152,9 +94,8 @@ export class CompilerError extends Error {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        codeframe: null,
         description,
-        loc: typeof loc === "symbol" ? null : loc,
+        loc,
         reason,
         severity: ErrorSeverity.Todo,
       })
@@ -170,9 +111,8 @@ export class CompilerError extends Error {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        codeframe: null,
         description,
-        loc: typeof loc === "symbol" ? null : loc,
+        loc,
         reason,
         severity: ErrorSeverity.InvalidInput,
       })
@@ -200,8 +140,7 @@ export class CompilerError extends Error {
       reason: options.reason,
       description: options.description ?? null,
       severity: options.severity,
-      codeframe: tryPrintCodeFrame(options),
-      loc: options.nodePath?.node?.loc ?? null,
+      loc: typeof options.loc === "symbol" ? null : options.loc,
     });
     return this.pushErrorDetail(detail);
   }

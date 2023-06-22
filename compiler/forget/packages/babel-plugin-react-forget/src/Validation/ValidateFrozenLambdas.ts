@@ -133,7 +133,6 @@ function validateOperand(
     const lambda = state.lambdas.get(operandId);
     if (lambda !== undefined) {
       return new CompilerErrorDetail({
-        codeframe: null,
         description: null,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:

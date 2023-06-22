@@ -104,7 +104,6 @@ function validateNonRefValue(error: CompilerError, operand: Place): void {
   if (isRefValueType(operand.identifier)) {
     error.pushErrorDetail(
       new CompilerErrorDetail({
-        codeframe: null,
         description: `Cannot access ref value at ${printPlace(operand)}`,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
@@ -120,7 +119,6 @@ function validateNonRefObject(error: CompilerError, operand: Place): void {
   if (isUseRefType(operand.identifier)) {
     error.pushErrorDetail(
       new CompilerErrorDetail({
-        codeframe: null,
         description: `Cannot access ref object at ${printPlace(operand)}`,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:

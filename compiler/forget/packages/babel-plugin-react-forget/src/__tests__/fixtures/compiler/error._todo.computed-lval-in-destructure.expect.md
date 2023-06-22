@@ -15,14 +15,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] TodoError: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern
-  1 | function Component(props) {
-  2 |   const computedKey = props.key;
-> 3 |   const { [computedKey]: x } = props.val;
-    |           ^^^^^^^^^^^^^^^^
-  4 |
-  5 |   return x;
-  6 | }
+[ReactForget] Todo: (BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern (3:3)
 ```
           
       

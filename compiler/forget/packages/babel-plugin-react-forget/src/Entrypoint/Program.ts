@@ -213,7 +213,6 @@ export function compileProgram(
           reason,
           description: violation.value.trim(),
           severity: ErrorSeverity.InvalidInput,
-          codeframe: null,
           loc: violation.loc ?? null,
         })
       );
@@ -359,7 +358,6 @@ function buildFunctionDeclaration(
         "ArrowFunctionExpression was not declared in a variable declaration",
       severity: ErrorSeverity.Todo,
       description: `Handle ${fn.parentPath.type}`,
-      codeframe: null,
       loc: fn.node.loc ?? null,
     });
   }
@@ -370,7 +368,6 @@ function buildFunctionDeclaration(
       reason: "ArrowFunctionExpression was not a single declaration",
       severity: ErrorSeverity.Todo,
       description: `Handle ${variableDeclarator.parentPath.type}`,
-      codeframe: null,
       loc: fn.node.loc ?? null,
     });
   }
@@ -382,7 +379,6 @@ function buildFunctionDeclaration(
       reason: "ArrowFunctionExpression was not an identifier",
       severity: ErrorSeverity.Todo,
       description: `Handle ${id.type}`,
-      codeframe: null,
       loc: fn.node.loc ?? null,
     });
   }
