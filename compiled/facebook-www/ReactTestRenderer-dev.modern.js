@@ -24392,11 +24392,6 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
-  {
-    // StrictMode in Offscreen should always run double passive effects
-    mode &= ~NoStrictPassiveEffectsMode;
-  }
-
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
@@ -24565,7 +24560,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-f829eef9";
+var ReactVersion = "18.3.0-www-modern-f3a022db";
 
 // Might add PROFILE later.
 

@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-786512bb";
+var ReactVersion = "18.3.0-www-classic-218ac23d";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -28292,11 +28292,6 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
-  {
-    // StrictMode in Offscreen should always run double passive effects
-    mode &= ~NoStrictPassiveEffectsMode;
-  }
-
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
