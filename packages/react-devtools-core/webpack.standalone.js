@@ -47,7 +47,7 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
+  devtool: __DEV__ ? 'eval-cheap-module-source-map' : 'source-map',
   target: 'electron-main',
   entry: {
     standalone: './src/standalone.js',
@@ -56,8 +56,13 @@ module.exports = {
     path: __dirname + '/dist',
     filename: '[name].js',
     chunkFilename: '[name].chunk.js',
-    library: '[name]',
-    libraryTarget: 'commonjs2',
+    library: {
+      type: 'commonjs2',
+    },
+  },
+  externals: {
+    bufferutil: 'commonjs bufferutil',
+    'utf-8-validate': 'commonjs utf-8-validate',
   },
   resolve: {
     alias: {
