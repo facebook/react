@@ -642,4 +642,4 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-canary-254cbdbd6-20230621";
+exports.version = "18.3.0-canary-794b770db-20230622";
