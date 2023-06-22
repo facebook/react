@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<14c435eed21e626d0548f1265b3a2ab8>>
+ * @generated SignedSource<<8f036c0125a599ffea1d8d0e0001b6d9>>
  */
 
 'use strict';
@@ -27539,11 +27539,6 @@ function createFiberFromSuspenseList(pendingProps, mode, lanes, key) {
   return fiber;
 }
 function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
-  {
-    // StrictMode in Offscreen should always run double passive effects
-    mode &= ~NoStrictPassiveEffectsMode;
-  }
-
   var fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
@@ -27763,7 +27758,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-a48d7fee";
+var ReactVersion = "18.3.0-canary-e9a186c1";
 
 function createPortal$1(
   children,
