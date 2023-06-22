@@ -137,59 +137,13 @@ export function describeNativeComponentFrame(
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.
     if (sample && control && typeof sample.stack === 'string') {
-      // This extracts the first frame from the sample that isn't also in the control.
-      // Skipping one frame that we assume is the frame that calls the two.
-      const sampleLines = sample.stack.split('\n');
-      const controlLines = control.stack.split('\n');
-      let s = sampleLines.length - 1;
-      let c = controlLines.length - 1;
-      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
-        // We expect at least one stack frame to be shared.
-        // Typically this will be the root most one. However, stack frames may be
-        // cut off due to maximum stack limits. In this case, one maybe cut off
-        // earlier than the other. We assume that the sample is longer or the same
-        // and there for cut off earlier. So we should find the root most frame in
-        // the sample somewhere in the control.
-        c--;
-      }
-      for (; s >= 1 && c >= 0; s--, c--) {
-        // Next we find the first one that isn't the same which should be the
-        // frame that called our sample function and the control.
-        if (sampleLines[s] !== controlLines[c]) {
-          // In V8, the first line is describing the message but other VMs don't.
-          // If we're about to return the first line, and the control is also on the same
-          // line, that's a pretty good indicator that our sample threw at same line as
-          // the control. I.e. before we entered the sample frame. So we ignore this result.
-          // This can happen if you passed a class to function component, or non-function.
-          if (s !== 1 || c !== 1) {
-            do {
-              s--;
-              c--;
-              // We may still have similar intermediate frames from the construct call.
-              // The next one that isn't the same should be our match though.
-              if (c < 0 || sampleLines[s] !== controlLines[c]) {
-                // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
-                let frame = '\n' + sampleLines[s].replace(' at new ', ' at ');
-
-                // If our component frame is labeled "<anonymous>"
-                // but we have a user-provided "displayName"
-                // splice it in to make the stack more readable.
-                if (fn.displayName && frame.includes('<anonymous>')) {
-                  frame = frame.replace('<anonymous>', fn.displayName);
-                }
-
-                if (__DEV__) {
-                  if (typeof fn === 'function') {
-                    componentFrameCache.set(fn, frame);
-                  }
-                }
-                // Return the line we found.
-                return frame;
-              }
-            } while (s >= 1 && c >= 0);
-          }
-          break;
-        }
+      const frame = determineComponentFrameFromStack(
+        fn,
+        sample.stack,
+        control.stack,
+      );
+      if (frame) {
+        return frame;
       }
     }
   } finally {
@@ -209,6 +163,85 @@ export function describeNativeComponentFrame(
     }
   }
   return syntheticFrame;
+}
+
+// Used for cases where the Hermes VM truncates the stack trace in the middle.
+// The RegExp is for matching the "... skipping " line here:
+// https://github.com/facebook/hermes/blob/df07cf713a84a4434c83c08cede38ba438dc6aca/lib/VM/JSError.cpp#L694
+const MIDDLE_TRUNCATION_REGEX = /\n\s+\.\.\.\sskipping/;
+
+export function determineComponentFrameFromStack(
+  fn: Function,
+  sampleStack: string,
+  controlStack: string,
+): ?string {
+  // Hermes VM currently truncates stack traces in the *middle* as opposed to
+  // the bottom, so we remove the "... skipping {x} lines" line and everything
+  // below it first, to mimick a scenario where the stack is truncated at the
+  // bottom.
+  const sampleStackMatch = MIDDLE_TRUNCATION_REGEX.exec(sampleStack);
+  if (sampleStackMatch != null) {
+    sampleStack = sampleStack.slice(0, sampleStackMatch.index);
+  }
+  const controlStackMatch = MIDDLE_TRUNCATION_REGEX.exec(controlStack);
+  if (controlStackMatch != null) {
+    controlStack = controlStack.slice(0, controlStackMatch.index);
+  }
+
+  // This extracts the first frame from the sample that isn't also in the control.
+  // Skipping one frame that we assume is the frame that calls the two.
+  const sampleLines = sampleStack.split('\n');
+  const controlLines = controlStack.split('\n');
+  let s = sampleLines.length - 1;
+  let c = controlLines.length - 1;
+  while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+    // We expect at least one stack frame to be shared.
+    // Typically this will be the root most one. However, stack frames may be
+    // cut off due to maximum stack limits. In this case, one maybe cut off
+    // earlier than the other. We assume that the sample is longer or the same
+    // and there for cut off earlier. So we should find the root most frame in
+    // the sample somewhere in the control.
+    c--;
+  }
+  for (; s >= 1 && c >= 0; s--, c--) {
+    // Next we find the first one that isn't the same which should be the
+    // frame that called our sample function and the control.
+    if (sampleLines[s] !== controlLines[c]) {
+      // In V8, the first line is describing the message but other VMs don't.
+      // If we're about to return the first line, and the control is also on the same
+      // line, that's a pretty good indicator that our sample threw at same line as
+      // the control. I.e. before we entered the sample frame. So we ignore this result.
+      // This can happen if you passed a class to function component, or non-function.
+      if (s !== 1 || c !== 1) {
+        do {
+          s--;
+          c--;
+          // We may still have similar intermediate frames from the construct call.
+          // The next one that isn't the same should be our match though.
+          if (c < 0 || sampleLines[s] !== controlLines[c]) {
+            // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
+            let frame = '\n' + sampleLines[s].replace(' at new ', ' at ');
+
+            // If our component frame is labeled "<anonymous>"
+            // but we have a user-provided "displayName"
+            // splice it in to make the stack more readable.
+            if (fn.displayName && frame.includes('<anonymous>')) {
+              frame = frame.replace('<anonymous>', fn.displayName);
+            }
+
+            if (__DEV__) {
+              if (typeof fn === 'function') {
+                componentFrameCache.set(fn, frame);
+              }
+            }
+            // Return the line we found.
+            return frame;
+          }
+        } while (s >= 1 && c >= 0);
+      }
+      break;
+    }
+  }
 }
 
 const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
