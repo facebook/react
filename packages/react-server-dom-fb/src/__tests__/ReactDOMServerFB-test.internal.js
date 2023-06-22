@@ -205,13 +205,12 @@ describe('ReactDOMServerFB', () => {
         </Suspense>
       </div>,
       {
-        onError(x) {
-          errors.push(x.message);
+        onError(error) {
+          errors.push(error);
         },
       },
     );
-    const reason = 'Test abort reason';
-    ReactDOMServer.abortStream(stream, new Error(reason));
-    expect(errors).toEqual([reason]);
+    ReactDOMServer.abortStream(stream, theError);
+    expect(errors).toEqual([theError]);
   });
 });
