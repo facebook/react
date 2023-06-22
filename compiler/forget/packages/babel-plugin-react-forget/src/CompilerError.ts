@@ -72,7 +72,7 @@ export class CompilerError extends Error {
   static invariant(
     condition: unknown,
     reason: string,
-    loc: SourceLocation,
+    loc: SourceLocation | null,
     description: string | null = null
   ): asserts condition {
     if (!condition) {
@@ -91,7 +91,7 @@ export class CompilerError extends Error {
 
   static todo(
     reason: string,
-    loc: SourceLocation,
+    loc: SourceLocation | null,
     description: string | null = null
   ): never {
     const errors = new CompilerError();
@@ -108,7 +108,7 @@ export class CompilerError extends Error {
 
   static invalidInput(
     reason: string,
-    loc: SourceLocation,
+    loc: SourceLocation | null,
     description: string | null = null
   ): never {
     const errors = new CompilerError();
