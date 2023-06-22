@@ -41,6 +41,22 @@ const tests: ForgetTestCases = {
         }
       `,
     },
+    {
+      // OK because invariants are only meant for the compiler team's consumption
+      name: "[Invariant] Defined after use",
+      code: normalizeIndent`
+        function Component(props) {
+          'use forget';
+          let y = function () {
+            m(x);
+          };
+
+          let x = { a };
+          m(x);
+          return y;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -61,31 +77,6 @@ const tests: ForgetTestCases = {
           column: 10,
           endColumn: 15,
           endLine: 6,
-        },
-      ],
-    },
-    {
-      name: "[Invariant] Defined after use",
-      code: normalizeIndent`
-        function Component(props) {
-          'use forget';
-          let y = function () {
-            m(x);
-          };
-
-          let x = { a };
-          m(x);
-          return y;
-        }
-      `,
-      errors: [
-        {
-          message:
-            "[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$1 is undefined (8:8)",
-          line: 8,
-          column: 3,
-          endColumn: 17,
-          endLine: 8,
         },
       ],
     },

@@ -6,15 +6,42 @@
  */
 
 import { transformFromAstSync } from "@babel/core";
+import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import ReactForgetBabelPlugin, {
-  CompilerError,
+  ErrorSeverity,
+  type CompilerError,
+  type CompilerErrorDetail,
   type PluginOptions,
 } from "babel-plugin-react-forget";
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
+type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetail, "loc"> & {
+  loc: BabelSourceLocation;
+};
+
 function isReactForgetCompilerError(err: Error): err is CompilerError {
   return err.name === "ReactForgetCompilerError";
+}
+
+function isReportableDiagnostic(
+  detail: CompilerErrorDetail
+): detail is CompilerErrorDetailWithLoc {
+  let isCorrectSeverity = false;
+  switch (detail.severity) {
+    case ErrorSeverity.InvalidInput:
+      isCorrectSeverity = true;
+      break;
+    case ErrorSeverity.Invariant:
+    case ErrorSeverity.Todo:
+      break;
+  }
+
+  return (
+    isCorrectSeverity === true &&
+    detail.loc != null &&
+    typeof detail.loc !== "symbol"
+  );
 }
 
 const rule: Rule.RuleModule = {
@@ -61,7 +88,7 @@ const rule: Rule.RuleModule = {
       } catch (err) {
         if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
-            if (detail.loc != null && typeof detail.loc !== "symbol") {
+            if (isReportableDiagnostic(detail)) {
               context.report({
                 message: detail.toString(),
                 loc: detail.loc,
