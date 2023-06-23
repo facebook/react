@@ -36,6 +36,11 @@ module.exports = {
   // We're stricter than the default config, mostly. We'll override a few rules
   // and then enable some React specific ones.
   rules: {
+    'react-hooks/exhaustive-deps': [
+      'error',{
+        warnWithNonLegitDependencies: true
+      }
+    ],
     'ft-flow/array-style-complex-type': [OFF, 'verbose'],
     'ft-flow/array-style-simple-type': [OFF, 'verbose'], // TODO should be WARNING
     'ft-flow/boolean-style': ERROR,
