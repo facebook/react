@@ -91,7 +91,7 @@
     "rollup": "^3.17.1",
     "rollup-plugin-prettier": "^3.0.0",
     "rollup-plugin-strip-banner": "^3.0.0",
-    "semver": "^7.1.1",
+    "semver": "^7.5.2",
     "signedsource": "^2.0.0",
     "targz": "^1.0.1",
     "through2": "^3.0.1",
