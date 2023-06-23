@@ -108,6 +108,76 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
+function parsePragma(pragma: string) {
+  let memoizeJsxElements = true;
+  let enableAssumeHooksFollowRulesOfReact = false;
+  let enableTreatHooksAsFunctions = true;
+  let disableAllMemoization = false;
+  let validateRefAccessDuringRender = true;
+  let enableEmitFreeze = null;
+  let enableOptimizeFunctionExpressions = false;
+  let inlineUseMemo = true;
+  let validateHooksUsage = true;
+  let enableFunctionCallSignatureOptimizations = true;
+  let validateFrozenLambdas = true;
+  let assertValidMutableRanges = true;
+
+  if (pragma.includes("@memoizeJsxElements false")) {
+    memoizeJsxElements = false;
+  }
+  if (pragma.includes("@enableAssumeHooksFollowRulesOfReact true")) {
+    enableAssumeHooksFollowRulesOfReact = true;
+  }
+  if (pragma.includes("@enableTreatHooksAsFunctions false")) {
+    enableTreatHooksAsFunctions = false;
+  }
+  if (pragma.includes("@disableAllMemoization true")) {
+    disableAllMemoization = true;
+  }
+  if (pragma.includes("@validateRefAccessDuringRender false")) {
+    validateRefAccessDuringRender = false;
+  }
+  if (pragma.includes("@enableOptimizeFunctionExpressions")) {
+    enableOptimizeFunctionExpressions = true;
+  }
+  if (pragma.includes("@enableEmitFreeze")) {
+    enableEmitFreeze = {
+      source: "react-forget-runtime",
+      importSpecifierName: "makeReadOnly",
+    };
+  }
+  if (pragma.includes("@inlineUseMemo false")) {
+    inlineUseMemo = false;
+  }
+  if (pragma.includes("@enableFunctionCallSignatureOptimizations false")) {
+    enableFunctionCallSignatureOptimizations = false;
+  }
+  if (pragma.includes("@validateHooksUsage false")) {
+    validateHooksUsage = false;
+  }
+  if (pragma.includes("@validateFrozenLambdas false")) {
+    validateHooksUsage = false;
+  }
+  if (pragma.includes("@assertValidMutableRanges false")) {
+    assertValidMutableRanges = false;
+  }
+
+  return {
+    enableAssumeHooksFollowRulesOfReact,
+    enableFunctionCallSignatureOptimizations,
+    disableAllMemoization,
+    enableTreatHooksAsFunctions,
+    inlineUseMemo,
+    memoizeJsxElements,
+    validateHooksUsage,
+    validateRefAccessDuringRender,
+    validateFrozenLambdas,
+    enableEmitFreeze,
+    enableOptimizeFunctionExpressions,
+    assertValidMutableRanges,
+  };
+}
+
 function compile(source: string): CompilerOutput {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
   const upsert = (result: PrintedCompilerPipelineValue) => {
@@ -120,74 +190,13 @@ function compile(source: string): CompilerOutput {
   };
   try {
     // Extract the first line to quickly check for custom test directives
-    const firstLine = source.substring(0, source.indexOf("\n"));
+    const pragma = source.substring(0, source.indexOf("\n"));
+    const options = parsePragma(pragma);
 
-    let memoizeJsxElements = true;
-    let enableAssumeHooksFollowRulesOfReact = false;
-    let enableTreatHooksAsFunctions = true;
-    let disableAllMemoization = false;
-    let validateRefAccessDuringRender = true;
-    let enableEmitFreeze = null;
-    let enableOptimizeFunctionExpressions = false;
-    let inlineUseMemo = true;
-    let validateHooksUsage = true;
-    let enableFunctionCallSignatureOptimizations = true;
-    let validateFrozenLambdas = true;
-    let assertValidMutableRanges = true;
-    if (firstLine.includes("@memoizeJsxElements false")) {
-      memoizeJsxElements = false;
-    }
-    if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
-      enableAssumeHooksFollowRulesOfReact = true;
-    }
-    if (firstLine.includes("@enableTreatHooksAsFunctions false")) {
-      enableTreatHooksAsFunctions = false;
-    }
-    if (firstLine.includes("@disableAllMemoization true")) {
-      disableAllMemoization = true;
-    }
-    if (firstLine.includes("@validateRefAccessDuringRender false")) {
-      validateRefAccessDuringRender = false;
-    }
-    if (firstLine.includes("@enableOptimizeFunctionExpressions")) {
-      enableOptimizeFunctionExpressions = true;
-    }
-    if (firstLine.includes("@enableEmitFreeze")) {
-      enableEmitFreeze = {
-        source: "react-forget-runtime",
-        importSpecifierName: "makeReadOnly",
-      };
-    }
-    if (firstLine.includes("@inlineUseMemo false")) {
-      inlineUseMemo = false;
-    }
-    if (firstLine.includes("@enableFunctionCallSignatureOptimizations false")) {
-      enableFunctionCallSignatureOptimizations = false;
-    }
-    if (firstLine.includes("@validateHooksUsage false")) {
-      validateHooksUsage = false;
-    }
-    if (firstLine.includes("@validateFrozenLambdas false")) {
-      validateHooksUsage = false;
-    }
-    if (firstLine.includes("@assertValidMutableRanges false")) {
-      assertValidMutableRanges = false;
-    }
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
-        enableAssumeHooksFollowRulesOfReact,
-        enableFunctionCallSignatureOptimizations,
-        disableAllMemoization,
-        enableTreatHooksAsFunctions,
-        inlineUseMemo,
-        memoizeJsxElements,
-        validateHooksUsage,
-        validateRefAccessDuringRender,
-        validateFrozenLambdas,
-        enableEmitFreeze,
-        enableOptimizeFunctionExpressions,
-        assertValidMutableRanges,
+        ...options,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
