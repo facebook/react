@@ -119,14 +119,55 @@ function compile(source: string): CompilerOutput {
     }
   };
   try {
+    // Extract the first line to quickly check for custom test directives
+    const firstLine = source.substring(0, source.indexOf("\n"));
+
+    let memoizeJsxElements = true;
+    let enableAssumeHooksFollowRulesOfReact = true;
+    let enableTreatHooksAsFunctions = true;
+    let disableAllMemoization = false;
+    let validateRefAccessDuringRender = true;
+    let enableEmitFreeze = null;
+    let enableOptimizeFunctionExpressions = false;
+    if (firstLine.includes("@memoizeJsxElements false")) {
+      memoizeJsxElements = false;
+    }
+    if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
+      enableAssumeHooksFollowRulesOfReact = true;
+    }
+    if (firstLine.includes("@enableTreatHooksAsFunctions false")) {
+      enableTreatHooksAsFunctions = false;
+    }
+    if (firstLine.includes("@disableAllMemoization true")) {
+      disableAllMemoization = true;
+    }
+    if (firstLine.includes("@validateRefAccessDuringRender false")) {
+      validateRefAccessDuringRender = false;
+    }
+    if (firstLine.includes("@enableOptimizeFunctionExpressions")) {
+      enableOptimizeFunctionExpressions = true;
+    }
+    if (firstLine.includes("@enableEmitFreeze")) {
+      enableEmitFreeze = {
+        source: "react-forget-runtime",
+        importSpecifierName: "makeReadOnly",
+      };
+    }
+
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
-        enableAssumeHooksFollowRulesOfReact: true,
+        enableAssumeHooksFollowRulesOfReact,
         enableFunctionCallSignatureOptimizations: true,
+        disableAllMemoization,
+        enableTreatHooksAsFunctions,
         inlineUseMemo: true,
-        memoizeJsxElements: true,
+        memoizeJsxElements,
         validateHooksUsage: true,
+        validateRefAccessDuringRender,
+        validateFrozenLambdas: true,
+        enableEmitFreeze,
+        enableOptimizeFunctionExpressions,
         assertValidMutableRanges: true,
       })) {
         const fnName = fn.node.id?.name ?? null;
