@@ -123,7 +123,7 @@ function compile(source: string): CompilerOutput {
     const firstLine = source.substring(0, source.indexOf("\n"));
 
     let memoizeJsxElements = true;
-    let enableAssumeHooksFollowRulesOfReact = true;
+    let enableAssumeHooksFollowRulesOfReact = false;
     let enableTreatHooksAsFunctions = true;
     let disableAllMemoization = false;
     let validateRefAccessDuringRender = true;
