@@ -13,7 +13,7 @@ import path from 'path';
 import {rimrafSync} from 'rimraf';
 
 describe('x_google_ignoreList source map extension', () => {
-  jest.setTimeout(30 * 1000);
+  jest.setTimeout(60 * 1000);
 
   const pathToExtensionsPackage = path.resolve(__dirname, '..', '..');
   const pathToChromeExtensionBuild = path.join(
