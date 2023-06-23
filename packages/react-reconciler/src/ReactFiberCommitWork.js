@@ -2692,7 +2692,7 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null) {
+            if (updatePayload !== null || diffInCommitPhase) {
               try {
                 commitUpdate(
                   finishedWork.stateNode,

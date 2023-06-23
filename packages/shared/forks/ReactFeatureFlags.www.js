@@ -30,6 +30,7 @@ export const {
   diffInCommitPhase,
   enableAsyncActions,
   alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
