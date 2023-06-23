@@ -129,6 +129,11 @@ function compile(source: string): CompilerOutput {
     let validateRefAccessDuringRender = true;
     let enableEmitFreeze = null;
     let enableOptimizeFunctionExpressions = false;
+    let inlineUseMemo = true;
+    let validateHooksUsage = true;
+    let enableFunctionCallSignatureOptimizations = true;
+    let validateFrozenLambdas = true;
+    let assertValidMutableRanges = true;
     if (firstLine.includes("@memoizeJsxElements false")) {
       memoizeJsxElements = false;
     }
@@ -153,22 +158,36 @@ function compile(source: string): CompilerOutput {
         importSpecifierName: "makeReadOnly",
       };
     }
-
+    if (firstLine.includes("@inlineUseMemo false")) {
+      inlineUseMemo = false;
+    }
+    if (firstLine.includes("@enableFunctionCallSignatureOptimizations false")) {
+      enableFunctionCallSignatureOptimizations = false;
+    }
+    if (firstLine.includes("@validateHooksUsage false")) {
+      validateHooksUsage = false;
+    }
+    if (firstLine.includes("@validateFrozenLambdas false")) {
+      validateHooksUsage = false;
+    }
+    if (firstLine.includes("@assertValidMutableRanges false")) {
+      assertValidMutableRanges = false;
+    }
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
         customHooks: new Map([...COMMON_HOOKS]),
         enableAssumeHooksFollowRulesOfReact,
-        enableFunctionCallSignatureOptimizations: true,
+        enableFunctionCallSignatureOptimizations,
         disableAllMemoization,
         enableTreatHooksAsFunctions,
-        inlineUseMemo: true,
+        inlineUseMemo,
         memoizeJsxElements,
-        validateHooksUsage: true,
+        validateHooksUsage,
         validateRefAccessDuringRender,
-        validateFrozenLambdas: true,
+        validateFrozenLambdas,
         enableEmitFreeze,
         enableOptimizeFunctionExpressions,
-        assertValidMutableRanges: true,
+        assertValidMutableRanges,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
