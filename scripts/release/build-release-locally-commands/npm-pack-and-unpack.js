@@ -16,8 +16,8 @@ const run = async ({cwd, dry, tempDirectory}) => {
   // We do this to ensure that the package.json files array is correct.
   const builtPackages = readdirSync(join(tempDirectory, 'build/node_modules/'));
   await Promise.all(
-    builtPackages.map(async (package) => {
-      await exec(`npm pack ./${package}`, {
+    builtPackages.map(async (builtPackage) => {
+      await exec(`npm pack ./${builtPackage}`, {
         cwd: `${tempDirectory}/build/node_modules/`,
       });
     })
