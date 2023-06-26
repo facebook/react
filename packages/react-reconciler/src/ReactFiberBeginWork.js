@@ -2512,7 +2512,7 @@ function mountSuspensePrimaryChildren(
   const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
     mode,
-    renderLanes,
+    NoLanes,
   );
   primaryChildFragment.return = workInProgress;
   workInProgress.child = primaryChildFragment;
