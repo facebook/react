@@ -1,6 +1,7 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
+  "type": "module",
   "keywords": [
     "react"
   ],

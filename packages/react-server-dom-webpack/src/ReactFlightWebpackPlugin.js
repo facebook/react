@@ -6,30 +6,23 @@
  *
  * @flow
  */
+const { join } = require('path');
+const { pathToFileURL } = require('url');
+const asyncLib = require('neo-async');
+const acorn = require('acorn-loose');
+const ModuleDependency = require('webpack/lib/dependencies/ModuleDependency');
+const NullDependency = require('webpack/lib/dependencies/NullDependency');
+const Template = require('webpack/lib/Template');
+const { sources, WebpackError, Compilation, AsyncDependenciesBlock } = require('webpack');
+const isArray = require('shared/isArray');
 
-import {join} from 'path';
-import {pathToFileURL} from 'url';
-import asyncLib from 'neo-async';
-import * as acorn from 'acorn-loose';
-
-import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
-import NullDependency from 'webpack/lib/dependencies/NullDependency';
-import Template from 'webpack/lib/Template';
-import {
-  sources,
-  WebpackError,
-  Compilation,
-  AsyncDependenciesBlock,
-} from 'webpack';
-
-import isArray from 'shared/isArray';
 
 class ClientReferenceDependency extends ModuleDependency {
-  constructor(request: mixed) {
+  constructor(request) {
     super(request);
   }
 
-  get type(): string {
+  get type() {
     return 'client-reference';
   }
 }
@@ -63,9 +56,9 @@ const PLUGIN_NAME = 'React Server Plugin';
 
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;
-  chunkName: string;
-  clientManifestFilename: string;
-  ssrManifestFilename: string;
+  chunkName;
+  clientManifestFilename;
+  ssrManifestFilename;
 
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
@@ -107,7 +100,7 @@ export default class ReactFlightWebpackPlugin {
       options.ssrManifestFilename || 'react-ssr-manifest.json';
   }
 
-  apply(compiler: any) {
+  apply(compiler) {
     const _this = this;
     let resolvedClientReferences;
     let clientFileNameFound = false;
@@ -339,11 +332,11 @@ export default class ReactFlightWebpackPlugin {
   // This attempts to replicate the dynamic file path resolution used for other wildcard
   // resolution in Webpack is using.
   resolveAllClientFiles(
-    context: string,
-    contextResolver: any,
-    normalResolver: any,
-    fs: any,
-    contextModuleFactory: any,
+    context,
+    contextResolver,
+    normalResolver,
+    fs,
+    contextModuleFactory,
     callback: (
       err: null | Error,
       result?: $ReadOnlyArray<ClientReferenceDependency>,
