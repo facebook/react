@@ -74,8 +74,6 @@ export const enableCustomElementPropertySupport = false;
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
 
-export const enableUseMutableSource = true;
-
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;

@@ -11,7 +11,6 @@ import type {
   ReactProviderType,
   ReactContext,
   ReactNodeList,
-  MutableSource,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
@@ -106,7 +105,6 @@ import {
   enableTransitionTracing,
   enableLegacyHidden,
   enableCPUSuspense,
-  enableUseMutableSource,
   enableFloat,
   enableHostSingletons,
   enableFormActions,
@@ -261,7 +259,6 @@ import {
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
-import {setWorkInProgressVersion} from './ReactMutableSource';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
 import {
   createCapturedValue,
@@ -1532,19 +1529,6 @@ function updateHostRoot(
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
       enterHydrationState(workInProgress);
-      if (enableUseMutableSource) {
-        const mutableSourceEagerHydrationData =
-          root.mutableSourceEagerHydrationData;
-        if (mutableSourceEagerHydrationData != null) {
-          for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
-            const mutableSource = ((mutableSourceEagerHydrationData[
-              i
-            ]: any): MutableSource<any>);
-            const version = mutableSourceEagerHydrationData[i + 1];
-            setWorkInProgressVersion(mutableSource, version);
-          }
-        }
-      }
 
       const child = mountChildFibers(
         workInProgress,

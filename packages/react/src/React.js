@@ -48,7 +48,6 @@ import {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
@@ -67,7 +66,6 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createServerContext} from './ReactServerContext';
-import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -93,7 +91,6 @@ const Children = {
 
 export {
   Children,
-  createMutableSource,
   createRef,
   Component,
   PureComponent,
@@ -112,7 +109,6 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
   useOptimistic as experimental_useOptimistic,
   useSyncExternalStore,
   useReducer,

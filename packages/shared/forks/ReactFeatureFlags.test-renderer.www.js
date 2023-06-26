@@ -61,9 +61,6 @@ export const enableCustomElementPropertySupport = false;
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
 
-// Some www surfaces are still using this. Remove once they have been migrated.
-export const enableUseMutableSource = true;
-
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
