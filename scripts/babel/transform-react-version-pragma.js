@@ -26,31 +26,29 @@ function transform(babel) {
       return null;
     }
 
-    let conditions = null;
-    for (const line of comments) {
-      const commentStr = line.value.trim();
-      if (commentStr.startsWith(GATE_VERSION_STR)) {
-        const condition = t.stringLiteral(
-          commentStr.slice(GATE_VERSION_STR.length)
-        );
-        if (conditions === null) {
-          conditions = [condition];
-        } else {
-          conditions.push(condition);
-        }
-      }
-    }
+    const resultingCondition = comments.reduce(
+      (accumulatedCondition, commentLine) => {
+        const commentStr = commentLine.value.trim();
 
-    if (conditions !== null) {
-      let condition = conditions[0];
-      for (let i = 1; i < conditions.length; i++) {
-        const right = conditions[i];
-        condition = t.logicalExpression('&&', condition, right);
-      }
-      return condition;
-    } else {
+        if (!commentStr.startsWith(GATE_VERSION_STR)) {
+          return accumulatedCondition;
+        }
+
+        const condition = commentStr.slice(GATE_VERSION_STR.length);
+        if (accumulatedCondition === null) {
+          return condition;
+        }
+
+        return accumulatedCondition.concat(' ', condition);
+      },
+      null
+    );
+
+    if (resultingCondition === null) {
       return null;
     }
+
+    return t.stringLiteral(resultingCondition);
   }
 
   return {
