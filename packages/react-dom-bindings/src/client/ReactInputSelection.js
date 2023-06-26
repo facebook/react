@@ -8,29 +8,9 @@
 import getActiveElement from './getActiveElement';
 
 import {getOffsets, setOffsets} from './ReactDOMSelection';
-import {ELEMENT_NODE, TEXT_NODE} from './HTMLNodeType';
+import {ELEMENT_NODE} from './HTMLNodeType';
 
-function isTextNode(node) {
-  return node && node.nodeType === TEXT_NODE;
-}
-
-function containsNode(outerNode, innerNode) {
-  if (!outerNode || !innerNode) {
-    return false;
-  } else if (outerNode === innerNode) {
-    return true;
-  } else if (isTextNode(outerNode)) {
-    return false;
-  } else if (isTextNode(innerNode)) {
-    return containsNode(outerNode, innerNode.parentNode);
-  } else if ('contains' in outerNode) {
-    return outerNode.contains(innerNode);
-  } else if (outerNode.compareDocumentPosition) {
-    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
-  } else {
-    return false;
-  }
-}
+import containsNode from './containsNode';
 
 function isInDocument(node) {
   return (
