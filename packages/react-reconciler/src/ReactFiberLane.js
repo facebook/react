@@ -636,6 +636,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.entangledLanes &= remainingLanes;
 
   root.errorRecoveryDisabledLanes &= remainingLanes;
+  root.shellSuspendCounter = 0;
 
   const entanglements = root.entanglements;
   const expirationTimes = root.expirationTimes;
