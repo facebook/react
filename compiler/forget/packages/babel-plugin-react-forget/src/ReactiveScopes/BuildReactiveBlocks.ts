@@ -70,11 +70,12 @@ class Context {
     this.#builders.push(builder);
     fn();
     const popped = this.#builders.pop();
-    CompilerError.invariant(
-      popped === builder,
-      "Expected push/pop to be called 1:1",
-      null
-    );
+    CompilerError.invariant(popped === builder, {
+      reason: "Expected push/pop to be called 1:1",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     return builder.complete();
   }
 }
@@ -94,11 +95,12 @@ class Builder {
 
   append(item: ReactiveStatement, label: BlockId | null): void {
     if (label !== null) {
-      CompilerError.invariant(
-        item.kind === "terminal",
-        "Only terminals may have a label",
-        null
-      );
+      CompilerError.invariant(item.kind === "terminal", {
+        reason: "Only terminals may have a label",
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       item.label = label;
     }
     this.#instructions.push(item);
@@ -138,11 +140,12 @@ class Builder {
     //   "Expected all scopes to be closed when exiting a block"
     // );
     const first = this.#stack[0]!;
-    CompilerError.invariant(
-      first.kind === "block",
-      "Expected first stack item to be a basic block",
-      null
-    );
+    CompilerError.invariant(first.kind === "block", {
+      reason: "Expected first stack item to be a basic block",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     return first.block;
   }
 }
@@ -173,11 +176,12 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         break;
       }
       case "scope": {
-        CompilerError.invariant(
-          false,
-          "Expected the function to not have scopes already assigned",
-          null
-        );
+        CompilerError.invariant(false, {
+          reason: "Expected the function to not have scopes already assigned",
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
       }
       default: {
         assertExhaustive(
@@ -192,12 +196,14 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 export function getInstructionScope(
   instr: ReactiveInstruction
 ): ReactiveScope | null {
-  CompilerError.invariant(
-    instr.lvalue !== null,
-    "Expected lvalues to not be null when assigning scopes. " +
+  CompilerError.invariant(instr.lvalue !== null, {
+    reason:
+      "Expected lvalues to not be null when assigning scopes. " +
       "Pruning lvalues too early can result in missing scope information.",
-    instr.loc
-  );
+    description: null,
+    loc: instr.loc,
+    suggestions: null,
+  });
   for (const operand of eachInstructionLValue(instr)) {
     const operandScope = getPlaceScope(instr.id, operand);
     if (operandScope !== null) {

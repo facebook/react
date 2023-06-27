@@ -108,11 +108,12 @@ export function inferMutableLifetimes(
         start = Math.min(start, operand.mutableRange.start);
         end = Math.max(end, operand.mutableRange.end);
       }
-      CompilerError.invariant(
-        start !== Number.MAX_SAFE_INTEGER,
-        "Expected phi to have a start range value",
-        null
-      );
+      CompilerError.invariant(start !== Number.MAX_SAFE_INTEGER, {
+        reason: "Expected phi to have a start range value",
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       phi.id.mutableRange = {
         start: makeInstructionId(start),
         end: makeInstructionId(end),

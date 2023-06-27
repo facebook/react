@@ -131,12 +131,12 @@ export function leaveSSA(fn: HIRFunction): void {
       if (value.kind === "DeclareLocal") {
         const name = value.lvalue.place.identifier.name;
         if (name !== null) {
-          CompilerError.invariant(
-            !declarations.has(name),
-            `Unexpected duplicate declaration`,
-            value.lvalue.place.loc,
-            `Found duplicate declaration for '${name}'`
-          );
+          CompilerError.invariant(!declarations.has(name), {
+            reason: `Unexpected duplicate declaration`,
+            description: `Found duplicate declaration for '${name}'`,
+            loc: value.lvalue.place.loc,
+            suggestions: null,
+          });
           declarations.set(name, {
             lvalue: value.lvalue,
             place: value.lvalue.place,
@@ -153,8 +153,12 @@ export function leaveSSA(fn: HIRFunction): void {
           ) {
             CompilerError.invariant(
               originalLVal !== undefined || block.kind === "block",
-              `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
-              value.lvalue.place.loc
+              {
+                reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
+                description: null,
+                loc: value.lvalue.place.loc,
+                suggestions: null,
+              }
             );
             declarations.set(value.lvalue.place.identifier.name, {
               lvalue: value.lvalue,
@@ -176,9 +180,14 @@ export function leaveSSA(fn: HIRFunction): void {
           if (place.identifier.name == null) {
             CompilerError.invariant(
               kind === null || kind === InstructionKind.Const,
-              `Expected consistent kind for destructuring`,
-              place.loc,
-              `other places were '${kind}' but '${printPlace(place)}' is const`
+              {
+                reason: `Expected consistent kind for destructuring`,
+                description: `other places were '${kind}' but '${printPlace(
+                  place
+                )}' is const`,
+                loc: place.loc,
+                suggestions: null,
+              }
             );
             kind = InstructionKind.Const;
           } else {
@@ -189,8 +198,12 @@ export function leaveSSA(fn: HIRFunction): void {
             ) {
               CompilerError.invariant(
                 originalLVal !== undefined || block.kind !== "value",
-                `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
-                place.loc
+                {
+                  reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
+                  description: null,
+                  loc: place.loc,
+                  suggestions: null,
+                }
               );
               declarations.set(place.identifier.name, {
                 lvalue: value.lvalue,
@@ -198,32 +211,39 @@ export function leaveSSA(fn: HIRFunction): void {
               });
               CompilerError.invariant(
                 kind === null || kind === InstructionKind.Const,
-                `Expected consistent kind for destructuring`,
-                place.loc,
-                `Other places were '${kind}' but '${printPlace(
-                  place
-                )}' is const`
+                {
+                  reason: `Expected consistent kind for destructuring`,
+                  description: `Other places were '${kind}' but '${printPlace(
+                    place
+                  )}' is const`,
+                  loc: place.loc,
+                  suggestions: null,
+                }
               );
               kind = InstructionKind.Const;
             } else {
               CompilerError.invariant(
                 kind === null || kind === InstructionKind.Reassign,
-                `Expected consistent kind for destructuring`,
-                place.loc,
-                `Other places were '${kind}' but '${printPlace(
-                  place
-                )}' is reassigned`
+                {
+                  reason: `Expected consistent kind for destructuring`,
+                  description: `Other places were '${kind}' but '${printPlace(
+                    place
+                  )}' is reassigned`,
+                  loc: place.loc,
+                  suggestions: null,
+                }
               );
               kind = InstructionKind.Reassign;
               originalLVal.lvalue.kind = InstructionKind.Let;
             }
           }
         }
-        CompilerError.invariant(
-          kind !== null,
-          "Expected at least one operand",
-          null
-        );
+        CompilerError.invariant(kind !== null, {
+          reason: "Expected at least one operand",
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
         value.lvalue.kind = kind;
       }
       rewritePlace(lvalue, rewrites, declarations);
@@ -356,11 +376,12 @@ export function leaveSSA(fn: HIRFunction): void {
 
       // If we never saw a declaration for this phi, it may have been pruned by DCE, so synthesize
       // a new Let binding
-      CompilerError.invariant(
-        phi.id.name != null,
-        "Expected reassignment phis to have a name",
-        null
-      );
+      CompilerError.invariant(phi.id.name != null, {
+        reason: "Expected reassignment phis to have a name",
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       const declaration = declarations.get(phi.id.name);
       if (declaration === undefined) {
         let initValue: Place;

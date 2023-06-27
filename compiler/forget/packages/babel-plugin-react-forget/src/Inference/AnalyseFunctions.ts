@@ -169,11 +169,12 @@ function infer(
   // In practice this never really matters because the Component function has no
   // context refs, so it will never have duplicate deps.
   for (const place of context) {
-    CompilerError.invariant(
-      place.identifier.name !== null,
-      "context refs should always have a name",
-      place.loc
-    );
+    CompilerError.invariant(place.identifier.name !== null, {
+      reason: "context refs should always have a name",
+      description: null,
+      loc: place.loc,
+      suggestions: null,
+    });
 
     const effect = mutations.get(place.identifier.name);
     if (effect !== undefined) {

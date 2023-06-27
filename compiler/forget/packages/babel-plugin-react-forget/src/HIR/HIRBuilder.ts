@@ -392,8 +392,12 @@ export default class HIRBuilder {
         last.kind === "label" &&
         last.label === label &&
         last.breakBlock === breakBlock,
-      "Mismatched label",
-      null
+      {
+        reason: "Mismatched label",
+        description: null,
+        loc: null,
+        suggestions: null,
+      }
     );
     return value;
   }
@@ -411,8 +415,12 @@ export default class HIRBuilder {
         last.kind === "switch" &&
         last.label === label &&
         last.breakBlock === breakBlock,
-      "Mismatched label",
-      null
+      {
+        reason: "Mismatched label",
+        description: null,
+        loc: null,
+        suggestions: null,
+      }
     );
     return value;
   }
@@ -447,8 +455,12 @@ export default class HIRBuilder {
         last.label === label &&
         last.continueBlock === continueBlock &&
         last.breakBlock === breakBlock,
-      "Mismatched loops",
-      null
+      {
+        reason: "Mismatched loops",
+        description: null,
+        loc: null,
+        suggestions: null,
+      }
     );
     return value;
   }
@@ -464,11 +476,12 @@ export default class HIRBuilder {
         return scope.breakBlock;
       }
     }
-    CompilerError.invariant(
-      false,
-      "Expected a loop or switch to be in scope",
-      null
-    );
+    CompilerError.invariant(false, {
+      reason: "Expected a loop or switch to be in scope",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
   }
 
   /**
@@ -484,14 +497,20 @@ export default class HIRBuilder {
           return scope.continueBlock;
         }
       } else if (label !== null && scope.label === label) {
-        CompilerError.invariant(
-          false,
-          "Continue may only refer to a labeled loop",
-          null
-        );
+        CompilerError.invariant(false, {
+          reason: "Continue may only refer to a labeled loop",
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
       }
     }
-    CompilerError.invariant(false, "Expected a loop to be in scope", null);
+    CompilerError.invariant(false, {
+      reason: "Expected a loop to be in scope",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
   }
 }
 
@@ -511,11 +530,12 @@ function _shrink(func: HIR): void {
       return target;
     }
     const block = func.blocks.get(blockId);
-    CompilerError.invariant(
-      block != null,
-      `expected block ${blockId} to exist`,
-      null
-    );
+    CompilerError.invariant(block != null, {
+      reason: `expected block ${blockId} to exist`,
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     target = getTargetIfIndirection(block);
     if (target !== null) {
       //  the target might also be a simple goto, recurse
@@ -731,11 +751,12 @@ export function markInstructionIds(func: HIR): void {
   const visited = new Set<Instruction>();
   for (const [_, block] of func.blocks) {
     for (const instr of block.instructions) {
-      CompilerError.invariant(
-        !visited.has(instr),
-        `${printInstruction(instr)} already visited!`,
-        instr.loc
-      );
+      CompilerError.invariant(!visited.has(instr), {
+        reason: `${printInstruction(instr)} already visited!`,
+        description: null,
+        loc: instr.loc,
+        suggestions: null,
+      });
       visited.add(instr);
       instr.id = makeInstructionId(++id);
     }

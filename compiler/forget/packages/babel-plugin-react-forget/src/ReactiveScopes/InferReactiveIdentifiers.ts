@@ -105,11 +105,12 @@ class Visitor extends ReactiveFunctionVisitor<State> {
             break;
           }
           case Effect.Unknown: {
-            CompilerError.invariant(
-              false,
-              "Unexpected unknown effect",
-              operand.loc
-            );
+            CompilerError.invariant(false, {
+              reason: "Unexpected unknown effect",
+              description: null,
+              loc: operand.loc,
+              suggestions: null,
+            });
           }
           default: {
             assertExhaustive(

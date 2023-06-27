@@ -103,6 +103,11 @@ class Scopes {
     this.#stack.push(next);
     fn();
     const last = this.#stack.pop();
-    CompilerError.invariant(last === next, "Mismatch push/pop calls", null);
+    CompilerError.invariant(last === next, {
+      reason: "Mismatch push/pop calls",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
   }
 }

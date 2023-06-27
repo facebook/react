@@ -342,11 +342,12 @@ class Unifier {
     if (type.kind === "Phi") {
       const operands = new Set(type.operands.map((i) => this.get(i).kind));
 
-      CompilerError.invariant(
-        operands.size > 0,
-        "there should be at least one operand",
-        null
-      );
+      CompilerError.invariant(operands.size > 0, {
+        reason: "there should be at least one operand",
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       const kind = operands.values().next().value;
 
       // there's only one unique type and it's not a type var

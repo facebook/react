@@ -883,7 +883,12 @@ export function isMutableEffect(
     }
 
     case Effect.Unknown: {
-      CompilerError.invariant(false, "Unexpected unknown effect", location);
+      CompilerError.invariant(false, {
+        reason: "Unexpected unknown effect",
+        description: null,
+        loc: location,
+        suggestions: null,
+      });
     }
     case Effect.Read:
     case Effect.Freeze: {
@@ -921,11 +926,12 @@ const opaqueBlockId = Symbol();
 export type BlockId = number & { [opaqueBlockId]: "BlockId" };
 
 export function makeBlockId(id: number): BlockId {
-  CompilerError.invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected block id to be a non-negative integer",
-    null
-  );
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: "Expected block id to be a non-negative integer",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   return id as BlockId;
 }
 
@@ -937,11 +943,12 @@ const opaqueScopeId = Symbol();
 export type ScopeId = number & { [opaqueScopeId]: "ScopeId" };
 
 export function makeScopeId(id: number): ScopeId {
-  CompilerError.invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected block id to be a non-negative integer",
-    null
-  );
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: "Expected block id to be a non-negative integer",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   return id as ScopeId;
 }
 
@@ -953,11 +960,12 @@ const opaqueIdentifierId = Symbol();
 export type IdentifierId = number & { [opaqueIdentifierId]: "IdentifierId" };
 
 export function makeIdentifierId(id: number): IdentifierId {
-  CompilerError.invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected identifier id to be a non-negative integer",
-    null
-  );
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: "Expected identifier id to be a non-negative integer",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   return id as IdentifierId;
 }
 
@@ -969,11 +977,12 @@ const opaqueInstructionId = Symbol();
 export type InstructionId = number & { [opaqueInstructionId]: "IdentifierId" };
 
 export function makeInstructionId(id: number): InstructionId {
-  CompilerError.invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected instruction id to be a non-negative integer",
-    null
-  );
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: "Expected instruction id to be a non-negative integer",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   return id as InstructionId;
 }
 

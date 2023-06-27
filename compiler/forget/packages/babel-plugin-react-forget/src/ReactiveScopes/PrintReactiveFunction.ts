@@ -226,11 +226,12 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
           writer.writeLine(`${prefix}: {`);
           writer.indented(() => {
             const block = case_.block;
-            CompilerError.invariant(
-              block != null,
-              "Expected case to have a block",
-              case_.test?.loc ?? null
-            );
+            CompilerError.invariant(block != null, {
+              reason: "Expected case to have a block",
+              description: null,
+              loc: case_.test?.loc ?? null,
+              suggestions: null,
+            });
             printReactiveInstructions(writer, block);
           });
           writer.writeLine("}");

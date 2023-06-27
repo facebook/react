@@ -100,17 +100,22 @@ export function inlineUseMemo(fn: HIRFunction): void {
             }
 
             if (body.loweredFunc.params.length > 0) {
-              CompilerError.invalidReact(
-                "useMemo callbacks may not accept any arguments",
-                body.loc
-              );
+              CompilerError.invalidReact({
+                reason: "useMemo callbacks may not accept any arguments",
+                description: null,
+                loc: body.loc,
+                suggestions: null,
+              });
             }
 
             if (body.loweredFunc.async || body.loweredFunc.generator) {
-              CompilerError.invalidReact(
-                "useMemo callbacks may not be async or generator functions",
-                body.loc
-              );
+              CompilerError.invalidReact({
+                reason:
+                  "useMemo callbacks may not be async or generator functions",
+                description: null,
+                loc: body.loc,
+                suggestions: null,
+              });
             }
 
             // We know this function is used for useMemo and can prune it later

@@ -6,7 +6,6 @@
  */
 
 import type { SourceLocation } from "./HIR";
-import type { ExtractClassProperties } from "./Utils/types";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
@@ -33,29 +32,61 @@ export enum ErrorSeverity {
   Invariant = "Invariant",
 }
 
-export type CompilerErrorOptions = {
+export enum CompilerSuggestionOperation {
+  InsertBefore,
+  InsertAfter,
+  Remove,
+  Replace,
+}
+export type CompilerSuggestion =
+  | {
+      op:
+        | CompilerSuggestionOperation.InsertAfter
+        | CompilerSuggestionOperation.InsertBefore
+        | CompilerSuggestionOperation.Replace;
+      range: [number, number];
+      description: string;
+      text: string;
+    }
+  | {
+      op: CompilerSuggestionOperation.Remove;
+      range: [number, number];
+      description: string;
+    };
+
+export type CompilerErrorDetailOptions = {
   reason: string;
   description?: string | null | undefined;
   severity: ErrorSeverity;
   loc: SourceLocation | null;
+  suggestions: Array<CompilerSuggestion> | null;
 };
-type CompilerErrorDetailOptions = ExtractClassProperties<CompilerErrorDetail>;
 
 /**
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
  */
 export class CompilerErrorDetail {
-  reason: string;
-  description: string | null;
-  severity: ErrorSeverity;
-  loc: SourceLocation | null;
+  options: CompilerErrorDetailOptions;
 
   constructor(options: CompilerErrorDetailOptions) {
-    this.reason = options.reason;
-    this.description = options.description;
-    this.severity = options.severity;
-    this.loc = options.loc;
+    this.options = options;
+  }
+
+  get reason(): CompilerErrorDetailOptions["reason"] {
+    return this.options.reason;
+  }
+  get description(): CompilerErrorDetailOptions["description"] {
+    return this.options.description;
+  }
+  get severity(): CompilerErrorDetailOptions["severity"] {
+    return this.options.severity;
+  }
+  get loc(): CompilerErrorDetailOptions["loc"] {
+    return this.options.loc;
+  }
+  get suggestions(): CompilerErrorDetailOptions["suggestions"] {
+    return this.options.suggestions;
   }
 
   printErrorMessage(): string {
@@ -79,17 +110,13 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    reason: string,
-    loc: SourceLocation | null,
-    description: string | null = null
+    options: Omit<CompilerErrorDetailOptions, "severity">
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
       errors.pushErrorDetail(
         new CompilerErrorDetail({
-          description,
-          loc,
-          reason,
+          ...options,
           severity: ErrorSeverity.Invariant,
         })
       );
@@ -97,34 +124,21 @@ export class CompilerError extends Error {
     }
   }
 
-  static todo(
-    reason: string,
-    loc: SourceLocation | null,
-    description: string | null = null
-  ): never {
+  static todo(options: Omit<CompilerErrorDetailOptions, "severity">): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        description,
-        loc,
-        reason,
-        severity: ErrorSeverity.Todo,
-      })
+      new CompilerErrorDetail({ ...options, severity: ErrorSeverity.Todo })
     );
     throw errors;
   }
 
   static invalidInput(
-    reason: string,
-    loc: SourceLocation | null,
-    description: string | null = null
+    options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        description,
-        loc,
-        reason,
+        ...options,
         severity: ErrorSeverity.InvalidInput,
       })
     );
@@ -132,16 +146,12 @@ export class CompilerError extends Error {
   }
 
   static invalidReact(
-    reason: string,
-    loc: SourceLocation | null,
-    description: string | null = null
+    options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        description,
-        loc,
-        reason,
+        ...options,
         severity: ErrorSeverity.InvalidReact,
       })
     );
@@ -149,16 +159,12 @@ export class CompilerError extends Error {
   }
 
   static invalidConfig(
-    reason: string,
-    loc: SourceLocation | null,
-    description: string | null = null
+    options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
-        description,
-        loc,
-        reason,
+        ...options,
         severity: ErrorSeverity.InvalidConfig,
       })
     );
@@ -180,11 +186,12 @@ export class CompilerError extends Error {
     return this.details.map((detail) => detail.toString()).join("\n\n");
   }
 
-  push(options: CompilerErrorOptions): CompilerErrorDetail {
+  push(options: CompilerErrorDetailOptions): CompilerErrorDetail {
     const detail = new CompilerErrorDetail({
       reason: options.reason,
       description: options.description ?? null,
       severity: options.severity,
+      suggestions: options.suggestions,
       loc: typeof options.loc === "symbol" ? null : options.loc,
     });
     return this.pushErrorDetail(detail);

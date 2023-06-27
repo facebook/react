@@ -47,11 +47,12 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     const originalPredecessorId = Array.from(block.preds)[0]!;
     const predecessorId = merged.get(originalPredecessorId);
     const predecessor = fn.body.blocks.get(predecessorId);
-    CompilerError.invariant(
-      predecessor !== undefined,
-      `Expected predecessor ${predecessorId} to exist`,
-      null
-    );
+    CompilerError.invariant(predecessor !== undefined, {
+      reason: `Expected predecessor ${predecessorId} to exist`,
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     if (predecessor.terminal.kind !== "goto" || predecessor.kind !== "block") {
       // The predecessor is not guaranteed to transfer control to this block,
       // they aren't consecutive.
@@ -60,11 +61,12 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
 
     // Replace phis in the merged block with canonical assignments to the single operand value
     for (const phi of block.phis) {
-      CompilerError.invariant(
-        phi.operands.size === 1,
-        `Found a block with a single predecessor but where a phi has multiple (${phi.operands.size}) operands`,
-        null
-      );
+      CompilerError.invariant(phi.operands.size === 1, {
+        reason: `Found a block with a single predecessor but where a phi has multiple (${phi.operands.size}) operands`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       const operand = Array.from(phi.operands.values())[0]!;
       const instr: Instruction = {
         id: predecessor.terminal.id,

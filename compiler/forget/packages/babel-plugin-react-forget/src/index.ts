@@ -9,6 +9,7 @@ export { default as BabelPlugin } from "./Babel/BabelPlugin";
 export {
   CompilerError,
   CompilerErrorDetail,
+  CompilerSuggestionOperation,
   ErrorSeverity,
 } from "./CompilerError";
 export {

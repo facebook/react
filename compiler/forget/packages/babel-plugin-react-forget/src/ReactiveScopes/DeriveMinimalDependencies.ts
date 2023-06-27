@@ -126,8 +126,13 @@ export class ReactiveScopeDependencyTree {
         deps.every(
           (dep) => dep.accessType === PropertyAccessType.UnconditionalDependency
         ),
-        "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies.",
-        null
+        {
+          reason:
+            "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies.",
+          description: null,
+          loc: null,
+          suggestions: null,
+        }
       );
 
       for (const dep of deps) {
@@ -163,11 +168,12 @@ export class ReactiveScopeDependencyTree {
   promoteDepsFromExhaustiveConditionals(
     trees: Array<ReactiveScopeDependencyTree>
   ): void {
-    CompilerError.invariant(
-      trees.length > 1,
-      "Expected trees to be at least 2 elements long.",
-      null
-    );
+    CompilerError.invariant(trees.length > 1, {
+      reason: "Expected trees to be at least 2 elements long.",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
 
     for (const [id, root] of this.#roots) {
       const nodesForRootId = mapNonNull(trees, (tree) => tree.#roots.get(id));
@@ -458,19 +464,23 @@ function addSubtreeIntersection(
   otherProperties: Array<Map<string, DependencyNode>>,
   currProperties: Map<string, DependencyNode>
 ): void {
-  CompilerError.invariant(
-    otherProperties.length > 1,
-    "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long.",
-    null
-  );
+  CompilerError.invariant(otherProperties.length > 1, {
+    reason:
+      "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long.",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
 
   otherProperties.forEach((properties) =>
     properties.forEach((node, _) =>
-      CompilerError.invariant(
-        !isUnconditional(node.accessType),
-        "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!",
-        null
-      )
+      CompilerError.invariant(!isUnconditional(node.accessType), {
+        reason:
+          "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!",
+        description: null,
+        loc: null,
+        suggestions: null,
+      })
     )
   );
 

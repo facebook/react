@@ -138,6 +138,7 @@ function validateOperand(
         reason:
           "Cannot use a mutable function where an immutable value is expected",
         severity: ErrorSeverity.InvalidReact,
+        suggestions: null,
       });
     }
   }

@@ -67,11 +67,12 @@ class SSABuilder {
   }
 
   state(): State {
-    CompilerError.invariant(
-      this.#current !== null,
-      "we need to be in a block to access state!",
-      null
-    );
+    CompilerError.invariant(this.#current !== null, {
+      reason: "we need to be in a block to access state!",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     return this.#states.get(this.#current)!;
   }
 
@@ -96,12 +97,12 @@ class SSABuilder {
 
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
-    CompilerError.invariant(
-      !this.#unknown.has(oldId),
-      `EnterSSA: Expected identifier to be defined before being used`,
-      oldPlace.loc,
-      `Identifier ${printIdentifier(oldId)} is undefined`
-    );
+    CompilerError.invariant(!this.#unknown.has(oldId), {
+      reason: `EnterSSA: Expected identifier to be defined before being used`,
+      description: `Identifier ${printIdentifier(oldId)} is undefined`,
+      loc: oldPlace.loc,
+      suggestions: null,
+    });
 
     // Do not redefine context references.
     if (this.#context.has(oldId)) {
@@ -237,11 +238,12 @@ function enterSSAImpl(
 ): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
-    CompilerError.invariant(
-      !visitedBlocks.has(block),
-      `found a cycle! visiting bb${block.id} again`,
-      null
-    );
+    CompilerError.invariant(!visitedBlocks.has(block), {
+      reason: `found a cycle! visiting bb${block.id} again`,
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     visitedBlocks.add(block);
 
     builder.startBlock(block);
@@ -249,11 +251,12 @@ function enterSSAImpl(
     if (blockId === rootEntry) {
       // NOTE: func.context should be empty for the root function
       if (func.env.enableOptimizeFunctionExpressions) {
-        CompilerError.invariant(
-          func.context.length === 0,
-          `Expected function context to be empty for outer function declarations`,
-          func.loc
-        );
+        CompilerError.invariant(func.context.length === 0, {
+          reason: `Expected function context to be empty for outer function declarations`,
+          description: null,
+          loc: func.loc,
+          suggestions: null,
+        });
       } else {
         func.context = func.context.map((p) => builder.defineContext(p));
       }
@@ -270,11 +273,13 @@ function enterSSAImpl(
       ) {
         const loweredFunc = instr.value.loweredFunc;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
-        CompilerError.invariant(
-          entry.preds.size === 0,
-          "Expected function expression entry block to have zero predecessors",
-          null
-        );
+        CompilerError.invariant(entry.preds.size === 0, {
+          reason:
+            "Expected function expression entry block to have zero predecessors",
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);
         builder.enter(() => {

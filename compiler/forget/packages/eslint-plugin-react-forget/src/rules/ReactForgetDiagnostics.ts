@@ -8,6 +8,7 @@
 import { transformFromAstSync } from "@babel/core";
 import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import ReactForgetBabelPlugin, {
+  CompilerSuggestionOperation,
   ErrorSeverity,
   type CompilerError,
   type CompilerErrorDetail,
@@ -19,6 +20,10 @@ import * as HermesParser from "hermes-parser";
 type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetail, "loc"> & {
   loc: BabelSourceLocation;
 };
+
+function assertExhaustive(_: never, errorMsg: string): never {
+  throw new Error(errorMsg);
+}
 
 function isReactForgetCompilerError(err: Error): err is CompilerError {
   return err.name === "ReactForgetCompilerError";
@@ -63,6 +68,7 @@ const rule: Rule.RuleModule = {
       description: "Surfaces diagnostics from React Forget",
       recommended: true,
     },
+    fixable: "code",
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
@@ -90,12 +96,67 @@ const rule: Rule.RuleModule = {
       } catch (err) {
         if (isReactForgetCompilerError(err) && Array.isArray(err.details)) {
           for (const detail of err.details) {
-            if (isReportableDiagnostic(detail)) {
-              context.report({
-                message: detail.toString(),
-                loc: detail.loc,
-              });
+            if (!isReportableDiagnostic(detail)) {
+              continue;
             }
+            let suggest: Array<Rule.SuggestionReportDescriptor> = [];
+            if (Array.isArray(detail.suggestions)) {
+              for (const suggestion of detail.suggestions) {
+                switch (suggestion.op) {
+                  case CompilerSuggestionOperation.InsertBefore:
+                    suggest.push({
+                      desc: suggestion.description,
+                      fix(fixer) {
+                        return fixer.insertTextBeforeRange(
+                          suggestion.range,
+                          suggestion.text
+                        );
+                      },
+                    });
+                    break;
+                  case CompilerSuggestionOperation.InsertAfter:
+                    suggest.push({
+                      desc: suggestion.description,
+                      fix(fixer) {
+                        return fixer.insertTextAfterRange(
+                          suggestion.range,
+                          suggestion.text
+                        );
+                      },
+                    });
+                    break;
+                  case CompilerSuggestionOperation.Replace:
+                    suggest.push({
+                      desc: suggestion.description,
+                      fix(fixer) {
+                        return fixer.replaceTextRange(
+                          suggestion.range,
+                          suggestion.text
+                        );
+                      },
+                    });
+                    break;
+                  case CompilerSuggestionOperation.Remove:
+                    suggest.push({
+                      desc: suggestion.description,
+                      fix(fixer) {
+                        return fixer.removeRange(suggestion.range);
+                      },
+                    });
+                    break;
+                  default:
+                    assertExhaustive(
+                      suggestion,
+                      "Unhandled suggestion operation"
+                    );
+                }
+              }
+            }
+            context.report({
+              message: detail.toString(),
+              loc: detail.loc,
+              suggest,
+            });
           }
         } else {
           throw err;

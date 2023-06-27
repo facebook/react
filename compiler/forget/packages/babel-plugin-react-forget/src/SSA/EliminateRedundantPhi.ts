@@ -83,11 +83,12 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
             same = operand;
           }
         }
-        CompilerError.invariant(
-          same !== null,
-          "Expected phis to be non-empty",
-          null
-        );
+        CompilerError.invariant(same !== null, {
+          reason: "Expected phis to be non-empty",
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
         rewrites.set(phi.id, same);
         block.phis.delete(phi);
       }

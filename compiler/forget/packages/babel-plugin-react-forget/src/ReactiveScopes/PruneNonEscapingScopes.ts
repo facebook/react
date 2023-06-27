@@ -243,11 +243,12 @@ class State {
         this.scopes.set(scope.id, node);
       }
       const identifierNode = this.identifiers.get(identifier);
-      CompilerError.invariant(
-        identifierNode !== undefined,
-        "Expected identifier to be initialized",
-        place.loc
-      );
+      CompilerError.invariant(identifierNode !== undefined, {
+        reason: "Expected identifier to be initialized",
+        description: null,
+        loc: place.loc,
+        suggestions: null,
+      });
       identifierNode.scopes.add(scope.id);
     }
   }
@@ -264,11 +265,12 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   // Visit an identifier, optionally forcing it to be memoized
   function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
-    CompilerError.invariant(
-      node !== undefined,
-      `Expected a node for all identifiers, none found for '${id}'`,
-      null
-    );
+    CompilerError.invariant(node !== undefined, {
+      reason: `Expected a node for all identifiers, none found for '${id}'`,
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     if (node.seen) {
       return node.memoized;
     }
@@ -303,11 +305,12 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   // Force all the scope's optionally-memoizeable dependencies (not "Never") to be memoized
   function forceMemoizeScopeDependencies(id: ScopeId): void {
     const node = state.scopes.get(id);
-    CompilerError.invariant(
-      node !== undefined,
-      "Expected a node for all scopes",
-      null
-    );
+    CompilerError.invariant(node !== undefined, {
+      reason: "Expected a node for all scopes",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     if (node.seen) {
       return;
     }
@@ -606,7 +609,12 @@ function computeMemoizationInputs(
       };
     }
     case "UnsupportedNode": {
-      CompilerError.invariant(false, `Unexpected unsupported node`, value.loc);
+      CompilerError.invariant(false, {
+        reason: `Unexpected unsupported node`,
+        description: null,
+        loc: value.loc,
+        suggestions: null,
+      });
     }
     default: {
       assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);

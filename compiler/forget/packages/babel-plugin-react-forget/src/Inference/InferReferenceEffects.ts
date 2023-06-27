@@ -191,11 +191,13 @@ class InferenceState {
    * (Re)initializes a @param value with its default @param kind.
    */
   initialize(value: InstructionValue, kind: ValueKind): void {
-    CompilerError.invariant(
-      value.kind !== "LoadLocal",
-      "Expected all top-level identifiers to be defined as variables, not values",
-      value.loc
-    );
+    CompilerError.invariant(value.kind !== "LoadLocal", {
+      reason:
+        "Expected all top-level identifiers to be defined as variables, not values",
+      description: null,
+      loc: value.loc,
+      suggestions: null,
+    });
     this.#values.set(value, kind);
   }
 
@@ -204,24 +206,25 @@ class InferenceState {
    */
   kind(place: Place): ValueKind {
     const values = this.#variables.get(place.identifier.id);
-    CompilerError.invariant(
-      values != null,
-      `Expected value kind to be initialized at '${printSourceLocation(
+    CompilerError.invariant(values != null, {
+      reason: `Expected value kind to be initialized at '${printSourceLocation(
         place.loc
       )}'`,
-      place.loc
-    );
+      description: null,
+      loc: place.loc,
+      suggestions: null,
+    });
     let mergedKind: ValueKind | null = null;
     for (const value of values) {
       const kind = this.#values.get(value)!;
       mergedKind = mergedKind !== null ? mergeValues(mergedKind, kind) : kind;
     }
-    CompilerError.invariant(
-      mergedKind !== null,
-      `InferReferenceEffects::kind: Expected at least one value`,
-      place.loc,
-      `No value found at '${printPlace(place)}'`
-    );
+    CompilerError.invariant(mergedKind !== null, {
+      reason: `InferReferenceEffects::kind: Expected at least one value`,
+      description: `No value found at '${printPlace(place)}'`,
+      loc: place.loc,
+      suggestions: null,
+    });
     return mergedKind;
   }
 
@@ -230,11 +233,12 @@ class InferenceState {
    */
   alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
-    CompilerError.invariant(
-      values != null,
-      `Expected value for identifier \`${value.identifier.id}\` to be initialized.`,
-      value.loc
-    );
+    CompilerError.invariant(values != null, {
+      reason: `Expected value for identifier \`${value.identifier.id}\` to be initialized.`,
+      description: null,
+      loc: value.loc,
+      suggestions: null,
+    });
     this.#variables.set(place.identifier.id, new Set(values));
   }
 
@@ -242,11 +246,14 @@ class InferenceState {
    * Defines (initializing or updating) a variable with a specific kind of value.
    */
   define(place: Place, value: InstructionValue): void {
-    CompilerError.invariant(
-      this.#values.has(value),
-      `Expected value to be initialized at '${printSourceLocation(value.loc)}'`,
-      value.loc
-    );
+    CompilerError.invariant(this.#values.has(value), {
+      reason: `Expected value to be initialized at '${printSourceLocation(
+        value.loc
+      )}'`,
+      description: null,
+      loc: value.loc,
+      suggestions: null,
+    });
     this.#variables.set(place.identifier.id, new Set([value]));
   }
 
@@ -269,11 +276,12 @@ class InferenceState {
   reference(place: Place, effectKind: Effect): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
-      CompilerError.invariant(
-        effectKind !== Effect.Store,
-        "[InferReferenceEffects] Unhandled store reference effect",
-        place.loc
-      );
+      CompilerError.invariant(effectKind !== Effect.Store, {
+        reason: "[InferReferenceEffects] Unhandled store reference effect",
+        description: null,
+        loc: place.loc,
+        suggestions: null,
+      });
       place.effect =
         effectKind === Effect.ConditionallyMutate
           ? Effect.ConditionallyMutate
@@ -315,13 +323,14 @@ class InferenceState {
         ) {
           effect = Effect.Mutate;
         } else {
-          CompilerError.invalidReact(
-            `InferReferenceEffects: inferred mutation of known immutable value`,
-            place.loc,
-            `Found mutation of ${printIdentifier(place.identifier)}${printType(
-              place.identifier.type
-            )} (${valueKind})`
-          );
+          CompilerError.invalidReact({
+            reason: `InferReferenceEffects: inferred mutation of known immutable value`,
+            description: `Found mutation of ${printIdentifier(
+              place.identifier
+            )}${printType(place.identifier.type)} (${valueKind})`,
+            loc: place.loc,
+            suggestions: null,
+          });
         }
         break;
       }
@@ -330,13 +339,14 @@ class InferenceState {
           valueKind !== ValueKind.Mutable &&
           valueKind !== ValueKind.Context
         ) {
-          CompilerError.invalidReact(
-            `InferReferenceEffects: inferred mutation of known immutable value`,
-            place.loc,
-            `Found mutation of ${printIdentifier(place.identifier)}${printType(
-              place.identifier.type
-            )} (${valueKind})`
-          );
+          CompilerError.invalidReact({
+            reason: `InferReferenceEffects: inferred mutation of known immutable value`,
+            description: `Found mutation of ${printIdentifier(
+              place.identifier
+            )}${printType(place.identifier.type)} (${valueKind})`,
+            loc: place.loc,
+            suggestions: null,
+          });
         }
 
         // TODO(gsn): This should be bailout once we add bailout infra.
@@ -365,11 +375,13 @@ class InferenceState {
         break;
       }
       case Effect.Unknown: {
-        CompilerError.invariant(
-          false,
-          "Unexpected unknown effect, expected to infer a precise effect kind",
-          place.loc
-        );
+        CompilerError.invariant(false, {
+          reason:
+            "Unexpected unknown effect, expected to infer a precise effect kind",
+          description: null,
+          loc: place.loc,
+          suggestions: null,
+        });
       }
       default: {
         assertExhaustive(
@@ -378,11 +390,12 @@ class InferenceState {
         );
       }
     }
-    CompilerError.invariant(
-      effect !== null,
-      "Expected effect to be set",
-      place.loc
-    );
+    CompilerError.invariant(effect !== null, {
+      reason: "Expected effect to be set",
+      description: null,
+      loc: place.loc,
+      suggestions: null,
+    });
     place.effect = effect;
   }
 
@@ -753,11 +766,13 @@ function inferBlock(
         continue;
       }
       case "MethodCall": {
-        CompilerError.invariant(
-          state.isDefined(instrValue.receiver),
-          "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad",
-          instrValue.loc
-        );
+        CompilerError.invariant(state.isDefined(instrValue.receiver), {
+          reason:
+            "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad",
+          description: null,
+          loc: instrValue.loc,
+          suggestions: null,
+        });
         state.reference(instrValue.property, Effect.Read);
 
         const signature = getFunctionCallSignature(
@@ -892,8 +907,13 @@ function inferBlock(
         const valueKind = state.kind(instrValue.place);
         CompilerError.invariant(
           valueKind === ValueKind.Mutable || valueKind === ValueKind.Context,
-          "[InferReferenceEffects] Context variables are always mutable.",
-          instrValue.loc
+          {
+            reason:
+              "[InferReferenceEffects] Context variables are always mutable.",
+            description: null,
+            loc: instrValue.loc,
+            suggestions: null,
+          }
         );
         state.initialize(instrValue, valueKind);
         state.define(lvalue, instrValue);
@@ -980,11 +1000,12 @@ function inferBlock(
     }
 
     for (const operand of eachInstructionOperand(instr)) {
-      CompilerError.invariant(
-        effectKind != null,
-        `effectKind must be set for instruction value \`${instrValue.kind}\``,
-        instrValue.loc
-      );
+      CompilerError.invariant(effectKind != null, {
+        reason: `effectKind must be set for instruction value \`${instrValue.kind}\``,
+        description: null,
+        loc: instrValue.loc,
+        suggestions: null,
+      });
       state.reference(operand, effectKind);
     }
 

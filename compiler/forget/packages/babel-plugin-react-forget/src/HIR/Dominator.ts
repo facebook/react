@@ -88,7 +88,12 @@ export class Dominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    CompilerError.invariant(dominator !== undefined, "Unknown node", null);
+    CompilerError.invariant(dominator !== undefined, {
+      reason: "Unknown node",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     return dominator === id ? null : dominator;
   }
 
@@ -119,7 +124,12 @@ export class PostDominator<T> {
    */
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
-    CompilerError.invariant(dominator !== undefined, "Unknown node", null);
+    CompilerError.invariant(dominator !== undefined, {
+      reason: "Unknown node",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     return dominator === id ? null : dominator;
   }
 
@@ -159,11 +169,12 @@ function computeImmediateDominators<T>(graph: Graph<T>): Map<T, T> {
           break;
         }
       }
-      CompilerError.invariant(
-        newIdom !== null,
-        `At least one predecessor must have been visited for block ${id}`,
-        null
-      );
+      CompilerError.invariant(newIdom !== null, {
+        reason: `At least one predecessor must have been visited for block ${id}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
 
       for (const pred of node.preds) {
         // For all other predecessors

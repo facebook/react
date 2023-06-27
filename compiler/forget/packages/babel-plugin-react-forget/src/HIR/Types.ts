@@ -62,11 +62,12 @@ const opaqueTypeId = Symbol();
 export type TypeId = number & { [opaqueTypeId]: "IdentifierId" };
 
 export function makeTypeId(id: number): TypeId {
-  CompilerError.invariant(
-    id >= 0 && Number.isInteger(id),
-    "Expected instruction id to be a non-negative integer",
-    null
-  );
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: "Expected instruction id to be a non-negative integer",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   return id as TypeId;
 }
 

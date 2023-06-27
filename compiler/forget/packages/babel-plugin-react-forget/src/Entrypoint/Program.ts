@@ -53,11 +53,12 @@ export function compileProgram(
         return;
       }
 
-      CompilerError.invariant(
-        fn.node.id != null,
-        "FunctionDeclaration must have a name",
-        fn.node.loc ?? GeneratedSource
-      );
+      CompilerError.invariant(fn.node.id != null, {
+        reason: "FunctionDeclaration must have a name",
+        description: null,
+        loc: fn.node.loc ?? GeneratedSource,
+        suggestions: null,
+      });
       const originalIdent = fn.node.id;
 
       if (pass.opts.gating != null) {
@@ -65,11 +66,12 @@ export function compileProgram(
         fn.node.id = addSuffix(fn.node.id, "_uncompiled");
 
         // Rename and append compiled function
-        CompilerError.invariant(
-          compiled.id != null,
-          "FunctionDeclaration must produce a name",
-          fn.node.loc ?? GeneratedSource
-        );
+        CompilerError.invariant(compiled.id != null, {
+          reason: "FunctionDeclaration must produce a name",
+          description: null,
+          loc: fn.node.loc ?? GeneratedSource,
+          suggestions: null,
+        });
         compiled.id = addSuffix(compiled.id, "_forget");
         const compiledFn = fn.insertAfter(compiled)[0];
         compiledFn.skip();
@@ -212,6 +214,7 @@ export function compileProgram(
           description: violation.value.trim(),
           severity: ErrorSeverity.InvalidReact,
           loc: violation.loc ?? null,
+          suggestions: null, // TODO(@poteto) add autofix for eslint
         })
       );
     }
@@ -357,6 +360,7 @@ function buildFunctionDeclaration(
       severity: ErrorSeverity.Todo,
       description: `Handle ${fn.parentPath.type}`,
       loc: fn.node.loc ?? null,
+      suggestions: null,
     });
   }
   const variableDeclarator = fn.parentPath;
@@ -367,6 +371,7 @@ function buildFunctionDeclaration(
       severity: ErrorSeverity.Todo,
       description: `Handle ${variableDeclarator.parentPath.type}`,
       loc: fn.node.loc ?? null,
+      suggestions: null,
     });
   }
   const variableDeclaration = variableDeclarator.parentPath;
@@ -378,6 +383,7 @@ function buildFunctionDeclaration(
       severity: ErrorSeverity.Todo,
       description: `Handle ${id.type}`,
       loc: fn.node.loc ?? null,
+      suggestions: null,
     });
   }
 
@@ -407,11 +413,12 @@ function buildBlockStatement(
     return wrappedBody.node;
   }
 
-  CompilerError.invariant(
-    body.isBlockStatement(),
-    "Body must be a BlockStatement",
-    body.node.loc ?? GeneratedSource
-  );
+  CompilerError.invariant(body.isBlockStatement(), {
+    reason: "Body must be a BlockStatement",
+    description: null,
+    loc: body.node.loc ?? GeneratedSource,
+    suggestions: null,
+  });
 
   return body.node;
 }
@@ -426,16 +433,20 @@ function addImportsToProgram(
     // Codegen currently does not rename import specifiers, so we do additional
     // validation here
     if (identifiers.has(importSpecifierName)) {
-      CompilerError.invalidConfig(
-        `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
-        GeneratedSource
-      );
+      CompilerError.invalidConfig({
+        reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
+        description: null,
+        loc: GeneratedSource,
+        suggestions: null,
+      });
     }
     if (path.scope.hasBinding(importSpecifierName)) {
-      CompilerError.invalidConfig(
-        `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
-        GeneratedSource
-      );
+      CompilerError.invalidConfig({
+        reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
+        description: null,
+        loc: GeneratedSource,
+        suggestions: null,
+      });
     }
     identifiers.add(importSpecifierName);
 

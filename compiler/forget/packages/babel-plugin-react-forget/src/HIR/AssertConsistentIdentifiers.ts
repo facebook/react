@@ -35,18 +35,20 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
       }
     }
     for (const instr of block.instructions) {
-      CompilerError.invariant(
-        instr.lvalue.identifier.name === null,
-        `Expected all lvalues to be temporaries`,
-        instr.lvalue.loc,
-        `Found named lvalue '${instr.lvalue.identifier.name}'`
-      );
-      CompilerError.invariant(
-        !assignments.has(instr.lvalue.identifier.id),
-        `Expected lvalues to be assigned exactly once`,
-        instr.lvalue.loc,
-        `Found duplicate assignment of '${printPlace(instr.lvalue)}'`
-      );
+      CompilerError.invariant(instr.lvalue.identifier.name === null, {
+        reason: `Expected all lvalues to be temporaries`,
+        description: `Found named lvalue '${instr.lvalue.identifier.name}'`,
+        loc: instr.lvalue.loc,
+        suggestions: null,
+      });
+      CompilerError.invariant(!assignments.has(instr.lvalue.identifier.id), {
+        reason: `Expected lvalues to be assigned exactly once`,
+        description: `Found duplicate assignment of '${printPlace(
+          instr.lvalue
+        )}'`,
+        loc: instr.lvalue.loc,
+        suggestions: null,
+      });
       assignments.add(instr.lvalue.identifier.id);
       for (const operand of eachInstructionLValue(instr)) {
         validate(identifiers, operand.identifier, operand.loc);
@@ -72,11 +74,11 @@ function validate(
   if (previous === undefined) {
     identifiers.set(identifier.id, identifier);
   } else {
-    CompilerError.invariant(
-      identifier === previous,
-      `Duplicate identifier object`,
-      loc ?? GeneratedSource,
-      `Found duplicate identifier object for id ${identifier.id}`
-    );
+    CompilerError.invariant(identifier === previous, {
+      reason: `Duplicate identifier object`,
+      description: `Found duplicate identifier object for id ${identifier.id}`,
+      loc: loc ?? GeneratedSource,
+      suggestions: null,
+    });
   }
 }

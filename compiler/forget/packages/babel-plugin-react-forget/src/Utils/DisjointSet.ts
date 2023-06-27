@@ -20,11 +20,12 @@ export default class DisjointSet<T> {
    */
   union(items: Array<T>): void {
     const first = items.shift();
-    CompilerError.invariant(
-      first != null,
-      "Expected set to be non-empty",
-      null
-    );
+    CompilerError.invariant(first != null, {
+      reason: "Expected set to be non-empty",
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
     // determine an arbitrary "root" for this set: if the first
     // item already has a root then use that, otherwise the first item
     // will be the new root.

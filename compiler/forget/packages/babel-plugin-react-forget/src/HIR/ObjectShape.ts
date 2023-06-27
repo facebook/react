@@ -103,11 +103,12 @@ function addShape(
     functionType,
   };
 
-  CompilerError.invariant(
-    !registry.has(id),
-    `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
-    null
-  );
+  CompilerError.invariant(!registry.has(id), {
+    reason: `[ObjectShape] Could not add shape to registry: name ${id} already exists.`,
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
   registry.set(id, shape);
   return shape;
 }

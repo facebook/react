@@ -109,6 +109,7 @@ function validateNonRefValue(error: CompilerError, operand: Place): void {
         reason:
           "Ref values (the `current` property) may not be accessed during render",
         severity: ErrorSeverity.InvalidReact,
+        suggestions: null,
       })
     );
   }
@@ -124,6 +125,7 @@ function validateNonRefObject(error: CompilerError, operand: Place): void {
         reason:
           "Ref values may not be passed to functions because they could read the ref value (`current` property) during render",
         severity: ErrorSeverity.InvalidReact,
+        suggestions: null,
       })
     );
   }

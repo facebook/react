@@ -137,18 +137,20 @@ function handleAssignment(
       for (const property of path.get("properties")) {
         if (property.isObjectProperty()) {
           const valuePath = property.get("value");
-          CompilerError.invariant(
-            valuePath.isLVal(),
-            `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
-            valuePath.node.loc ?? GeneratedSource
-          );
+          CompilerError.invariant(valuePath.isLVal(), {
+            reason: `[FindContextIdentifiers] Expected object property value to be an LVal, got: ${valuePath.type}`,
+            description: null,
+            loc: valuePath.node.loc ?? GeneratedSource,
+            suggestions: null,
+          });
           handleAssignment(reassigned, valuePath);
         } else {
-          CompilerError.invariant(
-            property.isRestElement(),
-            `[FindContextIdentifiers] Invalid assumptions for babel types.`,
-            property.node.loc ?? GeneratedSource
-          );
+          CompilerError.invariant(property.isRestElement(), {
+            reason: `[FindContextIdentifiers] Invalid assumptions for babel types.`,
+            description: null,
+            loc: property.node.loc ?? GeneratedSource,
+            suggestions: null,
+          });
           handleAssignment(reassigned, property);
         }
       }
@@ -170,10 +172,12 @@ function handleAssignment(
       break;
     }
     default: {
-      CompilerError.todo(
-        `[FindContextIdentifiers] Cannot handle Object destructuring assignment target ${lvalNode.type}`,
-        lvalNode.loc ?? GeneratedSource
-      );
+      CompilerError.todo({
+        reason: `[FindContextIdentifiers] Cannot handle Object destructuring assignment target ${lvalNode.type}`,
+        description: null,
+        loc: lvalNode.loc ?? GeneratedSource,
+        suggestions: null,
+      });
     }
   }
 }

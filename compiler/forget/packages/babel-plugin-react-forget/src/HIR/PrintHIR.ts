@@ -469,8 +469,12 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = "`";
       CompilerError.invariant(
         instrValue.subexprs.length === instrValue.quasis.length - 1,
-        "Bad assumption about quasi length.",
-        instrValue.loc
+        {
+          reason: "Bad assumption about quasi length.",
+          description: null,
+          loc: instrValue.loc,
+          suggestions: null,
+        }
       );
       for (let i = 0; i < instrValue.subexprs.length; i++) {
         value += instrValue.quasis[i].raw;

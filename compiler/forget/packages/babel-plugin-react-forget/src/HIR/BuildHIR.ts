@@ -88,6 +88,7 @@ export function lower(
           reason: `(BuildHIR::lower) Could not find binding for param '${param.node.name}'`,
           severity: ErrorSeverity.Invariant,
           loc: param.node.loc ?? null,
+          suggestions: null,
         });
         return;
       }
@@ -122,6 +123,7 @@ export function lower(
         reason: `(BuildHIR::lower) Handle ${param.node.type} params`,
         severity: ErrorSeverity.Todo,
         loc: param.node.loc ?? null,
+        suggestions: null,
       });
     }
   });
@@ -143,6 +145,7 @@ export function lower(
       reason: `(BuildHIR::lower) Unexpected function body kind: ${body.type}}`,
       severity: ErrorSeverity.InvalidInput,
       loc: body.node.loc ?? null,
+      suggestions: null,
     });
   }
 
@@ -320,6 +323,7 @@ function lowerStatement(
               "(BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement",
             severity: ErrorSeverity.Todo,
             loc: stmt.node.loc ?? null,
+            suggestions: null,
           });
           return {
             kind: "unsupported",
@@ -391,6 +395,7 @@ function lowerStatement(
           reason: `(BuildHIR::lowerStatement) Handle empty test in ForStatement`,
           severity: ErrorSeverity.Todo,
           loc: stmt.node.loc ?? null,
+          suggestions: null,
         });
       } else {
         builder.terminateWithContinuation(
@@ -540,6 +545,7 @@ function lowerStatement(
                 "(BuildHIR::lowerStatement) Expected at most one `default` branch in SwitchStatement, this code should have failed to parse",
               severity: ErrorSeverity.InvalidInput,
               loc: case_.node.loc ?? null,
+              suggestions: null,
             });
             break;
           }
@@ -614,6 +620,7 @@ function lowerStatement(
           reason: `(BuildHIR::lowerStatement) Handle ${nodeKind} kinds in VariableDeclaration`,
           severity: ErrorSeverity.Todo,
           loc: stmt.node.loc ?? null,
+          suggestions: null,
         });
         return;
       }
@@ -641,6 +648,7 @@ function lowerStatement(
               reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
               severity: ErrorSeverity.Invariant,
               loc: id.node.loc ?? null,
+              suggestions: null,
             });
           } else {
             const place: Place = {
@@ -655,6 +663,7 @@ function lowerStatement(
                   reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
                   severity: ErrorSeverity.InvalidInput,
                   loc: id.node.loc ?? null,
+                  suggestions: null,
                 });
               }
               lowerValueToTemporary(builder, {
@@ -681,6 +690,7 @@ function lowerStatement(
             reason: `(BuildHIR::lowerStatement) Expected variable declaration to be an identifier if no initializer was provided.`,
             severity: ErrorSeverity.InvalidInput,
             loc: stmt.node.loc ?? null,
+            suggestions: null,
           });
         }
       }
@@ -768,11 +778,12 @@ function lowerStatement(
     case "FunctionDeclaration": {
       const stmt = stmtPath as NodePath<t.FunctionDeclaration>;
       stmt.skip();
-      CompilerError.invariant(
-        stmt.get("id").type === "Identifier",
-        "function declarations must have a name",
-        stmt.node.loc ?? null
-      );
+      CompilerError.invariant(stmt.get("id").type === "Identifier", {
+        reason: "function declarations must have a name",
+        description: null,
+        loc: stmt.node.loc ?? null,
+        suggestions: null,
+      });
       const id = stmt.get("id") as NodePath<t.Identifier>;
 
       // Desugar FunctionDeclaration to FunctionExpression.
@@ -795,11 +806,13 @@ function lowerStatement(
           ),
         ])
       );
-      CompilerError.invariant(
-        desugared.length === 1,
-        "only one declaration is created from desugaring function declaration",
-        stmt.node.loc ?? null
-      );
+      CompilerError.invariant(desugared.length === 1, {
+        reason:
+          "only one declaration is created from desugaring function declaration",
+        description: null,
+        loc: stmt.node.loc ?? null,
+        suggestions: null,
+      });
       lowerStatement(builder, desugared.at(0)!);
       return;
     }
@@ -844,11 +857,12 @@ function lowerStatement(
       let test: Place;
       if (left.isVariableDeclaration()) {
         const declarations = left.get("declarations");
-        CompilerError.invariant(
-          declarations.length === 1,
-          `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
-          left.node.loc ?? null
-        );
+        CompilerError.invariant(declarations.length === 1, {
+          reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
+          description: null,
+          loc: left.node.loc ?? null,
+          suggestions: null,
+        });
         const id = declarations[0].get("id");
         const nextIterableOf = lowerValueToTemporary(builder, {
           kind: "NextIterableOf",
@@ -868,6 +882,7 @@ function lowerStatement(
           reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
           severity: ErrorSeverity.Todo,
           loc: left.node.loc ?? null,
+          suggestions: null,
         });
         return;
       }
@@ -935,6 +950,7 @@ function lowerStatement(
         reason: `(BuildHIR::lowerStatement) Handle ${stmtPath.type} statements`,
         severity: ErrorSeverity.Todo,
         loc: stmtPath.node.loc ?? null,
+        suggestions: null,
       });
       lowerValueToTemporary(builder, {
         kind: "UnsupportedNode",
@@ -1007,6 +1023,7 @@ function lowerExpression(
               reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
               severity: ErrorSeverity.Todo,
               loc: propertyPath.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -1016,6 +1033,7 @@ function lowerExpression(
               reason: `(BuildHIR::lowerExpression) Handle ${valuePath.type} values in ObjectExpression`,
               severity: ErrorSeverity.Todo,
               loc: valuePath.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -1039,6 +1057,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.type} properties in ObjectExpression`,
             severity: ErrorSeverity.Todo,
             loc: propertyPath.node.loc ?? null,
+            suggestions: null,
           });
           continue;
         }
@@ -1058,6 +1077,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
             severity: ErrorSeverity.Todo,
             loc: null,
+            suggestions: null,
           });
           continue;
         } else if (element.isExpression()) {
@@ -1073,6 +1093,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
             severity: ErrorSeverity.Todo,
             loc: element.node.loc ?? null,
+            suggestions: null,
           });
           continue;
         }
@@ -1091,6 +1112,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}`,
           severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1116,6 +1138,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
           severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1149,6 +1172,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
           severity: ErrorSeverity.Todo,
           loc: leftPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1180,6 +1204,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Expected SequenceExpression to have at least one expression`,
             severity: ErrorSeverity.InvalidInput,
             loc: expr.node.loc ?? null,
+            suggestions: null,
           });
         } else {
           lowerValueToTemporary(builder, {
@@ -1391,6 +1416,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Handle ${operator} operators in AssignmentExpression`,
           severity: ErrorSeverity.Todo,
           loc: expr.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1463,6 +1489,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
             severity: ErrorSeverity.Todo,
             loc: expr.node.loc ?? null,
+            suggestions: null,
           });
           return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
         }
@@ -1504,6 +1531,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) Handle ${attribute.type} attributes in JSXElement`,
             severity: ErrorSeverity.Todo,
             loc: attribute.node.loc ?? null,
+            suggestions: null,
           });
           continue;
         }
@@ -1516,14 +1544,16 @@ function lowerExpression(
               reason: `(BuildHIR::lowerExpression) Unexpected colon in attribute name '${name}'`,
               severity: ErrorSeverity.Todo,
               loc: namePath.node.loc ?? null,
+              suggestions: null,
             });
           }
         } else {
-          CompilerError.invariant(
-            namePath.isJSXNamespacedName(),
-            "Refinement",
-            namePath.node.loc ?? null
-          );
+          CompilerError.invariant(namePath.isJSXNamespacedName(), {
+            reason: "Refinement",
+            description: null,
+            loc: namePath.node.loc ?? null,
+            suggestions: null,
+          });
           const namespace = namePath.node.namespace.name;
           const name = namePath.node.name.name;
           propName = `${namespace}:${name}`;
@@ -1538,6 +1568,7 @@ function lowerExpression(
               reason: `(BuildHIR::lowerExpression) Handle ${valueExpr.type} attribute values in JSXElement`,
               severity: ErrorSeverity.Todo,
               loc: valueExpr.node?.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -1547,6 +1578,7 @@ function lowerExpression(
               reason: `(BuildHIR::lowerExpression) Handle ${expression.type} expressions in JSXExpressionContainer within JSXElement`,
               severity: ErrorSeverity.Todo,
               loc: valueExpr.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -1589,14 +1621,17 @@ function lowerExpression(
             "(BuildHIR::lowerExpression) Handle tagged template with interpolations",
           severity: ErrorSeverity.Todo,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
-      CompilerError.invariant(
-        expr.get("quasi").get("quasis").length == 1,
-        "there should be only one quasi as we don't support interpolations yet",
-        expr.node.loc ?? null
-      );
+      CompilerError.invariant(expr.get("quasi").get("quasis").length == 1, {
+        reason:
+          "there should be only one quasi as we don't support interpolations yet",
+        description: null,
+        loc: expr.node.loc ?? null,
+        suggestions: null,
+      });
       const value = expr.get("quasi").get("quasis").at(0)!.node.value;
       if (value.raw !== value.cooked) {
         builder.errors.push({
@@ -1604,6 +1639,7 @@ function lowerExpression(
             "(BuildHIR::lowerExpression) Handle tagged template where cooked value is different from raw value",
           severity: ErrorSeverity.Todo,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1625,6 +1661,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Unexpected quasi and subexpression lengths in TemplateLiteral.`,
           severity: ErrorSeverity.InvalidInput,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1634,6 +1671,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerAssignment) Handle TSType in TemplateLiteral.`,
           severity: ErrorSeverity.Todo,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1675,6 +1713,7 @@ function lowerExpression(
             reason: `(BuildHIR::lowerExpression) delete on a non-member expression has no semantic meaning`,
             severity: ErrorSeverity.InvalidInput,
             loc: expr.node.loc ?? null,
+            suggestions: null,
           });
           return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
         }
@@ -1712,6 +1751,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
           severity: ErrorSeverity.Todo,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1720,6 +1760,7 @@ function lowerExpression(
           reason: `(BuildHIR::lowerExpression) Handle prefix UpdateExpression`,
           severity: ErrorSeverity.Todo,
           loc: exprPath.node.loc ?? null,
+          suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
@@ -1774,6 +1815,7 @@ function lowerExpression(
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
         severity: ErrorSeverity.Todo,
         loc: exprPath.node.loc ?? null,
+        suggestions: null,
       });
       return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
     }
@@ -1843,7 +1885,12 @@ function lowerOptionalMemberExpression(
       loc,
     };
   });
-  CompilerError.invariant(object !== null, "Satisfy type checker", null);
+  CompilerError.invariant(object !== null, {
+    reason: "Satisfy type checker",
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
 
   // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
   // the semantic of conditional evaluation depending on the callee
@@ -2047,6 +2094,7 @@ function lowerReorderableExpression(
       reason: `(BuildHIR::node.lowerReorderableExpression) Expression type '${expr.type}' cannot be safely reordered`,
       severity: ErrorSeverity.Todo,
       loc: expr.node.loc ?? null,
+      suggestions: null,
     });
   }
   return lowerExpressionToTemporary(builder, expr);
@@ -2138,6 +2186,7 @@ function lowerArguments(
         reason: `(BuildHIR::lowerExpression) Handle ${argPath.type} arguments in CallExpression`,
         severity: ErrorSeverity.Todo,
         loc: argPath.node.loc ?? null,
+        suggestions: null,
       });
     }
   }
@@ -2167,6 +2216,7 @@ function lowerMemberExpression(
         reason: `(BuildHIR::lowerMemberExpression) Handle ${propertyNode.type} property`,
         severity: ErrorSeverity.Todo,
         loc: propertyNode.node.loc ?? null,
+        suggestions: null,
       });
       return {
         object,
@@ -2187,6 +2237,7 @@ function lowerMemberExpression(
         reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
         severity: ErrorSeverity.Todo,
         loc: propertyNode.node.loc ?? null,
+        suggestions: null,
       });
       return {
         object,
@@ -2243,6 +2294,7 @@ function lowerJsxElementName(
         reason: `(BuildHIR::lowerJsxElementName) Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'`,
         severity: ErrorSeverity.InvalidInput,
         loc: exprPath.node.loc ?? null,
+        suggestions: null,
       });
     }
     const place = lowerValueToTemporary(builder, {
@@ -2256,6 +2308,7 @@ function lowerJsxElementName(
       reason: `(BuildHIR::lowerJsxElementName) Handle ${exprPath.type} tags`,
       severity: ErrorSeverity.Todo,
       loc: exprPath.node.loc ?? null,
+      suggestions: null,
     });
     return lowerValueToTemporary(builder, {
       kind: "UnsupportedNode",
@@ -2275,11 +2328,12 @@ function lowerJsxMemberExpression(
   if (object.isJSXMemberExpression()) {
     objectPlace = lowerJsxMemberExpression(builder, object);
   } else {
-    CompilerError.invariant(
-      object.isJSXIdentifier(),
-      `TypeScript refinement fail: expected 'JsxIdentifier', got '${object.node.type}'`,
-      object.node.loc ?? null
-    );
+    CompilerError.invariant(object.isJSXIdentifier(), {
+      reason: `TypeScript refinement fail: expected 'JsxIdentifier', got '${object.node.type}'`,
+      description: null,
+      loc: object.node.loc ?? null,
+      suggestions: null,
+    });
     objectPlace = lowerIdentifier(builder, object);
   }
   const property = exprPath.get("property").node.name;
@@ -2310,11 +2364,12 @@ function lowerJsxElement(
     if (expression.isJSXEmptyExpression()) {
       return null;
     } else {
-      CompilerError.invariant(
-        expression.isExpression(),
-        `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`,
-        expression.node.loc ?? null
-      );
+      CompilerError.invariant(expression.isExpression(), {
+        reason: `(BuildHIR::lowerJsxElement) Expected Expression but found ${expression.type}!`,
+        description: null,
+        loc: expression.node.loc ?? null,
+        suggestions: null,
+      });
       return lowerExpressionToTemporary(builder, expression);
     }
   } else if (exprPath.isJSXText()) {
@@ -2329,6 +2384,7 @@ function lowerJsxElement(
       reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
       severity: ErrorSeverity.Todo,
       loc: exprPath.node.loc ?? null,
+      suggestions: null,
     });
     const place = lowerValueToTemporary(builder, {
       kind: "UnsupportedNode",
@@ -2481,6 +2537,7 @@ function lowerIdentifierForAssignment(
         reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
         severity: ErrorSeverity.InvalidReact,
         loc: path.node.loc ?? null,
+        suggestions: null,
       });
     } else {
       // Else its an internal error bc we couldn't find the binding
@@ -2488,6 +2545,7 @@ function lowerIdentifierForAssignment(
         reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
         severity: ErrorSeverity.Invariant,
         loc: path.node.loc ?? null,
+        suggestions: null,
       });
     }
     return null;
@@ -2530,6 +2588,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
               severity: ErrorSeverity.InvalidInput,
               loc: lvalue.node.loc ?? null,
+              suggestions: null,
             });
           }
           lowerValueToTemporary(builder, {
@@ -2560,11 +2619,12 @@ function lowerAssignment(
     }
     case "MemberExpression": {
       // This can only occur because of a coding error, parsers enforce this condition
-      CompilerError.invariant(
-        kind === InstructionKind.Reassign,
-        "MemberExpression may only appear in an assignment expression",
-        lvaluePath.node.loc ?? null
-      );
+      CompilerError.invariant(kind === InstructionKind.Reassign, {
+        reason: "MemberExpression may only appear in an assignment expression",
+        description: null,
+        loc: lvaluePath.node.loc ?? null,
+        suggestions: null,
+      });
       const lvalue = lvaluePath as NodePath<t.MemberExpression>;
       const property = lvalue.get("property");
       const object = lowerExpressionToTemporary(builder, lvalue.get("object"));
@@ -2574,6 +2634,7 @@ function lowerAssignment(
             reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in MemberExpression`,
             severity: ErrorSeverity.Todo,
             loc: property.node.loc ?? null,
+            suggestions: null,
           });
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
@@ -2592,6 +2653,7 @@ function lowerAssignment(
               "(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property",
             severity: ErrorSeverity.Todo,
             loc: property.node.loc ?? null,
+            suggestions: null,
           });
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
         }
@@ -2624,6 +2686,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
               severity: ErrorSeverity.Todo,
               loc: element.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2691,6 +2754,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
               severity: ErrorSeverity.Todo,
               loc: argument.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2714,6 +2778,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Handle ${property.type} properties in ObjectPattern`,
               severity: ErrorSeverity.Todo,
               loc: property.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2722,6 +2787,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Handle computed properties in ObjectPattern`,
               severity: ErrorSeverity.Todo,
               loc: property.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2731,6 +2797,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
               severity: ErrorSeverity.Todo,
               loc: key.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2740,6 +2807,7 @@ function lowerAssignment(
               reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
               severity: ErrorSeverity.Todo,
               loc: element.node.loc ?? null,
+              suggestions: null,
             });
             continue;
           }
@@ -2875,6 +2943,7 @@ function lowerAssignment(
         reason: `(BuildHIR::lowerAssignment) Handle ${lvaluePath.type} assignments`,
         severity: ErrorSeverity.Todo,
         loc: lvaluePath.node.loc ?? null,
+        suggestions: null,
       });
       return { kind: "UnsupportedNode", node: lvalueNode, loc };
     }

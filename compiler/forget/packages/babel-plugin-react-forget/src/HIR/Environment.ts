@@ -195,11 +195,12 @@ export class Environment {
     if (config?.customHooks) {
       this.#globals = new Map(DEFAULT_GLOBALS);
       for (const [hookName, hook] of config.customHooks) {
-        CompilerError.invariant(
-          !this.#globals.has(hookName),
-          `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
-          null
-        );
+        CompilerError.invariant(!this.#globals.has(hookName), {
+          reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
+          description: null,
+          loc: null,
+          suggestions: null,
+        });
         this.#globals.set(
           hookName,
           addHook(this.#shapes, [], {
@@ -271,11 +272,12 @@ export class Environment {
       // If an object or function has a shapeId, it must have been assigned
       // by Forget (and be present in a builtin or user-defined registry)
       const shape = this.#shapes.get(shapeId);
-      CompilerError.invariant(
-        shape !== undefined,
-        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
-        null
-      );
+      CompilerError.invariant(shape !== undefined, {
+        reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       return shape.properties.get(property) ?? null;
     } else {
       return null;
@@ -286,11 +288,12 @@ export class Environment {
     const { shapeId } = type;
     if (shapeId !== null) {
       const shape = this.#shapes.get(shapeId);
-      CompilerError.invariant(
-        shape !== undefined,
-        `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
-        null
-      );
+      CompilerError.invariant(shape !== undefined, {
+        reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
       return shape.functionType;
     }
     return null;
