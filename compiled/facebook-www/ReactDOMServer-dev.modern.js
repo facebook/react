@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0e527f26";
+var ReactVersion = "18.3.0-www-modern-0f8c7382";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9885,13 +9885,6 @@ function throwOnUseEffectEventCall() {
 function useEffectEvent(callback) {
   // $FlowIgnore[incompatible-return]
   return throwOnUseEffectEventCall;
-} // TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-
-function useMutableSource(source, getSnapshot, subscribe) {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
 }
 
 function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
@@ -10014,7 +10007,6 @@ var HooksDispatcher = {
   useTransition: useTransition,
   useId: useId,
   // Subscriptions are not setup in a server environment.
-  useMutableSource: useMutableSource,
   useSyncExternalStore: useSyncExternalStore
 };
 

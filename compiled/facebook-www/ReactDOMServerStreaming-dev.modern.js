@@ -9775,13 +9775,6 @@ function throwOnUseEffectEventCall() {
 function useEffectEvent(callback) {
   // $FlowIgnore[incompatible-return]
   return throwOnUseEffectEventCall;
-} // TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-
-function useMutableSource(source, getSnapshot, subscribe) {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
 }
 
 function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
@@ -9904,7 +9897,6 @@ var HooksDispatcher = {
   useTransition: useTransition,
   useId: useId,
   // Subscriptions are not setup in a server environment.
-  useMutableSource: useMutableSource,
   useSyncExternalStore: useSyncExternalStore
 };
 

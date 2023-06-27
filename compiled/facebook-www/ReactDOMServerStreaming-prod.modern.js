@@ -2450,10 +2450,6 @@ var HooksDispatcher = {
     0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
     return JSCompiler_inline_result + ":";
   },
-  useMutableSource: function (source, getSnapshot) {
-    resolveCurrentlyRenderingComponent();
-    return getSnapshot(source._source);
-  },
   useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
     if (void 0 === getServerSnapshot)
       throw Error(

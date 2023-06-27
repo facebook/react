@@ -2430,10 +2430,6 @@ var HooksDispatcher = {
     0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
     return JSCompiler_inline_result + ":";
   },
-  useMutableSource: function (source, getSnapshot) {
-    resolveCurrentlyRenderingComponent();
-    return getSnapshot(source._source);
-  },
   useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
     if (void 0 === getServerSnapshot) throw Error(formatProdErrorMessage(407));
     return getServerSnapshot();
@@ -3913,4 +3909,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-8fc58e59";
+exports.version = "18.3.0-www-modern-c35c81e5";

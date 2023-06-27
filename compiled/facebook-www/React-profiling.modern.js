@@ -267,13 +267,6 @@ function useTransition() {
 function useDeferredValue(value) {
   return ReactCurrentDispatcher.current.useDeferredValue(value);
 }
-function useMutableSource(source, getSnapshot, subscribe) {
-  return ReactCurrentDispatcher.current.useMutableSource(
-    source,
-    getSnapshot,
-    subscribe
-  );
-}
 var ReactCurrentBatchConfig = { transition: null },
   ReactSharedInternals = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
@@ -283,14 +276,6 @@ var ReactCurrentBatchConfig = { transition: null },
     ContextRegistry: {}
   },
   ContextRegistry = ReactSharedInternals.ContextRegistry;
-function createMutableSource(source, getVersion) {
-  return {
-    _getVersion: getVersion,
-    _source: source,
-    _workInProgressVersionPrimary: null,
-    _workInProgressVersionSecondary: null
-  };
-}
 function startTransition(scope, options) {
   var prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = {};
@@ -503,7 +488,6 @@ exports.createElement = function (type, config, children) {
     _owner: ReactCurrentOwner$1.current
   };
 };
-exports.createMutableSource = createMutableSource;
 exports.createRef = function () {
   return { current: null };
 };
@@ -574,7 +558,6 @@ exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_act = function () {
   throw Error("act(...) is not supported in production builds of React.");
 };
-exports.unstable_createMutableSource = createMutableSource;
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -599,7 +582,6 @@ exports.unstable_useDeferredValue = useDeferredValue;
 exports.unstable_useMemoCache = function (size) {
   return ReactCurrentDispatcher.current.useMemoCache(size);
 };
-exports.unstable_useMutableSource = useMutableSource;
 exports.unstable_useTransition = useTransition;
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
@@ -630,7 +612,6 @@ exports.useLayoutEffect = function (create, deps) {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.useMutableSource = useMutableSource;
 exports.useReducer = function (reducer, initialArg, init) {
   return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
 };
@@ -652,7 +633,7 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-www-modern-7a4b93ac";
+exports.version = "18.3.0-www-modern-92efa02a";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

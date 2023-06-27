@@ -1413,8 +1413,8 @@ function getNextLanes(root, wipLanes) {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
+  // For those exceptions where entanglement is semantically important,
+  // we should ensure that there is no partial work at the
   // time we apply the entanglement.
 
   var entangledLanes = root.entangledLanes;
@@ -1715,9 +1715,6 @@ function markRootSuspended$1(root, suspendedLanes) {
 function markRootPinged(root, pingedLanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
-function markRootMutableRead(root, updateLane) {
-  root.mutableReadLanes |= updateLane & root.pendingLanes;
-}
 function markRootFinished(root, remainingLanes) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
   root.pendingLanes = remainingLanes; // Let's try everything again
@@ -1725,7 +1722,6 @@ function markRootFinished(root, remainingLanes) {
   root.suspendedLanes = NoLanes;
   root.pingedLanes = NoLanes;
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   var entanglements = root.entanglements;
@@ -11807,73 +11803,6 @@ var Passive =
   /*   */
   8;
 
-// and should be reset before starting a new render.
-// This tracks which mutable sources need to be reset after a render.
-
-var workInProgressSources = [];
-var rendererSigil$1;
-
-{
-  // Used to detect multiple renderers using the same mutable source.
-  rendererSigil$1 = {};
-}
-
-function markSourceAsDirty(mutableSource) {
-  workInProgressSources.push(mutableSource);
-}
-function resetWorkInProgressVersions() {
-  for (var i = 0; i < workInProgressSources.length; i++) {
-    var mutableSource = workInProgressSources[i];
-
-    {
-      mutableSource._workInProgressVersionPrimary = null;
-    }
-  }
-
-  workInProgressSources.length = 0;
-}
-function getWorkInProgressVersion(mutableSource) {
-  {
-    return mutableSource._workInProgressVersionPrimary;
-  }
-}
-function setWorkInProgressVersion(mutableSource, version) {
-  {
-    mutableSource._workInProgressVersionPrimary = version;
-  }
-
-  workInProgressSources.push(mutableSource);
-}
-function warnAboutMultipleRenderersDEV(mutableSource) {
-  {
-    {
-      if (mutableSource._currentPrimaryRenderer == null) {
-        mutableSource._currentPrimaryRenderer = rendererSigil$1;
-      } else if (mutableSource._currentPrimaryRenderer !== rendererSigil$1) {
-        error(
-          "Detected multiple renderers concurrently rendering the " +
-            "same mutable source. This is currently unsupported."
-        );
-      }
-    }
-  }
-} // Eager reads the version of a mutable source and stores it on the root.
-// This ensures that the version used for server rendering matches the one
-// that is eventually read during hydration.
-// If they don't match there's a potential tear and a full deopt render is required.
-
-function registerMutableSourceForHydration(root, mutableSource) {
-  var getVersion = mutableSource._getVersion;
-  var version = getVersion(mutableSource._source); // TODO Clear this data once all pending hydration work is finished.
-  // Retaining it forever may interfere with GC.
-
-  if (root.mutableSourceEagerHydrationData == null) {
-    root.mutableSourceEagerHydrationData = [mutableSource, version];
-  } else {
-    root.mutableSourceEagerHydrationData.push(mutableSource, version);
-  }
-}
-
 var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
 // extra complexity. But this module is optimized for the single root case.
@@ -13542,255 +13471,6 @@ function rerenderReducer(reducer, initialArg, init) {
   return [newState, dispatch];
 }
 
-function readFromUnsubscribedMutableSource(root, source, getSnapshot) {
-  {
-    warnAboutMultipleRenderersDEV(source);
-  }
-
-  var getVersion = source._getVersion;
-  var version = getVersion(source._source); // Is it safe for this component to read from this source during the current render?
-
-  var isSafeToReadFromSource = false; // Check the version first.
-  // If this render has already been started with a specific version,
-  // we can use it alone to determine if we can safely read from the source.
-
-  var currentRenderVersion = getWorkInProgressVersion(source);
-
-  if (currentRenderVersion !== null) {
-    // It's safe to read if the store hasn't been mutated since the last time
-    // we read something.
-    isSafeToReadFromSource = currentRenderVersion === version;
-  } else {
-    // If there's no version, then this is the first time we've read from the
-    // source during the current render pass, so we need to do a bit more work.
-    // What we need to determine is if there are any hooks that already
-    // subscribed to the source, and if so, whether there are any pending
-    // mutations that haven't been synchronized yet.
-    //
-    // If there are no pending mutations, then `root.mutableReadLanes` will be
-    // empty, and we know we can safely read.
-    //
-    // If there *are* pending mutations, we may still be able to safely read
-    // if the currently rendering lanes are inclusive of the pending mutation
-    // lanes, since that guarantees that the value we're about to read from
-    // the source is consistent with the values that we read during the most
-    // recent mutation.
-    isSafeToReadFromSource = isSubsetOfLanes(
-      renderLanes$1,
-      root.mutableReadLanes
-    );
-
-    if (isSafeToReadFromSource) {
-      // If it's safe to read from this source during the current render,
-      // store the version in case other components read from it.
-      // A changed version number will let those components know to throw and restart the render.
-      setWorkInProgressVersion(source, version);
-    }
-  }
-
-  if (isSafeToReadFromSource) {
-    var snapshot = getSnapshot(source._source);
-
-    {
-      if (typeof snapshot === "function") {
-        error(
-          "Mutable source should not return a function as the snapshot value. " +
-            "Functions may close over mutable values and cause tearing."
-        );
-      }
-    }
-
-    return snapshot;
-  } else {
-    // This handles the special case of a mutable source being shared between renderers.
-    // In that case, if the source is mutated between the first and second renderer,
-    // The second renderer don't know that it needs to reset the WIP version during unwind,
-    // (because the hook only marks sources as dirty if it's written to their WIP version).
-    // That would cause this tear check to throw again and eventually be visible to the user.
-    // We can avoid this infinite loop by explicitly marking the source as dirty.
-    //
-    // This can lead to tearing in the first renderer when it resumes,
-    // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
-    markSourceAsDirty(source); // Intentioally throw an error to force React to retry synchronously. During
-    // the synchronous retry, it will block interleaved mutations, so we should
-    // get a consistent read. Therefore, the following error should never be
-    // visible to the user.
-    // We expect this error not to be thrown during the synchronous retry,
-    // because we blocked interleaved mutations.
-
-    throw new Error(
-      "Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue."
-    );
-  }
-}
-
-function useMutableSource(hook, source, getSnapshot, subscribe) {
-  var root = getWorkInProgressRoot();
-
-  if (root === null) {
-    throw new Error(
-      "Expected a work-in-progress root. This is a bug in React. Please file an issue."
-    );
-  }
-
-  var getVersion = source._getVersion;
-  var version = getVersion(source._source);
-  var dispatcher = ReactCurrentDispatcher$1.current; // eslint-disable-next-line prefer-const
-
-  var _dispatcher$useState2 = dispatcher.useState(function () {
-      return readFromUnsubscribedMutableSource(root, source, getSnapshot);
-    }),
-    currentSnapshot = _dispatcher$useState2[0],
-    setSnapshot = _dispatcher$useState2[1];
-
-  var snapshot = currentSnapshot; // Grab a handle to the state hook as well.
-  // We use it to clear the pending update queue if we have a new source.
-
-  var stateHook = workInProgressHook;
-  var memoizedState = hook.memoizedState;
-  var refs = memoizedState.refs;
-  var prevGetSnapshot = refs.getSnapshot;
-  var prevSource = memoizedState.source;
-  var prevSubscribe = memoizedState.subscribe;
-  var fiber = currentlyRenderingFiber$1;
-  hook.memoizedState = {
-    refs: refs,
-    source: source,
-    subscribe: subscribe
-  }; // Sync the values needed by our subscription handler after each commit.
-
-  dispatcher.useEffect(
-    function () {
-      refs.getSnapshot = getSnapshot; // Normally the dispatch function for a state hook never changes,
-      // but this hook recreates the queue in certain cases  to avoid updates from stale sources.
-      // handleChange() below needs to reference the dispatch function without re-subscribing,
-      // so we use a ref to ensure that it always has the latest version.
-
-      refs.setSnapshot = setSnapshot; // Check for a possible change between when we last rendered now.
-
-      var maybeNewVersion = getVersion(source._source);
-
-      if (!objectIs(version, maybeNewVersion)) {
-        var maybeNewSnapshot = getSnapshot(source._source);
-
-        {
-          if (typeof maybeNewSnapshot === "function") {
-            error(
-              "Mutable source should not return a function as the snapshot value. " +
-                "Functions may close over mutable values and cause tearing."
-            );
-          }
-        }
-
-        if (!objectIs(snapshot, maybeNewSnapshot)) {
-          setSnapshot(maybeNewSnapshot);
-          var lane = requestUpdateLane(fiber);
-          markRootMutableRead(root, lane);
-        } // If the source mutated between render and now,
-        // there may be state updates already scheduled from the old source.
-        // Entangle the updates so that they render in the same batch.
-
-        markRootEntangled(root, root.mutableReadLanes);
-      }
-    },
-    [getSnapshot, source, subscribe]
-  ); // If we got a new source or subscribe function, re-subscribe in a passive effect.
-
-  dispatcher.useEffect(
-    function () {
-      var handleChange = function () {
-        var latestGetSnapshot = refs.getSnapshot;
-        var latestSetSnapshot = refs.setSnapshot;
-
-        try {
-          latestSetSnapshot(latestGetSnapshot(source._source)); // Record a pending mutable source update with the same expiration time.
-
-          var lane = requestUpdateLane(fiber);
-          markRootMutableRead(root, lane);
-        } catch (error) {
-          // A selector might throw after a source mutation.
-          // e.g. it might try to read from a part of the store that no longer exists.
-          // In this case we should still schedule an update with React.
-          // Worst case the selector will throw again and then an error boundary will handle it.
-          latestSetSnapshot(function () {
-            throw error;
-          });
-        }
-      };
-
-      var unsubscribe = subscribe(source._source, handleChange);
-
-      {
-        if (typeof unsubscribe !== "function") {
-          error(
-            "Mutable source subscribe function must return an unsubscribe function."
-          );
-        }
-      }
-
-      return unsubscribe;
-    },
-    [source, subscribe]
-  ); // If any of the inputs to useMutableSource change, reading is potentially unsafe.
-  //
-  // If either the source or the subscription have changed we can't can't trust the update queue.
-  // Maybe the source changed in a way that the old subscription ignored but the new one depends on.
-  //
-  // If the getSnapshot function changed, we also shouldn't rely on the update queue.
-  // It's possible that the underlying source was mutated between the when the last "change" event fired,
-  // and when the current render (with the new getSnapshot function) is processed.
-  //
-  // In both cases, we need to throw away pending updates (since they are no longer relevant)
-  // and treat reading from the source as we do in the mount case.
-
-  if (
-    !objectIs(prevGetSnapshot, getSnapshot) ||
-    !objectIs(prevSource, source) ||
-    !objectIs(prevSubscribe, subscribe)
-  ) {
-    // Create a new queue and setState method,
-    // So if there are interleaved updates, they get pushed to the older queue.
-    // When this becomes current, the previous queue and dispatch method will be discarded,
-    // including any interleaving updates that occur.
-    var newQueue = {
-      pending: null,
-      lanes: NoLanes,
-      dispatch: null,
-      lastRenderedReducer: basicStateReducer,
-      lastRenderedState: snapshot
-    };
-    newQueue.dispatch = setSnapshot = dispatchSetState.bind(
-      null,
-      currentlyRenderingFiber$1,
-      newQueue
-    );
-    stateHook.queue = newQueue;
-    stateHook.baseQueue = null;
-    snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot);
-    stateHook.memoizedState = stateHook.baseState = snapshot;
-  }
-
-  return snapshot;
-}
-
-function mountMutableSource(source, getSnapshot, subscribe) {
-  var hook = mountWorkInProgressHook();
-  hook.memoizedState = {
-    refs: {
-      getSnapshot: getSnapshot,
-      setSnapshot: null
-    },
-    source: source,
-    subscribe: subscribe
-  };
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
-
-function updateMutableSource(source, getSnapshot, subscribe) {
-  var hook = updateWorkInProgressHook();
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
-
 function mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   var fiber = currentlyRenderingFiber$1;
   var hook = mountWorkInProgressHook();
@@ -15087,7 +14767,6 @@ var ContextOnlyDispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
@@ -15235,11 +14914,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       mountHookTypesDev();
@@ -15379,11 +15053,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
@@ -15520,11 +15189,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return updateTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -15664,11 +15328,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -15826,12 +15485,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -15994,12 +15647,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
@@ -16160,12 +15807,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -19475,7 +19116,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
   var nextState = workInProgress.memoizedState;
-  var root = workInProgress.stateNode;
   pushRootTransition(workInProgress);
 
   if (enableTransitionTracing) {
@@ -19548,20 +19188,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
       enterHydrationState(workInProgress);
-
-      {
-        var mutableSourceEagerHydrationData =
-          root.mutableSourceEagerHydrationData;
-
-        if (mutableSourceEagerHydrationData != null) {
-          for (var i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
-            var mutableSource = mutableSourceEagerHydrationData[i];
-            var version = mutableSourceEagerHydrationData[i + 1];
-            setWorkInProgressVersion(mutableSource, version);
-          }
-        }
-      }
-
       var child = mountChildFibers(
         workInProgress,
         null,
@@ -23760,7 +23386,6 @@ function completeWork(current, workInProgress, renderLanes) {
 
       popRootTransition(workInProgress);
       popHostContainer(workInProgress);
-      resetWorkInProgressVersions();
 
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
@@ -24625,7 +24250,6 @@ function unwindWork(current, workInProgress, renderLanes) {
 
       popRootTransition(workInProgress);
       popHostContainer(workInProgress);
-      resetWorkInProgressVersions();
       var _flags = workInProgress.flags;
 
       if (
@@ -24759,7 +24383,6 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
 
       popRootTransition(interruptedWork);
       popHostContainer(interruptedWork);
-      resetWorkInProgressVersions();
       break;
     }
 
@@ -34546,7 +34169,6 @@ function FiberRootNode(
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
   this.entangledLanes = NoLanes;
@@ -34558,10 +34180,6 @@ function FiberRootNode(
   {
     this.pooledCache = null;
     this.pooledCacheLanes = NoLanes;
-  }
-
-  {
-    this.mutableSourceEagerHydrationData = null;
   }
 
   {
@@ -34671,7 +34289,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-f6368a4e";
+var ReactVersion = "18.3.0-www-modern-491ec6e9";
 
 function createPortal$1(
   children,
@@ -46534,9 +46152,7 @@ function hydrateRoot$1(container, initialChildren, options) {
   } // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
 
-  var hydrationCallbacks = options != null ? options : null; // TODO: Delete this option
-
-  var mutableSources = (options != null && options.hydratedSources) || null;
+  var hydrationCallbacks = options != null ? options : null;
   var isStrictMode = false;
   var concurrentUpdatesByDefaultOverride = false;
   var identifierPrefix = "";
@@ -46580,14 +46196,7 @@ function hydrateRoot$1(container, initialChildren, options) {
   markContainerAsRoot(root.current, container);
   Dispatcher$1.current = ReactDOMClientDispatcher; // This can't be a comment node since hydration doesn't work on comment nodes anyway.
 
-  listenToAllSupportedEvents(container);
-
-  if (mutableSources) {
-    for (var i = 0; i < mutableSources.length; i++) {
-      var mutableSource = mutableSources[i];
-      registerMutableSourceForHydration(root, mutableSource);
-    }
-  } // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
+  listenToAllSupportedEvents(container); // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
 
   return new ReactDOMHydrationRoot(root);
 }

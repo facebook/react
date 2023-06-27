@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-3cdb3aa3";
+var ReactVersion = "18.3.0-www-classic-70d18c58";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1994,10 +1994,6 @@ function useId() {
   var dispatcher = resolveDispatcher();
   return dispatcher.useId();
 }
-function useMutableSource(source, getSnapshot, subscribe) {
-  var dispatcher = resolveDispatcher();
-  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
-}
 function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   var dispatcher = resolveDispatcher();
   return dispatcher.useSyncExternalStore(
@@ -3016,26 +3012,6 @@ function createServerContext(globalName, defaultValue) {
   }
 
   return context;
-}
-
-function createMutableSource(source, getVersion) {
-  var mutableSource = {
-    _getVersion: getVersion,
-    _source: source,
-    _workInProgressVersionPrimary: null,
-    _workInProgressVersionSecondary: null
-  };
-
-  {
-    mutableSource._currentPrimaryRenderer = null;
-    mutableSource._currentSecondaryRenderer = null; // Used to detect side effects that update a mutable source during render.
-    // See https://github.com/facebook/react/issues/19948
-
-    mutableSource._currentlyRenderingFiber = null;
-    mutableSource._initialVersionAsOfFirstRender = null;
-  }
-
-  return mutableSource;
 }
 
 function startTransition(scope, options) {
@@ -4175,7 +4151,6 @@ exports.cloneElement = cloneElement;
 exports.createContext = createContext;
 exports.createElement = createElement;
 exports.createFactory = createFactory;
-exports.createMutableSource = createMutableSource;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
@@ -4196,14 +4171,12 @@ exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_act = act;
-exports.unstable_createMutableSource = createMutableSource;
 exports.unstable_getCacheForType = getCacheForType;
 exports.unstable_getCacheSignal = getCacheSignal;
 exports.unstable_startTransition = startTransition;
 exports.unstable_useCacheRefresh = useCacheRefresh;
 exports.unstable_useDeferredValue = useDeferredValue;
 exports.unstable_useMemoCache = useMemoCache;
-exports.unstable_useMutableSource = useMutableSource;
 exports.unstable_useTransition = useTransition;
 exports.use = use;
 exports.useCallback = useCallback;
@@ -4216,7 +4189,6 @@ exports.useImperativeHandle = useImperativeHandle;
 exports.useInsertionEffect = useInsertionEffect;
 exports.useLayoutEffect = useLayoutEffect;
 exports.useMemo = useMemo;
-exports.useMutableSource = useMutableSource;
 exports.useReducer = useReducer;
 exports.useRef = useRef;
 exports.useState = useState;
