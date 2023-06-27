@@ -29,6 +29,7 @@ function isReportableDiagnostic(
 ): detail is CompilerErrorDetailWithLoc {
   let isCorrectSeverity = false;
   switch (detail.severity) {
+    case ErrorSeverity.InvalidReact:
     case ErrorSeverity.InvalidInput:
       isCorrectSeverity = true;
       break;

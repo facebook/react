@@ -315,7 +315,7 @@ class InferenceState {
         ) {
           effect = Effect.Mutate;
         } else {
-          CompilerError.invalidInput(
+          CompilerError.invalidReact(
             `InferReferenceEffects: inferred mutation of known immutable value`,
             place.loc,
             `Found mutation of ${printIdentifier(place.identifier)}${printType(
@@ -330,7 +330,7 @@ class InferenceState {
           valueKind !== ValueKind.Mutable &&
           valueKind !== ValueKind.Context
         ) {
-          CompilerError.invalidInput(
+          CompilerError.invalidReact(
             `InferReferenceEffects: inferred mutation of known immutable value`,
             place.loc,
             `Found mutation of ${printIdentifier(place.identifier)}${printType(

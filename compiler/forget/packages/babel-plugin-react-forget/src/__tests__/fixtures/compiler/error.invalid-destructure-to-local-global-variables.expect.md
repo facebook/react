@@ -15,7 +15,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (3:3)
+[ReactForget] InvalidReact: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (3:3)
 ```
           
       

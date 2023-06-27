@@ -30,7 +30,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
         reason:
           "Hooks may not be referenced as normal values, they must be called. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
         loc: typeof place.loc !== "symbol" ? place.loc : null,
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidReact,
       })
     );
   };

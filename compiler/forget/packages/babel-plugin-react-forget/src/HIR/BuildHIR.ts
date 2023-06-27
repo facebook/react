@@ -2481,7 +2481,7 @@ function lowerIdentifierForAssignment(
       // Trying to reassign a global is not allowed
       builder.errors.push({
         reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidReact,
         loc: path.node.loc ?? null,
       });
     } else {

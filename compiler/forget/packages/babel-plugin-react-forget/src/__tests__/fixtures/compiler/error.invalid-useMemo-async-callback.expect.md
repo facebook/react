@@ -15,7 +15,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: useMemo callbacks may not be async or generator functions (2:4)
+[ReactForget] InvalidReact: useMemo callbacks may not be async or generator functions (2:4)
 ```
           
       

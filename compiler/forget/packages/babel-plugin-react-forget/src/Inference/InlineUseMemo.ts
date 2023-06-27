@@ -100,14 +100,14 @@ export function inlineUseMemo(fn: HIRFunction): void {
             }
 
             if (body.loweredFunc.params.length > 0) {
-              CompilerError.invalidInput(
+              CompilerError.invalidReact(
                 "useMemo callbacks may not accept any arguments",
                 body.loc
               );
             }
 
             if (body.loweredFunc.async || body.loweredFunc.generator) {
-              CompilerError.invalidInput(
+              CompilerError.invalidReact(
                 "useMemo callbacks may not be async or generator functions",
                 body.loc
               );

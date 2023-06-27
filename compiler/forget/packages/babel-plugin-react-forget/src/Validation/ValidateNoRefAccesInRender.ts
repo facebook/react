@@ -108,7 +108,7 @@ function validateNonRefValue(error: CompilerError, operand: Place): void {
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
           "Ref values (the `current` property) may not be accessed during render",
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidReact,
       })
     );
   }
@@ -123,7 +123,7 @@ function validateNonRefObject(error: CompilerError, operand: Place): void {
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
           "Ref values may not be passed to functions because they could read the ref value (`current` property) during render",
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidReact,
       })
     );
   }

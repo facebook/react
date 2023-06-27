@@ -16,7 +16,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: Cannot use a mutable function where an immutable value is expected (6:6)
+[ReactForget] InvalidReact: Cannot use a mutable function where an immutable value is expected (6:6)
 ```
           
       

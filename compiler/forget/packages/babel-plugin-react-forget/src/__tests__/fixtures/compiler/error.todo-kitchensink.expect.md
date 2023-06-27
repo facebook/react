@@ -127,9 +127,9 @@ let moduleLocal = false;
 
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
 
-[ReactForget] InvalidInput: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (64:64)
+[ReactForget] InvalidReact: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (64:64)
 
-[ReactForget] InvalidInput: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (65:65)
+[ReactForget] InvalidReact: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (65:65)
 ```
           
       

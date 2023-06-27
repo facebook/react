@@ -137,7 +137,7 @@ function validateOperand(
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
           "Cannot use a mutable function where an immutable value is expected",
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidReact,
       });
     }
   }

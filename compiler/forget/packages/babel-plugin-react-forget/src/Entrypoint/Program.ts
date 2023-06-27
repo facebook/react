@@ -210,7 +210,7 @@ export function compileProgram(
         new CompilerErrorDetail({
           reason,
           description: violation.value.trim(),
-          severity: ErrorSeverity.InvalidInput,
+          severity: ErrorSeverity.InvalidReact,
           loc: violation.loc ?? null,
         })
       );
@@ -426,14 +426,14 @@ function addImportsToProgram(
     // Codegen currently does not rename import specifiers, so we do additional
     // validation here
     if (identifiers.has(importSpecifierName)) {
-      CompilerError.invalidInput(
-        `[InvalidConfig] Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
+      CompilerError.invalidConfig(
+        `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
         GeneratedSource
       );
     }
     if (path.scope.hasBinding(importSpecifierName)) {
-      CompilerError.invalidInput(
-        `[InvalidConfig] Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
+      CompilerError.invalidConfig(
+        `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
         GeneratedSource
       );
     }

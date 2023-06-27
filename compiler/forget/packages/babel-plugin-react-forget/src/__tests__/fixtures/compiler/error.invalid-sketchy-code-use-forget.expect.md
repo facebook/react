@@ -16,7 +16,7 @@ function lowercasecomponent() {
 ## Error
 
 ```
-[ReactForget] InvalidInput: One or more React eslint rules is disabled. eslint-disable react-hooks/rules-of-hooks (1:1)
+[ReactForget] InvalidReact: One or more React eslint rules is disabled. eslint-disable react-hooks/rules-of-hooks (1:1)
 ```
           
       

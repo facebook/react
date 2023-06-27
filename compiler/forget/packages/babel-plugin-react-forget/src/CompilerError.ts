@@ -15,6 +15,14 @@ export enum ErrorSeverity {
    */
   InvalidInput = "InvalidInput",
   /**
+   * Code that breaks the rules of React.
+   */
+  InvalidReact = "InvalidReact",
+  /**
+   * Incorrect configuration of the compiler.
+   */
+  InvalidConfig = "InvalidConfig",
+  /**
    * Unhandled syntax that we don't support yet.
    */
   Todo = "Todo",
@@ -123,6 +131,40 @@ export class CompilerError extends Error {
     throw errors;
   }
 
+  static invalidReact(
+    reason: string,
+    loc: SourceLocation | null,
+    description: string | null = null
+  ): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        description,
+        loc,
+        reason,
+        severity: ErrorSeverity.InvalidReact,
+      })
+    );
+    throw errors;
+  }
+
+  static invalidConfig(
+    reason: string,
+    loc: SourceLocation | null,
+    description: string | null = null
+  ): never {
+    const errors = new CompilerError();
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        description,
+        loc,
+        reason,
+        severity: ErrorSeverity.InvalidConfig,
+      })
+    );
+    throw errors;
+  }
+
   constructor(...args: any[]) {
     super(...args);
     this.name = "ReactForgetCompilerError";
@@ -167,6 +209,8 @@ export class CompilerError extends Error {
       switch (detail.severity) {
         case ErrorSeverity.Invariant:
         case ErrorSeverity.InvalidInput:
+        case ErrorSeverity.InvalidReact:
+        case ErrorSeverity.InvalidConfig:
           return true;
         case ErrorSeverity.Todo:
           return false;

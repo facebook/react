@@ -20,7 +20,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] InvalidInput: Cannot use a mutable function where an immutable value is expected (8:8)
+[ReactForget] InvalidReact: Cannot use a mutable function where an immutable value is expected (8:8)
 ```
           
       
