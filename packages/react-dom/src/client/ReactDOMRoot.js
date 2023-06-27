@@ -207,7 +207,6 @@ export function createRoot(
       } else {
         if (
           typeof options === 'object' &&
-          options !== null &&
           (options: any).$$typeof === REACT_ELEMENT_TYPE
         ) {
           console.error(
