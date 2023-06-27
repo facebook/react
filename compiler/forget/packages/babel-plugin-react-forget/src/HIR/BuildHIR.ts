@@ -1005,7 +1005,7 @@ function lowerExpression(
           } else {
             builder.errors.push({
               reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-              severity: ErrorSeverity.InvalidInput,
+              severity: ErrorSeverity.Todo,
               loc: propertyPath.node.loc ?? null,
             });
             continue;
@@ -1089,7 +1089,7 @@ function lowerExpression(
       if (!calleePath.isExpression()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}`,
-          severity: ErrorSeverity.InvalidInput,
+          severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
@@ -1114,7 +1114,7 @@ function lowerExpression(
       if (!calleePath.isExpression()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
-          severity: ErrorSeverity.InvalidInput,
+          severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
@@ -1147,7 +1147,7 @@ function lowerExpression(
       if (!leftPath.isExpression()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Expected Expression, got ${leftPath.type} lval in BinaryExpression`,
-          severity: ErrorSeverity.InvalidInput,
+          severity: ErrorSeverity.Todo,
           loc: leftPath.node.loc ?? null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
@@ -1461,7 +1461,7 @@ function lowerExpression(
         default: {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Expected Identifier or MemberExpression, got ${expr.type} lval in AssignmentExpression`,
-            severity: ErrorSeverity.InvalidInput,
+            severity: ErrorSeverity.Todo,
             loc: expr.node.loc ?? null,
           });
           return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
@@ -2185,7 +2185,7 @@ function lowerMemberExpression(
     if (!propertyNode.isExpression()) {
       builder.errors.push({
         reason: `(BuildHIR::lowerMemberExpression) Expected Expression, got ${propertyNode.type} property`,
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.Todo,
         loc: propertyNode.node.loc ?? null,
       });
       return {
@@ -2325,13 +2325,11 @@ function lowerJsxElement(
     });
     return place;
   } else {
-    if (!(t.isJSXFragment(exprNode) || t.isJSXSpreadChild(exprNode))) {
-      builder.errors.push({
-        reason: `(BuildHIR::lowerJsxElement) Expected refinement to work, got: ${exprPath.type}`,
-        severity: ErrorSeverity.InvalidInput,
-        loc: exprPath.node.loc ?? null,
-      });
-    }
+    builder.errors.push({
+      reason: `(BuildHIR::lowerJsxElement) Unhandled JsxElement, got: ${exprPath.type}`,
+      severity: ErrorSeverity.Todo,
+      loc: exprPath.node.loc ?? null,
+    });
     const place = lowerValueToTemporary(builder, {
       kind: "UnsupportedNode",
       node: exprNode,
@@ -2592,7 +2590,7 @@ function lowerAssignment(
           builder.errors.push({
             reason:
               "(BuildHIR::lowerAssignment) Expected private name to appear as a non-computed property",
-            severity: ErrorSeverity.InvalidInput,
+            severity: ErrorSeverity.Todo,
             loc: property.node.loc ?? null,
           });
           return { kind: "UnsupportedNode", node: lvalueNode, loc };
@@ -2740,7 +2738,7 @@ function lowerAssignment(
           if (!element.isLVal()) {
             builder.errors.push({
               reason: `(BuildHIR::lowerAssignment) Expected object property value to be an LVal, got: ${element.type}`,
-              severity: ErrorSeverity.InvalidInput,
+              severity: ErrorSeverity.Todo,
               loc: element.node.loc ?? null,
             });
             continue;
