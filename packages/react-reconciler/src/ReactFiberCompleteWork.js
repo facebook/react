@@ -41,8 +41,6 @@ import {
   diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
-
 import {now} from './Scheduler';
 
 import {
@@ -1038,7 +1036,6 @@ function completeWork(
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;

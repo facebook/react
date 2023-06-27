@@ -100,9 +100,6 @@ export const allowConcurrentByDefault = true;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 
-// Some www surfaces are still using this. Remove once they have been migrated.
-export const enableUseMutableSource = true;
-
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 

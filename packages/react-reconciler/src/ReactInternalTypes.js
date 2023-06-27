@@ -11,10 +11,6 @@ import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
-  MutableSourceSubscribeFn,
-  MutableSourceGetSnapshotFn,
-  MutableSourceVersion,
-  MutableSource,
   StartTransitionOptions,
   Wakeable,
   Usable,
@@ -54,7 +50,6 @@ export type HookType =
   | 'useDebugValue'
   | 'useDeferredValue'
   | 'useTransition'
-  | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
@@ -237,11 +232,6 @@ type BaseFiberRootProperties = {
   context: Object | null,
   pendingContext: Object | null,
 
-  // Used by useMutableSource hook to avoid tearing during hydration.
-  mutableSourceEagerHydrationData?: Array<
-    MutableSource<any> | MutableSourceVersion,
-  > | null,
-
   // Used to create a linked list that represent all the roots that have
   // pending work scheduled on them.
   next: FiberRoot | null,
@@ -257,7 +247,6 @@ type BaseFiberRootProperties = {
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
   expiredLanes: Lanes,
-  mutableReadLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
 
   finishedLanes: Lanes,
@@ -410,11 +399,6 @@ export type Dispatcher = {
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
   ],
-  useMutableSource<TSource, Snapshot>(
-    source: MutableSource<TSource>,
-    getSnapshot: MutableSourceGetSnapshotFn<TSource, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<TSource, Snapshot>,
-  ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,

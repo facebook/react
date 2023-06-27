@@ -58,7 +58,6 @@ export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
-export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
