@@ -2850,7 +2850,7 @@ function mountId(): string {
   if (getIsHydrating()) {
     const treeId = getTreeId();
 
-    // Use a captial R prefix for server-generated ids.
+    // Use a capital R prefix for server-generated ids.
     id = ':' + identifierPrefix + 'R' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
