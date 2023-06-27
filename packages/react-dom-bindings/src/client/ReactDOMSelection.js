@@ -193,7 +193,14 @@ export function setOffsets(node, offsets) {
 
     if (start > end) {
       selection.addRange(range);
-      selection.extend(endMarker.node, endMarker.offset);
+      // If `extend` is called while another element has focus, an error is
+      // thrown. We therefore disable `extend` if the active element is somewhere
+      // other than the node we are selecting. This should only occur in Firefox,
+      // since it is the only browser to support multiple selections.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=921444.
+      if (selection.rangeCount > 0 && selection.extend) {
+        selection.extend(endMarker.node, endMarker.offset);
+      }
     } else {
       range.setEnd(endMarker.node, endMarker.offset);
       selection.addRange(range);
