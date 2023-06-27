@@ -137,8 +137,12 @@ export type ReactClientValue =
   | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
+  | Map<ReactClientValue, ReactClientValue>
+  | Set<ReactClientValue>
+  | Date
   | ReactClientObject
   | Promise<ReactClientValue>; // Thenable<ReactClientValue>
 
@@ -683,6 +687,15 @@ function serializeClientReference(
   }
 }
 
+function outlineModel(request: Request, value: any): number {
+  request.pendingChunks++;
+  const outlinedId = request.nextChunkId++;
+  // We assume that this object doesn't suspend, but a child might.
+  const processedChunk = processModelChunk(request, outlinedId, value);
+  request.completedRegularChunks.push(processedChunk);
+  return outlinedId;
+}
+
 function serializeServerReference(
   request: Request,
   parent:
@@ -708,15 +721,7 @@ function serializeServerReference(
     id: getServerReferenceId(request.bundlerConfig, serverReference),
     bound: bound ? Promise.resolve(bound) : null,
   };
-  request.pendingChunks++;
-  const metadataId = request.nextChunkId++;
-  // We assume that this object doesn't suspend.
-  const processedChunk = processModelChunk(
-    request,
-    metadataId,
-    serverReferenceMetadata,
-  );
-  request.completedRegularChunks.push(processedChunk);
+  const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
 }
@@ -733,6 +738,19 @@ function serializeLargeTextString(request: Request, text: string): string {
   );
   request.completedRegularChunks.push(headerChunk, textChunk);
   return serializeByValueID(textId);
+}
+
+function serializeMap(
+  request: Request,
+  map: Map<ReactClientValue, ReactClientValue>,
+): string {
+  const id = outlineModel(request, Array.from(map));
+  return '$Q' + id.toString(16);
+}
+
+function serializeSet(request: Request, set: Set<ReactClientValue>): string {
+  const id = outlineModel(request, Array.from(set));
+  return '$W' + id.toString(16);
 }
 
 function escapeStringValue(value: string): string {
@@ -923,6 +941,12 @@ function resolveModelToJSON(
         isInsideContextValue = false;
       }
       return (undefined: any);
+    }
+    if (value instanceof Map) {
+      return serializeMap(request, value);
+    }
+    if (value instanceof Set) {
+      return serializeSet(request, value);
     }
     if (!isArray(value)) {
       const iteratorFn = getIteratorFn(value);

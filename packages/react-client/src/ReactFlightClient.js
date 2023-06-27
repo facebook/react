@@ -535,6 +535,24 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
   return proxy;
 }
 
+function getOutlinedModel(response: Response, id: number): any {
+  const chunk = getChunk(response, id);
+  switch (chunk.status) {
+    case RESOLVED_MODEL:
+      initializeModelChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
+  switch (chunk.status) {
+    case INITIALIZED: {
+      return chunk.value;
+    }
+    // We always encode it first in the stream so it won't be pending.
+    default:
+      throw chunk.reason;
+  }
+}
+
 function parseModelString(
   response: Response,
   parentObject: Object,
@@ -576,22 +594,20 @@ function parseModelString(
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);
-        const chunk = getChunk(response, id);
-        switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
-            break;
-        }
-        // The status might have changed after initialization.
-        switch (chunk.status) {
-          case INITIALIZED: {
-            const metadata = chunk.value;
-            return createServerReferenceProxy(response, metadata);
-          }
-          // We always encode it first in the stream so it won't be pending.
-          default:
-            throw chunk.reason;
-        }
+        const metadata = getOutlinedModel(response, id);
+        return createServerReferenceProxy(response, metadata);
+      }
+      case 'Q': {
+        // Map
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Map(data);
+      }
+      case 'W': {
+        // Set
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Set(data);
       }
       case 'I': {
         // $Infinity

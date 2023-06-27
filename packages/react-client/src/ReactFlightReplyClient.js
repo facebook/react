@@ -59,8 +59,12 @@ export type ReactServerValue =
   | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactServerValue>
   | Array<ReactServerValue>
+  | Map<ReactServerValue, ReactServerValue>
+  | Set<ReactServerValue>
+  | Date
   | ReactServerObject
   | Promise<ReactServerValue>; // Thenable<ReactServerValue>
 
@@ -117,6 +121,14 @@ function serializeDateFromDateJSON(dateJSON: string): string {
 
 function serializeBigInt(n: bigint): string {
   return '$n' + n.toString(10);
+}
+
+function serializeMapID(id: number): string {
+  return '$Q' + id.toString(16);
+}
+
+function serializeSetID(id: number): string {
+  return '$W' + id.toString(16);
 }
 
 function escapeStringValue(value: string): string {
@@ -228,6 +240,24 @@ export function processReply(
           data.append(prefix + originalKey, originalValue);
         });
         return serializeFormDataReference(refId);
+      }
+      if (value instanceof Map) {
+        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        if (formData === null) {
+          formData = new FormData();
+        }
+        const mapId = nextPartId++;
+        formData.append(formFieldPrefix + mapId, partJSON);
+        return serializeMapID(mapId);
+      }
+      if (value instanceof Set) {
+        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        if (formData === null) {
+          formData = new FormData();
+        }
+        const setId = nextPartId++;
+        formData.append(formFieldPrefix + setId, partJSON);
+        return serializeSetID(setId);
       }
       if (!isArray(value)) {
         const iteratorFn = getIteratorFn(value);
