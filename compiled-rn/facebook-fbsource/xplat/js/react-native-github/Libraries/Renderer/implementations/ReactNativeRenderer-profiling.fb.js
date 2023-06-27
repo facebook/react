@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<752421d40b30109c7cbe8342b2cc683c>>
+ * @generated SignedSource<<d5f02e71767f464e7b78b9ae138a3218>>
  */
 
 
@@ -1989,11 +1989,6 @@ function createLaneMap(initial) {
   for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
   return laneMap;
 }
-function markRootUpdated(root, updateLane) {
-  root.pendingLanes |= updateLane;
-  536870912 !== updateLane &&
-    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
-}
 function markRootFinished(root, remainingLanes) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
   root.pendingLanes = remainingLanes;
@@ -2332,14 +2327,7 @@ function markUpdateLaneFromFiberToRoot(sourceFiber, update, lane) {
     (update.lane = lane | 1073741824));
 }
 function getRootForUpdatedFiber(sourceFiber) {
-  if (50 < nestedUpdateCount)
-    throw (
-      ((nestedUpdateCount = 0),
-      (rootWithNestedUpdates = null),
-      Error(
-        "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
-      ))
-    );
+  throwIfInfiniteUpdateLoopDetected();
   for (var parent = sourceFiber.return; null !== parent; )
     (sourceFiber = parent), (parent = sourceFiber.return);
   return 3 === sourceFiber.tag ? sourceFiber.stateNode : null;
@@ -3563,10 +3551,23 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
     var workInProgressRoot$jscomp$0 = workInProgressRoot,
       workInProgressRootRenderLanes$jscomp$0 = workInProgressRootRenderLanes,
+      nestedUpdatePasses = 0,
       errors = null;
     isFlushingWork = !0;
     do {
       var didPerformSomeWork = !1;
+      if (60 < ++nestedUpdatePasses) {
+        for (onlyLegacy = firstScheduledRoot; null !== onlyLegacy; )
+          (workInProgressRoot$jscomp$0 = onlyLegacy.next),
+            (onlyLegacy.next = null),
+            (onlyLegacy = workInProgressRoot$jscomp$0);
+        firstScheduledRoot = lastScheduledRoot = null;
+        onlyLegacy = Error(
+          "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
+        );
+        null === errors ? (errors = [onlyLegacy]) : errors.push(onlyLegacy);
+        break;
+      }
       for (var root = firstScheduledRoot; null !== root; ) {
         if (
           (!onlyLegacy || 0 === root.tag) &&
@@ -3620,7 +3621,8 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
                   commitRoot(
                     root$jscomp$0,
                     workInProgressRootRecoverableErrors,
-                    workInProgressTransitions
+                    workInProgressTransitions,
+                    workInProgressRootDidIncludeRecursiveRenderUpdate
                   ));
             }
             ensureRootIsScheduled(root$jscomp$0);
@@ -8191,6 +8193,8 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressRootPingedLanes = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
+  didIncludeCommitPhaseUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
@@ -8346,6 +8350,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               didTimeout,
               workInProgressRootRecoverableErrors,
               workInProgressTransitions,
+              workInProgressRootDidIncludeRecursiveRenderUpdate,
               lanes
             ),
             exitStatus
@@ -8357,6 +8362,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           didTimeout,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
+          workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes
         );
       }
@@ -8406,10 +8412,11 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   lanes
 ) {
   0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
-  commitRoot(root, recoverableErrors, transitions);
+  commitRoot(root, recoverableErrors, transitions, didIncludeRenderPhaseUpdate);
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -8444,6 +8451,15 @@ function isRenderConsistentWithExternalStores(finishedWork) {
     }
   }
   return !0;
+}
+function markRootUpdated(root, updatedLanes) {
+  root.pendingLanes |= updatedLanes;
+  536870912 !== updatedLanes &&
+    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+  executionContext & 2
+    ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+    : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0);
+  throwIfInfiniteUpdateLoopDetected();
 }
 function markRootSuspended(root, suspendedLanes) {
   suspendedLanes &= ~workInProgressRootPingedLanes;
@@ -8498,6 +8514,7 @@ function prepareFreshStack(root, lanes) {
       0;
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
   finishQueueingConcurrentUpdates();
   return root;
 }
@@ -9046,7 +9063,12 @@ function completeUnitOfWork(unitOfWork) {
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
 }
-function commitRoot(root, recoverableErrors, transitions) {
+function commitRoot(
+  root,
+  recoverableErrors,
+  transitions,
+  didIncludeRenderPhaseUpdate
+) {
   var previousUpdateLanePriority = currentUpdatePriority,
     prevTransition = ReactCurrentBatchConfig.transition;
   try {
@@ -9056,6 +9078,7 @@ function commitRoot(root, recoverableErrors, transitions) {
         root,
         recoverableErrors,
         transitions,
+        didIncludeRenderPhaseUpdate,
         previousUpdateLanePriority
       );
   } finally {
@@ -9068,6 +9091,7 @@ function commitRootImpl(
   root,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   renderPriorityLevel
 ) {
   do flushPassiveEffects();
@@ -9092,6 +9116,7 @@ function commitRootImpl(
   var remainingLanes = transitions.lanes | transitions.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(root, remainingLanes);
+  didIncludeCommitPhaseUpdate = !1;
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
@@ -9160,6 +9185,8 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
+  didIncludeCommitPhaseUpdate ||
+  didIncludeRenderPhaseUpdate ||
   0 !== (remainingLanes & 3)
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
@@ -9332,6 +9359,10 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
   var pingCache = root.pingCache;
   null !== pingCache && pingCache.delete(wakeable);
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
+  executionContext & 2
+    ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+    : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0);
+  throwIfInfiniteUpdateLoopDetected();
   workInProgressRoot === root &&
     (workInProgressRootRenderLanes & pingedLanes) === pingedLanes &&
     (4 === workInProgressRootExitStatus ||
@@ -9378,6 +9409,20 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   }
   null !== retryCache && retryCache.delete(wakeable);
   retryTimedOutBoundary(boundaryFiber, retryLane);
+}
+function throwIfInfiniteUpdateLoopDetected() {
+  if (50 < nestedUpdateCount)
+    throw (
+      ((nestedUpdateCount = 0),
+      (rootWithNestedUpdates = null),
+      executionContext & 2 &&
+        null !== workInProgressRoot &&
+        (workInProgressRoot.errorRecoveryDisabledLanes |=
+          workInProgressRootRenderLanes),
+      Error(
+        "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
+      ))
+    );
 }
 var beginWork;
 beginWork = function (current, workInProgress, renderLanes) {
@@ -10370,10 +10415,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1175 = {
+  devToolsConfig$jscomp$inline_1180 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-355ac2fb",
+    version: "18.3.0-canary-072c2160",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10403,10 +10448,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1175.bundleType,
-  version: devToolsConfig$jscomp$inline_1175.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1175.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1175.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1180.bundleType,
+  version: devToolsConfig$jscomp$inline_1180.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1180.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1180.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10422,14 +10467,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1175.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1180.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-355ac2fb"
+  reconcilerVersion: "18.3.0-canary-072c2160"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
