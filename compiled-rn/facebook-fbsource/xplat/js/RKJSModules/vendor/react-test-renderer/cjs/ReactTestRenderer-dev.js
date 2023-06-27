@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<78e16f0583c5e93e8b989135cc106bd4>>
+ * @generated SignedSource<<bfa37b9235cbe10193422349b5fb18a5>>
  */
 
 'use strict';
@@ -1327,8 +1327,8 @@ function getNextLanes(root, wipLanes) {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
+  // For those exceptions where entanglement is semantically important,
+  // we should ensure that there is no partial work at the
   // time we apply the entanglement.
 
   var entangledLanes = root.entangledLanes;
@@ -1627,7 +1627,6 @@ function markRootFinished(root, remainingLanes) {
   root.suspendedLanes = NoLanes;
   root.pingedLanes = NoLanes;
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   var entanglements = root.entanglements;
@@ -5948,22 +5947,6 @@ var Passive =
   /*   */
   8;
 
-// and should be reset before starting a new render.
-// This tracks which mutable sources need to be reset after a render.
-
-var workInProgressSources = [];
-function resetWorkInProgressVersions() {
-  for (var i = 0; i < workInProgressSources.length; i++) {
-    var mutableSource = workInProgressSources[i];
-
-    {
-      mutableSource._workInProgressVersionSecondary = null;
-    }
-  }
-
-  workInProgressSources.length = 0;
-}
-
 var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
 // there's only a single root, but we do support multi root apps, hence this
 // extra complexity. But this module is optimized for the single root case.
@@ -7441,18 +7424,6 @@ function rerenderReducer(reducer, initialArg, init) {
   return [newState, dispatch];
 }
 
-function mountMutableSource(source, getSnapshot, subscribe) {
-  {
-    return undefined;
-  }
-}
-
-function updateMutableSource(source, getSnapshot, subscribe) {
-  {
-    return undefined;
-  }
-}
-
 function mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   var fiber = currentlyRenderingFiber$1;
   var hook = mountWorkInProgressHook();
@@ -8416,7 +8387,6 @@ var ContextOnlyDispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
@@ -8552,11 +8522,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      mountHookTypesDev();
-      return mountMutableSource();
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       mountHookTypesDev();
@@ -8670,11 +8635,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return mountTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return mountMutableSource();
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -8791,11 +8751,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return updateMutableSource();
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       updateHookTypesDev();
@@ -8909,11 +8864,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       currentHookNameInDev = "useTransition";
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      updateHookTypesDev();
-      return updateMutableSource();
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -9046,12 +8996,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountMutableSource();
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -9187,12 +9131,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource();
-    },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
       warnInvalidHookAccess();
@@ -9326,12 +9264,6 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource: function (source, getSnapshot, subscribe) {
-      currentHookNameInDev = "useMutableSource";
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource();
     },
     useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
       currentHookNameInDev = "useSyncExternalStore";
@@ -15410,7 +15342,6 @@ function completeWork(current, workInProgress, renderLanes) {
       }
       popHostContainer(workInProgress);
       popTopLevelContextObject(workInProgress);
-      resetWorkInProgressVersions();
 
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
@@ -16059,7 +15990,6 @@ function unwindWork(current, workInProgress, renderLanes) {
       }
       popHostContainer(workInProgress);
       popTopLevelContextObject(workInProgress);
-      resetWorkInProgressVersions();
       var _flags = workInProgress.flags;
 
       if (
@@ -16180,7 +16110,6 @@ function unwindInterruptedWork(current, interruptedWork, renderLanes) {
       }
       popHostContainer(interruptedWork);
       popTopLevelContextObject(interruptedWork);
-      resetWorkInProgressVersions();
       break;
     }
 
@@ -23838,7 +23767,6 @@ function FiberRootNode(
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
   this.entangledLanes = NoLanes;
@@ -23929,7 +23857,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-6aacd3fa1-20230626";
+var ReactVersion = "18.3.0-canary-80d9a4011-20230627";
 
 // Might add PROFILE later.
 

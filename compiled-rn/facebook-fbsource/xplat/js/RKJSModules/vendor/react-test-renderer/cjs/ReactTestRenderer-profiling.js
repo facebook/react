@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<40f55b392dc647d81f9ec5812e9957ef>>
+ * @generated SignedSource<<122479e7a309e602a4eea949c69aac02>>
  */
 
 "use strict";
@@ -495,7 +495,6 @@ function markRootFinished(root, remainingLanes) {
   root.suspendedLanes = 0;
   root.pingedLanes = 0;
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   remainingLanes = root.entanglements;
@@ -1973,12 +1972,6 @@ function findFirstSuspended(row) {
   }
   return null;
 }
-var workInProgressSources = [];
-function resetWorkInProgressVersions() {
-  for (var i = 0; i < workInProgressSources.length; i++)
-    workInProgressSources[i]._workInProgressVersionSecondary = null;
-  workInProgressSources.length = 0;
-}
 var firstScheduledRoot = null,
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
@@ -2467,7 +2460,6 @@ function rerenderReducer(reducer) {
   }
   return [newState, dispatch];
 }
-function updateMutableSource() {}
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
     hook = updateWorkInProgressHook();
@@ -2800,7 +2792,6 @@ var ContextOnlyDispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
@@ -2891,7 +2882,6 @@ var HooksDispatcherOnMount = {
       mountWorkInProgressHook().memoizedState = stateHook;
       return [!1, stateHook];
     },
-    useMutableSource: function () {},
     useSyncExternalStore: function (subscribe, getSnapshot) {
       var fiber = currentlyRenderingFiber$1,
         hook = mountWorkInProgressHook();
@@ -2963,7 +2953,6 @@ var HooksDispatcherOnMount = {
         start
       ];
     },
-    useMutableSource: updateMutableSource,
     useSyncExternalStore: updateSyncExternalStore,
     useId: updateId
   };
@@ -3000,7 +2989,6 @@ var HooksDispatcherOnRerender = {
       start
     ];
   },
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId
 };
@@ -4702,7 +4690,6 @@ function completeWork(current, workInProgress, renderLanes) {
         popHostContainer(),
         pop(didPerformWorkStackCursor),
         pop(contextStackCursor$1),
-        resetWorkInProgressVersions(),
         renderLanes.pendingContext &&
           ((renderLanes.context = renderLanes.pendingContext),
           (renderLanes.pendingContext = null)),
@@ -5025,7 +5012,6 @@ function unwindWork(current, workInProgress) {
         popHostContainer(),
         pop(didPerformWorkStackCursor),
         pop(contextStackCursor$1),
-        resetWorkInProgressVersions(),
         (current = workInProgress.flags),
         0 !== (current & 65536) && 0 === (current & 128)
           ? ((workInProgress.flags = (current & -65537) | 128), workInProgress)
@@ -5092,7 +5078,6 @@ function unwindInterruptedWork(current, interruptedWork) {
       popHostContainer();
       pop(didPerformWorkStackCursor);
       pop(contextStackCursor$1);
-      resetWorkInProgressVersions();
       break;
     case 26:
     case 27:
@@ -8624,7 +8609,6 @@ function FiberRootNode(
   this.entangledLanes =
     this.errorRecoveryDisabledLanes =
     this.finishedLanes =
-    this.mutableReadLanes =
     this.expiredLanes =
     this.pingedLanes =
     this.suspendedLanes =
@@ -9043,7 +9027,7 @@ var devToolsConfig$jscomp$inline_1073 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-6aacd3fa1-20230626",
+  version: "18.3.0-canary-80d9a4011-20230627",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1271 = {
@@ -9074,7 +9058,7 @@ var internals$jscomp$inline_1271 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6aacd3fa1-20230626"
+  reconcilerVersion: "18.3.0-canary-80d9a4011-20230627"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1272 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

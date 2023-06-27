@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fa95eb422bbf02624017fdab1fc74ea8>>
+ * @generated SignedSource<<506b43d751458f22815d7d9f5b4c0d6a>>
  */
 
 
@@ -951,7 +951,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_255 = {
+var injectedNamesToPlugins$jscomp$inline_254 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -997,32 +997,32 @@ var injectedNamesToPlugins$jscomp$inline_255 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_256 = !1,
-  pluginName$jscomp$inline_257;
-for (pluginName$jscomp$inline_257 in injectedNamesToPlugins$jscomp$inline_255)
+  isOrderingDirty$jscomp$inline_255 = !1,
+  pluginName$jscomp$inline_256;
+for (pluginName$jscomp$inline_256 in injectedNamesToPlugins$jscomp$inline_254)
   if (
-    injectedNamesToPlugins$jscomp$inline_255.hasOwnProperty(
-      pluginName$jscomp$inline_257
+    injectedNamesToPlugins$jscomp$inline_254.hasOwnProperty(
+      pluginName$jscomp$inline_256
     )
   ) {
-    var pluginModule$jscomp$inline_258 =
-      injectedNamesToPlugins$jscomp$inline_255[pluginName$jscomp$inline_257];
+    var pluginModule$jscomp$inline_257 =
+      injectedNamesToPlugins$jscomp$inline_254[pluginName$jscomp$inline_256];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_257) ||
-      namesToPlugins[pluginName$jscomp$inline_257] !==
-        pluginModule$jscomp$inline_258
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_256) ||
+      namesToPlugins[pluginName$jscomp$inline_256] !==
+        pluginModule$jscomp$inline_257
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_257])
+      if (namesToPlugins[pluginName$jscomp$inline_256])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_257 + "`.")
+            (pluginName$jscomp$inline_256 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_257] =
-        pluginModule$jscomp$inline_258;
-      isOrderingDirty$jscomp$inline_256 = !0;
+      namesToPlugins[pluginName$jscomp$inline_256] =
+        pluginModule$jscomp$inline_257;
+      isOrderingDirty$jscomp$inline_255 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_256 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_255 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1618,7 +1618,6 @@ function markRootFinished(root, remainingLanes) {
   root.suspendedLanes = 0;
   root.pingedLanes = 0;
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
   remainingLanes = root.entanglements;
@@ -3451,12 +3450,6 @@ function findFirstSuspended(row) {
   }
   return null;
 }
-var workInProgressSources = [];
-function resetWorkInProgressVersions() {
-  for (var i = 0; i < workInProgressSources.length; i++)
-    workInProgressSources[i]._workInProgressVersionSecondary = null;
-  workInProgressSources.length = 0;
-}
 var firstScheduledRoot = null,
   lastScheduledRoot = null,
   didScheduleMicrotask = !1,
@@ -3981,101 +3974,6 @@ function rerenderReducer(reducer) {
   }
   return [newState, dispatch];
 }
-function readFromUnsubscribedMutableSource(root, source, getSnapshot) {
-  var getVersion = source._getVersion;
-  getVersion = getVersion(source._source);
-  var JSCompiler_inline_result = source._workInProgressVersionSecondary;
-  if (null !== JSCompiler_inline_result)
-    root = JSCompiler_inline_result === getVersion;
-  else if (
-    ((root = root.mutableReadLanes), (root = (renderLanes$1 & root) === root))
-  )
-    (source._workInProgressVersionSecondary = getVersion),
-      workInProgressSources.push(source);
-  if (root) return getSnapshot(source._source);
-  workInProgressSources.push(source);
-  throw Error(
-    "Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue."
-  );
-}
-function useMutableSource(hook, source, getSnapshot, subscribe) {
-  var root = workInProgressRoot;
-  if (null === root)
-    throw Error(
-      "Expected a work-in-progress root. This is a bug in React. Please file an issue."
-    );
-  var getVersion = source._getVersion,
-    version = getVersion(source._source),
-    dispatcher = ReactCurrentDispatcher$1.current,
-    _dispatcher$useState2 = dispatcher.useState(function () {
-      return readFromUnsubscribedMutableSource(root, source, getSnapshot);
-    }),
-    setSnapshot = _dispatcher$useState2[1],
-    snapshot = _dispatcher$useState2[0];
-  _dispatcher$useState2 = workInProgressHook;
-  var memoizedState = hook.memoizedState,
-    refs = memoizedState.refs,
-    prevGetSnapshot = refs.getSnapshot,
-    prevSource = memoizedState.source;
-  memoizedState = memoizedState.subscribe;
-  var fiber = currentlyRenderingFiber$1;
-  hook.memoizedState = { refs: refs, source: source, subscribe: subscribe };
-  dispatcher.useEffect(
-    function () {
-      refs.getSnapshot = getSnapshot;
-      refs.setSnapshot = setSnapshot;
-      var maybeNewVersion = getVersion(source._source);
-      objectIs(version, maybeNewVersion) ||
-        ((maybeNewVersion = getSnapshot(source._source)),
-        objectIs(snapshot, maybeNewVersion) ||
-          (setSnapshot(maybeNewVersion),
-          (maybeNewVersion = requestUpdateLane(fiber)),
-          (root.mutableReadLanes |= maybeNewVersion & root.pendingLanes)),
-        markRootEntangled(root, root.mutableReadLanes));
-    },
-    [getSnapshot, source, subscribe]
-  );
-  dispatcher.useEffect(
-    function () {
-      return subscribe(source._source, function () {
-        var latestGetSnapshot = refs.getSnapshot,
-          latestSetSnapshot = refs.setSnapshot;
-        try {
-          latestSetSnapshot(latestGetSnapshot(source._source));
-          var lane = requestUpdateLane(fiber);
-          root.mutableReadLanes |= lane & root.pendingLanes;
-        } catch (error) {
-          latestSetSnapshot(function () {
-            throw error;
-          });
-        }
-      });
-    },
-    [source, subscribe]
-  );
-  (objectIs(prevGetSnapshot, getSnapshot) &&
-    objectIs(prevSource, source) &&
-    objectIs(memoizedState, subscribe)) ||
-    ((hook = {
-      pending: null,
-      lanes: 0,
-      dispatch: null,
-      lastRenderedReducer: basicStateReducer,
-      lastRenderedState: snapshot
-    }),
-    (hook.dispatch = setSnapshot =
-      dispatchSetState.bind(null, currentlyRenderingFiber$1, hook)),
-    (_dispatcher$useState2.queue = hook),
-    (_dispatcher$useState2.baseQueue = null),
-    (snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot)),
-    (_dispatcher$useState2.memoizedState = _dispatcher$useState2.baseState =
-      snapshot));
-  return snapshot;
-}
-function updateMutableSource(source, getSnapshot, subscribe) {
-  var hook = updateWorkInProgressHook();
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
 function updateSyncExternalStore(subscribe, getSnapshot) {
   var fiber = currentlyRenderingFiber$1,
     hook = updateWorkInProgressHook();
@@ -4389,7 +4287,6 @@ var ContextOnlyDispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError
 };
@@ -4481,15 +4378,6 @@ var HooksDispatcherOnMount = {
     mountWorkInProgressHook().memoizedState = stateHook;
     return [!1, stateHook];
   },
-  useMutableSource: function (source, getSnapshot, subscribe) {
-    var hook = mountWorkInProgressHook();
-    hook.memoizedState = {
-      refs: { getSnapshot: getSnapshot, setSnapshot: null },
-      source: source,
-      subscribe: subscribe
-    };
-    return useMutableSource(hook, source, getSnapshot, subscribe);
-  },
   useSyncExternalStore: function (subscribe, getSnapshot) {
     var fiber = currentlyRenderingFiber$1,
       hook = mountWorkInProgressHook();
@@ -4556,7 +4444,6 @@ var HooksDispatcherOnUpdate = {
       start
     ];
   },
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId
 };
@@ -4593,7 +4480,6 @@ var HooksDispatcherOnRerender = {
       start
     ];
   },
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId
 };
@@ -6288,7 +6174,6 @@ function completeWork(current, workInProgress, renderLanes) {
         popHostContainer(),
         pop(didPerformWorkStackCursor),
         pop(contextStackCursor$1),
-        resetWorkInProgressVersions(),
         renderLanes.pendingContext &&
           ((renderLanes.context = renderLanes.pendingContext),
           (renderLanes.pendingContext = null)),
@@ -6633,7 +6518,6 @@ function unwindWork(current, workInProgress) {
         popHostContainer(),
         pop(didPerformWorkStackCursor),
         pop(contextStackCursor$1),
-        resetWorkInProgressVersions(),
         (current = workInProgress.flags),
         0 !== (current & 65536) && 0 === (current & 128)
           ? ((workInProgress.flags = (current & -65537) | 128), workInProgress)
@@ -6698,7 +6582,6 @@ function unwindInterruptedWork(current, interruptedWork) {
       popHostContainer();
       pop(didPerformWorkStackCursor);
       pop(contextStackCursor$1);
-      resetWorkInProgressVersions();
       break;
     case 26:
     case 27:
@@ -9998,7 +9881,6 @@ function FiberRootNode(
   this.entangledLanes =
     this.errorRecoveryDisabledLanes =
     this.finishedLanes =
-    this.mutableReadLanes =
     this.expiredLanes =
     this.pingedLanes =
     this.suspendedLanes =
@@ -10232,10 +10114,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1134 = {
+  devToolsConfig$jscomp$inline_1120 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-946c3ff0",
+    version: "18.3.0-canary-0830b591",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10265,10 +10147,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1134.bundleType,
-  version: devToolsConfig$jscomp$inline_1134.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1134.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1134.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1120.bundleType,
+  version: devToolsConfig$jscomp$inline_1120.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1120.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1120.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10284,14 +10166,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1134.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1120.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-946c3ff0"
+  reconcilerVersion: "18.3.0-canary-0830b591"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
