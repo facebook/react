@@ -80,6 +80,36 @@ const tests: ForgetTestCases = {
         },
       ],
     },
+    {
+      name: "[InvalidReact] ESlint suppression",
+      // Indentation is intentionally weird so it doesn't add extra whitespace
+      code: normalizeIndent`
+  function Component(props) {
+    'use forget';
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+    Component();
+  }`,
+      errors: [
+        {
+          message:
+            "[ReactForget] InvalidReact: React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior. eslint-disable-next-line react-hooks/rules-of-hooks (4:4)",
+          suggestions: [
+            {
+              output: normalizeIndent`
+  function Component(props) {
+    'use forget';
+
+    Component();
+  }`,
+            },
+          ],
+        },
+        {
+          message:
+            "Definition for rule 'react-hooks/rules-of-hooks' was not found.",
+        },
+      ],
+    },
   ],
 };
 

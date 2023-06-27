@@ -69,6 +69,7 @@ const rule: Rule.RuleModule = {
       recommended: true,
     },
     fixable: "code",
+    hasSuggestions: true,
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint

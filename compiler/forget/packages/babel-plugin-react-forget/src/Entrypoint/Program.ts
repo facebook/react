@@ -10,6 +10,7 @@ import * as t from "@babel/types";
 import {
   CompilerError,
   CompilerErrorDetail,
+  CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
 import { GeneratedSource } from "../HIR";
@@ -197,7 +198,8 @@ export function compileProgram(
       },
     });
 
-    const reason = `One or more React eslint rules is disabled`;
+    const reason =
+      "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior";
     const error = new CompilerError();
     for (const violation of violations) {
       if (options.logger != null) {
@@ -214,7 +216,13 @@ export function compileProgram(
           description: violation.value.trim(),
           severity: ErrorSeverity.InvalidReact,
           loc: violation.loc ?? null,
-          suggestions: null, // TODO(@poteto) add autofix for eslint
+          suggestions: [
+            {
+              description: "Remove the eslint disable",
+              range: [violation.start!, violation.end!],
+              op: CompilerSuggestionOperation.Remove,
+            },
+          ],
         })
       );
     }
