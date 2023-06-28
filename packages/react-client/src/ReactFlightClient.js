@@ -29,6 +29,7 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
+  usedWithSSR,
 } from './ReactFlightClientConfig';
 
 import {
@@ -529,8 +530,10 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
     });
   };
   // Expose encoder for use by SSR.
-  // TODO: Only expose this in SSR builds and not the browser client.
-  proxy.$$FORM_ACTION = encodeFormAction;
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    (proxy: any).$$FORM_ACTION = encodeFormAction;
+  }
   knownServerReferences.set(proxy, metaData);
   return proxy;
 }

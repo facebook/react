@@ -28,6 +28,8 @@ import type {
   RejectedThenable,
 } from '../../shared/ReactTypes';
 
+import {usedWithSSR} from './ReactFlightClientConfig';
+
 type ReactJSONValue =
   | string
   | boolean
@@ -496,8 +498,10 @@ export function createServerReference<A: Iterable<any>, T>(
     return callServer(id, args);
   };
   // Expose encoder for use by SSR.
-  // TODO: Only expose this in SSR builds and not the browser client.
-  proxy.$$FORM_ACTION = encodeFormAction;
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    (proxy: any).$$FORM_ACTION = encodeFormAction;
+  }
   knownServerReferences.set(proxy, {id: id, bound: null});
   return proxy;
 }
