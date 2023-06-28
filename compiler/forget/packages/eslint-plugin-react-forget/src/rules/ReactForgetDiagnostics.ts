@@ -157,7 +157,7 @@ const rule: Rule.RuleModule = {
               }
             }
             context.report({
-              message: detail.toString(),
+              message: `[ReactForget] ${detail.reason}`,
               loc: detail.loc,
               suggest,
             });

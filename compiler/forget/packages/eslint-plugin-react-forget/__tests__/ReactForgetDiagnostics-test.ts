@@ -72,7 +72,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at freeze $22:TObject<BuiltInRefValue> (6:6)",
+            "[ReactForget] Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)",
           line: 6,
           column: 10,
           endColumn: 15,
@@ -92,7 +92,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] InvalidReact: React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior. eslint-disable-next-line react-hooks/rules-of-hooks (4:4)",
+            "[ReactForget] React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior",
           suggestions: [
             {
               output: normalizeIndent`
