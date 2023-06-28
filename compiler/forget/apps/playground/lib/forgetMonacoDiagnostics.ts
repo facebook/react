@@ -19,10 +19,9 @@ function mapForgetSeverityToMonaco(
 ): MarkerSeverity {
   switch (level) {
     case ErrorSeverity.Todo:
-    case ErrorSeverity.InvalidInput:
-      return monaco.MarkerSeverity.Error;
-    default:
       return monaco.MarkerSeverity.Warning;
+    default:
+      return monaco.MarkerSeverity.Error;
   }
 }
 

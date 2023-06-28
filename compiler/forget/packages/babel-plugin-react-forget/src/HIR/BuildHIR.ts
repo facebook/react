@@ -8,7 +8,11 @@
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { Expression } from "@babel/types";
-import { CompilerError, ErrorSeverity } from "../CompilerError";
+import {
+  CompilerError,
+  CompilerSuggestionOperation,
+  ErrorSeverity,
+} from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
@@ -142,8 +146,8 @@ export function lower(
     lowerStatement(builder, body);
   } else {
     builder.errors.push({
-      reason: `(BuildHIR::lower) Unexpected function body kind: ${body.type}}`,
-      severity: ErrorSeverity.InvalidInput,
+      reason: `Unexpected function body kind: ${body.type}}. This error is likely caused by a bug in React Forget. Please file an issue`,
+      severity: ErrorSeverity.InvalidJS,
       loc: body.node.loc ?? null,
       suggestions: null,
     });
@@ -541,9 +545,8 @@ function lowerStatement(
         if (testExpr.node == null) {
           if (hasDefault) {
             builder.errors.push({
-              reason:
-                "(BuildHIR::lowerStatement) Expected at most one `default` branch in SwitchStatement, this code should have failed to parse",
-              severity: ErrorSeverity.InvalidInput,
+              reason: `Expected at most one \`default\` branch in SwitchStatement, this code should have failed to parse. This error is likely caused by a bug in React Forget. Please file an issue`,
+              severity: ErrorSeverity.InvalidJS,
               loc: case_.node.loc ?? null,
               suggestions: null,
             });
@@ -659,11 +662,19 @@ function lowerStatement(
             };
             if (builder.isContextIdentifier(id)) {
               if (kind === InstructionKind.Const) {
+                const declRangeStart = declaration.parentPath.node.start!;
                 builder.errors.push({
-                  reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
-                  severity: ErrorSeverity.InvalidInput,
+                  reason: `Invalid declaration kind (const), this variable is reassigned later`,
+                  severity: ErrorSeverity.InvalidJS,
                   loc: id.node.loc ?? null,
-                  suggestions: null,
+                  suggestions: [
+                    {
+                      description: "Change to let",
+                      op: CompilerSuggestionOperation.Replace,
+                      range: [declRangeStart, declRangeStart + 5], // "const".length
+                      text: "let",
+                    },
+                  ],
                 });
               }
               lowerValueToTemporary(builder, {
@@ -687,8 +698,8 @@ function lowerStatement(
           }
         } else {
           builder.errors.push({
-            reason: `(BuildHIR::lowerStatement) Expected variable declaration to be an identifier if no initializer was provided.`,
-            severity: ErrorSeverity.InvalidInput,
+            reason: `Expected variable declaration to be an identifier if no initializer was provided. This error is likely caused by a bug in React Forget. Please file an issue`,
+            severity: ErrorSeverity.InvalidJS,
             loc: stmt.node.loc ?? null,
             suggestions: null,
           });
@@ -1109,8 +1120,8 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}`,
-          severity: ErrorSeverity.Todo,
+          reason: `Expected Expression, got ${calleePath.type} in NewExpression (v8 intrinsics not supported): ${calleePath.type}. This error is likely caused by a bug in React Forget. Please file an issue`,
+          severity: ErrorSeverity.InvalidJS,
           loc: calleePath.node.loc ?? null,
           suggestions: null,
         });
@@ -1135,7 +1146,7 @@ function lowerExpression(
       const calleePath = expr.get("callee");
       if (!calleePath.isExpression()) {
         builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported)`,
+          reason: `Expected Expression, got ${calleePath.type} in CallExpression (v8 intrinsics not supported). This error is likely caused by a bug in React Forget. Please file an issue`,
           severity: ErrorSeverity.Todo,
           loc: calleePath.node.loc ?? null,
           suggestions: null,
@@ -1201,8 +1212,8 @@ function lowerExpression(
         }
         if (last === null) {
           builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Expected SequenceExpression to have at least one expression`,
-            severity: ErrorSeverity.InvalidInput,
+            reason: `Expected SequenceExpression to have at least one expression. This error is likely caused by a bug in React Forget. Please file an issue`,
+            severity: ErrorSeverity.InvalidJS,
             loc: expr.node.loc ?? null,
             suggestions: null,
           });
@@ -1658,8 +1669,8 @@ function lowerExpression(
 
       if (subexprs.length !== quasis.length - 1) {
         builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Unexpected quasi and subexpression lengths in TemplateLiteral.`,
-          severity: ErrorSeverity.InvalidInput,
+          reason: `Unexpected quasi and subexpression lengths in TemplateLiteral. This error is likely caused by a bug in React Forget. Please file an issue`,
+          severity: ErrorSeverity.InvalidJS,
           loc: exprPath.node.loc ?? null,
           suggestions: null,
         });
@@ -1710,10 +1721,16 @@ function lowerExpression(
           }
         } else {
           builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) delete on a non-member expression has no semantic meaning`,
-            severity: ErrorSeverity.InvalidInput,
+            reason: `Deleting a non-member expression has no semantic meaning`,
+            severity: ErrorSeverity.InvalidJS,
             loc: expr.node.loc ?? null,
-            suggestions: null,
+            suggestions: [
+              {
+                description: "Remove this line",
+                range: [expr.node.start!, expr.node.end!],
+                op: CompilerSuggestionOperation.Remove,
+              },
+            ],
           });
           return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
         }
@@ -2291,8 +2308,8 @@ function lowerJsxElementName(
     const tag = `${namespace}:${name}`;
     if (namespace.indexOf(":") !== -1 || name.indexOf(":") !== -1) {
       builder.errors.push({
-        reason: `(BuildHIR::lowerJsxElementName) Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'`,
-        severity: ErrorSeverity.InvalidInput,
+        reason: `Expected JSXNamespacedName to have no colons in the namespace or name, got '${namespace}' : '${name}'. This error is likely caused by a bug in React Forget. Please file an issue`,
+        severity: ErrorSeverity.InvalidJS,
         loc: exprPath.node.loc ?? null,
         suggestions: null,
       });
@@ -2585,8 +2602,8 @@ function lowerAssignment(
         if (kind !== InstructionKind.Reassign) {
           if (kind === InstructionKind.Const) {
             builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Invalid declaration kind (const) for variable later reassigned.`,
-              severity: ErrorSeverity.InvalidInput,
+              reason: `Invalid declaration kind (const), this variable is reassigned later`,
+              severity: ErrorSeverity.InvalidJS,
               loc: lvalue.node.loc ?? null,
               suggestions: null,
             });

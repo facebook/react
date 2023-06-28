@@ -10,9 +10,9 @@ import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
   /**
-   * Unexpected syntax or input that may not be safe to compile.
+   * Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some misunderstanding on the user’s part.
    */
-  InvalidInput = "InvalidInput",
+  InvalidJS = "InvalidJS",
   /**
    * Code that breaks the rules of React.
    */
@@ -132,14 +132,14 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static invalidInput(
+  static invalidJS(
     options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
-        severity: ErrorSeverity.InvalidInput,
+        severity: ErrorSeverity.InvalidJS,
       })
     );
     throw errors;
@@ -215,7 +215,7 @@ export class CompilerError extends Error {
     return this.details.some((detail) => {
       switch (detail.severity) {
         case ErrorSeverity.Invariant:
-        case ErrorSeverity.InvalidInput:
+        case ErrorSeverity.InvalidJS:
         case ErrorSeverity.InvalidReact:
         case ErrorSeverity.InvalidConfig:
           return true;

@@ -32,19 +32,22 @@ function isReactForgetCompilerError(err: Error): err is CompilerError {
 function isReportableDiagnostic(
   detail: CompilerErrorDetail
 ): detail is CompilerErrorDetailWithLoc {
-  let isCorrectSeverity = false;
+  let isReportable = false;
   switch (detail.severity) {
     case ErrorSeverity.InvalidReact:
-    case ErrorSeverity.InvalidInput:
-      isCorrectSeverity = true;
+    case ErrorSeverity.InvalidJS:
+      isReportable = true;
       break;
+    case ErrorSeverity.InvalidConfig:
     case ErrorSeverity.Invariant:
     case ErrorSeverity.Todo:
       break;
+    default:
+      assertExhaustive(detail.severity, "Unhandled error severity");
   }
 
   return (
-    isCorrectSeverity === true &&
+    isReportable === true &&
     detail.loc != null &&
     typeof detail.loc !== "symbol"
   );
