@@ -107,7 +107,7 @@ function validateNonRefValue(error: CompilerError, operand: Place): void {
         description: `Cannot access ref value at ${printPlace(operand)}`,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
-          "Ref values (the `current` property) may not be accessed during render",
+          "Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)",
         severity: ErrorSeverity.InvalidReact,
         suggestions: null,
       })
@@ -123,7 +123,7 @@ function validateNonRefObject(error: CompilerError, operand: Place): void {
         description: `Cannot access ref object at ${printPlace(operand)}`,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
-          "Ref values may not be passed to functions because they could read the ref value (`current` property) during render",
+          "Ref values may not be passed to functions because they could read the ref value (`current` property) during render. (https://react.dev/reference/react/useRef)",
         severity: ErrorSeverity.InvalidReact,
         suggestions: null,
       })

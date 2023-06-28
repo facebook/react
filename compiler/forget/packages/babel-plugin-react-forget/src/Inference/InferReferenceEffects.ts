@@ -25,11 +25,9 @@ import {
 } from "../HIR/HIR";
 import { FunctionSignature } from "../HIR/ObjectShape";
 import {
-  printIdentifier,
   printMixedHIR,
   printPlace,
   printSourceLocation,
-  printType,
 } from "../HIR/PrintHIR";
 import {
   eachInstructionOperand,
@@ -324,10 +322,11 @@ class InferenceState {
           effect = Effect.Mutate;
         } else {
           CompilerError.invalidReact({
-            reason: `InferReferenceEffects: inferred mutation of known immutable value`,
-            description: `Found mutation of ${printIdentifier(
-              place.identifier
-            )}${printType(place.identifier.type)} (${valueKind})`,
+            reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
+            description:
+              place.identifier.name !== null
+                ? `Found mutation of ${place.identifier.name}`
+                : null,
             loc: place.loc,
             suggestions: null,
           });
@@ -340,10 +339,11 @@ class InferenceState {
           valueKind !== ValueKind.Context
         ) {
           CompilerError.invalidReact({
-            reason: `InferReferenceEffects: inferred mutation of known immutable value`,
-            description: `Found mutation of ${printIdentifier(
-              place.identifier
-            )}${printType(place.identifier.type)} (${valueKind})`,
+            reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
+            description:
+              place.identifier.name !== null
+                ? `Found mutation of ${place.identifier.name}`
+                : null,
             loc: place.loc,
             suggestions: null,
           });

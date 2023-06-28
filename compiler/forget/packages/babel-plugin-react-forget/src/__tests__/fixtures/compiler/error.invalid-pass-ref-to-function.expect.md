@@ -14,7 +14,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Ref values may not be passed to functions because they could read the ref value (`current` property) during render. Cannot access ref object at mutate? $21[6:8]:TObject<BuiltInUseRefId> (3:3)
+[ReactForget] InvalidReact: Ref values may not be passed to functions because they could read the ref value (`current` property) during render. (https://react.dev/reference/react/useRef). Cannot access ref object at mutate? $21[6:8]:TObject<BuiltInUseRefId> (3:3)
 ```
           
       

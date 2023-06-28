@@ -72,7 +72,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. Cannot access ref value at freeze $22:TObject<BuiltInRefValue> (6:6)",
+            "[ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at freeze $22:TObject<BuiltInRefValue> (6:6)",
           line: 6,
           column: 10,
           endColumn: 15,

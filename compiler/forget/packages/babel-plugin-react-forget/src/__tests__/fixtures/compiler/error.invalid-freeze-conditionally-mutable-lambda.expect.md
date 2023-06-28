@@ -25,7 +25,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Cannot use a mutable function where an immutable value is expected (15:15)
+[ReactForget] InvalidReact: This mutates a variable that is managed by React, where an immutable value or a function was expected (15:15)
 ```
           
       

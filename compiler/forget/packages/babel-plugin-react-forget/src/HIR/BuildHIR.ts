@@ -2551,9 +2551,9 @@ function lowerIdentifierForAssignment(
     if (kind === InstructionKind.Reassign) {
       // Trying to reassign a global is not allowed
       builder.errors.push({
-        reason: `(BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported.`,
+        reason: `This reassigns a variable which was not defined inside of the component. Components should be pure and side-effect free. If this variable is used in rendering, use useState instead. (https://react.dev/learn/keeping-components-pure)`,
         severity: ErrorSeverity.InvalidReact,
-        loc: path.node.loc ?? null,
+        loc: path.parentPath.node.loc ?? null,
         suggestions: null,
       });
     } else {

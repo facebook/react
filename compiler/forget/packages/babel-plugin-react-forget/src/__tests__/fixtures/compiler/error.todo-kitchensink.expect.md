@@ -64,10 +64,6 @@ function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
     }
   }
 
-  // Cannot assign to globals
-  someUnknownGlobal = true;
-  moduleLocal = true;
-
   function component(a) {
     // Add support for function declarations once we support `var` hoisting.
     function t() {}
@@ -126,10 +122,6 @@ let moduleLocal = false;
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered (55:55)
 
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
-
-[ReactForget] InvalidReact: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (64:64)
-
-[ReactForget] InvalidReact: (BuildHIR::lowerAssignment) Assigning to an identifier defined outside the function scope is not supported. (65:65)
 ```
           
       

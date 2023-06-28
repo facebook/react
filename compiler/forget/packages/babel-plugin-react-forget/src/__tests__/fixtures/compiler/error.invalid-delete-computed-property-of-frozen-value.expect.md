@@ -16,7 +16,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: InferReferenceEffects: inferred mutation of known immutable value. Found mutation of $19 (frozen) (5:5)
+[ReactForget] InvalidReact: This mutates a variable after it was passed to React, which means that React cannot observe changes to it (5:5)
 ```
           
       

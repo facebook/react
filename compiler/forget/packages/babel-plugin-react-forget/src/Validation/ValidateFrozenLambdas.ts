@@ -132,11 +132,16 @@ function validateOperand(
       state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
     const lambda = state.lambdas.get(operandId);
     if (lambda !== undefined) {
+      // TODO: these seem to always be null, we should try to preserve original names from source
+      const description =
+        lambda.name !== null && operand.identifier.name !== null
+          ? `\`${lambda.name}\` is a function that may mutate \`${operand.identifier.name}\`. If you must mutate \`${operand.identifier.name}\` try using a React API like useState and use its setter function instead`
+          : null;
       return new CompilerErrorDetail({
-        description: null,
+        description,
         loc: typeof operand.loc !== "symbol" ? operand.loc : null,
         reason:
-          "Cannot use a mutable function where an immutable value is expected",
+          "This mutates a variable that is managed by React, where an immutable value or a function was expected",
         severity: ErrorSeverity.InvalidReact,
         suggestions: null,
       });
