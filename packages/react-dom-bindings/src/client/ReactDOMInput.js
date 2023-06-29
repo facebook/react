@@ -23,6 +23,31 @@ import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttr
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
 
+function findRadioGroup(node: HTMLInputElement) {
+  let queryRoot: Element = node;
+
+  while (queryRoot.parentNode) {
+    queryRoot = ((queryRoot.parentNode: any): Element);
+  }
+
+  // If `node.form` was non-null, then we could try `form.elements`,
+  // but that sometimes behaves strangely in IE8. We could also try using
+  // `form.getElementsByName`, but that will only return direct children
+  // and won't include inputs that use the HTML5 `form=` attribute. Since
+  // the input might not even be in a form. It might not even be in the
+  // document. Let's just use the local `querySelectorAll` to ensure we don't
+  // miss anything.
+  if (__DEV__) {
+    checkAttributeStringCoercion(node.name, 'name');
+  }
+
+  return queryRoot.querySelectorAll(
+    'input[name="' +
+      escapeSelectorAttributeValueInsideDoubleQuotes('' + node.name) +
+      '"][type="radio"]',
+  );
+}
+
 /**
  * Implements an <input> host component that allows setting these optional
  * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
@@ -175,8 +200,10 @@ export function updateInput(
     }
   }
 
+  let needUpdateRadioGroupTrackedValue = false;
   if (checked != null && node.checked !== !!checked) {
     node.checked = checked;
+    needUpdateRadioGroupTrackedValue = type === 'radio' && !!checked;
   }
 
   if (
@@ -189,6 +216,21 @@ export function updateInput(
       checkAttributeStringCoercion(name, 'name');
     }
     node.name = toString(getToStringValue(name));
+
+    if (needUpdateRadioGroupTrackedValue) {
+      const group = findRadioGroup(node);
+
+      for (let i = 0; i < group.length; i++) {
+        const otherNode = ((group[i]: any): HTMLInputElement);
+        if (otherNode === node || otherNode.form !== node.form) {
+          continue;
+        }
+
+        // We need update the tracked value on the named cousin since the value
+        // was changed but the input saw no event or value set
+        updateValueIfChanged(otherNode);
+      }
+    }
   } else {
     node.removeAttribute('name');
   }
@@ -348,27 +390,7 @@ export function restoreControlledInputState(element: Element, props: Object) {
   );
   const name = props.name;
   if (props.type === 'radio' && name != null) {
-    let queryRoot: Element = rootNode;
-
-    while (queryRoot.parentNode) {
-      queryRoot = ((queryRoot.parentNode: any): Element);
-    }
-
-    // If `rootNode.form` was non-null, then we could try `form.elements`,
-    // but that sometimes behaves strangely in IE8. We could also try using
-    // `form.getElementsByName`, but that will only return direct children
-    // and won't include inputs that use the HTML5 `form=` attribute. Since
-    // the input might not even be in a form. It might not even be in the
-    // document. Let's just use the local `querySelectorAll` to ensure we don't
-    // miss anything.
-    if (__DEV__) {
-      checkAttributeStringCoercion(name, 'name');
-    }
-    const group = queryRoot.querySelectorAll(
-      'input[name="' +
-        escapeSelectorAttributeValueInsideDoubleQuotes('' + name) +
-        '"][type="radio"]',
-    );
+    const group = findRadioGroup(rootNode);
 
     for (let i = 0; i < group.length; i++) {
       const otherNode = ((group[i]: any): HTMLInputElement);

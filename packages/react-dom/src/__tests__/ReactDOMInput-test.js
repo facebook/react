@@ -2358,4 +2358,82 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual(['']);
     expect(node.value).toBe('a');
   });
+
+  it('#26876: After the `checked` props updated not in the event handler task, `onChange` should still be called when the unchecked radio clicked', async () => {
+    const eventHandler = jest.fn();
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={eventHandler}
+        />
+        <input
+          type="radio"
+          name="a"
+          value="2"
+          checked={false}
+          onChange={eventHandler}
+        />
+      </div>,
+      container,
+    );
+
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={false}
+          onChange={eventHandler}
+        />
+        <input
+          type="radio"
+          name="a"
+          value="2"
+          checked={true}
+          onChange={eventHandler}
+        />
+      </div>,
+      container,
+    );
+
+    ReactDOM.render(
+      <div>
+        <input
+          type="radio"
+          name="a"
+          value="1"
+          checked={true}
+          onChange={eventHandler}
+        />
+        <input
+          type="radio"
+          name="a"
+          value="2"
+          checked={false}
+          onChange={eventHandler}
+        />
+      </div>,
+      container,
+    );
+
+    const radio1 = container.querySelector('input[name="a"][value="1"]');
+    const radio2 = container.querySelector('input[name="a"][value="2"]');
+
+    expect(eventHandler).not.toHaveBeenCalled();
+
+    // This next line isn't necessary in a proper browser environment, but
+    // jsdom doesn't uncheck the others in a group (because they are not yet
+    // sharing a parent), which makes this whole test a little less effective.
+    setUntrackedChecked.call(radio1, false);
+    setUntrackedChecked.call(radio2, true);
+
+    dispatchEventOnNode(radio2, 'click');
+
+    expect(eventHandler).toHaveBeenCalled();
+  });
 });
