@@ -7,7 +7,9 @@
  * @flow
  */
 
-import type {Chunk, Destination} from './ReactServerStreamConfig';
+import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
+
+import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -15,7 +17,9 @@ import {
   beginWriting,
   writeChunkAndReturn,
   stringToChunk,
+  typedArrayToBinaryChunk,
   byteLengthOfChunk,
+  byteLengthOfBinaryChunk,
   completeWriting,
   close,
   closeWithError,
@@ -176,7 +180,7 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedRegularChunks: Array<Chunk>,
+  completedRegularChunks: Array<Chunk | BinaryChunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -235,7 +239,7 @@ export function createRequest(
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
     completedHintChunks: ([]: Array<Chunk>),
-    completedRegularChunks: ([]: Array<Chunk>),
+    completedRegularChunks: ([]: Array<Chunk | BinaryChunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),
@@ -733,7 +737,6 @@ function serializeLargeTextString(request: Request, text: string): string {
   const headerChunk = processTextHeader(
     request,
     textId,
-    text,
     byteLengthOfChunk(textChunk),
   );
   request.completedRegularChunks.push(headerChunk, textChunk);
@@ -751,6 +754,25 @@ function serializeMap(
 function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   const id = outlineModel(request, Array.from(set));
   return '$W' + id.toString(16);
+}
+
+function serializeTypedArray(
+  request: Request,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): string {
+  request.pendingChunks += 2;
+  const bufferId = request.nextChunkId++;
+  // TODO: Convert to little endian if that's not the server default.
+  const binaryChunk = typedArrayToBinaryChunk(typedArray);
+  const headerChunk = processBufferHeader(
+    request,
+    tag,
+    bufferId,
+    byteLengthOfBinaryChunk(binaryChunk),
+  );
+  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  return serializeByValueID(bufferId);
 }
 
 function escapeStringValue(value: string): string {
@@ -942,12 +964,68 @@ function resolveModelToJSON(
       }
       return (undefined: any);
     }
+
     if (value instanceof Map) {
       return serializeMap(request, value);
     }
     if (value instanceof Set) {
       return serializeSet(request, value);
     }
+
+    if (enableBinaryFlight) {
+      if (value instanceof ArrayBuffer) {
+        return serializeTypedArray(request, 'A', new Uint8Array(value));
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray(request, 'C', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray(request, 'c', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray(request, 'U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray(request, 'S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray(request, 's', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray(request, 'L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray(request, 'l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray(request, 'F', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray(request, 'D', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray(request, 'N', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray(request, 'm', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray(request, 'V', value);
+      }
+    }
+
     if (!isArray(value)) {
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
@@ -1593,9 +1671,18 @@ function processHintChunk(
 function processTextHeader(
   request: Request,
   id: number,
-  text: string,
   binaryLength: number,
 ): Chunk {
   const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  return stringToChunk(row);
+}
+
+function processBufferHeader(
+  request: Request,
+  tag: string,
+  id: number,
+  binaryLength: number,
+): Chunk {
+  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   return stringToChunk(row);
 }

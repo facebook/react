@@ -75,6 +75,8 @@ export const enableFetchInstrumentation = false;
 
 export const enableFormActions = false;
 
+export const enableBinaryFlight = true;
+
 export const disableJavaScriptURLs = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.

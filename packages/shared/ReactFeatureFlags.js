@@ -84,6 +84,8 @@ export const enableFetchInstrumentation = true;
 
 export const enableFormActions = __EXPERIMENTAL__;
 
+export const enableBinaryFlight = __EXPERIMENTAL__;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
