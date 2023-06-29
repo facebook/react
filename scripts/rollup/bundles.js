@@ -447,7 +447,7 @@ const bundles = [
     global: 'ReactFlightWebpackNodeRegister',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['url', 'module'],
+    externals: ['url', 'module', 'react-server-dom-webpack/server'],
   },
 
   /******* React Server DOM ESM Server *******/

@@ -14,26 +14,10 @@ const url = require('url');
 const Module = require('module');
 
 module.exports = function register() {
-  const CLIENT_REFERENCE = Symbol.for('react.client.reference');
-  const SERVER_REFERENCE = Symbol.for('react.server.reference');
+  const Server: any = require('react-server-dom-webpack/server');
+  const registerClientReference = Server.registerClientReference;
+  const registerServerReference = Server.registerServerReference;
   const PROMISE_PROTOTYPE = Promise.prototype;
-
-  // Patch bind on the server to ensure that this creates another
-  // bound server reference with the additional arguments.
-  const originalBind = Function.prototype.bind;
-  /*eslint-disable no-extend-native */
-  Function.prototype.bind = (function bind(this: any, self: any) {
-    // $FlowFixMe[unsupported-syntax]
-    const newFn = originalBind.apply(this, arguments);
-    if (this.$$typeof === SERVER_REFERENCE) {
-      // $FlowFixMe[method-unbinding]
-      const args = Array.prototype.slice.call(arguments, 1);
-      newFn.$$typeof = SERVER_REFERENCE;
-      newFn.$$id = this.$$id;
-      newFn.$$bound = this.$$bound ? this.$$bound.concat(args) : args;
-    }
-    return newFn;
-  }: any);
 
   const deepProxyHandlers = {
     get: function (target: Function, name: string, receiver: Proxy<Function>) {
@@ -111,7 +95,7 @@ module.exports = function register() {
           // Something is conditionally checking which export to use. We'll pretend to be
           // an ESM compat module but then we'll check again on the client.
           const moduleId = target.$$id;
-          target.default = Object.defineProperties(
+          target.default = registerClientReference(
             (function () {
               throw new Error(
                 `Attempted to call the default export of ${moduleId} from the server ` +
@@ -120,13 +104,8 @@ module.exports = function register() {
                   `Client Component.`,
               );
             }: any),
-            {
-              $$typeof: {value: CLIENT_REFERENCE},
-              // This a placeholder value that tells the client to conditionally use the
-              // whole object or just the default export.
-              $$id: {value: target.$$id + '#'},
-              $$async: {value: target.$$async},
-            },
+            target.$$id + '#',
+            target.$$async,
           );
           return true;
         case 'then':
@@ -139,29 +118,26 @@ module.exports = function register() {
             // we should resolve that with a client reference that unwraps the Promise on
             // the client.
 
-            const clientReference = Object.defineProperties(({}: any), {
-              $$typeof: {value: CLIENT_REFERENCE},
-              $$id: {value: target.$$id},
-              $$async: {value: true},
-            });
+            const clientReference = registerClientReference(
+              ({}: any),
+              target.$$id,
+              true,
+            );
             const proxy = new Proxy(clientReference, proxyHandlers);
 
             // Treat this as a resolved Promise for React's use()
             target.status = 'fulfilled';
             target.value = proxy;
 
-            const then = (target.then = Object.defineProperties(
+            const then = (target.then = registerClientReference(
               (function then(resolve, reject: any) {
                 // Expose to React.
                 return Promise.resolve(resolve(proxy));
               }: any),
               // If this is not used as a Promise but is treated as a reference to a `.then`
               // export then we should treat it as a reference to that name.
-              {
-                $$typeof: {value: CLIENT_REFERENCE},
-                $$id: {value: target.$$id + '#then'},
-                $$async: {value: false},
-              },
+              target.$$id + '#then',
+              false,
             ));
             return then;
           } else {
@@ -173,7 +149,7 @@ module.exports = function register() {
       }
       let cachedReference = target[name];
       if (!cachedReference) {
-        const reference = Object.defineProperties(
+        const reference = registerClientReference(
           (function () {
             throw new Error(
               // eslint-disable-next-line react-internal/safe-string-coercion
@@ -184,13 +160,10 @@ module.exports = function register() {
                 `only be rendered as a Component or passed to props of a Client Component.`,
             );
           }: any),
-          {
-            name: {value: name},
-            $$typeof: {value: CLIENT_REFERENCE},
-            $$id: {value: target.$$id + '#' + name},
-            $$async: {value: target.$$async},
-          },
+          target.$$id + '#' + name,
+          target.$$async,
         );
+        Object.defineProperty(reference, 'name', {value: name});
         cachedReference = target[name] = new Proxy(
           reference,
           deepProxyHandlers,
@@ -264,12 +237,12 @@ module.exports = function register() {
 
     if (useClient) {
       const moduleId: string = (url.pathToFileURL(filename).href: any);
-      const clientReference = Object.defineProperties(({}: any), {
-        $$typeof: {value: CLIENT_REFERENCE},
+      const clientReference = registerClientReference(
+        ({}: any),
         // Represents the whole Module object instead of a particular import.
-        $$id: {value: moduleId},
-        $$async: {value: false},
-      });
+        moduleId,
+        false,
+      );
       this.exports = new Proxy(clientReference, proxyHandlers);
     }
 
@@ -284,23 +257,18 @@ module.exports = function register() {
       // reference. If there are any functions in the export.
       if (typeof exports === 'function') {
         // The module exports a function directly,
-        Object.defineProperties((exports: any), {
-          $$typeof: {value: SERVER_REFERENCE},
+        registerServerReference(
+          (exports: any),
           // Represents the whole Module object instead of a particular import.
-          $$id: {value: moduleId},
-          $$bound: {value: null},
-        });
+          moduleId,
+        );
       } else {
         const keys = Object.keys(exports);
         for (let i = 0; i < keys.length; i++) {
           const key = keys[i];
           const value = exports[keys[i]];
           if (typeof value === 'function') {
-            Object.defineProperties((value: any), {
-              $$typeof: {value: SERVER_REFERENCE},
-              $$id: {value: moduleId + '#' + key},
-              $$bound: {value: null},
-            });
+            registerServerReference((value: any), moduleId + '#' + key);
           }
         }
       }

@@ -27,6 +27,11 @@ import {
 
 import {decodeAction} from 'react-server/src/ReactFlightActionServer';
 
+export {
+  registerServerReference,
+  registerClientReference,
+} from './ReactFlightWebpackReferences';
+
 type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,

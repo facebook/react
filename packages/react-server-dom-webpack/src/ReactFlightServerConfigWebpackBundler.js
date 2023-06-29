@@ -9,24 +9,18 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
+import type {
+  ClientReference,
+  ServerReference,
+} from './ReactFlightWebpackReferences';
+
+export type {ClientReference, ServerReference};
+
 export type ClientManifest = {
   [id: string]: ClientReferenceMetadata,
 };
 
-export type ServerReference<T: Function> = T & {
-  $$typeof: symbol,
-  $$id: string,
-  $$bound: null | Array<ReactClientValue>,
-};
-
 export type ServerReferenceId = string;
-
-// eslint-disable-next-line no-unused-vars
-export type ClientReference<T> = {
-  $$typeof: symbol,
-  $$id: string,
-  $$async: boolean,
-};
 
 export type ClientReferenceMetadata = {
   id: string,
@@ -37,21 +31,15 @@ export type ClientReferenceMetadata = {
 
 export type ClientReferenceKey = string;
 
-const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
-const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
+export {
+  isClientReference,
+  isServerReference,
+} from './ReactFlightWebpackReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
   return reference.$$async ? reference.$$id + '#async' : reference.$$id;
-}
-
-export function isClientReference(reference: Object): boolean {
-  return reference.$$typeof === CLIENT_REFERENCE_TAG;
-}
-
-export function isServerReference(reference: Object): boolean {
-  return reference.$$typeof === SERVER_REFERENCE_TAG;
 }
 
 export function resolveClientReferenceMetadata<T>(
