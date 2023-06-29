@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1e7d01283543cc2574e9236933f570be>>
+ * @generated SignedSource<<dbd1018a89116fe337d8815d46dbcf5f>>
  */
 
 
@@ -1615,6 +1615,7 @@ function markRootFinished(root, remainingLanes) {
   root.expiredLanes &= remainingLanes;
   root.entangledLanes &= remainingLanes;
   root.errorRecoveryDisabledLanes &= remainingLanes;
+  root.shellSuspendCounter = 0;
   remainingLanes = root.entanglements;
   var expirationTimes = root.expirationTimes;
   for (root = root.hiddenUpdates; 0 < noLongerPendingLanes; ) {
@@ -2559,26 +2560,32 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "rejected":
       throw thenable.reason;
     default:
-      "string" === typeof thenable.status
-        ? thenable.then(noop, noop)
-        : ((thenableState = thenable),
-          (thenableState.status = "pending"),
-          thenableState.then(
-            function (fulfilledValue) {
-              if ("pending" === thenable.status) {
-                var fulfilledThenable = thenable;
-                fulfilledThenable.status = "fulfilled";
-                fulfilledThenable.value = fulfilledValue;
-              }
-            },
-            function (error) {
-              if ("pending" === thenable.status) {
-                var rejectedThenable = thenable;
-                rejectedThenable.status = "rejected";
-                rejectedThenable.reason = error;
-              }
+      if ("string" === typeof thenable.status) thenable.then(noop, noop);
+      else {
+        thenableState = workInProgressRoot;
+        if (null !== thenableState && 100 < thenableState.shellSuspendCounter)
+          throw Error(
+            "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
+          );
+        thenableState = thenable;
+        thenableState.status = "pending";
+        thenableState.then(
+          function (fulfilledValue) {
+            if ("pending" === thenable.status) {
+              var fulfilledThenable = thenable;
+              fulfilledThenable.status = "fulfilled";
+              fulfilledThenable.value = fulfilledValue;
             }
-          ));
+          },
+          function (error) {
+            if ("pending" === thenable.status) {
+              var rejectedThenable = thenable;
+              rejectedThenable.status = "rejected";
+              rejectedThenable.reason = error;
+            }
+          }
+        );
+      }
       switch (thenable.status) {
         case "fulfilled":
           return thenable.value;
@@ -8364,29 +8371,35 @@ function renderRootSync(root, lanes) {
     prepareFreshStack(root, lanes);
   }
   markRenderStarted(lanes);
+  lanes = !1;
   a: do
     try {
-      if (0 !== workInProgressSuspendedReason && null !== workInProgress)
-        switch (
-          ((lanes = workInProgress),
-          (memoizedUpdaters = workInProgressThrownValue),
-          workInProgressSuspendedReason)
-        ) {
+      if (0 !== workInProgressSuspendedReason && null !== workInProgress) {
+        memoizedUpdaters = workInProgress;
+        var thrownValue = workInProgressThrownValue;
+        switch (workInProgressSuspendedReason) {
           case 8:
             resetWorkInProgressStack();
             workInProgressRootExitStatus = 6;
             break a;
+          case 3:
+          case 2:
+            lanes ||
+              null !== suspenseHandlerStackCursor.current ||
+              (lanes = !0);
           default:
             (workInProgressSuspendedReason = 0),
               (workInProgressThrownValue = null),
-              throwAndUnwindWorkLoop(lanes, memoizedUpdaters);
+              throwAndUnwindWorkLoop(memoizedUpdaters, thrownValue);
         }
+      }
       workLoopSync();
       break;
     } catch (thrownValue$110) {
       handleThrow(root, thrownValue$110);
     }
   while (1);
+  lanes && root.shellSuspendCounter++;
   resetContextDependencies();
   executionContext = prevExecutionContext;
   ReactCurrentDispatcher.current = prevDispatcher;
@@ -9924,6 +9937,7 @@ function FiberRootNode(
   this.callbackPriority = 0;
   this.expirationTimes = createLaneMap(-1);
   this.entangledLanes =
+    this.shellSuspendCounter =
     this.errorRecoveryDisabledLanes =
     this.finishedLanes =
     this.expiredLanes =
@@ -10162,7 +10176,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1125 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-0b3b38d1",
+    version: "18.3.0-canary-96743b2c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10218,7 +10232,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0b3b38d1"
+  reconcilerVersion: "18.3.0-canary-96743b2c"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
