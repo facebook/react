@@ -14,6 +14,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
@@ -103,6 +105,32 @@ export function trackUsedThenable<T>(
         // happen. Flight lazily parses JSON when the value is actually awaited.
         thenable.then(noop, noop);
       } else {
+        // This is an uncached thenable that we haven't seen before.
+
+        // Detect infinite ping loops caused by uncached promises.
+        const root = getWorkInProgressRoot();
+        if (root !== null && root.shellSuspendCounter > 100) {
+          // This root has suspended repeatedly in the shell without making any
+          // progress (i.e. committing something). This is highly suggestive of
+          // an infinite ping loop, often caused by an accidental Async Client
+          // Component.
+          //
+          // During a transition, we can suspend the work loop until the promise
+          // to resolve, but this is a sync render, so that's not an option. We
+          // also can't show a fallback, because none was provided. So our last
+          // resort is to throw an error.
+          //
+          // TODO: Remove this error in a future release. Other ways of handling
+          // this case include forcing a concurrent render, or putting the whole
+          // root into offscreen mode.
+          throw new Error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        }
+
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
