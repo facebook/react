@@ -94,6 +94,7 @@ export function trackUsedThenable<T>(
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(rejectedError);
       throw rejectedError;
     }
     default: {
@@ -149,17 +150,19 @@ export function trackUsedThenable<T>(
             }
           },
         );
-      }
 
-      // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
-        case 'fulfilled': {
-          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-          return fulfilledThenable.value;
-        }
-        case 'rejected': {
-          const rejectedThenable: RejectedThenable<T> = (thenable: any);
-          throw rejectedThenable.reason;
+        // Check one more time in case the thenable resolved synchronously.
+        switch (thenable.status) {
+          case 'fulfilled': {
+            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+            return fulfilledThenable.value;
+          }
+          case 'rejected': {
+            const rejectedThenable: RejectedThenable<T> = (thenable: any);
+            const rejectedError = rejectedThenable.reason;
+            checkIfUseWrappedInAsyncCatch(rejectedError);
+            throw rejectedError;
+          }
         }
       }
 
@@ -222,4 +225,21 @@ export function checkIfUseWrappedInTryCatch(): boolean {
     }
   }
   return false;
+}
+
+export function checkIfUseWrappedInAsyncCatch(rejectedReason: any) {
+  // This check runs in prod, too, because it prevents a more confusing
+  // downstream error, where SuspenseException is caught by a promise and
+  // thrown asynchronously.
+  // TODO: Another way to prevent SuspenseException from leaking into an async
+  // execution context is to check the dispatcher every time `use` is called,
+  // or some equivalent. That might be preferable for other reasons, too, since
+  // it matches how we prevent similar mistakes for other hooks.
+  if (rejectedReason === SuspenseException) {
+    throw new Error(
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    );
+  }
 }

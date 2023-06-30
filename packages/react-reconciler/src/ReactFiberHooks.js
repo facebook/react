@@ -163,9 +163,11 @@ export type UpdateQueue<S, A> = {
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot: void | true;
 let didWarnAboutUseWrappedInTryCatch;
+let didWarnAboutAsyncClientComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set<string | null>();
   didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
+  didWarnAboutAsyncClientComponent = new Set<string | null>();
 }
 
 export type Hook = {
@@ -370,6 +372,59 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
   }
 }
 
+function warnIfAsyncClientComponent(
+  Component: Function,
+  componentDoesIncludeHooks: boolean,
+) {
+  if (__DEV__) {
+    // This dev-only check only works for detecting native async functions,
+    // not transpiled ones. There's also a prod check that we use to prevent
+    // async client components from crashing the app; the prod one works even
+    // for transpiled async functions. Neither mechanism is completely
+    // bulletproof but together they cover the most common cases.
+    const isAsyncFunction =
+      // $FlowIgnore[method-unbinding]
+      Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+    if (isAsyncFunction) {
+      // Encountered an async Client Component. This is not yet supported,
+      // except in certain constrained cases, like during a route navigation.
+      const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
+      if (!didWarnAboutAsyncClientComponent.has(componentName)) {
+        didWarnAboutAsyncClientComponent.add(componentName);
+
+        // Check if this is a sync update. We use the "root" render lanes here
+        // because the "subtree" render lanes may include additional entangled
+        // lanes related to revealing previously hidden content.
+        const root = getWorkInProgressRoot();
+        const rootRenderLanes = getWorkInProgressRootRenderLanes();
+        if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
+          console.error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        } else {
+          // This is a concurrent (Transition, Retry, etc) render. We don't
+          // warn in these cases.
+          //
+          // However, Async Components are forbidden to include hooks, even
+          // during a transition, so let's check for that here.
+          //
+          // TODO: Add a corresponding warning to Server Components runtime.
+          if (componentDoesIncludeHooks) {
+            console.error(
+              'Hooks are not supported inside an async component. This ' +
+                "error is often caused by accidentally adding `'use client'` " +
+                'to a module that was originally written for the server.',
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
 function throwInvalidHookError() {
   throw new Error(
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
@@ -554,19 +609,27 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
 
   return children;
 }
 
-function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
+function finishRenderingHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+): void {
+  if (__DEV__) {
+    workInProgress._debugHookTypes = hookTypesDev;
+
+    const componentDoesIncludeHooks =
+      workInProgressHook !== null || thenableIndexCounter !== 0;
+    warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
+  }
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
-
-  if (__DEV__) {
-    workInProgress._debugHookTypes = hookTypesDev;
-  }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
   // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
@@ -645,7 +708,13 @@ function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
     if (checkIfUseWrappedInTryCatch()) {
       const componentName =
         getComponentNameFromFiber(workInProgress) || 'Unknown';
-      if (!didWarnAboutUseWrappedInTryCatch.has(componentName)) {
+      if (
+        !didWarnAboutUseWrappedInTryCatch.has(componentName) &&
+        // This warning also fires if you suspend with `use` inside an
+        // async component. Since we warn for that above, we'll silence this
+        // second warning by checking here.
+        !didWarnAboutAsyncClientComponent.has(componentName)
+      ) {
         didWarnAboutUseWrappedInTryCatch.add(componentName);
         console.error(
           '`use` was called from inside a try/catch block. This is not allowed ' +
@@ -683,7 +752,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     props,
     secondArg,
   );
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
   return children;
 }
 

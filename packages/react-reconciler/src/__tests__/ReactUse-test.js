@@ -1639,13 +1639,20 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(
-        <ErrorBoundary>
-          <AsyncClientComponent />
-        </ErrorBoundary>,
-      );
-    });
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ErrorBoundary>
+            <AsyncClientComponent />
+          </ErrorBoundary>,
+        );
+      });
+    }).toErrorDev([
+      'async/await is not yet supported in Client Components, only ' +
+        'Server Components. This error is often caused by accidentally ' +
+        "adding `'use client'` to a module that was originally written " +
+        'for the server.',
+    ]);
     assertLog([
       'async/await is not yet supported in Client Components, only Server ' +
         'Components. This error is often caused by accidentally adding ' +
@@ -1685,13 +1692,20 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(
-        <ErrorBoundary>
-          <AsyncClientComponent />
-        </ErrorBoundary>,
-      );
-    });
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ErrorBoundary>
+            <AsyncClientComponent />
+          </ErrorBoundary>,
+        );
+      });
+    }).toErrorDev([
+      'async/await is not yet supported in Client Components, only ' +
+        'Server Components. This error is often caused by accidentally ' +
+        "adding `'use client'` to a module that was originally written " +
+        'for the server.',
+    ]);
     assertLog([
       'async/await is not yet supported in Client Components, only Server ' +
         'Components. This error is often caused by accidentally adding ' +
@@ -1708,5 +1722,47 @@ describe('ReactUse', () => {
         "`'use client'` to a module that was originally written for " +
         'the server.',
     );
+  });
+
+  test('warn if async client component calls a hook (e.g. useState)', async () => {
+    async function AsyncClientComponent() {
+      useState();
+      return <Text text="Hi" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<AsyncClientComponent />);
+        });
+      });
+    }).toErrorDev([
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    ]);
+  });
+
+  test('warn if async client component calls a hook (e.g. use)', async () => {
+    const promise = Promise.resolve();
+
+    async function AsyncClientComponent() {
+      use(promise);
+      return <Text text="Hi" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<AsyncClientComponent />);
+        });
+      });
+    }).toErrorDev([
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    ]);
   });
 });
