@@ -626,7 +626,7 @@ exports.useSyncExternalStore = function (
   );
 };
 exports.useTransition = useTransition;
-exports.version = "18.3.0-canary-7f362de15-20230630";
+exports.version = "18.3.0-canary-1fdacbefd-20230630";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
