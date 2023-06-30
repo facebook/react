@@ -73,3 +73,5 @@ To help you get your feet wet and get you familiar with our contribution process
 ### License
 
 React is [MIT licensed](./LICENSE).
+
+I looked up how to fix npm and yarn fail to start server - Looking at the latest canary version error - found out you have to install the latest version to 13.4.5 - npm install next@canary
