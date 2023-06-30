@@ -17,9 +17,6 @@ const pathToBabel = path.join(
 const pathToBabelPluginReplaceConsoleCalls = require.resolve(
   '../babel/transform-replace-console-calls'
 );
-const pathToBabelPluginAsyncToGenerator = require.resolve(
-  '@babel/plugin-transform-async-to-generator'
-);
 const pathToTransformInfiniteLoops = require.resolve(
   '../babel/transform-prevent-infinite-loops'
 );
@@ -78,7 +75,7 @@ module.exports = {
       const isInDevToolsPackages = !!filePath.match(
         /\/packages\/react-devtools.*\//
       );
-      const testOnlyPlugins = [pathToBabelPluginAsyncToGenerator];
+      const testOnlyPlugins = [];
       const sourceOnlyPlugins = [];
       if (process.env.NODE_ENV === 'development' && !isInDevToolsPackages) {
         sourceOnlyPlugins.push(pathToBabelPluginReplaceConsoleCalls);
