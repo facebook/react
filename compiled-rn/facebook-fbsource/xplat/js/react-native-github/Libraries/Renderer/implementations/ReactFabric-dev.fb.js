@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e2cd5e3ead207b4f962ec80388466a70>>
+ * @generated SignedSource<<dc397abf80dec5e36385341a0139a828>>
  */
 
 'use strict';
@@ -4492,7 +4492,7 @@ function createLaneMap(initial) {
 
   return laneMap;
 }
-function markRootUpdated$1(root, updateLane) {
+function markRootUpdated(root, updateLane) {
   root.pendingLanes |= updateLane; // If there are any suspended transitions, it's possible this new update
   // could unblock them. Clear the suspended lanes so that we can try rendering
   // them again.
@@ -4525,7 +4525,7 @@ function markRootSuspended$1(root, suspendedLanes) {
     lanes &= ~lane;
   }
 }
-function markRootPinged$1(root, pingedLanes) {
+function markRootPinged(root, pingedLanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 function markRootFinished(root, remainingLanes) {
@@ -9758,21 +9758,6 @@ function ensureRootIsScheduled(root) {
     ReactCurrentActQueue$2.didScheduleLegacyUpdate = true;
   }
 }
-
-function unscheduleAllRoots() {
-  // This is only done in a fatal error situation, as a last resort to prevent
-  // an infinite render loop.
-  var root = firstScheduledRoot;
-
-  while (root !== null) {
-    var next = root.next;
-    root.next = null;
-    root = next;
-  }
-
-  firstScheduledRoot = lastScheduledRoot = null;
-}
-
 function flushSyncWorkOnAllRoots() {
   // This is allowed to be called synchronously, but the caller should check
   // the execution context first.
@@ -9801,49 +9786,11 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
   var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes(); // There may or may not be synchronous work scheduled. Let's check.
 
   var didPerformSomeWork;
-  var nestedUpdatePasses = 0;
   var errors = null;
   isFlushingWork = true;
 
   do {
-    didPerformSomeWork = false; // This outer loop re-runs if performing sync work on a root spawns
-    // additional sync work. If it happens too many times, it's very likely
-    // caused by some sort of infinite update loop. We already have a loop guard
-    // in place that will trigger an error on the n+1th update, but it's
-    // possible for that error to get swallowed if the setState is called from
-    // an unexpected place, like during the render phase. So as an added
-    // precaution, we also use a guard here.
-    //
-    // Ideally, there should be no known way to trigger this synchronous loop.
-    // It's really just here as a safety net.
-    //
-    // This limit is slightly larger than the one that throws inside setState,
-    // because that one is preferable because it includes a componens stack.
-
-    if (++nestedUpdatePasses > 60) {
-      // This is a fatal error, so we'll unschedule all the roots.
-      unscheduleAllRoots(); // TODO: Change this error message to something different to distinguish
-      // it from the one that is thrown from setState. Those are less fatal
-      // because they usually will result in the bad component being unmounted,
-      // and an error boundary being triggered, rather than us having to
-      // forcibly stop the entire scheduler.
-
-      var infiniteUpdateError = new Error(
-        "Maximum update depth exceeded. This can happen when a component " +
-          "repeatedly calls setState inside componentWillUpdate or " +
-          "componentDidUpdate. React limits the number of nested updates to " +
-          "prevent infinite loops."
-      );
-
-      if (errors === null) {
-        errors = [infiniteUpdateError];
-      } else {
-        errors.push(infiniteUpdateError);
-      }
-
-      break;
-    }
-
+    didPerformSomeWork = false;
     var root = firstScheduledRoot;
 
     while (root !== null) {
@@ -22846,13 +22793,7 @@ var workInProgressRootPingedLanes = NoLanes; // Errors that are thrown during th
 var workInProgressRootConcurrentErrors = null; // These are errors that we recovered from without surfacing them to the UI.
 // We will log them once the tree commits.
 
-var workInProgressRootRecoverableErrors = null; // Tracks when an update occurs during the render phase.
-
-var workInProgressRootDidIncludeRecursiveRenderUpdate = false; // Thacks when an update occurs during the commit phase. It's a separate
-// variable from the one for renders because the commit phase may run
-// concurrently to a render phase.
-
-var didIncludeCommitPhaseUpdate = false; // The most recent time we either committed a fallback, or when a fallback was
+var workInProgressRootRecoverableErrors = null; // The most recent time we either committed a fallback, or when a fallback was
 // filled in with the resolved UI. This lets us throttle the appearance of new
 // content as it streams in, to minimize jank.
 // TODO: Think of a better name for this variable?
@@ -23340,8 +23281,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
     commitRoot(
       root,
       workInProgressRootRecoverableErrors,
-      workInProgressTransitions,
-      workInProgressRootDidIncludeRecursiveRenderUpdate
+      workInProgressTransitions
     );
   } else {
     if (
@@ -23374,7 +23314,6 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
             finishedWork,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
-            workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes
           ),
           msUntilTimeout
@@ -23388,7 +23327,6 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
       finishedWork,
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
-      workInProgressRootDidIncludeRecursiveRenderUpdate,
       lanes
     );
   }
@@ -23399,7 +23337,6 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  didIncludeRenderPhaseUpdate,
   lanes
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
@@ -23423,20 +23360,14 @@ function commitRootWhenReady(
       // us that it's ready. This will be canceled if we start work on the
       // root again.
       root.cancelPendingCommit = schedulePendingCommit(
-        commitRoot.bind(
-          null,
-          root,
-          recoverableErrors,
-          transitions,
-          didIncludeRenderPhaseUpdate
-        )
+        commitRoot.bind(null, root, recoverableErrors, transitions)
       );
       markRootSuspended(root, lanes);
       return;
     }
   } // Otherwise, commit immediately.
 
-  commitRoot(root, recoverableErrors, transitions, didIncludeRenderPhaseUpdate);
+  commitRoot(root, recoverableErrors, transitions);
 }
 
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -23499,49 +23430,18 @@ function isRenderConsistentWithExternalStores(finishedWork) {
   // eslint-disable-next-line no-unreachable
 
   return true;
-} // The extra indirections around markRootUpdated and markRootSuspended is
-// needed to avoid a circular dependency between this module and
-// ReactFiberLane. There's probably a better way to split up these modules and
-// avoid this problem. Perhaps all the root-marking functions should move into
-// the work loop.
-
-function markRootUpdated(root, updatedLanes) {
-  markRootUpdated$1(root, updatedLanes); // Check for recursive updates
-
-  if (executionContext & RenderContext) {
-    workInProgressRootDidIncludeRecursiveRenderUpdate = true;
-  } else if (executionContext & CommitContext) {
-    didIncludeCommitPhaseUpdate = true;
-  }
-
-  throwIfInfiniteUpdateLoopDetected();
-}
-
-function markRootPinged(root, pingedLanes) {
-  markRootPinged$1(root, pingedLanes); // Check for recursive pings. Pings are conceptually different from updates in
-  // other contexts but we call it an "update" in this context because
-  // repeatedly pinging a suspended render can cause a recursive render loop.
-  // The relevant property is that it can result in a new render attempt
-  // being scheduled.
-
-  if (executionContext & RenderContext) {
-    workInProgressRootDidIncludeRecursiveRenderUpdate = true;
-  } else if (executionContext & CommitContext) {
-    didIncludeCommitPhaseUpdate = true;
-  }
-
-  throwIfInfiniteUpdateLoopDetected();
 }
 
 function markRootSuspended(root, suspendedLanes) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
+  // TODO: Lol maybe there's a better way to factor this besides this
+  // obnoxiously named function :)
   suspendedLanes = removeLanes(suspendedLanes, workInProgressRootPingedLanes);
   suspendedLanes = removeLanes(
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes
   );
-
   markRootSuspended$1(root, suspendedLanes);
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
@@ -23612,8 +23512,7 @@ function performSyncWorkOnRoot(root) {
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
-    workInProgressTransitions,
-    workInProgressRootDidIncludeRecursiveRenderUpdate
+    workInProgressTransitions
   ); // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
 
@@ -23754,7 +23653,6 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootPingedLanes = NoLanes;
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
-  workInProgressRootDidIncludeRecursiveRenderUpdate = false;
   finishQueueingConcurrentUpdates();
 
   {
@@ -24733,12 +24631,7 @@ function unwindUnitOfWork(unitOfWork) {
   workInProgress = null;
 }
 
-function commitRoot(
-  root,
-  recoverableErrors,
-  transitions,
-  didIncludeRenderPhaseUpdate
-) {
+function commitRoot(root, recoverableErrors, transitions) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
   var previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -24751,7 +24644,6 @@ function commitRoot(
       root,
       recoverableErrors,
       transitions,
-      didIncludeRenderPhaseUpdate,
       previousUpdateLanePriority
     );
   } finally {
@@ -24766,7 +24658,6 @@ function commitRootImpl(
   root,
   recoverableErrors,
   transitions,
-  didIncludeRenderPhaseUpdate,
   renderPriorityLevel
 ) {
   do {
@@ -24830,9 +24721,7 @@ function commitRootImpl(
 
   var concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
-  markRootFinished(root, remainingLanes); // Reset this before firing side effects so we can detect recursive updates.
-
-  didIncludeCommitPhaseUpdate = false;
+  markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
@@ -25015,18 +24904,7 @@ function commitRootImpl(
 
   remainingLanes = root.pendingLanes;
 
-  if (
-    // Check if there was a recursive update spawned by this render, in either
-    // the render phase or the commit phase. We track these explicitly because
-    // we can't infer from the remaining lanes alone.
-    didIncludeCommitPhaseUpdate ||
-    didIncludeRenderPhaseUpdate || // As an additional precaution, we also check if there's any remaining sync
-    // work. Theoretically this should be unreachable but if there's a mistake
-    // in React it helps to be overly defensive given how hard it is to debug
-    // those scenarios otherwise. This won't catch recursive async updates,
-    // though, which is why we check the flags above first.
-    includesSyncLane(remainingLanes)
-  ) {
+  if (includesSyncLane(remainingLanes)) {
     {
       markNestedUpdateScheduled();
     } // Count the number of times the root synchronously re-renders without
@@ -25451,18 +25329,6 @@ function throwIfInfiniteUpdateLoopDetected() {
     nestedPassiveUpdateCount = 0;
     rootWithNestedUpdates = null;
     rootWithPassiveNestedUpdates = null;
-
-    if (executionContext & RenderContext && workInProgressRoot !== null) {
-      // We're in the render phase. Disable the concurrent error recovery
-      // mechanism to ensure that the error we're about to throw gets handled.
-      // We need it to trigger the nearest error boundary so that the infinite
-      // update loop is broken.
-      workInProgressRoot.errorRecoveryDisabledLanes = mergeLanes(
-        workInProgressRoot.errorRecoveryDisabledLanes,
-        workInProgressRootRenderLanes
-      );
-    }
-
     throw new Error(
       "Maximum update depth exceeded. This can happen when a component " +
         "repeatedly calls setState inside componentWillUpdate or " +
@@ -27076,7 +26942,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-6f8e14d0";
+var ReactVersion = "18.3.0-canary-8fa97b4d";
 
 function createPortal$1(
   children,
