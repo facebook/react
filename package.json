@@ -18,7 +18,6 @@
     "@babel/plugin-syntax-jsx": "^7.10.4",
     "@babel/plugin-syntax-typescript": "^7.14.5",
     "@babel/plugin-transform-arrow-functions": "^7.10.4",
-    "@babel/plugin-transform-async-to-generator": "^7.10.4",
     "@babel/plugin-transform-block-scoped-functions": "^7.10.4",
     "@babel/plugin-transform-block-scoping": "^7.11.1",
     "@babel/plugin-transform-classes": "^7.10.4",

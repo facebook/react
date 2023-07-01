@@ -32,9 +32,6 @@ export const enableComponentStackLocations = true;
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
 
-// Recoil still uses useMutableSource in www, need to delete
-export const enableUseMutableSource = false;
-
 // Not sure if www still uses this. We don't have a replacement but whatever we
 // replace it with will likely be different than what's already there, so we
 // probably should just delete it as long as nothing in www relies on it.
@@ -86,6 +83,8 @@ export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 
 export const enableFormActions = __EXPERIMENTAL__;
+
+export const enableBinaryFlight = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 

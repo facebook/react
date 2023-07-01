@@ -466,5 +466,6 @@
   "478": "Thenable should have already resolved. This is a bug in React.",
   "479": "Cannot update optimistic state while rendering.",
   "480": "File/Blob fields are not yet supported in progressive forms. It probably means you are closing over binary data or FormData in a Server Action.",
-  "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React."
+  "481": "Tried to encode a Server Action from a different instance than the encoder is from. This is a bug in React.",
+  "482": "async/await is not yet supported in Client Components, only Server Components. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
 }

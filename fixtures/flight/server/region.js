@@ -22,7 +22,7 @@ babelRegister({
       return false;
     },
   ],
-  presets: ['react-app'],
+  presets: ['@babel/preset-react'],
   plugins: ['@babel/transform-modules-commonjs'],
 });
 
