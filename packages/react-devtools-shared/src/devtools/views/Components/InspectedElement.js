@@ -263,7 +263,9 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         <div className={styles.SelectedComponentName}>
           <div
             className={
-              element.isStrictModeNonCompliant ? undefined : styles.Component
+              element.isStrictModeNonCompliant
+                ? styles.StrictModeNonCompliant
+                : styles.Component
             }
             title={element.displayName}>
             {element.displayName}
