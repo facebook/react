@@ -1,11 +1,18 @@
 {
   "private": true,
+  "type": "module",
   "name": "browserify-dev-fixture",
   "dependencies": {
-    "browserify": "^13.3.0"
+    "@babel/core": "^7.22.5",
+    "@babel/preset-env": "^7.22.5",
+    "babelify": "^10.0.0",
+    "browserify": "^13.3.0",
+    "cpx": "^1.5.0",
+    "shx": "^0.3.3"
   },
   "scripts": {
-    "build": "rm -f output.js && browserify ./input.js -o output.js",
-    "prebuild": "cp -r ../../../../build/oss-experimental/* ./node_modules/"
+    "predev": "if not exist public\\ (mkdir public\\) && cpx \"..\\..\\build\\oss-experimental\\react\\umd\\react.development.js\" public\\ && cpx \"..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom.development.js\" public\\ && cpx \"..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom-server-legacy.browser.development.js\" public\\",
+    "build": "shx rm -f output.js && browserify ./input.js -o output.js",
+    "prebuild": "cpx \"../../../../build/oss-experimental/*\" ./node_modules/"
   }
 }
