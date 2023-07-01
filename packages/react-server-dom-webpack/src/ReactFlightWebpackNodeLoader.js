@@ -190,8 +190,8 @@ function transformServerModule(
       newSrc += 'if (typeof ' + local + ' === "function") ';
     }
     newSrc += 'registerServerReference(' + local + ',';
-    newSrc += JSON.stringify(url + '#' + exported);
-    newSrc += ');\n';
+    newSrc += JSON.stringify(url) + ',';
+    newSrc += JSON.stringify(exported) + ');\n';
   });
   return newSrc;
 }
@@ -348,8 +348,8 @@ async function transformClientModule(
         ');';
     }
     newSrc += '},';
-    newSrc += JSON.stringify(url + '#' + name);
-    newSrc += ');\n';
+    newSrc += JSON.stringify(url) + ',';
+    newSrc += JSON.stringify(name) + ');\n';
   }
   return newSrc;
 }

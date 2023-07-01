@@ -91,8 +91,9 @@ module.exports = function register() {
         // The module exports a function directly,
         registerServerReference(
           (exports: any),
-          // Represents the whole Module object instead of a particular import.
           moduleId,
+          // Represents the whole Module object instead of a particular import.
+          null,
         );
       } else {
         const keys = Object.keys(exports);
@@ -100,7 +101,7 @@ module.exports = function register() {
           const key = keys[i];
           const value = exports[keys[i]];
           if (typeof value === 'function') {
-            registerServerReference((value: any), moduleId + '#' + key);
+            registerServerReference((value: any), moduleId, key);
           }
         }
       }

@@ -35,12 +35,11 @@ export function isServerReference(reference: Object): boolean {
 export function registerClientReference<T>(
   proxyImplementation: any,
   id: string,
-  async: boolean,
+  exportName: string,
 ): ClientReference<T> {
   return Object.defineProperties(proxyImplementation, {
     $$typeof: {value: CLIENT_REFERENCE_TAG},
-    $$id: {value: id},
-    $$async: {value: async},
+    $$id: {value: id + '#' + exportName},
   });
 }
 
@@ -64,10 +63,11 @@ function bind(this: ServerReference<any>) {
 export function registerServerReference<T>(
   reference: ServerReference<T>,
   id: string,
+  exportName: string,
 ): ServerReference<T> {
   return Object.defineProperties((reference: any), {
     $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: id},
+    $$id: {value: id + '#' + exportName},
     $$bound: {value: null},
     bind: {value: bind},
   });
