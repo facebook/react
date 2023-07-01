@@ -30,6 +30,7 @@ import {decodeAction} from 'react-server/src/ReactFlightActionServer';
 export {
   registerServerReference,
   registerClientReference,
+  createClientModuleProxy,
 } from './ReactFlightWebpackReferences';
 
 type Options = {

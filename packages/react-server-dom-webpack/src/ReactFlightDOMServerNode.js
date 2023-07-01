@@ -41,6 +41,7 @@ import {decodeAction} from 'react-server/src/ReactFlightActionServer';
 export {
   registerServerReference,
   registerClientReference,
+  createClientModuleProxy,
 } from './ReactFlightWebpackReferences';
 
 function createDrainHandler(destination: Destination, request: Request) {
