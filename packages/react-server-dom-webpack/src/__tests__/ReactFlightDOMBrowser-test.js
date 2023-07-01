@@ -32,6 +32,12 @@ let use;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
+
     act = require('internal-test-utils').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;

@@ -26,6 +26,12 @@ let use;
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.node'),
+    );
+
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;

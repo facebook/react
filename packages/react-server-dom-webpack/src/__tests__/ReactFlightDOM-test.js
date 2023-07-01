@@ -36,6 +36,14 @@ let ErrorBoundary;
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.node.unbundled'),
+    );
+
+    ReactServerDOMClient = require('react-server-dom-webpack/client');
+
     act = require('internal-test-utils').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -49,7 +57,6 @@ describe('ReactFlightDOM', () => {
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
-    ReactServerDOMClient = require('react-server-dom-webpack/client');
     ReactServerDOMServer = require('react-server-dom-webpack/server.node.unbundled');
 
     ErrorBoundary = class extends React.Component {
