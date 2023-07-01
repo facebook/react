@@ -1101,7 +1101,7 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link href="before" rel="preload" as="style">',
+      '<link rel="preload" as="style" href="before">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });

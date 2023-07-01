@@ -12,7 +12,7 @@ import type {
   PreconnectOptions,
   PreloadOptions,
   PreinitOptions,
-} from 'react-dom/src/ReactDOMDispatcher';
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;

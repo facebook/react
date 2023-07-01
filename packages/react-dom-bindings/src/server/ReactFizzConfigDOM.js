@@ -8,6 +8,12 @@
  */
 
 import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {
   checkHtmlStringCoercion,
@@ -163,6 +169,7 @@ const startScriptSrc = stringToPrecomputedChunk('<script src="');
 const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
 const scriptNonce = stringToPrecomputedChunk('" nonce="');
 const scriptIntegirty = stringToPrecomputedChunk('" integrity="');
+const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
@@ -192,6 +199,7 @@ const scriptReplacer = (
 export type BootstrapScriptDescriptor = {
   src: string,
   integrity?: string,
+  crossOrigin?: string,
 };
 export type ExternalRuntimeScript = {
   src: string,
@@ -266,8 +274,14 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      const crossOrigin =
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
-      preloadBootstrapScript(resources, src, nonce, integrity);
+      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
 
       bootstrapChunks.push(
         startScriptSrc,
@@ -285,6 +299,12 @@ export function createResponseState(
           stringToChunk(escapeTextForBrowser(integrity)),
         );
       }
+      if (typeof crossOrigin === 'string') {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(crossOrigin)),
+        );
+      }
       bootstrapChunks.push(endAsyncScript);
     }
   }
@@ -295,8 +315,14 @@ export function createResponseState(
         typeof scriptConfig === 'string' ? scriptConfig : scriptConfig.src;
       const integrity =
         typeof scriptConfig === 'string' ? undefined : scriptConfig.integrity;
+      const crossOrigin =
+        typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
+          ? undefined
+          : scriptConfig.crossOrigin === 'use-credentials'
+          ? 'use-credentials'
+          : '';
 
-      preloadBootstrapModule(resources, src, nonce, integrity);
+      preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin);
 
       bootstrapChunks.push(
         startModuleSrc,
@@ -313,6 +339,12 @@ export function createResponseState(
         bootstrapChunks.push(
           scriptIntegirty,
           stringToChunk(escapeTextForBrowser(integrity)),
+        );
+      }
+      if (typeof crossOrigin === 'string') {
+        bootstrapChunks.push(
+          scriptCrossOrigin,
+          stringToChunk(escapeTextForBrowser(crossOrigin)),
         );
       }
       bootstrapChunks.push(endAsyncScript);
@@ -4787,12 +4819,12 @@ type PreconnectResource = TResource<'preconnect', null>;
 type PreloadAsProps = {
   rel: 'preload',
   as: string,
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 type PreloadModuleProps = {
   rel: 'modulepreload',
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 type PreloadProps = PreloadAsProps | PreloadModuleProps;
@@ -4894,7 +4926,7 @@ function getResourceKey(as: string, href: string): string {
   return `[${as}]${href}`;
 }
 
-export function prefetchDNS(href: string, options?: mixed) {
+export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -4953,7 +4985,7 @@ export function prefetchDNS(href: string, options?: mixed) {
   }
 }
 
-export function preconnect(href: string, options?: ?{crossOrigin?: string}) {
+export function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5016,13 +5048,6 @@ export function preconnect(href: string, options?: ?{crossOrigin?: string}) {
   }
 }
 
-type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 export function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
@@ -5038,20 +5063,25 @@ export function preload(href: string, options: PreloadOptions) {
   }
   const resources = getResources(request);
   if (__DEV__) {
+    let encountered = '';
     if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options == null || typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (typeof options.as !== 'string' || !options.as) {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
       console.error(
-        'ReactDOM.preload(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
-        getValueDescriptorExpectingObjectForWarning(href),
-      );
-    } else if (options == null || typeof options !== 'object') {
-      console.error(
-        'ReactDOM.preload(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preloaded but encountered %s instead.',
-        getValueDescriptorExpectingEnumForWarning(options),
-      );
-    } else if (typeof options.as !== 'string') {
-      console.error(
-        'ReactDOM.preload(): Expected the `as` property in the `options` argument (second) to contain a string value describing the type of resource to be preloaded but encountered %s instead. Values that are valid in for the `as` attribute of a `<link rel="preload" as="..." />` tag are valid here.',
-        getValueDescriptorExpectingEnumForWarning(options.as),
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
+        encountered,
       );
     }
   }
@@ -5060,10 +5090,29 @@ export function preload(href: string, options: PreloadOptions) {
     href &&
     typeof options === 'object' &&
     options !== null &&
-    typeof options.as === 'string'
+    typeof options.as === 'string' &&
+    options.as
   ) {
     const as = options.as;
-    const key = getResourceKey(as, href);
+    let key: string;
+    if (as === 'image') {
+      // For image preloads the key contains either the imageSrcSet + imageSizes or the href but not
+      // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
+      // by varying the href. this is an edge case but it is the most correct behavior.
+      const {imageSrcSet, imageSizes} = options;
+      let uniquePart = '';
+      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+        uniquePart += '[' + imageSrcSet + ']';
+        if (typeof imageSizes === 'string') {
+          uniquePart += '[' + imageSizes + ']';
+        }
+      } else {
+        uniquePart += '[][]' + href;
+      }
+      key = getResourceKey(as, uniquePart);
+    } else {
+      key = getResourceKey(as, href);
+    }
     let resource = resources.preloadsMap.get(key);
     if (__DEV__) {
       const devResource = getAsResourceDEV(resource);
@@ -5161,14 +5210,6 @@ export function preload(href: string, options: PreloadOptions) {
   }
 }
 
-type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
-};
 function preinit(href: string, options: PreinitOptions): void {
   if (!enableFloat) {
     return;
@@ -5408,6 +5449,7 @@ function preloadBootstrapScript(
   src: string,
   nonce: ?string,
   integrity: ?string,
+  crossOrigin: ?string,
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
@@ -5427,6 +5469,7 @@ function preloadBootstrapScript(
     as: 'script',
     nonce,
     integrity,
+    crossOrigin,
   };
   const resource: PreloadResource = {
     type: 'preload',
@@ -5448,6 +5491,7 @@ function preloadBootstrapModule(
   src: string,
   nonce: ?string,
   integrity: ?string,
+  crossOrigin: ?string,
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
@@ -5466,6 +5510,7 @@ function preloadBootstrapModule(
     href: src,
     nonce,
     integrity,
+    crossOrigin,
   };
   const resource: PreloadResource = {
     type: 'preload',
@@ -5507,11 +5552,18 @@ function preloadPropsFromPreloadOptions(
   return {
     rel: 'preload',
     as,
-    href,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === 'image' && options.imageSrcSet ? undefined : href,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    nonce: options.nonce,
     fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes,
   };
 }
 

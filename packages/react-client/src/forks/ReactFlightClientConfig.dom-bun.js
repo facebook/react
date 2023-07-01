@@ -20,3 +20,4 @@ export const resolveClientReference: any = null;
 export const resolveServerReference: any = null;
 export const preloadModule: any = null;
 export const requireModule: any = null;
+export const usedWithSSR = true;

@@ -17,6 +17,7 @@ let waitFor;
 let waitForPaint;
 let assertLog;
 let waitForAll;
+let waitForMicrotasks;
 
 describe('ReactUse', () => {
   beforeEach(() => {
@@ -40,6 +41,7 @@ describe('ReactUse', () => {
     assertLog = InternalTestUtils.assertLog;
     waitForPaint = InternalTestUtils.waitForPaint;
     waitFor = InternalTestUtils.waitFor;
+    waitForMicrotasks = InternalTestUtils.waitForMicrotasks;
 
     pendingTextRequests = new Map();
   });
@@ -1615,5 +1617,96 @@ describe('ReactUse', () => {
     await act(() => resolveTextRequests('C'));
     assertLog(['C']);
     expect(root).toMatchRenderedOutput('C');
+  });
+
+  // @gate !forceConcurrentByDefaultForTesting
+  test('an async component outside of a Suspense boundary crashes with an error (resolves in microtask)', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    async function AsyncClientComponent() {
+      return <Text text="Hi" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <ErrorBoundary>
+          <AsyncClientComponent />
+        </ErrorBoundary>,
+      );
+    });
+    assertLog([
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+    );
+  });
+
+  // @gate !forceConcurrentByDefaultForTesting
+  test('an async component outside of a Suspense boundary crashes with an error (resolves in macrotask)', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    async function AsyncClientComponent() {
+      await waitForMicrotasks();
+      return <Text text="Hi" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <ErrorBoundary>
+          <AsyncClientComponent />
+        </ErrorBoundary>,
+      );
+    });
+    assertLog([
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      'async/await is not yet supported in Client Components, only Server ' +
+        'Components. This error is often caused by accidentally adding ' +
+        "`'use client'` to a module that was originally written for " +
+        'the server.',
+    );
   });
 });

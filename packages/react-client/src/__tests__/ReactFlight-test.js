@@ -323,6 +323,67 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
   });
 
+  it('can transport Map', async () => {
+    function ComponentClient({prop}) {
+      return `
+        map: ${prop instanceof Map}
+        size: ${prop.size}
+        greet: ${prop.get('hi').greet}
+        content: ${JSON.stringify(Array.from(prop))}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const objKey = {obj: 'key'};
+    const map = new Map([
+      ['hi', {greet: 'world'}],
+      [objKey, 123],
+    ]);
+    const model = <Component prop={map} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(`
+        map: true
+        size: 2
+        greet: world
+        content: [["hi",{"greet":"world"}],[{"obj":"key"},123]]
+      `);
+  });
+
+  it('can transport Set', async () => {
+    function ComponentClient({prop}) {
+      return `
+        set: ${prop instanceof Set}
+        size: ${prop.size}
+        hi: ${prop.has('hi')}
+        content: ${JSON.stringify(Array.from(prop))}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const objKey = {obj: 'key'};
+    const set = new Set(['hi', objKey]);
+    const model = <Component prop={set} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(`
+        set: true
+        size: 2
+        hi: true
+        content: ["hi",{"obj":"key"}]
+      `);
+  });
+
   it('can render a lazy component as a shared component on the server', async () => {
     function SharedComponent({text}) {
       return (

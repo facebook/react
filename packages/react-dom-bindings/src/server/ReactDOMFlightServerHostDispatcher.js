@@ -13,7 +13,7 @@ import type {
   PreconnectOptions,
   PreloadOptions,
   PreinitOptions,
-} from 'react-dom/src/ReactDOMDispatcher';
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {enableFloat} from 'shared/ReactFeatureFlags';
 
@@ -52,7 +52,7 @@ function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   }
 }
 
-function preconnect(href: string, options: ?PreconnectOptions) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();

@@ -4,6 +4,8 @@ import Container from './Container.js';
 
 import {Counter} from './Counter.js';
 import {Counter as Counter2} from './Counter2.js';
+import AsyncModule from './cjs/Counter3.js';
+const Counter3 = await(AsyncModule);
 
 import ShowMore from './ShowMore.js';
 import Button from './Button.js';
@@ -28,6 +30,7 @@ export default async function App() {
           <h1>{getServerState()}</h1>
           <Counter />
           <Counter2 />
+          <Counter3 />
           <ul>
             {todos.map(todo => (
               <li key={todo.id}>{todo.text}</li>
