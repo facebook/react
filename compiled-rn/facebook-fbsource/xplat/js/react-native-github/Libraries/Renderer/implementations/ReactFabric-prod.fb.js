@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e58ec2886a35a2d34bc652c588d143e7>>
+ * @generated SignedSource<<23a36138dca05b18c63f619db0604fe8>>
  */
 
 "use strict";
@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_238 = {
+var injectedNamesToPlugins$jscomp$inline_239 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_238 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_239 = !1,
-  pluginName$jscomp$inline_240;
-for (pluginName$jscomp$inline_240 in injectedNamesToPlugins$jscomp$inline_238)
+  isOrderingDirty$jscomp$inline_240 = !1,
+  pluginName$jscomp$inline_241;
+for (pluginName$jscomp$inline_241 in injectedNamesToPlugins$jscomp$inline_239)
   if (
-    injectedNamesToPlugins$jscomp$inline_238.hasOwnProperty(
-      pluginName$jscomp$inline_240
+    injectedNamesToPlugins$jscomp$inline_239.hasOwnProperty(
+      pluginName$jscomp$inline_241
     )
   ) {
-    var pluginModule$jscomp$inline_241 =
-      injectedNamesToPlugins$jscomp$inline_238[pluginName$jscomp$inline_240];
+    var pluginModule$jscomp$inline_242 =
+      injectedNamesToPlugins$jscomp$inline_239[pluginName$jscomp$inline_241];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_240) ||
-      namesToPlugins[pluginName$jscomp$inline_240] !==
-        pluginModule$jscomp$inline_241
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_241) ||
+      namesToPlugins[pluginName$jscomp$inline_241] !==
+        pluginModule$jscomp$inline_242
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_240])
+      if (namesToPlugins[pluginName$jscomp$inline_241])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_240 + "`.")
+            (pluginName$jscomp$inline_241 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_240] =
-        pluginModule$jscomp$inline_241;
-      isOrderingDirty$jscomp$inline_239 = !0;
+      namesToPlugins[pluginName$jscomp$inline_241] =
+        pluginModule$jscomp$inline_242;
+      isOrderingDirty$jscomp$inline_240 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_239 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_240 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -2442,7 +2442,11 @@ function trackUsedThenable(thenableState, thenable, index) {
     case "fulfilled":
       return thenable.value;
     case "rejected":
-      throw thenable.reason;
+      throw (
+        ((thenableState = thenable.reason),
+        checkIfUseWrappedInAsyncCatch(thenableState),
+        thenableState)
+      );
     default:
       if ("string" === typeof thenable.status) thenable.then(noop, noop);
       else {
@@ -2469,12 +2473,16 @@ function trackUsedThenable(thenableState, thenable, index) {
             }
           }
         );
-      }
-      switch (thenable.status) {
-        case "fulfilled":
-          return thenable.value;
-        case "rejected":
-          throw thenable.reason;
+        switch (thenable.status) {
+          case "fulfilled":
+            return thenable.value;
+          case "rejected":
+            throw (
+              ((thenableState = thenable.reason),
+              checkIfUseWrappedInAsyncCatch(thenableState),
+              thenableState)
+            );
+        }
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -2489,6 +2497,12 @@ function getSuspendedThenable() {
   var thenable = suspendedThenable;
   suspendedThenable = null;
   return thenable;
+}
+function checkIfUseWrappedInAsyncCatch(rejectedReason) {
+  if (rejectedReason === SuspenseException)
+    throw Error(
+      "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
+    );
 }
 var thenableState$1 = null,
   thenableIndexCounter$1 = 0;
@@ -5855,14 +5869,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$63 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$63 = lastTailNode),
+      for (var lastTailNode$64 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$64 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$63
+      null === lastTailNode$64
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$63.sibling = null);
+        : (lastTailNode$64.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -5872,19 +5886,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$64 = completedWork.child; null !== child$64; )
-      (newChildLanes |= child$64.lanes | child$64.childLanes),
-        (subtreeFlags |= child$64.subtreeFlags & 31457280),
-        (subtreeFlags |= child$64.flags & 31457280),
-        (child$64.return = completedWork),
-        (child$64 = child$64.sibling);
+    for (var child$65 = completedWork.child; null !== child$65; )
+      (newChildLanes |= child$65.lanes | child$65.childLanes),
+        (subtreeFlags |= child$65.subtreeFlags & 31457280),
+        (subtreeFlags |= child$65.flags & 31457280),
+        (child$65.return = completedWork),
+        (child$65 = child$65.sibling);
   else
-    for (child$64 = completedWork.child; null !== child$64; )
-      (newChildLanes |= child$64.lanes | child$64.childLanes),
-        (subtreeFlags |= child$64.subtreeFlags),
-        (subtreeFlags |= child$64.flags),
-        (child$64.return = completedWork),
-        (child$64 = child$64.sibling);
+    for (child$65 = completedWork.child; null !== child$65; )
+      (newChildLanes |= child$65.lanes | child$65.childLanes),
+        (subtreeFlags |= child$65.subtreeFlags),
+        (subtreeFlags |= child$65.flags),
+        (child$65.return = completedWork),
+        (child$65 = child$65.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -6364,8 +6378,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$79) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$79);
+      } catch (error$80) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$80);
       }
     else ref.current = null;
 }
@@ -6469,10 +6483,10 @@ function commitHookEffectListMount(flags, finishedWork) {
     var effect = (finishedWork = finishedWork.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var create$80 = effect.create,
+        var create$81 = effect.create,
           inst = effect.inst;
-        create$80 = create$80();
-        inst.destroy = create$80;
+        create$81 = create$81();
+        inst.destroy = create$81;
       }
       effect = effect.next;
     } while (effect !== finishedWork);
@@ -6535,11 +6549,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$81) {
+          } catch (error$82) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$81
+              error$82
             );
           }
         }
@@ -6859,8 +6873,8 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         }
         try {
           commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-        } catch (error$83) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$83);
+        } catch (error$84) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$84);
         }
       }
       break;
@@ -7517,16 +7531,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         exitStatus = renderRootSync(root, lanes);
         if (2 === exitStatus) {
           errorRetryLanes = lanes;
-          var errorRetryLanes$92 = getLanesToRetrySynchronouslyOnError(
+          var errorRetryLanes$93 = getLanesToRetrySynchronouslyOnError(
             root,
             errorRetryLanes
           );
-          0 !== errorRetryLanes$92 &&
-            ((lanes = errorRetryLanes$92),
+          0 !== errorRetryLanes$93 &&
+            ((lanes = errorRetryLanes$93),
             (exitStatus = recoverFromConcurrentError(
               root,
               errorRetryLanes,
-              errorRetryLanes$92
+              errorRetryLanes$93
             )));
         }
         if (1 === exitStatus)
@@ -7809,8 +7823,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$94) {
-      handleThrow(root, thrownValue$94);
+    } catch (thrownValue$95) {
+      handleThrow(root, thrownValue$95);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -7916,8 +7930,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$96) {
-      handleThrow(root, thrownValue$96);
+    } catch (thrownValue$97) {
+      handleThrow(root, thrownValue$97);
     }
   while (1);
   resetContextDependencies();
@@ -8085,10 +8099,10 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                       };
                       suspenseBoundary.updateQueue = newOffscreenQueue;
                     } else {
-                      var retryQueue$31 = offscreenQueue.retryQueue;
-                      null === retryQueue$31
+                      var retryQueue$32 = offscreenQueue.retryQueue;
+                      null === retryQueue$32
                         ? (offscreenQueue.retryQueue = new Set([wakeable]))
-                        : retryQueue$31.add(wakeable);
+                        : retryQueue$32.add(wakeable);
                     }
                   }
                   break;
@@ -9420,10 +9434,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1042 = {
+  devToolsConfig$jscomp$inline_1043 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-e7a561cd",
+    version: "18.3.0-canary-2909dc0f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9439,11 +9453,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1284 = {
-  bundleType: devToolsConfig$jscomp$inline_1042.bundleType,
-  version: devToolsConfig$jscomp$inline_1042.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1042.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1042.rendererConfig,
+var internals$jscomp$inline_1285 = {
+  bundleType: devToolsConfig$jscomp$inline_1043.bundleType,
+  version: devToolsConfig$jscomp$inline_1043.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1043.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1043.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9459,26 +9473,26 @@ var internals$jscomp$inline_1284 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1042.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1043.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-e7a561cd"
+  reconcilerVersion: "18.3.0-canary-2909dc0f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1285 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1286 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1285.isDisabled &&
-    hook$jscomp$inline_1285.supportsFiber
+    !hook$jscomp$inline_1286.isDisabled &&
+    hook$jscomp$inline_1286.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1285.inject(
-        internals$jscomp$inline_1284
+      (rendererID = hook$jscomp$inline_1286.inject(
+        internals$jscomp$inline_1285
       )),
-        (injectedHook = hook$jscomp$inline_1285);
+        (injectedHook = hook$jscomp$inline_1286);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
