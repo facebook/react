@@ -132,7 +132,15 @@ export function describeNativeComponentFrame(
       // TODO(luna): This will currently only throw if the function component
       // tries to access React/ReactDOM/props. We should probably make this throw
       // in simple components too
-      fn();
+      const maybePromise = fn();
+
+      // If the function component returns a promise, it's likely an async
+      // component, which we don't yet support. Attach a noop catch handler to
+      // silence the error.
+      // TODO: Implement component stacks for async client components?
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
     }
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.
