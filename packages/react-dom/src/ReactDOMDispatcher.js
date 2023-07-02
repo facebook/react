@@ -7,25 +7,34 @@
  * @flow
  */
 
-export type PrefetchDNSOptions = {};
-export type PreconnectOptions = {crossOrigin?: string};
-export type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-};
-export type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
+const PrefetchDNSOptions = {};
+const PreconnectOptions = {crossOrigin: undefined};
+const PreloadOptions = {
+  as: undefined,
+  crossOrigin: undefined,
+  integrity: undefined,
+  type: undefined,
 };
 
-export type HostDispatcher = {
-  prefetchDNS: (href: string, options?: ?PrefetchDNSOptions) => void,
-  preconnect: (href: string, options: ?PreconnectOptions) => void,
-  preload: (href: string, options: PreloadOptions) => void,
-  preinit: (href: string, options: PreinitOptions) => void,
+const PreinitOptions = {
+  as: undefined,
+  precedence: undefined,
+  crossOrigin: undefined,
+  integrity: undefined,
+  nonce: undefined,
+};
+
+const HostDispatcher = {
+  prefetchDNS: function(href, options) {},
+  preconnect: function(href, options) {},
+  preload: function(href, options) {},
+  preinit: function(href, options) {},
+};
+
+module.exports = {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+  HostDispatcher,
 };

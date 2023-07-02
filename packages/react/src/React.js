@@ -7,8 +7,8 @@
  * @flow
  */
 
-import ReactVersion from 'shared/ReactVersion';
-import {
+const ReactVersion = require('shared/ReactVersion');
+const {
   REACT_FRAGMENT_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_PROFILER_TYPE,
@@ -20,23 +20,23 @@ import {
   REACT_SCOPE_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
-} from 'shared/ReactSymbols';
+} = require('shared/ReactSymbols');
 
-import {Component, PureComponent} from './ReactBaseClasses';
-import {createRef} from './ReactCreateRef';
-import {forEach, map, count, toArray, only} from './ReactChildren';
-import {
-  createElement as createElementProd,
-  createFactory as createFactoryProd,
-  cloneElement as cloneElementProd,
+const {Component, PureComponent} = require('./ReactBaseClasses');
+const {createRef} = require('./ReactCreateRef');
+const {forEach, map, count, toArray, only} = require('./ReactChildren');
+const {
+  createElement: createElementProd,
+  createFactory: createFactoryProd,
+  cloneElement: cloneElementProd,
   isValidElement,
-} from './ReactElement';
-import {createContext} from './ReactContext';
-import {lazy} from './ReactLazy';
-import {forwardRef} from './ReactForwardRef';
-import {memo} from './ReactMemo';
-import {cache} from './ReactCache';
-import {
+} = require('./ReactElement');
+const {createContext} = require('./ReactContext');
+const {lazy} = require('./ReactLazy');
+const {forwardRef} = require('./ReactForwardRef');
+const {memo} = require('./ReactMemo');
+const {cache} = require('./ReactCache');
+const {
   getCacheSignal,
   getCacheForType,
   useCallback,
@@ -60,28 +60,32 @@ import {
   use,
   useMemoCache,
   useOptimistic,
-} from './ReactHooks';
-import {
+} = require('./ReactHooks');
+const {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
-} from './ReactElementValidator';
-import {createServerContext} from './ReactServerContext';
-import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
-import {startTransition} from './ReactStartTransition';
-import {act} from './ReactAct';
+} = require('./ReactElementValidator');
+const {createServerContext} = require('./ReactServerContext');
+const {createMutableSource} = require('./ReactMutableSource');
+const ReactSharedInternals = require('./ReactSharedInternals');
+const {startTransition} = require('./ReactStartTransition');
+const {act} = require('./ReactAct');
 
-// TODO: Move this branching into the other module instead and just re-export.
-const createElement: any = __DEV__
-  ? createElementWithValidation
-  : createElementProd;
-const cloneElement: any = __DEV__
-  ? cloneElementWithValidation
-  : cloneElementProd;
-const createFactory: any = __DEV__
-  ? createFactoryWithValidation
-  : createFactoryProd;
+let createElement;
+let cloneElement;
+let createFactory;
+
+if (__DEV__) {
+  createElement = createElementWithValidation;
+  cloneElement = cloneElementWithValidation;
+  createFactory = createFactoryWithValidation;
+} else {
+  createElement = createElementProd;
+  cloneElement = cloneElementProd;
+  createFactory = createFactoryProd;
+}
+
 
 const Children = {
   map,
@@ -91,7 +95,7 @@ const Children = {
   only,
 };
 
-export {
+module.exports = {
   Children,
   createMutableSource,
   createRef,
@@ -106,47 +110,43 @@ export {
   useCallback,
   useContext,
   useEffect,
-  useEffectEvent as experimental_useEffectEvent,
+  experimental_useEffectEvent: useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,
-  useOptimistic as experimental_useOptimistic,
+  experimental_useOptimistic: useOptimistic,
   useSyncExternalStore,
   useReducer,
   useRef,
   useState,
-  REACT_FRAGMENT_TYPE as Fragment,
-  REACT_PROFILER_TYPE as Profiler,
-  REACT_STRICT_MODE_TYPE as StrictMode,
-  REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
-  REACT_SUSPENSE_TYPE as Suspense,
+  Fragment: REACT_FRAGMENT_TYPE,
+  Profiler: REACT_PROFILER_TYPE,
+  StrictMode: REACT_STRICT_MODE_TYPE,
+  unstable_DebugTracingMode: REACT_DEBUG_TRACING_MODE_TYPE,
+  Suspense: REACT_SUSPENSE_TYPE,
   createElement,
   cloneElement,
   isValidElement,
-  ReactVersion as version,
-  ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  // Deprecated behind disableCreateFactory
+  version: ReactVersion,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
   createFactory,
-  // Concurrent Mode
   useTransition,
   startTransition,
   useDeferredValue,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
-  getCacheSignal as unstable_getCacheSignal,
-  getCacheForType as unstable_getCacheForType,
-  useCacheRefresh as unstable_useCacheRefresh,
-  REACT_CACHE_TYPE as unstable_Cache,
+  SuspenseList: REACT_SUSPENSE_LIST_TYPE,
+  unstable_LegacyHidden: REACT_LEGACY_HIDDEN_TYPE,
+  unstable_Offscreen: REACT_OFFSCREEN_TYPE,
+  unstable_getCacheSignal: getCacheSignal,
+  unstable_getCacheForType: getCacheForType,
+  unstable_useCacheRefresh: useCacheRefresh,
+  unstable_Cache: REACT_CACHE_TYPE,
   use,
-  useMemoCache as unstable_useMemoCache,
-  // enableScopeAPI
-  REACT_SCOPE_TYPE as unstable_Scope,
-  // enableTransitionTracing
-  REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
+  unstable_useMemoCache: useMemoCache,
+  unstable_Scope: REACT_SCOPE_TYPE,
+  unstable_TracingMarker: REACT_TRACING_MARKER_TYPE,
   useId,
   act,
 };

@@ -7,22 +7,21 @@
  * @flow
  */
 
-import type {HostDispatcher} from './ReactDOMDispatcher';
+const { HostDispatcher } = require('./ReactDOMDispatcher');
 
-type InternalsType = {
-  usingClientEntryPoint: boolean,
-  Events: [any, any, any, any, any, any],
-  Dispatcher: {
-    current: null | HostDispatcher,
-  },
-};
-
-const Internals: InternalsType = ({
+const InternalsType = {
   usingClientEntryPoint: false,
-  Events: null,
+  Events: [null, null, null, null, null, null],
   Dispatcher: {
     current: null,
   },
-}: any);
+};
 
-export default Internals;
+const Internals = {
+  ...InternalsType,
+  Dispatcher: {
+    current: null,
+  },
+};
+
+module.exports = Internals;

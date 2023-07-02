@@ -16,13 +16,11 @@
     "react-dom": "^18.2.0"
   },
   "scripts": {
-    "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prestart": "cp -r ../../build/oss-experimental/* ./node_modules/",
-    "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
+    "predev": "if not exist public\\ (mkdir public\\) && copy ..\\..\\build\\oss-experimental\\react\\umd\\react.development.js public\\ && copy ..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom.development.js public\\ && copy ..\\..\\build\\oss-experimental\\react-dom\\umd\\react-dom-server-legacy.browser.development.js public\\",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:client": "PORT=3001 react-scripts start",
-    "dev:server": "NODE_ENV=development node server",
-    "start": "react-scripts build && NODE_ENV=production node server",
+    "dev:client": "set PORT=3001&& react-scripts start",
+    "dev:server": "set NODE_ENV=development&& node server",
+    "start": "react-scripts build && set NODE_ENV=production&& node server",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
