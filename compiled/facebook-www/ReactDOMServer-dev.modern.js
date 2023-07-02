@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0f8c7382";
+var ReactVersion = "18.3.0-www-modern-dbe91128";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -8157,7 +8157,14 @@ function describeNativeComponentFrame(fn, construct) {
       // tries to access React/ReactDOM/props. We should probably make this throw
       // in simple components too
 
-      fn();
+      var maybePromise = fn(); // If the function component returns a promise, it's likely an async
+      // component, which we don't yet support. Attach a noop catch handler to
+      // silence the error.
+      // TODO: Implement component stacks for async client components?
+
+      if (maybePromise && typeof maybePromise.catch === "function") {
+        maybePromise.catch(function () {});
+      }
     }
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.

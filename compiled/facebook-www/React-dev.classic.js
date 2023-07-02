@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-60aa7d44";
+var ReactVersion = "18.3.0-www-classic-cc85cd34";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2293,7 +2293,14 @@ function describeNativeComponentFrame(fn, construct) {
       // tries to access React/ReactDOM/props. We should probably make this throw
       // in simple components too
 
-      fn();
+      var maybePromise = fn(); // If the function component returns a promise, it's likely an async
+      // component, which we don't yet support. Attach a noop catch handler to
+      // silence the error.
+      // TODO: Implement component stacks for async client components?
+
+      if (maybePromise && typeof maybePromise.catch === "function") {
+        maybePromise.catch(function () {});
+      }
     }
   } catch (sample) {
     // This is inlined manually because closure doesn't do it for us.
