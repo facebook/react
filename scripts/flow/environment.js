@@ -170,6 +170,10 @@ declare module 'util' {
   }
 }
 
+declare module 'stream/web' {
+  declare class ReadableStream extends ReadableStream {}
+}
+
 declare module 'busboy' {
   import type {Writable, Readable} from 'stream';
 

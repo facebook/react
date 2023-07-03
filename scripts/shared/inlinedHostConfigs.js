@@ -45,6 +45,27 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-nodeweb',
+    entryPoints: ['react-dom/src/server/ReactDOMFizzServerNodeWeb.js'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/src/server/ReactDOMFizzServerNodeWeb.js',
+      'react-server-dom-webpack',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-bun',
     entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
     paths: [
