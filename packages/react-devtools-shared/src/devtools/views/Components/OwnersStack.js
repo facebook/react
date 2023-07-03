@@ -191,7 +191,10 @@ export default function OwnerStack(): React.Node {
           ))}
       </div>
       <div className={styles.VRule} />
-      <Button onClick={() => selectOwner(null)} title="Back to tree view">
+      <Button
+        className={styles.IconButton}
+        onClick={() => selectOwner(null)}
+        title="Back to tree view">
         <ButtonIcon type="close" />
       </Button>
     </div>
