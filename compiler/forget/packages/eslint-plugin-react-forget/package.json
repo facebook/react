@@ -11,11 +11,7 @@
   "exports": "./lib/index.js",
   "scripts": {
     "build": "tsc",
-    "lint": "npm-run-all \"lint:*\"",
-    "lint:eslint-docs": "npm-run-all \"update:eslint-docs -- --check\"",
-    "lint:js": "eslint .",
-    "test": "tsc && jest",
-    "update:eslint-docs": "eslint-doc-generator"
+    "test": "tsc && jest"
   },
   "dependencies": {
     "@babel/core": "^7.19.1",
