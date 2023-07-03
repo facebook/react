@@ -15,8 +15,6 @@
   },
   "dependencies": {
     "@babel/core": "^7.19.1",
-    "@babel/parser": "^7.19.1",
-    "@babel/traverse": "^7.19.1",
     "babel-plugin-react-forget": "*",
     "hermes-parser": "^0.12.1"
   },
