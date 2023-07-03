@@ -14,7 +14,7 @@ const ERROR = 2;
 module.exports = {
   extends: ['prettier'],
 
-  // Stop ESLint from looking for a configuration file in parent folders
+  // f Stop ESLint from looking for a configuration file in parent folders
   root: true,
 
   plugins: [
