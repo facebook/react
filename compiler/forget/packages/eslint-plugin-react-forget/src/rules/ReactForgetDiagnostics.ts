@@ -90,11 +90,7 @@ const rule: Rule.RuleModule = {
           filename,
           highlightCode: false,
           retainLines: true,
-          plugins: [
-            [ReactForgetBabelPlugin, COMPILER_OPTIONS],
-            "babel-plugin-fbt",
-            "babel-plugin-fbt-runtime",
-          ],
+          plugins: [[ReactForgetBabelPlugin, COMPILER_OPTIONS]],
           sourceType: "module",
         });
       } catch (err) {
