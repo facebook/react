@@ -264,7 +264,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           <div
             className={
               element.isStrictModeNonCompliant
-                ? styles.StrictModeNonCompliantComponent
+                ? styles.StrictModeNonCompliant
                 : styles.Component
             }
             title={element.displayName}>
@@ -272,16 +272,12 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           </div>
         </div>
         {canOpenInEditor && (
-          <Button
-            className={styles.IconButton}
-            onClick={onOpenInEditor}
-            title="Open in editor">
+          <Button onClick={onOpenInEditor} title="Open in editor">
             <ButtonIcon type="editor" />
           </Button>
         )}
         {canToggleError && (
           <Toggle
-            className={styles.IconButton}
             isChecked={isErrored}
             onChange={toggleErrored}
             title={
@@ -294,7 +290,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         )}
         {canToggleSuspense && (
           <Toggle
-            className={styles.IconButton}
             isChecked={isSuspended}
             onChange={toggleSuspended}
             title={
@@ -307,7 +302,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         )}
         {store.supportsNativeInspection && (
           <Button
-            className={styles.IconButton}
             onClick={highlightElement}
             title="Inspect the matching DOM element">
             <ButtonIcon type="view-dom" />
@@ -315,7 +309,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         )}
         {!hideLogAction && (
           <Button
-            className={styles.IconButton}
             onClick={logElement}
             title="Log this component data to the console">
             <ButtonIcon type="log-data" />
@@ -323,7 +316,6 @@ export default function InspectedElementWrapper(_: Props): React.Node {
         )}
         {!hideViewSourceAction && (
           <Button
-            className={styles.IconButton}
             disabled={!canViewSource}
             onClick={viewSource}
             title="View source for this element">
