@@ -28,7 +28,7 @@ function isHookName(s) {
  */
 
 function isHook(node) {
-  if (node.type === 'Identifier') {
+  if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
     return isHookName(node.name);
   } else if (
     node.type === 'MemberExpression' &&
@@ -49,7 +49,10 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  return (
+    (node.type === 'Identifier' || node.type === 'JSXIdentifier') &&
+    /^[A-Z]/.test(node.name)
+  );
 }
 
 function isReactFunction(node, functionName) {
@@ -677,6 +680,15 @@ function getFunctionName(node) {
       //
       // class {useHook = () => {}}
       // class {useHook() {}}
+    } else if (
+      node.parent.type === 'JSXExpressionContainer' &&
+      node.parent.parent.type === 'JSXAttribute' &&
+      node.parent.parent.name.type === 'JSXIdentifier'
+    ) {
+      // <Component Child={() => {}} />
+      // is actually
+      // createElement(Component, { Child: () => {}})
+      return node.parent.parent.name;
     } else if (
       node.parent.type === 'AssignmentPattern' &&
       node.parent.right === node &&
