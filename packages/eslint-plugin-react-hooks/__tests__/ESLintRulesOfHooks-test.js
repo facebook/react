@@ -479,6 +479,22 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid because hook names can include non-latin characters.
+        function ComponentWithHook() {
+          useÞursakóði();
+        };
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because component names can include non-latin characters.
+        function ÆðiÞurs() {
+          useÞursakóði();
+        };
+      `,
+    },
   ],
   invalid: [
     {
@@ -1041,6 +1057,24 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        // Valid because it is not a real hook (lowercased).
+        Hook.useþursaæði();
+        // Invalid in the top-level scope because it is a hook.
+        Hook.useÞursaÆði();
+      `,
+      errors: [topLevelError('Hook.useÞursaÆði')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because this is not a component.
+        function æðiÞurs() {
+          useÞursakóði();
+        };
+      `,
+      errors: [functionError('useÞursakóði', 'æðiÞurs')],
     },
   ],
 };
