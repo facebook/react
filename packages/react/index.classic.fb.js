@@ -17,7 +17,8 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
-  SuspenseList as unstable_SuspenseList,
+  SuspenseList,
+  SuspenseList as unstable_SuspenseList, // TODO: Remove once call sights updated to SuspenseList
   cloneElement,
   createContext,
   createElement,
