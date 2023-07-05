@@ -17,7 +17,7 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
-  SuspenseList,
+  SuspenseList as unstable_SuspenseList,
   cloneElement,
   createContext,
   createElement,
