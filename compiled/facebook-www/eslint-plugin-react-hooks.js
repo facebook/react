@@ -623,10 +623,20 @@ var RulesOfHooks = {
 
 
                 if (isDirectlyInsideComponentOrHook) {
-                  // Report an error if a hook does not reach all finalizing code
+                  // Report an error if the hook is called inside an async function.
+                  var isAsyncFunction = codePathNode.async;
+
+                  if (isAsyncFunction) {
+                    context.report({
+                      node: hook,
+                      message: "React Hook \"" + context.getSource(hook) + "\" cannot be " + 'called in an async function.'
+                    });
+                  } // Report an error if a hook does not reach all finalizing code
                   // path segments.
                   //
                   // Special case when we think there might be an early return.
+
+
                   if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd && !isUseIdentifier(hook) // `use(...)` can be called conditionally.
                   ) {
                       var message = "React Hook \"" + context.getSource(hook) + "\" is called " + 'conditionally. React Hooks must be called in the exact ' + 'same order in every component render.' + (possiblyHasEarlyReturn ? ' Did you accidentally call a React Hook after an' + ' early return?' : '');
