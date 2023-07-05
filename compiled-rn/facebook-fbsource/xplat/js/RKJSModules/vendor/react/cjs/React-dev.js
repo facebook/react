@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<85cf0b54e8f0b417c4ef6e8f35c5a677>>
+ * @generated SignedSource<<e07addc76261adf5c9844f571089b66c>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-7118f5dd7-20230705";
+var ReactVersion = "18.3.0-canary-e91142dd6-20230705";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -3928,11 +3928,8 @@ exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
 exports.unstable_act = act;
 exports.unstable_getCacheForType = getCacheForType;
 exports.unstable_getCacheSignal = getCacheSignal;
-exports.unstable_startTransition = startTransition;
 exports.unstable_useCacheRefresh = useCacheRefresh;
-exports.unstable_useDeferredValue = useDeferredValue;
 exports.unstable_useMemoCache = useMemoCache;
-exports.unstable_useTransition = useTransition;
 exports.use = use;
 exports.useCallback = useCallback;
 exports.useContext = useContext;
