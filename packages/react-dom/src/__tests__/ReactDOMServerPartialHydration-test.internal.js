@@ -116,7 +116,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Offscreen = React.unstable_Offscreen;
     useSyncExternalStore = React.useSyncExternalStore;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
 
     const InternalTestUtils = require('internal-test-utils');
