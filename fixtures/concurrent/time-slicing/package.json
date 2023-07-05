@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "glamor": "^2.20.40",
-    "react": "0.0.0-experimental-269dd6ec5",
-    "react-dom": "0.0.0-experimental-269dd6ec5",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
     "react-markdown": "^3.2.0",
     "react-scripts": "^1.1.4",
     "victory": "^0.25.6"
