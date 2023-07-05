@@ -406,13 +406,11 @@ type TestFilter =
     };
 
 async function readTestFilter(): Promise<TestFilter | null> {
-  const input = (await exists(FILTER_PATH))
-    ? await fs.readFile(FILTER_PATH, "utf8")
-    : null;
-  if (input === null) {
-    return null;
+  if (!(await exists(FILTER_PATH))) {
+    throw new Error(`testfilter file not found at ${FILTER_PATH}`);
   }
 
+  const input = await fs.readFile(FILTER_PATH, "utf8");
   const lines = input.trim().split("\n");
   if (lines.length < 2) {
     console.warn("Misformed filter file. Expected at least two lines.");
@@ -461,7 +459,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     let isCompilerValid = false;
     let lastUpdate = -1;
     let filterMode: boolean = false;
-    let testFilter: TestFilter | null = await readTestFilter();
+    let testFilter: TestFilter | null;
 
     function isRealUpdate(): boolean {
       // Try to ignore changes that occurred as a result of our explicitly updating
@@ -487,7 +485,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
         const results = await run(
           worker,
           opts,
-          filterMode ? testFilter : null,
+          filterMode ? await readTestFilter() : null,
           compilerVersion
         );
         if (mode === Mode.Update) {
@@ -508,7 +506,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
       console.log(
         "\n" +
           (filterMode
-            ? `Current mode = FILTER, filter test fixtures by "${FILTER_FILENAME}".`
+            ? `Current mode = FILTER, filter test fixtures by "${FILTER_PATH}".`
             : "Current mode = NORMAL, run all test fixtures.") +
           "\nWaiting for input or file changes...\n" +
           "u     - update all fixtures\n" +
@@ -567,8 +565,8 @@ export async function main(opts: RunnerOptions): Promise<void> {
           events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !==
           -1
         ) {
-          testFilter = await readTestFilter();
           if (filterMode) {
+            testFilter = await readTestFilter();
             onChange({ mode: Mode.Test });
           }
         }
