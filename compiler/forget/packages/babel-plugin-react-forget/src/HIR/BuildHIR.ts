@@ -1790,10 +1790,15 @@ function lowerExpression(
         builder,
         expr.node.loc ?? GeneratedSource
       );
-      const identifier = lowerIdentifier(
+      const identifier = lowerIdentifierForAssignment(
         builder,
+        argument.node.loc ?? GeneratedSource,
+        InstructionKind.Reassign,
         argument as NodePath<t.Identifier>
       );
+      if (identifier === null) {
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       builder.push({
         id: makeInstructionId(0),
         lvalue: { ...temp },
