@@ -19,14 +19,8 @@
     "improve-images": "node ./improveImages.mjs"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.1",
     "@babel/node": "^7.14.7",
-    "@babel/parser": "^7.14.8",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-transform-flow-strip-types": "^7.10.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.10.4",
-    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
-    "@babel/preset-react": "^7.10.4",
     "acorn-jsx": "^5.2.0",
     "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",

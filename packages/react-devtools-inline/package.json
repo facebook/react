@@ -26,13 +26,8 @@
     "sourcemap-codec": "^1.4.8"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-transform-flow-strip-types": "^7.10.4",
-    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
-    "@babel/preset-flow": "^7.10.4",
-    "@babel/preset-react": "^7.10.4",
     "@playwright/test": "^1.16.3",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
