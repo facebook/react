@@ -32,7 +32,6 @@ export {
   memo,
   cache,
   startTransition,
-  startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
   unstable_TracingMarker,
   unstable_DebugTracingMode,
@@ -48,7 +47,6 @@ export {
   useContext,
   useDebugValue,
   useDeferredValue,
-  useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
   experimental_useEffectEvent,
   useImperativeHandle,
@@ -61,7 +59,6 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
-  useTransition as unstable_useTransition, // TODO: Remove once call sights updated to useTransition
   version,
 } from './src/React';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';
