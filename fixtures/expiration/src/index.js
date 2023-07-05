@@ -1,21 +1,26 @@
-const React = global.React;
-const ReactDOM = global.ReactDOM;
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-class Counter extends React.unstable_AsyncComponent {
-  state = {counter: 0};
-  onCommit() {
-    setImmediate(() => {
-      this.setState(state => ({
-        counter: state.counter + 1,
-      }));
-    });
+class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { counter: 0 };
   }
+
+  incrementCounter = () => {
+    this.setState(state => ({
+      counter: state.counter + 1,
+    }));
+  }
+
   componentDidMount() {
-    this.onCommit();
+    this.incrementCounter();
   }
+
   componentDidUpdate() {
-    this.onCommit();
+    setTimeout(this.incrementCounter, 1000); // Add a delay before incrementing
   }
+
   render() {
     return <h1>{this.state.counter}</h1>;
   }
