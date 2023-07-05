@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-01767f27";
+var ReactVersion = "18.3.0-www-modern-d09ac638";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -4143,11 +4143,8 @@ exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_act = act;
 exports.unstable_getCacheForType = getCacheForType;
 exports.unstable_getCacheSignal = getCacheSignal;
-exports.unstable_startTransition = startTransition;
 exports.unstable_useCacheRefresh = useCacheRefresh;
-exports.unstable_useDeferredValue = useDeferredValue;
 exports.unstable_useMemoCache = useMemoCache;
-exports.unstable_useTransition = useTransition;
 exports.use = use;
 exports.useCallback = useCallback;
 exports.useContext = useContext;

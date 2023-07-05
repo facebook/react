@@ -249,14 +249,8 @@ function createCacheRoot() {
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentDispatcher = { current: null };
-function useTransition() {
-  return ReactCurrentDispatcher.current.useTransition();
-}
-function useDeferredValue(value) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value);
-}
-var ReactCurrentBatchConfig = { transition: null },
+var ReactCurrentDispatcher = { current: null },
+  ReactCurrentBatchConfig = { transition: null },
   ReactSharedInternals = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentCache: ReactCurrentCache,
@@ -264,22 +258,8 @@ var ReactCurrentBatchConfig = { transition: null },
     ReactCurrentOwner: ReactCurrentOwner$1,
     ContextRegistry: {}
   },
-  ContextRegistry = ReactSharedInternals.ContextRegistry;
-function startTransition(scope, options) {
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
-  enableTransitionTracing &&
-    void 0 !== options &&
-    void 0 !== options.name &&
-    ((ReactCurrentBatchConfig.transition.name = options.name),
-    (ReactCurrentBatchConfig.transition.startTime = -1));
-  try {
-    scope();
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
-  }
-}
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
+  ContextRegistry = ReactSharedInternals.ContextRegistry,
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
   var propName,
@@ -537,7 +517,20 @@ exports.memo = function (type, compare) {
     compare: void 0 === compare ? null : compare
   };
 };
-exports.startTransition = startTransition;
+exports.startTransition = function (scope, options) {
+  var prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = {};
+  enableTransitionTracing &&
+    void 0 !== options &&
+    void 0 !== options.name &&
+    ((ReactCurrentBatchConfig.transition.name = options.name),
+    (ReactCurrentBatchConfig.transition.startTime = -1));
+  try {
+    scope();
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
+};
 exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
@@ -563,15 +556,12 @@ exports.unstable_getCacheSignal = function () {
       ),
       dispatcher.signal);
 };
-exports.unstable_startTransition = startTransition;
 exports.unstable_useCacheRefresh = function () {
   return ReactCurrentDispatcher.current.useCacheRefresh();
 };
-exports.unstable_useDeferredValue = useDeferredValue;
 exports.unstable_useMemoCache = function (size) {
   return ReactCurrentDispatcher.current.useMemoCache(size);
 };
-exports.unstable_useTransition = useTransition;
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
@@ -582,7 +572,9 @@ exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
-exports.useDeferredValue = useDeferredValue;
+exports.useDeferredValue = function (value) {
+  return ReactCurrentDispatcher.current.useDeferredValue(value);
+};
 exports.useEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useEffect(create, deps);
 };
@@ -621,5 +613,7 @@ exports.useSyncExternalStore = function (
     getServerSnapshot
   );
 };
-exports.useTransition = useTransition;
-exports.version = "18.3.0-www-modern-4c04bf5d";
+exports.useTransition = function () {
+  return ReactCurrentDispatcher.current.useTransition();
+};
+exports.version = "18.3.0-www-modern-1670571e";
