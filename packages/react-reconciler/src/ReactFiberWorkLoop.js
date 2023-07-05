@@ -1926,8 +1926,6 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
           }
           default: {
             // Unwind then continue with the normal work loop.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
@@ -2046,8 +2044,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         resumeOrUnwind: switch (workInProgressSuspendedReason) {
           case SuspendedOnError: {
             // Unwind then continue with the normal work loop.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
@@ -2055,8 +2051,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
-              workInProgressSuspendedReason = NotSuspended;
-              workInProgressThrownValue = null;
               replaySuspendedUnitOfWork(unitOfWork);
               break;
             }
@@ -2099,13 +2093,9 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             const thenable: Thenable<mixed> = (thrownValue: any);
             if (isThenableResolved(thenable)) {
               // The data resolved. Try rendering the component again.
-              workInProgressSuspendedReason = NotSuspended;
-              workInProgressThrownValue = null;
               replaySuspendedUnitOfWork(unitOfWork);
             } else {
               // Otherwise, unwind then continue with the normal work loop.
-              workInProgressSuspendedReason = NotSuspended;
-              workInProgressThrownValue = null;
               throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             }
             break;
@@ -2161,8 +2151,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               }
             }
             // Otherwise, unwind then continue with the normal work loop.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
@@ -2171,8 +2159,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // pattern. The newer replaying behavior can cause subtle issues
             // like infinite ping loops. So we maintain the old behavior and
             // always unwind.
-            workInProgressSuspendedReason = NotSuspended;
-            workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(unitOfWork, thrownValue);
             break;
           }
@@ -2284,7 +2270,8 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
-  //
+  workInProgressSuspendedReason = NotSuspended;
+  workInProgressThrownValue = null;
   const current = unitOfWork.alternate;
   setCurrentDebugFiberInDEV(unitOfWork);
 
@@ -2404,6 +2391,8 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
   //
   // Return to the normal work loop. This will unwind the stack, and potentially
   // result in showing a fallback.
+  workInProgressSuspendedReason = NotSuspended;
+  workInProgressThrownValue = null;
   resetSuspendedWorkLoopOnUnwind(unitOfWork);
 
   const returnFiber = unitOfWork.return;
