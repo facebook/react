@@ -8,6 +8,7 @@ function id(x) {
   Math;
   id;
   let y = true;
+  y = false;
   y;
   let z;
   z;

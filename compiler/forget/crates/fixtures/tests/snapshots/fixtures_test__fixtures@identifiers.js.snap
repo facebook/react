@@ -14,6 +14,7 @@ function id(x) {
   Math;
   id;
   let y = true;
+  y = false;
   y;
   let z;
   z;
@@ -28,9 +29,11 @@ bb0
   [1] unknown $2 = LoadGlobal id
   [2] unknown $3 = true
   [3] unknown $5 = StoreLocal Let unknown y$4 = unknown $3
-  [4] unknown $6 = LoadLocal unknown y$4
-  [5] unknown $8 = DeclareLocal Let unknown z$7
-  [6] unknown $9 = LoadLocal unknown z$7
-  [7] unknown $11 = LoadLocal unknown x$10
-  [8] Return unknown $11
+  [4] unknown $6 = false
+  [5] unknown $7 = StoreLocal Reassign unknown y$4 = unknown $6
+  [6] unknown $8 = LoadLocal unknown y$4
+  [7] unknown $10 = DeclareLocal Let unknown z$9
+  [8] unknown $11 = LoadLocal unknown z$9
+  [9] unknown $13 = LoadLocal unknown x$12
+  [10] Return unknown $13
 

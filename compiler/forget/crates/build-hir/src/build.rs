@@ -1,7 +1,7 @@
 use bumpalo::collections::{CollectIn, String};
 use estree::{
-    ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Pattern, Statement,
-    VariableDeclarationKind,
+    AssignmentTarget, ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Pattern,
+    Statement, VariableDeclarationKind,
 };
 use hir::{
     ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionKind,
@@ -114,7 +114,13 @@ fn lower_statement<'a>(
             for declaration in stmt.declarations {
                 if let Some(init) = declaration.init {
                     let value = lower_expression_to_temporary(env, builder, init);
-                    lower_assignment(env, builder, kind, declaration.id, value);
+                    lower_assignment(
+                        env,
+                        builder,
+                        kind,
+                        AssignmentTarget::Pattern(declaration.id.into()),
+                        value,
+                    );
                 } else {
                     if let Pattern::Identifier(id) = declaration.id {
                         // TODO: handle unbound variables
@@ -195,6 +201,14 @@ fn lower_expression<'a>(
                 .collect_in(env.allocator);
             InstructionValue::Array(hir::Array { elements })
         }
+        ExpressionLike::AssignmentExpression(expr) => match expr.operator {
+            estree::AssignmentOperator::Equals => {
+                let right = lower_expression_to_temporary(env, builder, expr.right);
+                lower_assignment(env, builder, InstructionKind::Reassign, expr.left, right)
+            }
+            _ => todo!("lower assignment expr {:#?}", expr),
+        },
+
         // Cases that cannot appear in expression position but which are included in ExpressionLike
         // to make serialization easier
         ExpressionLike::SpreadElement(_) => {
@@ -208,22 +222,25 @@ fn lower_assignment<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     kind: InstructionKind,
-    lvalue: Pattern,
+    lvalue: AssignmentTarget,
     value: Place<'a>,
 ) -> InstructionValue<'a> {
     match lvalue {
-        Pattern::Identifier(lvalue) => {
-            let place = lower_identifier_for_assignment(env, builder, kind, *lvalue).unwrap();
-            let temporary = lower_value_to_temporary(
-                env,
-                builder,
-                InstructionValue::StoreLocal(hir::StoreLocal {
-                    lvalue: LValue { place, kind },
-                    value,
-                }),
-            );
-            InstructionValue::LoadLocal(LoadLocal { place: temporary })
-        }
+        AssignmentTarget::Pattern(lvalue) => match *lvalue {
+            Pattern::Identifier(lvalue) => {
+                let place = lower_identifier_for_assignment(env, builder, kind, *lvalue).unwrap();
+                let temporary = lower_value_to_temporary(
+                    env,
+                    builder,
+                    InstructionValue::StoreLocal(hir::StoreLocal {
+                        lvalue: LValue { place, kind },
+                        value,
+                    }),
+                );
+                InstructionValue::LoadLocal(LoadLocal { place: temporary })
+            }
+            _ => todo!("lower assignment pattern for {:#?}", lvalue),
+        },
         _ => todo!("lower assignment for {:#?}", lvalue),
     }
 }

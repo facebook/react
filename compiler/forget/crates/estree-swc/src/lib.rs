@@ -6,8 +6,8 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, ModuleItem, Pat, PatOrExpr,
-    Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, MemberExpr, ModuleItem, Pat,
+    PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -360,7 +360,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
         Expr::Assign(expr) => {
             estree::ExpressionLike::AssignmentExpression(Box::new(estree::AssignmentExpression {
                 operator: convert_assignment_operator(expr.op),
-                left: convert_assignment_target(&expr.left),
+                left: convert_assignment_target(cx, &expr.left),
                 right: convert_expression(cx, &expr.right),
                 loc: None,
                 range: convert_span(&expr.span),
@@ -370,8 +370,28 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
     }
 }
 
-fn convert_assignment_target(_target: &PatOrExpr) -> estree::AssignmentTarget {
-    todo!("translate assignment target")
+fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> estree::AssignmentTarget {
+    match target {
+        PatOrExpr::Pat(target) => {
+            estree::AssignmentTarget::Pattern(Box::new(convert_pattern(cx, target)))
+        }
+        PatOrExpr::Expr(target) => {
+            if let Expr::Member(target) = target.as_ref() {
+                estree::AssignmentTarget::MemberExpression(Box::new(convert_member_expression(
+                    cx, target,
+                )))
+            } else {
+                panic!(
+                    "Invalid input, expected either a pattern or member expression, got {:#?}",
+                    target
+                )
+            }
+        }
+    }
+}
+
+fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberExpression {
+    todo!("convert member expression")
 }
 
 fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {
@@ -388,6 +408,7 @@ fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {
 
 fn convert_assignment_operator(op: AssignOp) -> estree::AssignmentOperator {
     match op {
+        AssignOp::Assign => estree::AssignmentOperator::Equals,
         AssignOp::AddAssign => estree::AssignmentOperator::PlusEquals,
         _ => todo!("translate assignment operator"),
     }
