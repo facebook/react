@@ -368,7 +368,6 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.cache = function (fn) {
@@ -635,7 +634,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-e0d9c072";
+exports.version = "18.3.0-www-classic-9c85c048";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

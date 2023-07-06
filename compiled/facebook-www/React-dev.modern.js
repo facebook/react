@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-d09ac638";
+var ReactVersion = "18.3.0-www-modern-4c77dfb7";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -4115,7 +4115,6 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.cache = cache;
