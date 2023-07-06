@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e07addc76261adf5c9844f571089b66c>>
+ * @generated SignedSource<<7acac2f2a74dcdd0d337dca60149a207>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-a19bbebbe-20230706";
+var ReactVersion = "18.3.0-canary-eb2c2f7c2-20230706";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -3898,7 +3898,6 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
-exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.cache = cache;
