@@ -1,10 +1,5 @@
 use bumpalo::collections::Vec;
-use estree::BindingId;
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use hir::{
     BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, Instruction,

@@ -390,7 +390,7 @@ fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> estree::Assign
     }
 }
 
-fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberExpression {
+fn convert_member_expression(_cx: &Context, _expr: &MemberExpr) -> estree::MemberExpression {
     todo!("convert member expression")
 }
 

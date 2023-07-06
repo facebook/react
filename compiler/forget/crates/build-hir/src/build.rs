@@ -285,9 +285,9 @@ fn lower_assignment<'a>(
 }
 
 fn lower_identifier_for_assignment<'a>(
-    env: &'a Environment<'a>,
+    _env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
-    kind: InstructionKind,
+    _kind: InstructionKind,
     identifier: estree::Identifier,
 ) -> Option<Place<'a>> {
     let binding = builder.resolve_binding(&identifier)?;

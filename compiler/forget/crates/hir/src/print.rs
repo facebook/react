@@ -1,7 +1,7 @@
 use std::fmt::{Result, Write};
 
 use crate::{
-    terminal, ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
+    ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
     PrimitiveValue, Terminal, TerminalValue,
 };
 
