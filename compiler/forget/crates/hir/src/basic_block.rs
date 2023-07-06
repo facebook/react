@@ -8,6 +8,7 @@ use crate::{id_types::BlockId, Instruction, Terminal};
 /// continue.
 ///
 /// [1] Assuming no exceptions are thrown.
+#[derive(Debug)]
 pub struct BasicBlock<'a> {
     /// The identifier for the block
     pub id: BlockId,
@@ -28,6 +29,7 @@ pub struct BasicBlock<'a> {
     pub predecessors: HashSet<BlockId>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum BlockKind {
     Block,
     Value,

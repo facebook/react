@@ -1,12 +1,49 @@
-use std::num::NonZeroU32;
+use std::{io::stderr, num::NonZeroU32, sync::Arc};
 
-use swc_common::{source_map::Pos, Span};
-use swc_ecma_ast::{
-    AssignOp, BinaryOp, BlockStmt, Decl, Expr, Ident, Lit, ModuleItem, Pat, PatOrExpr, Program,
-    Stmt, UnaryOp, VarDeclKind, VarDeclOrExpr,
+use swc::Compiler;
+use swc_core::common::errors::Handler;
+use swc_core::common::source_map::Pos;
+use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, GLOBALS};
+use swc_core::ecma::ast::{
+    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, ModuleItem, Pat, PatOrExpr,
+    Program, Stmt, UnaryOp, VarDeclKind, VarDeclOrExpr,
 };
+use swc_core::ecma::parser::Syntax;
+use swc_core::ecma::transforms::base::resolver;
+use swc_core::ecma::visit::FoldWith;
 
-pub fn convert_program(program: &Program) -> estree::Program {
+/// Parses source text into an estree::Program via SWC, internally performing the parsing
+/// and SWC -> ESTree conversion.
+pub fn parse(source: &str, file: &str) -> Result<estree::Program, Box<dyn std::error::Error>> {
+    GLOBALS.set(&Default::default(), || {
+        let cm = Arc::new(SourceMap::new(FilePathMapping::empty()));
+        let c = Compiler::new(cm);
+        let fm =
+            c.cm.new_source_file(FileName::Real(file.into()), source.to_string());
+
+        let handler = Handler::with_emitter_writer(Box::new(stderr()), Some(c.cm.clone()));
+
+        let comments = c.comments().clone();
+        let module = c.parse_js(
+            fm.clone(),
+            &handler,
+            EsVersion::Es5,
+            Syntax::Typescript(Default::default()),
+            swc::config::IsModule::Bool(true),
+            Some(&comments),
+        )?;
+
+        let module = c.run_transform(&handler, false, || {
+            let unresolved_mark = Mark::new();
+            let top_level_mark = Mark::new();
+            module.fold_with(&mut resolver(unresolved_mark, top_level_mark, true))
+        });
+
+        Ok(convert_program(&module))
+    })
+}
+
+fn convert_program(program: &Program) -> estree::Program {
     let mut program_items: Vec<estree::ModuleItem>;
     match program {
         Program::Module(program) => {

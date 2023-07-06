@@ -102,7 +102,7 @@ fn lower_statement<'a>(
         Statement::EmptyStatement(_) => {
             // no-op
         }
-        _ => todo!(),
+        _ => todo!("Lower {stmt:#?}"),
     }
     Ok(())
 }
@@ -148,7 +148,7 @@ fn lower_expression<'a>(
         ExpressionLike::SpreadElement(_) => {
             panic!("SpreadElement may not appear in normal expression position")
         }
-        _ => todo!(),
+        _ => todo!("Lower expr {expr:#?}"),
     }
 }
 
@@ -197,7 +197,7 @@ fn lower_primitive<'a>(
         LiteralValue::Null => PrimitiveValue::Null,
         LiteralValue::Number(value) => PrimitiveValue::Number(f64::from(value).into()),
         LiteralValue::String(s) => PrimitiveValue::String(String::from_str_in(&s, &env.allocator)),
-        _ => todo!(),
+        _ => todo!("Lower literal {literal:#?}"),
     }
 }
 

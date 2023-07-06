@@ -2,11 +2,13 @@ use crate::{instruction::Place, BlockId, InstructionId};
 
 /// Terminals represent statements or expressions that affect control flow,
 /// such as for-of, if-else, return, logical (??), ternaries (?:), etc.
+#[derive(Debug)]
 pub struct Terminal<'a> {
     pub id: InstructionId,
     pub value: TerminalValue<'a>,
 }
 
+#[derive(Debug)]
 pub enum TerminalValue<'a> {
     // BranchTerminal(BranchTerminal),
     DoWhileTerminal(DoWhileTerminal),
@@ -69,23 +71,26 @@ impl<'a> TerminalValue<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct GotoTerminal {
     pub block: BlockId,
     pub kind: GotoKind,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum GotoKind {
     Break,
     Continue,
 }
 
+#[derive(Debug)]
 pub struct DoWhileTerminal {
     pub body: BlockId,
     pub test: BlockId,
     pub fallthrough: BlockId,
 }
 
+#[derive(Debug)]
 pub struct IfTerminal<'a> {
     pub test: Place<'a>,
     pub consequent: BlockId,
@@ -93,10 +98,12 @@ pub struct IfTerminal<'a> {
     pub fallthrough: Option<BlockId>,
 }
 
+#[derive(Debug)]
 pub struct ReturnTerminal<'a> {
     pub value: Place<'a>,
 }
 
+#[derive(Debug)]
 pub struct ForTerminal {
     pub init: BlockId,
     pub test: BlockId,

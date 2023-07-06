@@ -1,0 +1,15 @@
+[package]
+name = "fixtures"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+insta = "1.30.0"
+estree = { path = "../estree" }
+estree-swc = { path = "../estree-swc" }
+hir = { path = "../hir" }
+build-hir = { path = "../build-hir" }
+bumpalo = { version = "3.13.0", features = ["collections"] }

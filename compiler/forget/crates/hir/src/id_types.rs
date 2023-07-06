@@ -39,6 +39,7 @@ impl TypeVarId {
 ///
 /// TODO: rename to more clearly indicate that this is for sequencing
 /// and to reflect that it is applied to terminals as well
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct InstructionId(pub(crate) u32);
 
 pub struct InstructionIdGenerator(u32);
@@ -56,10 +57,13 @@ impl InstructionIdGenerator {
 }
 
 /// Uniquely identifies a reactive scope
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct ScopeId(pub(crate) u32);
 
 /// Uniquely identifiers a builtin function type in the type registry
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct FunctionId(pub(crate) u32);
 
 /// Uniquely identifiers a builtin object type in the type registry
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct ObjectId(pub(crate) u32);

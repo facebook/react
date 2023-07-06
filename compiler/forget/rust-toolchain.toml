@@ -1,0 +1,3 @@
+[toolchain]
+# Sigh, because SWC 
+channel = "nightly"

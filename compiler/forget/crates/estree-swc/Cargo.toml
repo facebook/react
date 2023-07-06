@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-swc_ecma_ast = { version = "0.106.6", features = ["serde", "serde-impl"] }
 estree = { path = "../estree" }
-swc_common = "0.31.16"
+swc = "0.264.8"
+swc_core = { version = "0.79.9", features = ["swc_ecma_visit", "__ecma_transforms", "swc_ecma_ast", "swc_common", "swc", "swc_ecma_parser", "__ecma", "__common", "ecma_ast", "__visit", "__parser"] }

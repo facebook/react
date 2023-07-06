@@ -58,12 +58,25 @@ impl<'a> Builder<'a> {
             blocks: self.completed,
         };
 
+        assert!(hir.blocks.len() > 0, "initial block count");
         reverse_postorder_blocks(&mut hir);
+        assert!(hir.blocks.len() > 0, "after reverse_postorder_blocks");
         remove_unreachable_for_updates(&mut hir);
+        assert!(hir.blocks.len() > 0, "after remove_unreachable_for_updates");
         remove_unreachable_fallthroughs(&mut hir);
+        assert!(
+            hir.blocks.len() > 0,
+            "after remove_unreachable_fallthroughs"
+        );
         remove_unreachable_do_while_statements(&mut hir);
+        assert!(
+            hir.blocks.len() > 0,
+            "after remove_unreachable_do_while_statements"
+        );
         mark_instruction_ids(&mut hir)?;
+        assert!(hir.blocks.len() > 0, "after mark_instruction_ids");
         mark_predecessors(&mut hir);
+        assert!(hir.blocks.len() > 0, "after mark_predecessors");
 
         Ok(hir)
     }
@@ -166,6 +179,7 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
             }
             TerminalValue::ReturnTerminal(..) => { /* no-op */ }
         }
+        postorder.push(block_id);
     }
     visit(hir.entry, &hir, &mut visited, &mut postorder);
 
@@ -241,7 +255,9 @@ fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     let mut visited = HashSet::<(usize, usize)>::new();
     for (block_ix, block) in hir.blocks.values_mut().enumerate() {
         for (instr_ix, instr) in block.instructions.iter_mut().enumerate() {
-            invariant(!visited.insert((block_ix, instr_ix)), || ())?;
+            invariant(visited.insert((block_ix, instr_ix)), || {
+                format!("Expected bb{block_ix} i{instr_ix} not to have been visited yet")
+            })?;
             instr.id = id_gen.next();
         }
         block.terminal.id = id_gen.next();
@@ -275,12 +291,13 @@ fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
     visit(hir.entry, None, hir, &mut visited);
 }
 
-fn invariant<F>(cond: bool, _f: F) -> Result<(), Diagnostic>
+fn invariant<F>(cond: bool, f: F) -> Result<(), Diagnostic>
 where
-    F: FnOnce() -> Diagnostic,
+    F: FnOnce() -> String,
 {
     if !cond {
-        panic!("Oops invariant failed");
+        let msg = f();
+        panic!("Invariant: {msg}");
     }
     Ok(())
 }

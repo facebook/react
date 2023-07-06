@@ -2,6 +2,7 @@
 
 members = [
     "crates/build-hir",
+    "crates/fixtures",
     "crates/hir",
     "crates/swc-demo",
     "crates/estree",

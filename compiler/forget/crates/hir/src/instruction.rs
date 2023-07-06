@@ -4,12 +4,14 @@ use bumpalo::collections::{String, Vec};
 
 use crate::{IdentifierId, InstructionId, ScopeId, Type};
 
+#[derive(Debug)]
 pub struct Instruction<'a> {
     pub id: InstructionId,
     pub lvalue: Place<'a>,
     pub value: InstructionValue<'a>,
 }
 
+#[derive(Debug)]
 pub enum InstructionValue<'a> {
     Array(Array<'a>),
     // Await(Await<'a>),
@@ -46,19 +48,23 @@ pub enum InstructionValue<'a> {
     // Unsupported(Unsupported<'a>),
 }
 
+#[derive(Debug)]
 pub struct Array<'a> {
     pub elements: Vec<'a, ArrayElement<'a>>,
 }
 
+#[derive(Debug)]
 pub enum ArrayElement<'a> {
     Place(Place<'a>),
     Spread(Place<'a>),
 }
 
+#[derive(Debug)]
 pub struct Primitive<'a> {
     pub value: PrimitiveValue<'a>,
 }
 
+#[derive(Debug)]
 pub enum PrimitiveValue<'a> {
     Boolean(bool),
     Null,
@@ -84,38 +90,45 @@ impl From<Number> for f64 {
     }
 }
 
+#[derive(Debug)]
 pub struct LoadLocal<'a> {
     pub place: Place<'a>,
 }
 
+#[derive(Debug)]
 pub struct LoadContext<'a> {
     pub place: Place<'a>,
 }
 
+#[derive(Debug)]
 pub struct DeclareLocal<'a> {
     pub lvalue: LValue<'a>,
 }
 
+#[derive(Debug)]
 pub struct DeclareContext<'a> {
     pub lvalue: LValue<'a>, // note: kind must be InstructionKind::Let
 }
 
+#[derive(Debug)]
 pub struct StoreLocal<'a> {
     pub lvalue: LValue<'a>,
     pub value: Place<'a>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Place<'a> {
     pub identifier: Identifier<'a>,
     pub effect: Option<Effect>,
 }
 
+#[derive(Debug)]
 pub struct LValue<'a> {
     pub place: Place<'a>,
     pub kind: InstructionKind,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum InstructionKind {
     /// `const` declaration
     Const,
@@ -127,7 +140,7 @@ pub enum InstructionKind {
     Reassign,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Effect {
     /// This reference freezes the value (corresponds to a place where codegen should emit a freeze instruction)
     Freeze,
@@ -163,7 +176,7 @@ impl Effect {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Identifier<'a> {
     /// Uniquely identifiers this identifier
     pub id: IdentifierId,
@@ -172,6 +185,7 @@ pub struct Identifier<'a> {
     pub data: Rc<RefCell<IdentifierData>>,
 }
 
+#[derive(Debug)]
 pub struct IdentifierData {
     pub mutable_range: MutableRange,
 
@@ -185,6 +199,7 @@ pub struct IdentifierData {
 ///
 /// Start is inclusive, end is exclusive (ie end is the "first" instruction
 /// for which the value is not mutable).
+#[derive(Clone, Debug)]
 pub struct MutableRange {
     /// start of the range, inclusive.
     pub start: InstructionId,
@@ -208,6 +223,7 @@ impl Default for MutableRange {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct ReactiveScope {
     pub id: ScopeId,
     pub range: MutableRange,
