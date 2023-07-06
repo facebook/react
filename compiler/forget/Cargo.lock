@@ -110,6 +110,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-hir"
+version = "0.1.0"
+dependencies = [
+ "hir",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,6 +192,12 @@ dependencies = [
  "quote",
  "syn 2.0.18",
 ]
+
+[[package]]
+name = "equivalent"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88bffebc5d80432c9b140ee17875ff173a8ab62faad5b257da912bd2f6c1c0a1"
 
 [[package]]
 name = "estree"
@@ -277,6 +290,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 
 [[package]]
+name = "hashbrown"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
+
+[[package]]
 name = "hermit-abi"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -292,6 +311,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee512640fe35acbfb4bb779db6f0d80704c2cacfa2e39b601ef3e3f47d1ae4c7"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "hir"
+version = "0.1.0"
+dependencies = [
+ "bumpalo",
+ "indexmap 2.0.0",
+ "serde",
 ]
 
 [[package]]
@@ -317,7 +345,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.12.3",
+]
+
+[[package]]
+name = "indexmap"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5477fe2230a79769d8dc68e0eabf5437907c0457a5614a9e8dddb67f65eb65d"
+dependencies = [
+ "equivalent",
+ "hashbrown 0.14.0",
 ]
 
 [[package]]
@@ -1048,7 +1086,7 @@ checksum = "e659ba3b910dc0cc0deb8731293151f56054d603ee47f0042fda530b7d487517"
 dependencies = [
  "better_scoped_tls",
  "bitflags 2.3.2",
- "indexmap",
+ "indexmap 1.9.3",
  "once_cell",
  "phf",
  "rustc-hash",
@@ -1069,7 +1107,7 @@ version = "0.119.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "266eaf9dc1ba58fca1fd34e97f9493e4df655eecde468104f32ab40d7147efac"
 dependencies = [
- "indexmap",
+ "indexmap 1.9.3",
  "num_cpus",
  "once_cell",
  "rustc-hash",

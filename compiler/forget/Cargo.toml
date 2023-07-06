@@ -1,6 +1,8 @@
 [workspace]
 
 members = [
+    "crates/build-hir",
+    "crates/hir",
     "crates/swc-demo",
     "crates/estree",
     "crates/estree-swc",
