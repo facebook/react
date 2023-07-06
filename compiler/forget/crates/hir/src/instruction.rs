@@ -31,7 +31,7 @@ pub enum InstructionValue<'a> {
     // New(New<'a>),
     // NextIterable(NextIterable<'a>),
     // Object(Object<'a>),
-    // Primitive(Primitive<'a>),
+    Primitive(Primitive<'a>),
     // PropertyDelete(PropertyDelete<'a>),
     // PropertyLoad(PropertyLoad<'a>),
     // PropertyStore(PropertyStore<'a>),
@@ -52,6 +52,35 @@ pub struct Array<'a> {
 pub enum ArrayElement<'a> {
     Place(Place<'a>),
     Spread(Place<'a>),
+}
+
+pub struct Primitive<'a> {
+    pub value: PrimitiveValue<'a>,
+}
+
+pub enum PrimitiveValue<'a> {
+    Boolean(bool),
+    Null,
+    Number(Number),
+    String(String<'a>),
+    Undefined,
+}
+
+/// Represents a JavaScript Number as its binary representation so that
+/// -1 == -1, NaN == Nan etc.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+pub struct Number(u64);
+
+impl From<f64> for Number {
+    fn from(value: f64) -> Self {
+        Self(value.to_bits())
+    }
+}
+
+impl From<Number> for f64 {
+    fn from(value: Number) -> Self {
+        f64::from_bits(value.0)
+    }
 }
 
 pub struct LoadLocal<'a> {

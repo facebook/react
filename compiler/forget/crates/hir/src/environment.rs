@@ -19,7 +19,7 @@ pub struct Environment<'a> {
 
     /// Arena allocator so that data for compilation can be efficiently allocated
     /// and the memory reclaimed when compilation completes.
-    allocator: &'a Bump,
+    pub allocator: &'a Bump,
 
     /// The next available block index
     next_block_id: Cell<BlockId>,

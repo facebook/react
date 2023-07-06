@@ -1,6 +1,11 @@
+use bumpalo::collections::Vec;
+use estree::Identifier;
 use std::collections::HashSet;
 
-use hir::{BasicBlock, BlockId, Environment, GotoKind, InstructionIdGenerator, TerminalValue, HIR};
+use hir::{
+    BasicBlock, BlockId, BlockKind, Environment, GotoKind, Instruction, InstructionIdGenerator,
+    InstructionValue, Place, Terminal, TerminalValue, Type, HIR,
+};
 use indexmap::IndexMap;
 
 /// Helper struct used when converting from ESTree to HIR. Includes:
@@ -19,15 +24,26 @@ pub struct Builder<'a> {
     completed: IndexMap<BlockId, BasicBlock<'a>>,
 
     entry: BlockId,
+
+    wip: WipBlock<'a>,
+
+    id_gen: InstructionIdGenerator,
 }
 
 impl<'a> Builder<'a> {
     pub(crate) fn new(environment: &'a Environment<'a>) -> Self {
         let entry = environment.next_block_id();
+        let current = WipBlock {
+            id: entry,
+            kind: BlockKind::Block,
+            instructions: Vec::new_in(&environment.allocator),
+        };
         Self {
             environment,
             completed: Default::default(),
             entry,
+            wip: current,
+            id_gen: InstructionIdGenerator::new(),
         }
     }
 
@@ -51,18 +67,80 @@ impl<'a> Builder<'a> {
 
         Ok(hir)
     }
+
+    /// Adds a new instruction to the end of the work in progress block
+    pub(crate) fn push(&mut self, lvalue: Place<'a>, value: InstructionValue<'a>) {
+        let instr = Instruction {
+            id: self.id_gen.next(),
+            lvalue,
+            value,
+        };
+        self.wip.instructions.push(instr);
+    }
+
+    /// Terminates the work in progress block with the given terminal, and starts a new
+    /// work in progress block with the given kind
+    pub(crate) fn terminate(&mut self, terminal: TerminalValue<'a>, next_kind: BlockKind) {
+        let next_wip = WipBlock {
+            id: self.environment.next_block_id(),
+            kind: next_kind,
+            instructions: Vec::new_in(&self.environment.allocator),
+        };
+        let prev_wip = std::mem::replace(&mut self.wip, next_wip);
+        self.completed.insert(
+            prev_wip.id,
+            BasicBlock {
+                id: prev_wip.id,
+                kind: prev_wip.kind,
+                instructions: prev_wip.instructions,
+                terminal: Terminal {
+                    id: self.id_gen.next(),
+                    value: terminal,
+                },
+                predecessors: Default::default(),
+            },
+        );
+    }
+
+    /// Returns a new temporary identifier
+    pub(crate) fn make_temporary(&self) -> hir::Identifier<'a> {
+        hir::Identifier {
+            id: self.environment.next_identifier_id(),
+            mutable_range: Default::default(),
+            name: None,
+            scope: None,
+            type_: Type::Var(self.environment.next_type_var_id()),
+        }
+    }
+
+    /// Resolves the target for the given break label (if present), or returns the default
+    /// break target given the current context. Returns a diagnostic if the label is
+    /// provided but cannot be resolved.
+    pub(crate) fn resolve_break(&self, label: Option<Identifier>) -> Result<BlockId, Diagnostic> {
+        todo!()
+    }
+
+    /// Resolves the target for the given continue label (if present), or returns the default
+    /// continue target given the current context. Returns a diagnostic if the label is
+    /// provided but cannot be resolved.
+    pub(crate) fn resolve_continue(
+        &self,
+        label: Option<Identifier>,
+    ) -> Result<BlockId, Diagnostic> {
+        todo!()
+    }
 }
 
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before
 /// successors (except for the case of loops)
 fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     let mut visited = HashSet::<BlockId>::with_capacity(hir.blocks.len());
-    let mut postorder = Vec::<BlockId>::with_capacity(hir.blocks.len());
+    let mut postorder = std::vec::Vec::<BlockId>::with_capacity(hir.blocks.len());
     fn visit<'a>(
         block_id: BlockId,
         hir: &HIR<'a>,
         visited: &mut HashSet<BlockId>,
-        postorder: &mut Vec<BlockId>,
+        postorder: &mut std::vec::Vec<BlockId>,
     ) {
         if !visited.insert(block_id) {
             // already visited
@@ -96,6 +174,12 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     }
 
     hir.blocks = blocks;
+}
+
+pub(crate) struct WipBlock<'a> {
+    pub id: BlockId,
+    pub kind: BlockKind,
+    pub instructions: Vec<'a, Instruction<'a>>,
 }
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable

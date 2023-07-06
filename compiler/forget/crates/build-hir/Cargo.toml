@@ -9,3 +9,4 @@ edition = "2021"
 hir = { path = "../hir" }
 estree = { path = "../estree" }
 indexmap = "2.0.0"
+bumpalo = "3.13.0"
