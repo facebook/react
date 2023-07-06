@@ -1,7 +1,7 @@
 use bumpalo::collections::{CollectIn, String};
 use estree::{
-    AssignmentTarget, ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Pattern,
-    Statement, VariableDeclarationKind,
+    AssignmentTarget, ExpressionLike, FunctionDeclaration, IfStatement, Literal, LiteralValue,
+    Pattern, Statement, VariableDeclarationKind,
 };
 use hir::{
     ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionKind,
@@ -143,6 +143,45 @@ fn lower_statement<'a>(
                     }
                 }
             }
+        }
+        Statement::IfStatement(stmt) => {
+            // block for what follows the if statement, though this may
+            // not be reachable
+            let fallthrough_block = builder.reserve(BlockKind::Block);
+
+            let IfStatement {
+                test,
+                consequent,
+                alternate,
+                ..
+            } = *stmt;
+
+            let consequent_block = builder.enter(BlockKind::Block, |builder| {
+                lower_statement(env, builder, consequent, None).unwrap();
+                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                    block: fallthrough_block.id,
+                    kind: GotoKind::Break,
+                })
+            });
+
+            let alternate_block = builder.enter(BlockKind::Block, |builder| {
+                if let Some(alternate) = alternate {
+                    lower_statement(env, builder, alternate, None).unwrap();
+                }
+                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                    block: fallthrough_block.id,
+                    kind: GotoKind::Break,
+                })
+            });
+
+            let test = lower_expression_to_temporary(env, builder, test);
+            let terminal = TerminalValue::IfTerminal(hir::IfTerminal {
+                test,
+                consequent: consequent_block,
+                alternate: alternate_block,
+                fallthrough: Some(fallthrough_block.id),
+            });
+            builder.terminate_with_fallthrough(terminal, fallthrough_block);
         }
         _ => todo!("Lower {stmt:#?}"),
     }

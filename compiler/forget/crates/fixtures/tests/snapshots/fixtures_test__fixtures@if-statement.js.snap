@@ -1,0 +1,32 @@
+---
+source: crates/fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/fixtures/tests/fixtures/if-statement.js
+---
+Input:
+function foo(a, b, c, d) {
+  if (a) {
+    return b;
+  } else {
+    c;
+  }
+  d;
+}
+
+
+Output:
+entry bb0
+bb0
+  [0] unknown $5 = LoadLocal unknown a$4
+  [1] If unknown $5 consequent=bb2 alternate=bb4 fallthrough=bb1
+bb2
+  [2] unknown $1 = LoadLocal unknown b$0
+  [3] Return unknown $1
+bb4
+  [4] unknown $3 = LoadLocal unknown c$2
+  [5] Goto bb1
+bb1
+  [6] unknown $7 = LoadLocal unknown d$6
+  [7] unknown $8 = <undefined>
+  [8] Return unknown $8
+

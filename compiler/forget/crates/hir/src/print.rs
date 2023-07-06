@@ -1,7 +1,7 @@
 use std::fmt::{Result, Write};
 
 use crate::{
-    ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
+    terminal, ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
     PrimitiveValue, Terminal, TerminalValue,
 };
 
@@ -149,6 +149,23 @@ impl<'a> Print for TerminalValue<'a> {
             TerminalValue::ReturnTerminal(terminal) => {
                 write!(out, "Return ")?;
                 terminal.value.print(out)?;
+            }
+            TerminalValue::GotoTerminal(terminal) => {
+                write!(out, "Goto {}", terminal.block)?;
+            }
+            TerminalValue::IfTerminal(terminal) => {
+                write!(out, "If ")?;
+                terminal.test.print(out)?;
+                write!(
+                    out,
+                    " consequent={} alternate={} fallthrough={}",
+                    terminal.consequent,
+                    terminal.alternate,
+                    match terminal.fallthrough {
+                        Some(fallthrough) => format!("{fallthrough}"),
+                        None => "<none>".to_string(),
+                    }
+                )?;
             }
             _ => write!(out, "{:?}", self)?,
         }

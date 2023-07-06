@@ -96,13 +96,61 @@ impl<'a> Builder<'a> {
             kind: next_kind,
             instructions: Vec::new_in(&self.environment.allocator),
         };
-        let prev_wip = std::mem::replace(&mut self.wip, next_wip);
+        self.terminate_with_fallthrough(terminal, next_wip)
+    }
+
+    pub(crate) fn terminate_with_fallthrough(
+        &mut self,
+        terminal: TerminalValue<'a>,
+        fallthrough: WipBlock<'a>,
+    ) {
+        let prev_wip = std::mem::replace(&mut self.wip, fallthrough);
         self.completed.insert(
             prev_wip.id,
             BasicBlock {
                 id: prev_wip.id,
                 kind: prev_wip.kind,
                 instructions: prev_wip.instructions,
+                terminal: Terminal {
+                    id: self.id_gen.next(),
+                    value: terminal,
+                },
+                predecessors: Default::default(),
+            },
+        );
+    }
+
+    pub(crate) fn reserve(&mut self, kind: BlockKind) -> WipBlock<'a> {
+        WipBlock {
+            id: self.environment.next_block_id(),
+            kind,
+            instructions: Vec::new_in(&self.environment.allocator),
+        }
+    }
+
+    pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> BlockId
+    where
+        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+    {
+        let wip = self.reserve(kind);
+        let id = wip.id;
+        self.enter_reserved(wip, f);
+        id
+    }
+
+    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F)
+    where
+        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+    {
+        let current = std::mem::replace(&mut self.wip, wip);
+        let terminal = f(self);
+        let completed = std::mem::replace(&mut self.wip, current);
+        self.completed.insert(
+            completed.id,
+            BasicBlock {
+                id: completed.id,
+                kind: completed.kind,
+                instructions: completed.instructions,
                 terminal: Terminal {
                     id: self.id_gen.next(),
                     value: terminal,
