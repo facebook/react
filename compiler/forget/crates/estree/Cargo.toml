@@ -8,5 +8,18 @@ edition = "2021"
 [dependencies]
 bumpalo = { version = "3.13.0", features = ["boxed", "collections"] }
 elsa = "1.8.1"
+insta = { version = "1.30.0", features = ["glob"] }
 serde = { version = "1.0.164", features = ["derive"] }
 serde_json = "1.0.99"
+static_assertions = "1.1.0"
+
+
+# Make insta run faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.insta]
+opt-level = 3
+
+# Make insta diffing libary faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.similar]
+opt-level = 3

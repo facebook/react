@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use std::num::{NonZeroU32, NonZeroUsize};
+use static_assertions::assert_eq_size;
+use std::num::NonZeroU32;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SourceLocation {
@@ -13,20 +14,25 @@ pub struct SourceLocation {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Position {
     /// >= 1
-    pub line: NonZeroUsize,
+    pub line: NonZeroU32,
     /// >= 0
     pub column: u32,
 }
+assert_eq_size!(Option<Position>, u64);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SourceRange {
     pub start: u32,
+    // end is exclusive so it can always be non-zero. This allows
+    // Option<SourceRange> to not take any additional bytes.
     pub end: NonZeroU32,
 }
+assert_eq_size!(Option<SourceRange>, u64);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Program {
     /// sourceType
+    #[serde(rename = "sourceType")]
     #[serde(default)]
     pub source_type: SourceType,
 
@@ -36,6 +42,7 @@ pub struct Program {
     pub comments: Option<Vec<Comment>>,
 
     pub loc: Option<SourceLocation>,
+
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
@@ -73,24 +80,18 @@ pub enum CommentType {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum ModuleItem {
-    Directive(Box<Directive>),
     Statement(Box<Statement>),
+    ImportDeclaration(Box<ImportDeclaration>),
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum ImportExportDeclaration {
     ImportDeclaration(Box<ImportDeclaration>),
     // TODO:
     // ExportNamedDeclaration(Box<ExportNamedDeclaration>),
     // ExportDefaultDeclaration(Box<ExportDefaultDeclaration>),
     // ExportAllDeclaration(Box<ExportAllDeclaration>),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Directive {
-    /// type = "ExpressionStatement"
-    pub type_: String,
-    pub expression: Literal,
-    pub directive: String,
-    pub loc: Option<SourceLocation>,
-    #[serde(default)]
-    pub range: Option<SourceRange>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -106,12 +107,27 @@ pub struct ImportDeclaration {
 #[serde(tag = "type")]
 pub enum ImportSpecifiers {
     ImportSpecifier(Box<ImportSpecifier>),
+    ImportDefaultSpecifier(Box<ImportDefaultSpecifier>),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ImportSpecifier {
     pub imported: Identifier,
+
+    pub local: Identifier,
+
     pub loc: Option<SourceLocation>,
+
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ImportDefaultSpecifier {
+    pub local: Identifier,
+
+    pub loc: Option<SourceLocation>,
+
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
@@ -142,6 +158,8 @@ pub enum Statement {
     WhileStatement(Box<WhileStatement>),
     WithStatement(Box<WithStatement>),
 }
+// Prevent unboxed variants from increasing the size
+assert_eq_size!(Statement, u128);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BlockStatement {
@@ -467,6 +485,8 @@ pub enum ExpressionLike {
     JSXOpeningElement(Box<JSXOpeningElement>),
     JSXText(Box<JSXText>),
 }
+// Prevent unboxed variants from increasing the size
+assert_eq_size!(ExpressionLike, u128);
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ArrayExpression {
@@ -1223,6 +1243,7 @@ pub struct JSXText {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use insta::{assert_snapshot, glob};
     use serde_json;
 
     #[test]
@@ -1256,11 +1277,30 @@ mod tests {
     }
 
     #[test]
+    fn import() {
+        let source = include_str!("import.json");
+        let ast: Program = serde_json::from_str(&source).unwrap();
+        println!("deserialized:\n{:#?}", ast);
+        let serialized = serde_json::to_string_pretty(&ast).unwrap();
+        println!("serialized:\n{}", serialized);
+    }
+
+    #[test]
     fn test() {
         let source = include_str!("test.json");
         let ast: Program = serde_json::from_str(&source).unwrap();
         println!("deserialized:\n{:#?}", ast);
         let serialized = serde_json::to_string_pretty(&ast).unwrap();
         println!("serialized:\n{}", serialized);
+    }
+
+    #[test]
+    fn fixtures() {
+        glob!("fixtures/**.json", |path| {
+            let input = std::fs::read_to_string(path).unwrap();
+            let ast: Program = serde_json::from_str(&input).unwrap();
+            let serialized = serde_json::to_string_pretty(&ast).unwrap();
+            assert_snapshot!(format!("Input:\n{input}\n\nOutput:\n{serialized}"));
+        });
     }
 }
