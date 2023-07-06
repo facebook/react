@@ -38,22 +38,26 @@ function getRandomInputs(primaryCorpus, secondaryCorpora, count) {
 
   let inputs = primaryCorpus.getRandomTestcases(primaryCount);
 
+  // TODO(gsn): Uncomment this once we have more tests to build a 
+  // secondary corpora.
+  //
   // Split remainder equally between the secondary corpora.
-  const secondaryCount = Math.floor(count / secondaryCorpora.length);
+  // const secondaryCount = Math.floor(count / secondaryCorpora.length);
 
-  for (let i = 0; i < secondaryCorpora.length; i++) {
-    let currentCount = secondaryCount;
-    if (i == secondaryCorpora.length - 1) {
-      // Last one takes the remainder.
-      currentCount = count;
-    }
+  // for (let i = 0; i < secondaryCorpora.length; i++) {
+  //   let currentCount = secondaryCount;
+  //   if (i == secondaryCorpora.length - 1) {
+  //     // Last one takes the remainder.
+  //     currentCount = count;
+  //   }
 
-    count -= currentCount;
-    if (currentCount) {
-      inputs = inputs.concat(
-          secondaryCorpora[i].getRandomTestcases(currentCount));
-    }
-  }
+  //   count -= currentCount;
+  //   if (currentCount) {
+  //     inputs = inputs.concat(
+  //       secondaryCorpora[i].getRandomTestcases(currentCount)
+  //     );
+  //   }
+  // }
 
   return random.shuffle(inputs);
 }
@@ -65,47 +69,18 @@ function collect(value, total) {
 
 function overrideSettings(settings, settingOverrides) {
   for (const setting of settingOverrides) {
-    const parts = setting.split('=');
+    const parts = setting.split("=");
     settings[parts[0]] = parseFloat(parts[1]);
   }
 }
 
-function* randomInputGen(engine) {
+function* randomInputGen() {
   const inputDir = path.resolve(program.input_dir);
 
-  const v8Corpus = new corpus.Corpus(inputDir, 'v8');
-  const chakraCorpus = new corpus.Corpus(inputDir, 'chakra');
-  const spiderMonkeyCorpus = new corpus.Corpus(inputDir, 'spidermonkey');
-  const jscCorpus = new corpus.Corpus(inputDir, 'WebKit/JSTests');
-  const crashTestsCorpus = new corpus.Corpus(inputDir, 'CrashTests');
+  const reactCorpus = new corpus.Corpus(inputDir, "react");
 
   for (let i = 0; i < program.no_of_files; i++) {
-    let inputs;
-    if (engine === 'V8') {
-      inputs = getRandomInputs(
-          v8Corpus,
-          random.shuffle([chakraCorpus, spiderMonkeyCorpus, jscCorpus,
-                          crashTestsCorpus, v8Corpus]),
-          MAX_TEST_INPUTS_PER_TEST);
-    } else if (engine == 'chakra') {
-      inputs = getRandomInputs(
-          chakraCorpus,
-          random.shuffle([v8Corpus, spiderMonkeyCorpus, jscCorpus,
-                          crashTestsCorpus]),
-          MAX_TEST_INPUTS_PER_TEST);
-    } else if (engine == 'spidermonkey') {
-      inputs = getRandomInputs(
-          spiderMonkeyCorpus,
-          random.shuffle([v8Corpus, chakraCorpus, jscCorpus,
-                          crashTestsCorpus]),
-          MAX_TEST_INPUTS_PER_TEST);
-    } else {
-      inputs = getRandomInputs(
-          jscCorpus,
-          random.shuffle([chakraCorpus, spiderMonkeyCorpus, v8Corpus,
-                          crashTestsCorpus]),
-          MAX_TEST_INPUTS_PER_TEST);
-    }
+    let inputs = getRandomInputs(reactCorpus, [], MAX_TEST_INPUTS_PER_TEST);
 
     if (inputs.length > 0) {
       yield inputs;
@@ -158,31 +133,8 @@ function main() {
     overrideSettings(settings, program.setting);
   }
 
-  let app_name = process.env.APP_NAME;
-  if (app_name && app_name.endsWith('.exe')) {
-    app_name = app_name.substr(0, app_name.length - 4);
-  }
-
-  if (app_name === 'd8' ||
-      app_name === 'v8_simple_inspector_fuzzer' ||
-      app_name === 'v8_foozzie.py') {
-    // V8 supports running the raw d8 executable, the inspector fuzzer or
-    // the differential fuzzing harness 'foozzie'.
-    settings.engine = 'V8';
-  } else if (app_name === 'ch') {
-    settings.engine = 'chakra';
-  } else if (app_name === 'js') {
-    settings.engine = 'spidermonkey';
-  } else if (app_name === 'jsc') {
-    settings.engine = 'jsc';
-  } else {
-    console.log('ERROR: Invalid APP_NAME');
-    process.exit(1);
-  }
-
-  const mode = process.env.FUZZ_MODE || 'default';
-  assert(mode in SCRIPT_MUTATORS, `Unknown mode ${mode}`);
-  const mutator = new SCRIPT_MUTATORS[mode](settings);
+  settings.engine = "node";
+  const mutator = new SCRIPT_MUTATORS["default"](settings);
 
   if (program.mutate) {
     const absPath = path.resolve(program.mutate);
@@ -200,23 +152,18 @@ function main() {
   if (program.mutate_corpus) {
     inputGen = corpusInputGen();
   } else {
-    inputGen = randomInputGen(settings.engine);
+    inputGen = randomInputGen();
   }
 
   for (const [i, inputs] of enumerate(inputGen)) {
-    const outputPath = path.join(program.output_dir, 'fuzz-' + i + '.js');
+    const outputPath = path.join(program.output_dir, "fuzz-" + i + ".js");
 
     const start = Date.now();
-    const paths = inputs.map(input => input.relPath);
+    const paths = inputs.map((input) => input.relPath);
 
     try {
       const mutated = mutator.mutateMultiple(inputs);
       fs.writeFileSync(outputPath, mutated.code);
-
-      if (settings.engine === 'V8' && mutated.flags && mutated.flags.length > 0) {
-        const flagsPath = path.join(program.output_dir, 'flags-' + i + '.js');
-        fs.writeFileSync(flagsPath, mutated.flags.join(' '));
-      }
     } catch (e) {
       if (e.message.startsWith('ENOSPC')) {
         console.log('ERROR: No space left. Bailing out...');

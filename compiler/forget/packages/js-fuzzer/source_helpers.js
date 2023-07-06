@@ -26,7 +26,7 @@ const V8_REPLACE_BUILTIN_REGEXP = new RegExp(
     V8_BUILTIN_PREFIX + '(\\w+)\\(', 'g');
 
 const BABYLON_OPTIONS = {
-    sourceType: 'script',
+    sourceType: 'module',
     allowReturnOutsideFunction: true,
     tokens: false,
     ranges: false,

@@ -16,7 +16,6 @@ const db = require('./db.js');
 const random = require('./random.js');
 const sourceHelpers = require('./source_helpers.js');
 
-const { AddTryCatchMutator } = require('./mutators/try_catch.js');
 const { ArrayMutator } = require('./mutators/array_mutator.js');
 const { CrossOverMutator } = require('./mutators/crossover_mutator.js');
 const { ExpressionMutator } = require('./mutators/expression_mutator.js');
@@ -67,7 +66,6 @@ class ScriptMutator {
       new FunctionCallMutator(settings),
       new VariableOrObjectMutator(settings),
     ];
-    this.trycatch = new AddTryCatchMutator(settings);
     this.settings = settings;
   }
 
@@ -149,9 +147,6 @@ class ScriptMutator {
         annotations.push(` Script mutator: extra ${mutator.constructor.name}`);
       }
     }
-
-    // Try-catch wrapping should always be the last mutation.
-    mutators.push(this.trycatch);
 
     for (const mutator of mutators) {
       mutator.mutate(source);

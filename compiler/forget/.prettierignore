@@ -9,3 +9,4 @@ test262/
 *.json
 *.css
 *.webmanifest
+packages/js-fuzzer
