@@ -11,6 +11,8 @@ fn fixtures() {
         let input = std::fs::read_to_string(path).unwrap();
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
 
+        println!("{:#?}", &ast);
+
         let mut output = String::new();
 
         for (ix, item) in ast.body.into_iter().enumerate() {

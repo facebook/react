@@ -1,9 +1,10 @@
 use std::{io::stderr, num::NonZeroU32, sync::Arc};
 
+use estree::{Binding, BindingId};
 use swc::Compiler;
 use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
-use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, GLOBALS};
+use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
     AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, ModuleItem, Pat, PatOrExpr,
     Program, Stmt, UnaryOp, VarDeclKind, VarDeclOrExpr,
@@ -33,24 +34,37 @@ pub fn parse(source: &str, file: &str) -> Result<estree::Program, Box<dyn std::e
             Some(&comments),
         )?;
 
+        let context = Context {
+            top_level_mark: Mark::new(),
+            unresolved_mark: Mark::new(),
+        };
+
         let module = c.run_transform(&handler, false, || {
-            let unresolved_mark = Mark::new();
-            let top_level_mark = Mark::new();
-            module.fold_with(&mut resolver(unresolved_mark, top_level_mark, true))
+            module.fold_with(&mut resolver(
+                context.unresolved_mark,
+                context.top_level_mark,
+                true,
+            ))
         });
 
-        Ok(convert_program(&module))
+        Ok(convert_program(&context, &module))
     })
 }
 
-fn convert_program(program: &Program) -> estree::Program {
+#[derive(Debug)]
+struct Context {
+    unresolved_mark: Mark,
+    top_level_mark: Mark,
+}
+
+fn convert_program(cx: &Context, program: &Program) -> estree::Program {
     let mut program_items: Vec<estree::ModuleItem>;
     match program {
         Program::Module(program) => {
             let body = &program.body;
             program_items = Vec::with_capacity(body.len());
             for item in body {
-                program_items.push(convert_module_item(item));
+                program_items.push(convert_module_item(cx, item));
             }
         }
         Program::Script(program) => {
@@ -58,7 +72,7 @@ fn convert_program(program: &Program) -> estree::Program {
             program_items = Vec::with_capacity(body.len());
             for item in body {
                 program_items.push(estree::ModuleItem::Statement(Box::new(convert_statement(
-                    item,
+                    cx, item,
                 ))));
             }
         }
@@ -76,10 +90,12 @@ fn convert_program(program: &Program) -> estree::Program {
     }
 }
 
-fn convert_module_item(item: &ModuleItem) -> estree::ModuleItem {
+fn convert_module_item(cx: &Context, item: &ModuleItem) -> estree::ModuleItem {
     match item {
-        ModuleItem::Stmt(item) => estree::ModuleItem::Statement(Box::new(convert_statement(item))),
-        _ => todo!(),
+        ModuleItem::Stmt(item) => {
+            estree::ModuleItem::Statement(Box::new(convert_statement(cx, item)))
+        }
+        _ => todo!("Convert {:#?}", item),
     }
 }
 
@@ -98,10 +114,10 @@ fn convert_decl_kind(kind: &VarDeclKind) -> estree::VariableDeclarationKind {
     }
 }
 
-fn convert_block_statement(stmt: &BlockStmt) -> estree::BlockStatement {
+fn convert_block_statement(cx: &Context, stmt: &BlockStmt) -> estree::BlockStatement {
     let mut body: Vec<estree::Statement> = Vec::with_capacity(stmt.stmts.len());
     for stmt in &stmt.stmts {
-        body.push(convert_statement(stmt));
+        body.push(convert_statement(cx, stmt));
     }
     estree::BlockStatement {
         body,
@@ -110,13 +126,14 @@ fn convert_block_statement(stmt: &BlockStmt) -> estree::BlockStatement {
     }
 }
 
-fn convert_statement(stmt: &Stmt) -> estree::Statement {
+fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
     match stmt {
         Stmt::Decl(Decl::Fn(item)) => {
             let name = item.ident.sym.to_string();
             estree::Statement::FunctionDeclaration(Box::new(estree::FunctionDeclaration {
                 id: Some(estree::Identifier {
                     name,
+                    binding: convert_binding(cx, item.ident.span.ctxt),
                     loc: None,
                     range: convert_span(&item.ident.span),
                 }),
@@ -124,10 +141,10 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
                     .function
                     .params
                     .iter()
-                    .map(|param| convert_pattern(&param.pat))
+                    .map(|param| convert_pattern(cx, &param.pat))
                     .collect(),
                 body: item.function.body.as_ref().map(|body| {
-                    estree::Statement::BlockStatement(Box::new(convert_block_statement(body)))
+                    estree::Statement::BlockStatement(Box::new(convert_block_statement(cx, body)))
                 }),
                 is_async: item.function.is_async,
                 is_generator: item.function.is_generator,
@@ -136,16 +153,22 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
             }))
         }
         Stmt::Block(item) => {
-            estree::Statement::BlockStatement(Box::new(convert_block_statement(item)))
+            estree::Statement::BlockStatement(Box::new(convert_block_statement(cx, item)))
         }
         Stmt::Break(item) => estree::Statement::BreakStatement(Box::new(estree::BreakStatement {
-            label: item.label.as_ref().map(|label| convert_identifier(label)),
+            label: item
+                .label
+                .as_ref()
+                .map(|label| convert_identifier(cx, label)),
             loc: None,
             range: convert_span(&item.span),
         })),
         Stmt::Continue(item) => {
             estree::Statement::ContinueStatement(Box::new(estree::ContinueStatement {
-                label: item.label.as_ref().map(|label| convert_identifier(label)),
+                label: item
+                    .label
+                    .as_ref()
+                    .map(|label| convert_identifier(cx, label)),
                 loc: None,
                 range: convert_span(&item.span),
             }))
@@ -158,8 +181,8 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
         }
         Stmt::DoWhile(item) => {
             estree::Statement::DoWhileStatement(Box::new(estree::DoWhileStatement {
-                body: convert_statement(&item.body),
-                test: convert_expression(&item.test),
+                body: convert_statement(cx, &item.body),
+                test: convert_expression(cx, &item.test),
                 loc: None,
                 range: convert_span(&item.span),
             }))
@@ -169,7 +192,7 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
             range: convert_span(&item.span),
         })),
         Stmt::Expr(item) => {
-            let expression = convert_expression(&item.expr);
+            let expression = convert_expression(cx, &item.expr);
             estree::Statement::ExpressionStatement(Box::new(estree::ExpressionStatement {
                 expression,
                 directive: None,
@@ -180,7 +203,7 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
         Stmt::For(item) => estree::Statement::ForStatement(Box::new(estree::ForStatement {
             init: item.init.as_ref().map(|init| match init {
                 VarDeclOrExpr::Expr(init) => {
-                    estree::ForInit::Expression(Box::new(convert_expression(init)))
+                    estree::ForInit::Expression(Box::new(convert_expression(cx, init)))
                 }
                 VarDeclOrExpr::VarDecl(init) => {
                     assert_eq!(init.decls.len(), 1);
@@ -188,8 +211,8 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
                     estree::ForInit::VariableDeclaration(Box::new(estree::VariableDeclaration {
                         kind: convert_decl_kind(&init.kind),
                         declarations: vec![estree::VariableDeclarator {
-                            id: convert_pattern(&decl.name),
-                            init: decl.init.as_ref().map(|init| convert_expression(init)),
+                            id: convert_pattern(cx, &decl.name),
+                            init: decl.init.as_ref().map(|init| convert_expression(cx, init)),
                             loc: None,
                             range: convert_span(&decl.span),
                         }],
@@ -198,31 +221,31 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
                     }))
                 }
             }),
-            test: item.test.as_ref().map(|test| convert_expression(test)),
+            test: item.test.as_ref().map(|test| convert_expression(cx, test)),
             update: item
                 .update
                 .as_ref()
-                .map(|update| convert_expression(update)),
-            body: convert_statement(&item.body),
+                .map(|update| convert_expression(cx, update)),
+            body: convert_statement(cx, &item.body),
             loc: None,
             range: convert_span(&item.span),
         })),
         Stmt::Return(item) => {
             estree::Statement::ReturnStatement(Box::new(estree::ReturnStatement {
-                argument: item.arg.as_ref().map(|arg| convert_expression(arg)),
+                argument: item.arg.as_ref().map(|arg| convert_expression(cx, arg)),
                 loc: None,
                 range: convert_span(&item.span),
             }))
         }
         Stmt::Throw(item) => estree::Statement::ThrowStatement(Box::new(estree::ThrowStatement {
-            argument: convert_expression(&item.arg),
+            argument: convert_expression(cx, &item.arg),
             loc: None,
             range: convert_span(&item.span),
         })),
         Stmt::If(item) => estree::Statement::IfStatement(Box::new(estree::IfStatement {
-            test: convert_expression(&item.test),
-            consequent: convert_statement(&item.cons),
-            alternate: item.alt.as_ref().map(|alt| convert_statement(alt)),
+            test: convert_expression(cx, &item.test),
+            consequent: convert_statement(cx, &item.cons),
+            alternate: item.alt.as_ref().map(|alt| convert_statement(cx, alt)),
             loc: None,
             range: convert_span(&item.span),
         })),
@@ -230,9 +253,11 @@ fn convert_statement(stmt: &Stmt) -> estree::Statement {
     }
 }
 
-fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
+fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
     match expr {
-        Expr::Ident(expr) => estree::ExpressionLike::Identifier(Box::new(convert_identifier(expr))),
+        Expr::Ident(expr) => {
+            estree::ExpressionLike::Identifier(Box::new(convert_identifier(cx, expr)))
+        }
         Expr::Array(expr) => {
             estree::ExpressionLike::ArrayExpression(Box::new(estree::ArrayExpression {
                 elements: expr
@@ -244,12 +269,12 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
                         match value.spread {
                             Some(spread) => estree::ExpressionLike::SpreadElement(Box::new(
                                 estree::SpreadElement {
-                                    argument: convert_expression(&value.expr),
+                                    argument: convert_expression(cx, &value.expr),
                                     loc: None,
                                     range: convert_span(&spread),
                                 },
                             )),
-                            None => convert_expression(&value.expr),
+                            None => convert_expression(cx, &value.expr),
                         }
                     })
                     .collect(),
@@ -259,7 +284,7 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
         }
         Expr::Await(expr) => {
             estree::ExpressionLike::AwaitExpression(Box::new(estree::AwaitExpression {
-                argument: convert_expression(&expr.arg),
+                argument: convert_expression(cx, &expr.arg),
                 loc: None,
                 range: convert_span(&expr.span),
             }))
@@ -268,7 +293,7 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
             estree::ExpressionLike::UnaryExpression(Box::new(estree::UnaryExpression {
                 operator: convert_unary_operator(expr.op),
                 is_prefix: false,
-                argument: convert_expression(&expr.arg),
+                argument: convert_expression(cx, &expr.arg),
                 loc: None,
                 range: convert_span(&expr.span),
             }))
@@ -277,8 +302,8 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
             Operator::Binary(op) => {
                 estree::ExpressionLike::BinaryExpression(Box::new(estree::BinaryExpression {
                     operator: op,
-                    left: convert_expression(&expr.left),
-                    right: convert_expression(&expr.right),
+                    left: convert_expression(cx, &expr.left),
+                    right: convert_expression(cx, &expr.right),
                     loc: None,
                     range: convert_span(&expr.span),
                 }))
@@ -286,8 +311,8 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
             Operator::Logical(op) => {
                 estree::ExpressionLike::LogicalExpression(Box::new(estree::LogicalExpression {
                     operator: op,
-                    left: convert_expression(&expr.left),
-                    right: convert_expression(&expr.right),
+                    left: convert_expression(cx, &expr.left),
+                    right: convert_expression(cx, &expr.right),
                     loc: None,
                     range: convert_span(&expr.span),
                 }))
@@ -321,7 +346,7 @@ fn convert_expression(expr: &Expr) -> estree::ExpressionLike {
             estree::ExpressionLike::AssignmentExpression(Box::new(estree::AssignmentExpression {
                 operator: convert_assignment_operator(expr.op),
                 left: convert_assignment_target(&expr.left),
-                right: convert_expression(&expr.right),
+                right: convert_expression(cx, &expr.right),
                 loc: None,
                 range: convert_span(&expr.span),
             }))
@@ -389,10 +414,11 @@ fn convert_binary_operator(op: BinaryOp) -> Operator {
     }
 }
 
-fn convert_pattern(pat: &Pat) -> estree::Pattern {
+fn convert_pattern(cx: &Context, pat: &Pat) -> estree::Pattern {
     match pat {
         Pat::Ident(pat) => estree::Pattern::Identifier(Box::new(estree::Identifier {
             name: pat.id.sym.to_string(),
+            binding: convert_binding(cx, pat.id.span.ctxt),
             loc: None,
             range: convert_span(&pat.span),
         })),
@@ -400,10 +426,22 @@ fn convert_pattern(pat: &Pat) -> estree::Pattern {
     }
 }
 
-fn convert_identifier(identifier: &Ident) -> estree::Identifier {
+fn convert_binding(context: &Context, binding_cx: SyntaxContext) -> Option<Binding> {
+    let id = BindingId::new(NonZeroU32::new(binding_cx.as_u32()).unwrap());
+    if binding_cx.as_u32() == context.top_level_mark.as_u32() {
+        Some(Binding::Global)
+    } else if binding_cx.as_u32() == context.unresolved_mark.as_u32() {
+        Some(Binding::Module(id))
+    } else {
+        Some(Binding::Local(id))
+    }
+}
+
+fn convert_identifier(cx: &Context, identifier: &Ident) -> estree::Identifier {
     let name = identifier.sym.as_ref().to_string();
     estree::Identifier {
         name,
+        binding: convert_binding(cx, identifier.span.ctxt),
         loc: None,
         range: convert_span(&identifier.span),
     }

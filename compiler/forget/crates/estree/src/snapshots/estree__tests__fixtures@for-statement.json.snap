@@ -541,6 +541,7 @@ Output:
       "type": "FunctionDeclaration",
       "id": {
         "name": "Component",
+        "binding": null,
         "loc": {
           "source": null,
           "start": {
@@ -561,6 +562,7 @@ Output:
         {
           "type": "Identifier",
           "name": "props",
+          "binding": null,
           "loc": {
             "source": null,
             "start": {
@@ -590,6 +592,7 @@ Output:
                 "id": {
                   "type": "Identifier",
                   "name": "x",
+                  "binding": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -669,6 +672,7 @@ Output:
                   "id": {
                     "type": "Identifier",
                     "name": "i",
+                    "binding": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -745,6 +749,7 @@ Output:
               "left": {
                 "type": "Identifier",
                 "name": "i",
+                "binding": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -803,6 +808,7 @@ Output:
               "argument": {
                 "type": "Identifier",
                 "name": "i",
+                "binding": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -847,6 +853,7 @@ Output:
                     "left": {
                       "type": "Identifier",
                       "name": "x",
+                      "binding": null,
                       "loc": {
                         "source": null,
                         "start": {
@@ -866,6 +873,7 @@ Output:
                     "right": {
                       "type": "Identifier",
                       "name": "i",
+                      "binding": null,
                       "loc": {
                         "source": null,
                         "start": {
@@ -953,6 +961,7 @@ Output:
             "argument": {
               "type": "Identifier",
               "name": "x",
+              "binding": null,
               "loc": {
                 "source": null,
                 "start": {

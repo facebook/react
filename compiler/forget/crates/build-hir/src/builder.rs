@@ -1,9 +1,13 @@
 use bumpalo::collections::Vec;
-use estree::Identifier;
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use estree::BindingId;
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    rc::Rc,
+};
 
 use hir::{
-    BasicBlock, BlockId, BlockKind, Environment, GotoKind, IdentifierData, Instruction,
+    BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, Instruction,
     InstructionIdGenerator, InstructionValue, Place, Terminal, TerminalValue, Type, HIR,
 };
 use indexmap::IndexMap;
@@ -28,6 +32,8 @@ pub struct Builder<'a> {
     wip: WipBlock<'a>,
 
     id_gen: InstructionIdGenerator,
+
+    bindings: HashMap<(bumpalo::collections::String<'a>, BindingId), Identifier<'a>>,
 }
 
 impl<'a> Builder<'a> {
@@ -44,6 +50,7 @@ impl<'a> Builder<'a> {
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
+            bindings: Default::default(),
         }
     }
 
@@ -131,7 +138,10 @@ impl<'a> Builder<'a> {
     /// Resolves the target for the given break label (if present), or returns the default
     /// break target given the current context. Returns a diagnostic if the label is
     /// provided but cannot be resolved.
-    pub(crate) fn resolve_break(&self, _label: Option<Identifier>) -> Result<BlockId, Diagnostic> {
+    pub(crate) fn resolve_break(
+        &self,
+        _label: Option<&estree::Identifier>,
+    ) -> Result<BlockId, Diagnostic> {
         todo!()
     }
 
@@ -140,10 +150,52 @@ impl<'a> Builder<'a> {
     /// provided but cannot be resolved.
     pub(crate) fn resolve_continue(
         &self,
-        _label: Option<Identifier>,
+        _label: Option<&estree::Identifier>,
     ) -> Result<BlockId, Diagnostic> {
         todo!()
     }
+
+    pub(crate) fn resolve_binding(
+        &mut self,
+        identifier: &estree::Identifier,
+    ) -> Option<Binding<'a>> {
+        identifier.binding.as_ref().map(|binding| match binding {
+            estree::Binding::Global => Binding::Global,
+            estree::Binding::Local(id) => {
+                Binding::Local(self.resolve_binding_identifier(&identifier.name, *id))
+            }
+            estree::Binding::Module(id) => {
+                Binding::Module(self.resolve_binding_identifier(&identifier.name, *id))
+            }
+        })
+    }
+
+    fn resolve_binding_identifier(&mut self, name: &str, binding_id: BindingId) -> Identifier<'a> {
+        let key_name = bumpalo::collections::String::from_str_in(name, &self.environment.allocator);
+        if let Some(identifier) = self.bindings.get(&(key_name.clone(), binding_id)) {
+            identifier.clone()
+        } else {
+            let id = self.environment.next_identifier_id();
+            let identifier = Identifier {
+                id,
+                name: Some(key_name.clone()),
+                data: Rc::new(RefCell::new(IdentifierData {
+                    mutable_range: Default::default(),
+                    scope: None,
+                    type_: Type::Var(self.environment.next_type_var_id()),
+                })),
+            };
+            self.bindings
+                .insert((key_name, binding_id), identifier.clone());
+            identifier
+        }
+    }
+}
+
+pub(crate) enum Binding<'a> {
+    Local(Identifier<'a>),
+    Module(Identifier<'a>),
+    Global,
 }
 
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before

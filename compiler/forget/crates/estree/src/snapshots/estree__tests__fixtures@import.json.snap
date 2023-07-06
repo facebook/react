@@ -119,6 +119,7 @@ Output:
           "type": "ImportDefaultSpecifier",
           "local": {
             "name": "React",
+            "binding": null,
             "loc": {
               "source": null,
               "start": {

@@ -364,6 +364,7 @@ Output:
       "type": "FunctionDeclaration",
       "id": {
         "name": "foo",
+        "binding": null,
         "loc": {
           "source": null,
           "start": {

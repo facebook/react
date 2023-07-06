@@ -38,6 +38,8 @@ impl<'a> Print for BasicBlock<'a> {
 impl<'a> Print for Instruction<'a> {
     fn print(&self, out: &mut impl Write) -> Result {
         write!(out, "  {} ", self.id)?;
+        self.lvalue.print(out)?;
+        write!(out, " = ")?;
         self.value.print(out)?;
         writeln!(out, "")?;
         Ok(())
@@ -56,6 +58,13 @@ impl<'a> Print for InstructionValue<'a> {
                     item.print(out)?;
                 }
                 write!(out, "]")?;
+            }
+            InstructionValue::LoadGlobal(value) => {
+                write!(out, "LoadGlobal {}", &value.name)?;
+            }
+            InstructionValue::LoadLocal(value) => {
+                write!(out, "LoadLocal ")?;
+                value.place.print(out)?;
             }
             InstructionValue::Primitive(value) => {
                 // Unlike other variants we don't print the variant name ("Primitive") since it's

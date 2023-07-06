@@ -1020,9 +1020,22 @@ pub struct AssignmentPattern {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Identifier {
     pub name: String,
+
+    #[serde(default)]
+    pub binding: Option<Binding>,
+
     pub loc: Option<SourceLocation>,
+
     #[serde(default)]
     pub range: Option<SourceRange>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum Binding {
+    Local(BindingId),
+    Module(BindingId),
+    Global,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -1238,6 +1251,22 @@ pub struct JSXText {
 
     #[serde(default)]
     pub range: Option<SourceRange>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[serde(transparent)]
+pub struct BindingId(NonZeroU32);
+
+impl BindingId {
+    pub fn new(id: NonZeroU32) -> Self {
+        Self(id)
+    }
+}
+
+impl From<BindingId> for u32 {
+    fn from(value: BindingId) -> Self {
+        value.0.into()
+    }
 }
 
 #[cfg(test)]

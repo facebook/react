@@ -28,7 +28,7 @@ pub enum InstructionValue<'a> {
     // JsxFragment(JsxFragment<'a>),
     // JsxText(JsxText<'a>),
     LoadContext(LoadContext<'a>),
-    // LoadGlobal(LoadGlobal<'a>),
+    LoadGlobal(LoadGlobal<'a>),
     LoadLocal(LoadLocal<'a>),
     // MethodCall(MethodCall<'a>),
     // New(New<'a>),
@@ -98,6 +98,11 @@ pub struct LoadLocal<'a> {
 #[derive(Debug)]
 pub struct LoadContext<'a> {
     pub place: Place<'a>,
+}
+
+#[derive(Debug)]
+pub struct LoadGlobal<'a> {
+    pub name: String<'a>,
 }
 
 #[derive(Debug)]

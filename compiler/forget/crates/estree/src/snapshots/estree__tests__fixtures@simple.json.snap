@@ -202,6 +202,7 @@ Output:
       "type": "FunctionDeclaration",
       "id": {
         "name": "Component",
+        "binding": null,
         "loc": {
           "source": null,
           "start": {
@@ -222,6 +223,7 @@ Output:
         {
           "type": "Identifier",
           "name": "props",
+          "binding": null,
           "loc": {
             "source": null,
             "start": {
@@ -251,6 +253,7 @@ Output:
               "object": {
                 "type": "Identifier",
                 "name": "props",
+                "binding": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -270,6 +273,7 @@ Output:
               "property": {
                 "type": "Identifier",
                 "name": "value",
+                "binding": null,
                 "loc": {
                   "source": null,
                   "start": {

@@ -2,10 +2,10 @@ use bumpalo::collections::{CollectIn, String};
 use estree::{ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Statement};
 use hir::{
     ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionValue,
-    LoadLocal, Place, PrimitiveValue, TerminalValue,
+    LoadGlobal, LoadLocal, Place, PrimitiveValue, TerminalValue,
 };
 
-use crate::builder::Builder;
+use crate::builder::{Binding, Builder};
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
 /// if it was constructed sucessfully, otherwise a list of diagnostics
@@ -61,7 +61,7 @@ fn lower_statement<'a>(
             }
         }
         Statement::BreakStatement(stmt) => {
-            let block = builder.resolve_break(stmt.label)?;
+            let block = builder.resolve_break(stmt.label.as_ref())?;
             builder.terminate(
                 TerminalValue::GotoTerminal(hir::GotoTerminal {
                     block,
@@ -71,7 +71,7 @@ fn lower_statement<'a>(
             );
         }
         Statement::ContinueStatement(stmt) => {
-            let block = builder.resolve_continue(stmt.label)?;
+            let block = builder.resolve_continue(stmt.label.as_ref())?;
             builder.terminate(
                 TerminalValue::GotoTerminal(hir::GotoTerminal {
                     block,
@@ -127,6 +127,22 @@ fn lower_expression<'a>(
     expr: ExpressionLike,
 ) -> InstructionValue<'a> {
     match expr {
+        ExpressionLike::Identifier(expr) => {
+            // TODO: handle unbound variables
+            let binding = builder.resolve_binding(&expr).unwrap();
+            match binding {
+                Binding::Local(identifier) => {
+                    let place = Place {
+                        effect: None,
+                        identifier,
+                    };
+                    InstructionValue::LoadLocal(LoadLocal { place })
+                }
+                Binding::Module(..) | Binding::Global => InstructionValue::LoadGlobal(LoadGlobal {
+                    name: String::from_str_in(&expr.name, &env.allocator),
+                }),
+            }
+        }
         ExpressionLike::Literal(expr) => InstructionValue::Primitive(hir::Primitive {
             value: lower_primitive(env, builder, *expr),
         }),
