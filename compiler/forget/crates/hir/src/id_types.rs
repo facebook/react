@@ -32,6 +32,20 @@ impl IdentifierId {
 /// and to reflect that it is applied to terminals as well
 pub struct InstructionId(pub(crate) u32);
 
+pub struct InstructionIdGenerator(u32);
+
+impl InstructionIdGenerator {
+    pub fn new() -> Self {
+        Self(0)
+    }
+
+    pub fn next(&mut self) -> InstructionId {
+        let id = self.0;
+        self.0 += 1;
+        InstructionId(id)
+    }
+}
+
 /// Uniquely identifies a reactive scope
 pub struct ScopeId(pub(crate) u32);
 

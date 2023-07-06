@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 hir = { path = "../hir" }
+estree = { path = "../estree" }
+indexmap = "2.0.0"

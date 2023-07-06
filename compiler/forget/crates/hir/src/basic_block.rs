@@ -1,4 +1,6 @@
-use crate::{id_types::BlockId, Instruction};
+use std::collections::HashSet;
+
+use crate::{id_types::BlockId, Instruction, Terminal};
 
 /// Represents a sequence of instructions that will always[1] execute
 /// consecutively. Concretely, a block may have zero or more instructions
@@ -18,6 +20,12 @@ pub struct BasicBlock<'a> {
 
     /// The ordered instructions in this block
     pub instructions: bumpalo::collections::Vec<'a, Instruction<'a>>,
+
+    /// The terminal instruction for the block
+    pub terminal: Terminal<'a>,
+
+    /// The immediate predecessors of this block
+    pub predecessors: HashSet<BlockId>,
 }
 
 pub enum BlockKind {

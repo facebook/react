@@ -8,12 +8,12 @@ mod registry;
 mod terminal;
 mod types;
 
-pub use basic_block::BasicBlock;
-pub use environment::Environment;
-pub use features::Features;
-pub use function::Function;
+pub use basic_block::*;
+pub use environment::*;
+pub use features::*;
+pub use function::*;
 pub use id_types::*;
-pub use instruction::Instruction;
+pub use instruction::*;
 pub use registry::Registry;
 pub use terminal::*;
 pub use types::*;

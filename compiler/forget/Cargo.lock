@@ -113,7 +113,9 @@ dependencies = [
 name = "build-hir"
 version = "0.1.0"
 dependencies = [
+ "estree",
  "hir",
+ "indexmap 2.0.0",
 ]
 
 [[package]]

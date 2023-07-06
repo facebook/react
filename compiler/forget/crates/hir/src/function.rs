@@ -21,3 +21,13 @@ pub struct HIR<'a> {
     /// but the blocks are in reverse postorder
     pub blocks: IndexMap<BlockId, BasicBlock<'a>>,
 }
+
+impl<'a> HIR<'a> {
+    pub fn block(&self, id: BlockId) -> &BasicBlock<'a> {
+        self.blocks.get(&id).unwrap()
+    }
+
+    pub fn block_mut(&mut self, id: BlockId) -> &mut BasicBlock<'a> {
+        self.blocks.get_mut(&id).unwrap()
+    }
+}
