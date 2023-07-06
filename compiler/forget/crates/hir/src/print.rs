@@ -1,8 +1,8 @@
 use std::fmt::{Result, Write};
 
 use crate::{
-    ArrayElement, BasicBlock, Function, Instruction, InstructionValue, Place, PrimitiveValue,
-    Terminal, TerminalValue,
+    ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
+    PrimitiveValue, Terminal, TerminalValue,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -80,6 +80,16 @@ impl<'a> Print for InstructionValue<'a> {
                     PrimitiveValue::Undefined => write!(out, "<undefined>")?,
                 };
             }
+            InstructionValue::StoreLocal(value) => {
+                write!(out, "StoreLocal ")?;
+                value.lvalue.print(out)?;
+                write!(out, " = ")?;
+                value.value.print(out)?;
+            }
+            InstructionValue::DeclareLocal(value) => {
+                write!(out, "DeclareLocal ")?;
+                value.lvalue.print(out)?;
+            }
             _ => write!(out, "{:?}", self)?,
         }
         Ok(())
@@ -114,6 +124,13 @@ impl<'a> Print for Place<'a> {
             },
             self.identifier.id
         )
+    }
+}
+
+impl<'a> Print for LValue<'a> {
+    fn print(&self, out: &mut impl Write) -> Result {
+        write!(out, "{} ", self.kind)?;
+        self.place.print(out)
     }
 }
 

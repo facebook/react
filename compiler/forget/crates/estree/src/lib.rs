@@ -1038,6 +1038,22 @@ pub enum Binding {
     Global,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
+#[serde(transparent)]
+pub struct BindingId(NonZeroU32);
+
+impl BindingId {
+    pub fn new(id: NonZeroU32) -> Self {
+        Self(id)
+    }
+}
+
+impl From<BindingId> for u32 {
+    fn from(value: BindingId) -> Self {
+        value.0.into()
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MemberExpression {
     pub object: ExpressionLike,
@@ -1251,22 +1267,6 @@ pub struct JSXText {
 
     #[serde(default)]
     pub range: Option<SourceRange>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[serde(transparent)]
-pub struct BindingId(NonZeroU32);
-
-impl BindingId {
-    pub fn new(id: NonZeroU32) -> Self {
-        Self(id)
-    }
-}
-
-impl From<BindingId> for u32 {
-    fn from(value: BindingId) -> Self {
-        value.0.into()
-    }
 }
 
 #[cfg(test)]

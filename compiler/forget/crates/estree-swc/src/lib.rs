@@ -7,7 +7,7 @@ use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
     AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, ModuleItem, Pat, PatOrExpr,
-    Program, Stmt, UnaryOp, VarDeclKind, VarDeclOrExpr,
+    Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -95,7 +95,7 @@ fn convert_module_item(cx: &Context, item: &ModuleItem) -> estree::ModuleItem {
         ModuleItem::Stmt(item) => {
             estree::ModuleItem::Statement(Box::new(convert_statement(cx, item)))
         }
-        _ => todo!("Convert {:#?}", item),
+        _ => todo!("translate module item {:#?}", item),
     }
 }
 
@@ -152,6 +152,9 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
                 range: convert_span(&item.function.span),
             }))
         }
+        Stmt::Decl(Decl::Var(item)) => {
+            estree::Statement::VariableDeclaration(Box::new(convert_variable_declaration(cx, item)))
+        }
         Stmt::Block(item) => {
             estree::Statement::BlockStatement(Box::new(convert_block_statement(cx, item)))
         }
@@ -207,18 +210,9 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
                 }
                 VarDeclOrExpr::VarDecl(init) => {
                     assert_eq!(init.decls.len(), 1);
-                    let decl = &init.decls[0];
-                    estree::ForInit::VariableDeclaration(Box::new(estree::VariableDeclaration {
-                        kind: convert_decl_kind(&init.kind),
-                        declarations: vec![estree::VariableDeclarator {
-                            id: convert_pattern(cx, &decl.name),
-                            init: decl.init.as_ref().map(|init| convert_expression(cx, init)),
-                            loc: None,
-                            range: convert_span(&decl.span),
-                        }],
-                        loc: None,
-                        range: convert_span(&init.span),
-                    }))
+                    estree::ForInit::VariableDeclaration(Box::new(convert_variable_declaration(
+                        cx, init,
+                    )))
                 }
             }),
             test: item.test.as_ref().map(|test| convert_expression(cx, test)),
@@ -249,7 +243,28 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
             loc: None,
             range: convert_span(&item.span),
         })),
-        _ => todo!(),
+        _ => todo!("translate statement {:#?}", stmt),
+    }
+}
+
+fn convert_variable_declaration(cx: &Context, decl: &VarDecl) -> estree::VariableDeclaration {
+    estree::VariableDeclaration {
+        kind: convert_decl_kind(&decl.kind),
+        declarations: decl
+            .decls
+            .iter()
+            .map(|declarator| estree::VariableDeclarator {
+                id: convert_pattern(cx, &declarator.name),
+                init: declarator
+                    .init
+                    .as_ref()
+                    .map(|init| convert_expression(cx, init)),
+                loc: None,
+                range: convert_span(&decl.span),
+            })
+            .collect(),
+        loc: None,
+        range: convert_span(&decl.span),
     }
 }
 
@@ -351,12 +366,12 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
                 range: convert_span(&expr.span),
             }))
         }
-        _ => todo!(),
+        _ => todo!("translate expression {:#?}", expr),
     }
 }
 
 fn convert_assignment_target(_target: &PatOrExpr) -> estree::AssignmentTarget {
-    todo!()
+    todo!("translate assignment target")
 }
 
 fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {
@@ -374,7 +389,7 @@ fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {
 fn convert_assignment_operator(op: AssignOp) -> estree::AssignmentOperator {
     match op {
         AssignOp::AddAssign => estree::AssignmentOperator::PlusEquals,
-        _ => todo!(),
+        _ => todo!("translate assignment operator"),
     }
 }
 
@@ -422,7 +437,7 @@ fn convert_pattern(cx: &Context, pat: &Pat) -> estree::Pattern {
             loc: None,
             range: convert_span(&pat.span),
         })),
-        _ => todo!(),
+        _ => todo!("translate pattern {:#?}", pat),
     }
 }
 

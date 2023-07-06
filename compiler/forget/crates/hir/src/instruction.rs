@@ -145,6 +145,16 @@ pub enum InstructionKind {
     Reassign,
 }
 
+impl Display for InstructionKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Const => f.write_str("Const"),
+            Self::Let => f.write_str("Let"),
+            Self::Reassign => f.write_str("Reassign"),
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum Effect {
     /// This reference freezes the value (corresponds to a place where codegen should emit a freeze instruction)

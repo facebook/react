@@ -21,7 +21,7 @@ use indexmap::IndexMap;
 /// generally involves driving calls to enter/exit blocks, resolve
 /// labels and variables, and then calling `build()` when the HIR
 /// is complete.
-pub struct Builder<'a> {
+pub(crate) struct Builder<'a> {
     #[allow(dead_code)]
     environment: &'a Environment<'a>,
 
@@ -32,8 +32,12 @@ pub struct Builder<'a> {
     wip: WipBlock<'a>,
 
     id_gen: InstructionIdGenerator,
+}
 
-    bindings: HashMap<(bumpalo::collections::String<'a>, BindingId), Identifier<'a>>,
+pub(crate) struct WipBlock<'a> {
+    pub id: BlockId,
+    pub kind: BlockKind,
+    pub instructions: Vec<'a, Instruction<'a>>,
 }
 
 impl<'a> Builder<'a> {
@@ -50,7 +54,6 @@ impl<'a> Builder<'a> {
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
-            bindings: Default::default(),
         }
     }
 
@@ -148,34 +151,15 @@ impl<'a> Builder<'a> {
     ) -> Option<Binding<'a>> {
         identifier.binding.as_ref().map(|binding| match binding {
             estree::Binding::Global => Binding::Global,
-            estree::Binding::Local(id) => {
-                Binding::Local(self.resolve_binding_identifier(&identifier.name, *id))
-            }
-            estree::Binding::Module(id) => {
-                Binding::Module(self.resolve_binding_identifier(&identifier.name, *id))
-            }
+            estree::Binding::Local(id) => Binding::Local(
+                self.environment
+                    .resolve_binding_identifier(&identifier.name, *id),
+            ),
+            estree::Binding::Module(id) => Binding::Module(
+                self.environment
+                    .resolve_binding_identifier(&identifier.name, *id),
+            ),
         })
-    }
-
-    fn resolve_binding_identifier(&mut self, name: &str, binding_id: BindingId) -> Identifier<'a> {
-        let key_name = bumpalo::collections::String::from_str_in(name, &self.environment.allocator);
-        if let Some(identifier) = self.bindings.get(&(key_name.clone(), binding_id)) {
-            identifier.clone()
-        } else {
-            let id = self.environment.next_identifier_id();
-            let identifier = Identifier {
-                id,
-                name: Some(key_name.clone()),
-                data: Rc::new(RefCell::new(IdentifierData {
-                    mutable_range: Default::default(),
-                    scope: None,
-                    type_: Type::Var(self.environment.next_type_var_id()),
-                })),
-            };
-            self.bindings
-                .insert((key_name, binding_id), identifier.clone());
-            identifier
-        }
     }
 }
 
@@ -229,12 +213,6 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     }
 
     hir.blocks = blocks;
-}
-
-pub(crate) struct WipBlock<'a> {
-    pub id: BlockId,
-    pub kind: BlockKind,
-    pub instructions: Vec<'a, Instruction<'a>>,
 }
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable

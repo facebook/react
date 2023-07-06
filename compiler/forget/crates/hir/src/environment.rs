@@ -1,8 +1,15 @@
-use std::cell::Cell;
+use std::{
+    cell::{Cell, RefCell},
+    collections::HashMap,
+    rc::Rc,
+};
 
 use bumpalo::Bump;
+use estree::BindingId;
 
-use crate::{BlockId, Features, IdentifierId, Registry, TypeVarId};
+use crate::{
+    BlockId, Features, Identifier, IdentifierData, IdentifierId, Registry, Type, TypeVarId,
+};
 
 /// Stores all the contextual information about the top-level React function being
 /// compiled. Environments may not be reused between React functions, but *are*
@@ -28,6 +35,8 @@ pub struct Environment<'a> {
     next_identifier_id: Cell<IdentifierId>,
 
     next_type_var_id: Cell<TypeVarId>,
+
+    bindings: Rc<RefCell<HashMap<(bumpalo::collections::String<'a>, BindingId), Identifier<'a>>>>,
 }
 
 impl<'a> Environment<'a> {
@@ -39,6 +48,7 @@ impl<'a> Environment<'a> {
             next_block_id: Cell::new(BlockId(0)),
             next_identifier_id: Cell::new(IdentifierId(0)),
             next_type_var_id: Cell::new(TypeVarId(0)),
+            bindings: Default::default(),
         }
     }
 
@@ -66,5 +76,26 @@ impl<'a> Environment<'a> {
         let id = self.next_type_var_id.get();
         self.next_type_var_id.set(id.next());
         id
+    }
+
+    pub fn resolve_binding_identifier(&self, name: &str, binding_id: BindingId) -> Identifier<'a> {
+        let key_name = bumpalo::collections::String::from_str_in(name, &self.allocator);
+        let mut bindings = self.bindings.borrow_mut();
+        if let Some(identifier) = bindings.get(&(key_name.clone(), binding_id)) {
+            identifier.clone()
+        } else {
+            let id = self.next_identifier_id();
+            let identifier = Identifier {
+                id,
+                name: Some(key_name.clone()),
+                data: Rc::new(RefCell::new(IdentifierData {
+                    mutable_range: Default::default(),
+                    scope: None,
+                    type_: Type::Var(self.next_type_var_id()),
+                })),
+            };
+            bindings.insert((key_name, binding_id), identifier.clone());
+            identifier
+        }
     }
 }

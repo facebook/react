@@ -7,5 +7,9 @@ function id(x) {
   // FOO;
   Math;
   id;
+  let y = true;
+  y;
+  let z;
+  z;
   return x;
 }

@@ -13,6 +13,10 @@ function id(x) {
   // FOO;
   Math;
   id;
+  let y = true;
+  y;
+  let z;
+  z;
   return x;
 }
 
@@ -22,6 +26,11 @@ entry bb0
 bb0
   [0] unknown $0 = LoadGlobal Math
   [1] unknown $2 = LoadGlobal id
-  [2] unknown $4 = LoadLocal unknown x$3
-  [3] Return unknown $4
+  [2] unknown $3 = true
+  [3] unknown $5 = StoreLocal Let unknown y$4 = unknown $3
+  [4] unknown $6 = LoadLocal unknown y$4
+  [5] unknown $8 = DeclareLocal Let unknown z$7
+  [6] unknown $9 = LoadLocal unknown z$7
+  [7] unknown $11 = LoadLocal unknown x$10
+  [8] Return unknown $11
 

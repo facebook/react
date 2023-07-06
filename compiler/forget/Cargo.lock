@@ -587,6 +587,7 @@ name = "hir"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
+ "estree",
  "indexmap 2.0.0",
  "serde",
 ]

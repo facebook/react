@@ -1,8 +1,11 @@
 use bumpalo::collections::{CollectIn, String};
-use estree::{ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Statement};
+use estree::{
+    ExpressionLike, FunctionDeclaration, Literal, LiteralValue, Pattern, Statement,
+    VariableDeclarationKind,
+};
 use hir::{
-    ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionValue,
-    LoadGlobal, LoadLocal, Place, PrimitiveValue, TerminalValue,
+    ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionKind,
+    InstructionValue, LValue, LoadGlobal, LoadLocal, Place, PrimitiveValue, TerminalValue,
 };
 
 use crate::builder::{Binding, Builder};
@@ -102,6 +105,39 @@ fn lower_statement<'a>(
         Statement::EmptyStatement(_) => {
             // no-op
         }
+        Statement::VariableDeclaration(stmt) => {
+            let kind = match stmt.kind {
+                VariableDeclarationKind::Const => InstructionKind::Const,
+                VariableDeclarationKind::Let => InstructionKind::Let,
+                VariableDeclarationKind::Var => panic!("`var` declarations are not supported"),
+            };
+            for declaration in stmt.declarations {
+                if let Some(init) = declaration.init {
+                    let value = lower_expression_to_temporary(env, builder, init);
+                    lower_assignment(env, builder, kind, declaration.id, value);
+                } else {
+                    if let Pattern::Identifier(id) = declaration.id {
+                        // TODO: handle unbound variables
+                        let binding = builder.resolve_binding(&id).unwrap();
+                        let identifier = match binding {
+                            Binding::Local(identifier) => identifier,
+                            _ => panic!("Expected variable declaration to be a local binding"),
+                        };
+                        let place = Place {
+                            effect: None,
+                            identifier,
+                        };
+                        lower_value_to_temporary(
+                            env,
+                            builder,
+                            InstructionValue::DeclareLocal(hir::DeclareLocal {
+                                lvalue: LValue { place, kind },
+                            }),
+                        );
+                    }
+                }
+            }
+        }
         _ => todo!("Lower {stmt:#?}"),
     }
     Ok(())
@@ -165,6 +201,46 @@ fn lower_expression<'a>(
             panic!("SpreadElement may not appear in normal expression position")
         }
         _ => todo!("Lower expr {expr:#?}"),
+    }
+}
+
+fn lower_assignment<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    kind: InstructionKind,
+    lvalue: Pattern,
+    value: Place<'a>,
+) -> InstructionValue<'a> {
+    match lvalue {
+        Pattern::Identifier(lvalue) => {
+            let place = lower_identifier_for_assignment(env, builder, kind, *lvalue).unwrap();
+            let temporary = lower_value_to_temporary(
+                env,
+                builder,
+                InstructionValue::StoreLocal(hir::StoreLocal {
+                    lvalue: LValue { place, kind },
+                    value,
+                }),
+            );
+            InstructionValue::LoadLocal(LoadLocal { place: temporary })
+        }
+        _ => todo!("lower assignment for {:#?}", lvalue),
+    }
+}
+
+fn lower_identifier_for_assignment<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    kind: InstructionKind,
+    identifier: estree::Identifier,
+) -> Option<Place<'a>> {
+    let binding = builder.resolve_binding(&identifier)?;
+    match binding {
+        Binding::Module(..) | Binding::Global => panic!("Cannot reassign a global"),
+        Binding::Local(id) => Some(Place {
+            identifier: id,
+            effect: None,
+        }),
     }
 }
 
