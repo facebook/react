@@ -1,5 +1,3 @@
-use std::iter::Successors;
-
 use crate::{instruction::Place, BlockId, InstructionId};
 
 /// Terminals represent statements or expressions that affect control flow,

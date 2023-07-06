@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use bumpalo::collections::{String, Vec};
 
 use crate::{IdentifierId, InstructionId, ScopeId, Type};
@@ -20,7 +22,6 @@ pub enum InstructionValue<'a> {
     DeclareContext(DeclareContext<'a>),
     DeclareLocal(DeclareLocal<'a>),
     // Destructure(Destructure<'a>),
-    // Expression(Expression<'a>),
     // Function(Function<'a>),
     // JsxFragment(JsxFragment<'a>),
     // JsxText(JsxText<'a>),
@@ -104,6 +105,7 @@ pub struct StoreLocal<'a> {
     pub value: Place<'a>,
 }
 
+#[derive(Clone)]
 pub struct Place<'a> {
     pub identifier: Identifier<'a>,
     pub effect: Option<Effect>,
@@ -161,12 +163,16 @@ impl Effect {
     }
 }
 
+#[derive(Clone)]
 pub struct Identifier<'a> {
     /// Uniquely identifiers this identifier
     pub id: IdentifierId,
-
     pub name: Option<String<'a>>,
 
+    pub data: Rc<RefCell<IdentifierData>>,
+}
+
+pub struct IdentifierData {
     pub mutable_range: MutableRange,
 
     pub scope: Option<ReactiveScope>,
@@ -185,6 +191,21 @@ pub struct MutableRange {
 
     /// end of the range, exclusive
     pub end: InstructionId,
+}
+
+impl MutableRange {
+    pub fn new() -> Self {
+        Self {
+            start: InstructionId(0),
+            end: InstructionId(0),
+        }
+    }
+}
+
+impl Default for MutableRange {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 pub struct ReactiveScope {

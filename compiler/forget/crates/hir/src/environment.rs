@@ -2,7 +2,7 @@ use std::cell::Cell;
 
 use bumpalo::Bump;
 
-use crate::{BlockId, Features, IdentifierId, Registry};
+use crate::{BlockId, Features, IdentifierId, Registry, TypeVarId};
 
 /// Stores all the contextual information about the top-level React function being
 /// compiled. Environments may not be reused between React functions, but *are*
@@ -26,6 +26,8 @@ pub struct Environment<'a> {
 
     /// The next available identifier id
     next_identifier_id: Cell<IdentifierId>,
+
+    next_type_var_id: Cell<TypeVarId>,
 }
 
 impl<'a> Environment<'a> {
@@ -36,6 +38,7 @@ impl<'a> Environment<'a> {
             registry,
             next_block_id: Cell::new(BlockId(0)),
             next_identifier_id: Cell::new(IdentifierId(0)),
+            next_type_var_id: Cell::new(TypeVarId(0)),
         }
     }
 
@@ -55,6 +58,13 @@ impl<'a> Environment<'a> {
     pub fn next_identifier_id(&self) -> IdentifierId {
         let id = self.next_identifier_id.get();
         self.next_identifier_id.set(id.next());
+        id
+    }
+
+    /// Get the next available type var
+    pub fn next_type_var_id(&self) -> TypeVarId {
+        let id = self.next_type_var_id.get();
+        self.next_type_var_id.set(id.next());
         id
     }
 }

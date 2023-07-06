@@ -1,10 +1,10 @@
 use bumpalo::collections::Vec;
 use estree::Identifier;
-use std::collections::HashSet;
+use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use hir::{
-    BasicBlock, BlockId, BlockKind, Environment, GotoKind, Instruction, InstructionIdGenerator,
-    InstructionValue, Place, Terminal, TerminalValue, Type, HIR,
+    BasicBlock, BlockId, BlockKind, Environment, GotoKind, IdentifierData, Instruction,
+    InstructionIdGenerator, InstructionValue, Place, Terminal, TerminalValue, Type, HIR,
 };
 use indexmap::IndexMap;
 
@@ -106,17 +106,19 @@ impl<'a> Builder<'a> {
     pub(crate) fn make_temporary(&self) -> hir::Identifier<'a> {
         hir::Identifier {
             id: self.environment.next_identifier_id(),
-            mutable_range: Default::default(),
             name: None,
-            scope: None,
-            type_: Type::Var(self.environment.next_type_var_id()),
+            data: Rc::new(RefCell::new(IdentifierData {
+                mutable_range: Default::default(),
+                scope: None,
+                type_: Type::Var(self.environment.next_type_var_id()),
+            })),
         }
     }
 
     /// Resolves the target for the given break label (if present), or returns the default
     /// break target given the current context. Returns a diagnostic if the label is
     /// provided but cannot be resolved.
-    pub(crate) fn resolve_break(&self, label: Option<Identifier>) -> Result<BlockId, Diagnostic> {
+    pub(crate) fn resolve_break(&self, _label: Option<Identifier>) -> Result<BlockId, Diagnostic> {
         todo!()
     }
 
@@ -125,7 +127,7 @@ impl<'a> Builder<'a> {
     /// provided but cannot be resolved.
     pub(crate) fn resolve_continue(
         &self,
-        label: Option<Identifier>,
+        _label: Option<Identifier>,
     ) -> Result<BlockId, Diagnostic> {
         todo!()
     }

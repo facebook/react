@@ -52,7 +52,7 @@ fn lower_statement<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     stmt: Statement,
-    label: Option<String<'a>>,
+    _label: Option<String<'a>>,
 ) -> Result<(), Diagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
@@ -97,8 +97,6 @@ fn lower_statement<'a>(
             );
         }
         Statement::ExpressionStatement(stmt) => {
-            // TODO: port the logic for emitting an ExpressionStatement instr if the instr
-            // was a logical or conditional. is that even necessary anymore?
             lower_expression_to_temporary(env, builder, stmt.expression);
         }
         Statement::EmptyStatement(_) => {
@@ -175,13 +173,13 @@ fn lower_value_to_temporary<'a>(
         return place;
     }
     let place = build_temporary_place(env, builder);
-    builder.push(todo!("clone `place`"), value);
+    builder.push(place.clone(), value);
     return place;
 }
 
 /// Constructs a temporary Identifier and Place wrapper, which can be used as an Instruction lvalue
 /// or other places where a temporary target is required
-fn build_temporary_place<'a>(env: &'a Environment<'a>, builder: &mut Builder<'a>) -> Place<'a> {
+fn build_temporary_place<'a>(_env: &'a Environment<'a>, builder: &mut Builder<'a>) -> Place<'a> {
     Place {
         identifier: builder.make_temporary(),
         effect: None,

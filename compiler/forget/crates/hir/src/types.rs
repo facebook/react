@@ -1,9 +1,9 @@
-use crate::{FunctionId, ObjectId};
+use crate::{FunctionId, ObjectId, TypeVarId};
 
 pub enum Type {
-    Builtin(Box<BuiltinType>),
+    Builtin(BuiltinType),
     // Phi(Box<PhiType>),
-    // Var(Box<TypeVar>),
+    Var(TypeVarId),
     // Poly(Box<PolyType>),
     // Prop(Box<PropType>),
 }

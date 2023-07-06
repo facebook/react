@@ -24,6 +24,15 @@ impl IdentifierId {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
+pub struct TypeVarId(pub(crate) u32);
+
+impl TypeVarId {
+    pub(crate) fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
+}
+
 /// Used to globally order the instructions and terminals within the scope
 /// of a given HIR value. Instructions and terminals are ordered using
 /// reverse postorder iteration of block instructions and their terminals.
