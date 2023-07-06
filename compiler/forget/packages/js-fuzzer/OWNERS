@@ -1,0 +1,7 @@
+set noparent
+
+file:../../../INFRA_OWNERS
+
+msarms@chromium.org
+mslekova@chromium.org
+ochang@chromium.org

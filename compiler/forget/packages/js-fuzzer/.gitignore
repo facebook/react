@@ -1,0 +1,6 @@
+/node_modules
+/ochang_js_fuzzer*
+/db/
+/output.zip
+/output/
+/workdir/
