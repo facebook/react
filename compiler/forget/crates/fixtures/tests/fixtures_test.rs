@@ -2,7 +2,7 @@ use build_hir::build;
 use bumpalo::Bump;
 use estree::{ModuleItem, Statement};
 use estree_swc::parse;
-use hir::{Environment, Registry};
+use hir::{Environment, Print, Registry};
 use insta::{assert_snapshot, glob};
 
 #[test]
@@ -11,9 +11,9 @@ fn fixtures() {
         let input = std::fs::read_to_string(path).unwrap();
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
 
-        let mut output = Vec::new();
+        let mut output = String::new();
 
-        for item in ast.body {
+        for (ix, item) in ast.body.into_iter().enumerate() {
             if let ModuleItem::Statement(stmt) = item {
                 if let Statement::FunctionDeclaration(fun) = *stmt {
                     let allocator = Bump::new();
@@ -25,12 +25,15 @@ fn fixtures() {
                         Registry,
                     ));
                     let hir = build(&environment, *fun).unwrap();
-                    output.push(format!("{hir:#?}"));
+
+                    if ix != 0 {
+                        output.push_str("\n\n");
+                    }
+                    hir.print(&mut output).unwrap();
                 }
             }
         }
 
-        let joined = output.join("\n\n");
-        assert_snapshot!(format!("Input:\n{input}\n\nOutput:\n{joined}"));
+        assert_snapshot!(format!("Input:\n{input}\n\nOutput:\n{output}"));
     });
 }

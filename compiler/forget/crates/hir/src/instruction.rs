@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use bumpalo::collections::{String, Vec};
 
@@ -173,6 +173,19 @@ impl Effect {
             Self::Capture | Self::Store | Self::ConditionallyMutate | Self::Mutate => true,
             Self::Read | Self::Freeze => false,
         }
+    }
+}
+
+impl Display for Effect {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Effect::Capture => "capture",
+            Effect::ConditionallyMutate => "mutate?",
+            Effect::Freeze => "freeze",
+            Effect::Mutate => "mutate",
+            Effect::Read => "read",
+            Effect::Store => "store",
+        })
     }
 }
 

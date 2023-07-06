@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// Unique identifier for a basic block. Values are unique only with respect to
 /// a single top-level function, and may be reused across different top-level
 /// functions. Notably, ids *are* unique across the basic blocks of a function
@@ -12,6 +14,12 @@ impl BlockId {
     }
 }
 
+impl Display for BlockId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("bb{}", self.0))
+    }
+}
+
 /// Unique identifier for a variable within a program. This is used to distinguish
 /// different instances of a variable with the same name in different scopes, or
 /// even the same named identifier across reassignments (when in SSA form).
@@ -21,6 +29,12 @@ pub struct IdentifierId(pub(crate) u32);
 impl IdentifierId {
     pub(crate) fn next(self) -> Self {
         Self(self.0 + 1)
+    }
+}
+
+impl Display for IdentifierId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("${}", self.0))
     }
 }
 
@@ -41,6 +55,12 @@ impl TypeVarId {
 /// and to reflect that it is applied to terminals as well
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct InstructionId(pub(crate) u32);
+
+impl Display for InstructionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("[{}]", self.0))
+    }
+}
 
 pub struct InstructionIdGenerator(u32);
 
