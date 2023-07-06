@@ -81,7 +81,7 @@ describe('ReactDOMFizzServer', () => {
     Suspense = React.Suspense;
     use = React.use;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
 
     PropTypes = require('prop-types');
