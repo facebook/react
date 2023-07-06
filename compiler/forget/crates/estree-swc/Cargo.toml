@@ -1,0 +1,11 @@
+[package]
+name = "estree-swc"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+swc_ecma_ast = { version = "0.106.6", features = ["serde", "serde-impl"] }
+estree = { path = "../estree" }
+swc_common = "0.31.16"
