@@ -65,25 +65,12 @@ impl<'a> Builder<'a> {
             blocks: self.completed,
         };
 
-        assert!(hir.blocks.len() > 0, "initial block count");
         reverse_postorder_blocks(&mut hir);
-        assert!(hir.blocks.len() > 0, "after reverse_postorder_blocks");
         remove_unreachable_for_updates(&mut hir);
-        assert!(hir.blocks.len() > 0, "after remove_unreachable_for_updates");
         remove_unreachable_fallthroughs(&mut hir);
-        assert!(
-            hir.blocks.len() > 0,
-            "after remove_unreachable_fallthroughs"
-        );
         remove_unreachable_do_while_statements(&mut hir);
-        assert!(
-            hir.blocks.len() > 0,
-            "after remove_unreachable_do_while_statements"
-        );
         mark_instruction_ids(&mut hir)?;
-        assert!(hir.blocks.len() > 0, "after mark_instruction_ids");
         mark_predecessors(&mut hir);
-        assert!(hir.blocks.len() > 0, "after mark_predecessors");
 
         Ok(hir)
     }
