@@ -94,6 +94,24 @@ describe('SchedulerPostTask', () => {
       });
     };
 
+    scheduler.yield = function ({priority, signal}) {
+      const id = idCounter++;
+      log(
+        `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,
+      );
+      const controller = signal._controller;
+      let callback;
+
+      return {
+        then(cb) {
+          callback = cb;
+          return new Promise((resolve, reject) => {
+            taskQueue.set(controller, {id, callback, resolve, reject});
+          });
+        },
+      };
+    };
+
     global.TaskController = class TaskController {
       constructor() {
         this.signal = {_controller: this};

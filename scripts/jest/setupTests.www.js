@@ -34,6 +34,7 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
   actual.enableIsInputPendingContinuous = __VARIANT__;
   actual.enableProfiling = __VARIANT__;
   actual.enableSchedulerDebugging = __VARIANT__;
+  actual.enableSchedulerYield = __VARIANT__;
 
   return actual;
 });
