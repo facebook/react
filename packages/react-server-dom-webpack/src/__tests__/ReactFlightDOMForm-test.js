@@ -32,6 +32,10 @@ let ReactServerDOMClient;
 describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
     jest.resetModules();
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.edge'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;

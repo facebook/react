@@ -145,6 +145,8 @@ module.exports = [
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-server-dom-webpack/node-register',
+      'react-server-dom-webpack/src/ReactFlightWebpackNodeRegister.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',

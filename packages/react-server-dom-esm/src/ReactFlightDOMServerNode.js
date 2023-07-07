@@ -38,6 +38,11 @@ import {
 
 import {decodeAction} from 'react-server/src/ReactFlightActionServer';
 
+export {
+  registerServerReference,
+  registerClientReference,
+} from './ReactFlightESMReferences';
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
