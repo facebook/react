@@ -12,3 +12,4 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const enableProfiling = __VARIANT__;
+export const enableSchedulerYield = __VARIANT__;
