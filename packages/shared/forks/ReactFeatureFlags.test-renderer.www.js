@@ -72,7 +72,7 @@ export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 export const enableDeferRootSchedulingToMicrotask = true;

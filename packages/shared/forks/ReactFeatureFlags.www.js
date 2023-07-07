@@ -102,7 +102,7 @@ export const allowConcurrentByDefault = true;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = false;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
