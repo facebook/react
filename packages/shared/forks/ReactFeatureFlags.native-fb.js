@@ -10,7 +10,6 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 
-// NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
 // Re-export dynamic flags from the internal module. Intentionally using *
 // because this import is compiled to a `require` call.
 import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
@@ -86,7 +85,7 @@ export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 
-export const useModernStrictMode = false;
+export const useModernStrictMode = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 
