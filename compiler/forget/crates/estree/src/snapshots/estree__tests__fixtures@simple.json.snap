@@ -196,7 +196,6 @@ Input:
 
 Output:
 {
-  "sourceType": "module",
   "body": [
     {
       "type": "FunctionDeclaration",
@@ -241,10 +240,7 @@ Output:
           }
         }
       ],
-      "generator": false,
-      "async": false,
       "body": {
-        "type": "BlockStatement",
         "body": [
           {
             "type": "ReturnStatement",
@@ -291,7 +287,6 @@ Output:
                 }
               },
               "computed": false,
-              "optional": false,
               "loc": {
                 "source": null,
                 "start": {
@@ -341,6 +336,8 @@ Output:
           "end": 51
         }
       },
+      "generator": false,
+      "async": false,
       "loc": {
         "source": null,
         "start": {
@@ -358,7 +355,7 @@ Output:
       }
     }
   ],
-  "comments": [],
+  "sourceType": null,
   "loc": {
     "source": null,
     "start": {

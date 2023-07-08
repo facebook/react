@@ -910,6 +910,7 @@ Output:
                       "end": 84
                     }
                   },
+                  "directive": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -1014,6 +1015,8 @@ Output:
           "end": 103
         }
       },
+      "generator": false,
+      "async": false,
       "loc": {
         "source": null,
         "start": {
@@ -1031,6 +1034,7 @@ Output:
       }
     }
   ],
+  "sourceType": "script",
   "loc": {
     "source": null,
     "start": {

@@ -35,8 +35,18 @@
                     "plural": true
                 },
                 "body": {
-                    "type": "BlockStatement",
+                    "type": "FunctionBody",
                     "nullable": true
+                },
+                "is_generator": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "generator"
+                },
+                "is_async": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "async"
                 }
             }
         },
@@ -85,8 +95,13 @@
         "Program": {
             "fields": {
                 "body": {
-                    "type": "Statement",
+                    "type": "ModuleItem",
                     "plural": true
+                },
+                "source_type": {
+                    "type": "SourceType",
+                    "nullable": true,
+                    "rename": "sourceType"
                 }
             }
         },
@@ -94,6 +109,11 @@
             "fields": {
                 "expression": {
                     "type": "Expression"
+                },
+                "directive": {
+                    "type": "String",
+                    "nullable": true,
+                    "optional": true
                 }
             }
         },
@@ -272,6 +292,19 @@
                 }
             }
         },
+        "ForOfStatement": {
+            "fields": {
+                "left": {
+                    "type": "ForInInit"
+                },
+                "right": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
         "FunctionDeclaration": {
             "fields": {
                 "function": {
@@ -306,7 +339,7 @@
         "ArrayExpression": {
             "fields": {
                 "elements": {
-                    "type": "Expression",
+                    "type": "ExpressionOrSpread",
                     "plural": true,
                     "nullable_item": true
                 }
@@ -338,6 +371,18 @@
                 "function": {
                     "type": "Function",
                     "flatten": true
+                }
+            }
+        },
+        "ArrowFunctionExpression": {
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                },
+                "is_expression": {
+                    "type": "bool",
+                    "rename": "expression"
                 }
             }
         },
@@ -409,7 +454,7 @@
         "MemberExpression": {
             "fields": {
                 "object": {
-                    "type": "Expression"
+                    "type": "ExpressionOrSuper"
                 },
                 "property": {
                     "type": "Expression"
@@ -433,35 +478,88 @@
             }
         },
         "CallExpression": {
-            "type": true,
             "fields": {
                 "callee": {
-                    "type": "Expression"
+                    "type": "ExpressionOrSuper"
                 },
                 "arguments": {
-                    "type": "Expression",
+                    "type": "ExpressionOrSpread",
                     "plural": true
                 }
             }
         },
         "NewExpression": {
-            "type": true,
             "fields": {
                 "callee": {
                     "type": "Expression"
                 },
                 "arguments": {
-                    "type": "Expression",
+                    "type": "ExpressionOrSpread",
                     "plural": true
                 }
             }
         },
         "SequenceExpression": {
-            "type": true,
             "fields": {
                 "expressions": {
                     "type": "Expression",
                     "plural": true
+                }
+            }
+        },
+        "Super": {},
+        "SpreadElement": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "YieldExpression": {
+            "fields": {
+                "argument": {
+                    "type": "Expression",
+                    "nullable": true,
+                    "optional": true
+                },
+                "is_delegate": {
+                    "type": "bool",
+                    "rename": "delegate"
+                }
+            }
+        },
+        "ImportDeclaration": {
+            "fields": {
+                "specifiers": {
+                    "type": "ImportDeclarationSpecifier",
+                    "plural": true
+                },
+                "source": {
+                    "type": "Literal"
+                }
+            }
+        },
+        "ImportSpecifier": {
+            "fields": {
+                "imported": {
+                    "type": "Identifier"
+                },
+                "local": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ImportDefaultSpecifier": {
+            "fields": {
+                "local": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ImportNamespaceSpecifier": {
+            "fields": {
+                "local": {
+                    "type": "Identifier"
                 }
             }
         }
@@ -476,6 +574,7 @@
             "EmptyStatement",
             "ExpressionStatement",
             "ForInStatement",
+            "ForOfStatement",
             "ForStatement",
             "FunctionDeclaration",
             "IfStatement",
@@ -490,6 +589,7 @@
         ],
         "Expression": [
             "ArrayExpression",
+            "ArrowFunctionExpression",
             "AssignmentExpression",
             "BinaryExpression",
             "CallExpression",
@@ -504,7 +604,32 @@
             "SequenceExpression",
             "ThisExpression",
             "UnaryExpression",
-            "UpdateExpression"
+            "UpdateExpression",
+            "YieldExpression"
+        ],
+        "ImportDeclarationSpecifier": [
+            "ImportSpecifier",
+            "ImportDefaultSpecifier",
+            "ImportNamespaceSpecifier"
+        ],
+        "ModuleItem": [
+            "ImportOrExportDeclaration",
+            "Statement"
+        ],
+        "ImportOrExportDeclaration": [
+            "ImportDeclaration"
+        ],
+        "ExpressionOrSuper": [
+            "Expression",
+            "Super"
+        ],
+        "ExpressionOrSpread": [
+            "Expression",
+            "SpreadElement"
+        ],
+        "FunctionBody": [
+            "BlockStatement",
+            "Expression"
         ],
         "Pattern": [
             "Identifier"
@@ -591,6 +716,10 @@
             "And": "&&",
             "NullCoalescing": "??",
             "Or": "||"
+        },
+        "SourceType": {
+            "Script": "script",
+            "Module": "module"
         }
     }
 }

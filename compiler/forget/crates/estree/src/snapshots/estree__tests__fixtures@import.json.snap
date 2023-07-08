@@ -111,9 +111,9 @@ Input:
 
 Output:
 {
-  "sourceType": "module",
   "body": [
     {
+      "type": "ImportDeclaration",
       "specifiers": [
         {
           "type": "ImportDefaultSpecifier",
@@ -154,8 +154,11 @@ Output:
         }
       ],
       "source": {
-        "value": "react",
+        "value": {
+          "String": "react"
+        },
         "raw": "'react'",
+        "regex": null,
         "loc": {
           "source": null,
           "start": {
@@ -189,7 +192,7 @@ Output:
       }
     }
   ],
-  "comments": [],
+  "sourceType": "module",
   "loc": {
     "source": null,
     "start": {

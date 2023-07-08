@@ -1,5 +1,6 @@
 mod binding;
 mod generated;
+mod generated_extensions;
 mod js_value;
 mod range;
 

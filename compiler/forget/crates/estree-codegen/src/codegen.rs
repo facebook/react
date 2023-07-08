@@ -168,6 +168,9 @@ pub struct Field {
 
     #[serde(default)]
     pub flatten: bool,
+
+    #[serde(default)]
+    pub rename: Option<String>,
 }
 
 impl Field {
@@ -193,17 +196,19 @@ impl Field {
                 "Can only set nullable_item if plural"
             )
         }
-        if self.nullable || self.optional {
-            assert_eq!(
-                self.optional, false,
-                "Expected field to be nullable if optional"
-            );
+        if self.nullable {
             type_ = quote!(Option<#type_>);
         }
         let mut field = quote!(#name: #type_);
         if self.optional {
             field = quote! {
                 #[serde(default)]
+                #field
+            }
+        }
+        if let Some(rename) = &self.rename {
+            field = quote! {
+                #[serde(rename = #rename)]
                 #field
             }
         }
@@ -238,11 +243,7 @@ impl Field {
                 "Can only set nullable_item if plural"
             )
         }
-        if self.nullable || self.optional {
-            assert_eq!(
-                self.nullable, true,
-                "Expected field to be nullable if optional"
-            );
+        if self.nullable {
             type_ = quote!(Option<#type_>);
         }
         let mut field = quote!(#name: #type_);
@@ -255,6 +256,12 @@ impl Field {
         if self.flatten {
             field = quote! {
                 #[serde(flatten)]
+                #field
+            }
+        }
+        if let Some(rename) = &self.rename {
+            field = quote! {
+                #[serde(rename = #rename)]
                 #field
             }
         }

@@ -16,7 +16,13 @@ pub struct Position {
 pub struct Function {
     id: Option<Identifier>,
     params: Vec<Pattern>,
-    body: Option<BlockStatement>,
+    body: Option<FunctionBody>,
+    #[serde(rename = "generator")]
+    #[serde(default)]
+    is_generator: bool,
+    #[serde(rename = "async")]
+    #[serde(default)]
+    is_async: bool,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RegExpValue {
@@ -47,7 +53,9 @@ pub struct Literal {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Program {
-    body: Vec<Statement>,
+    body: Vec<ModuleItem>,
+    #[serde(rename = "sourceType")]
+    source_type: Option<SourceType>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -56,6 +64,8 @@ pub struct Program {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ExpressionStatement {
     expression: Expression,
+    #[serde(default)]
+    directive: Option<String>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -220,6 +230,16 @@ pub struct ForInStatement {
     pub range: Option<SourceRange>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ForOfStatement {
+    left: ForInInit,
+    right: Expression,
+    body: Statement,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionDeclaration {
     #[serde(flatten)]
     function: Function,
@@ -255,7 +275,7 @@ pub struct ThisExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArrayExpression {
-    elements: Vec<Option<Expression>>,
+    elements: Vec<Option<ExpressionOrSpread>>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -283,6 +303,17 @@ pub struct Property {
 pub struct FunctionExpression {
     #[serde(flatten)]
     function: Function,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ArrowFunctionExpression {
+    #[serde(flatten)]
+    function: Function,
+    #[serde(rename = "expression")]
+    is_expression: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -340,7 +371,7 @@ pub struct LogicalExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberExpression {
-    object: Expression,
+    object: ExpressionOrSuper,
     property: Expression,
     computed: bool,
     #[serde(default)]
@@ -360,8 +391,8 @@ pub struct ConditionalExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CallExpression {
-    callee: Expression,
-    arguments: Vec<Expression>,
+    callee: ExpressionOrSuper,
+    arguments: Vec<ExpressionOrSpread>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -370,7 +401,7 @@ pub struct CallExpression {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewExpression {
     callee: Expression,
-    arguments: Vec<Expression>,
+    arguments: Vec<ExpressionOrSpread>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -379,6 +410,66 @@ pub struct NewExpression {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SequenceExpression {
     expressions: Vec<Expression>,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Super {
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SpreadElement {
+    argument: Expression,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct YieldExpression {
+    #[serde(default)]
+    argument: Option<Expression>,
+    #[serde(rename = "delegate")]
+    is_delegate: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ImportDeclaration {
+    specifiers: Vec<ImportDeclarationSpecifier>,
+    source: Literal,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ImportSpecifier {
+    imported: Identifier,
+    local: Identifier,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ImportDefaultSpecifier {
+    local: Identifier,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ImportNamespaceSpecifier {
+    local: Identifier,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -395,6 +486,7 @@ pub enum Statement {
     EmptyStatement(Box<EmptyStatement>),
     ExpressionStatement(Box<ExpressionStatement>),
     ForInStatement(Box<ForInStatement>),
+    ForOfStatement(Box<ForOfStatement>),
     ForStatement(Box<ForStatement>),
     FunctionDeclaration(Box<FunctionDeclaration>),
     IfStatement(Box<IfStatement>),
@@ -411,6 +503,7 @@ pub enum Statement {
 #[serde(tag = "type")]
 pub enum Expression {
     ArrayExpression(Box<ArrayExpression>),
+    ArrowFunctionExpression(Box<ArrowFunctionExpression>),
     AssignmentExpression(Box<AssignmentExpression>),
     BinaryExpression(Box<BinaryExpression>),
     CallExpression(Box<CallExpression>),
@@ -426,6 +519,43 @@ pub enum Expression {
     ThisExpression(Box<ThisExpression>),
     UnaryExpression(Box<UnaryExpression>),
     UpdateExpression(Box<UpdateExpression>),
+    YieldExpression(Box<YieldExpression>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum ImportDeclarationSpecifier {
+    ImportDefaultSpecifier(Box<ImportDefaultSpecifier>),
+    ImportNamespaceSpecifier(Box<ImportNamespaceSpecifier>),
+    ImportSpecifier(Box<ImportSpecifier>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ModuleItem {
+    ImportOrExportDeclaration(ImportOrExportDeclaration),
+    Statement(Statement),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum ImportOrExportDeclaration {
+    ImportDeclaration(Box<ImportDeclaration>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ExpressionOrSuper {
+    Expression(Expression),
+    Super(Box<Super>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ExpressionOrSpread {
+    Expression(Expression),
+    SpreadElement(Box<SpreadElement>),
+}
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum FunctionBody {
+    BlockStatement(Box<BlockStatement>),
+    Expression(Expression),
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
@@ -910,6 +1040,45 @@ impl std::str::FromStr for LogicalOperator {
             "&&" => Ok(Self::And),
             "??" => Ok(Self::NullCoalescing),
             "||" => Ok(Self::Or),
+            _ => Err(()),
+        }
+    }
+}
+#[derive(
+    Serialize,
+    Deserialize,
+    Clone,
+    Copy,
+    Eq,
+    PartialEq,
+    Ord,
+    PartialOrd,
+    Hash,
+    Debug
+)]
+pub enum SourceType {
+    /// module
+    #[serde(rename = "module")]
+    Module,
+    /// script
+    #[serde(rename = "script")]
+    Script,
+}
+impl std::fmt::Display for SourceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Self::Module => "module",
+            Self::Script => "script",
+        };
+        f.write_str(name)
+    }
+}
+impl std::str::FromStr for SourceType {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "module" => Ok(Self::Module),
+            "script" => Ok(Self::Script),
             _ => Err(()),
         }
     }
