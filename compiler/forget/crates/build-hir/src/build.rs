@@ -1,14 +1,15 @@
 use bumpalo::collections::{CollectIn, String};
 use estree::{
-    AssignmentTarget, ExpressionLike, FunctionDeclaration, IfStatement, Literal, LiteralValue,
-    Pattern, Statement, VariableDeclarationKind,
+    AssignmentTarget, BinaryExpression, ExpressionLike, ForInit, ForStatement, FunctionDeclaration,
+    IfStatement, Literal, LiteralValue, Pattern, Statement, VariableDeclarationKind,
 };
 use hir::{
-    ArrayElement, BlockKind, Environment, Function, GotoKind, Identifier, InstructionKind,
-    InstructionValue, LValue, LoadGlobal, LoadLocal, Place, PrimitiveValue, TerminalValue,
+    ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, Function, GotoKind,
+    Identifier, InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal, Place,
+    PrimitiveValue, TerminalValue,
 };
 
-use crate::builder::{Binding, Builder};
+use crate::builder::{Binding, Builder, LoopScope};
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
 /// if it was constructed sucessfully, otherwise a list of diagnostics
@@ -35,7 +36,7 @@ pub fn build<'a>(
         }),
     );
     builder.terminate(
-        TerminalValue::ReturnTerminal(hir::ReturnTerminal {
+        TerminalValue::Return(hir::ReturnTerminal {
             value: implicit_return_value,
         }),
         hir::BlockKind::Block,
@@ -55,7 +56,7 @@ fn lower_statement<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     stmt: Statement,
-    _label: Option<String<'a>>,
+    label: Option<String<'a>>,
 ) -> Result<(), Diagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
@@ -66,7 +67,7 @@ fn lower_statement<'a>(
         Statement::BreakStatement(stmt) => {
             let block = builder.resolve_break(stmt.label.as_ref())?;
             builder.terminate(
-                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                TerminalValue::Goto(hir::GotoTerminal {
                     block,
                     kind: GotoKind::Break,
                 }),
@@ -76,7 +77,7 @@ fn lower_statement<'a>(
         Statement::ContinueStatement(stmt) => {
             let block = builder.resolve_continue(stmt.label.as_ref())?;
             builder.terminate(
-                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                TerminalValue::Goto(hir::GotoTerminal {
                     block,
                     kind: GotoKind::Continue,
                 }),
@@ -95,7 +96,7 @@ fn lower_statement<'a>(
                 ),
             };
             builder.terminate(
-                TerminalValue::ReturnTerminal(hir::ReturnTerminal { value }),
+                TerminalValue::Return(hir::ReturnTerminal { value }),
                 BlockKind::Block,
             );
         }
@@ -158,7 +159,7 @@ fn lower_statement<'a>(
 
             let consequent_block = builder.enter(BlockKind::Block, |builder| {
                 lower_statement(env, builder, consequent, None).unwrap();
-                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                TerminalValue::Goto(hir::GotoTerminal {
                     block: fallthrough_block.id,
                     kind: GotoKind::Break,
                 })
@@ -168,20 +169,94 @@ fn lower_statement<'a>(
                 if let Some(alternate) = alternate {
                     lower_statement(env, builder, alternate, None).unwrap();
                 }
-                TerminalValue::GotoTerminal(hir::GotoTerminal {
+                TerminalValue::Goto(hir::GotoTerminal {
                     block: fallthrough_block.id,
                     kind: GotoKind::Break,
                 })
             });
 
             let test = lower_expression_to_temporary(env, builder, test);
-            let terminal = TerminalValue::IfTerminal(hir::IfTerminal {
+            let terminal = TerminalValue::If(hir::IfTerminal {
                 test,
                 consequent: consequent_block,
                 alternate: alternate_block,
                 fallthrough: Some(fallthrough_block.id),
             });
             builder.terminate_with_fallthrough(terminal, fallthrough_block);
+        }
+        Statement::ForStatement(stmt) => {
+            let ForStatement {
+                init,
+                test,
+                update,
+                body,
+                ..
+            } = *stmt;
+
+            // Block for the loop's test condition
+            let test_block = builder.reserve(BlockKind::Loop);
+
+            // Block for code following the loop
+            let fallthrough_block = builder.reserve(BlockKind::Block);
+
+            let init_block = builder.enter(BlockKind::Loop, |builder| {
+                if let Some(ForInit::VariableDeclaration(decl)) = init {
+                    lower_statement(env, builder, Statement::VariableDeclaration(decl), None)
+                        .unwrap();
+                    TerminalValue::Goto(hir::GotoTerminal {
+                        block: test_block.id,
+                        kind: GotoKind::Break,
+                    })
+                } else {
+                    panic!("Expected for statement to have a variable declaration initializer")
+                }
+            });
+
+            let update_block = update.map(|update| {
+                builder.enter(BlockKind::Loop, |builder| {
+                    lower_expression_to_temporary(env, builder, update);
+                    TerminalValue::Goto(hir::GotoTerminal {
+                        block: test_block.id,
+                        kind: GotoKind::Break,
+                    })
+                })
+            });
+
+            let body_block = builder.enter(BlockKind::Block, |builder| {
+                let loop_ = LoopScope {
+                    label,
+                    continue_block: update_block.unwrap_or(test_block.id),
+                    break_block: fallthrough_block.id,
+                };
+                builder.enter_loop(loop_, |builder| {
+                    lower_statement(env, builder, body, None).unwrap();
+                    TerminalValue::Goto(hir::GotoTerminal {
+                        block: update_block.unwrap_or(test_block.id),
+                        kind: GotoKind::Continue,
+                    })
+                })
+            });
+
+            let terminal = TerminalValue::For(ForTerminal {
+                body: body_block,
+                init: init_block,
+                test: test_block.id,
+                fallthrough: fallthrough_block.id,
+                update: update_block,
+            });
+            builder.terminate_with_fallthrough(terminal, test_block);
+
+            if let Some(test) = test {
+                let test_value = lower_expression_to_temporary(env, builder, test);
+                let terminal = TerminalValue::Branch(BranchTerminal {
+                    test: test_value,
+                    consequent: body_block,
+                    alternate: fallthrough_block.id,
+                });
+                builder.terminate_with_fallthrough(terminal, fallthrough_block);
+            } else {
+                panic!("Expected for statement to have a tesst block");
+            }
         }
         _ => todo!("Lower {stmt:#?}"),
     }
@@ -240,6 +315,7 @@ fn lower_expression<'a>(
                 .collect_in(env.allocator);
             InstructionValue::Array(hir::Array { elements })
         }
+
         ExpressionLike::AssignmentExpression(expr) => match expr.operator {
             estree::AssignmentOperator::Equals => {
                 let right = lower_expression_to_temporary(env, builder, expr.right);
@@ -247,6 +323,22 @@ fn lower_expression<'a>(
             }
             _ => todo!("lower assignment expr {:#?}", expr),
         },
+
+        ExpressionLike::BinaryExpression(expr) => {
+            let BinaryExpression {
+                left,
+                operator,
+                right,
+                ..
+            } = *expr;
+            let left = lower_expression_to_temporary(env, builder, left);
+            let right = lower_expression_to_temporary(env, builder, right);
+            InstructionValue::Binary(hir::Binary {
+                left,
+                operator,
+                right,
+            })
+        }
 
         // Cases that cannot appear in expression position but which are included in ExpressionLike
         // to make serialization easier

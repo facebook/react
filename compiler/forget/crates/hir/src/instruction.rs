@@ -1,6 +1,7 @@
 use std::{cell::RefCell, fmt::Display, rc::Rc};
 
 use bumpalo::collections::{String, Vec};
+use estree::BinaryOperator;
 
 use crate::{IdentifierId, InstructionId, ScopeId, Type};
 
@@ -15,7 +16,7 @@ pub struct Instruction<'a> {
 pub enum InstructionValue<'a> {
     Array(Array<'a>),
     // Await(Await<'a>),
-    // Binary(Binary<'a>),
+    Binary(Binary<'a>),
     // Call(Call<'a>),
     // ComputedDelete(ComputedDelete<'a>),
     // ComputedLoad(ComputedLoad<'a>),
@@ -57,6 +58,13 @@ pub struct Array<'a> {
 pub enum ArrayElement<'a> {
     Place(Place<'a>),
     Spread(Place<'a>),
+}
+
+#[derive(Debug)]
+pub struct Binary<'a> {
+    pub left: Place<'a>,
+    pub operator: BinaryOperator,
+    pub right: Place<'a>,
 }
 
 #[derive(Debug)]

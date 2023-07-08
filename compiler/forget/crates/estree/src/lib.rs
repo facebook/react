@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use static_assertions::assert_eq_size;
-use std::num::NonZeroU32;
+use std::{fmt::Display, num::NonZeroU32};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SourceLocation {
@@ -687,6 +687,17 @@ pub enum BinaryOperator {
     /// instanceof
     #[serde(rename = "instanceof")]
     Instanceof,
+}
+
+impl Display for BinaryOperator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            Self::Plus => "+",
+            Self::LessThan => "<",
+            _ => todo!("display for operator: {:#?}", self),
+        };
+        f.write_str(name)
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]

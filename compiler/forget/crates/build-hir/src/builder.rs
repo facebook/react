@@ -1,4 +1,4 @@
-use bumpalo::collections::Vec;
+use bumpalo::collections::{String, Vec};
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use hir::{
@@ -27,12 +27,56 @@ pub(crate) struct Builder<'a> {
     wip: WipBlock<'a>,
 
     id_gen: InstructionIdGenerator,
+
+    scopes: Vec<'a, ControlFlowScope<'a>>,
 }
 
 pub(crate) struct WipBlock<'a> {
     pub id: BlockId,
     pub kind: BlockKind,
     pub instructions: Vec<'a, Instruction<'a>>,
+}
+
+pub(crate) enum Binding<'a> {
+    Local(Identifier<'a>),
+    Module(Identifier<'a>),
+    Global,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+enum ControlFlowScope<'a> {
+    Loop(LoopScope<'a>),
+    // Switch(SwitchScope<'a>),
+    Label(LabelScope<'a>),
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) struct LoopScope<'a> {
+    pub label: Option<String<'a>>,
+    pub continue_block: BlockId,
+    pub break_block: BlockId,
+}
+
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub(crate) struct LabelScope<'a> {
+    pub label: String<'a>,
+    pub block: BlockId,
+}
+
+impl<'a> ControlFlowScope<'a> {
+    fn label(&self) -> Option<&String<'a>> {
+        match self {
+            Self::Loop(scope) => scope.label.as_ref(),
+            Self::Label(scope) => Some(&scope.label),
+        }
+    }
+
+    fn break_block(&self) -> BlockId {
+        match self {
+            Self::Loop(scope) => scope.break_block,
+            Self::Label(scope) => scope.block,
+        }
+    }
 }
 
 impl<'a> Builder<'a> {
@@ -49,6 +93,7 @@ impl<'a> Builder<'a> {
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
+            scopes: Vec::new_in(&environment.allocator),
         }
     }
 
@@ -155,6 +200,17 @@ impl<'a> Builder<'a> {
         );
     }
 
+    pub(crate) fn enter_loop<F>(&mut self, scope: LoopScope<'a>, f: F) -> TerminalValue<'a>
+    where
+        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+    {
+        self.scopes.push(ControlFlowScope::Loop(scope.clone()));
+        let terminal = f(self);
+        let last = self.scopes.pop().unwrap();
+        assert_eq!(last, ControlFlowScope::Loop(scope));
+        terminal
+    }
+
     /// Returns a new temporary identifier
     pub(crate) fn make_temporary(&self) -> hir::Identifier<'a> {
         hir::Identifier {
@@ -173,9 +229,21 @@ impl<'a> Builder<'a> {
     /// provided but cannot be resolved.
     pub(crate) fn resolve_break(
         &self,
-        _label: Option<&estree::Identifier>,
+        label: Option<&estree::Identifier>,
     ) -> Result<BlockId, Diagnostic> {
-        todo!()
+        for scope in self.scopes.iter().rev() {
+            match (label, scope.label()) {
+                // If this is an unlabeled break, return the most recent break target
+                (None, _) => return Ok(scope.break_block()),
+                // If the break is labeled and matches the current scope, return its break target
+                (Some(label), Some(scope_label)) if &label.name == scope_label => {
+                    return Ok(scope.break_block());
+                }
+                // Otherwise keep searching
+                _ => continue,
+            }
+        }
+        Err(())
     }
 
     /// Resolves the target for the given continue label (if present), or returns the default
@@ -183,9 +251,36 @@ impl<'a> Builder<'a> {
     /// provided but cannot be resolved.
     pub(crate) fn resolve_continue(
         &self,
-        _label: Option<&estree::Identifier>,
+        label: Option<&estree::Identifier>,
     ) -> Result<BlockId, Diagnostic> {
-        todo!()
+        for scope in self.scopes.iter().rev() {
+            match scope {
+                ControlFlowScope::Loop(scope) => {
+                    match (label, &scope.label) {
+                        // If this is an unlabeled continue, return the first matching loop
+                        (None, _) => return Ok(scope.continue_block),
+                        // If the continue is labeled and matches the current scope, return its continue target
+                        (Some(label), Some(scope_label))
+                            if label.name.as_str() == scope_label.as_str() =>
+                        {
+                            return Ok(scope.continue_block);
+                        }
+                        // Otherwise keep searching
+                        _ => continue,
+                    }
+                }
+                _ => {
+                    match (label, scope.label()) {
+                        (Some(label), Some(scope_label)) if label.name.as_str() == scope_label => {
+                            // Error, the continue referred to a label that is not a loop
+                            return Err(());
+                        }
+                        _ => continue,
+                    }
+                }
+            }
+        }
+        Err(())
     }
 
     pub(crate) fn resolve_binding(
@@ -206,12 +301,6 @@ impl<'a> Builder<'a> {
     }
 }
 
-pub(crate) enum Binding<'a> {
-    Local(Identifier<'a>),
-    Module(Identifier<'a>),
-    Global,
-}
-
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before
 /// successors (except for the case of loops)
 fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
@@ -230,20 +319,24 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
         let block = hir.block(block_id);
         let terminal = &block.terminal;
         match &terminal.value {
-            TerminalValue::IfTerminal(terminal) => {
+            TerminalValue::Branch(terminal) => {
                 visit(terminal.alternate, hir, visited, postorder);
                 visit(terminal.consequent, hir, visited, postorder);
             }
-            TerminalValue::ForTerminal(terminal) => {
+            TerminalValue::If(terminal) => {
+                visit(terminal.alternate, hir, visited, postorder);
+                visit(terminal.consequent, hir, visited, postorder);
+            }
+            TerminalValue::For(terminal) => {
                 visit(terminal.init, hir, visited, postorder);
             }
-            TerminalValue::DoWhileTerminal(terminal) => {
+            TerminalValue::DoWhile(terminal) => {
                 visit(terminal.body, hir, visited, postorder);
             }
-            TerminalValue::GotoTerminal(terminal) => {
+            TerminalValue::Goto(terminal) => {
                 visit(terminal.block, hir, visited, postorder);
             }
-            TerminalValue::ReturnTerminal(..) => { /* no-op */ }
+            TerminalValue::Return(..) => { /* no-op */ }
         }
         postorder.push(block_id);
     }
@@ -263,7 +356,7 @@ fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
     let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
 
     for block in hir.blocks.values_mut() {
-        if let TerminalValue::ForTerminal(terminal) = &mut block.terminal.value {
+        if let TerminalValue::For(terminal) = &mut block.terminal.value {
             if let Some(update) = terminal.update {
                 if !block_ids.contains(&update) {
                     terminal.update = None;
@@ -297,9 +390,9 @@ fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
     let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
 
     for block in hir.blocks.values_mut() {
-        if let TerminalValue::DoWhileTerminal(terminal) = &mut block.terminal.value {
+        if let TerminalValue::DoWhile(terminal) = &mut block.terminal.value {
             if !block_ids.contains(&terminal.test) {
-                block.terminal.value = TerminalValue::GotoTerminal(hir::GotoTerminal {
+                block.terminal.value = TerminalValue::Goto(hir::GotoTerminal {
                     block: terminal.body,
                     kind: GotoKind::Break,
                 });
@@ -353,7 +446,7 @@ fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
 
 fn invariant<F>(cond: bool, f: F) -> Result<(), Diagnostic>
 where
-    F: FnOnce() -> String,
+    F: FnOnce() -> std::string::String,
 {
     if !cond {
         let msg = f();

@@ -10,22 +10,22 @@ pub struct Terminal<'a> {
 
 #[derive(Debug)]
 pub enum TerminalValue<'a> {
-    // BranchTerminal(BranchTerminal),
-    DoWhileTerminal(DoWhileTerminal),
-    // ForOfTerminal(ForOfTerminal),
-    ForTerminal(ForTerminal),
-    GotoTerminal(GotoTerminal),
-    IfTerminal(IfTerminal<'a>),
-    // LabelTerminal(LabelTerminal),
-    // LogicalTerminal(LogicalTerminal),
-    // OptionalTerminal(OptionalTerminal),
-    ReturnTerminal(ReturnTerminal<'a>),
-    // SequenceTerminal(SequenceTerminal),
-    // SwitchTerminal(SwitchTerminal),
-    // TernaryTerminal(TernaryTerminal),
-    // ThrowTerminal(ThrowTerminal),
-    // UnsupportedTerminal(UnsupportedTerminal),
-    // WhileTerminal(WhileTerminal),
+    Branch(BranchTerminal<'a>),
+    DoWhile(DoWhileTerminal),
+    // ForOf(ForOfTerminal),
+    For(ForTerminal),
+    Goto(GotoTerminal),
+    If(IfTerminal<'a>),
+    // Label(LabelTerminal),
+    // Logical(LogicalTerminal),
+    // Optional(OptionalTerminal),
+    Return(ReturnTerminal<'a>),
+    // Sequence(SequenceTerminal),
+    // Switch(SwitchTerminal),
+    // Ternary(TernaryTerminal),
+    // Throw(ThrowTerminal),
+    // Unsupported(UnsupportedTerminal),
+    // While(WhileTerminal),
 }
 
 impl<'a> TerminalValue<'a> {
@@ -34,41 +34,51 @@ impl<'a> TerminalValue<'a> {
         F: Fn(BlockId) -> Option<BlockId>,
     {
         match self {
-            Self::IfTerminal(terminal) => {
+            Self::If(terminal) => {
                 terminal.fallthrough = match terminal.fallthrough {
                     Some(fallthrough) => f(fallthrough),
                     _ => None,
                 }
             }
-            Self::DoWhileTerminal(DoWhileTerminal { fallthrough, .. })
-            | Self::ForTerminal(ForTerminal { fallthrough, .. }) => {
+            Self::DoWhile(DoWhileTerminal { fallthrough, .. })
+            | Self::For(ForTerminal { fallthrough, .. }) => {
                 // statically detect if fallthrough is changed to Option so
                 // that we can update to map the fallthrough w f()
                 let _: BlockId = *fallthrough;
             }
-            Self::GotoTerminal(_) | Self::ReturnTerminal(_) => {}
+            Self::Branch(_) | Self::Goto(_) | Self::Return(_) => {}
         }
     }
 
     pub fn successors(&self) -> Vec<BlockId> {
         match self {
-            Self::IfTerminal(terminal) => {
+            Self::If(terminal) => {
                 vec![terminal.consequent, terminal.alternate]
             }
-            Self::ForTerminal(terminal) => {
+            Self::Branch(terminal) => {
+                vec![terminal.consequent, terminal.alternate]
+            }
+            Self::For(terminal) => {
                 vec![terminal.init]
             }
-            Self::DoWhileTerminal(terminal) => {
+            Self::DoWhile(terminal) => {
                 vec![terminal.body]
             }
-            Self::GotoTerminal(terminal) => {
+            Self::Goto(terminal) => {
                 vec![terminal.block]
             }
-            Self::ReturnTerminal(_) => {
+            Self::Return(_) => {
                 vec![]
             }
         }
     }
+}
+
+#[derive(Debug)]
+pub struct BranchTerminal<'a> {
+    pub test: Place<'a>,
+    pub consequent: BlockId,
+    pub alternate: BlockId,
 }
 
 #[derive(Debug)]

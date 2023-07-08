@@ -6,8 +6,8 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, MemberExpr, ModuleItem, Pat,
-    PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, MemberExpr, MemberProp,
+    ModuleItem, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -366,6 +366,9 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
                 range: convert_span(&expr.span),
             }))
         }
+        Expr::Member(expr) => {
+            estree::ExpressionLike::MemberExpression(Box::new(convert_member_expression(cx, expr)))
+        }
         _ => todo!("translate expression {:#?}", expr),
     }
 }
@@ -376,22 +379,40 @@ fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> estree::Assign
             estree::AssignmentTarget::Pattern(Box::new(convert_pattern(cx, target)))
         }
         PatOrExpr::Expr(target) => {
-            if let Expr::Member(target) = target.as_ref() {
-                estree::AssignmentTarget::MemberExpression(Box::new(convert_member_expression(
-                    cx, target,
-                )))
-            } else {
-                panic!(
-                    "Invalid input, expected either a pattern or member expression, got {:#?}",
-                    target
-                )
+            match target.as_ref() {
+                Expr::Member(target) => estree::AssignmentTarget::MemberExpression(Box::new(
+                    convert_member_expression(cx, target),
+                )),
+                Expr::Ident(target) => estree::AssignmentTarget::Pattern(Box::new(
+                    estree::Pattern::Identifier(Box::new(convert_identifier(cx, target))),
+                )),
+                _ => {
+                    panic!("Expected assignment target to be member expression or identifier, got {:#?}", target)
+                }
             }
         }
     }
 }
 
-fn convert_member_expression(_cx: &Context, _expr: &MemberExpr) -> estree::MemberExpression {
-    todo!("convert member expression")
+fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberExpression {
+    let (is_computed, property) = match &expr.prop {
+        MemberProp::Ident(prop) => (
+            false,
+            estree::ExpressionLike::Identifier(Box::new(convert_identifier(cx, prop))),
+        ),
+        MemberProp::Computed(prop) => (true, convert_expression(cx, &prop.expr)),
+        _ => {
+            panic!("PrivateName member expression properties are not supported")
+        }
+    };
+    estree::MemberExpression {
+        object: convert_expression(cx, &expr.obj),
+        property,
+        is_computed,
+        is_optional: false,
+        loc: None,
+        range: convert_span(&expr.span),
+    }
 }
 
 fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {

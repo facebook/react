@@ -90,6 +90,12 @@ impl<'a> Print for InstructionValue<'a> {
                 write!(out, "DeclareLocal ")?;
                 value.lvalue.print(out)?;
             }
+            InstructionValue::Binary(value) => {
+                write!(out, "Binary ")?;
+                value.left.print(out)?;
+                write!(out, " {} ", value.operator)?;
+                value.right.print(out)?;
+            }
             _ => write!(out, "{:?}", self)?,
         }
         Ok(())
@@ -146,14 +152,14 @@ impl<'a> Print for Terminal<'a> {
 impl<'a> Print for TerminalValue<'a> {
     fn print(&self, out: &mut impl Write) -> Result {
         match self {
-            TerminalValue::ReturnTerminal(terminal) => {
+            TerminalValue::Return(terminal) => {
                 write!(out, "Return ")?;
                 terminal.value.print(out)?;
             }
-            TerminalValue::GotoTerminal(terminal) => {
+            TerminalValue::Goto(terminal) => {
                 write!(out, "Goto {}", terminal.block)?;
             }
-            TerminalValue::IfTerminal(terminal) => {
+            TerminalValue::If(terminal) => {
                 write!(out, "If ")?;
                 terminal.test.print(out)?;
                 write!(
@@ -165,6 +171,29 @@ impl<'a> Print for TerminalValue<'a> {
                         Some(fallthrough) => format!("{fallthrough}"),
                         None => "<none>".to_string(),
                     }
+                )?;
+            }
+            TerminalValue::Branch(terminal) => {
+                write!(out, "Branch ")?;
+                terminal.test.print(out)?;
+                write!(
+                    out,
+                    " consequent={} alternate={}",
+                    terminal.consequent, terminal.alternate,
+                )?;
+            }
+            TerminalValue::For(terminal) => {
+                write!(
+                    out,
+                    "For init={} test={} update={} body={} fallthrough={}",
+                    terminal.init,
+                    terminal.test,
+                    match terminal.update {
+                        Some(fallthrough) => format!("{fallthrough}"),
+                        None => "<none>".to_string(),
+                    },
+                    terminal.body,
+                    terminal.fallthrough,
                 )?;
             }
             _ => write!(out, "{:?}", self)?,
