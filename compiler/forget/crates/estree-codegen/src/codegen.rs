@@ -33,11 +33,6 @@ impl Grammar {
             operators,
         } = self;
 
-        let enum_names: HashSet<String> = enums.keys().cloned().collect();
-
-        let mut node_names: Vec<_> = nodes.keys().cloned().collect();
-        node_names.sort();
-
         let objects: Vec<_> = objects
             .iter()
             .map(|(name, object)| object.codegen(name))
@@ -48,7 +43,7 @@ impl Grammar {
             .collect();
         let enums: Vec<_> = enums
             .iter()
-            .map(|(name, enum_)| enum_.codegen(name, &enum_names))
+            .map(|(name, enum_)| enum_.codegen(name, &enums))
             .collect();
         let operators: Vec<_> = operators
             .iter()
@@ -223,7 +218,7 @@ pub struct Enum {
 }
 
 impl Enum {
-    pub fn codegen(&self, name: &str, enums: &HashSet<String>) -> TokenStream {
+    pub fn codegen(&self, name: &str, enums: &IndexMap<String, Enum>) -> TokenStream {
         let mut sorted_variants: Vec<_> = self.variants.iter().collect();
         sorted_variants.sort();
 
@@ -232,7 +227,7 @@ impl Enum {
             .iter()
             .map(|name| {
                 let variant = format_ident!("{}", name);
-                if enums.contains(*name) {
+                if enums.contains_key(*name) {
                     quote!(#variant(#variant))
                 } else {
                     quote!(#variant(Box<#variant>))
@@ -245,7 +240,7 @@ impl Enum {
                 #(#variants),*
             }
         };
-        let enum_ = if sorted_variants.iter().any(|name| enums.contains(*name)) {
+        let enum_ = if sorted_variants.iter().any(|name| enums.contains_key(*name)) {
             // contains recursive enum, use untagged serialization
             quote! {
                 #[serde(untagged)]
@@ -258,9 +253,92 @@ impl Enum {
             }
         };
 
+        let enum_tag = format_ident!("__{}Tag", name);
+        let mut seen = HashSet::new();
+
+        // tag_variants is used to generate an enum of all the possible type tags (`type` values)
+        // that can appear in this enum. we emit this enum and derive a deserializer for it so that
+        // our enum deserializer can first decode the tag in order to know how to decode the data
+        let mut tag_variants = Vec::new();
+
+        // once the tag is decoded, we need to match against it and deserialize according the tag (`type`)
+        // tag_matches are the match arms for each type.
+        let mut tag_matches = Vec::new();
+
+        // Imagine a case like:
+        // enum ModuleItem {
+        //   ImportDeclaration, // struct
+        //   Statement // another enum
+        // }
+        // We need to generate matches for all the possible *concrete* `type` values, which means
+        // we have to expand nested enums such as `Statement`
+        for variant in self.variants.iter() {
+            if let Some(nested_enum) = enums.get(variant) {
+                let outer_variant = format_ident!("{}", variant);
+                for variant in nested_enum.variants.iter() {
+                    // Skip variants that appear in multiple nested enums, we deserialize
+                    // as the first listed outer variant
+                    if !seen.insert(variant.to_string()) {
+                        continue;
+                    }
+                    // Modeling ESTree only requires a single level of nested enums,
+                    // so that's all we support. Though in theory we could support arbitrary nesting,
+                    // since ultimately we're matching based on the final concrete types.
+                    assert!(!enums.contains_key(variant));
+
+                    let inner_variant = format_ident!("{}", variant);
+                    tag_variants.push(quote!(#inner_variant));
+
+                    tag_matches.push(quote! {
+                        #enum_tag::#inner_variant => {
+                            let node: Box<#inner_variant> = <Box<#inner_variant> as Deserialize>::deserialize(
+                                serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                            )?;
+                            Ok(#name::#outer_variant(#outer_variant::#inner_variant(node)))
+                        }
+                    });
+                }
+            } else {
+                if !seen.insert(variant.to_string()) {
+                    panic!(
+                        "Concrete variant {} was already added by a nested enum",
+                        variant
+                    );
+                }
+                let variant_name = format_ident!("{}", variant);
+                tag_variants.push(quote!(#variant_name));
+
+                tag_matches.push(quote! {
+                    #enum_tag::#variant_name => {
+                        let node: Box<#variant_name> = <Box<#variant_name> as Deserialize>::deserialize(
+                            serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                        )?;
+                        Ok(#name::#variant_name(node))
+                    }
+                })
+            }
+        }
         quote! {
-            #[derive(Serialize, Deserialize, Clone, Debug)]
+            #[derive(Serialize, Clone, Debug)]
             #enum_
+
+            #[derive(Deserialize, Debug)]
+            enum #enum_tag {
+                #(#tag_variants),*
+            }
+
+            impl <'de> serde::Deserialize<'de> for #name {
+                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                where D: serde::Deserializer<'de> {
+                    let tagged = serde::Deserializer::deserialize_any(
+                        deserializer,
+                        serde::__private::de::TaggedContentVisitor::<#enum_tag>::new("type", "Pattern")
+                    )?;
+                    match tagged.0 {
+                        #(#tag_matches),*
+                    }
+                }
+            }
         }
     }
 }
