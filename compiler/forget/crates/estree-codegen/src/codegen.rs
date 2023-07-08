@@ -31,29 +31,18 @@ impl Grammar {
             operators,
         } = self;
 
-        let nodelike: HashSet<String> =
-            // nodes.keys().cloned().chain(enums.keys().cloned()).collect();
-            Default::default();
-
         let enum_names: HashSet<String> = enums.keys().cloned().collect();
 
         let mut node_names: Vec<_> = nodes.keys().cloned().collect();
         node_names.sort();
-        let node_variants: Vec<_> = node_names
-            .iter()
-            .map(|name| {
-                let name = format_ident!("{}", name);
-                quote!(#name(Box<#name>))
-            })
-            .collect();
 
         let objects: Vec<_> = objects
             .iter()
-            .map(|(name, object)| object.codegen(name, &nodelike))
+            .map(|(name, object)| object.codegen(name))
             .collect();
         let nodes: Vec<_> = nodes
             .iter()
-            .map(|(name, node)| node.codegen(name, &nodelike))
+            .map(|(name, node)| node.codegen(name))
             .collect();
         let enums: Vec<_> = enums
             .iter()
@@ -76,12 +65,6 @@ impl Grammar {
             #(#enums)*
 
             #(#operators)*
-
-            // #[derive(Serialize, Deserialize, Clone, Debug)]
-            // #[serde(tag = "type")]
-            // pub enum Node {
-            //     #(#node_variants),*
-            // }
         }
     }
 }
@@ -93,12 +76,12 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn codegen(&self, name: &str, nodes: &HashSet<String>) -> TokenStream {
+    pub fn codegen(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
         let fields: Vec<_> = self
             .fields
             .iter()
-            .map(|(name, field)| field.codegen(name, nodes))
+            .map(|(name, field)| field.codegen(name))
             .collect();
 
         quote! {
@@ -117,12 +100,12 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn codegen(&self, name: &str, nodes: &HashSet<String>) -> TokenStream {
+    pub fn codegen(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
         let fields: Vec<_> = self
             .fields
             .iter()
-            .map(|(name, field)| field.codegen_node(name, nodes))
+            .map(|(name, field)| field.codegen_node(name))
             .collect();
 
         quote! {
@@ -136,15 +119,6 @@ impl Node {
                 #[serde(default)]
                 pub range: Option<SourceRange>,
             }
-
-            // impl #name {
-            //     pub fn from_node(node: Node) -> Option<Box<Self>> {
-            //         match node {
-            //             Node::#name(node) => Some(node),
-            //             _ => None
-            //         }
-            //     }
-            // }
         }
     }
 }
@@ -174,16 +148,9 @@ pub struct Field {
 }
 
 impl Field {
-    pub fn codegen(&self, name: &str, nodes: &HashSet<String>) -> TokenStream {
+    pub fn codegen(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
-        let type_name = format_ident!(
-            "{}",
-            if nodes.contains(&self.type_) {
-                "Node"
-            } else {
-                &self.type_
-            }
-        );
+        let type_name = format_ident!("{}", &self.type_);
         let mut type_ = quote!(#type_name);
         if self.plural {
             if self.nullable_item {
@@ -221,16 +188,9 @@ impl Field {
         field
     }
 
-    pub fn codegen_node(&self, name: &str, nodes: &HashSet<String>) -> TokenStream {
+    pub fn codegen_node(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
-        let type_name = format_ident!(
-            "{}",
-            if nodes.contains(&self.type_) {
-                "Node"
-            } else {
-                &self.type_
-            }
-        );
+        let type_name = format_ident!("{}", &self.type_);
         let mut type_ = quote!(#type_name);
         if self.plural {
             if self.nullable_item {
@@ -262,13 +222,6 @@ impl Field {
         if let Some(rename) = &self.rename {
             field = quote! {
                 #[serde(rename = #rename)]
-                #field
-            }
-        }
-        if nodes.contains(&self.type_) {
-            let comment = format!(" {}", &self.type_);
-            field = quote! {
-                #[doc = #comment]
                 #field
             }
         }
@@ -300,26 +253,6 @@ impl Enum {
             })
             .collect();
 
-        let from_node_matches: Vec<_> = sorted_variants
-            .iter()
-            .map(|name| {
-                let variant = format_ident!("{}", name);
-                if enums.contains(*name) {
-                    quote! {
-                        if let Some(node) = #variant::from_node(node) {
-                            return Some(Self::#variant(node));
-                        }
-                    }
-                } else {
-                    quote! {
-                        if let Some(node) = #variant::from_node(node) {
-                            return Some(Self::#variant(node));
-                        }
-                    }
-                }
-            })
-            .collect();
-
         let enum_ = quote! {
             pub enum #name {
                 #(#variants),*
@@ -341,13 +274,6 @@ impl Enum {
         quote! {
             #[derive(Serialize, Deserialize, Clone, Debug)]
             #enum_
-
-            // impl #name {
-            //     pub fn from_node(node: Node) -> Option<Self> {
-            //         #(#from_node_matches)*
-            //         None
-            //     }
-            // }
         }
     }
 }

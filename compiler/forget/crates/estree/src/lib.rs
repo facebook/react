@@ -18,6 +18,7 @@ mod tests {
     #[test]
     fn fixtures() {
         glob!("fixtures/**.json", |path| {
+            println!("{:?}", path);
             let input = std::fs::read_to_string(path).unwrap();
             let ast: Program = serde_json::from_str(&input).unwrap();
             let serialized = serde_json::to_string_pretty(&ast).unwrap();
