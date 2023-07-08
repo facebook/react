@@ -3,37 +3,38 @@ use serde::{Serialize, Deserialize};
 use crate::{JsValue, Binding, SourceRange};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SourceLocation {
-    source: Option<String>,
-    start: Position,
-    end: Position,
+    pub source: Option<String>,
+    pub start: Position,
+    pub end: Position,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Position {
-    line: NonZeroU32,
-    column: u32,
+    pub line: NonZeroU32,
+    pub column: u32,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Function {
-    id: Option<Identifier>,
-    params: Vec<Pattern>,
-    body: Option<FunctionBody>,
+    pub id: Option<Identifier>,
+    pub params: Vec<Pattern>,
+    pub body: Option<FunctionBody>,
     #[serde(rename = "generator")]
     #[serde(default)]
-    is_generator: bool,
+    pub is_generator: bool,
     #[serde(rename = "async")]
     #[serde(default)]
-    is_async: bool,
+    pub is_async: bool,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RegExpValue {
-    pattern: String,
-    flags: String,
+    pub pattern: String,
+    pub flags: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Identifier {
-    name: String,
+    pub name: String,
+    #[serde(skip)]
     #[serde(default)]
-    binding: Option<Binding>,
+    pub binding: Option<Binding>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -41,11 +42,11 @@ pub struct Identifier {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Literal {
-    value: JsValue,
+    pub value: JsValue,
     #[serde(default)]
-    raw: Option<String>,
+    pub raw: Option<String>,
     #[serde(default)]
-    regex: Option<RegExpValue>,
+    pub regex: Option<RegExpValue>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -53,9 +54,9 @@ pub struct Literal {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Program {
-    body: Vec<ModuleItem>,
+    pub body: Vec<ModuleItem>,
     #[serde(rename = "sourceType")]
-    source_type: Option<SourceType>,
+    pub source_type: Option<SourceType>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -63,9 +64,9 @@ pub struct Program {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ExpressionStatement {
-    expression: Expression,
+    pub expression: Expression,
     #[serde(default)]
-    directive: Option<String>,
+    pub directive: Option<String>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -73,7 +74,7 @@ pub struct ExpressionStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BlockStatement {
-    body: Vec<Statement>,
+    pub body: Vec<Statement>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -95,8 +96,8 @@ pub struct DebuggerStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WithStatement {
-    object: Expression,
-    body: Statement,
+    pub object: Expression,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -104,7 +105,7 @@ pub struct WithStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ReturnStatement {
-    argument: Option<Expression>,
+    pub argument: Option<Expression>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -112,8 +113,8 @@ pub struct ReturnStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LabeledStatement {
-    label: Identifier,
-    body: Statement,
+    pub label: Identifier,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -121,7 +122,7 @@ pub struct LabeledStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BreakStatement {
-    label: Option<Identifier>,
+    pub label: Option<Identifier>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -129,7 +130,7 @@ pub struct BreakStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ContinueStatement {
-    label: Option<Identifier>,
+    pub label: Option<Identifier>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -137,9 +138,9 @@ pub struct ContinueStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct IfStatement {
-    test: Expression,
-    consequent: Statement,
-    alternate: Option<Statement>,
+    pub test: Expression,
+    pub consequent: Statement,
+    pub alternate: Option<Statement>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -147,8 +148,8 @@ pub struct IfStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SwitchStatement {
-    discriminant: Expression,
-    cases: Vec<SwitchCase>,
+    pub discriminant: Expression,
+    pub cases: Vec<SwitchCase>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -156,8 +157,8 @@ pub struct SwitchStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SwitchCase {
-    test: Option<Expression>,
-    consequent: Vec<Statement>,
+    pub test: Option<Expression>,
+    pub consequent: Vec<Statement>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -165,7 +166,7 @@ pub struct SwitchCase {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ThrowStatement {
-    argument: Expression,
+    pub argument: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -173,9 +174,9 @@ pub struct ThrowStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TryStatement {
-    block: BlockStatement,
-    handler: Option<CatchClause>,
-    finalizer: Option<BlockStatement>,
+    pub block: BlockStatement,
+    pub handler: Option<CatchClause>,
+    pub finalizer: Option<BlockStatement>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -183,8 +184,8 @@ pub struct TryStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CatchClause {
-    param: Pattern,
-    body: BlockStatement,
+    pub param: Pattern,
+    pub body: BlockStatement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -192,8 +193,8 @@ pub struct CatchClause {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WhileStatement {
-    test: Expression,
-    body: Statement,
+    pub test: Expression,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -201,8 +202,8 @@ pub struct WhileStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct DoWhileStatement {
-    body: Statement,
-    test: Expression,
+    pub body: Statement,
+    pub test: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -210,10 +211,10 @@ pub struct DoWhileStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ForStatement {
-    init: Option<ForInit>,
-    test: Option<Expression>,
-    update: Option<Expression>,
-    body: Statement,
+    pub init: Option<ForInit>,
+    pub test: Option<Expression>,
+    pub update: Option<Expression>,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -221,9 +222,9 @@ pub struct ForStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ForInStatement {
-    left: ForInInit,
-    right: Expression,
-    body: Statement,
+    pub left: ForInInit,
+    pub right: Expression,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -231,9 +232,9 @@ pub struct ForInStatement {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ForOfStatement {
-    left: ForInInit,
-    right: Expression,
-    body: Statement,
+    pub left: ForInInit,
+    pub right: Expression,
+    pub body: Statement,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -242,7 +243,7 @@ pub struct ForOfStatement {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionDeclaration {
     #[serde(flatten)]
-    function: Function,
+    pub function: Function,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -250,8 +251,8 @@ pub struct FunctionDeclaration {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct VariableDeclaration {
-    kind: VariableDeclarationKind,
-    declarations: Vec<VariableDeclarator>,
+    pub kind: VariableDeclarationKind,
+    pub declarations: Vec<VariableDeclarator>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -259,8 +260,8 @@ pub struct VariableDeclaration {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct VariableDeclarator {
-    id: Pattern,
-    init: Option<Expression>,
+    pub id: Pattern,
+    pub init: Option<Expression>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -275,7 +276,7 @@ pub struct ThisExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArrayExpression {
-    elements: Vec<Option<ExpressionOrSpread>>,
+    pub elements: Vec<Option<ExpressionOrSpread>>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -283,7 +284,7 @@ pub struct ArrayExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ObjectExpression {
-    properties: Vec<Property>,
+    pub properties: Vec<Property>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -291,9 +292,9 @@ pub struct ObjectExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Property {
-    key: PropertyKey,
-    value: Expression,
-    kind: PropertyKind,
+    pub key: PropertyKey,
+    pub value: Expression,
+    pub kind: PropertyKind,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -302,7 +303,7 @@ pub struct Property {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionExpression {
     #[serde(flatten)]
-    function: Function,
+    pub function: Function,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -311,9 +312,9 @@ pub struct FunctionExpression {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ArrowFunctionExpression {
     #[serde(flatten)]
-    function: Function,
+    pub function: Function,
     #[serde(rename = "expression")]
-    is_expression: bool,
+    pub is_expression: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -321,9 +322,9 @@ pub struct ArrowFunctionExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UnaryExpression {
-    operator: UnaryOperator,
-    prefix: bool,
-    argument: Expression,
+    pub operator: UnaryOperator,
+    pub prefix: bool,
+    pub argument: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -331,9 +332,9 @@ pub struct UnaryExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UpdateExpression {
-    operator: UpdateOperator,
-    argument: Expression,
-    prefix: bool,
+    pub operator: UpdateOperator,
+    pub argument: Expression,
+    pub prefix: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -341,9 +342,9 @@ pub struct UpdateExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct BinaryExpression {
-    left: Expression,
-    operator: BinaryOperator,
-    right: Expression,
+    pub left: Expression,
+    pub operator: BinaryOperator,
+    pub right: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -351,9 +352,9 @@ pub struct BinaryExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AssignmentExpression {
-    operator: AssignmentOperator,
-    left: AssignmentTarget,
-    right: Expression,
+    pub operator: AssignmentOperator,
+    pub left: AssignmentTarget,
+    pub right: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -361,9 +362,9 @@ pub struct AssignmentExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LogicalExpression {
-    operator: LogicalOperator,
-    left: Expression,
-    right: Expression,
+    pub operator: LogicalOperator,
+    pub left: Expression,
+    pub right: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -371,9 +372,9 @@ pub struct LogicalExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MemberExpression {
-    object: ExpressionOrSuper,
-    property: Expression,
-    computed: bool,
+    pub object: ExpressionOrSuper,
+    pub property: Expression,
+    pub computed: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -381,9 +382,9 @@ pub struct MemberExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ConditionalExpression {
-    test: Expression,
-    alternate: Expression,
-    consequent: Expression,
+    pub test: Expression,
+    pub alternate: Expression,
+    pub consequent: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -391,8 +392,8 @@ pub struct ConditionalExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CallExpression {
-    callee: ExpressionOrSuper,
-    arguments: Vec<ExpressionOrSpread>,
+    pub callee: ExpressionOrSuper,
+    pub arguments: Vec<ExpressionOrSpread>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -400,8 +401,8 @@ pub struct CallExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NewExpression {
-    callee: Expression,
-    arguments: Vec<ExpressionOrSpread>,
+    pub callee: Expression,
+    pub arguments: Vec<ExpressionOrSpread>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -409,7 +410,7 @@ pub struct NewExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SequenceExpression {
-    expressions: Vec<Expression>,
+    pub expressions: Vec<Expression>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -424,7 +425,7 @@ pub struct Super {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SpreadElement {
-    argument: Expression,
+    pub argument: Expression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -433,9 +434,9 @@ pub struct SpreadElement {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct YieldExpression {
     #[serde(default)]
-    argument: Option<Expression>,
+    pub argument: Option<Expression>,
     #[serde(rename = "delegate")]
-    is_delegate: bool,
+    pub is_delegate: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -443,8 +444,8 @@ pub struct YieldExpression {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImportDeclaration {
-    specifiers: Vec<ImportDeclarationSpecifier>,
-    source: Literal,
+    pub specifiers: Vec<ImportDeclarationSpecifier>,
+    pub source: Literal,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -452,8 +453,8 @@ pub struct ImportDeclaration {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImportSpecifier {
-    imported: Identifier,
-    local: Identifier,
+    pub imported: Identifier,
+    pub local: Identifier,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -461,7 +462,7 @@ pub struct ImportSpecifier {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImportDefaultSpecifier {
-    local: Identifier,
+    pub local: Identifier,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -469,7 +470,7 @@ pub struct ImportDefaultSpecifier {
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ImportNamespaceSpecifier {
-    local: Identifier,
+    pub local: Identifier,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]

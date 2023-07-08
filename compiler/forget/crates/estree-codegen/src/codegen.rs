@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use indexmap::IndexMap;
 use quote::{__private::TokenStream, format_ident, quote};
 use serde::{Deserialize, Serialize};
+use syn::Type;
 
 /// Returns prettyplease-formatted Rust source for estree
 pub fn estree() -> String {
@@ -15,6 +16,7 @@ pub fn estree() -> String {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Grammar {
     pub objects: IndexMap<String, Object>,
     pub nodes: IndexMap<String, Node>,
@@ -70,6 +72,7 @@ impl Grammar {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Object {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
@@ -94,6 +97,7 @@ impl Object {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Node {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
@@ -124,52 +128,47 @@ impl Node {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Field {
     #[serde(rename = "type")]
     pub type_: String,
 
     #[serde(default)]
-    pub nullable: bool,
-
-    #[serde(default)]
     pub optional: bool,
-
-    #[serde(default)]
-    pub plural: bool,
-
-    #[serde(default)]
-    pub nullable_item: bool,
 
     #[serde(default)]
     pub flatten: bool,
 
     #[serde(default)]
     pub rename: Option<String>,
+
+    #[serde(default)]
+    pub skip: bool,
 }
 
 impl Field {
     pub fn codegen(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
-        let type_name = format_ident!("{}", &self.type_);
-        let mut type_ = quote!(#type_name);
-        if self.plural {
-            if self.nullable_item {
-                type_ = quote!(Option<#type_>);
-            }
-            type_ = quote! { Vec<#type_> };
-        } else {
-            assert_eq!(
-                self.nullable_item, false,
-                "Can only set nullable_item if plural"
-            )
-        }
-        if self.nullable {
-            type_ = quote!(Option<#type_>);
-        }
-        let mut field = quote!(#name: #type_);
+        let type_name: Type = syn::parse_str(&self.type_)
+            .unwrap_or_else(|_| panic!("Expected a type name, got `{}`", &self.type_));
+
+        let type_ = quote!(#type_name);
+        let mut field = quote!(pub #name: #type_);
         if self.optional {
             field = quote! {
                 #[serde(default)]
+                #field
+            }
+        }
+        if self.flatten {
+            field = quote! {
+                #[serde(flatten)]
+                #field
+            }
+        }
+        if self.skip {
+            field = quote! {
+                #[serde(skip)]
                 #field
             }
         }
@@ -179,34 +178,15 @@ impl Field {
                 #field
             }
         }
-        if self.flatten {
-            field = quote! {
-                #[serde(flatten)]
-                #field
-            }
-        }
         field
     }
 
     pub fn codegen_node(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
-        let type_name = format_ident!("{}", &self.type_);
-        let mut type_ = quote!(#type_name);
-        if self.plural {
-            if self.nullable_item {
-                type_ = quote!(Option<#type_>);
-            }
-            type_ = quote! { Vec<#type_> };
-        } else {
-            assert_eq!(
-                self.nullable_item, false,
-                "Can only set nullable_item if plural"
-            )
-        }
-        if self.nullable {
-            type_ = quote!(Option<#type_>);
-        }
-        let mut field = quote!(#name: #type_);
+        let type_name: Type = syn::parse_str(&self.type_)
+            .unwrap_or_else(|_| panic!("Expected a type name, got `{}`", &self.type_));
+        let type_ = quote!(#type_name);
+        let mut field = quote!(pub #name: #type_);
         if self.optional {
             field = quote! {
                 #[serde(default)]
@@ -216,6 +196,12 @@ impl Field {
         if self.flatten {
             field = quote! {
                 #[serde(flatten)]
+                #field
+            }
+        }
+        if self.skip {
+            field = quote! {
+                #[serde(skip)]
                 #field
             }
         }
@@ -231,6 +217,7 @@ impl Field {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
+#[serde(deny_unknown_fields)]
 pub struct Enum {
     pub variants: Vec<String>,
 }
@@ -280,6 +267,7 @@ impl Enum {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
+#[serde(deny_unknown_fields)]
 pub struct Operator {
     pub variants: IndexMap<String, String>,
 }

@@ -3,8 +3,7 @@
         "SourceLocation": {
             "fields": {
                 "source": {
-                    "type": "String",
-                    "nullable": true
+                    "type": "Option<String>"
                 },
                 "start": {
                     "type": "Position"
@@ -27,16 +26,13 @@
         "Function": {
             "fields": {
                 "id": {
-                    "type": "Identifier",
-                    "nullable": true
+                    "type": "Option<Identifier>"
                 },
                 "params": {
-                    "type": "Pattern",
-                    "plural": true
+                    "type": "Vec<Pattern>"
                 },
                 "body": {
-                    "type": "FunctionBody",
-                    "nullable": true
+                    "type": "Option<FunctionBody>"
                 },
                 "is_generator": {
                     "type": "bool",
@@ -68,8 +64,7 @@
                     "type": "String"
                 },
                 "binding": {
-                    "type": "Binding",
-                    "nullable": true,
+                    "type": "Option<Binding>",
                     "optional": true,
                     "skip": true
                 }
@@ -81,13 +76,11 @@
                     "type": "JsValue"
                 },
                 "raw": {
-                    "type": "String",
-                    "nullable": true,
+                    "type": "Option<String>",
                     "optional": true
                 },
                 "regex": {
-                    "type": "RegExpValue",
-                    "nullable": true,
+                    "type": "Option<RegExpValue>",
                     "optional": true
                 }
             }
@@ -95,12 +88,10 @@
         "Program": {
             "fields": {
                 "body": {
-                    "type": "ModuleItem",
-                    "plural": true
+                    "type": "Vec<ModuleItem>"
                 },
                 "source_type": {
-                    "type": "SourceType",
-                    "nullable": true,
+                    "type": "Option<SourceType>",
                     "rename": "sourceType"
                 }
             }
@@ -111,8 +102,7 @@
                     "type": "Expression"
                 },
                 "directive": {
-                    "type": "String",
-                    "nullable": true,
+                    "type": "Option<String>",
                     "optional": true
                 }
             }
@@ -120,8 +110,7 @@
         "BlockStatement": {
             "fields": {
                 "body": {
-                    "type": "Statement",
-                    "plural": true
+                    "type": "Vec<Statement>"
                 }
             }
         },
@@ -140,8 +129,7 @@
         "ReturnStatement": {
             "fields": {
                 "argument": {
-                    "type": "Expression",
-                    "nullable": true
+                    "type": "Option<Expression>"
                 }
             }
         },
@@ -158,16 +146,14 @@
         "BreakStatement": {
             "fields": {
                 "label": {
-                    "type": "Identifier",
-                    "nullable": true
+                    "type": "Option<Identifier>"
                 }
             }
         },
         "ContinueStatement": {
             "fields": {
                 "label": {
-                    "type": "Identifier",
-                    "nullable": true
+                    "type": "Option<Identifier>"
                 }
             }
         },
@@ -180,8 +166,7 @@
                     "type": "Statement"
                 },
                 "alternate": {
-                    "type": "Statement",
-                    "nullable": true
+                    "type": "Option<Statement>"
                 }
             }
         },
@@ -191,20 +176,17 @@
                     "type": "Expression"
                 },
                 "cases": {
-                    "type": "SwitchCase",
-                    "plural": true
+                    "type": "Vec<SwitchCase>"
                 }
             }
         },
         "SwitchCase": {
             "fields": {
                 "test": {
-                    "type": "Expression",
-                    "nullable": true
+                    "type": "Option<Expression>"
                 },
                 "consequent": {
-                    "type": "Statement",
-                    "plural": true
+                    "type": "Vec<Statement>"
                 }
             }
         },
@@ -221,12 +203,10 @@
                     "type": "BlockStatement"
                 },
                 "handler": {
-                    "type": "CatchClause",
-                    "nullable": true
+                    "type": "Option<CatchClause>"
                 },
                 "finalizer": {
-                    "type": "BlockStatement",
-                    "nullable": true
+                    "type": "Option<BlockStatement>"
                 }
             }
         },
@@ -263,16 +243,13 @@
         "ForStatement": {
             "fields": {
                 "init": {
-                    "type": "ForInit",
-                    "nullable": true
+                    "type": "Option<ForInit>"
                 },
                 "test": {
-                    "type": "Expression",
-                    "nullable": true
+                    "type": "Option<Expression>"
                 },
                 "update": {
-                    "type": "Expression",
-                    "nullable": true
+                    "type": "Option<Expression>"
                 },
                 "body": {
                     "type": "Statement"
@@ -319,8 +296,7 @@
                     "type": "VariableDeclarationKind"
                 },
                 "declarations": {
-                    "type": "VariableDeclarator",
-                    "plural": true
+                    "type": "Vec<VariableDeclarator>"
                 }
             }
         },
@@ -330,8 +306,7 @@
                     "type": "Pattern"
                 },
                 "init": {
-                    "type": "Expression",
-                    "nullable": true
+                    "type": "Option<Expression>"
                 }
             }
         },
@@ -339,17 +314,14 @@
         "ArrayExpression": {
             "fields": {
                 "elements": {
-                    "type": "ExpressionOrSpread",
-                    "plural": true,
-                    "nullable_item": true
+                    "type": "Vec<Option<ExpressionOrSpread>>"
                 }
             }
         },
         "ObjectExpression": {
             "fields": {
                 "properties": {
-                    "type": "Property",
-                    "plural": true
+                    "type": "Vec<Property>"
                 }
             }
         },
@@ -483,8 +455,7 @@
                     "type": "ExpressionOrSuper"
                 },
                 "arguments": {
-                    "type": "ExpressionOrSpread",
-                    "plural": true
+                    "type": "Vec<ExpressionOrSpread>"
                 }
             }
         },
@@ -494,16 +465,14 @@
                     "type": "Expression"
                 },
                 "arguments": {
-                    "type": "ExpressionOrSpread",
-                    "plural": true
+                    "type": "Vec<ExpressionOrSpread>"
                 }
             }
         },
         "SequenceExpression": {
             "fields": {
                 "expressions": {
-                    "type": "Expression",
-                    "plural": true
+                    "type": "Vec<Expression>"
                 }
             }
         },
@@ -518,8 +487,7 @@
         "YieldExpression": {
             "fields": {
                 "argument": {
-                    "type": "Expression",
-                    "nullable": true,
+                    "type": "Option<Expression>",
                     "optional": true
                 },
                 "is_delegate": {
@@ -531,8 +499,7 @@
         "ImportDeclaration": {
             "fields": {
                 "specifiers": {
-                    "type": "ImportDeclarationSpecifier",
-                    "plural": true
+                    "type": "Vec<ImportDeclarationSpecifier>"
                 },
                 "source": {
                     "type": "Literal"
