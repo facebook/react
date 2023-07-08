@@ -7,6 +7,8 @@ use hir::{
 };
 use indexmap::IndexMap;
 
+use crate::{invariant, BuildDiagnostic, DiagnosticError, ErrorSeverity};
+
 /// Helper struct used when converting from ESTree to HIR. Includes:
 /// - Variable resolution
 /// - Label resolution (for labeled statements and break/continue)
@@ -46,7 +48,9 @@ pub(crate) enum Binding<'a> {
 #[derive(Clone, PartialEq, Eq, Debug)]
 enum ControlFlowScope<'a> {
     Loop(LoopScope<'a>),
+
     // Switch(SwitchScope<'a>),
+    #[allow(dead_code)]
     Label(LabelScope<'a>),
 }
 
@@ -102,7 +106,7 @@ impl<'a> Builder<'a> {
     ///
     /// TODO: refine the type, only invariants should be possible here,
     /// not other types of errors
-    pub(crate) fn build(self) -> Result<HIR<'a>, Diagnostic> {
+    pub(crate) fn build(self) -> Result<HIR<'a>, BuildDiagnostic> {
         let mut hir = HIR {
             entry: self.entry,
             blocks: self.completed,
@@ -168,22 +172,34 @@ impl<'a> Builder<'a> {
         }
     }
 
-    pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> BlockId
+    pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> Result<BlockId, BuildDiagnostic>
     where
-        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
     {
         let wip = self.reserve(kind);
         let id = wip.id;
-        self.enter_reserved(wip, f);
-        id
+        self.enter_reserved(wip, f)?;
+        Ok(id)
     }
 
-    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F)
+    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F) -> Result<(), BuildDiagnostic>
     where
-        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
     {
         let current = std::mem::replace(&mut self.wip, wip);
-        let terminal = f(self);
+
+        let (result, terminal) = match f(self) {
+            Ok(terminal) => (Ok(()), terminal),
+            Err(error) => (
+                Err(error),
+                // TODO: add a `Terminal::Error` variant
+                TerminalValue::Goto(hir::GotoTerminal {
+                    block: current.id,
+                    kind: GotoKind::Break,
+                }),
+            ),
+        };
+
         let completed = std::mem::replace(&mut self.wip, current);
         self.completed.insert(
             completed.id,
@@ -198,11 +214,16 @@ impl<'a> Builder<'a> {
                 predecessors: Default::default(),
             },
         );
+        result
     }
 
-    pub(crate) fn enter_loop<F>(&mut self, scope: LoopScope<'a>, f: F) -> TerminalValue<'a>
+    pub(crate) fn enter_loop<F>(
+        &mut self,
+        scope: LoopScope<'a>,
+        f: F,
+    ) -> Result<TerminalValue<'a>, BuildDiagnostic>
     where
-        F: FnOnce(&mut Self) -> TerminalValue<'a>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
     {
         self.scopes.push(ControlFlowScope::Loop(scope.clone()));
         let terminal = f(self);
@@ -230,7 +251,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_break(
         &self,
         label: Option<&estree::Identifier>,
-    ) -> Result<BlockId, Diagnostic> {
+    ) -> Result<BlockId, BuildDiagnostic> {
         for scope in self.scopes.iter().rev() {
             match (label, scope.label()) {
                 // If this is an unlabeled break, return the most recent break target
@@ -243,7 +264,11 @@ impl<'a> Builder<'a> {
                 _ => continue,
             }
         }
-        Err(())
+        Err(BuildDiagnostic::new(
+            DiagnosticError::UnresolvedBreakTarget,
+            ErrorSeverity::InvalidSyntax,
+            None,
+        ))
     }
 
     /// Resolves the target for the given continue label (if present), or returns the default
@@ -252,7 +277,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_continue(
         &self,
         label: Option<&estree::Identifier>,
-    ) -> Result<BlockId, Diagnostic> {
+    ) -> Result<BlockId, BuildDiagnostic> {
         for scope in self.scopes.iter().rev() {
             match scope {
                 ControlFlowScope::Loop(scope) => {
@@ -273,31 +298,46 @@ impl<'a> Builder<'a> {
                     match (label, scope.label()) {
                         (Some(label), Some(scope_label)) if label.name.as_str() == scope_label => {
                             // Error, the continue referred to a label that is not a loop
-                            return Err(());
+                            return Err(BuildDiagnostic::new(
+                                DiagnosticError::ContinueTargetIsNotALoop,
+                                ErrorSeverity::InvalidSyntax,
+                                None,
+                            ));
                         }
                         _ => continue,
                     }
                 }
             }
         }
-        Err(())
+        Err(BuildDiagnostic::new(
+            DiagnosticError::UnresolvedContinueTarget,
+            ErrorSeverity::InvalidSyntax,
+            None,
+        ))
     }
 
     pub(crate) fn resolve_binding(
         &mut self,
         identifier: &estree::Identifier,
-    ) -> Option<Binding<'a>> {
-        identifier.binding.as_ref().map(|binding| match binding {
-            estree::Binding::Global => Binding::Global,
-            estree::Binding::Local(id) => Binding::Local(
-                self.environment
-                    .resolve_binding_identifier(&identifier.name, *id),
-            ),
-            estree::Binding::Module(id) => Binding::Module(
-                self.environment
-                    .resolve_binding_identifier(&identifier.name, *id),
-            ),
-        })
+    ) -> Result<Binding<'a>, BuildDiagnostic> {
+        match &identifier.binding {
+            Some(binding) => Ok(match binding {
+                estree::Binding::Global => Binding::Global,
+                estree::Binding::Local(id) => Binding::Local(
+                    self.environment
+                        .resolve_binding_identifier(&identifier.name, *id),
+                ),
+                estree::Binding::Module(id) => Binding::Module(
+                    self.environment
+                        .resolve_binding_identifier(&identifier.name, *id),
+                ),
+            }),
+            _ => Err(BuildDiagnostic::new(
+                DiagnosticError::UnknownIdentifier,
+                ErrorSeverity::Invariant,
+                identifier.range.clone(),
+            )),
+        }
     }
 }
 
@@ -403,13 +443,17 @@ fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 
 /// Updates the instruction ids for all instructions and blocks
 /// Relies on the blocks being in reverse postorder to ensure that id ordering is correct
-fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
+fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
     for (block_ix, block) in hir.blocks.values_mut().enumerate() {
         for (instr_ix, instr) in block.instructions.iter_mut().enumerate() {
             invariant(visited.insert((block_ix, instr_ix)), || {
-                format!("Expected bb{block_ix} i{instr_ix} not to have been visited yet")
+                BuildDiagnostic::new(
+                    DiagnosticError::BlockVisitedTwice { block: block.id },
+                    ErrorSeverity::Invariant,
+                    None,
+                )
             })?;
             instr.id = id_gen.next();
         }
@@ -443,16 +487,3 @@ fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
     }
     visit(hir.entry, None, hir, &mut visited);
 }
-
-fn invariant<F>(cond: bool, f: F) -> Result<(), Diagnostic>
-where
-    F: FnOnce() -> std::string::String,
-{
-    if !cond {
-        let msg = f();
-        panic!("Invariant: {msg}");
-    }
-    Ok(())
-}
-
-type Diagnostic = ();

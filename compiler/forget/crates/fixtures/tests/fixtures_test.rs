@@ -1,9 +1,12 @@
+use std::fmt::Write;
+
 use build_hir::build;
 use bumpalo::Bump;
 use estree::{ModuleItem, Statement};
 use estree_swc::parse;
 use hir::{Environment, Print, Registry};
 use insta::{assert_snapshot, glob};
+use miette::{NamedSource, Report};
 
 #[test]
 fn fixtures() {
@@ -24,12 +27,25 @@ fn fixtures() {
                         },
                         Registry,
                     ));
-                    let hir = build(&environment, *fun).unwrap();
-
                     if ix != 0 {
                         output.push_str("\n\n");
                     }
-                    hir.print(&mut output).unwrap();
+                    match build(&environment, *fun) {
+                        Ok(hir) => {
+                            hir.print(&mut output).unwrap();
+                        }
+                        Err(error) => {
+                            write!(&mut output, "{}", error,).unwrap();
+                            eprintln!(
+                                "{:?}",
+                                Report::new(error).with_source_code(NamedSource::new(
+                                    path.to_string_lossy(),
+                                    input.clone(),
+                                ))
+                            );
+                            continue;
+                        }
+                    };
                 }
             }
         }

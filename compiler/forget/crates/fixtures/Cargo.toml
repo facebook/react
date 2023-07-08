@@ -13,3 +13,4 @@ estree-swc = { path = "../estree-swc" }
 hir = { path = "../hir" }
 build-hir = { path = "../build-hir" }
 bumpalo = { version = "3.13.0", features = ["collections"] }
+miette = { version = "5.9.0", features = ["backtrace", "fancy"] }

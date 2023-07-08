@@ -1,4 +1,4 @@
-use bumpalo::collections::{CollectIn, String};
+use bumpalo::collections::{String, Vec};
 use estree::{
     AssignmentTarget, BinaryExpression, ExpressionLike, ForInit, ForStatement, FunctionDeclaration,
     IfStatement, Literal, LiteralValue, Pattern, Statement, VariableDeclarationKind,
@@ -9,7 +9,11 @@ use hir::{
     PrimitiveValue, TerminalValue,
 };
 
-use crate::builder::{Binding, Builder, LoopScope};
+use crate::{
+    builder::{Binding, Builder, LoopScope},
+    error::DiagnosticError,
+    BuildDiagnostic, ErrorSeverity,
+};
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
 /// if it was constructed sucessfully, otherwise a list of diagnostics
@@ -20,7 +24,7 @@ use crate::builder::{Binding, Builder, LoopScope};
 pub fn build<'a>(
     environment: &'a Environment<'a>,
     fun: FunctionDeclaration,
-) -> Result<Function<'a>, Diagnostic> {
+) -> Result<Function<'a>, BuildDiagnostic> {
     let mut builder = Builder::new(environment);
 
     lower_statement(environment, &mut builder, fun.body.unwrap(), None)?;
@@ -57,7 +61,7 @@ fn lower_statement<'a>(
     builder: &mut Builder<'a>,
     stmt: Statement,
     label: Option<String<'a>>,
-) -> Result<(), Diagnostic> {
+) -> Result<(), BuildDiagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
             for stmt in stmt.body {
@@ -86,7 +90,7 @@ fn lower_statement<'a>(
         }
         Statement::ReturnStatement(stmt) => {
             let value = match stmt.argument {
-                Some(argument) => lower_expression_to_temporary(env, builder, argument),
+                Some(argument) => lower_expression_to_temporary(env, builder, argument)?,
                 None => lower_value_to_temporary(
                     env,
                     builder,
@@ -101,7 +105,7 @@ fn lower_statement<'a>(
             );
         }
         Statement::ExpressionStatement(stmt) => {
-            lower_expression_to_temporary(env, builder, stmt.expression);
+            lower_expression_to_temporary(env, builder, stmt.expression)?;
         }
         Statement::EmptyStatement(_) => {
             // no-op
@@ -110,25 +114,37 @@ fn lower_statement<'a>(
             let kind = match stmt.kind {
                 VariableDeclarationKind::Const => InstructionKind::Const,
                 VariableDeclarationKind::Let => InstructionKind::Let,
-                VariableDeclarationKind::Var => panic!("`var` declarations are not supported"),
+                VariableDeclarationKind::Var => {
+                    return Err(BuildDiagnostic::new(
+                        DiagnosticError::VariableDeclarationKindIsVar,
+                        ErrorSeverity::Unsupported,
+                        stmt.range,
+                    ));
+                }
             };
             for declaration in stmt.declarations {
                 if let Some(init) = declaration.init {
-                    let value = lower_expression_to_temporary(env, builder, init);
+                    let value = lower_expression_to_temporary(env, builder, init)?;
                     lower_assignment(
                         env,
                         builder,
                         kind,
                         AssignmentTarget::Pattern(declaration.id.into()),
                         value,
-                    );
+                    )?;
                 } else {
                     if let Pattern::Identifier(id) = declaration.id {
                         // TODO: handle unbound variables
-                        let binding = builder.resolve_binding(&id).unwrap();
+                        let binding = builder.resolve_binding(&id)?;
                         let identifier = match binding {
                             Binding::Local(identifier) => identifier,
-                            _ => panic!("Expected variable declaration to be a local binding"),
+                            _ => {
+                                return Err(BuildDiagnostic::new(
+                                    DiagnosticError::VariableDeclarationBindingIsNonLocal,
+                                    ErrorSeverity::Invariant,
+                                    id.range,
+                                ));
+                            }
                         };
                         let place = Place {
                             effect: None,
@@ -158,24 +174,24 @@ fn lower_statement<'a>(
             } = *stmt;
 
             let consequent_block = builder.enter(BlockKind::Block, |builder| {
-                lower_statement(env, builder, consequent, None).unwrap();
-                TerminalValue::Goto(hir::GotoTerminal {
+                lower_statement(env, builder, consequent, None)?;
+                Ok(TerminalValue::Goto(hir::GotoTerminal {
                     block: fallthrough_block.id,
                     kind: GotoKind::Break,
-                })
-            });
+                }))
+            })?;
 
             let alternate_block = builder.enter(BlockKind::Block, |builder| {
                 if let Some(alternate) = alternate {
-                    lower_statement(env, builder, alternate, None).unwrap();
+                    lower_statement(env, builder, alternate, None)?;
                 }
-                TerminalValue::Goto(hir::GotoTerminal {
+                Ok(TerminalValue::Goto(hir::GotoTerminal {
                     block: fallthrough_block.id,
                     kind: GotoKind::Break,
-                })
-            });
+                }))
+            })?;
 
-            let test = lower_expression_to_temporary(env, builder, test);
+            let test = lower_expression_to_temporary(env, builder, test)?;
             let terminal = TerminalValue::If(hir::IfTerminal {
                 test,
                 consequent: consequent_block,
@@ -201,26 +217,31 @@ fn lower_statement<'a>(
 
             let init_block = builder.enter(BlockKind::Loop, |builder| {
                 if let Some(ForInit::VariableDeclaration(decl)) = init {
-                    lower_statement(env, builder, Statement::VariableDeclaration(decl), None)
-                        .unwrap();
-                    TerminalValue::Goto(hir::GotoTerminal {
+                    lower_statement(env, builder, Statement::VariableDeclaration(decl), None)?;
+                    Ok(TerminalValue::Goto(hir::GotoTerminal {
                         block: test_block.id,
                         kind: GotoKind::Break,
-                    })
+                    }))
                 } else {
-                    panic!("Expected for statement to have a variable declaration initializer")
+                    Err(BuildDiagnostic::new(
+                        DiagnosticError::ForStatementIsMissingInitializer,
+                        ErrorSeverity::Todo,
+                        None,
+                    ))
                 }
-            });
+            })?;
 
-            let update_block = update.map(|update| {
-                builder.enter(BlockKind::Loop, |builder| {
-                    lower_expression_to_temporary(env, builder, update);
-                    TerminalValue::Goto(hir::GotoTerminal {
-                        block: test_block.id,
-                        kind: GotoKind::Break,
+            let update_block = update
+                .map(|update| {
+                    builder.enter(BlockKind::Loop, |builder| {
+                        lower_expression_to_temporary(env, builder, update)?;
+                        Ok(TerminalValue::Goto(hir::GotoTerminal {
+                            block: test_block.id,
+                            kind: GotoKind::Break,
+                        }))
                     })
                 })
-            });
+                .transpose()?;
 
             let body_block = builder.enter(BlockKind::Block, |builder| {
                 let loop_ = LoopScope {
@@ -229,13 +250,13 @@ fn lower_statement<'a>(
                     break_block: fallthrough_block.id,
                 };
                 builder.enter_loop(loop_, |builder| {
-                    lower_statement(env, builder, body, None).unwrap();
-                    TerminalValue::Goto(hir::GotoTerminal {
+                    lower_statement(env, builder, body, None)?;
+                    Ok(TerminalValue::Goto(hir::GotoTerminal {
                         block: update_block.unwrap_or(test_block.id),
                         kind: GotoKind::Continue,
-                    })
+                    }))
                 })
-            });
+            })?;
 
             let terminal = TerminalValue::For(ForTerminal {
                 body: body_block,
@@ -247,7 +268,7 @@ fn lower_statement<'a>(
             builder.terminate_with_fallthrough(terminal, test_block);
 
             if let Some(test) = test {
-                let test_value = lower_expression_to_temporary(env, builder, test);
+                let test_value = lower_expression_to_temporary(env, builder, test)?;
                 let terminal = TerminalValue::Branch(BranchTerminal {
                     test: test_value,
                     consequent: body_block,
@@ -255,7 +276,11 @@ fn lower_statement<'a>(
                 });
                 builder.terminate_with_fallthrough(terminal, fallthrough_block);
             } else {
-                panic!("Expected for statement to have a tesst block");
+                return Err(BuildDiagnostic::new(
+                    DiagnosticError::ForStatementIsMissingTest,
+                    ErrorSeverity::Todo,
+                    stmt.range,
+                ));
             }
         }
         _ => todo!("Lower {stmt:#?}"),
@@ -268,9 +293,9 @@ fn lower_expression_to_temporary<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     expr: ExpressionLike,
-) -> Place<'a> {
-    let value = lower_expression(env, builder, expr);
-    lower_value_to_temporary(env, builder, value)
+) -> Result<Place<'a>, BuildDiagnostic> {
+    let value = lower_expression(env, builder, expr)?;
+    Ok(lower_value_to_temporary(env, builder, value))
 }
 
 /// Converts an ESTree Expression into an HIR InstructionValue. Note that while only a single
@@ -281,11 +306,11 @@ fn lower_expression<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     expr: ExpressionLike,
-) -> InstructionValue<'a> {
-    match expr {
+) -> Result<InstructionValue<'a>, BuildDiagnostic> {
+    Ok(match expr {
         ExpressionLike::Identifier(expr) => {
             // TODO: handle unbound variables
-            let binding = builder.resolve_binding(&expr).unwrap();
+            let binding = builder.resolve_binding(&expr)?;
             match binding {
                 Binding::Local(identifier) => {
                     let place = Place {
@@ -303,23 +328,23 @@ fn lower_expression<'a>(
             value: lower_primitive(env, builder, *expr),
         }),
         ExpressionLike::ArrayExpression(expr) => {
-            let elements = expr
-                .elements
-                .into_iter()
-                .map(|expr| match expr {
+            let mut elements = Vec::with_capacity_in(expr.elements.len(), &env.allocator);
+            for expr in expr.elements {
+                let element = match expr {
                     ExpressionLike::SpreadElement(expr) => ArrayElement::Spread(
-                        lower_expression_to_temporary(env, builder, expr.argument),
+                        lower_expression_to_temporary(env, builder, expr.argument)?,
                     ),
-                    _ => ArrayElement::Place(lower_expression_to_temporary(env, builder, expr)),
-                })
-                .collect_in(env.allocator);
+                    _ => ArrayElement::Place(lower_expression_to_temporary(env, builder, expr)?),
+                };
+                elements.push(element);
+            }
             InstructionValue::Array(hir::Array { elements })
         }
 
         ExpressionLike::AssignmentExpression(expr) => match expr.operator {
             estree::AssignmentOperator::Equals => {
-                let right = lower_expression_to_temporary(env, builder, expr.right);
-                lower_assignment(env, builder, InstructionKind::Reassign, expr.left, right)
+                let right = lower_expression_to_temporary(env, builder, expr.right)?;
+                lower_assignment(env, builder, InstructionKind::Reassign, expr.left, right)?
             }
             _ => todo!("lower assignment expr {:#?}", expr),
         },
@@ -331,8 +356,8 @@ fn lower_expression<'a>(
                 right,
                 ..
             } = *expr;
-            let left = lower_expression_to_temporary(env, builder, left);
-            let right = lower_expression_to_temporary(env, builder, right);
+            let left = lower_expression_to_temporary(env, builder, left)?;
+            let right = lower_expression_to_temporary(env, builder, right)?;
             InstructionValue::Binary(hir::Binary {
                 left,
                 operator,
@@ -342,11 +367,15 @@ fn lower_expression<'a>(
 
         // Cases that cannot appear in expression position but which are included in ExpressionLike
         // to make serialization easier
-        ExpressionLike::SpreadElement(_) => {
-            panic!("SpreadElement may not appear in normal expression position")
+        ExpressionLike::SpreadElement(expr) => {
+            return Err(BuildDiagnostic::new(
+                DiagnosticError::NonExpressionInExpressionPosition,
+                ErrorSeverity::Invariant,
+                expr.range,
+            ));
         }
         _ => todo!("Lower expr {expr:#?}"),
-    }
+    })
 }
 
 fn lower_assignment<'a>(
@@ -355,11 +384,11 @@ fn lower_assignment<'a>(
     kind: InstructionKind,
     lvalue: AssignmentTarget,
     value: Place<'a>,
-) -> InstructionValue<'a> {
-    match lvalue {
+) -> Result<InstructionValue<'a>, BuildDiagnostic> {
+    Ok(match lvalue {
         AssignmentTarget::Pattern(lvalue) => match *lvalue {
             Pattern::Identifier(lvalue) => {
-                let place = lower_identifier_for_assignment(env, builder, kind, *lvalue).unwrap();
+                let place = lower_identifier_for_assignment(env, builder, kind, *lvalue)?;
                 let temporary = lower_value_to_temporary(
                     env,
                     builder,
@@ -373,7 +402,7 @@ fn lower_assignment<'a>(
             _ => todo!("lower assignment pattern for {:#?}", lvalue),
         },
         _ => todo!("lower assignment for {:#?}", lvalue),
-    }
+    })
 }
 
 fn lower_identifier_for_assignment<'a>(
@@ -381,11 +410,15 @@ fn lower_identifier_for_assignment<'a>(
     builder: &mut Builder<'a>,
     _kind: InstructionKind,
     identifier: estree::Identifier,
-) -> Option<Place<'a>> {
+) -> Result<Place<'a>, BuildDiagnostic> {
     let binding = builder.resolve_binding(&identifier)?;
     match binding {
-        Binding::Module(..) | Binding::Global => panic!("Cannot reassign a global"),
-        Binding::Local(id) => Some(Place {
+        Binding::Module(..) | Binding::Global => Err(BuildDiagnostic::new(
+            DiagnosticError::ReassignedGlobal,
+            ErrorSeverity::InvalidReact,
+            identifier.range,
+        )),
+        Binding::Local(id) => Ok(Place {
             identifier: id,
             effect: None,
         }),
@@ -440,5 +473,3 @@ fn lower_primitive<'a>(
         _ => todo!("Lower literal {literal:#?}"),
     }
 }
-
-type Diagnostic = ();

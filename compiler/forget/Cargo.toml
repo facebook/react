@@ -1,5 +1,5 @@
 [workspace]
-
+resolver = "2"
 members = [
     "crates/build-hir",
     "crates/fixtures",
@@ -8,3 +8,13 @@ members = [
     "crates/estree",
     "crates/estree-swc",
 ]
+
+# Make insta run faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.insta]
+opt-level = 3
+
+# Make insta diffing libary faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.similar]
+opt-level = 3

@@ -11,7 +11,7 @@ pub struct SourceLocation {
     pub end: Position,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Position {
     /// >= 1
     pub line: NonZeroU32,
@@ -20,7 +20,7 @@ pub struct Position {
 }
 assert_eq_size!(Option<Position>, u64);
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SourceRange {
     pub start: u32,
     // end is exclusive so it can always be non-zero. This allows
