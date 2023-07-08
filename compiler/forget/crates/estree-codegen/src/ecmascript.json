@@ -1,0 +1,596 @@
+{
+    "objects": {
+        "SourceLocation": {
+            "fields": {
+                "source": {
+                    "type": "String",
+                    "nullable": true
+                },
+                "start": {
+                    "type": "Position"
+                },
+                "end": {
+                    "type": "Position"
+                }
+            }
+        },
+        "Position": {
+            "fields": {
+                "line": {
+                    "type": "NonZeroU32"
+                },
+                "column": {
+                    "type": "u32"
+                }
+            }
+        },
+        "Function": {
+            "fields": {
+                "id": {
+                    "type": "Identifier",
+                    "nullable": true
+                },
+                "params": {
+                    "type": "Pattern",
+                    "plural": true
+                },
+                "body": {
+                    "type": "BlockStatement",
+                    "nullable": true
+                }
+            }
+        },
+        "RegExpValue": {
+            "fields": {
+                "pattern": {
+                    "type": "String"
+                },
+                "flags": {
+                    "type": "String"
+                }
+            }
+        }
+    },
+    "nodes": {
+        "Identifier": {
+            "fields": {
+                "name": {
+                    "type": "String"
+                },
+                "binding": {
+                    "type": "Binding",
+                    "nullable": true,
+                    "optional": true,
+                    "skip": true
+                }
+            }
+        },
+        "Literal": {
+            "fields": {
+                "value": {
+                    "type": "JsValue"
+                },
+                "raw": {
+                    "type": "String",
+                    "nullable": true,
+                    "optional": true
+                },
+                "regex": {
+                    "type": "RegExpValue",
+                    "nullable": true,
+                    "optional": true
+                }
+            }
+        },
+        "Program": {
+            "fields": {
+                "body": {
+                    "type": "Statement",
+                    "plural": true
+                }
+            }
+        },
+        "ExpressionStatement": {
+            "fields": {
+                "expression": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "BlockStatement": {
+            "fields": {
+                "body": {
+                    "type": "Statement",
+                    "plural": true
+                }
+            }
+        },
+        "EmptyStatement": {},
+        "DebuggerStatement": {},
+        "WithStatement": {
+            "fields": {
+                "object": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "ReturnStatement": {
+            "fields": {
+                "argument": {
+                    "type": "Expression",
+                    "nullable": true
+                }
+            }
+        },
+        "LabeledStatement": {
+            "fields": {
+                "label": {
+                    "type": "Identifier"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "BreakStatement": {
+            "fields": {
+                "label": {
+                    "type": "Identifier",
+                    "nullable": true
+                }
+            }
+        },
+        "ContinueStatement": {
+            "fields": {
+                "label": {
+                    "type": "Identifier",
+                    "nullable": true
+                }
+            }
+        },
+        "IfStatement": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "consequent": {
+                    "type": "Statement"
+                },
+                "alternate": {
+                    "type": "Statement",
+                    "nullable": true
+                }
+            }
+        },
+        "SwitchStatement": {
+            "fields": {
+                "discriminant": {
+                    "type": "Expression"
+                },
+                "cases": {
+                    "type": "SwitchCase",
+                    "plural": true
+                }
+            }
+        },
+        "SwitchCase": {
+            "fields": {
+                "test": {
+                    "type": "Expression",
+                    "nullable": true
+                },
+                "consequent": {
+                    "type": "Statement",
+                    "plural": true
+                }
+            }
+        },
+        "ThrowStatement": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "TryStatement": {
+            "fields": {
+                "block": {
+                    "type": "BlockStatement"
+                },
+                "handler": {
+                    "type": "CatchClause",
+                    "nullable": true
+                },
+                "finalizer": {
+                    "type": "BlockStatement",
+                    "nullable": true
+                }
+            }
+        },
+        "CatchClause": {
+            "fields": {
+                "param": {
+                    "type": "Pattern"
+                },
+                "body": {
+                    "type": "BlockStatement"
+                }
+            }
+        },
+        "WhileStatement": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "DoWhileStatement": {
+            "fields": {
+                "body": {
+                    "type": "Statement"
+                },
+                "test": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "ForStatement": {
+            "fields": {
+                "init": {
+                    "type": "ForInit",
+                    "nullable": true
+                },
+                "test": {
+                    "type": "Expression",
+                    "nullable": true
+                },
+                "update": {
+                    "type": "Expression",
+                    "nullable": true
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "ForInStatement": {
+            "fields": {
+                "left": {
+                    "type": "ForInInit"
+                },
+                "right": {
+                    "type": "Expression"
+                },
+                "body": {
+                    "type": "Statement"
+                }
+            }
+        },
+        "FunctionDeclaration": {
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                }
+            }
+        },
+        "VariableDeclaration": {
+            "fields": {
+                "kind": {
+                    "type": "VariableDeclarationKind"
+                },
+                "declarations": {
+                    "type": "VariableDeclarator",
+                    "plural": true
+                }
+            }
+        },
+        "VariableDeclarator": {
+            "fields": {
+                "id": {
+                    "type": "Pattern"
+                },
+                "init": {
+                    "type": "Expression",
+                    "nullable": true
+                }
+            }
+        },
+        "ThisExpression": {},
+        "ArrayExpression": {
+            "fields": {
+                "elements": {
+                    "type": "Expression",
+                    "plural": true,
+                    "nullable_item": true
+                }
+            }
+        },
+        "ObjectExpression": {
+            "fields": {
+                "properties": {
+                    "type": "Property",
+                    "plural": true
+                }
+            }
+        },
+        "Property": {
+            "fields": {
+                "key": {
+                    "type": "PropertyKey"
+                },
+                "value": {
+                    "type": "Expression"
+                },
+                "kind": {
+                    "type": "PropertyKind"
+                }
+            }
+        },
+        "FunctionExpression": {
+            "fields": {
+                "function": {
+                    "type": "Function",
+                    "flatten": true
+                }
+            }
+        },
+        "UnaryExpression": {
+            "fields": {
+                "operator": {
+                    "type": "UnaryOperator"
+                },
+                "prefix": {
+                    "type": "bool"
+                },
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "UpdateExpression": {
+            "fields": {
+                "operator": {
+                    "type": "UpdateOperator"
+                },
+                "argument": {
+                    "type": "Expression"
+                },
+                "prefix": {
+                    "type": "bool"
+                }
+            }
+        },
+        "BinaryExpression": {
+            "fields": {
+                "left": {
+                    "type": "Expression"
+                },
+                "operator": {
+                    "type": "BinaryOperator"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "AssignmentExpression": {
+            "fields": {
+                "operator": {
+                    "type": "AssignmentOperator"
+                },
+                "left": {
+                    "type": "AssignmentTarget"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "LogicalExpression": {
+            "fields": {
+                "operator": {
+                    "type": "LogicalOperator"
+                },
+                "left": {
+                    "type": "Expression"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "MemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "Expression"
+                },
+                "property": {
+                    "type": "Expression"
+                },
+                "computed": {
+                    "type": "bool"
+                }
+            }
+        },
+        "ConditionalExpression": {
+            "fields": {
+                "test": {
+                    "type": "Expression"
+                },
+                "alternate": {
+                    "type": "Expression"
+                },
+                "consequent": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "CallExpression": {
+            "type": true,
+            "fields": {
+                "callee": {
+                    "type": "Expression"
+                },
+                "arguments": {
+                    "type": "Expression",
+                    "plural": true
+                }
+            }
+        },
+        "NewExpression": {
+            "type": true,
+            "fields": {
+                "callee": {
+                    "type": "Expression"
+                },
+                "arguments": {
+                    "type": "Expression",
+                    "plural": true
+                }
+            }
+        },
+        "SequenceExpression": {
+            "type": true,
+            "fields": {
+                "expressions": {
+                    "type": "Expression",
+                    "plural": true
+                }
+            }
+        }
+    },
+    "enums": {
+        "Statement": [
+            "BlockStatement",
+            "BreakStatement",
+            "ContinueStatement",
+            "DebuggerStatement",
+            "DoWhileStatement",
+            "EmptyStatement",
+            "ExpressionStatement",
+            "ForInStatement",
+            "ForStatement",
+            "FunctionDeclaration",
+            "IfStatement",
+            "LabeledStatement",
+            "ReturnStatement",
+            "SwitchStatement",
+            "ThrowStatement",
+            "TryStatement",
+            "VariableDeclaration",
+            "WhileStatement",
+            "WithStatement"
+        ],
+        "Expression": [
+            "ArrayExpression",
+            "AssignmentExpression",
+            "BinaryExpression",
+            "CallExpression",
+            "ConditionalExpression",
+            "FunctionExpression",
+            "Identifier",
+            "Literal",
+            "LogicalExpression",
+            "MemberExpression",
+            "NewExpression",
+            "ObjectExpression",
+            "SequenceExpression",
+            "ThisExpression",
+            "UnaryExpression",
+            "UpdateExpression"
+        ],
+        "Pattern": [
+            "Identifier"
+        ],
+        "ForInit": [
+            "Expression",
+            "VariableDeclaration"
+        ],
+        "ForInInit": [
+            "Pattern",
+            "VariableDeclaration"
+        ],
+        "PropertyKey": [
+            "Identifier",
+            "Literal"
+        ],
+        "AssignmentTarget": [
+            "Expression",
+            "Pattern"
+        ]
+    },
+    "operators": {
+        "VariableDeclarationKind": {
+            "Const": "const",
+            "Let": "let",
+            "Var": "var"
+        },
+        "PropertyKind": {
+            "Get": "get",
+            "Init": "init",
+            "Set": "set"
+        },
+        "UnaryOperator": {
+            "Delete": "delete",
+            "Minus": "-",
+            "Negation": "!",
+            "Plus": "+",
+            "Tilde": "~",
+            "Typeof": "typeof",
+            "Void": "void"
+        },
+        "UpdateOperator": {
+            "Decrement": "--",
+            "Increment": "++"
+        },
+        "BinaryOperator": {
+            "Add": "+",
+            "BinaryAnd": "&",
+            "BinaryOr": "|",
+            "BinaryXor": "^",
+            "Divide": "/",
+            "Equals": "==",
+            "GreaterThan": ">",
+            "GreaterThanOrEqual": ">=",
+            "In": "in",
+            "Instanceof": "instanceof",
+            "LessThan": "<",
+            "LessThanOrEqual": "<=",
+            "Modulo": "%",
+            "Multiply": "*",
+            "NotEquals": "!=",
+            "NotStrictEquals": "!==",
+            "ShiftLeft": "<<",
+            "ShiftRight": ">>",
+            "StrictEquals": "===",
+            "Subtract": "-",
+            "UnsignedShiftRight": ">>>"
+        },
+        "AssignmentOperator": {
+            "BinaryAndEquals": "&=",
+            "BinaryOrEquals": "|=",
+            "BinaryXorEquals": "^=",
+            "DivideEquals": "/=",
+            "Equals": "=",
+            "MinusEquals": "-=",
+            "ModuloEquals": "%=",
+            "MultiplyEquals": "*=",
+            "PlusEquals": "+=",
+            "ShiftLeftEquals": "<<=",
+            "ShiftRightEquals": ">>=",
+            "UnsignedShiftRightEquals": ">>>="
+        },
+        "LogicalOperator": {
+            "And": "&&",
+            "NullCoalescing": "??",
+            "Or": "||"
+        }
+    }
+}

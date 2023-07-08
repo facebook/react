@@ -535,7 +535,6 @@ Input:
 
 Output:
 {
-  "sourceType": "script",
   "body": [
     {
       "type": "FunctionDeclaration",
@@ -580,13 +579,11 @@ Output:
           }
         }
       ],
-      "generator": false,
-      "async": false,
       "body": {
-        "type": "BlockStatement",
         "body": [
           {
             "type": "VariableDeclaration",
+            "kind": "let",
             "declarations": [
               {
                 "id": {
@@ -611,8 +608,11 @@ Output:
                 },
                 "init": {
                   "type": "Literal",
-                  "value": 0,
+                  "value": {
+                    "Number": 0
+                  },
                   "raw": "0",
+                  "regex": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -646,7 +646,6 @@ Output:
                 }
               }
             ],
-            "kind": "let",
             "loc": {
               "source": null,
               "start": {
@@ -666,7 +665,7 @@ Output:
           {
             "type": "ForStatement",
             "init": {
-              "type": "VariableDeclaration",
+              "kind": "let",
               "declarations": [
                 {
                   "id": {
@@ -691,8 +690,11 @@ Output:
                   },
                   "init": {
                     "type": "Literal",
-                    "value": 0,
+                    "value": {
+                      "Number": 0
+                    },
                     "raw": "0",
+                    "regex": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -726,7 +728,6 @@ Output:
                   }
                 }
               ],
-              "kind": "let",
               "loc": {
                 "source": null,
                 "start": {
@@ -745,7 +746,6 @@ Output:
             },
             "test": {
               "type": "BinaryExpression",
-              "operator": "<",
               "left": {
                 "type": "Identifier",
                 "name": "i",
@@ -766,10 +766,14 @@ Output:
                   "end": 60
                 }
               },
+              "operator": "<",
               "right": {
                 "type": "Literal",
-                "value": 10,
+                "value": {
+                  "Number": 10
+                },
                 "raw": "10",
+                "regex": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -906,7 +910,6 @@ Output:
                       "end": 84
                     }
                   },
-                  "directive": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -1028,7 +1031,6 @@ Output:
       }
     }
   ],
-  "comments": [],
   "loc": {
     "source": null,
     "start": {

@@ -6,6 +6,7 @@ members = [
     "crates/hir",
     "crates/swc-demo",
     "crates/estree",
+    "crates/estree-codegen",
     "crates/estree-swc",
 ]
 
