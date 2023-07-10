@@ -7,13 +7,17 @@
  * @flow
  */
 
-const {enableProfiling: enableProfilingFeatureFlag} =
+const {
+  enableProfiling: enableProfilingFeatureFlag,
+  enableSchedulerYield: enableSchedulerYieldFeatureFlag,
+} =
   // $FlowFixMe[cannot-resolve-module]
   require('SchedulerFeatureFlags');
 
 export const enableSchedulerDebugging = true;
 export const enableProfiling: boolean =
   __PROFILE__ && enableProfilingFeatureFlag;
+export const enableSchedulerYield = enableSchedulerYieldFeatureFlag;
 export const enableIsInputPending = true;
 export const enableIsInputPendingContinuous = true;
 export const frameYieldMs = 5;
