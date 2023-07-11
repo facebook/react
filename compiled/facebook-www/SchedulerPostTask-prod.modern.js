@@ -29,12 +29,21 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
           signal: continuationController.signal
         };
       node._controller = continuationController;
-      scheduler
-        .postTask(
-          runTask.bind(null, priorityLevel, postTaskPriority, node, result),
-          continuationOptions
-        )
-        .catch(handleAbortError);
+      var nextTask = runTask.bind(
+        null,
+        priorityLevel,
+        postTaskPriority,
+        node,
+        result
+      );
+      void 0 !== scheduler.yield
+        ? scheduler
+            .yield(continuationOptions)
+            .then(nextTask)
+            .catch(handleAbortError)
+        : scheduler
+            .postTask(nextTask, continuationOptions)
+            .catch(handleAbortError);
     }
   } catch (error) {
     setTimeout(function () {
