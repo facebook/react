@@ -530,7 +530,129 @@
                     "type": "Identifier"
                 }
             }
-        }
+        },
+        "JSXIdentifier": {
+            "fields": {
+                "name": {
+                    "type": "String"
+                }
+            }
+        },
+        "JSXNamespacedName": {
+            "fields": {
+                "namespace": {
+                    "type": "JSXIdentifier"
+                },
+                "name": {
+                    "type": "JSXIdentifier"
+                }
+            }
+        },
+        "JSXMemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "JSXMemberExpressionOrIdentifier"
+                },
+                "property": {
+                    "type": "JSXIdentifier"
+                }
+            }
+        },
+        "JSXEmptyExpression": {},
+        "JSXExpressionContainer": {
+            "fields": {
+                "expression": {
+                    "type": "JSXExpressionOrEmpty"
+                }
+            }
+        },
+        "JSXSpreadChild": {
+            "fields": {
+                "expression": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "JSXOpeningElement": {
+            "fields": {
+                "name": {
+                    "type": "JSXElementName"
+                },
+                "attributes": {
+                    "type": "Vec<JSXAttributeOrSpread>"
+                },
+                "self_closing": {
+                    "type": "bool",
+                    "rename": "selfClosing"
+                }
+            }
+        },
+        "JSXClosingElement": {
+            "fields": {
+                "name": {
+                    "type": "JSXElementName"
+                }
+            }
+        },
+        "JSXAttribute": {
+            "fields": {
+                "name": {
+                    "type": "JSXIdentifierOrNamespacedName"
+                },
+                "value": {
+                    "type": "Option<JSXAttributeValue>"
+                }
+            }
+        },
+        "JSXSpreadAttribute": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "JSXText": {
+            "fields": {
+                "value": {
+                    "type": "String"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            }
+        },
+        "JSXElement": {
+            "fields": {
+                "opening_element": {
+                    "type": "JSXOpeningElement",
+                    "rename": "openingElement"
+                },
+                "children": {
+                    "type": "Vec<JSXChildItem>"
+                },
+                "closing_element": {
+                    "type": "Option<JSXClosingElement>",
+                    "rename": "closingElement"
+                }
+            }
+        },
+        "JSXFragment": {
+            "fields": {
+                "opening_fragment": {
+                    "type": "JSXOpeningFragment",
+                    "rename": "openingFragment"
+                },
+                "children": {
+                    "type": "Vec<JSXChildItem>"
+                },
+                "closing_fragment": {
+                    "type": "Option<JSXClosingFragment>",
+                    "rename": "closingFragment"
+                }
+            }
+        },
+        "JSXOpeningFragment": {},
+        "JSXClosingFragment": {}
     },
     "enums": {
         "Statement": [
@@ -573,7 +695,8 @@
             "ThisExpression",
             "UnaryExpression",
             "UpdateExpression",
-            "YieldExpression"
+            "YieldExpression",
+            "JSXElement"
         ],
         "ImportDeclarationSpecifier": [
             "ImportSpecifier",
@@ -617,6 +740,40 @@
         "AssignmentTarget": [
             "Expression",
             "Pattern"
+        ],
+        "JSXMemberExpressionOrIdentifier": [
+            "JSXMemberExpression",
+            "JSXIdentifier"
+        ],
+        "JSXExpressionOrEmpty": [
+            "Expression",
+            "JSXEmptyExpression"
+        ],
+        "JSXAttributeOrSpread": [
+            "JSXAttribute",
+            "JSXSpreadAttribute"
+        ],
+        "JSXAttributeValue": [
+            "Literal",
+            "JSXExpressionContainer",
+            "JSXElement",
+            "JSXFragment"
+        ],
+        "JSXElementName": [
+            "JSXIdentifier",
+            "JSXMemberExpression",
+            "JSXNamespacedName"
+        ],
+        "JSXIdentifierOrNamespacedName": [
+            "JSXIdentifier",
+            "JSXNamespacedName"
+        ],
+        "JSXChildItem": [
+            "JSXText", 
+            "JSXExpressionContainer",
+            "JSXSpreadChild",
+            "JSXElement",
+            "JSXFragment"
         ]
     },
     "operators": {

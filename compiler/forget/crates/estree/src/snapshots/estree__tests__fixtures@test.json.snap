@@ -358,13 +358,11 @@ Input:
 
 Output:
 {
-  "sourceType": "script",
   "body": [
     {
       "type": "FunctionDeclaration",
       "id": {
         "name": "foo",
-        "binding": null,
         "loc": {
           "source": null,
           "start": {
@@ -382,17 +380,13 @@ Output:
         }
       },
       "params": [],
-      "generator": false,
-      "async": false,
       "body": {
-        "type": "BlockStatement",
         "body": [
           {
             "type": "ReturnStatement",
             "argument": {
               "type": "JSXElement",
               "openingElement": {
-                "type": "JSXOpeningElement",
                 "name": {
                   "type": "JSXMemberExpression",
                   "object": {
@@ -415,7 +409,6 @@ Output:
                     }
                   },
                   "property": {
-                    "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": {
                       "source": null,
@@ -451,6 +444,7 @@ Output:
                 },
                 "attributes": [
                   {
+                    "type": "JSXAttribute",
                     "name": {
                       "type": "JSXIdentifier",
                       "name": "a",
@@ -474,8 +468,11 @@ Output:
                       "type": "JSXExpressionContainer",
                       "expression": {
                         "type": "Literal",
-                        "value": 10,
+                        "value": {
+                          "Number": 10
+                        },
                         "raw": "10",
+                        "regex": null,
                         "loc": {
                           "source": null,
                           "start": {
@@ -544,7 +541,6 @@ Output:
               },
               "children": [],
               "closingElement": {
-                "type": "JSXClosingElement",
                 "name": {
                   "type": "JSXMemberExpression",
                   "object": {
@@ -567,7 +563,6 @@ Output:
                     }
                   },
                   "property": {
-                    "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": {
                       "source": null,
@@ -666,6 +661,8 @@ Output:
           "end": 56
         }
       },
+      "generator": false,
+      "async": false,
       "loc": {
         "source": null,
         "start": {
@@ -683,7 +680,7 @@ Output:
       }
     }
   ],
-  "comments": [],
+  "sourceType": "script",
   "loc": {
     "source": null,
     "start": {
