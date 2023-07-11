@@ -3585,6 +3585,13 @@ body {
         imageSizes: 'makes no sense',
       });
 
+      ReactDOM.preload('rp', {
+        as: 'image',
+        imageSrcSet: 'rpsrcset',
+        imageSizes: 'rpsizes',
+        referrerPolicy: 'no-referrer',
+      });
+
       if (isClient) {
         // Will key off href in absense of imageSrcSet
         ReactDOM.preload('client', {as: 'image'});
@@ -3634,6 +3641,13 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="rpsrcset"
+            imagesizes="rpsizes"
+            referrerpolicy="no-referrer"
+          />
         </head>
         <body>hello</body>
       </html>,
@@ -3653,6 +3667,13 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="rpsrcset"
+            imagesizes="rpsizes"
+            referrerpolicy="no-referrer"
+          />
         </head>
         <body>hello</body>
       </html>,
@@ -3672,6 +3693,13 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="rpsrcset"
+            imagesizes="rpsizes"
+            referrerpolicy="no-referrer"
+          />
           <link rel="preload" as="image" href="client" />
           <link rel="preload" as="image" imagesrcset="clientset" />
           <link
