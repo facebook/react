@@ -17,10 +17,10 @@ function foo() {
 
 ```javascript
 function foo() {
-  const x = 42;
   const f = () => {
-    console.log(x);
+    console.log(42);
   };
+
   f();
   return 42;
 }

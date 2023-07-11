@@ -67,6 +67,7 @@ function Component(props) {
         if (!comments.length) {
           return;
         }
+
         console.log(comments.length);
       };
       $[7] = comments.length;
@@ -75,6 +76,7 @@ function Component(props) {
       t4 = $[8];
     }
     onClick = t4;
+
     allUrls.push(...urls);
     $[0] = post;
     $[1] = media;

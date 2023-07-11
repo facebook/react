@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableOptimizeFunctionExpressions
 function Component(props) {
   const x = 42;
   const onEvent = () => {
@@ -16,7 +15,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableOptimizeFunctionExpressions
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   let t0;

@@ -1,7 +1,7 @@
 function VideoTab() {
   const ref = useRef();
   let x = () => {
-    ref.current;
+    console.log(ref.current);
   };
 
   return <VideoList videos={x} />;

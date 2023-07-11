@@ -26,6 +26,7 @@ function Component() {
     const foo = function foo() {
       x = 9;
     };
+
     t0 = bar(foo);
     $[0] = t0;
   } else {

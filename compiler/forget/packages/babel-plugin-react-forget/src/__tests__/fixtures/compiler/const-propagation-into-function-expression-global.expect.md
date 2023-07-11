@@ -5,7 +5,7 @@
 function foo() {
   const isX = GLOBAL_IS_X;
   const getJSX = () => {
-    <Child x={isX}></Child>;
+    return <Child x={isX}></Child>;
   };
   const result = getJSX();
   return result;
@@ -19,12 +19,9 @@ function foo() {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo() {
   const $ = useMemoCache(2);
-  const isX = GLOBAL_IS_X;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
-      <Child x={isX}></Child>;
-    };
+    t0 = () => <Child x={GLOBAL_IS_X} />;
     $[0] = t0;
   } else {
     t0 = $[0];

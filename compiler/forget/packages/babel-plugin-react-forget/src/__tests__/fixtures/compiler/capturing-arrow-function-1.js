@@ -1,7 +1,7 @@
 function component(a) {
   let z = { a };
   let x = () => {
-    z;
+    console.log(z);
   };
   return x;
 }

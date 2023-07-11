@@ -1,4 +1,3 @@
-// @enableOptimizeFunctionExpressions
 function Component(props) {
   const x = 42;
   const onEvent = () => {

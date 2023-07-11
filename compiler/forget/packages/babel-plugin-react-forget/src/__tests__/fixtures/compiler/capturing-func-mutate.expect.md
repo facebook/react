@@ -7,7 +7,7 @@ function component(a, b) {
   let y = { b };
   let x = function () {
     z.a = 2;
-    y.b;
+    console.log(y.b);
   };
   x();
   return z;
@@ -29,8 +29,9 @@ function component(a, b) {
     const y = { b };
     const x = function () {
       z.a = 2;
-      y.b;
+      console.log(y.b);
     };
+
     x();
     $[0] = a;
     $[1] = b;

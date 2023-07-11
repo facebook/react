@@ -25,8 +25,7 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = (e) => {
-      let x_0 = null; // intentionally shadow the original x
-      setX((currentX) => currentX + x_0); // intentionally refer to shadowed x
+      setX((currentX) => currentX + null);
     };
     $[0] = t0;
   } else {

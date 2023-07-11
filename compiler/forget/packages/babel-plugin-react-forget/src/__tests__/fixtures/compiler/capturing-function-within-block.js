@@ -3,7 +3,7 @@ function component(a) {
   let x;
   {
     x = function () {
-      z;
+      console.log(z);
     };
   }
   return x;

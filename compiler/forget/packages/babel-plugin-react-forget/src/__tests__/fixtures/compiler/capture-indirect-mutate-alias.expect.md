@@ -27,7 +27,7 @@ function component(a) {
   if (c_0) {
     x = { a };
     (function () {
-      let q = x;
+      const q = x;
       (function () {
         q.b = 1;
       })();

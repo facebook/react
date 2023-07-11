@@ -29,8 +29,8 @@ function component(foo, bar) {
     x = { foo };
     const y = { bar };
     (function () {
-      let a = [y];
-      let b = x;
+      const a = [y];
+      const b = x;
       a.x = b;
     })();
     mutate(y);

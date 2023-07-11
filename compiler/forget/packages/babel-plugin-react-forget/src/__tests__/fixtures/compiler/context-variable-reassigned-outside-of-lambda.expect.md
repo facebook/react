@@ -27,6 +27,7 @@ function Component(props) {
     onChange = (e) => {
       console.log(x);
     };
+
     x = {};
     $[0] = onChange;
   } else {

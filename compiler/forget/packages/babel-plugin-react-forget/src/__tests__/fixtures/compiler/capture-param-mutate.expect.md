@@ -52,18 +52,17 @@ function getNativeLogFunction(level) {
   let t0;
   if (c_0) {
     t0 = function () {
-      let str;
+      let str = undefined;
       if (arguments.length === 1 && typeof arguments[0] === "string") {
         str = arguments[0];
       } else {
         str = Array.prototype.map
           .call(arguments, function (arg) {
-            return inspect(arg, {
-              depth: 10,
-            });
+            return inspect(arg, { depth: 10 });
           })
           .join(", ");
       }
+
       const firstArg = arguments[0];
       let logLevel = level;
       if (
@@ -84,6 +83,7 @@ function getNativeLogFunction(level) {
       if (groupStack.length) {
         str = groupFormat("", str);
       }
+
       global.nativeLoggingHook(str, logLevel);
     };
     $[0] = level;

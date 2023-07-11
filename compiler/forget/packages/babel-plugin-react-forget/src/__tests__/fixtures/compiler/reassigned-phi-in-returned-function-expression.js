@@ -1,4 +1,3 @@
-// @enableOptimizeFunctionExpressions
 function Component(props) {
   return () => {
     let str;

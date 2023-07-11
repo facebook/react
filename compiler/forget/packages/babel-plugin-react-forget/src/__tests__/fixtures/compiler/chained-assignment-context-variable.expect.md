@@ -28,6 +28,7 @@ function Component() {
     const foo = () => {
       x = getObject();
     };
+
     foo();
     $[0] = x;
     $[1] = y;

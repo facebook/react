@@ -5,7 +5,7 @@
 function VideoTab() {
   const ref = useRef();
   let x = () => {
-    ref.current;
+    console.log(ref.current);
   };
 
   return <VideoList videos={x} />;
@@ -23,7 +23,7 @@ function VideoTab() {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
-      ref.current;
+      console.log(ref.current);
     };
     $[0] = t0;
   } else {

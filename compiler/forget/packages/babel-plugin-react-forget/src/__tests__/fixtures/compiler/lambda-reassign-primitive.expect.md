@@ -36,6 +36,7 @@ function Component() {
     const fn = function () {
       x = x + 1;
     };
+
     fn();
     $[0] = x;
   } else {

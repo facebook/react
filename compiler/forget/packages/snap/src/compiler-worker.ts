@@ -98,7 +98,7 @@ export async function compile(
     let disableAllMemoization = false;
     let validateRefAccessDuringRender = true;
     let enableEmitFreeze = null;
-    let enableOptimizeFunctionExpressions = false;
+    let enableOptimizeFunctionExpressions = true;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
@@ -132,8 +132,8 @@ export async function compile(
     if (firstLine.includes("@validateRefAccessDuringRender false")) {
       validateRefAccessDuringRender = false;
     }
-    if (firstLine.includes("@enableOptimizeFunctionExpressions")) {
-      enableOptimizeFunctionExpressions = true;
+    if (firstLine.includes("@enableOptimizeFunctionExpressions false")) {
+      enableOptimizeFunctionExpressions = false;
     }
     if (firstLine.includes("@enableEmitFreeze")) {
       enableEmitFreeze = {

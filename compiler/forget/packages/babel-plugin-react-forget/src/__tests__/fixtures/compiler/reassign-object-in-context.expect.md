@@ -25,6 +25,7 @@ function Component(props) {
     const foo = () => {
       x = {};
     };
+
     foo();
     $[0] = x;
   } else {

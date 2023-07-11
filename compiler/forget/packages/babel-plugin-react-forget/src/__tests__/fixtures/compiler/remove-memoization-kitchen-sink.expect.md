@@ -26,6 +26,7 @@ function Component(props) {
   const onChange = (e) => {
     setX(e.target.value);
   };
+
   const object = { x, onChange };
 
   const { x: x_0, onChange: onChange_0 } = object;

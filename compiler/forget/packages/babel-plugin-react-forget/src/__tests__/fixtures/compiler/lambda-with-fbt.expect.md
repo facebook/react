@@ -48,24 +48,22 @@ function Component() {
     t0 = () => {
       if (!someCondition) {
         return fbt._("Purchase as a gift", null, { hk: "1gHj4g" });
-      } else if (
-        !iconOnly &&
-        showPrice &&
-        item?.current_gift_offer?.price?.formatted != null
-      ) {
-        return fbt._(
-          "Gift | {price}",
-          [
-            fbt._param(
-              "price",
-
-              item?.current_gift_offer?.price?.formatted
-            ),
-          ],
-          { hk: "3GTnGE" }
-        );
-      } else if (!iconOnly && !showPrice) {
-        return fbt._("Gift", null, { hk: "3fqfrk" });
+      } else {
+        if (
+          !iconOnly &&
+          showPrice &&
+          item?.current_gift_offer?.price?.formatted != null
+        ) {
+          return fbt._(
+            "Gift | {price}",
+            [fbt._param("price", item?.current_gift_offer?.price?.formatted)],
+            { hk: "3GTnGE" }
+          );
+        } else {
+          if (!iconOnly && !showPrice) {
+            return fbt._("Gift", null, { hk: "3fqfrk" });
+          }
+        }
       }
     };
     $[0] = t0;

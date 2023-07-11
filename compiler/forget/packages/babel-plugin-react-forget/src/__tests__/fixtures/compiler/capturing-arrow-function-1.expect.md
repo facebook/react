@@ -5,7 +5,7 @@
 function component(a) {
   let z = { a };
   let x = () => {
-    z;
+    console.log(z);
   };
   return x;
 }
@@ -32,7 +32,7 @@ function component(a) {
   let t1;
   if (c_2) {
     t1 = () => {
-      z;
+      console.log(z);
     };
     $[2] = z;
     $[3] = t1;

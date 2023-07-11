@@ -38,8 +38,8 @@ function component(a, b) {
     z = { a };
     const x = function () {
       z.a = 2;
-      y.b;
     };
+
     x();
     $[2] = a;
     $[3] = y.b;

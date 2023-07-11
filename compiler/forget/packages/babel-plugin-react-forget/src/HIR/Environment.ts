@@ -229,7 +229,7 @@ export class Environment {
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
     this.enableOptimizeFunctionExpressions =
-      config?.enableOptimizeFunctionExpressions ?? false;
+      config?.enableOptimizeFunctionExpressions ?? true;
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;

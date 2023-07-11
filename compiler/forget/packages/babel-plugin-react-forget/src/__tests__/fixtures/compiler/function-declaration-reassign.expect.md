@@ -30,6 +30,7 @@ function component() {
   let x;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     x = t0;
+
     x = {};
     $[1] = x;
   } else {

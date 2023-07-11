@@ -38,8 +38,8 @@ function Component(props) {
   if (c_0) {
     const allUrls = [];
 
-    const { media: t84, comments, urls } = post;
-    media = t84;
+    const { media: t83, comments, urls } = post;
+    media = t83;
     const c_3 = $[3] !== comments.length;
     let t0;
     if (c_3) {
@@ -47,6 +47,7 @@ function Component(props) {
         if (!comments.length) {
           return;
         }
+
         console.log(comments.length);
       };
       $[3] = comments.length;
@@ -55,6 +56,7 @@ function Component(props) {
       t0 = $[4];
     }
     onClick = t0;
+
     allUrls.push(...urls);
     $[0] = post;
     $[1] = media;

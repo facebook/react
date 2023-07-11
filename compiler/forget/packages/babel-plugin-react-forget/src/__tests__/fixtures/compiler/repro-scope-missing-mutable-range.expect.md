@@ -26,7 +26,7 @@ function HomeDiscoStoreItemTileRating(props) {
   count = 0;
   const aggregates = item?.aggregates || [];
   aggregates.forEach((aggregate) => {
-    count += aggregate.count || 0;
+    count = count + (aggregate.count || 0);
   });
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

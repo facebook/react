@@ -26,6 +26,7 @@ function component(a) {
     const x = function () {
       y.b.a = 2;
     };
+
     x();
     $[0] = a;
     $[1] = y;
