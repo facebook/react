@@ -1849,139 +1849,6 @@ export function renderHasNotSuspendedYet(): boolean {
   return workInProgressRootExitStatus === RootInProgress;
 }
 
-// TODO: Over time, this function and renderRootConcurrent have become more
-// and more similar. Not sure it makes sense to maintain forked paths. Consider
-// unifying them again.
-function renderRootSync(root: FiberRoot, lanes: Lanes) {
-  const prevExecutionContext = executionContext;
-  executionContext |= RenderContext;
-  const prevDispatcher = pushDispatcher(root.containerInfo);
-  const prevCacheDispatcher = pushCacheDispatcher();
-
-  // If the root or lanes have changed, throw out the existing stack
-  // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
-    if (enableUpdaterTracking) {
-      if (isDevToolsPresent) {
-        const memoizedUpdaters = root.memoizedUpdaters;
-        if (memoizedUpdaters.size > 0) {
-          restorePendingUpdaters(root, workInProgressRootRenderLanes);
-          memoizedUpdaters.clear();
-        }
-
-        // At this point, move Fibers that scheduled the upcoming work from the Map to the Set.
-        // If we bailout on this work, we'll move them back (like above).
-        // It's important to move them now in case the work spawns more work at the same priority with different updaters.
-        // That way we can keep the current update and future updates separate.
-        movePendingFibersToMemoized(root, lanes);
-      }
-    }
-
-    workInProgressTransitions = getTransitionsForLanes(root, lanes);
-    prepareFreshStack(root, lanes);
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStarted(lanes);
-    }
-  }
-
-  if (enableSchedulingProfiler) {
-    markRenderStarted(lanes);
-  }
-
-  let didSuspendInShell = false;
-  outer: do {
-    try {
-      if (
-        workInProgressSuspendedReason !== NotSuspended &&
-        workInProgress !== null
-      ) {
-        // The work loop is suspended. During a synchronous render, we don't
-        // yield to the main thread. Immediately unwind the stack. This will
-        // trigger either a fallback or an error boundary.
-        // TODO: For discrete and "default" updates (anything that's not
-        // flushSync), we want to wait for the microtasks the flush before
-        // unwinding. Will probably implement this using renderRootConcurrent,
-        // or merge renderRootSync and renderRootConcurrent into the same
-        // function and fork the behavior some other way.
-        const unitOfWork = workInProgress;
-        const thrownValue = workInProgressThrownValue;
-        switch (workInProgressSuspendedReason) {
-          case SuspendedOnHydration: {
-            // Selective hydration. An update flowed into a dehydrated tree.
-            // Interrupt the current render so the work loop can switch to the
-            // hydration lane.
-            resetWorkInProgressStack();
-            workInProgressRootExitStatus = RootDidNotComplete;
-            break outer;
-          }
-          case SuspendedOnImmediate:
-          case SuspendedOnData: {
-            if (!didSuspendInShell && getSuspenseHandler() === null) {
-              didSuspendInShell = true;
-            }
-            // Intentional fallthrough
-          }
-          default: {
-            // Unwind then continue with the normal work loop.
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
-            break;
-          }
-        }
-      }
-      workLoopSync();
-      break;
-    } catch (thrownValue) {
-      handleThrow(root, thrownValue);
-    }
-  } while (true);
-
-  // Check if something suspended in the shell. We use this to detect an
-  // infinite ping loop caused by an uncached promise.
-  //
-  // Only increment this counter once per synchronous render attempt across the
-  // whole tree. Even if there are many sibling components that suspend, this
-  // counter only gets incremented once.
-  if (didSuspendInShell) {
-    root.shellSuspendCounter++;
-  }
-
-  resetContextDependencies();
-
-  executionContext = prevExecutionContext;
-  popDispatcher(prevDispatcher);
-  popCacheDispatcher(prevCacheDispatcher);
-
-  if (workInProgress !== null) {
-    // This is a sync render, so we should have finished the whole tree.
-    throw new Error(
-      'Cannot commit an incomplete root. This error is likely caused by a ' +
-        'bug in React. Please file an issue.',
-    );
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logRenderStopped();
-    }
-  }
-
-  if (enableSchedulingProfiler) {
-    markRenderStopped();
-  }
-
-  // Set this to null to indicate there's no in-progress render.
-  workInProgressRoot = null;
-  workInProgressRootRenderLanes = NoLanes;
-
-  // It's safe to process the queue now that the render phase is complete.
-  finishQueueingConcurrentUpdates();
-
-  return workInProgressRootExitStatus;
-}
-
 // The work loop is an extremely hot path. Tell Closure not to inline it.
 /** @noinline */
 function workLoopSync() {
@@ -1991,7 +1858,24 @@ function workLoopSync() {
   }
 }
 
+/** @noinline */
+function workLoopConcurrent() {
+  // Perform work until Scheduler asks us to yield
+  while (workInProgress !== null && !shouldYield()) {
+    // $FlowFixMe[incompatible-call] found when upgrading Flow
+    performUnitOfWork(workInProgress);
+  }
+}
+
 function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
+  return renderRoot(root, lanes, true);
+}
+
+function renderRootSync(root: FiberRoot, lanes: Lanes) {
+  return renderRoot(root, lanes, false);
+}
+
+function renderRoot(root: FiberRoot, lanes: Lanes, isConcurrent: boolean) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
   const prevDispatcher = pushDispatcher(root.containerInfo);
@@ -2017,7 +1901,18 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
 
     workInProgressTransitions = getTransitionsForLanes(root, lanes);
-    resetRenderTimer();
+    if (isConcurrent) {
+      resetRenderTimer();
+    } else {
+      // We don't reset the CPU render timer (used by SuspenseList) for
+      // synchronous renders because the timer should start at the beginning
+      // of the sequence of work. We don't reset it for sync renders because
+      // if there's an additional layout render pass, we haven't yet yielded
+      // for paint. See original PR for more context: https://github.com/facebook/react/pull/19643
+      // TODO: This mechanism could be improved. I think we could move all of
+      // this logic to the ReactFiberRootScheduler module, since that
+      // controls when we enter/leave the work loop.
+    }
     prepareFreshStack(root, lanes);
   }
 
@@ -2031,6 +1926,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     markRenderStarted(lanes);
   }
 
+  let didSuspendSynchronouslyInShell = false;
   outer: do {
     try {
       if (
@@ -2054,40 +1950,70 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               replaySuspendedUnitOfWork(unitOfWork);
               break;
             }
-            // The work loop is suspended on data. We should wait for it to
-            // resolve before continuing to render.
-            // TODO: Handle the case where the promise resolves synchronously.
-            // Usually this is handled when we instrument the promise to add a
-            // `status` field, but if the promise already has a status, we won't
-            // have added a listener until right here.
-            const onResolution = () => {
-              // Check if the root is still suspended on this promise.
-              if (
-                workInProgressSuspendedReason === SuspendedOnData &&
-                workInProgressRoot === root
-              ) {
-                // Mark the root as ready to continue rendering.
-                workInProgressSuspendedReason = SuspendedAndReadyToContinue;
-              }
-              // Ensure the root is scheduled. We should do this even if we're
-              // currently working on a different root, so that we resume
-              // rendering later.
-              ensureRootIsScheduled(root);
-            };
-            thenable.then(onResolution, onResolution);
-            break outer;
+
+            if (isConcurrent) {
+              // The work loop is suspended on data. We should wait for it to
+              // resolve before continuing to render.
+              // TODO: Handle the case where the promise resolves synchronously.
+              // Usually this is handled when we instrument the promise to add a
+              // `status` field, but if the promise already has a status, we
+              // won't have added a listener until right here.
+              const onResolution = () => {
+                // Check if the root is still suspended on this promise.
+                if (
+                  workInProgressSuspendedReason === SuspendedOnData &&
+                  workInProgressRoot === root
+                ) {
+                  // Mark the root as ready to continue rendering.
+                  workInProgressSuspendedReason = SuspendedAndReadyToContinue;
+                }
+                // Ensure the root is scheduled. We should do this even if we're
+                // currently working on a different root, so that we resume
+                // rendering later.
+                ensureRootIsScheduled(root);
+              };
+              thenable.then(onResolution, onResolution);
+              break outer;
+            }
+
+            if (getSuspenseHandler() === null) {
+              didSuspendSynchronouslyInShell = true;
+            }
+
+            // Unwind then continue with the normal work loop.
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            break;
           }
           case SuspendedOnImmediate: {
-            // If this fiber just suspended, it's possible the data is already
-            // cached. Yield to the main thread to give it a chance to ping. If
-            // it does, we can retry immediately without unwinding the stack.
-            workInProgressSuspendedReason = SuspendedAndReadyToContinue;
-            break outer;
+            if (isConcurrent) {
+              // If this fiber just suspended, it's possible the data is already
+              // cached. Yield to the main thread to give it a chance to ping.
+              // If it does, we can retry immediately without unwinding
+              // the stack.
+              workInProgressSuspendedReason = SuspendedAndReadyToContinue;
+              break outer;
+            }
+
+            if (getSuspenseHandler() === null) {
+              didSuspendSynchronouslyInShell = true;
+            }
+
+            // Unwind then continue with the normal work loop.
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            break;
           }
           case SuspendedOnInstance: {
-            workInProgressSuspendedReason =
-              SuspendedOnInstanceAndReadyToContinue;
-            break outer;
+            if (isConcurrent) {
+              // If this fiber just suspended, it's possible the data is already
+              // cached. Yield to the main thread to give it a chance to ping.
+              // If it does, we can retry immediately without unwinding
+              // the stack.
+              workInProgressSuspendedReason =
+                SuspendedOnInstanceAndReadyToContinue;
+              break outer;
+            }
+            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            break;
           }
           case SuspendedAndReadyToContinue: {
             const thenable: Thenable<mixed> = (thrownValue: any);
@@ -2166,6 +2092,8 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Selective hydration. An update flowed into a dehydrated tree.
             // Interrupt the current render so the work loop can switch to the
             // hydration lane.
+            //
+            // NOTE: This happens even during synchronous renders!
             resetWorkInProgressStack();
             workInProgressRootExitStatus = RootDidNotComplete;
             break outer;
@@ -2178,21 +2106,35 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
         }
       }
 
-      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+      if (
+        isConcurrent &&
         // `act` special case: If we're inside an `act` scope, don't consult
         // `shouldYield`. Always keep working until the render is complete.
         // This is not just an optimization: in a unit test environment, we
         // can't trust the result of `shouldYield`, because the host I/O is
         // likely mocked.
-        workLoopSync();
-      } else {
+        !(__DEV__ && ReactCurrentActQueue.current !== null)
+      ) {
         workLoopConcurrent();
+      } else {
+        workLoopSync();
       }
       break;
     } catch (thrownValue) {
       handleThrow(root, thrownValue);
     }
   } while (true);
+
+  // Check if something suspended in the shell. We use this to detect an
+  // infinite ping loop caused by an uncached promise.
+  //
+  // Only increment this counter once per synchronous render attempt across the
+  // whole tree. Even if there are many sibling components that suspend, this
+  // counter only gets incremented once.
+  if (didSuspendSynchronouslyInShell) {
+    root.shellSuspendCounter++;
+  }
+
   resetContextDependencies();
 
   popDispatcher(prevDispatcher);
@@ -2207,11 +2149,19 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
   // Check if the tree has completed.
   if (workInProgress !== null) {
-    // Still work remaining.
-    if (enableSchedulingProfiler) {
-      markRenderYielded();
+    if (isConcurrent) {
+      // Still work remaining.
+      if (enableSchedulingProfiler) {
+        markRenderYielded();
+      }
+      return RootInProgress;
+    } else {
+      // This is a sync render, so we should have finished the whole tree.
+      throw new Error(
+        'Cannot commit an incomplete root. This error is likely caused by a ' +
+          'bug in React. Please file an issue.',
+      );
     }
-    return RootInProgress;
   } else {
     // Completed the tree.
     if (enableSchedulingProfiler) {
@@ -2227,15 +2177,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
 
     // Return the final exit status.
     return workInProgressRootExitStatus;
-  }
-}
-
-/** @noinline */
-function workLoopConcurrent() {
-  // Perform work until Scheduler asks us to yield
-  while (workInProgress !== null && !shouldYield()) {
-    // $FlowFixMe[incompatible-call] found when upgrading Flow
-    performUnitOfWork(workInProgress);
   }
 }
 
