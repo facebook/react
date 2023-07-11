@@ -639,6 +639,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hir-ssa"
+version = "0.1.0"
+dependencies = [
+ "bumpalo",
+ "hir",
+ "miette 5.9.0",
+ "thiserror",
+]
+
+[[package]]
 name = "iana-time-zone"
 version = "0.1.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"

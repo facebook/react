@@ -13,14 +13,14 @@ function test() {
 Output:
 entry bb0
 bb0
-  [0] unknown $0 = true
-  [1] unknown $1 = false
-  [2] unknown $2 = null
-  [3] unknown $3 = 1
-  [4] unknown $4 = 3.14
-  [5] unknown $5 = "hello world!"
-  [6] unknown $6 = Array [unknown $5]
-  [7] unknown $7 = Array [unknown $0, unknown $1, unknown $2, unknown $3, unknown $4, ...unknown $6]
-  [8] unknown $8 = 2
-  [9] Return unknown $8
+  [0] #0 = true
+  [1] #1 = false
+  [2] #2 = null
+  [3] #3 = 1
+  [4] #4 = 3.14
+  [5] #5 = "hello world!"
+  [6] #6 = Array [unknown #5]
+  [7] #7 = Array [unknown #0, unknown #1, unknown #2, unknown #3, unknown #4, ...unknown #6]
+  [8] #8 = 2
+  [9] Return unknown #8
 

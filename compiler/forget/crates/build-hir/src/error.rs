@@ -119,7 +119,7 @@ impl BuildDiagnostic {
 /// with the diagnostic produced by the provided callback
 pub fn invariant<F>(cond: bool, f: F) -> Result<(), BuildDiagnostic>
 where
-    F: FnOnce() -> BuildDiagnostic,
+    F: Fn() -> BuildDiagnostic,
 {
     if cond {
         Ok(())

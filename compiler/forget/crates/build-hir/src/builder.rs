@@ -1,9 +1,13 @@
-use bumpalo::collections::{String, Vec};
+use bumpalo::{
+    boxed::Box,
+    collections::{String, Vec},
+};
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use hir::{
-    BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, Instruction,
-    InstructionIdGenerator, InstructionValue, Place, Terminal, TerminalValue, Type, HIR,
+    BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, InstrIx,
+    Instruction, InstructionIdGenerator, InstructionValue, Operand, Terminal, TerminalValue, Type,
+    HIR,
 };
 use indexmap::IndexMap;
 
@@ -22,7 +26,9 @@ pub(crate) struct Builder<'a> {
     #[allow(dead_code)]
     environment: &'a Environment<'a>,
 
-    completed: IndexMap<BlockId, BasicBlock<'a>>,
+    completed: IndexMap<BlockId, Box<'a, BasicBlock<'a>>>,
+
+    instructions: Vec<'a, Instruction<'a>>,
 
     entry: BlockId,
 
@@ -36,7 +42,7 @@ pub(crate) struct Builder<'a> {
 pub(crate) struct WipBlock<'a> {
     pub id: BlockId,
     pub kind: BlockKind,
-    pub instructions: Vec<'a, Instruction<'a>>,
+    pub instructions: Vec<'a, InstrIx>,
 }
 
 pub(crate) enum Binding<'a> {
@@ -94,6 +100,7 @@ impl<'a> Builder<'a> {
         Self {
             environment,
             completed: Default::default(),
+            instructions: Vec::new_in(&environment.allocator),
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
@@ -110,6 +117,7 @@ impl<'a> Builder<'a> {
         let mut hir = HIR {
             entry: self.entry,
             blocks: self.completed,
+            instructions: self.instructions,
         };
 
         reverse_postorder_blocks(&mut hir);
@@ -123,13 +131,15 @@ impl<'a> Builder<'a> {
     }
 
     /// Adds a new instruction to the end of the work in progress block
-    pub(crate) fn push(&mut self, lvalue: Place<'a>, value: InstructionValue<'a>) {
+    pub(crate) fn push(&mut self, value: InstructionValue<'a>) -> InstrIx {
         let instr = Instruction {
             id: self.id_gen.next(),
-            lvalue,
             value,
         };
-        self.wip.instructions.push(instr);
+        let ix = InstrIx::new(self.instructions.len() as u32);
+        self.instructions.push(instr);
+        self.wip.instructions.push(ix);
+        ix
     }
 
     /// Terminates the work in progress block with the given terminal, and starts a new
@@ -151,16 +161,19 @@ impl<'a> Builder<'a> {
         let prev_wip = std::mem::replace(&mut self.wip, fallthrough);
         self.completed.insert(
             prev_wip.id,
-            BasicBlock {
-                id: prev_wip.id,
-                kind: prev_wip.kind,
-                instructions: prev_wip.instructions,
-                terminal: Terminal {
-                    id: self.id_gen.next(),
-                    value: terminal,
+            Box::new_in(
+                BasicBlock {
+                    id: prev_wip.id,
+                    kind: prev_wip.kind,
+                    instructions: prev_wip.instructions,
+                    terminal: Terminal {
+                        id: self.id_gen.next(),
+                        value: terminal,
+                    },
+                    predecessors: Default::default(),
                 },
-                predecessors: Default::default(),
-            },
+                &self.environment.allocator,
+            ),
         );
     }
 
@@ -203,16 +216,19 @@ impl<'a> Builder<'a> {
         let completed = std::mem::replace(&mut self.wip, current);
         self.completed.insert(
             completed.id,
-            BasicBlock {
-                id: completed.id,
-                kind: completed.kind,
-                instructions: completed.instructions,
-                terminal: Terminal {
-                    id: self.id_gen.next(),
-                    value: terminal,
+            Box::new_in(
+                BasicBlock {
+                    id: completed.id,
+                    kind: completed.kind,
+                    instructions: completed.instructions,
+                    terminal: Terminal {
+                        id: self.id_gen.next(),
+                        value: terminal,
+                    },
+                    predecessors: Default::default(),
                 },
-                predecessors: Default::default(),
-            },
+                &self.environment.allocator,
+            ),
         );
         result
     }
@@ -377,6 +393,9 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
                 visit(terminal.block, hir, visited, postorder);
             }
             TerminalValue::Return(..) => { /* no-op */ }
+            TerminalValue::Unsupported(..) => {
+                panic!("Unexpected unsupported terminal")
+            }
         }
         postorder.push(block_id);
     }
@@ -446,15 +465,17 @@ fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
-    for (block_ix, block) in hir.blocks.values_mut().enumerate() {
-        for (instr_ix, instr) in block.instructions.iter_mut().enumerate() {
-            invariant(visited.insert((block_ix, instr_ix)), || {
+    for (ii, block) in hir.blocks.values_mut().enumerate() {
+        let block_id = block.id;
+        for (jj, instr_ix) in block.instructions.iter_mut().enumerate() {
+            invariant(visited.insert((ii, jj)), || {
                 BuildDiagnostic::new(
-                    DiagnosticError::BlockVisitedTwice { block: block.id },
+                    DiagnosticError::BlockVisitedTwice { block: block_id },
                     ErrorSeverity::Invariant,
                     None,
                 )
             })?;
+            let instr = &mut hir.instructions[usize::from(*instr_ix)];
             instr.id = id_gen.next();
         }
         block.terminal.id = id_gen.next();

@@ -1,0 +1,12 @@
+[package]
+name = "hir-ssa"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hir = { path = "../hir" }
+bumpalo = "3.13.0"
+miette = { version = "5.9.0" }
+thiserror = "1.0.41"

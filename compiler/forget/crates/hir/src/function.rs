@@ -1,9 +1,11 @@
+use std::cell::Cell;
+
+use bumpalo::{boxed::Box, collections::Vec};
 use indexmap::IndexMap;
 
-use crate::{BasicBlock, BlockId};
+use crate::{BasicBlock, BlockId, Instruction};
 
 /// Represents either a React function or a function expression
-#[derive(Debug)]
 pub struct Function<'a> {
     pub body: HIR<'a>,
     pub is_async: bool,
@@ -14,14 +16,16 @@ pub struct Function<'a> {
 /// Blocks are stored in reverse postorder (predecessors before successors)
 /// so that compiler passes can complete forward data flow analysis in a
 /// single pass over the CFG in the case where there are no loops.
-#[derive(Debug)]
 pub struct HIR<'a> {
     /// The id of the first block
     pub entry: BlockId,
 
     /// Blocks are stored in a map for easy retrieval by their id,
     /// but the blocks are in reverse postorder
-    pub blocks: IndexMap<BlockId, BasicBlock<'a>>,
+    pub blocks: IndexMap<BlockId, Box<'a, BasicBlock<'a>>>,
+
+    /// All instructions for the block. This may contain unused items,
+    pub instructions: Vec<'a, Instruction<'a>>,
 }
 
 impl<'a> HIR<'a> {

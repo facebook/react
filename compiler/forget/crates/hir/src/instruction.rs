@@ -3,12 +3,11 @@ use std::{cell::RefCell, fmt::Display, rc::Rc};
 use bumpalo::collections::{String, Vec};
 use estree::BinaryOperator;
 
-use crate::{IdentifierId, InstructionId, ScopeId, Type};
+use crate::{IdentifierId, InstrIx, InstructionId, ScopeId, Type};
 
 #[derive(Debug)]
 pub struct Instruction<'a> {
     pub id: InstructionId,
-    pub lvalue: Place<'a>,
     pub value: InstructionValue<'a>,
 }
 
@@ -16,7 +15,7 @@ pub struct Instruction<'a> {
 pub enum InstructionValue<'a> {
     Array(Array<'a>),
     // Await(Await<'a>),
-    Binary(Binary<'a>),
+    Binary(Binary),
     // Call(Call<'a>),
     // ComputedDelete(ComputedDelete<'a>),
     // ComputedLoad(ComputedLoad<'a>),
@@ -28,7 +27,7 @@ pub enum InstructionValue<'a> {
     // Function(Function<'a>),
     // JsxFragment(JsxFragment<'a>),
     // JsxText(JsxText<'a>),
-    LoadContext(LoadContext<'a>),
+    LoadContext(LoadContext),
     LoadGlobal(LoadGlobal<'a>),
     LoadLocal(LoadLocal<'a>),
     // MethodCall(MethodCall<'a>),
@@ -51,20 +50,20 @@ pub enum InstructionValue<'a> {
 
 #[derive(Debug)]
 pub struct Array<'a> {
-    pub elements: Vec<'a, Option<ArrayElement<'a>>>,
+    pub elements: Vec<'a, Option<ArrayElement>>,
 }
 
 #[derive(Debug)]
-pub enum ArrayElement<'a> {
-    Place(Place<'a>),
-    Spread(Place<'a>),
+pub enum ArrayElement {
+    Place(Operand),
+    Spread(Operand),
 }
 
 #[derive(Debug)]
-pub struct Binary<'a> {
-    pub left: Place<'a>,
+pub struct Binary {
+    pub left: Operand,
     pub operator: BinaryOperator,
-    pub right: Place<'a>,
+    pub right: Operand,
 }
 
 #[derive(Debug)]
@@ -100,12 +99,12 @@ impl From<Number> for f64 {
 
 #[derive(Debug)]
 pub struct LoadLocal<'a> {
-    pub place: Place<'a>,
+    pub place: IdentifierOperand<'a>,
 }
 
 #[derive(Debug)]
-pub struct LoadContext<'a> {
-    pub place: Place<'a>,
+pub struct LoadContext {
+    pub place: Operand,
 }
 
 #[derive(Debug)]
@@ -126,18 +125,24 @@ pub struct DeclareContext<'a> {
 #[derive(Debug)]
 pub struct StoreLocal<'a> {
     pub lvalue: LValue<'a>,
-    pub value: Place<'a>,
+    pub value: Operand,
 }
 
 #[derive(Clone, Debug)]
-pub struct Place<'a> {
+pub struct Operand {
+    pub ix: InstrIx,
+    pub effect: Option<Effect>,
+}
+
+#[derive(Clone, Debug)]
+pub struct IdentifierOperand<'a> {
     pub identifier: Identifier<'a>,
     pub effect: Option<Effect>,
 }
 
 #[derive(Debug)]
 pub struct LValue<'a> {
-    pub place: Place<'a>,
+    pub identifier: IdentifierOperand<'a>,
     pub kind: InstructionKind,
 }
 

@@ -32,7 +32,7 @@ fn fixtures() {
                     }
                     match build(&environment, *fun) {
                         Ok(hir) => {
-                            hir.print(&mut output).unwrap();
+                            hir.print(&hir.body, &mut output).unwrap();
                         }
                         Err(error) => {
                             write!(&mut output, "{}", error,).unwrap();

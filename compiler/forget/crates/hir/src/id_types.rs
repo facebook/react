@@ -87,3 +87,24 @@ pub struct FunctionId(pub(crate) u32);
 /// Uniquely identifiers a builtin object type in the type registry
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
 pub struct ObjectId(pub(crate) u32);
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Hash, Debug)]
+pub struct InstrIx(pub(crate) u32);
+
+impl InstrIx {
+    pub fn new(value: u32) -> Self {
+        Self(value)
+    }
+}
+
+impl From<InstrIx> for usize {
+    fn from(value: InstrIx) -> Self {
+        value.0 as usize
+    }
+}
+
+impl Display for InstrIx {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("#{}", self.0))
+    }
+}

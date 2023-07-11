@@ -1,8 +1,8 @@
 use std::fmt::{Result, Write};
 
 use crate::{
-    ArrayElement, BasicBlock, Function, Instruction, InstructionValue, LValue, Place,
-    PrimitiveValue, Terminal, TerminalValue,
+    ArrayElement, BasicBlock, Function, Identifier, IdentifierOperand, Instruction,
+    InstructionValue, LValue, Operand, PrimitiveValue, Terminal, TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -10,44 +10,45 @@ use crate::{
 /// handle things like indentation and maybe wrapping long lines. The
 /// `pretty` crate seems to have a lot of usage but the type signatures
 /// are pretty tedious, we can make something much simpler.
-pub trait Print {
-    fn print(&self, out: &mut impl Write) -> Result;
+pub trait Print<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result;
 }
 
-impl<'a> Print for Function<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for Function<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         writeln!(out, "entry {}", self.body.entry)?;
-        for block in self.body.blocks.values() {
-            block.print(out)?;
+        for (_, block) in self.body.blocks.iter() {
+            block.print(hir, out)?;
         }
         Ok(())
     }
 }
 
-impl<'a> Print for BasicBlock<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for BasicBlock<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         writeln!(out, "{}", self.id)?;
-        for instr in &self.instructions {
-            instr.print(out)?;
+        for ix in &self.instructions {
+            let instr = &hir.instructions[usize::from(*ix)];
+            write!(out, "  {} {} = ", instr.id, ix)?;
+            instr.value.print(hir, out)?;
+            writeln!(out, "")?;
         }
-        self.terminal.print(out)?;
+        self.terminal.print(hir, out)?;
         Ok(())
     }
 }
 
-impl<'a> Print for Instruction<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for Instruction<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(out, "  {} ", self.id)?;
-        self.lvalue.print(out)?;
-        write!(out, " = ")?;
-        self.value.print(out)?;
+        self.value.print(hir, out)?;
         writeln!(out, "")?;
         Ok(())
     }
 }
 
-impl<'a> Print for InstructionValue<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for InstructionValue<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         match self {
             InstructionValue::Array(value) => {
                 write!(out, "Array [")?;
@@ -56,7 +57,7 @@ impl<'a> Print for InstructionValue<'a> {
                         write!(out, ", ")?;
                     }
                     if let Some(item) = item {
-                        item.print(out)?;
+                        item.print(hir, out)?;
                     } else {
                         write!(out, "<elision>")?;
                     }
@@ -68,7 +69,7 @@ impl<'a> Print for InstructionValue<'a> {
             }
             InstructionValue::LoadLocal(value) => {
                 write!(out, "LoadLocal ")?;
-                value.place.print(out)?;
+                value.place.print(hir, out)?;
             }
             InstructionValue::Primitive(value) => {
                 // Unlike other variants we don't print the variant name ("Primitive") since it's
@@ -86,19 +87,19 @@ impl<'a> Print for InstructionValue<'a> {
             }
             InstructionValue::StoreLocal(value) => {
                 write!(out, "StoreLocal ")?;
-                value.lvalue.print(out)?;
+                value.lvalue.print(hir, out)?;
                 write!(out, " = ")?;
-                value.value.print(out)?;
+                value.value.print(hir, out)?;
             }
             InstructionValue::DeclareLocal(value) => {
                 write!(out, "DeclareLocal ")?;
-                value.lvalue.print(out)?;
+                value.lvalue.print(hir, out)?;
             }
             InstructionValue::Binary(value) => {
                 write!(out, "Binary ")?;
-                value.left.print(out)?;
+                value.left.print(hir, out)?;
                 write!(out, " {} ", value.operator)?;
-                value.right.print(out)?;
+                value.right.print(hir, out)?;
             }
             _ => write!(out, "{:?}", self)?,
         }
@@ -106,66 +107,90 @@ impl<'a> Print for InstructionValue<'a> {
     }
 }
 
-impl<'a> Print for ArrayElement<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for ArrayElement {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         match self {
-            ArrayElement::Place(place) => place.print(out),
+            ArrayElement::Place(place) => place.print(hir, out),
             ArrayElement::Spread(place) => {
                 write!(out, "...")?;
-                place.print(out)?;
+                place.print(hir, out)?;
                 Ok(())
             }
         }
     }
 }
 
-impl<'a> Print for Place<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for Operand {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(
             out,
-            "{} {}{}",
+            "{} {}",
             match self.effect {
                 Some(effect) => format!("{}", effect),
                 None => "unknown".to_string(),
             },
-            match &self.identifier.name {
-                Some(name) => name.to_string(),
-                None => "".to_string(),
-            },
-            self.identifier.id
+            self.ix
         )
     }
 }
 
-impl<'a> Print for LValue<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for LValue<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(out, "{} ", self.kind)?;
-        self.place.print(out)
+        self.identifier.print(hir, out)
     }
 }
 
-impl<'a> Print for Terminal<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for IdentifierOperand<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+        write!(
+            out,
+            "{} ",
+            match self.effect {
+                Some(effect) => format!("{}", effect),
+                None => "unknown".to_string(),
+            },
+        )?;
+        self.identifier.print(hir, out)
+    }
+}
+
+impl<'a> Print<'a> for Identifier<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+        write!(
+            out,
+            "{}{}",
+            match &self.name {
+                Some(name) => name.to_string(),
+                None => "".to_string(),
+            },
+            self.id
+        )
+    }
+}
+
+impl<'a> Print<'a> for Terminal<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(out, "  {} ", self.id)?;
-        self.value.print(out)?;
+        self.value.print(hir, out)?;
         writeln!(out, "")?;
         Ok(())
     }
 }
 
-impl<'a> Print for TerminalValue<'a> {
-    fn print(&self, out: &mut impl Write) -> Result {
+impl<'a> Print<'a> for TerminalValue<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         match self {
             TerminalValue::Return(terminal) => {
                 write!(out, "Return ")?;
-                terminal.value.print(out)?;
+                terminal.value.print(hir, out)?;
             }
             TerminalValue::Goto(terminal) => {
                 write!(out, "Goto {}", terminal.block)?;
             }
             TerminalValue::If(terminal) => {
                 write!(out, "If ")?;
-                terminal.test.print(out)?;
+                terminal.test.print(hir, out)?;
                 write!(
                     out,
                     " consequent={} alternate={} fallthrough={}",
@@ -179,7 +204,7 @@ impl<'a> Print for TerminalValue<'a> {
             }
             TerminalValue::Branch(terminal) => {
                 write!(out, "Branch ")?;
-                terminal.test.print(out)?;
+                terminal.test.print(hir, out)?;
                 write!(
                     out,
                     " consequent={} alternate={}",

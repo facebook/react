@@ -1,4 +1,4 @@
-use crate::{instruction::Place, BlockId, InstructionId};
+use crate::{instruction::Operand, BlockId, InstructionId};
 
 /// Terminals represent statements or expressions that affect control flow,
 /// such as for-of, if-else, return, logical (??), ternaries (?:), etc.
@@ -10,21 +10,21 @@ pub struct Terminal<'a> {
 
 #[derive(Debug)]
 pub enum TerminalValue<'a> {
-    Branch(BranchTerminal<'a>),
+    Branch(BranchTerminal),
     DoWhile(DoWhileTerminal),
     // ForOf(ForOfTerminal),
     For(ForTerminal),
     Goto(GotoTerminal),
-    If(IfTerminal<'a>),
+    If(IfTerminal),
     // Label(LabelTerminal),
     // Logical(LogicalTerminal),
     // Optional(OptionalTerminal),
-    Return(ReturnTerminal<'a>),
+    Return(ReturnTerminal),
     // Sequence(SequenceTerminal),
     // Switch(SwitchTerminal),
     // Ternary(TernaryTerminal),
     // Throw(ThrowTerminal),
-    // Unsupported(UnsupportedTerminal),
+    Unsupported(UnsupportedTerminal<'a>),
     // While(WhileTerminal),
 }
 
@@ -47,6 +47,7 @@ impl<'a> TerminalValue<'a> {
                 let _: BlockId = *fallthrough;
             }
             Self::Branch(_) | Self::Goto(_) | Self::Return(_) => {}
+            Self::Unsupported(_) => panic!("Unexpected unsupported terminal"),
         }
     }
 
@@ -70,13 +71,19 @@ impl<'a> TerminalValue<'a> {
             Self::Return(_) => {
                 vec![]
             }
+            Self::Unsupported(_) => panic!("Unexpected unsupported terminal"),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct BranchTerminal<'a> {
-    pub test: Place<'a>,
+pub struct UnsupportedTerminal<'a> {
+    phantom: std::marker::PhantomData<&'a ()>
+}
+
+#[derive(Debug)]
+pub struct BranchTerminal {
+    pub test: Operand,
     pub consequent: BlockId,
     pub alternate: BlockId,
 }
@@ -101,16 +108,16 @@ pub struct DoWhileTerminal {
 }
 
 #[derive(Debug)]
-pub struct IfTerminal<'a> {
-    pub test: Place<'a>,
+pub struct IfTerminal {
+    pub test: Operand,
     pub consequent: BlockId,
     pub alternate: BlockId,
     pub fallthrough: Option<BlockId>,
 }
 
 #[derive(Debug)]
-pub struct ReturnTerminal<'a> {
-    pub value: Place<'a>,
+pub struct ReturnTerminal {
+    pub value: Operand,
 }
 
 #[derive(Debug)]

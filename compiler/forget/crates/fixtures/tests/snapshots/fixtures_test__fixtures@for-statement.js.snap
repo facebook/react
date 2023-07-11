@@ -16,31 +16,31 @@ function foo() {
 Output:
 entry bb0
 bb0
-  [0] unknown $0 = 0
-  [1] unknown $2 = StoreLocal Let unknown x$1 = unknown $0
+  [0] #0 = 0
+  [1] #1 = StoreLocal Let unknown x$0 = unknown #0
   [2] For init=bb3 test=bb1 update=bb4 body=bb5 fallthrough=bb2
 bb3
-  [3] unknown $3 = 0
-  [4] unknown $5 = StoreLocal Let unknown i$4 = unknown $3
+  [3] #2 = 0
+  [4] #3 = StoreLocal Let unknown i$1 = unknown #2
   [5] Goto bb1
 bb1
-  [6] unknown $14 = LoadLocal unknown i$4
-  [7] unknown $15 = 10
-  [8] unknown $16 = Binary unknown $14 < unknown $15
-  [9] Branch unknown $16 consequent=bb5 alternate=bb2
+  [6] #12 = LoadLocal unknown i$1
+  [7] #13 = 10
+  [8] #14 = Binary unknown #12 < unknown #13
+  [9] Branch unknown #14 consequent=bb5 alternate=bb2
 bb5
-  [10] unknown $10 = LoadLocal unknown x$1
-  [11] unknown $11 = LoadLocal unknown i$4
-  [12] unknown $12 = Binary unknown $10 + unknown $11
-  [13] unknown $13 = StoreLocal Reassign unknown x$1 = unknown $12
+  [10] #8 = LoadLocal unknown x$0
+  [11] #9 = LoadLocal unknown i$1
+  [12] #10 = Binary unknown #8 + unknown #9
+  [13] #11 = StoreLocal Reassign unknown x$0 = unknown #10
   [14] Goto bb4
 bb4
-  [15] unknown $6 = LoadLocal unknown i$4
-  [16] unknown $7 = 1
-  [17] unknown $8 = Binary unknown $6 + unknown $7
-  [18] unknown $9 = StoreLocal Reassign unknown i$4 = unknown $8
+  [15] #4 = LoadLocal unknown i$1
+  [16] #5 = 1
+  [17] #6 = Binary unknown #4 + unknown #5
+  [18] #7 = StoreLocal Reassign unknown i$1 = unknown #6
   [19] Goto bb1
 bb2
-  [20] unknown $17 = LoadLocal unknown x$1
-  [21] Return unknown $17
+  [20] #15 = LoadLocal unknown x$0
+  [21] Return unknown #15
 
