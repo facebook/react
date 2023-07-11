@@ -873,7 +873,6 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         continue;
       }
-      case "ExpressionStatement":
       case "TypeCastExpression": {
         // A type cast expression has no effect at runtime, so it's equivalent to a raw
         // identifier:

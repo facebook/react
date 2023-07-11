@@ -242,7 +242,6 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "TemplateLiteral":
     case "Primitive":
     case "NextIterableOf":
-    case "ExpressionStatement":
     case "Debugger": {
       return false;
     }

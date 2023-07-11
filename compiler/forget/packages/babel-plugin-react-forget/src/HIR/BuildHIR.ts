@@ -710,24 +710,7 @@ function lowerStatement(
     case "ExpressionStatement": {
       const stmt = stmtPath as NodePath<t.ExpressionStatement>;
       const expression = stmt.get("expression");
-      const value = lowerExpressionToTemporary(builder, expression);
-      const exprNode = expression.node;
-      if (
-        exprNode.type === "LogicalExpression" ||
-        exprNode.type === "ConditionalExpression"
-      ) {
-        const loc = exprNode.loc ?? GeneratedSource;
-        builder.push({
-          id: makeInstructionId(0),
-          lvalue: buildTemporaryPlace(builder, loc),
-          value: {
-            kind: "ExpressionStatement",
-            value,
-            loc,
-          },
-          loc,
-        });
-      }
+      lowerExpressionToTemporary(builder, expression);
       return;
     }
     case "DoWhileStatement": {

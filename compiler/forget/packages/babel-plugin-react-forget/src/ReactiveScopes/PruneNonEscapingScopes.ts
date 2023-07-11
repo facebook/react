@@ -450,8 +450,7 @@ function computeMemoizationInputs(
     }
     case "Await":
     case "TypeCastExpression":
-    case "NextIterableOf":
-    case "ExpressionStatement": {
+    case "NextIterableOf": {
       return {
         // Indirection for the inner value, memoized if the value is
         lvalues:

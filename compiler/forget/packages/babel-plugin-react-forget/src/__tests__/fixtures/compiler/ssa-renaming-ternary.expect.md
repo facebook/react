@@ -16,7 +16,7 @@ function foo(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.bar;
   let x;
   if (c_0) {
@@ -27,18 +27,7 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  const c_2 = $[2] !== props;
-  let t0;
-  if (c_2) {
-    t0 = props.cond ? ((x = []), x.push(props.foo)) : null;
-    $[2] = props;
-    $[3] = t0;
-    $[4] = x;
-  } else {
-    t0 = $[3];
-    x = $[4];
-  }
-  t0;
+  props.cond ? ((x = []), x.push(props.foo)) : null;
   return x;
 }
 

@@ -1123,10 +1123,6 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.value);
       break;
     }
-    case "ExpressionStatement": {
-      value = codegenPlace(cx, instrValue.value);
-      break;
-    }
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":

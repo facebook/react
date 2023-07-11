@@ -188,10 +188,6 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
-    case "ExpressionStatement": {
-      yield instrValue.value;
-      break;
-    }
     case "Debugger":
     case "RegExpLiteral":
     case "LoadGlobal":
@@ -460,10 +456,6 @@ export function mapInstructionOperands(
       break;
     }
     case "NextIterableOf": {
-      instrValue.value = fn(instrValue.value);
-      break;
-    }
-    case "ExpressionStatement": {
       instrValue.value = fn(instrValue.value);
       break;
     }
