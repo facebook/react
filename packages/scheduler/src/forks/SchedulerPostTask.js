@@ -9,8 +9,6 @@
 
 import type {PriorityLevel} from '../SchedulerPriorities';
 
-import {enableSchedulerYield} from '../SchedulerFeatureFlags';
-
 declare class TaskController {
   constructor(priority?: string): TaskController;
   signal: mixed;
@@ -149,7 +147,7 @@ function runTask<T>(
         continuation,
       );
 
-      if (enableSchedulerYield && scheduler.yield !== undefined) {
+      if (scheduler.yield !== undefined) {
         scheduler
           .yield(continuationOptions)
           .then(nextTask)

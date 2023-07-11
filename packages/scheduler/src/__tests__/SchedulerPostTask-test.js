@@ -96,9 +96,7 @@ describe('SchedulerPostTask', () => {
 
     scheduler.yield = function ({priority, signal}) {
       const id = idCounter++;
-      log(
-        `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,
-      );
+      log(`Yield ${id} [${priority === undefined ? '<default>' : priority}]`);
       const controller = signal._controller;
       let callback;
 
@@ -196,7 +194,7 @@ describe('SchedulerPostTask', () => {
       'Task 0 Fired',
       'A',
       'Yield at 5ms',
-      'Post Task 1 [user-visible]',
+      'Yield 1 [user-visible]',
     ]);
 
     runtime.flushTasks();
@@ -339,7 +337,7 @@ describe('SchedulerPostTask', () => {
 
       // The continuation should be scheduled in a separate macrotask even
       // though there's time remaining.
-      'Post Task 1 [user-visible]',
+      'Yield 1 [user-visible]',
     ]);
 
     // No time has elapsed
@@ -347,5 +345,68 @@ describe('SchedulerPostTask', () => {
 
     runtime.flushTasks();
     runtime.assertLog(['Task 1 Fired', 'Continuation Task']);
+  });
+
+  describe('falls back to postTask for scheduling continuations when scheduler.yield is not available', () => {
+    beforeEach(() => {
+      delete global.scheduler.yield;
+    });
+
+    it('task with continuation', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+        while (!Scheduler.unstable_shouldYield()) {
+          runtime.advanceTime(1);
+        }
+        runtime.log(`Yield at ${performance.now()}ms`);
+        return () => {
+          runtime.log('Continuation');
+        };
+      });
+      runtime.assertLog(['Post Task 0 [user-visible]']);
+
+      runtime.flushTasks();
+      runtime.assertLog([
+        'Task 0 Fired',
+        'A',
+        'Yield at 5ms',
+        'Post Task 1 [user-visible]',
+      ]);
+
+      runtime.flushTasks();
+      runtime.assertLog(['Task 1 Fired', 'Continuation']);
+    });
+
+    it('yielding continues in a new task regardless of how much time is remaining', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('Original Task');
+        runtime.log('shouldYield: ' + shouldYield());
+        runtime.log('Return a continuation');
+        return () => {
+          runtime.log('Continuation Task');
+        };
+      });
+      runtime.assertLog(['Post Task 0 [user-visible]']);
+
+      runtime.flushTasks();
+      runtime.assertLog([
+        'Task 0 Fired',
+        'Original Task',
+        // Immediately before returning a continuation, `shouldYield` returns
+        // false, which means there must be time remaining in the frame.
+        'shouldYield: false',
+        'Return a continuation',
+
+        // The continuation should be scheduled in a separate macrotask even
+        // though there's time remaining.
+        'Post Task 1 [user-visible]',
+      ]);
+
+      // No time has elapsed
+      expect(performance.now()).toBe(0);
+
+      runtime.flushTasks();
+      runtime.assertLog(['Task 1 Fired', 'Continuation Task']);
+    });
   });
 });
