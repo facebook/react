@@ -4,7 +4,7 @@ mod generated_extensions;
 mod js_value;
 mod range;
 
-pub use binding::Binding;
+pub use binding::{Binding, BindingId};
 pub use generated::*;
 pub use js_value::JsValue;
 pub use range::SourceRange;

@@ -56,7 +56,8 @@ pub struct Literal {
 pub struct Program {
     pub body: Vec<ModuleItem>,
     #[serde(rename = "sourceType")]
-    pub source_type: Option<SourceType>,
+    #[serde(default)]
+    pub source_type: SourceType,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]

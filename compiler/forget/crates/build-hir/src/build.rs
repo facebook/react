@@ -1,7 +1,8 @@
 use bumpalo::collections::{String, Vec};
 use estree::{
-    AssignmentTarget, BinaryExpression, ExpressionLike, ForInit, ForStatement, FunctionDeclaration,
-    IfStatement, Literal, LiteralValue, Pattern, Statement, VariableDeclarationKind,
+    AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
+    FunctionDeclaration, IfStatement, JsValue, Literal, Pattern, Statement,
+    VariableDeclarationKind,
 };
 use hir::{
     ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, Function, GotoKind,
@@ -27,7 +28,21 @@ pub fn build<'a>(
 ) -> Result<Function<'a>, BuildDiagnostic> {
     let mut builder = Builder::new(environment);
 
-    lower_statement(environment, &mut builder, fun.body.unwrap(), None)?;
+    match fun.function.body {
+        Some(estree::FunctionBody::BlockStatement(body)) => {
+            lower_block_statement(environment, &mut builder, *body, None)?
+        }
+        Some(estree::FunctionBody::Expression(body)) => {
+            lower_expression_to_temporary(environment, &mut builder, body)?;
+        }
+        None => {
+            return Err(BuildDiagnostic::new(
+                DiagnosticError::EmptyFunction,
+                ErrorSeverity::InvalidSyntax,
+                fun.range,
+            ));
+        }
+    }
 
     // In case the function did not explicitly return, terminate the final
     // block with an explicit `return undefined`. If the function *did* return,
@@ -49,9 +64,21 @@ pub fn build<'a>(
     let body = builder.build()?;
     Ok(Function {
         body,
-        is_async: fun.is_async,
-        is_generator: fun.is_generator,
+        is_async: fun.function.is_async,
+        is_generator: fun.function.is_generator,
     })
+}
+
+fn lower_block_statement<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    stmt: BlockStatement,
+    label: Option<String<'a>>,
+) -> Result<(), BuildDiagnostic> {
+    for stmt in stmt.body {
+        lower_statement(env, builder, stmt, None)?;
+    }
+    Ok(())
 }
 
 /// Convert a statement to HIR. This will often result in multiple instructions and blocks
@@ -64,9 +91,7 @@ fn lower_statement<'a>(
 ) -> Result<(), BuildDiagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
-            for stmt in stmt.body {
-                lower_statement(env, builder, stmt, None)?;
-            }
+            lower_block_statement(env, builder, *stmt, label)?;
         }
         Statement::BreakStatement(stmt) => {
             let block = builder.resolve_break(stmt.label.as_ref())?;
@@ -292,7 +317,7 @@ fn lower_statement<'a>(
 fn lower_expression_to_temporary<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
-    expr: ExpressionLike,
+    expr: Expression,
 ) -> Result<Place<'a>, BuildDiagnostic> {
     let value = lower_expression(env, builder, expr)?;
     Ok(lower_value_to_temporary(env, builder, value))
@@ -305,10 +330,10 @@ fn lower_expression_to_temporary<'a>(
 fn lower_expression<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
-    expr: ExpressionLike,
+    expr: Expression,
 ) -> Result<InstructionValue<'a>, BuildDiagnostic> {
     Ok(match expr {
-        ExpressionLike::Identifier(expr) => {
+        Expression::Identifier(expr) => {
             // TODO: handle unbound variables
             let binding = builder.resolve_binding(&expr)?;
             match binding {
@@ -324,24 +349,31 @@ fn lower_expression<'a>(
                 }),
             }
         }
-        ExpressionLike::Literal(expr) => InstructionValue::Primitive(hir::Primitive {
+        Expression::Literal(expr) => InstructionValue::Primitive(hir::Primitive {
             value: lower_primitive(env, builder, *expr),
         }),
-        ExpressionLike::ArrayExpression(expr) => {
+        Expression::ArrayExpression(expr) => {
             let mut elements = Vec::with_capacity_in(expr.elements.len(), &env.allocator);
             for expr in expr.elements {
                 let element = match expr {
-                    ExpressionLike::SpreadElement(expr) => ArrayElement::Spread(
-                        lower_expression_to_temporary(env, builder, expr.argument)?,
+                    Some(estree::ExpressionOrSpread::SpreadElement(expr)) => {
+                        Some(ArrayElement::Spread(lower_expression_to_temporary(
+                            env,
+                            builder,
+                            expr.argument,
+                        )?))
+                    }
+                    Some(estree::ExpressionOrSpread::Expression(expr)) => Some(
+                        ArrayElement::Place(lower_expression_to_temporary(env, builder, expr)?),
                     ),
-                    _ => ArrayElement::Place(lower_expression_to_temporary(env, builder, expr)?),
+                    None => None,
                 };
                 elements.push(element);
             }
             InstructionValue::Array(hir::Array { elements })
         }
 
-        ExpressionLike::AssignmentExpression(expr) => match expr.operator {
+        Expression::AssignmentExpression(expr) => match expr.operator {
             estree::AssignmentOperator::Equals => {
                 let right = lower_expression_to_temporary(env, builder, expr.right)?;
                 lower_assignment(env, builder, InstructionKind::Reassign, expr.left, right)?
@@ -349,7 +381,7 @@ fn lower_expression<'a>(
             _ => todo!("lower assignment expr {:#?}", expr),
         },
 
-        ExpressionLike::BinaryExpression(expr) => {
+        Expression::BinaryExpression(expr) => {
             let BinaryExpression {
                 left,
                 operator,
@@ -365,15 +397,6 @@ fn lower_expression<'a>(
             })
         }
 
-        // Cases that cannot appear in expression position but which are included in ExpressionLike
-        // to make serialization easier
-        ExpressionLike::SpreadElement(expr) => {
-            return Err(BuildDiagnostic::new(
-                DiagnosticError::NonExpressionInExpressionPosition,
-                ErrorSeverity::Invariant,
-                expr.range,
-            ));
-        }
         _ => todo!("Lower expr {expr:#?}"),
     })
 }
@@ -386,7 +409,7 @@ fn lower_assignment<'a>(
     value: Place<'a>,
 ) -> Result<InstructionValue<'a>, BuildDiagnostic> {
     Ok(match lvalue {
-        AssignmentTarget::Pattern(lvalue) => match *lvalue {
+        AssignmentTarget::Pattern(lvalue) => match lvalue {
             Pattern::Identifier(lvalue) => {
                 let place = lower_identifier_for_assignment(env, builder, kind, *lvalue)?;
                 let temporary = lower_value_to_temporary(
@@ -466,10 +489,10 @@ fn lower_primitive<'a>(
     literal: Literal,
 ) -> PrimitiveValue<'a> {
     match literal.value {
-        LiteralValue::Boolean(bool) => PrimitiveValue::Boolean(bool),
-        LiteralValue::Null => PrimitiveValue::Null,
-        LiteralValue::Number(value) => PrimitiveValue::Number(f64::from(value).into()),
-        LiteralValue::String(s) => PrimitiveValue::String(String::from_str_in(&s, &env.allocator)),
+        JsValue::Bool(bool) => PrimitiveValue::Boolean(bool),
+        JsValue::Null => PrimitiveValue::Null,
+        JsValue::Number(value) => PrimitiveValue::Number(f64::from(value).into()),
+        JsValue::String(s) => PrimitiveValue::String(String::from_str_in(&s, &env.allocator)),
         _ => todo!("Lower literal {literal:#?}"),
     }
 }

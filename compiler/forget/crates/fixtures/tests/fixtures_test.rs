@@ -18,7 +18,7 @@ fn fixtures() {
 
         for (ix, item) in ast.body.into_iter().enumerate() {
             if let ModuleItem::Statement(stmt) = item {
-                if let Statement::FunctionDeclaration(fun) = *stmt {
+                if let Statement::FunctionDeclaration(fun) = stmt {
                     let allocator = Bump::new();
                     let environment = allocator.alloc(Environment::new(
                         &allocator,

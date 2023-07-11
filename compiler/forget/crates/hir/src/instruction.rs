@@ -51,7 +51,7 @@ pub enum InstructionValue<'a> {
 
 #[derive(Debug)]
 pub struct Array<'a> {
-    pub elements: Vec<'a, ArrayElement<'a>>,
+    pub elements: Vec<'a, Option<ArrayElement<'a>>>,
 }
 
 #[derive(Debug)]

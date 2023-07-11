@@ -55,7 +55,11 @@ impl<'a> Print for InstructionValue<'a> {
                     if ix != 0 {
                         write!(out, ", ")?;
                     }
-                    item.print(out)?;
+                    if let Some(item) = item {
+                        item.print(out)?;
+                    } else {
+                        write!(out, "<elision>")?;
+                    }
                 }
                 write!(out, "]")?;
             }

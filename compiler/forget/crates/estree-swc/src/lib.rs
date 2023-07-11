@@ -71,9 +71,7 @@ fn convert_program(cx: &Context, program: &Program) -> estree::Program {
             let body = &program.body;
             program_items = Vec::with_capacity(body.len());
             for item in body {
-                program_items.push(estree::ModuleItem::Statement(Box::new(convert_statement(
-                    cx, item,
-                ))));
+                program_items.push(estree::ModuleItem::Statement(convert_statement(cx, item)));
             }
         }
     };
@@ -84,7 +82,7 @@ fn convert_program(cx: &Context, program: &Program) -> estree::Program {
             estree::SourceType::Module
         },
         body: program_items,
-        comments: None,
+        // comments: None,
         loc: None,
         range: None,
     }
@@ -92,9 +90,7 @@ fn convert_program(cx: &Context, program: &Program) -> estree::Program {
 
 fn convert_module_item(cx: &Context, item: &ModuleItem) -> estree::ModuleItem {
     match item {
-        ModuleItem::Stmt(item) => {
-            estree::ModuleItem::Statement(Box::new(convert_statement(cx, item)))
-        }
+        ModuleItem::Stmt(item) => estree::ModuleItem::Statement(convert_statement(cx, item)),
         _ => todo!("translate module item {:#?}", item),
     }
 }
@@ -131,23 +127,27 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
         Stmt::Decl(Decl::Fn(item)) => {
             let name = item.ident.sym.to_string();
             estree::Statement::FunctionDeclaration(Box::new(estree::FunctionDeclaration {
-                id: Some(estree::Identifier {
-                    name,
-                    binding: convert_binding(cx, item.ident.span.ctxt),
-                    loc: None,
-                    range: convert_span(&item.ident.span),
-                }),
-                params: item
-                    .function
-                    .params
-                    .iter()
-                    .map(|param| convert_pattern(cx, &param.pat))
-                    .collect(),
-                body: item.function.body.as_ref().map(|body| {
-                    estree::Statement::BlockStatement(Box::new(convert_block_statement(cx, body)))
-                }),
-                is_async: item.function.is_async,
-                is_generator: item.function.is_generator,
+                function: estree::Function {
+                    id: Some(estree::Identifier {
+                        name,
+                        binding: convert_binding(cx, item.ident.span.ctxt),
+                        loc: None,
+                        range: convert_span(&item.ident.span),
+                    }),
+                    params: item
+                        .function
+                        .params
+                        .iter()
+                        .map(|param| convert_pattern(cx, &param.pat))
+                        .collect(),
+                    body: item.function.body.as_ref().map(|body| {
+                        estree::FunctionBody::BlockStatement(Box::new(convert_block_statement(
+                            cx, body,
+                        )))
+                    }),
+                    is_async: item.function.is_async,
+                    is_generator: item.function.is_generator,
+                },
                 loc: None,
                 range: convert_span(&item.function.span),
             }))
@@ -206,7 +206,7 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
         Stmt::For(item) => estree::Statement::ForStatement(Box::new(estree::ForStatement {
             init: item.init.as_ref().map(|init| match init {
                 VarDeclOrExpr::Expr(init) => {
-                    estree::ForInit::Expression(Box::new(convert_expression(cx, init)))
+                    estree::ForInit::Expression(convert_expression(cx, init))
                 }
                 VarDeclOrExpr::VarDecl(init) => {
                     assert_eq!(init.decls.len(), 1);
@@ -268,28 +268,28 @@ fn convert_variable_declaration(cx: &Context, decl: &VarDecl) -> estree::Variabl
     }
 }
 
-fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
+fn convert_expression(cx: &Context, expr: &Expr) -> estree::Expression {
     match expr {
-        Expr::Ident(expr) => {
-            estree::ExpressionLike::Identifier(Box::new(convert_identifier(cx, expr)))
-        }
+        Expr::Ident(expr) => estree::Expression::Identifier(Box::new(convert_identifier(cx, expr))),
         Expr::Array(expr) => {
-            estree::ExpressionLike::ArrayExpression(Box::new(estree::ArrayExpression {
+            estree::Expression::ArrayExpression(Box::new(estree::ArrayExpression {
                 elements: expr
                     .elems
                     .iter()
                     .map(|item| {
                         // TODO: represent holes in array expressions
-                        let value = item.as_ref().unwrap();
+                        let value = item.as_ref()?;
                         match value.spread {
-                            Some(spread) => estree::ExpressionLike::SpreadElement(Box::new(
-                                estree::SpreadElement {
+                            Some(spread) => Some(estree::ExpressionOrSpread::SpreadElement(
+                                Box::new(estree::SpreadElement {
                                     argument: convert_expression(cx, &value.expr),
                                     loc: None,
                                     range: convert_span(&spread),
-                                },
+                                }),
                             )),
-                            None => convert_expression(cx, &value.expr),
+                            None => Some(estree::ExpressionOrSpread::Expression(
+                                convert_expression(cx, &value.expr),
+                            )),
                         }
                     })
                     .collect(),
@@ -297,17 +297,18 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
                 range: convert_span(&expr.span),
             }))
         }
-        Expr::Await(expr) => {
-            estree::ExpressionLike::AwaitExpression(Box::new(estree::AwaitExpression {
-                argument: convert_expression(cx, &expr.arg),
-                loc: None,
-                range: convert_span(&expr.span),
-            }))
+        Expr::Await(_expr) => {
+            // estree::Expression::AwaitExpression(Box::new(estree::AwaitExpression {
+            //     argument: convert_expression(cx, &expr.arg),
+            //     loc: None,
+            //     range: convert_span(&expr.span),
+            // }))
+            todo!("await expression")
         }
         Expr::Unary(expr) => {
-            estree::ExpressionLike::UnaryExpression(Box::new(estree::UnaryExpression {
+            estree::Expression::UnaryExpression(Box::new(estree::UnaryExpression {
                 operator: convert_unary_operator(expr.op),
-                is_prefix: false,
+                prefix: false,
                 argument: convert_expression(cx, &expr.arg),
                 loc: None,
                 range: convert_span(&expr.span),
@@ -315,7 +316,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
         }
         Expr::Bin(expr) => match convert_binary_operator(expr.op) {
             Operator::Binary(op) => {
-                estree::ExpressionLike::BinaryExpression(Box::new(estree::BinaryExpression {
+                estree::Expression::BinaryExpression(Box::new(estree::BinaryExpression {
                     operator: op,
                     left: convert_expression(cx, &expr.left),
                     right: convert_expression(cx, &expr.right),
@@ -324,7 +325,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
                 }))
             }
             Operator::Logical(op) => {
-                estree::ExpressionLike::LogicalExpression(Box::new(estree::LogicalExpression {
+                estree::Expression::LogicalExpression(Box::new(estree::LogicalExpression {
                     operator: op,
                     left: convert_expression(cx, &expr.left),
                     right: convert_expression(cx, &expr.right),
@@ -335,30 +336,28 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
         },
         Expr::Lit(expr) => {
             let (value, range) = match expr {
-                Lit::Bool(expr) => (
-                    estree::LiteralValue::Boolean(expr.value),
-                    convert_span(&expr.span),
-                ),
+                Lit::Bool(expr) => (estree::JsValue::Bool(expr.value), convert_span(&expr.span)),
                 Lit::Num(expr) => (
-                    estree::LiteralValue::Number(expr.value.into()),
+                    estree::JsValue::Number(expr.value.into()),
                     convert_span(&expr.span),
                 ),
                 Lit::Str(expr) => (
-                    estree::LiteralValue::String(expr.value.to_string()),
+                    estree::JsValue::String(expr.value.to_string()),
                     convert_span(&expr.span),
                 ),
-                Lit::Null(expr) => (estree::LiteralValue::Null, convert_span(&expr.span)),
+                Lit::Null(expr) => (estree::JsValue::Null, convert_span(&expr.span)),
                 _ => todo!(),
             };
-            estree::ExpressionLike::Literal(Box::new(estree::Literal {
+            estree::Expression::Literal(Box::new(estree::Literal {
                 value,
                 raw: None,
                 loc: None,
+                regex: None,
                 range,
             }))
         }
         Expr::Assign(expr) => {
-            estree::ExpressionLike::AssignmentExpression(Box::new(estree::AssignmentExpression {
+            estree::Expression::AssignmentExpression(Box::new(estree::AssignmentExpression {
                 operator: convert_assignment_operator(expr.op),
                 left: convert_assignment_target(cx, &expr.left),
                 right: convert_expression(cx, &expr.right),
@@ -367,7 +366,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
             }))
         }
         Expr::Member(expr) => {
-            estree::ExpressionLike::MemberExpression(Box::new(convert_member_expression(cx, expr)))
+            estree::Expression::MemberExpression(Box::new(convert_member_expression(cx, expr)))
         }
         _ => todo!("translate expression {:#?}", expr),
     }
@@ -375,17 +374,17 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::ExpressionLike {
 
 fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> estree::AssignmentTarget {
     match target {
-        PatOrExpr::Pat(target) => {
-            estree::AssignmentTarget::Pattern(Box::new(convert_pattern(cx, target)))
-        }
+        PatOrExpr::Pat(target) => estree::AssignmentTarget::Pattern(convert_pattern(cx, target)),
         PatOrExpr::Expr(target) => {
             match target.as_ref() {
-                Expr::Member(target) => estree::AssignmentTarget::MemberExpression(Box::new(
-                    convert_member_expression(cx, target),
-                )),
-                Expr::Ident(target) => estree::AssignmentTarget::Pattern(Box::new(
+                Expr::Member(target) => {
+                    estree::AssignmentTarget::Expression(estree::Expression::MemberExpression(
+                        Box::new(convert_member_expression(cx, target)),
+                    ))
+                }
+                Expr::Ident(target) => estree::AssignmentTarget::Pattern(
                     estree::Pattern::Identifier(Box::new(convert_identifier(cx, target))),
-                )),
+                ),
                 _ => {
                     panic!("Expected assignment target to be member expression or identifier, got {:#?}", target)
                 }
@@ -398,7 +397,7 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberE
     let (is_computed, property) = match &expr.prop {
         MemberProp::Ident(prop) => (
             false,
-            estree::ExpressionLike::Identifier(Box::new(convert_identifier(cx, prop))),
+            estree::Expression::Identifier(Box::new(convert_identifier(cx, prop))),
         ),
         MemberProp::Computed(prop) => (true, convert_expression(cx, &prop.expr)),
         _ => {
@@ -406,10 +405,10 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberE
         }
     };
     estree::MemberExpression {
-        object: convert_expression(cx, &expr.obj),
+        object: estree::ExpressionOrSuper::Expression(convert_expression(cx, &expr.obj)),
         property,
-        is_computed,
-        is_optional: false,
+        computed: false, // TODO
+        // optional: false, // TODO
         loc: None,
         range: convert_span(&expr.span),
     }
@@ -417,7 +416,7 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberE
 
 fn convert_unary_operator(op: UnaryOp) -> estree::UnaryOperator {
     match op {
-        UnaryOp::Bang => estree::UnaryOperator::Exclamation,
+        UnaryOp::Bang => estree::UnaryOperator::Negation,
         UnaryOp::Delete => estree::UnaryOperator::Delete,
         UnaryOp::Minus => estree::UnaryOperator::Minus,
         UnaryOp::Plus => estree::UnaryOperator::Plus,
@@ -442,32 +441,34 @@ enum Operator {
 
 fn convert_binary_operator(op: BinaryOp) -> Operator {
     match op {
-        BinaryOp::Add => Operator::Binary(estree::BinaryOperator::Plus),
-        BinaryOp::BitAnd => Operator::Binary(estree::BinaryOperator::Ampersand),
-        BinaryOp::BitOr => Operator::Binary(estree::BinaryOperator::Pipe),
-        BinaryOp::BitXor => Operator::Binary(estree::BinaryOperator::Caret),
-        BinaryOp::Div => Operator::Binary(estree::BinaryOperator::Slash),
-        BinaryOp::EqEq => Operator::Binary(estree::BinaryOperator::EqualsEquals),
-        BinaryOp::EqEqEq => Operator::Binary(estree::BinaryOperator::TripleEquals),
-        BinaryOp::Exp => Operator::Binary(estree::BinaryOperator::AsteriskAsterisk),
+        BinaryOp::Add => Operator::Binary(estree::BinaryOperator::Add),
+        BinaryOp::BitAnd => Operator::Binary(estree::BinaryOperator::BinaryAnd),
+        BinaryOp::BitOr => Operator::Binary(estree::BinaryOperator::BinaryOr),
+        BinaryOp::BitXor => Operator::Binary(estree::BinaryOperator::BinaryXor),
+        BinaryOp::Div => Operator::Binary(estree::BinaryOperator::Divide),
+        BinaryOp::EqEq => Operator::Binary(estree::BinaryOperator::Equals),
+        BinaryOp::EqEqEq => Operator::Binary(estree::BinaryOperator::StrictEquals),
+        // BinaryOp::Exp => Operator::Binary(estree::BinaryOperator::AsteriskAsterisk),
         BinaryOp::Gt => Operator::Binary(estree::BinaryOperator::GreaterThan),
-        BinaryOp::GtEq => Operator::Binary(estree::BinaryOperator::GreaterThanEquals),
+        BinaryOp::GtEq => Operator::Binary(estree::BinaryOperator::GreaterThanOrEqual),
         BinaryOp::In => Operator::Binary(estree::BinaryOperator::In),
         BinaryOp::InstanceOf => Operator::Binary(estree::BinaryOperator::Instanceof),
-        BinaryOp::LShift => Operator::Binary(estree::BinaryOperator::LtLt),
+        BinaryOp::LShift => Operator::Binary(estree::BinaryOperator::ShiftLeft),
         BinaryOp::Lt => Operator::Binary(estree::BinaryOperator::LessThan),
-        BinaryOp::LtEq => Operator::Binary(estree::BinaryOperator::LessThanEquals),
-        BinaryOp::Mod => Operator::Binary(estree::BinaryOperator::Percent),
-        BinaryOp::Mul => Operator::Binary(estree::BinaryOperator::Asterisk),
+        BinaryOp::LtEq => Operator::Binary(estree::BinaryOperator::LessThanOrEqual),
+        BinaryOp::Mod => Operator::Binary(estree::BinaryOperator::Modulo),
+        // BinaryOp::Mul => Operator::Binary(estree::BinaryOperator::Asterisk),
         BinaryOp::NotEq => Operator::Binary(estree::BinaryOperator::NotEquals),
-        BinaryOp::NotEqEq => Operator::Binary(estree::BinaryOperator::NotTripleEquals),
-        BinaryOp::RShift => Operator::Binary(estree::BinaryOperator::GtGt),
-        BinaryOp::Sub => Operator::Binary(estree::BinaryOperator::Minus),
-        BinaryOp::ZeroFillRShift => Operator::Binary(estree::BinaryOperator::GtGtGt),
+        BinaryOp::NotEqEq => Operator::Binary(estree::BinaryOperator::NotStrictEquals),
+        BinaryOp::RShift => Operator::Binary(estree::BinaryOperator::ShiftRight),
+        BinaryOp::Sub => Operator::Binary(estree::BinaryOperator::Subtract),
+        BinaryOp::ZeroFillRShift => Operator::Binary(estree::BinaryOperator::UnsignedShiftRight),
 
-        BinaryOp::LogicalAnd => Operator::Logical(estree::LogicalOperator::AmpersandAmpersand),
-        BinaryOp::LogicalOr => Operator::Logical(estree::LogicalOperator::PipePipe),
-        BinaryOp::NullishCoalescing => Operator::Logical(estree::LogicalOperator::QuestionQuestion),
+        BinaryOp::LogicalAnd => Operator::Logical(estree::LogicalOperator::And),
+        BinaryOp::LogicalOr => Operator::Logical(estree::LogicalOperator::Or),
+        BinaryOp::NullishCoalescing => Operator::Logical(estree::LogicalOperator::NullCoalescing),
+
+        _ => panic!("Unsupported binary operator `{}`", op),
     }
 }
 
@@ -484,7 +485,7 @@ fn convert_pattern(cx: &Context, pat: &Pat) -> estree::Pattern {
 }
 
 fn convert_binding(context: &Context, binding_cx: SyntaxContext) -> Option<Binding> {
-    let id = BindingId::new(NonZeroU32::new(binding_cx.as_u32()).unwrap());
+    let id = BindingId::new(binding_cx.as_u32());
     if binding_cx.as_u32() == context.top_level_mark.as_u32() {
         Some(Binding::Global)
     } else if binding_cx.as_u32() == context.unresolved_mark.as_u32() {

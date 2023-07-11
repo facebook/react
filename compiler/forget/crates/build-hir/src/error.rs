@@ -76,6 +76,10 @@ pub enum DiagnosticError {
     /// ErrorSeverity::Invariant
     #[error("Invariant: Identifier was not resolved (did name resolution run successfully?)")]
     UnknownIdentifier,
+
+    /// ErrorSeverity::InvalidSyntax
+    #[error("Expected function to have a body")]
+    EmptyFunction,
 }
 
 #[derive(Error, Diagnostic, Debug)]
