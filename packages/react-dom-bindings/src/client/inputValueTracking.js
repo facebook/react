@@ -75,12 +75,15 @@ function trackValueOnNode(node: any): ?ValueTracker {
   ) {
     return;
   }
-  const {get, set} = descriptor;
   Object.defineProperty(node, valueField, {
     configurable: true,
     // $FlowFixMe[missing-this-annot]
     get: function () {
-      return get.call(this);
+      const descriptor = Object.getOwnPropertyDescriptor(
+        node.constructor.prototype,
+        valueField,
+      );
+      return descriptor.get.call(this);
     },
     // $FlowFixMe[missing-local-annot]
     // $FlowFixMe[missing-this-annot]
@@ -89,7 +92,11 @@ function trackValueOnNode(node: any): ?ValueTracker {
         checkFormFieldValueStringCoercion(value);
       }
       currentValue = '' + value;
-      set.call(this, value);
+      const descriptor = Object.getOwnPropertyDescriptor(
+        node.constructor.prototype,
+        valueField,
+      );
+      descriptor.set.call(this, value);
     },
   });
   // We could've passed this the first time
