@@ -25,22 +25,22 @@ describe('input value tracking', () => {
 
     Object.defineProperty(HTMLInputElement.prototype, 'value', {
       configurable: true,
-      get: function() {
+      get: function () {
         getterInterceptor();
         return get.call(this);
       },
-      set: function(value) {
+      set: function (value) {
         set.call(this, value);
-      }
+      },
     });
 
     class MyForm extends React.Component {
       render() {
         return (
           <form>
-            <input type='text'></input>
+            <input type="text"></input>
           </form>
-        )
+        );
       }
     }
 
@@ -48,10 +48,9 @@ describe('input value tracking', () => {
     const myForm = ReactDOM.findDOMNode(myNode);
     const myInput = myForm.firstElementChild;
 
-
     // Access input value to trigger the descriptor above
     myInput.value;
-  
+
     expect(getterInterceptor).toHaveBeenCalled();
   });
 
@@ -60,16 +59,15 @@ describe('input value tracking', () => {
       render() {
         return (
           <form>
-            <input type='text'></input>
+            <input type="text"></input>
           </form>
-        )
+        );
       }
     }
 
     const myNode = ReactTestUtils.renderIntoDocument(<MyForm />);
     const myForm = ReactDOM.findDOMNode(myNode);
     const myInput = myForm.firstElementChild;
-
 
     const descriptor = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
@@ -81,18 +79,18 @@ describe('input value tracking', () => {
 
     Object.defineProperty(HTMLInputElement.prototype, 'value', {
       configurable: true,
-      get: function() {
+      get: function () {
         getterInterceptor();
         return get.call(this);
       },
-      set: function(value) {
+      set: function (value) {
         set.call(this, value);
-      }
+      },
     });
 
     // Access input value to trigger the descriptor above
     myInput.value;
-  
+
     expect(getterInterceptor).toHaveBeenCalled();
   });
 
@@ -104,13 +102,13 @@ describe('input value tracking', () => {
     const {get, set} = descriptor;
     Object.defineProperty(HTMLInputElement.prototype, 'value', {
       configurable: true,
-      get: function() {
+      get: function () {
         getterInterceptor();
         return get.call(this);
       },
-      set: function(value) {
+      set: function (value) {
         set.call(this, value);
-      }
+      },
     });
 
     const getterInterceptor = jest.fn();
@@ -119,9 +117,9 @@ describe('input value tracking', () => {
       render() {
         return (
           <form>
-            <input type='text'></input>
+            <input type="text"></input>
           </form>
-        )
+        );
       }
     }
 
@@ -129,11 +127,11 @@ describe('input value tracking', () => {
     const myForm = ReactDOM.findDOMNode(myNode);
     const myInput = myForm.firstElementChild;
 
-    delete HTMLInputElement.prototype.value
+    delete HTMLInputElement.prototype.value;
 
     // Access input value to trigger the descriptor above
     myInput.value;
-  
+
     expect(getterInterceptor).toHaveBeenCalled();
   });
 });
