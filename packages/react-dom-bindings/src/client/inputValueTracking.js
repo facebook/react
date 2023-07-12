@@ -104,6 +104,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
         valueField,
       );
 
+      // Fall back to descriptor stored at installation time when there is no current descriptor
       if (!currentDescriptor || !currentDescriptor.set) {
         set.call(this, value);
         return;
