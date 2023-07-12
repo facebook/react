@@ -457,7 +457,7 @@ fn convert_binary_operator(op: BinaryOp) -> Operator {
         BinaryOp::Lt => Operator::Binary(estree::BinaryOperator::LessThan),
         BinaryOp::LtEq => Operator::Binary(estree::BinaryOperator::LessThanOrEqual),
         BinaryOp::Mod => Operator::Binary(estree::BinaryOperator::Modulo),
-        // BinaryOp::Mul => Operator::Binary(estree::BinaryOperator::Asterisk),
+        BinaryOp::Mul => Operator::Binary(estree::BinaryOperator::Multiply),
         BinaryOp::NotEq => Operator::Binary(estree::BinaryOperator::NotEquals),
         BinaryOp::NotEqEq => Operator::Binary(estree::BinaryOperator::NotStrictEquals),
         BinaryOp::RShift => Operator::Binary(estree::BinaryOperator::ShiftRight),

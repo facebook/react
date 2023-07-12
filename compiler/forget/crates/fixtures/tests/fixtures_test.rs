@@ -5,6 +5,7 @@ use bumpalo::Bump;
 use estree::{ModuleItem, Statement};
 use estree_swc::parse;
 use hir::{Environment, Print, Registry};
+use hir_optimization::constant_propagation;
 use hir_ssa::{eliminate_redundant_phis, enter_ssa};
 use insta::{assert_snapshot, glob};
 use miette::{NamedSource, Report};
@@ -12,6 +13,7 @@ use miette::{NamedSource, Report};
 #[test]
 fn fixtures() {
     glob!("fixtures/**.js", |path| {
+        println!("fixture {}", path.to_str().unwrap());
         let input = std::fs::read_to_string(path).unwrap();
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
 
@@ -35,6 +37,7 @@ fn fixtures() {
                         Ok(mut fun) => {
                             enter_ssa(&environment, &mut fun).unwrap();
                             eliminate_redundant_phis(&environment, &mut fun);
+                            constant_propagation(&environment, &mut fun);
                             fun.print(&fun.body, &mut output).unwrap();
                         }
                         Err(error) => {

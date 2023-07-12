@@ -5,6 +5,7 @@ members = [
     "crates/fixtures",
     "crates/hir",
     "crates/hir-ssa",
+    "crates/hir-optimization",
     "crates/swc-demo",
     "crates/estree",
     "crates/estree-codegen",

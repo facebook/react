@@ -66,7 +66,7 @@ bb1 (block)
   x$14: phi(bb3: x$10, bb6: x$13)
   z$18: phi(bb3: z$19, bb6: z$9)
   [21] #15 = LoadLocal unknown x$14
-  [22] #16 = LoadLocal unknown y$8
+  [22] #16 = 0
   [23] #17 = Binary unknown #15 + unknown #16
   [24] #18 = LoadLocal unknown z$18
   [25] #19 = Binary unknown #17 + unknown #18

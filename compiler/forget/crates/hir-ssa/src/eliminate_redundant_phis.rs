@@ -16,7 +16,7 @@ use utils::RetainMut;
 /// and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
 /// until there are no new rewrites: for a CFG without back-edges it completes in a single pass.
 type Rewrites<'a> = HashMap<IdentifierId, Identifier<'a>>;
-pub fn eliminate_redundant_phis<'a>(_env: &'a Environment, fun: &mut Function<'a>) {
+pub fn eliminate_redundant_phis<'a>(_env: &Environment, fun: &mut Function<'a>) {
     let hir = &mut fun.body;
     let mut rewrites = Rewrites::new();
 

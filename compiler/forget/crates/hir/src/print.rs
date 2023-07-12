@@ -146,6 +146,9 @@ impl<'a> Print<'a> for InstructionValue<'a> {
                 write!(out, " {} ", value.operator)?;
                 value.right.print(hir, out)?;
             }
+            InstructionValue::Tombstone => {
+                write!(out, "Tombstone!")?;
+            }
             _ => write!(out, "{:?}", self)?,
         }
         Ok(())

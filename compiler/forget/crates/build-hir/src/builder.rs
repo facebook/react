@@ -118,14 +118,8 @@ impl<'a> Builder<'a> {
             blocks: self.completed,
             instructions: self.instructions,
         };
-
-        reverse_postorder_blocks(&mut hir);
-        remove_unreachable_for_updates(&mut hir);
-        remove_unreachable_fallthroughs(&mut hir);
-        remove_unreachable_do_while_statements(&mut hir);
-        mark_instruction_ids(&mut hir)?;
-        mark_predecessors(&mut hir);
-
+        // Run all the initialization passes
+        initialize_hir(&mut hir)?;
         Ok(hir)
     }
 
@@ -362,9 +356,19 @@ impl<'a> Builder<'a> {
     }
 }
 
+pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
+    reverse_postorder_blocks(hir);
+    remove_unreachable_for_updates(hir);
+    remove_unreachable_fallthroughs(hir);
+    remove_unreachable_do_while_statements(hir);
+    mark_instruction_ids(hir)?;
+    mark_predecessors(hir);
+    Ok(())
+}
+
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before
 /// successors (except for the case of loops)
-fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
+pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     let mut visited = HashSet::<BlockId>::with_capacity(hir.blocks.len());
     let mut postorder = std::vec::Vec::<BlockId>::with_capacity(hir.blocks.len());
     fn visit<'a>(
@@ -416,7 +420,7 @@ fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
 }
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable
-fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
     let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
 
     for block in hir.blocks.values_mut() {
@@ -432,7 +436,7 @@ fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
 
 /// Prunes unreachable fallthrough values, setting them to None if the referenced
 /// block was not otherwise reachable.
-fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
     let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
 
     for block in hir.blocks.values_mut() {
@@ -450,7 +454,7 @@ fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
 }
 
 /// Rewrites DoWhile statements into Gotos if the test block is not reachable
-fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
     let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
 
     for block in hir.blocks.values_mut() {
@@ -467,7 +471,7 @@ fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 
 /// Updates the instruction ids for all instructions and blocks
 /// Relies on the blocks being in reverse postorder to ensure that id ordering is correct
-fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
+pub fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
     for (ii, block) in hir.blocks.values_mut().enumerate() {
@@ -489,7 +493,7 @@ fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
 }
 
 /// Updates the predecessors of each block
-fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
+pub fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
     for block in hir.blocks.values_mut() {
         block.predecessors.clear();
     }

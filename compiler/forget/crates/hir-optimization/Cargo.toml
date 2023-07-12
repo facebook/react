@@ -1,18 +1,17 @@
 [package]
-name = "fixtures"
+name = "hir-optimization"
 version = "0.1.0"
 edition = "2021"
-publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-insta = "1.30.0"
 estree = { path = "../estree" }
-estree-swc = { path = "../estree-swc" }
 hir = { path = "../hir" }
-hir-optimization = { path = "../hir-optimization" }
 hir-ssa = { path = "../hir-ssa" }
 build-hir = { path = "../build-hir" }
-bumpalo = { version = "3.13.0", features = ["collections"] }
-miette = { version = "5.9.0", features = ["backtrace", "fancy"] }
+utils = { path = "../utils" }
+bumpalo = "3.13.0"
+indexmap = "2.0.0"
+miette = { version = "5.9.0" }
+thiserror = "1.0.41"

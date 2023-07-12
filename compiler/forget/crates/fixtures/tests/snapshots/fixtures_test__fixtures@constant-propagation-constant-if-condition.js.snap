@@ -1,0 +1,39 @@
+---
+source: crates/fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/fixtures/tests/fixtures/constant-propagation-constant-if-condition.js
+---
+Input:
+function Component(props) {
+  let x = true;
+  let y;
+  if (x) {
+    y = 42;
+  } else {
+    y = "nope";
+  }
+  return y;
+}
+
+
+Output:
+function Component(
+  unknown props$3,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = true
+  [1] #1 = StoreLocal Let unknown x$4 = unknown #0
+  [2] #2 = DeclareLocal Let unknown y$5
+  [3] #7 = true
+  [4] Goto bb2
+bb2 (block)
+  predecessors: bb0
+  [5] #3 = 42
+  [6] #4 = StoreLocal Reassign unknown y$6 = unknown #3
+  [7] Goto bb1
+bb1 (block)
+  predecessors: bb2
+  [8] #8 = LoadLocal unknown y$6
+  [9] Return unknown #8
+

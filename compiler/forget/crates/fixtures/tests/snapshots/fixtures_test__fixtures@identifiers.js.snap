@@ -34,7 +34,7 @@ bb0 (block)
   [3] #3 = StoreLocal Let unknown y$5 = unknown #2
   [4] #4 = false
   [5] #5 = StoreLocal Reassign unknown y$6 = unknown #4
-  [6] #6 = LoadLocal unknown y$6
+  [6] #6 = false
   [7] #7 = DeclareLocal Let unknown z$7
   [8] #8 = LoadLocal unknown z$7
   [9] #9 = LoadLocal unknown x$4

@@ -32,6 +32,7 @@ impl<'a> Instruction<'a> {
             InstructionValue::StoreLocal(instr) => {
                 f(&mut instr.lvalue);
             }
+            InstructionValue::Tombstone => {}
         }
     }
 
@@ -49,6 +50,7 @@ impl<'a> Instruction<'a> {
             InstructionValue::LoadLocal(instr) => f(&mut instr.place),
             InstructionValue::Primitive(_) => {}
             InstructionValue::StoreLocal(_) => {}
+            InstructionValue::Tombstone => {}
         }
     }
 }
@@ -87,7 +89,7 @@ pub enum InstructionValue<'a> {
     // Template(Template<'a>),
     // TypeCast(TypeCast<'a>),
     // Unary(Unary<'a>),
-    // Unsupported(Unsupported<'a>),
+    Tombstone,
 }
 
 #[derive(Debug)]
@@ -108,12 +110,12 @@ pub struct Binary {
     pub right: Operand,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Primitive<'a> {
     pub value: PrimitiveValue<'a>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PrimitiveValue<'a> {
     Boolean(bool),
     Null,
@@ -122,20 +124,140 @@ pub enum PrimitiveValue<'a> {
     Undefined,
 }
 
+impl<'a> PrimitiveValue<'a> {
+    pub fn is_truthy(&self) -> bool {
+        match &self {
+            PrimitiveValue::Boolean(value) => *value,
+            PrimitiveValue::Number(value) => value.is_truthy(),
+            PrimitiveValue::String(value) => value.len() != 0,
+            PrimitiveValue::Null => false,
+            PrimitiveValue::Undefined => false,
+        }
+    }
+
+    // Partial implementation of loose equality for javascript, returns Some for supported
+    // cases w the equality result, and None for unsupported cases
+    pub fn loosely_equals(&self, other: &Self) -> Option<bool> {
+        // https://tc39.es/ecma262/multipage/abstract-operations.html#sec-islooselyequal
+        match (&self, &other) {
+            // 1. If Type(x) is Type(y), then
+            //    a. Return IsStrictlyEqual(x, y).
+            (PrimitiveValue::Number(left), PrimitiveValue::Number(right)) => {
+                Some(left.equals(*right))
+            }
+            (PrimitiveValue::Null, PrimitiveValue::Null) => Some(true),
+            (PrimitiveValue::Undefined, PrimitiveValue::Undefined) => Some(true),
+            (PrimitiveValue::Boolean(left), PrimitiveValue::Boolean(right)) => Some(left == right),
+            (PrimitiveValue::String(left), PrimitiveValue::String(right)) => Some(left == right),
+
+            // 2. If x is null and y is undefined, return true.
+            (PrimitiveValue::Null, PrimitiveValue::Undefined) => Some(true),
+
+            // 3. If x is undefined and y is null, return true.
+            (PrimitiveValue::Undefined, PrimitiveValue::Null) => Some(true),
+            _ => None,
+        }
+    }
+
+    pub fn not_loosely_equals(&self, other: &Self) -> Option<bool> {
+        self.loosely_equals(other).map(|value| !value)
+    }
+
+    // Complete implementation of strict equality for javascript
+    pub fn strictly_equals(&self, other: &Self) -> bool {
+        // https://tc39.es/ecma262/multipage/abstract-operations.html#sec-isstrictlyequal
+        match (&self, &other) {
+            (PrimitiveValue::Number(left), PrimitiveValue::Number(right)) => left.equals(*right),
+            (PrimitiveValue::Null, PrimitiveValue::Null) => true,
+            (PrimitiveValue::Undefined, PrimitiveValue::Undefined) => true,
+            (PrimitiveValue::Boolean(left), PrimitiveValue::Boolean(right)) => left == right,
+            (PrimitiveValue::String(left), PrimitiveValue::String(right)) => left == right,
+            _ => false,
+        }
+    }
+
+    pub fn not_strictly_equals(&self, other: &Self) -> bool {
+        !self.strictly_equals(other)
+    }
+}
+
 /// Represents a JavaScript Number as its binary representation so that
 /// -1 == -1, NaN == Nan etc.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+/// Note: NaN is *always* represented as the f64::NAN constant to allow
+/// comparison of NaNs.
+#[derive(Clone, Copy, Eq, PartialEq, PartialOrd, Ord, Debug, Hash)]
 pub struct Number(u64);
 
 impl From<f64> for Number {
     fn from(value: f64) -> Self {
-        Self(value.to_bits())
+        if value.is_nan() {
+            Self(f64::NAN.to_bits())
+        } else {
+            Self(value.to_bits())
+        }
     }
 }
 
 impl From<Number> for f64 {
-    fn from(value: Number) -> Self {
-        f64::from_bits(value.0)
+    fn from(number: Number) -> Self {
+        let value = f64::from_bits(number.0);
+        assert!(!f64::is_nan(value) || number.0 == f64::NAN.to_bits());
+        value
+    }
+}
+
+impl Number {
+    pub fn equals(self, other: Self) -> bool {
+        f64::from(self) == f64::from(other)
+    }
+
+    pub fn not_equals(self, other: Self) -> bool {
+        !self.equals(other)
+    }
+
+    pub fn is_truthy(self) -> bool {
+        let value = f64::from(self);
+        if self.0 == f64::NAN.to_bits() || value == 0.0 || value == -0.0 {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+impl std::ops::Add for Number {
+    type Output = Number;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let result = f64::from(self) + f64::from(rhs);
+        Self::from(result)
+    }
+}
+
+impl std::ops::Sub for Number {
+    type Output = Number;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let result = f64::from(self) - f64::from(rhs);
+        Self::from(result)
+    }
+}
+
+impl std::ops::Mul for Number {
+    type Output = Number;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let result = f64::from(self) * f64::from(rhs);
+        Self::from(result)
+    }
+}
+
+impl std::ops::Div for Number {
+    type Output = Number;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let result = f64::from(self) / f64::from(rhs);
+        Self::from(result)
     }
 }
 
@@ -149,7 +271,7 @@ pub struct LoadContext {
     pub place: Operand,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct LoadGlobal<'a> {
     pub name: String<'a>,
 }

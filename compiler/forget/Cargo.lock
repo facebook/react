@@ -504,6 +504,7 @@ dependencies = [
  "estree",
  "estree-swc",
  "hir",
+ "hir-optimization",
  "hir-ssa",
  "insta",
  "miette 5.9.0",
@@ -637,6 +638,21 @@ dependencies = [
  "estree",
  "indexmap 2.0.0",
  "serde",
+]
+
+[[package]]
+name = "hir-optimization"
+version = "0.1.0"
+dependencies = [
+ "build-hir",
+ "bumpalo",
+ "estree",
+ "hir",
+ "hir-ssa",
+ "indexmap 2.0.0",
+ "miette 5.9.0",
+ "thiserror",
+ "utils",
 ]
 
 [[package]]
