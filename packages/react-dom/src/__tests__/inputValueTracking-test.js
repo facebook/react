@@ -38,7 +38,7 @@ describe('input value tracking', () => {
       render() {
         return (
           <form>
-            <input type="text"></input>
+            <input type="text" />
           </form>
         );
       }
@@ -49,6 +49,7 @@ describe('input value tracking', () => {
     const myInput = myForm.firstElementChild;
 
     // Access input value to trigger the descriptor above
+    // eslint-disable-next-line ft-flow/no-unused-expressions
     myInput.value;
 
     expect(getterInterceptor).toHaveBeenCalled();
@@ -59,7 +60,7 @@ describe('input value tracking', () => {
       render() {
         return (
           <form>
-            <input type="text"></input>
+            <input type="text" />
           </form>
         );
       }
@@ -89,6 +90,7 @@ describe('input value tracking', () => {
     });
 
     // Access input value to trigger the descriptor above
+    // eslint-disable-next-line ft-flow/no-unused-expressions
     myInput.value;
 
     expect(getterInterceptor).toHaveBeenCalled();
@@ -117,7 +119,7 @@ describe('input value tracking', () => {
       render() {
         return (
           <form>
-            <input type="text"></input>
+            <input type="text" />
           </form>
         );
       }
@@ -130,6 +132,7 @@ describe('input value tracking', () => {
     delete HTMLInputElement.prototype.value;
 
     // Access input value to trigger the descriptor above
+    // eslint-disable-next-line ft-flow/no-unused-expressions
     myInput.value;
 
     expect(getterInterceptor).toHaveBeenCalled();
