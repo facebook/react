@@ -3585,13 +3585,6 @@ body {
         imageSizes: 'makes no sense',
       });
 
-      ReactDOM.preload('rp', {
-        as: 'image',
-        imageSrcSet: 'rpsrcset',
-        imageSizes: 'rpsizes',
-        referrerPolicy: 'no-referrer',
-      });
-
       if (isClient) {
         // Will key off href in absense of imageSrcSet
         ReactDOM.preload('client', {as: 'image'});
@@ -3641,13 +3634,6 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
-          <link
-            rel="preload"
-            as="image"
-            imagesrcset="rpsrcset"
-            imagesizes="rpsizes"
-            referrerpolicy="no-referrer"
-          />
         </head>
         <body>hello</body>
       </html>,
@@ -3667,13 +3653,6 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
-          <link
-            rel="preload"
-            as="image"
-            imagesrcset="rpsrcset"
-            imagesizes="rpsizes"
-            referrerpolicy="no-referrer"
-          />
         </head>
         <body>hello</body>
       </html>,
@@ -3693,13 +3672,6 @@ body {
             imagesizes="foosizes"
           />
           <link rel="preload" as="somethingelse" href="bar" />
-          <link
-            rel="preload"
-            as="image"
-            imagesrcset="rpsrcset"
-            imagesizes="rpsizes"
-            referrerpolicy="no-referrer"
-          />
           <link rel="preload" as="image" href="client" />
           <link rel="preload" as="image" imagesrcset="clientset" />
           <link
@@ -3707,6 +3679,91 @@ body {
             as="image"
             imagesrcset="clientset"
             imagesizes="clientsizes"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
+  it('should handle referrerPolicy on image preload', async () => {
+    function App({isClient}) {
+      ReactDOM.preload('/server', {
+        as: 'image',
+        imageSrcSet: '/server',
+        imageSizes: '100vw',
+        referrerPolicy: 'no-referrer',
+      });
+
+      if (isClient) {
+        ReactDOM.preload('/client', {
+          as: 'image',
+          imageSrcSet: '/client',
+          imageSizes: '100vw',
+          referrerPolicy: 'no-referrer',
+        });
+      }
+
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            referrerpolicy="no-referrer"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            referrerpolicy="no-referrer"
+          />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+
+    root.render(<App isClient={true} />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/server"
+            imagesizes="100vw"
+            referrerpolicy="no-referrer"
+          />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="/client"
+            imagesizes="100vw"
+            referrerpolicy="no-referrer"
           />
         </head>
         <body>hello</body>
