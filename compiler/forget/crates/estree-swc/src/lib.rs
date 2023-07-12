@@ -407,7 +407,7 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> estree::MemberE
     estree::MemberExpression {
         object: estree::ExpressionOrSuper::Expression(convert_expression(cx, &expr.obj)),
         property,
-        computed: false, // TODO
+        computed: is_computed,
         // optional: false, // TODO
         loc: None,
         range: convert_span(&expr.span),

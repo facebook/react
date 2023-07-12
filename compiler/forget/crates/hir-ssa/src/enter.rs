@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use bumpalo::collections::{CollectIn, Vec};
 use hir::{
     BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
-    IdentifierOperand, Instruction, LValue, MutableRange, Phi, HIR,
+    IdentifierOperand, Instruction, LValue, MutableRange, Phi,
 };
 use indexmap::{IndexMap, IndexSet};
 use thiserror::Error;

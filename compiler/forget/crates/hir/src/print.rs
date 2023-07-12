@@ -166,7 +166,7 @@ impl<'a> Print<'a> for ArrayElement {
 }
 
 impl<'a> Print<'a> for Operand {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+    fn print(&self, _hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(
             out,
             "{} {}",
@@ -201,7 +201,7 @@ impl<'a> Print<'a> for IdentifierOperand<'a> {
 }
 
 impl<'a> Print<'a> for Identifier<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+    fn print(&self, _hir: &HIR<'a>, out: &mut impl Write) -> Result {
         write!(
             out,
             "{}{}",

@@ -30,7 +30,7 @@ pub fn build<'a>(
 
     match fun.function.body {
         Some(estree::FunctionBody::BlockStatement(body)) => {
-            lower_block_statement(env, &mut builder, *body, None)?
+            lower_block_statement(env, &mut builder, *body)?
         }
         Some(estree::FunctionBody::Expression(body)) => {
             lower_expression(env, &mut builder, body)?;
@@ -62,13 +62,9 @@ pub fn build<'a>(
     // In case the function did not explicitly return, terminate the final
     // block with an explicit `return undefined`. If the function *did* return,
     // this will be unreachable and get pruned later.
-    let implicit_return_value = lower_value_to_temporary(
-        env,
-        &mut builder,
-        InstructionValue::Primitive(hir::Primitive {
-            value: PrimitiveValue::Undefined,
-        }),
-    );
+    let implicit_return_value = builder.push(InstructionValue::Primitive(hir::Primitive {
+        value: PrimitiveValue::Undefined,
+    }));
     builder.terminate(
         TerminalValue::Return(hir::ReturnTerminal {
             value: Operand {
@@ -96,7 +92,6 @@ fn lower_block_statement<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     stmt: BlockStatement,
-    label: Option<String<'a>>,
 ) -> Result<(), BuildDiagnostic> {
     for stmt in stmt.body {
         lower_statement(env, builder, stmt, None)?;
@@ -114,7 +109,7 @@ fn lower_statement<'a>(
 ) -> Result<(), BuildDiagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
-            lower_block_statement(env, builder, *stmt, label)?;
+            lower_block_statement(env, builder, *stmt)?;
         }
         Statement::BreakStatement(stmt) => {
             let block = builder.resolve_break(stmt.label.as_ref())?;
@@ -139,13 +134,9 @@ fn lower_statement<'a>(
         Statement::ReturnStatement(stmt) => {
             let ix = match stmt.argument {
                 Some(argument) => lower_expression(env, builder, argument)?,
-                None => lower_value_to_temporary(
-                    env,
-                    builder,
-                    InstructionValue::Primitive(hir::Primitive {
-                        value: PrimitiveValue::Undefined,
-                    }),
-                ),
+                None => builder.push(InstructionValue::Primitive(hir::Primitive {
+                    value: PrimitiveValue::Undefined,
+                })),
             };
             builder.terminate(
                 TerminalValue::Return(hir::ReturnTerminal {
@@ -196,19 +187,15 @@ fn lower_statement<'a>(
                                 ));
                             }
                         };
-                        lower_value_to_temporary(
-                            env,
-                            builder,
-                            InstructionValue::DeclareLocal(hir::DeclareLocal {
-                                lvalue: LValue {
-                                    identifier: IdentifierOperand {
-                                        identifier,
-                                        effect: None,
-                                    },
-                                    kind,
+                        builder.push(InstructionValue::DeclareLocal(hir::DeclareLocal {
+                            lvalue: LValue {
+                                identifier: IdentifierOperand {
+                                    identifier,
+                                    effect: None,
                                 },
-                            }),
-                        );
+                                kind,
+                            },
+                        }));
                     }
                 }
             }
@@ -450,17 +437,13 @@ fn lower_assignment<'a>(
         AssignmentTarget::Pattern(lvalue) => match lvalue {
             Pattern::Identifier(lvalue) => {
                 let identifier = lower_identifier_for_assignment(env, builder, kind, *lvalue)?;
-                lower_value_to_temporary(
-                    env,
-                    builder,
-                    InstructionValue::StoreLocal(hir::StoreLocal {
-                        lvalue: LValue { identifier, kind },
-                        value: Operand {
-                            ix: value,
-                            effect: None,
-                        },
-                    }),
-                )
+                builder.push(InstructionValue::StoreLocal(hir::StoreLocal {
+                    lvalue: LValue { identifier, kind },
+                    value: Operand {
+                        ix: value,
+                        effect: None,
+                    },
+                }))
             }
             _ => todo!("lower assignment pattern for {:#?}", lvalue),
         },
@@ -485,41 +468,6 @@ fn lower_identifier_for_assignment<'a>(
             identifier: id,
             effect: None,
         }),
-    }
-}
-
-/// Given an already lowered InstructionValue:
-/// - if the instruction is a LoadLocal for a temporary location, avoid the indirection
-///   and return the place that the LoadLocal loads from
-/// - otherwise, create a new temporary place, push an instruction to associate the value with
-///   that temporary, and return a clone of the temporary
-fn lower_value_to_temporary<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
-    value: InstructionValue<'a>,
-) -> InstrIx {
-    // if let InstructionValue::LoadLocal(LoadLocal {
-    //     place:
-    //         place @ Operand {
-    //             identifier: Identifier { name: None, .. },
-    //             ..
-    //         },
-    // }) = value
-    // {
-    //     return place;
-    // }
-    builder.push(value)
-}
-
-/// Constructs a temporary Identifier and Place wrapper, which can be used as an Instruction lvalue
-/// or other places where a temporary target is required
-fn build_temporary_place<'a>(
-    _env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
-) -> IdentifierOperand<'a> {
-    IdentifierOperand {
-        identifier: builder.make_temporary(),
-        effect: None,
     }
 }
 

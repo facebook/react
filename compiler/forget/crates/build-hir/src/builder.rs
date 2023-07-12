@@ -6,8 +6,7 @@ use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use hir::{
     BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, InstrIx,
-    Instruction, InstructionIdGenerator, InstructionValue, Operand, Terminal, TerminalValue, Type,
-    HIR,
+    Instruction, InstructionIdGenerator, InstructionValue, Terminal, TerminalValue, Type, HIR,
 };
 use indexmap::IndexMap;
 
@@ -251,6 +250,10 @@ impl<'a> Builder<'a> {
     }
 
     /// Returns a new temporary identifier
+    /// This may be necessary for destructuring with default values. there
+    /// we synthesize a temporary identifier to store the possibly-missing value
+    /// into, and emit a later StoreLocal for the original identifier
+    #[allow(dead_code)]
     pub(crate) fn make_temporary(&self) -> hir::Identifier<'a> {
         hir::Identifier {
             id: self.environment.next_identifier_id(),

@@ -1,5 +1,3 @@
-use std::cell::Cell;
-
 use bumpalo::{
     boxed::Box,
     collections::{String, Vec},
