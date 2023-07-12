@@ -87,7 +87,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
 
       // Fall back to descriptor stored at installation time when there is no current descriptor
       if (!currentGetter) {
-        return get.call(this)
+        return get.call(this);
       }
 
       return currentGetter.call(this);
