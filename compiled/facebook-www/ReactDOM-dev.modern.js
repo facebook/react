@@ -33804,7 +33804,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-8b06a228";
+var ReactVersion = "18.3.0-www-modern-943f2df7";
 
 function createPortal$1(
   children,
@@ -44123,7 +44123,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
     imageSrcSet: options.imageSrcSet,
-    imageSizes: options.imageSizes
+    imageSizes: options.imageSizes,
+    referrerPolicy: options.referrerPolicy
   };
 }
 

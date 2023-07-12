@@ -1868,7 +1868,8 @@ function preload(href, options) {
             nonce: options.nonce,
             fetchPriority: options.fetchPriority,
             imageSrcSet: options.imageSrcSet,
-            imageSizes: options.imageSizes
+            imageSizes: options.imageSizes,
+            referrerPolicy: options.referrerPolicy
           }
         }),
         resources.preloadsMap.set(key, imageSizes),
@@ -3909,4 +3910,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-c35c81e5";
+exports.version = "18.3.0-www-modern-d39c47bb";

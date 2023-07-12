@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-59ab606e";
+var ReactVersion = "18.3.0-www-classic-ee8ed08d";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -7564,7 +7564,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
     imageSrcSet: options.imageSrcSet,
-    imageSizes: options.imageSizes
+    imageSizes: options.imageSizes,
+    referrerPolicy: options.referrerPolicy
   };
 }
 

@@ -7571,7 +7571,8 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
     imageSrcSet: options.imageSrcSet,
-    imageSizes: options.imageSizes
+    imageSizes: options.imageSizes,
+    referrerPolicy: options.referrerPolicy
   };
 }
 

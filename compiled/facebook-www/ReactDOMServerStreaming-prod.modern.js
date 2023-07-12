@@ -1918,7 +1918,8 @@ function preload(href, options) {
             nonce: options.nonce,
             fetchPriority: options.fetchPriority,
             imageSrcSet: options.imageSrcSet,
-            imageSizes: options.imageSizes
+            imageSizes: options.imageSizes,
+            referrerPolicy: options.referrerPolicy
           }
         }),
         resources.preloadsMap.set(key, imageSizes),
