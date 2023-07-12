@@ -90,6 +90,7 @@ import {
   ConcurrentMode,
   StrictLegacyMode,
   StrictEffectsMode,
+  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   HostRoot,
@@ -3538,11 +3539,19 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
 }
 
 // Unconditionally disconnects and connects passive and layout effects.
-function doubleInvokeEffectsOnFiber(root: FiberRoot, fiber: Fiber) {
+function doubleInvokeEffectsOnFiber(
+  root: FiberRoot,
+  fiber: Fiber,
+  shouldDoubleInvokePassiveEffects: boolean = true,
+) {
   disappearLayoutEffects(fiber);
-  disconnectPassiveEffect(fiber);
+  if (shouldDoubleInvokePassiveEffects) {
+    disconnectPassiveEffect(fiber);
+  }
   reappearLayoutEffects(root, fiber.alternate, fiber, false);
-  reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+  if (shouldDoubleInvokePassiveEffects) {
+    reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+  }
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(
@@ -3559,7 +3568,11 @@ function doubleInvokeEffectsInDEVIfNecessary(
     if (fiber.flags & PlacementDEV) {
       setCurrentDebugFiberInDEV(fiber);
       if (isInStrictMode) {
-        doubleInvokeEffectsOnFiber(root, fiber);
+        doubleInvokeEffectsOnFiber(
+          root,
+          fiber,
+          (fiber.mode & NoStrictPassiveEffectsMode) === NoMode,
+        );
       }
       resetCurrentDebugFiberInDEV();
     } else {
