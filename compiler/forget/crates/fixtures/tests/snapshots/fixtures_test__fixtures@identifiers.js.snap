@@ -23,17 +23,20 @@ function id(x) {
 
 
 Output:
+function id(
+  unknown x$4,
+)
 entry bb0
-bb0
+bb0 (block)
   [0] #0 = LoadGlobal Math
   [1] #1 = LoadGlobal id
   [2] #2 = true
-  [3] #3 = StoreLocal Let unknown y$1 = unknown #2
+  [3] #3 = StoreLocal Let unknown y$5 = unknown #2
   [4] #4 = false
-  [5] #5 = StoreLocal Reassign unknown y$1 = unknown #4
-  [6] #6 = LoadLocal unknown y$1
-  [7] #7 = DeclareLocal Let unknown z$2
-  [8] #8 = LoadLocal unknown z$2
-  [9] #9 = LoadLocal unknown x$3
+  [5] #5 = StoreLocal Reassign unknown y$6 = unknown #4
+  [6] #6 = LoadLocal unknown y$6
+  [7] #7 = DeclareLocal Let unknown z$7
+  [8] #8 = LoadLocal unknown z$7
+  [9] #9 = LoadLocal unknown x$4
   [10] Return unknown #9
 

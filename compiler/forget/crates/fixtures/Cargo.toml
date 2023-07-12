@@ -11,6 +11,7 @@ insta = "1.30.0"
 estree = { path = "../estree" }
 estree-swc = { path = "../estree-swc" }
 hir = { path = "../hir" }
+hir-ssa = { path = "../hir-ssa" }
 build-hir = { path = "../build-hir" }
 bumpalo = { version = "3.13.0", features = ["collections"] }
 miette = { version = "5.9.0", features = ["backtrace", "fancy"] }

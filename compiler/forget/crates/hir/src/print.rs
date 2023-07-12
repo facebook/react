@@ -2,7 +2,7 @@ use std::fmt::{Result, Write};
 
 use crate::{
     ArrayElement, BasicBlock, Function, Identifier, IdentifierOperand, Instruction,
-    InstructionValue, LValue, Operand, PrimitiveValue, Terminal, TerminalValue, HIR,
+    InstructionValue, LValue, Operand, Phi, PrimitiveValue, Terminal, TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -16,6 +16,20 @@ pub trait Print<'a> {
 
 impl<'a> Print<'a> for Function<'a> {
     fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+        writeln!(
+            out,
+            "function {}(",
+            match &self.id {
+                Some(id) => id,
+                None => "<anonymous>",
+            }
+        )?;
+        for param in &self.params {
+            write!(out, "  ")?;
+            param.print(hir, out)?;
+            writeln!(out, ",")?;
+        }
+        writeln!(out, ")")?;
         writeln!(out, "entry {}", self.body.entry)?;
         for (_, block) in self.body.blocks.iter() {
             block.print(hir, out)?;
@@ -26,7 +40,21 @@ impl<'a> Print<'a> for Function<'a> {
 
 impl<'a> Print<'a> for BasicBlock<'a> {
     fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
-        writeln!(out, "{}", self.id)?;
+        writeln!(out, "{} ({})", self.id, self.kind)?;
+        if !self.predecessors.is_empty() {
+            write!(out, "  predecessors: ")?;
+            for (ix, pred) in self.predecessors.iter().enumerate() {
+                if ix != 0 {
+                    write!(out, ", ")?;
+                }
+                write!(out, "{}", *pred)?;
+            }
+            writeln!(out)?;
+        }
+        for phi in self.phis.iter() {
+            phi.print(hir, out)?;
+            writeln!(out)?;
+        }
         for ix in &self.instructions {
             let instr = &hir.instructions[usize::from(*ix)];
             write!(out, "  {} {} = ", instr.id, ix)?;
@@ -34,6 +62,23 @@ impl<'a> Print<'a> for BasicBlock<'a> {
             writeln!(out, "")?;
         }
         self.terminal.print(hir, out)?;
+        Ok(())
+    }
+}
+
+impl<'a> Print<'a> for Phi<'a> {
+    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+        write!(out, "  ")?;
+        self.identifier.print(hir, out)?;
+        write!(out, ": phi(")?;
+        for (ix, (pred_id, id)) in self.operands.iter().enumerate() {
+            if ix != 0 {
+                write!(out, ", ")?;
+            }
+            write!(out, "{}: ", pred_id)?;
+            id.print(hir, out)?;
+        }
+        write!(out, ")")?;
         Ok(())
     }
 }

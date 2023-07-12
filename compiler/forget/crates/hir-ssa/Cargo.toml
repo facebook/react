@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 hir = { path = "../hir" }
 bumpalo = "3.13.0"
+indexmap = "2.0.0"
 miette = { version = "5.9.0" }
 thiserror = "1.0.41"

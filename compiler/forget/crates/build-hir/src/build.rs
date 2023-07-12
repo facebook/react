@@ -6,8 +6,8 @@ use estree::{
 };
 use hir::{
     ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, Function, GotoKind,
-    Identifier, IdentifierOperand, InstrIx, InstructionKind, InstructionValue, LValue, LoadGlobal,
-    LoadLocal, Operand, PrimitiveValue, TerminalValue,
+    IdentifierOperand, InstrIx, InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal,
+    Operand, PrimitiveValue, TerminalValue,
 };
 
 use crate::{
@@ -23,17 +23,17 @@ use crate::{
 /// Failures generally include nonsensical input (`delete 1`) or syntax
 /// that is not yet supported.
 pub fn build<'a>(
-    environment: &'a Environment<'a>,
+    env: &'a Environment<'a>,
     fun: FunctionDeclaration,
-) -> Result<Function<'a>, BuildDiagnostic> {
-    let mut builder = Builder::new(environment);
+) -> Result<&'a mut Function<'a>, BuildDiagnostic> {
+    let mut builder = Builder::new(env);
 
     match fun.function.body {
         Some(estree::FunctionBody::BlockStatement(body)) => {
-            lower_block_statement(environment, &mut builder, *body, None)?
+            lower_block_statement(env, &mut builder, *body, None)?
         }
         Some(estree::FunctionBody::Expression(body)) => {
-            lower_expression(environment, &mut builder, body)?;
+            lower_expression(env, &mut builder, body)?;
         }
         None => {
             return Err(BuildDiagnostic::new(
@@ -44,11 +44,26 @@ pub fn build<'a>(
         }
     }
 
+    let mut params = Vec::with_capacity_in(fun.function.params.len(), &env.allocator);
+    for param in fun.function.params {
+        match param {
+            Pattern::Identifier(param) => {
+                let identifier = lower_identifier_for_assignment(
+                    env,
+                    &mut builder,
+                    InstructionKind::Let,
+                    *param,
+                )?;
+                params.push(identifier);
+            }
+        }
+    }
+
     // In case the function did not explicitly return, terminate the final
     // block with an explicit `return undefined`. If the function *did* return,
     // this will be unreachable and get pruned later.
     let implicit_return_value = lower_value_to_temporary(
-        environment,
+        env,
         &mut builder,
         InstructionValue::Primitive(hir::Primitive {
             value: PrimitiveValue::Undefined,
@@ -65,11 +80,16 @@ pub fn build<'a>(
     );
 
     let body = builder.build()?;
-    Ok(Function {
+    Ok(env.alloc(Function {
+        id: fun
+            .function
+            .id
+            .map(|id| String::from_str_in(&id.name, &env.allocator)),
         body,
+        params,
         is_async: fun.function.is_async,
         is_generator: fun.function.is_generator,
-    })
+    }))
 }
 
 fn lower_block_statement<'a>(

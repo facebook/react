@@ -11,8 +11,10 @@ function test() {
 
 
 Output:
+function test(
+)
 entry bb0
-bb0
+bb0 (block)
   [0] #0 = true
   [1] #1 = false
   [2] #2 = null

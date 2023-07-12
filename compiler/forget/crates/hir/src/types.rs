@@ -1,6 +1,6 @@
 use crate::{FunctionId, ObjectId, TypeVarId};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Type {
     Builtin(BuiltinType),
     // Phi(Box<PhiType>),
@@ -9,7 +9,7 @@ pub enum Type {
     // Prop(Box<PropType>),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum BuiltinType {
     Primitive,
     Function(Option<FunctionId>),

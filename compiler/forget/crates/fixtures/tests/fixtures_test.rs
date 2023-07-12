@@ -5,6 +5,7 @@ use bumpalo::Bump;
 use estree::{ModuleItem, Statement};
 use estree_swc::parse;
 use hir::{Environment, Print, Registry};
+use hir_ssa::enter_ssa;
 use insta::{assert_snapshot, glob};
 use miette::{NamedSource, Report};
 
@@ -31,8 +32,9 @@ fn fixtures() {
                         output.push_str("\n\n");
                     }
                     match build(&environment, *fun) {
-                        Ok(hir) => {
-                            hir.print(&hir.body, &mut output).unwrap();
+                        Ok(mut fun) => {
+                            enter_ssa(&environment, &mut fun).unwrap();
+                            fun.print(&fun.body, &mut output).unwrap();
                         }
                         Err(error) => {
                             write!(&mut output, "{}", error,).unwrap();

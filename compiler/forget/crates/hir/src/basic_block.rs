@@ -1,6 +1,8 @@
-use std::collections::HashSet;
+use std::fmt::Display;
 
-use crate::{id_types::BlockId, InstrIx, Terminal};
+use indexmap::{IndexMap, IndexSet};
+
+use crate::{id_types::BlockId, Identifier, InstrIx, Terminal};
 
 /// Represents a sequence of instructions that will always[1] execute
 /// consecutively. Concretely, a block may have zero or more instructions
@@ -26,7 +28,15 @@ pub struct BasicBlock<'a> {
     pub terminal: Terminal<'a>,
 
     /// The immediate predecessors of this block
-    pub predecessors: HashSet<BlockId>,
+    pub predecessors: IndexSet<BlockId>,
+
+    pub phis: bumpalo::collections::Vec<'a, Phi<'a>>,
+}
+
+#[derive(Debug)]
+pub struct Phi<'a> {
+    pub identifier: Identifier<'a>,
+    pub operands: IndexMap<BlockId, Identifier<'a>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -35,4 +45,15 @@ pub enum BlockKind {
     Value,
     Loop,
     Sequence,
+}
+
+impl Display for BlockKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Block => f.write_str("block"),
+            Self::Value => f.write_str("value"),
+            Self::Loop => f.write_str("loop"),
+            Self::Sequence => f.write_str("sequence"),
+        }
+    }
 }

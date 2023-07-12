@@ -11,6 +11,48 @@ pub struct Instruction<'a> {
     pub value: InstructionValue<'a>,
 }
 
+impl<'a> Instruction<'a> {
+    pub fn each_identifier_store<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(&mut LValue<'a>) -> (),
+    {
+        match &mut self.value {
+            InstructionValue::Array(_) => {}
+            InstructionValue::Binary(_) => {}
+            InstructionValue::DeclareContext(instr) => {
+                f(&mut instr.lvalue);
+            }
+            InstructionValue::DeclareLocal(instr) => {
+                f(&mut instr.lvalue);
+            }
+            InstructionValue::LoadContext(_) => {}
+            InstructionValue::LoadGlobal(_) => {}
+            InstructionValue::LoadLocal(_) => {}
+            InstructionValue::Primitive(_) => {}
+            InstructionValue::StoreLocal(instr) => {
+                f(&mut instr.lvalue);
+            }
+        }
+    }
+
+    pub fn each_identifier_load<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(&mut IdentifierOperand<'a>) -> (),
+    {
+        match &mut self.value {
+            InstructionValue::Array(_) => {}
+            InstructionValue::Binary(_) => {}
+            InstructionValue::DeclareContext(_) => {}
+            InstructionValue::DeclareLocal(_) => {}
+            InstructionValue::LoadContext(_) => {}
+            InstructionValue::LoadGlobal(_) => {}
+            InstructionValue::LoadLocal(instr) => f(&mut instr.place),
+            InstructionValue::Primitive(_) => {}
+            InstructionValue::StoreLocal(_) => {}
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum InstructionValue<'a> {
     Array(Array<'a>),
