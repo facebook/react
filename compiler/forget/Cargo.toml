@@ -9,6 +9,7 @@ members = [
     "crates/estree",
     "crates/estree-codegen",
     "crates/estree-swc",
+    "crates/utils"
 ]
 
 # Make insta run faster by compiling with release mode optimizations

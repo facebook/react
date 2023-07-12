@@ -54,8 +54,6 @@ bb5 (block)
   [16] Goto bb3
 bb3 (block)
   predecessors: bb4, bb5
-  x$15: phi(bb4: x$10, bb5: x$10)
-  y$17: phi(bb4: y$8, bb5: y$8)
   z$19: phi(bb4: z$11, bb5: z$12)
   [17] Goto bb1
 bb6 (block)
@@ -65,11 +63,10 @@ bb6 (block)
   [20] Goto bb1
 bb1 (block)
   predecessors: bb3, bb6
-  x$14: phi(bb3: x$15, bb6: x$13)
-  y$16: phi(bb3: y$17, bb6: y$8)
+  x$14: phi(bb3: x$10, bb6: x$13)
   z$18: phi(bb3: z$19, bb6: z$9)
   [21] #15 = LoadLocal unknown x$14
-  [22] #16 = LoadLocal unknown y$16
+  [22] #16 = LoadLocal unknown y$8
   [23] #17 = Binary unknown #15 + unknown #16
   [24] #18 = LoadLocal unknown z$18
   [25] #19 = Binary unknown #17 + unknown #18

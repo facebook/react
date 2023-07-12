@@ -1,11 +1,11 @@
-use std::fmt::Write;
+use std::{env, fmt::Write};
 
 use build_hir::build;
 use bumpalo::Bump;
 use estree::{ModuleItem, Statement};
 use estree_swc::parse;
 use hir::{Environment, Print, Registry};
-use hir_ssa::enter_ssa;
+use hir_ssa::{eliminate_redundant_phis, enter_ssa};
 use insta::{assert_snapshot, glob};
 use miette::{NamedSource, Report};
 
@@ -34,6 +34,7 @@ fn fixtures() {
                     match build(&environment, *fun) {
                         Ok(mut fun) => {
                             enter_ssa(&environment, &mut fun).unwrap();
+                            eliminate_redundant_phis(&environment, &mut fun);
                             fun.print(&fun.body, &mut output).unwrap();
                         }
                         Err(error) => {

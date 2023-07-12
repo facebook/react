@@ -504,6 +504,7 @@ dependencies = [
  "estree",
  "estree-swc",
  "hir",
+ "hir-ssa",
  "insta",
  "miette 5.9.0",
 ]
@@ -644,8 +645,10 @@ version = "0.1.0"
 dependencies = [
  "bumpalo",
  "hir",
+ "indexmap 2.0.0",
  "miette 5.9.0",
  "thiserror",
+ "utils",
 ]
 
 [[package]]
@@ -2780,6 +2783,13 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+]
+
+[[package]]
+name = "utils"
+version = "0.1.0"
+dependencies = [
+ "bumpalo",
 ]
 
 [[package]]
