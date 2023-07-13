@@ -12,6 +12,7 @@ pub struct Function<'a> {
     pub id: Option<String<'a>>,
     pub body: HIR<'a>,
     pub params: Vec<'a, IdentifierOperand<'a>>,
+    pub context: Vec<'a, IdentifierOperand<'a>>,
     pub is_async: bool,
     pub is_generator: bool,
 }

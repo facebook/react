@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use bumpalo::collections::{CollectIn, Vec};
 use hir::{
     BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
-    IdentifierOperand, Instruction, LValue, MutableRange, Phi,
+    IdentifierOperand, Instruction, InstructionValue, LValue, MutableRange, Phi,
 };
 use indexmap::{IndexMap, IndexSet};
 use thiserror::Error;
@@ -13,13 +13,25 @@ use thiserror::Error;
 pub struct SSAError;
 
 pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<(), SSAError> {
+    // assert_eq!(fun.context.is_empty())
+    enter_ssa_impl(env, fun, None)
+}
+
+pub fn enter_ssa_impl<'a>(
+    env: &Environment<'a>,
+    fun: &mut Function<'a>,
+    context_defs: Option<IndexMap<IdentifierId, Identifier<'a>>>,
+) -> Result<(), SSAError> {
     let blocks = &fun.body.blocks;
     let instructions = &mut fun.body.instructions;
     let mut builder = Builder::new(env, fun.body.entry, blocks);
+    if let Some(context_defs) = context_defs {
+        builder.initialize_context(context_defs);
+    }
     for param in &mut fun.params {
         builder.visit_param(param);
     }
-    enter_ssa_impl(&mut builder, instructions)?;
+    visit_instructions(env, &mut builder, instructions)?;
 
     let mut states = builder.complete();
 
@@ -31,7 +43,8 @@ pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<()
     Ok(())
 }
 
-fn enter_ssa_impl<'a, 'e, 'f>(
+fn visit_instructions<'a, 'e, 'f>(
+    env: &Environment<'a>,
     builder: &mut Builder<'a, 'e, 'f>,
     instructions: &mut Vec<'a, Instruction<'a>>,
 ) -> Result<(), SSAError> {
@@ -40,9 +53,27 @@ fn enter_ssa_impl<'a, 'e, 'f>(
             let instr = &mut instructions[usize::from(*instr_ix)];
             instr.each_identifier_store(|store| builder.visit_store(store));
             instr.each_identifier_load(|load| builder.visit_load(load));
+
+            if let InstructionValue::Function(fun) = &mut instr.value {
+                // Lookup each of the context variables referenced in the function
+                // against the current block. Note that variables which are reassigned somewhere
+                // and referenced in a function expression are always promoted to LoadContext
+                // so the context variables are all guaranteed to be const. We're just remapping
+                // the id along w the original declaration and other usages.
+                let context_defs: IndexMap<IdentifierId, Identifier> = fun
+                    .lowered_function
+                    .context
+                    .iter()
+                    .map(|id| {
+                        let identifier = builder.get_id_at(block.id, &id.identifier);
+                        (id.identifier.id, identifier)
+                    })
+                    .collect();
+                enter_ssa_impl(env, &mut fun.lowered_function, Some(context_defs))?;
+            }
         }
-    });
-    Ok(())
+        Ok(())
+    })
 }
 
 #[derive(Debug)]
@@ -95,6 +126,11 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
             unknown: Default::default(),
             context: Default::default(),
         }
+    }
+
+    fn initialize_context(&mut self, defs: IndexMap<IdentifierId, Identifier<'a>>) {
+        let state = self.states.get_mut(&self.current).unwrap();
+        state.defs = defs;
     }
 
     fn complete(self) -> IndexMap<BlockId, BlockState<'a>> {
@@ -217,9 +253,9 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         }
     }
 
-    fn each_block<F>(&mut self, mut f: F) -> ()
+    fn each_block<F>(&mut self, mut f: F) -> Result<(), SSAError>
     where
-        F: FnMut(&BasicBlock<'a>, &mut Self) -> (),
+        F: FnMut(&BasicBlock<'a>, &mut Self) -> Result<(), SSAError>,
     {
         let mut visited = IndexSet::new();
         let block_ids: Vec<_> = self.blocks.keys().cloned().collect_in(self.env.allocator);
@@ -227,21 +263,20 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
             visited.insert(block_id);
             self.current = block_id;
             let block = self.blocks.get(&block_id).unwrap();
-            f(block, self);
+            f(block, self)?;
             let successors = block.terminal.value.successors();
             for successor in successors {
                 let block = self.blocks.get(&successor).unwrap();
                 let count = self
                     .unsealed_predecessors
-                    .get(&successor)
-                    .cloned()
-                    .unwrap_or(block.predecessors.len())
-                    - 1;
-                self.unsealed_predecessors.insert(successor, count);
-                if count == 0 && visited.contains(&successor) {
+                    .entry(successor)
+                    .or_insert(block.predecessors.len());
+                *count -= 1;
+                if *count == 0 && visited.contains(&successor) {
                     self.fix_incomplete_phis(successor)
                 }
             }
         }
+        Ok(())
     }
 }

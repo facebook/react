@@ -84,6 +84,8 @@ pub fn build<'a>(
             .map(|id| String::from_str_in(&id.name, &env.allocator)),
         body,
         params,
+        // TODO: populate context!
+        context: env.vec_new(),
         is_async: fun.is_async,
         is_generator: fun.is_generator,
     }))
