@@ -35,6 +35,11 @@ fn fixtures() {
                     }
                     match build(&environment, fun.function) {
                         Ok(mut fun) => {
+                            // println!("{fun:#?}");
+                            // let mut out = String::new();
+                            // fun.print(&fun.body, &mut out).unwrap();
+                            // println!("{out}");
+
                             enter_ssa(&environment, &mut fun).unwrap();
                             eliminate_redundant_phis(&environment, &mut fun);
                             constant_propagation(&environment, &mut fun);

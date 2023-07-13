@@ -1,19 +1,20 @@
-use bumpalo::{
-    boxed::Box,
-    collections::{String, Vec},
-};
+use std::collections::HashSet;
+
+use bumpalo::{boxed::Box, collections::String};
 use estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
-    FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement, VariableDeclarationKind,
+    Function, FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement,
+    VariableDeclarationKind,
 };
 use hir::{
-    ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, Function, GotoKind,
-    IdentifierOperand, InstrIx, InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal,
-    Operand, PrimitiveValue, TerminalValue,
+    ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand,
+    InstrIx, InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal, Operand,
+    PrimitiveValue, TerminalValue,
 };
 
 use crate::{
     builder::{Binding, Builder, LoopScope},
+    context::get_context_identifiers,
     error::DiagnosticError,
     BuildDiagnostic, ErrorSeverity,
 };
@@ -26,8 +27,8 @@ use crate::{
 /// that is not yet supported.
 pub fn build<'a>(
     env: &'a Environment<'a>,
-    fun: estree::Function,
-) -> Result<Box<'a, Function<'a>>, BuildDiagnostic> {
+    fun: Function,
+) -> Result<Box<'a, hir::Function<'a>>, BuildDiagnostic> {
     let mut builder = Builder::new(env);
 
     match fun.body {
@@ -78,7 +79,7 @@ pub fn build<'a>(
     );
 
     let body = builder.build()?;
-    Ok(env.box_new(Function {
+    Ok(env.box_new(hir::Function {
         id: fun
             .id
             .map(|id| String::from_str_in(&id.name, &env.allocator)),
@@ -179,7 +180,7 @@ fn lower_statement<'a>(
                 } else {
                     if let Pattern::Identifier(id) = declaration.id {
                         // TODO: handle unbound variables
-                        let binding = builder.resolve_binding(&id)?;
+                        let binding = builder.resolve_identifier(&id)?;
                         let identifier = match binding {
                             Binding::Local(identifier) => identifier,
                             _ => {
@@ -348,7 +349,7 @@ fn lower_expression<'a>(
     let value = match expr {
         Expression::Identifier(expr) => {
             // TODO: handle unbound variables
-            let binding = builder.resolve_binding(&expr)?;
+            let binding = builder.resolve_identifier(&expr)?;
             match binding {
                 Binding::Local(identifier) => {
                     let place = IdentifierOperand {
@@ -425,18 +426,44 @@ fn lower_expression<'a>(
         }
 
         Expression::FunctionExpression(expr) => {
-            let FunctionExpression { function, .. } = *expr;
-            let fun = build(env, function)?;
-            InstructionValue::Function(hir::FunctionExpression {
-                // TODO: collect dependencies!
-                dependencies: env.vec_new(),
-                lowered_function: fun,
-            })
+            InstructionValue::Function(lower_function(env, builder, *expr)?)
         }
 
         _ => todo!("Lower expr {expr:#?}"),
     };
     Ok(builder.push(value))
+}
+
+fn lower_function<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    expr: FunctionExpression,
+) -> Result<hir::FunctionExpression<'a>, BuildDiagnostic> {
+    let FunctionExpression { function, .. } = expr;
+    let context_identifiers = get_context_identifiers(env, &function);
+    let mut context = env.vec_new();
+    let mut seen = HashSet::new();
+    for identifier in context_identifiers {
+        match builder.resolve_identifier(identifier)? {
+            Binding::Local(identifier) => {
+                if !seen.insert(identifier.id) {
+                    continue;
+                }
+                context.push(IdentifierOperand {
+                    effect: None,
+                    identifier,
+                });
+            }
+            _ => {}
+        }
+    }
+    let mut fun = build(env, function)?;
+    fun.context = context;
+    Ok(hir::FunctionExpression {
+        // TODO: collect dependencies!
+        dependencies: env.vec_new(),
+        lowered_function: fun,
+    })
 }
 
 fn lower_assignment<'a>(
@@ -470,7 +497,7 @@ fn lower_identifier_for_assignment<'a>(
     _kind: InstructionKind,
     identifier: estree::Identifier,
 ) -> Result<IdentifierOperand<'a>, BuildDiagnostic> {
-    let binding = builder.resolve_binding(&identifier)?;
+    let binding = builder.resolve_identifier(&identifier)?;
     match binding {
         Binding::Module(..) | Binding::Global => Err(BuildDiagnostic::new(
             DiagnosticError::ReassignedGlobal,

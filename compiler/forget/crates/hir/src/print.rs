@@ -160,12 +160,12 @@ impl<'a> Print<'a> for InstructionValue<'a> {
                     dep.print(hir, out)?;
                 }
                 write!(out, "] @context[")?;
-                // for (ix, dep) in value.lowered_function.context.iter().enumerate() {
-                //     if ix != 0 {
-                //         write!(out, ", ")?;
-                //     }
-                //     dep.print(hir, out)?;
-                // }
+                for (ix, dep) in value.lowered_function.context.iter().enumerate() {
+                    if ix != 0 {
+                        write!(out, ", ")?;
+                    }
+                    dep.print(hir, out)?;
+                }
                 writeln!(out, "]:")?;
                 let mut inner_output = String::new();
                 value

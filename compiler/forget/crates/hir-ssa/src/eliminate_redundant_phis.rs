@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use hir::{BlockId, Environment, Function, Identifier, IdentifierId, InstructionValue, HIR};
+use hir::{BlockId, Environment, Function, Identifier, IdentifierId, InstructionValue};
 use utils::RetainMut;
 
 /// Pass to eliminate redundant phi nodes:

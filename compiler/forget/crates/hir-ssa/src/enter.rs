@@ -13,7 +13,7 @@ use thiserror::Error;
 pub struct SSAError;
 
 pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<(), SSAError> {
-    // assert_eq!(fun.context.is_empty())
+    assert!(fun.context.is_empty());
     enter_ssa_impl(env, fun, None)
 }
 
@@ -63,10 +63,11 @@ fn visit_instructions<'a, 'e, 'f>(
                 let context_defs: IndexMap<IdentifierId, Identifier> = fun
                     .lowered_function
                     .context
-                    .iter()
-                    .map(|id| {
-                        let identifier = builder.get_id_at(block.id, &id.identifier);
-                        (id.identifier.id, identifier)
+                    .iter_mut()
+                    .map(|identifier| {
+                        let old_id = identifier.identifier.id;
+                        builder.visit_load(identifier);
+                        (old_id, identifier.identifier.clone())
                     })
                     .collect();
                 enter_ssa_impl(env, &mut fun.lowered_function, Some(context_defs))?;

@@ -27,7 +27,7 @@ entry bb0
 bb0 (block)
   [0] #0 = 2
   [1] #1 = StoreLocal Const unknown y$7 = unknown #0
-  [2] #2 = Function @deps[] @context[]:
+  [2] #2 = Function @deps[] @context[unknown y$7]:
       function foo(
         unknown x$8,
       )
@@ -50,7 +50,7 @@ bb0 (block)
       bb2 (block)
         predecessors: bb3
         [12] #12 = LoadLocal unknown x$8
-        [13] #13 = LoadLocal unknown y$0
+        [13] #13 = 2
         [14] #14 = Binary unknown #12 + unknown #13
         [15] #15 = 8
         [16] #16 = Binary unknown #14 + unknown #15

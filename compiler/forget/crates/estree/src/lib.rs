@@ -3,11 +3,13 @@ mod generated;
 mod generated_extensions;
 mod js_value;
 mod range;
+mod visit;
 
 pub use binding::{Binding, BindingId};
 pub use generated::*;
 pub use js_value::JsValue;
 pub use range::SourceRange;
+pub use visit::*;
 
 #[cfg(test)]
 mod tests {

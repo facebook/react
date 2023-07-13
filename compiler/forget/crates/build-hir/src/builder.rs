@@ -325,7 +325,7 @@ impl<'a> Builder<'a> {
         ))
     }
 
-    pub(crate) fn resolve_binding(
+    pub(crate) fn resolve_identifier(
         &mut self,
         identifier: &estree::Identifier,
     ) -> Result<Binding<'a>, BuildDiagnostic> {
