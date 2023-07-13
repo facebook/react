@@ -5564,6 +5564,7 @@ function preloadPropsFromPreloadOptions(
     fetchPriority: options.fetchPriority,
     imageSrcSet: options.imageSrcSet,
     imageSizes: options.imageSizes,
+    referrerPolicy: options.referrerPolicy,
   };
 }
 

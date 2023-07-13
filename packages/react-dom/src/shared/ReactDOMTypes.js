@@ -18,6 +18,7 @@ export type PreloadOptions = {
   fetchPriority?: 'high' | 'low' | 'auto',
   imageSrcSet?: string,
   imageSizes?: string,
+  referrerPolicy?: string,
 };
 export type PreinitOptions = {
   as: string,
