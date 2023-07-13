@@ -1008,6 +1008,8 @@ Output:
       },
       "generator": false,
       "async": false,
+      "loc": null,
+      "range": null,
       "loc": {
         "source": null,
         "start": {
