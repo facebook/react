@@ -3280,7 +3280,7 @@ export function attach(
     };
 
     if (enableStyleXFeatures) {
-      if (memoizedProps.hasOwnProperty('xstyle')) {
+      if (memoizedProps != null && memoizedProps.hasOwnProperty('xstyle')) {
         plugins.stylex = getStyleXData(memoizedProps.xstyle);
       }
     }
