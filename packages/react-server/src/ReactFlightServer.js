@@ -7,7 +7,9 @@
  * @flow
  */
 
-import type {Chunk, Destination} from './ReactServerStreamConfig';
+import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
+
+import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -15,6 +17,9 @@ import {
   beginWriting,
   writeChunkAndReturn,
   stringToChunk,
+  typedArrayToBinaryChunk,
+  byteLengthOfChunk,
+  byteLengthOfBinaryChunk,
   completeWriting,
   close,
   closeWithError,
@@ -136,8 +141,12 @@ export type ReactClientValue =
   | symbol
   | null
   | void
+  | bigint
   | Iterable<ReactClientValue>
   | Array<ReactClientValue>
+  | Map<ReactClientValue, ReactClientValue>
+  | Set<ReactClientValue>
+  | Date
   | ReactClientObject
   | Promise<ReactClientValue>; // Thenable<ReactClientValue>
 
@@ -171,7 +180,7 @@ export type Request = {
   pingedTasks: Array<Task>,
   completedImportChunks: Array<Chunk>,
   completedHintChunks: Array<Chunk>,
-  completedJSONChunks: Array<Chunk>,
+  completedRegularChunks: Array<Chunk | BinaryChunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
@@ -230,7 +239,7 @@ export function createRequest(
     pingedTasks: pingedTasks,
     completedImportChunks: ([]: Array<Chunk>),
     completedHintChunks: ([]: Array<Chunk>),
-    completedJSONChunks: ([]: Array<Chunk>),
+    completedRegularChunks: ([]: Array<Chunk | BinaryChunk>),
     completedErrorChunks: ([]: Array<Chunk>),
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),
@@ -682,6 +691,15 @@ function serializeClientReference(
   }
 }
 
+function outlineModel(request: Request, value: any): number {
+  request.pendingChunks++;
+  const outlinedId = request.nextChunkId++;
+  // We assume that this object doesn't suspend, but a child might.
+  const processedChunk = processModelChunk(request, outlinedId, value);
+  request.completedRegularChunks.push(processedChunk);
+  return outlinedId;
+}
+
 function serializeServerReference(
   request: Request,
   parent:
@@ -707,17 +725,54 @@ function serializeServerReference(
     id: getServerReferenceId(request.bundlerConfig, serverReference),
     bound: bound ? Promise.resolve(bound) : null,
   };
-  request.pendingChunks++;
-  const metadataId = request.nextChunkId++;
-  // We assume that this object doesn't suspend.
-  const processedChunk = processModelChunk(
-    request,
-    metadataId,
-    serverReferenceMetadata,
-  );
-  request.completedJSONChunks.push(processedChunk);
+  const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
+}
+
+function serializeLargeTextString(request: Request, text: string): string {
+  request.pendingChunks += 2;
+  const textId = request.nextChunkId++;
+  const textChunk = stringToChunk(text);
+  const headerChunk = processTextHeader(
+    request,
+    textId,
+    byteLengthOfChunk(textChunk),
+  );
+  request.completedRegularChunks.push(headerChunk, textChunk);
+  return serializeByValueID(textId);
+}
+
+function serializeMap(
+  request: Request,
+  map: Map<ReactClientValue, ReactClientValue>,
+): string {
+  const id = outlineModel(request, Array.from(map));
+  return '$Q' + id.toString(16);
+}
+
+function serializeSet(request: Request, set: Set<ReactClientValue>): string {
+  const id = outlineModel(request, Array.from(set));
+  return '$W' + id.toString(16);
+}
+
+function serializeTypedArray(
+  request: Request,
+  tag: string,
+  typedArray: $ArrayBufferView,
+): string {
+  request.pendingChunks += 2;
+  const bufferId = request.nextChunkId++;
+  // TODO: Convert to little endian if that's not the server default.
+  const binaryChunk = typedArrayToBinaryChunk(typedArray);
+  const headerChunk = processBufferHeader(
+    request,
+    tag,
+    bufferId,
+    byteLengthOfBinaryChunk(binaryChunk),
+  );
+  request.completedRegularChunks.push(headerChunk, binaryChunk);
+  return serializeByValueID(bufferId);
 }
 
 function escapeStringValue(value: string): string {
@@ -909,6 +964,68 @@ function resolveModelToJSON(
       }
       return (undefined: any);
     }
+
+    if (value instanceof Map) {
+      return serializeMap(request, value);
+    }
+    if (value instanceof Set) {
+      return serializeSet(request, value);
+    }
+
+    if (enableBinaryFlight) {
+      if (value instanceof ArrayBuffer) {
+        return serializeTypedArray(request, 'A', new Uint8Array(value));
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray(request, 'C', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray(request, 'c', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray(request, 'U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray(request, 'S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray(request, 's', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray(request, 'L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray(request, 'l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray(request, 'F', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray(request, 'D', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray(request, 'N', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray(request, 'm', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray(request, 'V', value);
+      }
+    }
+
     if (!isArray(value)) {
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
@@ -960,7 +1077,12 @@ function resolveModelToJSON(
         return serializeDateFromDateJSON(value);
       }
     }
-
+    if (value.length >= 1024) {
+      // For large strings, we encode them outside the JSON payload so that we
+      // don't have to double encode and double parse the strings. This can also
+      // be more compact in case the string has a lot of escaped characters.
+      return serializeLargeTextString(request, value);
+    }
     return escapeStringValue(value);
   }
 
@@ -1152,7 +1274,7 @@ function emitProviderChunk(
 ): void {
   const contextReference = serializeProviderReference(contextName);
   const processedChunk = processReferenceChunk(request, id, contextReference);
-  request.completedJSONChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function retryTask(request: Request, task: Task): void {
@@ -1216,7 +1338,7 @@ function retryTask(request: Request, task: Task): void {
     }
 
     const processedChunk = processModelChunk(request, task.id, value);
-    request.completedJSONChunks.push(processedChunk);
+    request.completedRegularChunks.push(processedChunk);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
@@ -1323,11 +1445,11 @@ function flushCompletedChunks(
     hintChunks.splice(0, i);
 
     // Next comes model data.
-    const jsonChunks = request.completedJSONChunks;
+    const regularChunks = request.completedRegularChunks;
     i = 0;
-    for (; i < jsonChunks.length; i++) {
+    for (; i < regularChunks.length; i++) {
       request.pendingChunks--;
-      const chunk = jsonChunks[i];
+      const chunk = regularChunks[i];
       const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
       if (!keepWriting) {
         request.destination = null;
@@ -1335,7 +1457,7 @@ function flushCompletedChunks(
         break;
       }
     }
-    jsonChunks.splice(0, i);
+    regularChunks.splice(0, i);
 
     // Finally, errors are sent. The idea is that it's ok to delay
     // any error messages and prioritize display of other parts of
@@ -1543,5 +1665,24 @@ function processHintChunk(
 ): Chunk {
   const json: string = stringify(model);
   const row = serializeRowHeader('H' + code, id) + json + '\n';
+  return stringToChunk(row);
+}
+
+function processTextHeader(
+  request: Request,
+  id: number,
+  binaryLength: number,
+): Chunk {
+  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  return stringToChunk(row);
+}
+
+function processBufferHeader(
+  request: Request,
+  tag: string,
+  id: number,
+  binaryLength: number,
+): Chunk {
+  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   return stringToChunk(row);
 }

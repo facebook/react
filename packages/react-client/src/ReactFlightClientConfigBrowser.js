@@ -9,8 +9,6 @@
 
 export type StringDecoder = TextDecoder;
 
-export const supportsBinaryStreams = true;
-
 export function createStringDecoder(): StringDecoder {
   return new TextDecoder();
 }

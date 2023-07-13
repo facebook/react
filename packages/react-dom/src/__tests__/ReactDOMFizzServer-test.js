@@ -81,7 +81,7 @@ describe('ReactDOMFizzServer', () => {
     Suspense = React.Suspense;
     use = React.use;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
 
     PropTypes = require('prop-types');
@@ -596,27 +596,67 @@ describe('ReactDOMFizzServer', () => {
           {
             nonce: 'R4nd0m',
             bootstrapScriptContent: 'function noop(){}',
-            bootstrapScripts: ['init.js'],
-            bootstrapModules: ['init.mjs'],
+            bootstrapScripts: [
+              'init.js',
+              {src: 'init2.js', integrity: 'init2hash'},
+            ],
+            bootstrapModules: [
+              'init.mjs',
+              {src: 'init2.mjs', integrity: 'init2hash'},
+            ],
           },
         );
         pipe(writable);
       });
 
-      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      expect(getVisibleChildren(container)).toEqual([
+        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
+        <link
+          rel="preload"
+          href="init2.js"
+          as="script"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <div>Loading...</div>,
+      ]);
 
-      // check that there are 4 scripts with a matching nonce:
-      // The runtime script, an inline bootstrap script, and two src scripts
+      // check that there are 6 scripts with a matching nonce:
+      // The runtime script, an inline bootstrap script, two bootstrap scripts and two bootstrap modules
       expect(
         Array.from(container.getElementsByTagName('script')).filter(
           node => node.getAttribute('nonce') === CSPnonce,
         ).length,
-      ).toEqual(4);
+      ).toEqual(6);
 
       await act(() => {
         resolve({default: Text});
       });
-      expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+      expect(getVisibleChildren(container)).toEqual([
+        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
+        <link
+          rel="preload"
+          href="init2.js"
+          as="script"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
+        <link
+          rel="modulepreload"
+          href="init2.mjs"
+          nonce={CSPnonce}
+          integrity="init2hash"
+        />,
+        <div>Hello</div>,
+      ]);
     } finally {
       CSPnonce = null;
     }
@@ -3756,7 +3796,14 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(document)).toEqual(
       <html>
-        <head />
+        <head>
+          <link rel="preload" href="foo" as="script" />
+          <link rel="preload" href="bar" as="script" />
+          <link rel="preload" href="baz" as="script" integrity="qux" />
+          <link rel="modulepreload" href="quux" />
+          <link rel="modulepreload" href="corge" />
+          <link rel="modulepreload" href="grault" integrity="garply" />
+        </head>
         <body>
           <div>hello world</div>
         </body>
@@ -3774,6 +3821,81 @@ describe('ReactDOMFizzServer', () => {
       '<script type="module" src="quux" async=""></script>',
       '<script type="module" src="corge" async=""></script>',
       '<script type="module" src="grault" integrity="garply" async=""></script>',
+    ]);
+  });
+
+  it('accepts a crossOrigin property for bootstrapScripts and bootstrapModules', async () => {
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <html>
+          <head />
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          bootstrapScripts: [
+            'foo',
+            {
+              src: 'bar',
+            },
+            {
+              src: 'baz',
+              crossOrigin: '',
+            },
+            {
+              src: 'qux',
+              crossOrigin: 'defaults-to-empty',
+            },
+          ],
+          bootstrapModules: [
+            'quux',
+            {
+              src: 'corge',
+            },
+            {
+              src: 'grault',
+              crossOrigin: 'use-credentials',
+            },
+          ],
+        },
+      );
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="script" />
+          <link rel="preload" href="bar" as="script" />
+          <link rel="preload" href="baz" as="script" crossorigin="" />
+          <link rel="preload" href="qux" as="script" crossorigin="" />
+          <link rel="modulepreload" href="quux" />
+          <link rel="modulepreload" href="corge" />
+          <link
+            rel="modulepreload"
+            href="grault"
+            crossorigin="use-credentials"
+          />
+        </head>
+        <body>
+          <div>hello world</div>
+        </body>
+      </html>,
+    );
+    expect(
+      stripExternalRuntimeInNodes(
+        document.getElementsByTagName('script'),
+        renderOptions.unstable_externalRuntimeSrc,
+      ).map(n => n.outerHTML),
+    ).toEqual([
+      '<script src="foo" async=""></script>',
+      '<script src="bar" async=""></script>',
+      '<script src="baz" crossorigin="" async=""></script>',
+      '<script src="qux" crossorigin="" async=""></script>',
+      '<script type="module" src="quux" async=""></script>',
+      '<script type="module" src="corge" async=""></script>',
+      '<script type="module" src="grault" crossorigin="use-credentials" async=""></script>',
     ]);
   });
 

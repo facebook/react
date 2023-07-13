@@ -138,18 +138,25 @@ function runTask<T>(
       // Update the original callback node's controller, since even though we're
       // posting a new task, conceptually it's the same one.
       node._controller = continuationController;
-      scheduler
-        .postTask(
-          runTask.bind(
-            null,
-            priorityLevel,
-            postTaskPriority,
-            node,
-            continuation,
-          ),
-          continuationOptions,
-        )
-        .catch(handleAbortError);
+
+      const nextTask = runTask.bind(
+        null,
+        priorityLevel,
+        postTaskPriority,
+        node,
+        continuation,
+      );
+
+      if (scheduler.yield !== undefined) {
+        scheduler
+          .yield(continuationOptions)
+          .then(nextTask)
+          .catch(handleAbortError);
+      } else {
+        scheduler
+          .postTask(nextTask, continuationOptions)
+          .catch(handleAbortError);
+      }
     }
   } catch (error) {
     // We're inside a `postTask` promise. If we don't handle this error, then it

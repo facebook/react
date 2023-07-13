@@ -26,6 +26,12 @@ let use;
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.node'),
+    );
+
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
@@ -103,5 +109,60 @@ describe('ReactFlightDOMNode', () => {
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual('<span>Client Component</span>');
+  });
+
+  it('should encode long string in a compact format', async () => {
+    const testString = '"\n\t'.repeat(500) + '🙃';
+
+    const stream = ReactServerDOMServer.renderToPipeableStream({
+      text: testString,
+    });
+
+    const readable = new Stream.PassThrough();
+
+    const stringResult = readResult(readable);
+    const parsedResult = ReactServerDOMClient.createFromNodeStream(readable);
+
+    stream.pipe(readable);
+
+    const serializedContent = await stringResult;
+    // The content should be compact an unescaped
+    expect(serializedContent.length).toBeLessThan(2000);
+    expect(serializedContent).not.toContain('\\n');
+    expect(serializedContent).not.toContain('\\t');
+    expect(serializedContent).not.toContain('\\"');
+    expect(serializedContent).toContain('\t');
+
+    const result = await parsedResult;
+    // Should still match the result when parsed
+    expect(result.text).toBe(testString);
+  });
+
+  // @gate enableBinaryFlight
+  it('should be able to serialize any kind of typed array', async () => {
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]).buffer;
+    const buffers = [
+      buffer,
+      new Int8Array(buffer, 1),
+      new Uint8Array(buffer, 2),
+      new Uint8ClampedArray(buffer, 2),
+      new Int16Array(buffer, 2),
+      new Uint16Array(buffer, 2),
+      new Int32Array(buffer, 4),
+      new Uint32Array(buffer, 4),
+      new Float32Array(buffer, 4),
+      new Float64Array(buffer, 0),
+      new BigInt64Array(buffer, 0),
+      new BigUint64Array(buffer, 0),
+      new DataView(buffer, 3),
+    ];
+    const stream = ReactServerDOMServer.renderToPipeableStream(buffers);
+    const readable = new Stream.PassThrough();
+    const promise = ReactServerDOMClient.createFromNodeStream(readable);
+    stream.pipe(readable);
+    const result = await promise;
+    expect(result).toEqual(buffers);
   });
 });

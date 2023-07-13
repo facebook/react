@@ -72,7 +72,6 @@ import {
   writePostamble,
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
-  createResources,
   createBoundaryResources,
   prepareHostDispatcher,
   supportsRequestStorage,
@@ -270,6 +269,7 @@ function noop(): void {}
 
 export function createRequest(
   children: ReactNodeList,
+  resources: Resources,
   responseState: ResponseState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
@@ -282,7 +282,6 @@ export function createRequest(
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
-  const resources: Resources = createResources();
   const request: Request = {
     destination: null,
     flushScheduled: false,
@@ -2343,7 +2342,12 @@ function flushCompletedQueues(
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
-    } else if (enableFloat) {
+    } else if (request.pendingRootTasks > 0) {
+      // We have not yet flushed the root segment so we early return
+      return;
+    }
+
+    if (enableFloat) {
       writeHoistables(destination, request.resources, request.responseState);
     }
 

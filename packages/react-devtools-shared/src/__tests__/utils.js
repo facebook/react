@@ -152,7 +152,7 @@ export function getRendererID(): number {
     return rendererInterface.renderer.rendererPackageName === 'react-dom';
   });
 
-  if (ids == null) {
+  if (id == null) {
     throw Error('Could not find renderer.');
   }
 

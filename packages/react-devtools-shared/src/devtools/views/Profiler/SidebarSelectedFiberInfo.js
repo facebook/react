@@ -108,7 +108,6 @@ export default function SidebarSelectedFiberInfo(_: Props): React.Node {
         </div>
 
         <Button
-          className={styles.IconButton}
           onClick={() => selectFiber(null, null)}
           title="Back to commit view">
           <ButtonIcon type="close" />

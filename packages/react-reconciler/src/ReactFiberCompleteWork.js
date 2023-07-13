@@ -41,8 +41,6 @@ import {
   diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
-
 import {now} from './Scheduler';
 
 import {
@@ -1038,7 +1036,6 @@ function completeWork(
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;
@@ -1160,17 +1157,23 @@ function completeWork(
             return null;
           } else {
             // This is a Hoistable Instance
-            //
-            // We may have props to update on the Hoistable instance. We use the
-            // updateHostComponent path becuase it produces the update queue
-            // we need for Hoistables.
-            updateHostComponent(
-              current,
-              workInProgress,
-              type,
-              newProps,
-              renderLanes,
-            );
+            // We may have props to update on the Hoistable instance.
+            if (diffInCommitPhase && supportsMutation) {
+              const oldProps = current.memoizedProps;
+              if (oldProps !== newProps) {
+                markUpdate(workInProgress);
+              }
+            } else {
+              // We use the updateHostComponent path becuase it produces
+              // the update queue we need for Hoistables.
+              updateHostComponent(
+                current,
+                workInProgress,
+                type,
+                newProps,
+                renderLanes,
+              );
+            }
 
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
@@ -1192,13 +1195,20 @@ function completeWork(
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         if (current !== null && workInProgress.stateNode != null) {
-          updateHostComponent(
-            current,
-            workInProgress,
-            type,
-            newProps,
-            renderLanes,
-          );
+          if (diffInCommitPhase && supportsMutation) {
+            const oldProps = current.memoizedProps;
+            if (oldProps !== newProps) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            updateHostComponent(
+              current,
+              workInProgress,
+              type,
+              newProps,
+              renderLanes,
+            );
+          }
 
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);

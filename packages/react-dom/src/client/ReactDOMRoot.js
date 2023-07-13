@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
@@ -47,7 +47,6 @@ export type CreateRootOptions = {
 
 export type HydrateRootOptions = {
   // Hydration options
-  hydratedSources?: Array<MutableSource<any>>,
   onHydrated?: (suspenseNode: Comment) => void,
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
@@ -77,7 +76,6 @@ import {
   createHydrationContainer,
   updateContainer,
   findHostInstanceWithNoPortals,
-  registerMutableSourceForHydration,
   flushSync,
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -298,8 +296,6 @@ export function hydrateRoot(
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
-  // TODO: Delete this option
-  const mutableSources = (options != null && options.hydratedSources) || null;
 
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
@@ -343,13 +339,6 @@ export function hydrateRoot(
   Dispatcher.current = ReactDOMClientDispatcher;
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
-
-  if (mutableSources) {
-    for (let i = 0; i < mutableSources.length; i++) {
-      const mutableSource = mutableSources[i];
-      registerMutableSourceForHydration(root, mutableSource);
-    }
-  }
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);

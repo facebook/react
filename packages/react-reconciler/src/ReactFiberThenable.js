@@ -14,6 +14,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
@@ -92,6 +94,7 @@ export function trackUsedThenable<T>(
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(rejectedError);
       throw rejectedError;
     }
     default: {
@@ -103,6 +106,32 @@ export function trackUsedThenable<T>(
         // happen. Flight lazily parses JSON when the value is actually awaited.
         thenable.then(noop, noop);
       } else {
+        // This is an uncached thenable that we haven't seen before.
+
+        // Detect infinite ping loops caused by uncached promises.
+        const root = getWorkInProgressRoot();
+        if (root !== null && root.shellSuspendCounter > 100) {
+          // This root has suspended repeatedly in the shell without making any
+          // progress (i.e. committing something). This is highly suggestive of
+          // an infinite ping loop, often caused by an accidental Async Client
+          // Component.
+          //
+          // During a transition, we can suspend the work loop until the promise
+          // to resolve, but this is a sync render, so that's not an option. We
+          // also can't show a fallback, because none was provided. So our last
+          // resort is to throw an error.
+          //
+          // TODO: Remove this error in a future release. Other ways of handling
+          // this case include forcing a concurrent render, or putting the whole
+          // root into offscreen mode.
+          throw new Error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        }
+
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
@@ -121,17 +150,19 @@ export function trackUsedThenable<T>(
             }
           },
         );
-      }
 
-      // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
-        case 'fulfilled': {
-          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-          return fulfilledThenable.value;
-        }
-        case 'rejected': {
-          const rejectedThenable: RejectedThenable<T> = (thenable: any);
-          throw rejectedThenable.reason;
+        // Check one more time in case the thenable resolved synchronously.
+        switch (thenable.status) {
+          case 'fulfilled': {
+            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+            return fulfilledThenable.value;
+          }
+          case 'rejected': {
+            const rejectedThenable: RejectedThenable<T> = (thenable: any);
+            const rejectedError = rejectedThenable.reason;
+            checkIfUseWrappedInAsyncCatch(rejectedError);
+            throw rejectedError;
+          }
         }
       }
 
@@ -194,4 +225,21 @@ export function checkIfUseWrappedInTryCatch(): boolean {
     }
   }
   return false;
+}
+
+export function checkIfUseWrappedInAsyncCatch(rejectedReason: any) {
+  // This check runs in prod, too, because it prevents a more confusing
+  // downstream error, where SuspenseException is caught by a promise and
+  // thrown asynchronously.
+  // TODO: Another way to prevent SuspenseException from leaking into an async
+  // execution context is to check the dispatcher every time `use` is called,
+  // or some equivalent. That might be preferable for other reasons, too, since
+  // it matches how we prevent similar mistakes for other hooks.
+  if (rejectedReason === SuspenseException) {
+    throw new Error(
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    );
+  }
 }

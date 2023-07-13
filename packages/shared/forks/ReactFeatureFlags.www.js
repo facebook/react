@@ -30,6 +30,7 @@ export const {
   diffInCommitPhase,
   enableAsyncActions,
   alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -74,6 +75,8 @@ export const enableFetchInstrumentation = false;
 
 export const enableFormActions = false;
 
+export const enableBinaryFlight = true;
+
 export const disableJavaScriptURLs = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
@@ -99,13 +102,10 @@ export const allowConcurrentByDefault = true;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 
-// Some www surfaces are still using this. Remove once they have been migrated.
-export const enableUseMutableSource = true;
-
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
-export const enableSyncDefaultUpdates = true;
+export const forceConcurrentByDefaultForTesting = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

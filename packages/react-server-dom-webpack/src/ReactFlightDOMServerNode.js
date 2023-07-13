@@ -38,6 +38,12 @@ import {
 
 import {decodeAction} from 'react-server/src/ReactFlightActionServer';
 
+export {
+  registerServerReference,
+  registerClientReference,
+  createClientModuleProxy,
+} from './ReactFlightWebpackReferences';
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
@@ -131,7 +137,11 @@ function decodeReplyFromBusboy<T>(
     close(response);
   });
   busboyStream.on('error', err => {
-    reportGlobalError(response, err);
+    reportGlobalError(
+      response,
+      // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      err,
+    );
   });
   return getRoot(response);
 }

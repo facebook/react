@@ -21,6 +21,8 @@ import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
 
 import type {CallServerCallback} from './ReactFlightReplyClient';
 
+import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
+
 import {
   resolveClientReference,
   preloadModule,
@@ -28,8 +30,8 @@ import {
   dispatchHint,
   readPartialStringChunk,
   readFinalStringChunk,
-  supportsBinaryStreams,
   createStringDecoder,
+  usedWithSSR,
 } from './ReactFlightClientConfig';
 
 import {
@@ -52,6 +54,14 @@ export type JSONValue =
   | string
   | {+[key: string]: JSONValue}
   | $ReadOnlyArray<JSONValue>;
+
+const ROW_ID = 0;
+const ROW_TAG = 1;
+const ROW_LENGTH = 2;
+const ROW_CHUNK_BY_NEWLINE = 3;
+const ROW_CHUNK_BY_LENGTH = 4;
+
+type RowParserState = 0 | 1 | 2 | 3 | 4;
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
@@ -166,9 +176,13 @@ export type Response = {
   _bundlerConfig: SSRManifest,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
-  _partialRow: string,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
+  _rowState: RowParserState,
+  _rowID: number, // parts of a row ID parsed so far
+  _rowTag: number, // 0 indicates that we're currently parsing the row ID
+  _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
+  _buffer: Array<Uint8Array>, // chunks received so far as part of this row
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -275,6 +289,22 @@ function createResolvedModuleChunk<T>(
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(RESOLVED_MODULE, value, null, response);
+}
+
+function createInitializedTextChunk(
+  response: Response,
+  value: string,
+): InitializedChunk<string> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, value, null, response);
+}
+
+function createInitializedBufferChunk(
+  response: Response,
+  value: $ArrayBufferView | ArrayBuffer,
+): InitializedChunk<Uint8Array> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, value, null, response);
 }
 
 function resolveModelChunk<T>(
@@ -510,10 +540,30 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
     });
   };
   // Expose encoder for use by SSR.
-  // TODO: Only expose this in SSR builds and not the browser client.
-  proxy.$$FORM_ACTION = encodeFormAction;
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    (proxy: any).$$FORM_ACTION = encodeFormAction;
+  }
   knownServerReferences.set(proxy, metaData);
   return proxy;
+}
+
+function getOutlinedModel(response: Response, id: number): any {
+  const chunk = getChunk(response, id);
+  switch (chunk.status) {
+    case RESOLVED_MODEL:
+      initializeModelChunk(chunk);
+      break;
+  }
+  // The status might have changed after initialization.
+  switch (chunk.status) {
+    case INITIALIZED: {
+      return chunk.value;
+    }
+    // We always encode it first in the stream so it won't be pending.
+    default:
+      throw chunk.reason;
+  }
 }
 
 function parseModelString(
@@ -557,22 +607,20 @@ function parseModelString(
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);
-        const chunk = getChunk(response, id);
-        switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
-            break;
-        }
-        // The status might have changed after initialization.
-        switch (chunk.status) {
-          case INITIALIZED: {
-            const metadata = chunk.value;
-            return createServerReferenceProxy(response, metadata);
-          }
-          // We always encode it first in the stream so it won't be pending.
-          default:
-            throw chunk.reason;
-        }
+        const metadata = getOutlinedModel(response, id);
+        return createServerReferenceProxy(response, metadata);
+      }
+      case 'Q': {
+        // Map
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Map(data);
+      }
+      case 'W': {
+        // Set
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Set(data);
       }
       case 'I': {
         // $Infinity
@@ -666,13 +714,14 @@ export function createResponse(
     _bundlerConfig: bundlerConfig,
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
-    _partialRow: '',
-    _stringDecoder: (null: any),
+    _stringDecoder: createStringDecoder(),
     _fromJSON: (null: any),
+    _rowState: 0,
+    _rowID: 0,
+    _rowTag: 0,
+    _rowLength: 0,
+    _buffer: [],
   };
-  if (supportsBinaryStreams) {
-    response._stringDecoder = createStringDecoder();
-  }
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
   return response;
@@ -690,6 +739,23 @@ function resolveModel(
   } else {
     resolveModelChunk(chunk, model);
   }
+}
+
+function resolveText(response: Response, id: number, text: string): void {
+  const chunks = response._chunks;
+  // We assume that we always reference large strings after they've been
+  // emitted.
+  chunks.set(id, createInitializedTextChunk(response, text));
+}
+
+function resolveBuffer(
+  response: Response,
+  id: number,
+  buffer: $ArrayBufferView | ArrayBuffer,
+): void {
+  const chunks = response._chunks;
+  // We assume that we always reference buffers after they've been emitted.
+  chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
 
 function resolveModule(
@@ -806,33 +872,136 @@ function resolveHint(
   code: string,
   model: UninitializedModel,
 ): void {
-  const hintModel = parseModel<HintModel>(response, model);
+  const hintModel: HintModel = parseModel(response, model);
   dispatchHint(code, hintModel);
 }
 
-function processFullRow(response: Response, row: string): void {
-  if (row === '') {
-    return;
+function mergeBuffer(
+  buffer: Array<Uint8Array>,
+  lastChunk: Uint8Array,
+): Uint8Array {
+  const l = buffer.length;
+  // Count the bytes we'll need
+  let byteLength = lastChunk.length;
+  for (let i = 0; i < l; i++) {
+    byteLength += buffer[i].byteLength;
   }
-  const colon = row.indexOf(':', 0);
-  const id = parseInt(row.slice(0, colon), 16);
-  const tag = row[colon + 1];
-  // When tags that are not text are added, check them here before
-  // parsing the row as text.
-  // switch (tag) {
-  // }
+  // Allocate enough contiguous space
+  const result = new Uint8Array(byteLength);
+  let offset = 0;
+  // Copy all the buffers into it.
+  for (let i = 0; i < l; i++) {
+    const chunk = buffer[i];
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  result.set(lastChunk, offset);
+  return result;
+}
+
+function resolveTypedArray(
+  response: Response,
+  id: number,
+  buffer: Array<Uint8Array>,
+  lastChunk: Uint8Array,
+  constructor: any,
+  bytesPerElement: number,
+): void {
+  // If the view fits into one original buffer, we just reuse that buffer instead of
+  // copying it out to a separate copy. This means that it's not always possible to
+  // transfer these values to other threads without copying first since they may
+  // share array buffer. For this to work, it must also have bytes aligned to a
+  // multiple of a size of the type.
+  const chunk =
+    buffer.length === 0 && lastChunk.byteOffset % bytesPerElement === 0
+      ? lastChunk
+      : mergeBuffer(buffer, lastChunk);
+  // TODO: The transfer protocol of RSC is little-endian. If the client isn't little-endian
+  // we should convert it instead. In practice big endian isn't really Web compatible so it's
+  // somewhat safe to assume that browsers aren't going to run it, but maybe there's some SSR
+  // server that's affected.
+  const view: $ArrayBufferView = new constructor(
+    chunk.buffer,
+    chunk.byteOffset,
+    chunk.byteLength / bytesPerElement,
+  );
+  resolveBuffer(response, id, view);
+}
+
+function processFullRow(
+  response: Response,
+  id: number,
+  tag: number,
+  buffer: Array<Uint8Array>,
+  chunk: Uint8Array,
+): void {
+  if (enableBinaryFlight) {
+    switch (tag) {
+      case 65 /* "A" */:
+        // We must always clone to extract it into a separate buffer instead of just a view.
+        resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
+        return;
+      case 67 /* "C" */:
+        resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
+        return;
+      case 99 /* "c" */:
+        resolveBuffer(
+          response,
+          id,
+          buffer.length === 0 ? chunk : mergeBuffer(buffer, chunk),
+        );
+        return;
+      case 85 /* "U" */:
+        resolveTypedArray(response, id, buffer, chunk, Uint8ClampedArray, 1);
+        return;
+      case 83 /* "S" */:
+        resolveTypedArray(response, id, buffer, chunk, Int16Array, 2);
+        return;
+      case 115 /* "s" */:
+        resolveTypedArray(response, id, buffer, chunk, Uint16Array, 2);
+        return;
+      case 76 /* "L" */:
+        resolveTypedArray(response, id, buffer, chunk, Int32Array, 4);
+        return;
+      case 108 /* "l" */:
+        resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
+        return;
+      case 70 /* "F" */:
+        resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
+        return;
+      case 68 /* "D" */:
+        resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
+        return;
+      case 78 /* "N" */:
+        resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
+        return;
+      case 109 /* "m" */:
+        resolveTypedArray(response, id, buffer, chunk, BigUint64Array, 8);
+        return;
+      case 86 /* "V" */:
+        resolveTypedArray(response, id, buffer, chunk, DataView, 1);
+        return;
+    }
+  }
+
+  const stringDecoder = response._stringDecoder;
+  let row = '';
+  for (let i = 0; i < buffer.length; i++) {
+    row += readPartialStringChunk(stringDecoder, buffer[i]);
+  }
+  row += readFinalStringChunk(stringDecoder, chunk);
   switch (tag) {
-    case 'I': {
-      resolveModule(response, id, row.slice(colon + 2));
+    case 73 /* "I" */: {
+      resolveModule(response, id, row);
       return;
     }
-    case 'H': {
-      const code = row[colon + 2];
-      resolveHint(response, code, row.slice(colon + 3));
+    case 72 /* "H" */: {
+      const code = row[0];
+      resolveHint(response, code, row.slice(1));
       return;
     }
-    case 'E': {
-      const errorInfo = JSON.parse(row.slice(colon + 2));
+    case 69 /* "E" */: {
+      const errorInfo = JSON.parse(row);
       if (__DEV__) {
         resolveErrorDev(
           response,
@@ -846,49 +1015,132 @@ function processFullRow(response: Response, row: string): void {
       }
       return;
     }
-    default: {
+    case 84 /* "T" */: {
+      resolveText(response, id, row);
+      return;
+    }
+    default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
       // We assume anything else is JSON.
-      resolveModel(response, id, row.slice(colon + 1));
+      resolveModel(response, id, row);
       return;
     }
   }
-}
-
-export function processStringChunk(
-  response: Response,
-  chunk: string,
-  offset: number,
-): void {
-  let linebreak = chunk.indexOf('\n', offset);
-  while (linebreak > -1) {
-    const fullrow = response._partialRow + chunk.slice(offset, linebreak);
-    processFullRow(response, fullrow);
-    response._partialRow = '';
-    offset = linebreak + 1;
-    linebreak = chunk.indexOf('\n', offset);
-  }
-  response._partialRow += chunk.slice(offset);
 }
 
 export function processBinaryChunk(
   response: Response,
   chunk: Uint8Array,
 ): void {
-  if (!supportsBinaryStreams) {
-    throw new Error("This environment don't support binary chunks.");
+  let i = 0;
+  let rowState = response._rowState;
+  let rowID = response._rowID;
+  let rowTag = response._rowTag;
+  let rowLength = response._rowLength;
+  const buffer = response._buffer;
+  const chunkLength = chunk.length;
+  while (i < chunkLength) {
+    let lastIdx = -1;
+    switch (rowState) {
+      case ROW_ID: {
+        const byte = chunk[i++];
+        if (byte === 58 /* ":" */) {
+          // Finished the rowID, next we'll parse the tag.
+          rowState = ROW_TAG;
+        } else {
+          rowID = (rowID << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_TAG: {
+        const resolvedRowTag = chunk[i];
+        if (
+          resolvedRowTag === 84 /* "T" */ ||
+          (enableBinaryFlight &&
+            (resolvedRowTag === 65 /* "A" */ ||
+              resolvedRowTag === 67 /* "C" */ ||
+              resolvedRowTag === 99 /* "c" */ ||
+              resolvedRowTag === 85 /* "U" */ ||
+              resolvedRowTag === 83 /* "S" */ ||
+              resolvedRowTag === 115 /* "s" */ ||
+              resolvedRowTag === 76 /* "L" */ ||
+              resolvedRowTag === 108 /* "l" */ ||
+              resolvedRowTag === 70 /* "F" */ ||
+              resolvedRowTag === 68 /* "D" */ ||
+              resolvedRowTag === 78 /* "N" */ ||
+              resolvedRowTag === 109 /* "m" */ ||
+              resolvedRowTag === 86)) /* "V" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_LENGTH;
+          i++;
+        } else if (resolvedRowTag > 64 && resolvedRowTag < 91 /* "A"-"Z" */) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          i++;
+        } else {
+          rowTag = 0;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          // This was an unknown tag so it was probably part of the data.
+        }
+        continue;
+      }
+      case ROW_LENGTH: {
+        const byte = chunk[i++];
+        if (byte === 44 /* "," */) {
+          // Finished the rowLength, next we'll buffer up to that length.
+          rowState = ROW_CHUNK_BY_LENGTH;
+        } else {
+          rowLength = (rowLength << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_CHUNK_BY_NEWLINE: {
+        // We're looking for a newline
+        lastIdx = chunk.indexOf(10 /* "\n" */, i);
+        break;
+      }
+      case ROW_CHUNK_BY_LENGTH: {
+        // We're looking for the remaining byte length
+        lastIdx = i + rowLength;
+        if (lastIdx > chunk.length) {
+          lastIdx = -1;
+        }
+        break;
+      }
+    }
+    const offset = chunk.byteOffset + i;
+    if (lastIdx > -1) {
+      // We found the last chunk of the row
+      const length = lastIdx - i;
+      const lastChunk = new Uint8Array(chunk.buffer, offset, length);
+      processFullRow(response, rowID, rowTag, buffer, lastChunk);
+      // Reset state machine for a new row
+      i = lastIdx;
+      if (rowState === ROW_CHUNK_BY_NEWLINE) {
+        // If we're trailing by a newline we need to skip it.
+        i++;
+      }
+      rowState = ROW_ID;
+      rowTag = 0;
+      rowID = 0;
+      rowLength = 0;
+      buffer.length = 0;
+    } else {
+      // The rest of this row is in a future chunk. We stash the rest of the
+      // current chunk until we can process the full row.
+      const length = chunk.byteLength - i;
+      const remainingSlice = new Uint8Array(chunk.buffer, offset, length);
+      buffer.push(remainingSlice);
+      // Update how many bytes we're still waiting for. If we're looking for
+      // a newline, this doesn't hurt since we'll just ignore it.
+      rowLength -= remainingSlice.byteLength;
+      break;
+    }
   }
-  const stringDecoder = response._stringDecoder;
-  let linebreak = chunk.indexOf(10); // newline
-  while (linebreak > -1) {
-    const fullrow =
-      response._partialRow +
-      readFinalStringChunk(stringDecoder, chunk.subarray(0, linebreak));
-    processFullRow(response, fullrow);
-    response._partialRow = '';
-    chunk = chunk.subarray(linebreak + 1);
-    linebreak = chunk.indexOf(10); // newline
-  }
-  response._partialRow += readPartialStringChunk(stringDecoder, chunk);
+  response._rowState = rowState;
+  response._rowID = rowID;
+  response._rowTag = rowTag;
+  response._rowLength = rowLength;
 }
 
 function parseModel<T>(response: Response, json: UninitializedModel): T {

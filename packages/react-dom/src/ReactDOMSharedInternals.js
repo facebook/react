@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostDispatcher} from './ReactDOMDispatcher';
+import type {HostDispatcher} from './shared/ReactDOMTypes';
 
 type InternalsType = {
   usingClientEntryPoint: boolean,

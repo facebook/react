@@ -15,7 +15,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
-const ESLintPlugin = require('eslint-webpack-plugin');
 const paths = require('./paths');
 const modules = require('./modules');
 const getClientEnvironment = require('./env');
@@ -53,9 +52,6 @@ const babelRuntimeRegenerator = require.resolve('@babel/runtime/regenerator', {
 // Some apps do not need the benefits of saving a web request, so not inlining the chunk
 // makes for a smoother build process.
 const shouldInlineRuntimeChunk = process.env.INLINE_RUNTIME_CHUNK !== 'false';
-
-const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
-const disableESLintPlugin = process.env.DISABLE_ESLINT_PLUGIN === 'true';
 
 const imageInlineSizeLimit = parseInt(
   process.env.IMAGE_INLINE_SIZE_LIMIT || '10000'
@@ -687,31 +683,6 @@ module.exports = function (webpackEnv) {
             infrastructure: 'silent',
           },
         }),
-      // !disableESLintPlugin &&
-      //   new ESLintPlugin({
-      //     // Plugin options
-      //     extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
-      //     formatter: require.resolve('react-dev-utils/eslintFormatter'),
-      //     eslintPath: require.resolve('eslint'),
-      //     failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
-      //     context: paths.appSrc,
-      //     cache: true,
-      //     cacheLocation: path.resolve(
-      //       paths.appNodeModules,
-      //       '.cache/.eslintcache'
-      //     ),
-      //     // ESLint class options
-      //     cwd: paths.appPath,
-      //     resolvePluginsRelativeTo: __dirname,
-      //     baseConfig: {
-      //       extends: [require.resolve('eslint-config-react-app/base')],
-      //       rules: {
-      //         ...(!hasJsxRuntime && {
-      //           'react/react-in-jsx-scope': 'error',
-      //         }),
-      //       },
-      //     },
-      //   }),
       // Fork Start
       new ReactFlightWebpackPlugin({
         isServer: false,
@@ -723,6 +694,9 @@ module.exports = function (webpackEnv) {
       }),
       // Fork End
     ].filter(Boolean),
+    experiments: {
+      topLevelAwait: true,
+    },
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,

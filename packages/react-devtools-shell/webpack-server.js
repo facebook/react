@@ -1,5 +1,6 @@
 const {resolve} = require('path');
-const {DefinePlugin} = require('webpack');
+const Webpack = require('webpack');
+const WebpackDevServer = require('webpack-dev-server');
 const fs = require('fs');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
@@ -14,6 +15,8 @@ const {
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const semver = require('semver');
 
+const {SUCCESSFUL_COMPILATION_MESSAGE} = require('./constants');
+
 const ReactVersionSrc = fs.readFileSync(require.resolve('shared/ReactVersion'));
 const currentReactVersion = /export default '([^']+)';/.exec(
   ReactVersionSrc,
@@ -22,12 +25,6 @@ const currentReactVersion = /export default '([^']+)';/.exec(
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
   console.error('NODE_ENV not set');
-  process.exit(1);
-}
-
-const TARGET = process.env.TARGET;
-if (!TARGET) {
-  console.error('TARGET not set');
   process.exit(1);
 }
 
@@ -57,94 +54,79 @@ const E2E_APP_BUILD_DIR = process.env.REACT_VERSION
   ? resolve(__dirname, '..', '..', 'build-regression', 'node_modules')
   : builtModulesDir;
 
-const makeConfig = (entry, alias) => {
-  const config = {
-    mode: __DEV__ ? 'development' : 'production',
-    devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
-    entry,
-    node: {
-      // source-maps package has a dependency on 'fs'
-      // but this build won't trigger that code path
-      fs: 'empty',
-    },
-    resolve: {
-      alias,
-    },
-    optimization: {
-      minimize: false,
-    },
-    plugins: [
-      new DefinePlugin({
-        __DEV__,
-        __EXPERIMENTAL__: true,
-        __EXTENSION__: false,
-        __PROFILE__: false,
-        __TEST__: NODE_ENV === 'test',
-        'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
-        'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
-        'process.env.DEVTOOLS_PACKAGE': `"react-devtools-shell"`,
-        'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
-        'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-        'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-        'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-        'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-        'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-        'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
-        'process.env.E2E_APP_REACT_VERSION': `"${REACT_VERSION}"`,
-      }),
-    ],
-    module: {
-      rules: [
-        {
-          test: /\.js$/,
-          loader: 'babel-loader',
-          options: {
-            configFile: resolve(
-              __dirname,
-              '..',
-              'react-devtools-shared',
-              'babel.config.js',
-            ),
+const makeConfig = (entry, alias) => ({
+  mode: __DEV__ ? 'development' : 'production',
+  devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
+  stats: 'normal',
+  entry,
+  output: {
+    publicPath: '/dist/',
+  },
+  node: {
+    global: false,
+  },
+  resolve: {
+    alias,
+  },
+  optimization: {
+    minimize: false,
+  },
+  plugins: [
+    new Webpack.ProvidePlugin({
+      process: 'process/browser',
+    }),
+    new Webpack.DefinePlugin({
+      __DEV__,
+      __EXPERIMENTAL__: true,
+      __EXTENSION__: false,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
+      'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-shell"`,
+      'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.E2E_APP_REACT_VERSION': `"${REACT_VERSION}"`,
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        options: {
+          configFile: resolve(
+            __dirname,
+            '..',
+            'react-devtools-shared',
+            'babel.config.js',
+          ),
+        },
+      },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'style-loader',
           },
-        },
-        {
-          test: /\.css$/,
-          use: [
-            {
-              loader: 'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
+              modules: true,
+              localIdentName: '[local]',
             },
-            {
-              loader: 'css-loader',
-              options: {
-                sourceMap: true,
-                modules: true,
-                localIdentName: '[local]',
-              },
-            },
-          ],
-        },
-      ],
-    },
-  };
-
-  if (TARGET === 'local') {
-    // Local dev server build.
-    config.devServer = {
-      hot: true,
-      port: 8080,
-      clientLogLevel: 'warning',
-      publicPath: '/dist/',
-      stats: 'errors-only',
-    };
-  } else {
-    // Static build to deploy somewhere else.
-    config.output = {
-      path: resolve(__dirname, 'dist'),
-      filename: '[name].js',
-    };
-  }
-  return config;
-};
+          },
+        ],
+      },
+    ],
+  },
+});
 
 const app = makeConfig(
   {
@@ -200,4 +182,49 @@ const e2eRegressionApp = semver.lt(REACT_VERSION, '18.0.0')
       },
     );
 
-module.exports = [app, e2eRegressionApp];
+const appCompiler = Webpack(app);
+const appServer = new WebpackDevServer(
+  {
+    hot: true,
+    open: true,
+    port: 8080,
+    client: {
+      logging: 'warn',
+    },
+    static: {
+      directory: __dirname,
+      publicPath: '/',
+    },
+  },
+  appCompiler,
+);
+
+const e2eRegressionAppCompiler = Webpack(e2eRegressionApp);
+const e2eRegressionAppServer = new WebpackDevServer(
+  {
+    port: 8181,
+    client: {
+      logging: 'warn',
+    },
+    static: {
+      publicPath: '/dist/',
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
+  e2eRegressionAppCompiler,
+);
+
+const runServer = async () => {
+  console.log('Starting server...');
+
+  appServer.compiler.hooks.done.tap('done', () =>
+    console.log(SUCCESSFUL_COMPILATION_MESSAGE),
+  );
+
+  await e2eRegressionAppServer.start();
+  await appServer.start();
+};
+
+runServer();

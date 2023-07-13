@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/ReactDOMDispatcher';
+import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -19,6 +19,12 @@ import type {
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import type {
+  PrefetchDNSOptions,
+  PreconnectOptions,
+  PreloadOptions,
+  PreinitOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
@@ -99,7 +105,6 @@ import {
 } from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {
-  validatePreloadArguments,
   validatePreinitArguments,
   validateLinkPropsForStyleResource,
   getValueDescriptorExpectingObjectForWarning,
@@ -989,9 +994,23 @@ function clearContainerSparingly(container: Node) {
         detachDeletedInstance(element);
         continue;
       }
+      // Script tags are retained to avoid an edge case bug. Normally scripts will execute if they
+      // are ever inserted into the DOM. However when streaming if a script tag is opened but not
+      // yet closed some browsers create and insert the script DOM Node but the script cannot execute
+      // yet until the closing tag is parsed. If something causes React to call clearContainer while
+      // this DOM node is in the document but not yet executable the DOM node will be removed from the
+      // document and when the script closing tag comes in the script will not end up running. This seems
+      // to happen in Chrome/Firefox but not Safari at the moment though this is not necessarily specified
+      // behavior so it could change in future versions of browsers. While leaving all scripts is broader
+      // than strictly necessary this is the least amount of additional code to avoid this breaking
+      // edge case.
+      //
+      // Style tags are retained because they may likely come from 3rd party scripts and extensions
+      case 'SCRIPT':
       case 'STYLE': {
         continue;
       }
+      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
       case 'LINK': {
         if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
           continue;
@@ -1022,19 +1041,6 @@ export function bindInstance(
 
 export const supportsHydration = true;
 
-// With Resources, some HostComponent types will never be server rendered and need to be
-// inserted without breaking hydration
-export function isHydratableType(type: string, props: Props): boolean {
-  if (enableFloat) {
-    if (type === 'script') {
-      const {async, onLoad, onError} = (props: any);
-      return !(async && (onLoad || onError));
-    }
-    return true;
-  } else {
-    return true;
-  }
-}
 export function isHydratableText(text: string): boolean {
   return text !== '';
 }
@@ -1068,11 +1074,21 @@ export function canHydrateInstance(
       if (
         enableFormActions &&
         type === 'input' &&
-        (element: any).type === 'hidden' &&
-        anyProps.type !== 'hidden'
+        (element: any).type === 'hidden'
       ) {
-        // Skip past hidden inputs unless that's what we're looking for. This allows us
-        // embed extra form data in the original form.
+        if (__DEV__) {
+          checkAttributeStringCoercion(anyProps.name, 'name');
+        }
+        const name = anyProps.name == null ? null : '' + anyProps.name;
+        if (
+          anyProps.type !== 'hidden' ||
+          element.getAttribute('name') !== name
+        ) {
+          // Skip past hidden inputs unless that's what we're looking for. This allows us
+          // embed extra form data in the original form.
+        } else {
+          return element;
+        }
       } else {
         return element;
       }
@@ -1140,21 +1156,22 @@ export function canHydrateInstance(
           // if we learn it is problematic
           const srcAttr = element.getAttribute('src');
           if (
-            srcAttr &&
-            element.hasAttribute('async') &&
-            !element.hasAttribute('itemprop')
-          ) {
-            // This is an async script resource
-            break;
-          } else if (
             srcAttr !== (anyProps.src == null ? null : anyProps.src) ||
             element.getAttribute('type') !==
               (anyProps.type == null ? null : anyProps.type) ||
             element.getAttribute('crossorigin') !==
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
           ) {
-            // This script is for a different src
-            break;
+            // This script is for a different src/type/crossOrigin. It may be a script resource
+            // or it may just be a mistmatch
+            if (
+              srcAttr &&
+              element.hasAttribute('async') &&
+              !element.hasAttribute('itemprop')
+            ) {
+              // This is an async script resource
+              break;
+            }
           }
           return element;
         }
@@ -1929,6 +1946,7 @@ export function clearSingleton(instance: Instance): void {
       isMarkedHoistable(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
+      nodeName === 'SCRIPT' ||
       nodeName === 'STYLE' ||
       (nodeName === 'LINK' &&
         ((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet')
@@ -1997,7 +2015,7 @@ type ScriptProps = {
 
 type PreloadProps = {
   rel: 'preload',
-  href: string,
+  href: ?string,
   [string]: mixed,
 };
 
@@ -2082,7 +2100,7 @@ function preconnectAs(
   }
 }
 
-function prefetchDNS(href: string, options?: mixed) {
+function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2112,7 +2130,7 @@ function prefetchDNS(href: string, options?: mixed) {
   preconnectAs('dns-prefetch', null, href);
 }
 
-function preconnect(href: string, options: ?{crossOrigin?: string}) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -2143,18 +2161,34 @@ function preconnect(href: string, options: ?{crossOrigin?: string}) {
   preconnectAs('preconnect', crossOrigin, href);
 }
 
-type PreloadOptions = {
-  as: string,
-  crossOrigin?: string,
-  integrity?: string,
-  type?: string,
-};
 function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
   }
   if (__DEV__) {
-    validatePreloadArguments(href, options);
+    // TODO move this to ReactDOMFloat and expose a stricter function interface or possibly
+    // typed functions (preloadImage, preloadStyle, ...)
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += `The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options == null || typeof options !== 'object') {
+      encountered += `The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (typeof options.as !== 'string' || !options.as) {
+      encountered += `The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag. %s',
+        encountered,
+      );
+    }
   }
   const ownerDocument = getDocumentForImperativeFloatMethods();
   if (
@@ -2162,13 +2196,35 @@ function preload(href: string, options: PreloadOptions) {
     href &&
     typeof options === 'object' &&
     options !== null &&
+    typeof options.as === 'string' &&
+    options.as &&
     ownerDocument
   ) {
     const as = options.as;
-    const limitedEscapedHref =
-      escapeSelectorAttributeValueInsideDoubleQuotes(href);
-    const preloadSelector = `link[rel="preload"][as="${as}"][href="${limitedEscapedHref}"]`;
-
+    let preloadSelector = `link[rel="preload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
+      as,
+    )}"]`;
+    if (as === 'image') {
+      const {imageSrcSet, imageSizes} = options;
+      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+        preloadSelector += `[imagesrcset="${escapeSelectorAttributeValueInsideDoubleQuotes(
+          imageSrcSet,
+        )}"]`;
+        if (typeof imageSizes === 'string') {
+          preloadSelector += `[imagesizes="${escapeSelectorAttributeValueInsideDoubleQuotes(
+            imageSizes,
+          )}"]`;
+        }
+      } else {
+        preloadSelector += `[href="${escapeSelectorAttributeValueInsideDoubleQuotes(
+          href,
+        )}"]`;
+      }
+    } else {
+      preloadSelector += `[href="${escapeSelectorAttributeValueInsideDoubleQuotes(
+        href,
+      )}"]`;
+    }
     // Some preloads are keyed under their selector. This happens when the preload is for
     // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
     // Here we figure out which key to use to determine if we have a preload already.
@@ -2214,22 +2270,24 @@ function preloadPropsFromPreloadOptions(
   options: PreloadOptions,
 ): PreloadProps {
   return {
-    href,
     rel: 'preload',
     as,
+    // There is a bug in Safari where imageSrcSet is not respected on preload links
+    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+    // This harms older browers that do not support imageSrcSet by making their preloads not work
+    // but this population is shrinking fast and is already small so we accept this tradeoff.
+    href: as === 'image' && options.imageSrcSet ? undefined : href,
     crossOrigin: as === 'font' ? '' : options.crossOrigin,
     integrity: options.integrity,
     type: options.type,
+    nonce: options.nonce,
+    fetchPriority: options.fetchPriority,
+    imageSrcSet: options.imageSrcSet,
+    imageSizes: options.imageSizes,
+    referrerPolicy: options.referrerPolicy,
   };
 }
 
-type PreinitOptions = {
-  as: string,
-  precedence?: string,
-  crossOrigin?: string,
-  integrity?: string,
-  nonce?: string,
-};
 function preinit(href: string, options: PreinitOptions) {
   if (!enableFloat) {
     return;
@@ -2369,6 +2427,8 @@ function stylesheetPropsFromPreinitOptions(
     href,
     'data-precedence': precedence,
     crossOrigin: options.crossOrigin,
+    integrity: options.integrity,
+    fetchPriority: options.fetchPriority,
   };
 }
 
@@ -2382,6 +2442,7 @@ function scriptPropsFromPreinitOptions(
     crossOrigin: options.crossOrigin,
     integrity: options.integrity,
     nonce: options.nonce,
+    fetchPriority: options.fetchPriority,
   };
 }
 

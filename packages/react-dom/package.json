@@ -50,11 +50,12 @@
     "./client": "./client.js",
     "./server": {
       "workerd": "./server.edge.js",
-      "edge-light": "./server.edge.js",
       "bun": "./server.bun.js",
       "deno": "./server.browser.js",
       "worker": "./server.browser.js",
       "browser": "./server.browser.js",
+      "node": "./server.node.js",
+      "edge-light": "./server.edge.js",
       "default": "./server.node.js"
     },
     "./server.browser": "./server.browser.js",
@@ -63,10 +64,11 @@
     "./server.node": "./server.node.js",
     "./static": {
       "workerd": "./static.edge.js",
-      "edge-light": "./static.edge.js",
       "deno": "./static.browser.js",
       "worker": "./static.browser.js",
       "browser": "./static.browser.js",
+      "node": "./static.node.js",
+      "edge-light": "./static.edge.js",
       "default": "./static.node.js"
     },
     "./static.browser": "./static.browser.js",
