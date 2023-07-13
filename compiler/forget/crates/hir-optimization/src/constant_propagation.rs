@@ -10,8 +10,11 @@ use hir_ssa::eliminate_redundant_phis;
 
 pub fn constant_propagation<'a>(env: &Environment<'a>, fun: &mut Function<'a>) {
     let mut constants = Constants::new();
-    let have_terminals_changed = apply_constant_propagation(env, fun, &mut constants);
-    if have_terminals_changed {
+    loop {
+        let have_terminals_changed = apply_constant_propagation(env, fun, &mut constants);
+        if !have_terminals_changed {
+            break;
+        }
         // If terminals have changed then blocks may have become newly unreachable,
         // so reinitialize the HIR
         // TODO handle errors
@@ -84,11 +87,9 @@ fn apply_constant_propagation<'a>(
             fun.body.instructions[instr_ix].value = instr;
         }
 
-        if block.kind != BlockKind::Block {
-            // can't rewrite terminals in value blocks yet
-            continue;
-        }
-
+        // If the block ends in an `if` and the test value is a constant primitive,
+        // then convert the terminal into a goto to either the consequent or alternate
+        // in this case, only the selected branch is reachable
         if let TerminalValue::If(terminal) = &mut block.terminal.value {
             if let Some(primitive) =
                 read_primitive_instruction(&fun.body.instructions, &terminal.test)
@@ -168,7 +169,7 @@ fn evaluate_instruction<'a>(
 }
 
 fn apply_binary_operator<'a>(
-    env: &Environment<'a>,
+    _env: &Environment<'a>,
     left: Primitive<'a>,
     operator: BinaryOperator,
     right: Primitive<'a>,

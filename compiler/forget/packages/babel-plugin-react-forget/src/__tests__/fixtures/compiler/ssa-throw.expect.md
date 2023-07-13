@@ -16,8 +16,7 @@ function foo() {
 
 ```javascript
 function foo() {
-  const x = 2;
-  throw x;
+  throw 2;
 }
 
 ```

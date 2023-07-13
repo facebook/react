@@ -1,3 +1,7 @@
+
+## Input
+
+```javascript
 function Component() {
   let a = 1;
 
@@ -32,3 +36,15 @@ function Component() {
   // should constant-propagate to "ok"
   return e;
 }
+
+```
+
+## Code
+
+```javascript
+function Component() {
+  return "ok";
+}
+
+```
+      

@@ -53,8 +53,11 @@ export function constantPropagation(fn: HIRFunction): void {
 }
 
 function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
-  const haveTerminalsChanged = applyConstantPropagation(fn, constants);
-  if (haveTerminalsChanged) {
+  while (true) {
+    const haveTerminalsChanged = applyConstantPropagation(fn, constants);
+    if (!haveTerminalsChanged) {
+      break;
+    }
     // If terminals have changed then blocks may have become newly unreachable.
     // Re-run minification of the graph (incl reordering instruction ids)
     reversePostorderBlocks(fn.body);
@@ -156,10 +159,6 @@ function applyConstantPropagation(
       }
     }
 
-    if (block.kind !== "block") {
-      // can't rewrite terminals in value blocks yet
-      continue;
-    }
     const terminal = block.terminal;
     switch (terminal.kind) {
       case "if": {

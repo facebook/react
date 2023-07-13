@@ -24,12 +24,9 @@ function foo() {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo() {
   const $ = useMemoCache(1);
-  const x = 1;
-
-  const y = 3;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { x, y };
+    t0 = { x: 1, y: 3 };
     $[0] = t0;
   } else {
     t0 = $[0];
