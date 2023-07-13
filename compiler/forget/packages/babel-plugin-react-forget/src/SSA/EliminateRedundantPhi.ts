@@ -42,6 +42,7 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
   // compare to see if any new rewrites were added in that iteration.
   let size = rewrites.size;
   do {
+    const isFirstIteration = !hasBackEdge;
     size = rewrites.size;
     for (const [blockId, block] of ir.blocks) {
       // On the first iteration of the loop check for any back-edges.
@@ -105,7 +106,7 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
 
         // visit function expressions on first iteration of each block
         if (
-          !hasBackEdge &&
+          isFirstIteration &&
           instr.value.kind === "FunctionExpression" &&
           fn.env.enableOptimizeFunctionExpressions
         ) {

@@ -10,8 +10,16 @@ use hir_ssa::eliminate_redundant_phis;
 
 pub fn constant_propagation<'a>(env: &Environment<'a>, fun: &mut Function<'a>) {
     let mut constants = Constants::new();
+    constant_propagation_impl(env, fun, &mut constants);
+}
+
+fn constant_propagation_impl<'a>(
+    env: &Environment<'a>,
+    fun: &mut Function<'a>,
+    constants: &mut Constants<'a>,
+) {
     loop {
-        let have_terminals_changed = apply_constant_propagation(env, fun, &mut constants);
+        let have_terminals_changed = apply_constant_propagation(env, fun, constants);
         if !have_terminals_changed {
             break;
         }
@@ -161,6 +169,27 @@ fn evaluate_instruction<'a>(
             if let Some(const_value) = read_constant(&value.value) {
                 constants.insert(value.lvalue.identifier.identifier.id, const_value);
             }
+        }
+        InstructionValue::Function(value) => {
+            // TODO: due to the outer fixpoint iteration this could visit the same
+            // function many times. However we only strictly have to visit the function
+            // again if the context variable's constant values have changed since last
+            // time.
+            // Instead, we can:
+            // - Create a filtered Constants instance that extracts just the values for
+            //   the function (using its context variables list)
+            // - Track the last such filtered Constants instance we visited the function
+            //   with. Only visit again if the Constants have changed.
+            let mut inner_constants: Constants<'a> = value
+                .lowered_function
+                .context
+                .iter()
+                .filter_map(|id| {
+                    let value = constants.get(&id.identifier.id);
+                    value.map(|value| (id.identifier.id, value.clone()))
+                })
+                .collect();
+            constant_propagation_impl(env, &mut value.lowered_function, &mut inner_constants);
         }
         _ => {
             // no-op, not all instructions can be processed

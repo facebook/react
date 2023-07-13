@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use hir::{BlockId, Environment, Function, Identifier, IdentifierId, HIR};
+use hir::{BlockId, Environment, Function, Identifier, IdentifierId, InstructionValue, HIR};
 use utils::RetainMut;
 
 /// Pass to eliminate redundant phi nodes:
@@ -16,7 +16,7 @@ use utils::RetainMut;
 /// and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
 /// until there are no new rewrites: for a CFG without back-edges it completes in a single pass.
 type Rewrites<'a> = HashMap<IdentifierId, Identifier<'a>>;
-pub fn eliminate_redundant_phis<'a>(_env: &Environment, fun: &mut Function<'a>) {
+pub fn eliminate_redundant_phis<'a>(env: &Environment, fun: &mut Function<'a>) {
     let hir = &mut fun.body;
     let mut rewrites = Rewrites::new();
 
@@ -25,6 +25,7 @@ pub fn eliminate_redundant_phis<'a>(_env: &Environment, fun: &mut Function<'a>) 
 
     let mut len;
     loop {
+        let is_first_iteration = !has_back_edge;
         len = rewrites.len();
 
         for (_, block) in hir.blocks.iter_mut() {
@@ -75,6 +76,13 @@ pub fn eliminate_redundant_phis<'a>(_env: &Environment, fun: &mut Function<'a>) 
                     rewrite(&rewrites, &mut store.identifier.identifier)
                 });
                 instr.each_identifier_load(|load| rewrite(&rewrites, &mut load.identifier));
+                // Visit function expressions on first iteration of each block to
+                // recursively eliminate any of their redundant phis
+                if is_first_iteration {
+                    if let InstructionValue::Function(fun) = &mut instr.value {
+                        eliminate_redundant_phis(env, &mut fun.lowered_function);
+                    }
+                }
             }
         }
 
