@@ -68,8 +68,8 @@ impl<'a> BlockState<'a> {
     fn new(env: &Environment<'a>) -> Self {
         Self {
             defs: Default::default(),
-            incomplete_phis: Vec::new_in(&env.allocator),
-            phis: Vec::new_in(&env.allocator),
+            incomplete_phis: env.vec_new(),
+            phis: env.vec_new(),
         }
     }
 }
@@ -211,8 +211,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
 
     fn fix_incomplete_phis(&mut self, block_id: BlockId) -> () {
         let state = self.states.get_mut(&block_id).unwrap();
-        let incomplete_phis =
-            std::mem::replace(&mut state.incomplete_phis, Vec::new_in(&self.env.allocator));
+        let incomplete_phis = std::mem::replace(&mut state.incomplete_phis, self.env.vec_new());
         for phi in incomplete_phis {
             self.add_phi(block_id, &phi.old_id, phi.new_id);
         }

@@ -4,7 +4,7 @@ use std::{
     rc::Rc,
 };
 
-use bumpalo::Bump;
+use bumpalo::{boxed::Box, collections::Vec, Bump};
 use estree::BindingId;
 
 use crate::{
@@ -55,6 +55,18 @@ impl<'a> Environment<'a> {
     /// Allocate a value into the environment's memory arena
     pub fn alloc<T>(&self, value: T) -> &'a mut T {
         self.allocator.alloc(value)
+    }
+
+    pub fn box_new<T>(&self, value: T) -> Box<'a, T> {
+        Box::new_in(value, &self.allocator)
+    }
+
+    pub fn vec_new<T>(&self) -> Vec<'a, T> {
+        Vec::new_in(&self.allocator)
+    }
+
+    pub fn vec_with_capacity<T>(&self, capacity: usize) -> Vec<'a, T> {
+        Vec::with_capacity_in(capacity, &self.allocator)
     }
 
     /// Get the next available block id

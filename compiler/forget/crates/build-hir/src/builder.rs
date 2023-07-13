@@ -94,16 +94,16 @@ impl<'a> Builder<'a> {
         let current = WipBlock {
             id: entry,
             kind: BlockKind::Block,
-            instructions: Vec::new_in(&environment.allocator),
+            instructions: environment.vec_new(),
         };
         Self {
             environment,
             completed: Default::default(),
-            instructions: Vec::new_in(&environment.allocator),
+            instructions: environment.vec_new(),
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
-            scopes: Vec::new_in(&environment.allocator),
+            scopes: environment.vec_new(),
         }
     }
 
@@ -141,7 +141,7 @@ impl<'a> Builder<'a> {
         let next_wip = WipBlock {
             id: self.environment.next_block_id(),
             kind: next_kind,
-            instructions: Vec::new_in(&self.environment.allocator),
+            instructions: self.environment.vec_new(),
         };
         self.terminate_with_fallthrough(terminal, next_wip)
     }
@@ -154,20 +154,17 @@ impl<'a> Builder<'a> {
         let prev_wip = std::mem::replace(&mut self.wip, fallthrough);
         self.completed.insert(
             prev_wip.id,
-            Box::new_in(
-                BasicBlock {
-                    id: prev_wip.id,
-                    kind: prev_wip.kind,
-                    instructions: prev_wip.instructions,
-                    terminal: Terminal {
-                        id: self.id_gen.next(),
-                        value: terminal,
-                    },
-                    predecessors: Default::default(),
-                    phis: Vec::new_in(&self.environment.allocator),
+            self.environment.box_new(BasicBlock {
+                id: prev_wip.id,
+                kind: prev_wip.kind,
+                instructions: prev_wip.instructions,
+                terminal: Terminal {
+                    id: self.id_gen.next(),
+                    value: terminal,
                 },
-                &self.environment.allocator,
-            ),
+                predecessors: Default::default(),
+                phis: self.environment.vec_new(),
+            }),
         );
     }
 
@@ -175,7 +172,7 @@ impl<'a> Builder<'a> {
         WipBlock {
             id: self.environment.next_block_id(),
             kind,
-            instructions: Vec::new_in(&self.environment.allocator),
+            instructions: self.environment.vec_new(),
         }
     }
 
@@ -210,20 +207,17 @@ impl<'a> Builder<'a> {
         let completed = std::mem::replace(&mut self.wip, current);
         self.completed.insert(
             completed.id,
-            Box::new_in(
-                BasicBlock {
-                    id: completed.id,
-                    kind: completed.kind,
-                    instructions: completed.instructions,
-                    terminal: Terminal {
-                        id: self.id_gen.next(),
-                        value: terminal,
-                    },
-                    predecessors: Default::default(),
-                    phis: Vec::new_in(&self.environment.allocator),
+            self.environment.box_new(BasicBlock {
+                id: completed.id,
+                kind: completed.kind,
+                instructions: completed.instructions,
+                terminal: Terminal {
+                    id: self.id_gen.next(),
+                    value: terminal,
                 },
-                &self.environment.allocator,
-            ),
+                predecessors: Default::default(),
+                phis: self.environment.vec_new(),
+            }),
         );
         result
     }

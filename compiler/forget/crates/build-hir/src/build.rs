@@ -46,7 +46,7 @@ pub fn build<'a>(
         }
     }
 
-    let mut params = Vec::with_capacity_in(fun.params.len(), &env.allocator);
+    let mut params = env.vec_with_capacity(fun.params.len());
     for param in fun.params {
         match param {
             Pattern::Identifier(param) => {
@@ -78,18 +78,15 @@ pub fn build<'a>(
     );
 
     let body = builder.build()?;
-    Ok(Box::new_in(
-        Function {
-            id: fun
-                .id
-                .map(|id| String::from_str_in(&id.name, &env.allocator)),
-            body,
-            params,
-            is_async: fun.is_async,
-            is_generator: fun.is_generator,
-        },
-        &env.allocator,
-    ))
+    Ok(env.box_new(Function {
+        id: fun
+            .id
+            .map(|id| String::from_str_in(&id.name, &env.allocator)),
+        body,
+        params,
+        is_async: fun.is_async,
+        is_generator: fun.is_generator,
+    }))
 }
 
 fn lower_block_statement<'a>(
@@ -367,7 +364,7 @@ fn lower_expression<'a>(
             value: lower_primitive(env, builder, *expr),
         }),
         Expression::ArrayExpression(expr) => {
-            let mut elements = Vec::with_capacity_in(expr.elements.len(), &env.allocator);
+            let mut elements = env.vec_with_capacity(expr.elements.len());
             for expr in expr.elements {
                 let element = match expr {
                     Some(estree::ExpressionOrSpread::SpreadElement(expr)) => {
@@ -430,7 +427,7 @@ fn lower_expression<'a>(
             let fun = build(env, function)?;
             InstructionValue::Function(hir::FunctionExpression {
                 // TODO: collect dependencies!
-                dependencies: Vec::new_in(&env.allocator),
+                dependencies: env.vec_new(),
                 lowered_function: fun,
             })
         }
