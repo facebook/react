@@ -2,7 +2,6 @@
 
 module.exports = {
   plugins: [
-    '@babel/plugin-syntax-jsx',
     '@babel/plugin-transform-react-jsx',
     '@babel/plugin-transform-flow-strip-types',
     ['@babel/plugin-proposal-class-properties', {loose: true}],
