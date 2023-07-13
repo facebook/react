@@ -1,0 +1,34 @@
+---
+source: crates/fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/fixtures/tests/fixtures/function-expressions.js
+---
+Input:
+function Component(props) {
+  const foo = function foo(x) {
+    return x + 1;
+  };
+}
+
+
+Output:
+function Component(
+  unknown props$3,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = Function @deps[] @context[]:
+      function foo(
+        unknown x$0,
+      )
+      entry bb1
+      bb1 (block)
+        [0] #0 = LoadLocal unknown x$0
+        [1] #1 = 1
+        [2] #2 = Binary unknown #0 + unknown #1
+        [3] Return unknown #2
+  [1] #1 = StoreLocal Const unknown foo$4 = unknown #0
+  [2] #2 = <undefined>
+  [3] Return unknown #2
+
+

@@ -638,6 +638,7 @@ dependencies = [
  "estree",
  "indexmap 2.0.0",
  "serde",
+ "utils",
 ]
 
 [[package]]
@@ -2806,6 +2807,7 @@ name = "utils"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
+ "stacker",
 ]
 
 [[package]]

@@ -6,8 +6,9 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Ident, Lit, MemberExpr, MemberProp,
-    ModuleItem, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Function, Ident, Lit, MemberExpr,
+    MemberProp, ModuleItem, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind,
+    VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -122,32 +123,34 @@ fn convert_block_statement(cx: &Context, stmt: &BlockStmt) -> estree::BlockState
     }
 }
 
+fn convert_function(cx: &Context, id: Option<&Ident>, fun: &Function) -> estree::Function {
+    estree::Function {
+        id: id.map(|id| estree::Identifier {
+            name: id.sym.to_string(),
+            binding: convert_binding(cx, id.span.ctxt),
+            loc: None,
+            range: convert_span(&id.span),
+        }),
+        params: fun
+            .params
+            .iter()
+            .map(|param| convert_pattern(cx, &param.pat))
+            .collect(),
+        body: fun.body.as_ref().map(|body| {
+            estree::FunctionBody::BlockStatement(Box::new(convert_block_statement(cx, body)))
+        }),
+        is_async: fun.is_async,
+        is_generator: fun.is_generator,
+        loc: None,
+        range: convert_span(&fun.span),
+    }
+}
+
 fn convert_statement(cx: &Context, stmt: &Stmt) -> estree::Statement {
     match stmt {
         Stmt::Decl(Decl::Fn(item)) => {
-            let name = item.ident.sym.to_string();
             estree::Statement::FunctionDeclaration(Box::new(estree::FunctionDeclaration {
-                function: estree::Function {
-                    id: Some(estree::Identifier {
-                        name,
-                        binding: convert_binding(cx, item.ident.span.ctxt),
-                        loc: None,
-                        range: convert_span(&item.ident.span),
-                    }),
-                    params: item
-                        .function
-                        .params
-                        .iter()
-                        .map(|param| convert_pattern(cx, &param.pat))
-                        .collect(),
-                    body: item.function.body.as_ref().map(|body| {
-                        estree::FunctionBody::BlockStatement(Box::new(convert_block_statement(
-                            cx, body,
-                        )))
-                    }),
-                    is_async: item.function.is_async,
-                    is_generator: item.function.is_generator,
-                },
+                function: convert_function(cx, Some(&item.ident), &item.function),
                 loc: None,
                 range: convert_span(&item.function.span),
             }))
@@ -367,6 +370,13 @@ fn convert_expression(cx: &Context, expr: &Expr) -> estree::Expression {
         }
         Expr::Member(expr) => {
             estree::Expression::MemberExpression(Box::new(convert_member_expression(cx, expr)))
+        }
+        Expr::Fn(expr) => {
+            estree::Expression::FunctionExpression(Box::new(estree::FunctionExpression {
+                function: convert_function(cx, expr.ident.as_ref(), &expr.function),
+                loc: None,
+                range: convert_span(&expr.function.span),
+            }))
         }
         _ => todo!("translate expression {:#?}", expr),
     }

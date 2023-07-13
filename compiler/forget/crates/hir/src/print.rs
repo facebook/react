@@ -1,5 +1,7 @@
 use std::fmt::{Result, Write};
 
+use utils::ensure_sufficient_stack;
+
 use crate::{
     ArrayElement, BasicBlock, Function, Identifier, IdentifierOperand, Instruction,
     InstructionValue, LValue, Operand, Phi, PrimitiveValue, Terminal, TerminalValue, HIR,
@@ -16,25 +18,28 @@ pub trait Print<'a> {
 
 impl<'a> Print<'a> for Function<'a> {
     fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
-        writeln!(
-            out,
-            "function {}(",
-            match &self.id {
-                Some(id) => id,
-                None => "<anonymous>",
+        ensure_sufficient_stack(|| {
+            writeln!(
+                out,
+                "function {}(",
+                match &self.id {
+                    Some(id) => id,
+                    None => "<anonymous>",
+                }
+            )?;
+            for param in &self.params {
+                write!(out, "  ")?;
+                param.print(hir, out)?;
+                writeln!(out, ",")?;
             }
-        )?;
-        for param in &self.params {
-            write!(out, "  ")?;
-            param.print(hir, out)?;
-            writeln!(out, ",")?;
-        }
-        writeln!(out, ")")?;
-        writeln!(out, "entry {}", self.body.entry)?;
-        for (_, block) in self.body.blocks.iter() {
-            block.print(hir, out)?;
-        }
-        Ok(())
+            writeln!(out, ")")?;
+            writeln!(out, "entry {}", self.body.entry)?;
+            for (_, block) in self.body.blocks.iter() {
+                block.print(hir, out)?;
+            }
+            writeln!(out)?;
+            Ok(())
+        })
     }
 }
 
@@ -145,6 +150,33 @@ impl<'a> Print<'a> for InstructionValue<'a> {
                 value.left.print(hir, out)?;
                 write!(out, " {} ", value.operator)?;
                 value.right.print(hir, out)?;
+            }
+            InstructionValue::Function(value) => {
+                write!(out, "Function @deps[")?;
+                for (ix, dep) in value.dependencies.iter().enumerate() {
+                    if ix != 0 {
+                        write!(out, ", ")?;
+                    }
+                    dep.print(hir, out)?;
+                }
+                write!(out, "] @context[")?;
+                // for (ix, dep) in value.lowered_function.context.iter().enumerate() {
+                //     if ix != 0 {
+                //         write!(out, ", ")?;
+                //     }
+                //     dep.print(hir, out)?;
+                // }
+                writeln!(out, "]:")?;
+                let mut inner_output = String::new();
+                value
+                    .lowered_function
+                    .print(&value.lowered_function.body, &mut inner_output)?;
+                let lines: Vec<_> = inner_output
+                    .split("\n")
+                    .map(|line| format!("      {}", line))
+                    .filter(|line| line.trim().len() != 0)
+                    .collect();
+                write!(out, "{}", lines.join("\n"))?;
             }
             InstructionValue::Tombstone => {
                 write!(out, "Tombstone!")?;

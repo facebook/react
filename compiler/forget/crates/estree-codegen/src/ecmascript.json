@@ -43,6 +43,14 @@
                     "type": "bool",
                     "optional": true,
                     "rename": "async"
+                },
+                "loc": {
+                    "type": "Option<SourceLocation>",
+                    "optional": true
+                },
+                "range": {
+                    "type": "Option<SourceRange>",
+                    "optional": true
                 }
             }
         },

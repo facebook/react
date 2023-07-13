@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bumpalo = { version = "3.13.0", features = ["boxed", "collections"] }
+stacker = "0.1.15"

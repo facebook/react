@@ -1,8 +1,10 @@
-use bumpalo::collections::{String, Vec};
+use bumpalo::{
+    boxed::Box,
+    collections::{String, Vec},
+};
 use estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
-    FunctionDeclaration, IfStatement, JsValue, Literal, Pattern, Statement,
-    VariableDeclarationKind,
+    FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement, VariableDeclarationKind,
 };
 use hir::{
     ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, Function, GotoKind,
@@ -24,11 +26,11 @@ use crate::{
 /// that is not yet supported.
 pub fn build<'a>(
     env: &'a Environment<'a>,
-    fun: FunctionDeclaration,
-) -> Result<&'a mut Function<'a>, BuildDiagnostic> {
+    fun: estree::Function,
+) -> Result<Box<'a, Function<'a>>, BuildDiagnostic> {
     let mut builder = Builder::new(env);
 
-    match fun.function.body {
+    match fun.body {
         Some(estree::FunctionBody::BlockStatement(body)) => {
             lower_block_statement(env, &mut builder, *body)?
         }
@@ -44,8 +46,8 @@ pub fn build<'a>(
         }
     }
 
-    let mut params = Vec::with_capacity_in(fun.function.params.len(), &env.allocator);
-    for param in fun.function.params {
+    let mut params = Vec::with_capacity_in(fun.params.len(), &env.allocator);
+    for param in fun.params {
         match param {
             Pattern::Identifier(param) => {
                 let identifier = lower_identifier_for_assignment(
@@ -76,16 +78,18 @@ pub fn build<'a>(
     );
 
     let body = builder.build()?;
-    Ok(env.alloc(Function {
-        id: fun
-            .function
-            .id
-            .map(|id| String::from_str_in(&id.name, &env.allocator)),
-        body,
-        params,
-        is_async: fun.function.is_async,
-        is_generator: fun.function.is_generator,
-    }))
+    Ok(Box::new_in(
+        Function {
+            id: fun
+                .id
+                .map(|id| String::from_str_in(&id.name, &env.allocator)),
+            body,
+            params,
+            is_async: fun.is_async,
+            is_generator: fun.is_generator,
+        },
+        &env.allocator,
+    ))
 }
 
 fn lower_block_statement<'a>(
@@ -418,6 +422,16 @@ fn lower_expression<'a>(
                     ix: right,
                     effect: None,
                 },
+            })
+        }
+
+        Expression::FunctionExpression(expr) => {
+            let FunctionExpression { function, .. } = *expr;
+            let fun = build(env, function)?;
+            InstructionValue::Function(hir::FunctionExpression {
+                // TODO: collect dependencies!
+                dependencies: Vec::new_in(&env.allocator),
+                lowered_function: fun,
             })
         }
 

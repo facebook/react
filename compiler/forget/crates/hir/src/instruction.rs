@@ -1,9 +1,12 @@
 use std::{cell::RefCell, fmt::Display, rc::Rc};
 
-use bumpalo::collections::{String, Vec};
+use bumpalo::{
+    boxed::Box,
+    collections::{String, Vec},
+};
 use estree::BinaryOperator;
 
-use crate::{IdentifierId, InstrIx, InstructionId, ScopeId, Type};
+use crate::{Function, IdentifierId, InstrIx, InstructionId, ScopeId, Type};
 
 #[derive(Debug)]
 pub struct Instruction<'a> {
@@ -17,22 +20,23 @@ impl<'a> Instruction<'a> {
         F: FnMut(&mut LValue<'a>) -> (),
     {
         match &mut self.value {
-            InstructionValue::Array(_) => {}
-            InstructionValue::Binary(_) => {}
             InstructionValue::DeclareContext(instr) => {
                 f(&mut instr.lvalue);
             }
             InstructionValue::DeclareLocal(instr) => {
                 f(&mut instr.lvalue);
             }
-            InstructionValue::LoadContext(_) => {}
-            InstructionValue::LoadGlobal(_) => {}
-            InstructionValue::LoadLocal(_) => {}
-            InstructionValue::Primitive(_) => {}
             InstructionValue::StoreLocal(instr) => {
                 f(&mut instr.lvalue);
             }
-            InstructionValue::Tombstone => {}
+            InstructionValue::Array(_)
+            | InstructionValue::Binary(_)
+            | InstructionValue::LoadContext(_)
+            | InstructionValue::LoadGlobal(_)
+            | InstructionValue::LoadLocal(_)
+            | InstructionValue::Primitive(_)
+            | InstructionValue::Function(_)
+            | InstructionValue::Tombstone => {}
         }
     }
 
@@ -41,16 +45,17 @@ impl<'a> Instruction<'a> {
         F: FnMut(&mut IdentifierOperand<'a>) -> (),
     {
         match &mut self.value {
-            InstructionValue::Array(_) => {}
-            InstructionValue::Binary(_) => {}
-            InstructionValue::DeclareContext(_) => {}
-            InstructionValue::DeclareLocal(_) => {}
-            InstructionValue::LoadContext(_) => {}
-            InstructionValue::LoadGlobal(_) => {}
             InstructionValue::LoadLocal(instr) => f(&mut instr.place),
-            InstructionValue::Primitive(_) => {}
-            InstructionValue::StoreLocal(_) => {}
-            InstructionValue::Tombstone => {}
+            InstructionValue::Array(_)
+            | InstructionValue::Binary(_)
+            | InstructionValue::DeclareContext(_)
+            | InstructionValue::DeclareLocal(_)
+            | InstructionValue::LoadContext(_)
+            | InstructionValue::LoadGlobal(_)
+            | InstructionValue::Primitive(_)
+            | InstructionValue::StoreLocal(_)
+            | InstructionValue::Function(_)
+            | InstructionValue::Tombstone => {}
         }
     }
 }
@@ -68,7 +73,7 @@ pub enum InstructionValue<'a> {
     DeclareContext(DeclareContext<'a>),
     DeclareLocal(DeclareLocal<'a>),
     // Destructure(Destructure<'a>),
-    // Function(Function<'a>),
+    Function(FunctionExpression<'a>),
     // JsxFragment(JsxFragment<'a>),
     // JsxText(JsxText<'a>),
     LoadContext(LoadContext),
@@ -108,6 +113,12 @@ pub struct Binary {
     pub left: Operand,
     pub operator: BinaryOperator,
     pub right: Operand,
+}
+
+#[derive(Debug)]
+pub struct FunctionExpression<'a> {
+    pub dependencies: Vec<'a, Operand>,
+    pub lowered_function: Box<'a, Function<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

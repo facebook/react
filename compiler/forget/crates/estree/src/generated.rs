@@ -23,6 +23,10 @@ pub struct Function {
     #[serde(rename = "async")]
     #[serde(default)]
     pub is_async: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RegExpValue {

@@ -33,7 +33,7 @@ fn fixtures() {
                     if ix != 0 {
                         output.push_str("\n\n");
                     }
-                    match build(&environment, *fun) {
+                    match build(&environment, fun.function) {
                         Ok(mut fun) => {
                             enter_ssa(&environment, &mut fun).unwrap();
                             eliminate_redundant_phis(&environment, &mut fun);
@@ -56,6 +56,7 @@ fn fixtures() {
             }
         }
 
+        let output = output.trim();
         assert_snapshot!(format!("Input:\n{input}\n\nOutput:\n{output}"));
     });
 }
