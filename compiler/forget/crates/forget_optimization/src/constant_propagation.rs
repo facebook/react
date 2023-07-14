@@ -1,24 +1,29 @@
 use std::collections::HashMap;
 
+use forget_diagnostics::Diagnostic;
 use forget_estree::BinaryOperator;
 use forget_hir::{
-    initialize_hir, BlockKind, Environment, Function, GotoKind, GotoTerminal, IdentifierId,
-    Instruction, InstructionValue, LoadGlobal, Operand, Primitive, PrimitiveValue, TerminalValue,
+    initialize_hir, merge_consecutive_blocks, BlockKind, Environment, Function, GotoKind,
+    GotoTerminal, IdentifierId, Instruction, InstructionValue, LoadGlobal, Operand, Primitive,
+    PrimitiveValue, TerminalValue,
 };
 use forget_ssa::eliminate_redundant_phis;
 
-pub fn constant_propagation<'a>(env: &Environment<'a>, fun: &mut Function<'a>) {
+pub fn constant_propagation<'a>(
+    env: &Environment<'a>,
+    fun: &mut Function<'a>,
+) -> Result<(), Diagnostic> {
     let mut constants = Constants::new();
-    constant_propagation_impl(env, fun, &mut constants);
+    constant_propagation_impl(env, fun, &mut constants)
 }
 
 fn constant_propagation_impl<'a>(
     env: &Environment<'a>,
     fun: &mut Function<'a>,
     constants: &mut Constants<'a>,
-) {
+) -> Result<(), Diagnostic> {
     loop {
-        let have_terminals_changed = apply_constant_propagation(env, fun, constants);
+        let have_terminals_changed = apply_constant_propagation(env, fun, constants)?;
         if !have_terminals_changed {
             break;
         }
@@ -30,7 +35,7 @@ fn constant_propagation_impl<'a>(
         // Now that predecessors have changed, prune phi operands for unreachable blocks
         // for example, a phi node whose operand was eliminated because it was set in a
         // block that is no longer reached
-        for (_, block) in fun.body.blocks.iter_mut() {
+        for block in fun.body.blocks.iter_mut() {
             // TODO: avoid the clone here
             let predecessors = block.predecessors.clone();
             for phi in block.phis.iter_mut() {
@@ -42,17 +47,22 @@ fn constant_propagation_impl<'a>(
         // By removing some phi operands, there may be phis that were not previously
         // redundant but now are
         eliminate_redundant_phis(env, fun);
+
+        // Finally, merge together any blocks that are now guaranteed to execute
+        // consecutively
+        merge_consecutive_blocks(env, fun)?;
     }
+    Ok(())
 }
 
 fn apply_constant_propagation<'a>(
     env: &Environment<'a>,
     fun: &mut Function<'a>,
     constants: &mut Constants<'a>,
-) -> bool {
+) -> Result<bool, Diagnostic> {
     let mut has_changes = false;
 
-    for (_, block) in fun.body.blocks.iter_mut() {
+    for block in fun.body.blocks.iter_mut() {
         for phi in block.phis.iter() {
             let mut value: Option<Constant<'a>> = None;
             for (_, operand) in &phi.operands {
@@ -90,7 +100,7 @@ fn apply_constant_propagation<'a>(
                 &mut fun.body.instructions[instr_ix].value,
                 InstructionValue::Tombstone,
             );
-            evaluate_instruction(env, &fun.body.instructions, &mut instr, constants);
+            evaluate_instruction(env, &fun.body.instructions, &mut instr, constants)?;
             fun.body.instructions[instr_ix].value = instr;
         }
 
@@ -115,7 +125,7 @@ fn apply_constant_propagation<'a>(
         }
     }
 
-    has_changes
+    Ok(has_changes)
 }
 
 fn read_primitive_instruction<'a>(
@@ -135,7 +145,7 @@ fn evaluate_instruction<'a>(
     instrs: &[Instruction<'a>],
     mut instr: &mut InstructionValue<'a>,
     constants: &mut Constants<'a>,
-) {
+) -> Result<(), Diagnostic> {
     let read_constant = |operand: &Operand| {
         let instr = &instrs[usize::from(operand.ix)].value;
         match instr {
@@ -188,12 +198,13 @@ fn evaluate_instruction<'a>(
                     value.map(|value| (id.identifier.id, value.clone()))
                 })
                 .collect();
-            constant_propagation_impl(env, &mut value.lowered_function, &mut inner_constants);
+            constant_propagation_impl(env, &mut value.lowered_function, &mut inner_constants)?;
         }
         _ => {
             // no-op, not all instructions can be processed
         }
     }
+    Ok(())
 }
 
 fn apply_binary_operator<'a>(

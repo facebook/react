@@ -46,7 +46,7 @@ fn fixtures() {
                             println!("ok enter_ssa");
                             eliminate_redundant_phis(&environment, &mut fun);
                             println!("ok eliminate_redundant_phis");
-                            constant_propagation(&environment, &mut fun);
+                            constant_propagation(&environment, &mut fun).unwrap();
                             println!("ok constant_propagation");
                             fun.print(&fun.body, &mut output).unwrap();
                             println!("ok print");

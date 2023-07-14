@@ -535,6 +535,7 @@ version = "0.1.0"
 dependencies = [
  "bumpalo",
  "forget_build_hir",
+ "forget_diagnostics",
  "forget_estree",
  "forget_hir",
  "forget_ssa",

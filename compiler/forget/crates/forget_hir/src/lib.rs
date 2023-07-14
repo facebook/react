@@ -5,6 +5,7 @@ mod function;
 mod id_types;
 mod initialize;
 mod instruction;
+mod merge_consecutive_blocks;
 mod print;
 mod registry;
 mod terminal;
@@ -21,6 +22,7 @@ pub use initialize::{
     remove_unreachable_for_updates, reverse_postorder_blocks,
 };
 pub use instruction::*;
+pub use merge_consecutive_blocks::merge_consecutive_blocks;
 pub use print::Print;
 pub use registry::Registry;
 pub use terminal::*;

@@ -1,15 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use bumpalo::boxed::Box;
 use bumpalo::collections::{String, Vec};
 use forget_diagnostics::Diagnostic;
 use forget_hir::{
-    initialize_hir, BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier,
+    initialize_hir, BasicBlock, BlockId, BlockKind, Blocks, Environment, GotoKind, Identifier,
     IdentifierData, InstrIx, Instruction, InstructionIdGenerator, InstructionValue, Terminal,
     TerminalValue, Type, HIR,
 };
-use indexmap::IndexMap;
 
 use crate::BuildHIRError;
 
@@ -26,7 +24,7 @@ pub(crate) struct Builder<'a> {
     #[allow(dead_code)]
     environment: &'a Environment<'a>,
 
-    completed: IndexMap<BlockId, Box<'a, BasicBlock<'a>>>,
+    completed: Blocks<'a>,
 
     instructions: Vec<'a, Instruction<'a>>,
 
@@ -153,20 +151,17 @@ impl<'a> Builder<'a> {
         fallthrough: WipBlock<'a>,
     ) {
         let prev_wip = std::mem::replace(&mut self.wip, fallthrough);
-        self.completed.insert(
-            prev_wip.id,
-            self.environment.box_new(BasicBlock {
-                id: prev_wip.id,
-                kind: prev_wip.kind,
-                instructions: prev_wip.instructions,
-                terminal: Terminal {
-                    id: self.id_gen.next(),
-                    value: terminal,
-                },
-                predecessors: Default::default(),
-                phis: self.environment.vec_new(),
-            }),
-        );
+        self.completed.insert(Box::new(BasicBlock {
+            id: prev_wip.id,
+            kind: prev_wip.kind,
+            instructions: prev_wip.instructions,
+            terminal: Terminal {
+                id: self.id_gen.next(),
+                value: terminal,
+            },
+            predecessors: Default::default(),
+            phis: self.environment.vec_new(),
+        }));
     }
 
     pub(crate) fn reserve(&mut self, kind: BlockKind) -> WipBlock<'a> {
@@ -206,20 +201,17 @@ impl<'a> Builder<'a> {
         };
 
         let completed = std::mem::replace(&mut self.wip, current);
-        self.completed.insert(
-            completed.id,
-            self.environment.box_new(BasicBlock {
-                id: completed.id,
-                kind: completed.kind,
-                instructions: completed.instructions,
-                terminal: Terminal {
-                    id: self.id_gen.next(),
-                    value: terminal,
-                },
-                predecessors: Default::default(),
-                phis: self.environment.vec_new(),
-            }),
-        );
+        self.completed.insert(Box::new(BasicBlock {
+            id: completed.id,
+            kind: completed.kind,
+            instructions: completed.instructions,
+            terminal: Terminal {
+                id: self.id_gen.next(),
+                value: terminal,
+            },
+            predecessors: Default::default(),
+            phis: self.environment.vec_new(),
+        }));
         result
     }
 

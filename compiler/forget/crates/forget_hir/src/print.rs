@@ -34,7 +34,7 @@ impl<'a> Print<'a> for Function<'a> {
             }
             writeln!(out, ")")?;
             writeln!(out, "entry {}", self.body.entry)?;
-            for (_, block) in self.body.blocks.iter() {
+            for block in self.body.blocks.iter() {
                 block.print(hir, out)?;
             }
             writeln!(out)?;

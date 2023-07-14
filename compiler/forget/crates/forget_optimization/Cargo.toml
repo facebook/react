@@ -18,6 +18,7 @@ forget_hir = { workspace = true }
 forget_ssa = { workspace = true }
 forget_build_hir = { workspace = true }
 forget_utils = { workspace = true }
+forget_diagnostics = { workspace = true }
 bumpalo = { workspace = true }
 indexmap = { workspace = true }
 miette = { workspace = true }

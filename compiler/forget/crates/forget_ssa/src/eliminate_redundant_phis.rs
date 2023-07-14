@@ -28,7 +28,7 @@ pub fn eliminate_redundant_phis<'a>(env: &Environment, fun: &mut Function<'a>) {
         let is_first_iteration = !has_back_edge;
         len = rewrites.len();
 
-        for (_, block) in hir.blocks.iter_mut() {
+        for block in hir.blocks.iter_mut() {
             if !has_back_edge {
                 for predecessor in block.predecessors.iter() {
                     if !visited.contains(predecessor) {

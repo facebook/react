@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 
 use forget_diagnostics::{invariant, Diagnostic};
-use indexmap::IndexMap;
 use thiserror::Error;
 
-use crate::{BlockId, GotoKind, GotoTerminal, InstructionIdGenerator, TerminalValue, HIR};
+use crate::{BlockId, Blocks, GotoKind, GotoTerminal, InstructionIdGenerator, TerminalValue, HIR};
 
 /// Runs a variety of passes to put the HIR in canonical form. This should be called
 /// after initial HIR construction and after any transformations that change the
@@ -34,7 +33,7 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
             // already visited
             return;
         }
-        let block = hir.block(block_id);
+        let block = hir.blocks.block(block_id);
         let terminal = &block.terminal;
         match &terminal.value {
             TerminalValue::Branch(terminal) => {
@@ -64,9 +63,9 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     visit(hir.entry, &hir, &mut visited, &mut postorder);
 
     // NOTE: could consider sorting the blocks in-place by key
-    let mut blocks = IndexMap::with_capacity(hir.blocks.len());
+    let mut blocks = Blocks::with_capacity(hir.blocks.len());
     for id in postorder.iter().rev().cloned() {
-        blocks.insert(id, hir.blocks.remove(&id).unwrap());
+        blocks.insert(hir.blocks.take(id));
     }
 
     hir.blocks = blocks;
@@ -74,9 +73,9 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable
 pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
+    let block_ids = hir.blocks.block_ids();
 
-    for block in hir.blocks.values_mut() {
+    for block in hir.blocks.iter_mut() {
         if let TerminalValue::For(terminal) = &mut block.terminal.value {
             if let Some(update) = terminal.update {
                 if !block_ids.contains(&update) {
@@ -90,9 +89,9 @@ pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
 /// Prunes unreachable fallthrough values, setting them to None if the referenced
 /// block was not otherwise reachable.
 pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
+    let block_ids = hir.blocks.block_ids();
 
-    for block in hir.blocks.values_mut() {
+    for block in hir.blocks.iter_mut() {
         block
             .terminal
             .value
@@ -108,9 +107,9 @@ pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
 
 /// Rewrites DoWhile statements into Gotos if the test block is not reachable
 pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
-    let block_ids: HashSet<BlockId> = hir.blocks.keys().cloned().collect();
+    let block_ids = hir.blocks.block_ids();
 
-    for block in hir.blocks.values_mut() {
+    for block in hir.blocks.iter_mut() {
         if let TerminalValue::DoWhile(terminal) = &mut block.terminal.value {
             if !block_ids.contains(&terminal.test) {
                 block.terminal.value = TerminalValue::Goto(GotoTerminal {
@@ -127,7 +126,7 @@ pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 pub fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
-    for (ii, block) in hir.blocks.values_mut().enumerate() {
+    for (ii, block) in hir.blocks.iter_mut().enumerate() {
         let block_id = block.id;
         for (jj, instr_ix) in block.instructions.iter_mut().enumerate() {
             invariant(visited.insert((ii, jj)), || {
@@ -149,7 +148,7 @@ pub struct BlockVisitedTwice {
 
 /// Updates the predecessors of each block
 pub fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
-    for block in hir.blocks.values_mut() {
+    for block in hir.blocks.iter_mut() {
         block.predecessors.clear();
     }
     let mut visited = HashSet::<BlockId>::with_capacity(hir.blocks.len());
@@ -159,7 +158,7 @@ pub fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
         hir: &mut HIR<'a>,
         visited: &mut HashSet<BlockId>,
     ) {
-        let block = hir.block_mut(block_id);
+        let block = hir.blocks.block_mut(block_id);
         if let Some(prev_id) = prev_id {
             block.predecessors.insert(prev_id);
         }

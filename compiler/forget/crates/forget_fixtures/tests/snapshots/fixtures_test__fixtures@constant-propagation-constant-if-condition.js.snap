@@ -51,47 +51,23 @@ bb0 (block)
   [3] #7 = 1
   [4] #8 = 1
   [5] #9 = true
-  [6] Goto bb2
-bb2 (block)
-  predecessors: bb0
-  [7] #3 = true
-  [8] #4 = StoreLocal Reassign unknown b$7 = unknown #3
-  [9] Goto bb1
-bb1 (block)
-  predecessors: bb2
-  [10] #10 = DeclareLocal Let unknown c$9
-  [11] #15 = true
-  [12] Goto bb5
-bb5 (block)
-  predecessors: bb1
-  [13] #11 = "hello"
-  [14] #12 = StoreLocal Reassign unknown c$11 = unknown #11
-  [15] Goto bb4
-bb4 (block)
-  predecessors: bb5
-  [16] #16 = DeclareLocal Let unknown d$13
-  [17] #21 = "hello"
-  [18] #22 = "hello"
-  [19] #23 = true
-  [20] Goto bb8
-bb8 (block)
-  predecessors: bb4
-  [21] #17 = 42
-  [22] #18 = StoreLocal Reassign unknown d$15 = unknown #17
-  [23] Goto bb7
-bb7 (block)
-  predecessors: bb8
-  [24] #24 = DeclareLocal Let unknown e$17
-  [25] #29 = 42
-  [26] #30 = 42
-  [27] #31 = true
-  [28] Goto bb11
-bb11 (block)
-  predecessors: bb7
-  [29] #25 = "ok"
-  [30] #26 = StoreLocal Reassign unknown e$19 = unknown #25
-  [31] Goto bb10
-bb10 (block)
-  predecessors: bb11
-  [32] #32 = "ok"
-  [33] Return unknown #32
+  [6] #3 = true
+  [7] #4 = StoreLocal Reassign unknown b$7 = unknown #3
+  [8] #10 = DeclareLocal Let unknown c$9
+  [9] #15 = true
+  [10] #11 = "hello"
+  [11] #12 = StoreLocal Reassign unknown c$11 = unknown #11
+  [12] #16 = DeclareLocal Let unknown d$13
+  [13] #21 = "hello"
+  [14] #22 = "hello"
+  [15] #23 = true
+  [16] #17 = 42
+  [17] #18 = StoreLocal Reassign unknown d$15 = unknown #17
+  [18] #24 = DeclareLocal Let unknown e$17
+  [19] #29 = 42
+  [20] #30 = 42
+  [21] #31 = true
+  [22] #25 = "ok"
+  [23] #26 = StoreLocal Reassign unknown e$19 = unknown #25
+  [24] #32 = "ok"
+  [25] Return unknown #32

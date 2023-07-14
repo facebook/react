@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use bumpalo::collections::{CollectIn, Vec};
+use bumpalo::collections::Vec;
 use forget_diagnostics::{invariant, Diagnostic};
 use forget_hir::{
     BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
@@ -32,7 +32,7 @@ pub fn enter_ssa_impl<'a>(
 
     let mut states = builder.complete();
 
-    for block in fun.body.blocks.values_mut() {
+    for block in fun.body.blocks.iter_mut() {
         let state = states.remove(&block.id).unwrap();
         block.phis = state.phis;
     }
@@ -112,8 +112,9 @@ struct IncompletePhi<'a> {
 impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
     fn new(env: &'e Environment<'a>, entry: BlockId, blocks: &'f Blocks<'a>) -> Self {
         let states = blocks
-            .keys()
-            .map(|block_id| (*block_id, BlockState::new(env)))
+            .block_ids()
+            .into_iter()
+            .map(|block_id| (block_id, BlockState::new(env)))
             .collect();
         Self {
             env,
@@ -182,7 +183,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
             return identifier.clone();
         }
         // Else we have to look at predecessor blocks: bail if no predecessors
-        let block = self.blocks.get(&block_id).unwrap();
+        let block = self.blocks.block(block_id);
         if block.predecessors.is_empty() {
             println!("Unable to find previous id for {old_identifier:?}");
             self.unknown.insert(old_identifier.id);
@@ -225,7 +226,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
             identifier: new_identifier.clone(),
             operands: Default::default(),
         };
-        let block = self.blocks.get(&block_id).unwrap();
+        let block = self.blocks.block(block_id);
         let preds = block.predecessors.clone();
         for pred_block_id in preds {
             let pred_id = self.get_id_at(pred_block_id, old_identifier);
@@ -262,15 +263,15 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         F: FnMut(&BasicBlock<'a>, &mut Self) -> Result<(), Diagnostic>,
     {
         let mut visited = IndexSet::new();
-        let block_ids: Vec<_> = self.blocks.keys().cloned().collect_in(self.env.allocator);
+        let block_ids = self.blocks.block_ids();
         for block_id in block_ids {
             visited.insert(block_id);
             self.current = block_id;
-            let block = self.blocks.get(&block_id).unwrap();
+            let block = self.blocks.block(block_id);
             f(block, self)?;
             let successors = block.terminal.value.successors();
             for successor in successors {
-                let block = self.blocks.get(&successor).unwrap();
+                let block = self.blocks.block(successor);
                 let count = self
                     .unsealed_predecessors
                     .entry(successor)
