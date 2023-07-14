@@ -1,9 +1,9 @@
-use std::{cell::RefCell, fmt::Display, rc::Rc};
+use std::cell::RefCell;
+use std::fmt::Display;
+use std::rc::Rc;
 
-use bumpalo::{
-    boxed::Box,
-    collections::{String, Vec},
-};
+use bumpalo::boxed::Box;
+use bumpalo::collections::{String, Vec};
 use forget_estree::BinaryOperator;
 
 use crate::{Function, IdentifierId, InstrIx, InstructionId, ScopeId, Type};

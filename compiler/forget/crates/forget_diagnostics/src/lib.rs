@@ -8,9 +8,5 @@ pub fn invariant<F>(cond: bool, f: F) -> Result<(), Diagnostic>
 where
     F: Fn() -> Diagnostic,
 {
-    if cond {
-        Ok(())
-    } else {
-        Err(f())
-    }
+    if cond { Ok(()) } else { Err(f()) }
 }

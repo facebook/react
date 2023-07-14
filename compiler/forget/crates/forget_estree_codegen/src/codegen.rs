@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
 use indexmap::IndexMap;
-use quote::{__private::TokenStream, format_ident, quote};
+use quote::__private::TokenStream;
+use quote::{format_ident, quote};
 use serde::{Deserialize, Serialize};
 use syn::Type;
 

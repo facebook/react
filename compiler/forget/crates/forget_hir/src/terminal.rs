@@ -1,4 +1,5 @@
-use crate::{instruction::Operand, BlockId, InstructionId};
+use crate::instruction::Operand;
+use crate::{BlockId, InstructionId};
 
 /// Terminals represent statements or expressions that affect control flow,
 /// such as for-of, if-else, return, logical (??), ternaries (?:), etc.

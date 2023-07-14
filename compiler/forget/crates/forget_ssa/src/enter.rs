@@ -1,4 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use bumpalo::collections::{CollectIn, Vec};
 use forget_hir::{
@@ -145,7 +146,10 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
     fn visit_store(&mut self, lvalue: &mut LValue<'a>) -> () {
         let old_identifier = &lvalue.identifier.identifier;
         // TODO: use Result (?)
-        assert!(!self.unknown.contains(&old_identifier.id), "EnterSSA: Expected identifier to be defined before being used. Identifier {old_identifier:?} is undefined.");
+        assert!(
+            !self.unknown.contains(&old_identifier.id),
+            "EnterSSA: Expected identifier to be defined before being used. Identifier {old_identifier:?} is undefined."
+        );
 
         if self.context.contains(&old_identifier.id) {
             let new_identifier = self.get_id_at(self.current, old_identifier);

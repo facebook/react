@@ -1,7 +1,5 @@
-use std::{
-    error::Error,
-    fmt::{Debug, Display, Write},
-};
+use std::error::Error;
+use std::fmt::{Debug, Display, Write};
 
 use forget_estree::SourceRange;
 use miette::{ByteOffset, SourceSpan};

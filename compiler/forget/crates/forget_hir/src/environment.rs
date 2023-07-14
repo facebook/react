@@ -1,10 +1,10 @@
-use std::{
-    cell::{Cell, RefCell},
-    collections::HashMap,
-    rc::Rc,
-};
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
+use std::rc::Rc;
 
-use bumpalo::{boxed::Box, collections::Vec, Bump};
+use bumpalo::boxed::Box;
+use bumpalo::collections::Vec;
+use bumpalo::Bump;
 use forget_estree::BindingId;
 
 use crate::{

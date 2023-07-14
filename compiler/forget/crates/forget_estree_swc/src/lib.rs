@@ -1,4 +1,6 @@
-use std::{io::stderr, num::NonZeroU32, sync::Arc};
+use std::io::stderr;
+use std::num::NonZeroU32;
+use std::sync::Arc;
 
 use forget_estree::{Binding, BindingId};
 use swc::Compiler;
@@ -412,21 +414,22 @@ fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> forget_estree:
         PatOrExpr::Pat(target) => {
             forget_estree::AssignmentTarget::Pattern(convert_pattern(cx, target))
         }
-        PatOrExpr::Expr(target) => {
-            match target.as_ref() {
-                Expr::Member(target) => forget_estree::AssignmentTarget::Expression(
-                    forget_estree::Expression::MemberExpression(Box::new(
-                        convert_member_expression(cx, target),
-                    )),
-                ),
-                Expr::Ident(target) => forget_estree::AssignmentTarget::Pattern(
-                    forget_estree::Pattern::Identifier(Box::new(convert_identifier(cx, target))),
-                ),
-                _ => {
-                    panic!("Expected assignment target to be member expression or identifier, got {:#?}", target)
-                }
+        PatOrExpr::Expr(target) => match target.as_ref() {
+            Expr::Member(target) => forget_estree::AssignmentTarget::Expression(
+                forget_estree::Expression::MemberExpression(Box::new(convert_member_expression(
+                    cx, target,
+                ))),
+            ),
+            Expr::Ident(target) => forget_estree::AssignmentTarget::Pattern(
+                forget_estree::Pattern::Identifier(Box::new(convert_identifier(cx, target))),
+            ),
+            _ => {
+                panic!(
+                    "Expected assignment target to be member expression or identifier, got {:#?}",
+                    target
+                )
             }
-        }
+        },
     }
 }
 

@@ -1,10 +1,10 @@
-use bumpalo::{
-    boxed::Box,
-    collections::{String, Vec},
-};
-use forget_diagnostics::{invariant, Diagnostic, DiagnosticSeverity};
-use std::{cell::RefCell, collections::HashSet, rc::Rc};
+use std::cell::RefCell;
+use std::collections::HashSet;
+use std::rc::Rc;
 
+use bumpalo::boxed::Box;
+use bumpalo::collections::{String, Vec};
+use forget_diagnostics::{invariant, Diagnostic, DiagnosticSeverity};
 use forget_hir::{
     BasicBlock, BlockId, BlockKind, Environment, GotoKind, Identifier, IdentifierData, InstrIx,
     Instruction, InstructionIdGenerator, InstructionValue, Terminal, TerminalValue, Type, HIR,

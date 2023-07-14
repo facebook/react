@@ -1,4 +1,5 @@
-use std::{env, fmt::Write};
+use std::env;
+use std::fmt::Write;
 
 use bumpalo::Bump;
 use forget_build_hir::build;

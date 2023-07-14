@@ -1,7 +1,5 @@
-use bumpalo::{
-    boxed::Box,
-    collections::{String, Vec},
-};
+use bumpalo::boxed::Box;
+use bumpalo::collections::{String, Vec};
 use indexmap::IndexMap;
 
 use crate::{BasicBlock, BlockId, IdentifierOperand, Instruction};

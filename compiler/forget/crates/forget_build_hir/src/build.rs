@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
-use bumpalo::{boxed::Box, collections::String};
+use bumpalo::boxed::Box;
+use bumpalo::collections::String;
 use forget_diagnostics::{Diagnostic, DiagnosticSeverity};
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
@@ -13,11 +14,9 @@ use forget_hir::{
     PrimitiveValue, TerminalValue,
 };
 
-use crate::{
-    builder::{Binding, Builder, LoopScope},
-    context::get_context_identifiers,
-    error::BuildHIRError,
-};
+use crate::builder::{Binding, Builder, LoopScope};
+use crate::context::get_context_identifiers;
+use crate::error::BuildHIRError;
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
 /// if it was constructed sucessfully, otherwise a list of diagnostics

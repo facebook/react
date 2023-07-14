@@ -2,7 +2,8 @@ use std::fmt::Display;
 
 use indexmap::{IndexMap, IndexSet};
 
-use crate::{id_types::BlockId, Identifier, InstrIx, Terminal};
+use crate::id_types::BlockId;
+use crate::{Identifier, InstrIx, Terminal};
 
 /// Represents a sequence of instructions that will always[1] execute
 /// consecutively. Concretely, a block may have zero or more instructions

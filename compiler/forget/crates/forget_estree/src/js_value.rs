@@ -1,4 +1,5 @@
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::de::Visitor;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Clone, Debug, PartialEq, PartialOrd, Hash)]
 pub enum JsValue {
@@ -9,7 +10,18 @@ pub enum JsValue {
     String(String),
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Debug)]
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    Debug
+)]
 pub struct Number(u64);
 
 impl From<u32> for Number {
