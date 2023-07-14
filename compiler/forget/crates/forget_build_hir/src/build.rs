@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use bumpalo::{boxed::Box, collections::String};
+use forget_diagnostics::{Diagnostic, DiagnosticSeverity};
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
     Function, FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement,
@@ -15,8 +16,7 @@ use forget_hir::{
 use crate::{
     builder::{Binding, Builder, LoopScope},
     context::get_context_identifiers,
-    error::DiagnosticError,
-    BuildDiagnostic, ErrorSeverity,
+    error::BuildHIRError,
 };
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
@@ -28,7 +28,7 @@ use crate::{
 pub fn build<'a>(
     env: &'a Environment<'a>,
     fun: Function,
-) -> Result<Box<'a, forget_hir::Function<'a>>, BuildDiagnostic> {
+) -> Result<Box<'a, forget_hir::Function<'a>>, Diagnostic> {
     let mut builder = Builder::new(env);
 
     match fun.body {
@@ -39,9 +39,8 @@ pub fn build<'a>(
             lower_expression(env, &mut builder, body)?;
         }
         None => {
-            return Err(BuildDiagnostic::new(
-                DiagnosticError::EmptyFunction,
-                ErrorSeverity::InvalidSyntax,
+            return Err(Diagnostic::invalid_syntax(
+                BuildHIRError::EmptyFunction,
                 fun.range,
             ));
         }
@@ -96,7 +95,7 @@ fn lower_block_statement<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     stmt: BlockStatement,
-) -> Result<(), BuildDiagnostic> {
+) -> Result<(), Diagnostic> {
     for stmt in stmt.body {
         lower_statement(env, builder, stmt, None)?;
     }
@@ -110,7 +109,7 @@ fn lower_statement<'a>(
     builder: &mut Builder<'a>,
     stmt: Statement,
     label: Option<String<'a>>,
-) -> Result<(), BuildDiagnostic> {
+) -> Result<(), Diagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
             lower_block_statement(env, builder, *stmt)?;
@@ -160,9 +159,8 @@ fn lower_statement<'a>(
                 VariableDeclarationKind::Const => InstructionKind::Const,
                 VariableDeclarationKind::Let => InstructionKind::Let,
                 VariableDeclarationKind::Var => {
-                    return Err(BuildDiagnostic::new(
-                        DiagnosticError::VariableDeclarationKindIsVar,
-                        ErrorSeverity::Unsupported,
+                    return Err(Diagnostic::unsupported(
+                        BuildHIRError::VariableDeclarationKindIsVar,
                         stmt.range,
                     ));
                 }
@@ -184,9 +182,8 @@ fn lower_statement<'a>(
                         let identifier = match binding {
                             Binding::Local(identifier) => identifier,
                             _ => {
-                                return Err(BuildDiagnostic::new(
-                                    DiagnosticError::VariableDeclarationBindingIsNonLocal,
-                                    ErrorSeverity::Invariant,
+                                return Err(Diagnostic::invariant(
+                                    BuildHIRError::VariableDeclarationBindingIsNonLocal,
                                     id.range,
                                 ));
                             }
@@ -269,9 +266,8 @@ fn lower_statement<'a>(
                         kind: GotoKind::Break,
                     }))
                 } else {
-                    Err(BuildDiagnostic::new(
-                        DiagnosticError::ForStatementIsMissingInitializer,
-                        ErrorSeverity::Todo,
+                    Err(Diagnostic::todo(
+                        BuildHIRError::ForStatementIsMissingInitializer,
                         None,
                     ))
                 }
@@ -325,9 +321,8 @@ fn lower_statement<'a>(
                 });
                 builder.terminate_with_fallthrough(terminal, fallthrough_block);
             } else {
-                return Err(BuildDiagnostic::new(
-                    DiagnosticError::ForStatementIsMissingTest,
-                    ErrorSeverity::Todo,
+                return Err(Diagnostic::todo(
+                    BuildHIRError::ForStatementIsMissingTest,
                     stmt.range,
                 ));
             }
@@ -345,7 +340,7 @@ fn lower_expression<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     expr: Expression,
-) -> Result<InstrIx, BuildDiagnostic> {
+) -> Result<InstrIx, Diagnostic> {
     let value = match expr {
         Expression::Identifier(expr) => {
             // TODO: handle unbound variables
@@ -438,7 +433,7 @@ fn lower_function<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
     expr: FunctionExpression,
-) -> Result<forget_hir::FunctionExpression<'a>, BuildDiagnostic> {
+) -> Result<forget_hir::FunctionExpression<'a>, Diagnostic> {
     let FunctionExpression { function, .. } = expr;
     println!("get_context_identifiers() ...");
     let context_identifiers = get_context_identifiers(env, &function);
@@ -474,7 +469,7 @@ fn lower_assignment<'a>(
     kind: InstructionKind,
     lvalue: AssignmentTarget,
     value: InstrIx,
-) -> Result<InstrIx, BuildDiagnostic> {
+) -> Result<InstrIx, Diagnostic> {
     Ok(match lvalue {
         AssignmentTarget::Pattern(lvalue) => match lvalue {
             Pattern::Identifier(lvalue) => {
@@ -498,12 +493,15 @@ fn lower_identifier_for_assignment<'a>(
     builder: &mut Builder<'a>,
     _kind: InstructionKind,
     identifier: forget_estree::Identifier,
-) -> Result<IdentifierOperand<'a>, BuildDiagnostic> {
+) -> Result<IdentifierOperand<'a>, Diagnostic> {
     let binding = builder.resolve_identifier(&identifier)?;
     match binding {
-        Binding::Module(..) | Binding::Global => Err(BuildDiagnostic::new(
-            DiagnosticError::ReassignedGlobal,
-            ErrorSeverity::InvalidReact,
+        Binding::Module(..) | Binding::Global => Err(Diagnostic::invalid_react(
+            BuildHIRError::ReassignedGlobal,
+            identifier.range,
+        )
+        .annotate(
+            format!("Cannot reassign `{}`", &identifier.name),
             identifier.range,
         )),
         Binding::Local(id) => Ok(IdentifierOperand {

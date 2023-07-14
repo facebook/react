@@ -2,6 +2,7 @@ use bumpalo::{
     boxed::Box,
     collections::{String, Vec},
 };
+use forget_diagnostics::{invariant, Diagnostic, DiagnosticSeverity};
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 use forget_hir::{
@@ -10,7 +11,7 @@ use forget_hir::{
 };
 use indexmap::IndexMap;
 
-use crate::{invariant, BuildDiagnostic, DiagnosticError, ErrorSeverity};
+use crate::BuildHIRError;
 
 /// Helper struct used when converting from ESTree to HIR. Includes:
 /// - Variable resolution
@@ -112,7 +113,7 @@ impl<'a> Builder<'a> {
     ///
     /// TODO: refine the type, only invariants should be possible here,
     /// not other types of errors
-    pub(crate) fn build(self) -> Result<HIR<'a>, BuildDiagnostic> {
+    pub(crate) fn build(self) -> Result<HIR<'a>, Diagnostic> {
         let mut hir = HIR {
             entry: self.entry,
             blocks: self.completed,
@@ -176,9 +177,9 @@ impl<'a> Builder<'a> {
         }
     }
 
-    pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> Result<BlockId, BuildDiagnostic>
+    pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> Result<BlockId, Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
     {
         let wip = self.reserve(kind);
         let id = wip.id;
@@ -186,9 +187,9 @@ impl<'a> Builder<'a> {
         Ok(id)
     }
 
-    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F) -> Result<(), BuildDiagnostic>
+    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F) -> Result<(), Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
     {
         let current = std::mem::replace(&mut self.wip, wip);
 
@@ -226,9 +227,9 @@ impl<'a> Builder<'a> {
         &mut self,
         scope: LoopScope<'a>,
         f: F,
-    ) -> Result<TerminalValue<'a>, BuildDiagnostic>
+    ) -> Result<TerminalValue<'a>, Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, BuildDiagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
     {
         self.scopes.push(ControlFlowScope::Loop(scope.clone()));
         let terminal = f(self);
@@ -260,7 +261,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_break(
         &self,
         label: Option<&forget_estree::Identifier>,
-    ) -> Result<BlockId, BuildDiagnostic> {
+    ) -> Result<BlockId, Diagnostic> {
         for scope in self.scopes.iter().rev() {
             match (label, scope.label()) {
                 // If this is an unlabeled break, return the most recent break target
@@ -273,9 +274,8 @@ impl<'a> Builder<'a> {
                 _ => continue,
             }
         }
-        Err(BuildDiagnostic::new(
-            DiagnosticError::UnresolvedBreakTarget,
-            ErrorSeverity::InvalidSyntax,
+        Err(Diagnostic::invalid_syntax(
+            BuildHIRError::UnresolvedBreakTarget,
             None,
         ))
     }
@@ -286,7 +286,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_continue(
         &self,
         label: Option<&forget_estree::Identifier>,
-    ) -> Result<BlockId, BuildDiagnostic> {
+    ) -> Result<BlockId, Diagnostic> {
         for scope in self.scopes.iter().rev() {
             match scope {
                 ControlFlowScope::Loop(scope) => {
@@ -307,9 +307,8 @@ impl<'a> Builder<'a> {
                     match (label, scope.label()) {
                         (Some(label), Some(scope_label)) if label.name.as_str() == scope_label => {
                             // Error, the continue referred to a label that is not a loop
-                            return Err(BuildDiagnostic::new(
-                                DiagnosticError::ContinueTargetIsNotALoop,
-                                ErrorSeverity::InvalidSyntax,
+                            return Err(Diagnostic::invalid_syntax(
+                                BuildHIRError::ContinueTargetIsNotALoop,
                                 None,
                             ));
                         }
@@ -318,9 +317,8 @@ impl<'a> Builder<'a> {
                 }
             }
         }
-        Err(BuildDiagnostic::new(
-            DiagnosticError::UnresolvedContinueTarget,
-            ErrorSeverity::InvalidSyntax,
+        Err(Diagnostic::invalid_syntax(
+            BuildHIRError::UnresolvedContinueTarget,
             None,
         ))
     }
@@ -328,7 +326,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_identifier(
         &mut self,
         identifier: &forget_estree::Identifier,
-    ) -> Result<Binding<'a>, BuildDiagnostic> {
+    ) -> Result<Binding<'a>, Diagnostic> {
         match &identifier.binding {
             Some(binding) => Ok(match binding {
                 forget_estree::Binding::Global => Binding::Global,
@@ -341,16 +339,15 @@ impl<'a> Builder<'a> {
                         .resolve_binding_identifier(&identifier.name, *id),
                 ),
             }),
-            _ => Err(BuildDiagnostic::new(
-                DiagnosticError::UnknownIdentifier,
-                ErrorSeverity::Invariant,
+            _ => Err(Diagnostic::invariant(
+                BuildHIRError::UnknownIdentifier,
                 identifier.range.clone(),
             )),
         }
     }
 }
 
-pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
+pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     reverse_postorder_blocks(hir);
     remove_unreachable_for_updates(hir);
     remove_unreachable_fallthroughs(hir);
@@ -465,18 +462,14 @@ pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 
 /// Updates the instruction ids for all instructions and blocks
 /// Relies on the blocks being in reverse postorder to ensure that id ordering is correct
-pub fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), BuildDiagnostic> {
+pub fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
     for (ii, block) in hir.blocks.values_mut().enumerate() {
         let block_id = block.id;
         for (jj, instr_ix) in block.instructions.iter_mut().enumerate() {
             invariant(visited.insert((ii, jj)), || {
-                BuildDiagnostic::new(
-                    DiagnosticError::BlockVisitedTwice { block: block_id },
-                    ErrorSeverity::Invariant,
-                    None,
-                )
+                Diagnostic::invariant(BuildHIRError::BlockVisitedTwice { block: block_id }, None)
             })?;
             let instr = &mut hir.instructions[usize::from(*instr_ix)];
             instr.id = id_gen.next();

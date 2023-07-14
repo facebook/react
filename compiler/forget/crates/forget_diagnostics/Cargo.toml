@@ -1,5 +1,5 @@
 [package]
-name = "forget_build_hir"
+name = "forget_diagnostics"
 version = "0.1.0"
 publish               = false
 authors.workspace     = true
@@ -13,9 +13,11 @@ repository.workspace  = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-forget_hir = { workspace = true }
-forget_estree = { workspace = true}
-indexmap = { workspace = true }
-bumpalo = { workspace = true }
-forget_diagnostics = { workspace = true }
+# TODO: extract SourceRange into a separate crate so that 
+# we don't depend on full estree here
+forget_estree = { workspace = true }
+# TODO: consider extracting a separate forget_miette crate which does
+# the translation from forget_diagnostics::Diagnostic to miette::Diagnostic
+miette = { workspace = true }
 thiserror = { workspace = true }
+static_assertions = { workspace = true }

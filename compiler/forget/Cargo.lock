@@ -451,10 +451,20 @@ name = "forget_build_hir"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
+ "forget_diagnostics",
  "forget_estree",
  "forget_hir",
  "indexmap 2.0.0",
+ "thiserror",
+]
+
+[[package]]
+name = "forget_diagnostics"
+version = "0.1.0"
+dependencies = [
+ "forget_estree",
  "miette 5.9.0",
+ "static_assertions",
  "thiserror",
 ]
 

@@ -1,34 +1,9 @@
-use forget_estree::SourceRange;
 use forget_hir::BlockId;
-use miette::{ByteOffset, Diagnostic, SourceSpan};
 use thiserror::Error;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Error)]
-pub enum ErrorSeverity {
-    /// A feature that is intended to work but not yet implemented
-    #[error("Not implemented")]
-    Todo,
-
-    /// Syntax that is valid but inentionally not supported
-    #[error("Unsupported")]
-    Unsupported,
-
-    /// Invalid syntax
-    #[error("Invalid JavaScript")]
-    InvalidSyntax,
-
-    /// Valid syntax, but invalid React
-    #[error("Invalid React")]
-    InvalidReact,
-
-    /// Internal compiler error (ICE)
-    #[error("Internal error")]
-    Invariant,
-}
-
 /// Errors which can occur during HIR construction
-#[derive(Error, Diagnostic, Debug)]
-pub enum DiagnosticError {
+#[derive(Error, Debug)]
+pub enum BuildHIRError {
     /// ErrorSeverity::Unsupported
     #[error(
         "Variable declarations must be `let` or `const`, `var` declarations are not supported"
@@ -80,50 +55,4 @@ pub enum DiagnosticError {
     /// ErrorSeverity::InvalidSyntax
     #[error("Expected function to have a body")]
     EmptyFunction,
-}
-
-#[derive(Error, Diagnostic, Debug)]
-#[error("{error}")]
-pub struct BuildDiagnostic {
-    /// The actual error
-    pub error: DiagnosticError,
-
-    /// Error severity
-    pub severity: ErrorSeverity,
-
-    /// Source of the error
-    #[label]
-    pub range: Option<SourceSpan>,
-}
-
-impl BuildDiagnostic {
-    pub fn new(
-        error: DiagnosticError,
-        severity: ErrorSeverity,
-        range: Option<SourceRange>,
-    ) -> Self {
-        Self {
-            error,
-            severity,
-            range: range.map(|range| {
-                SourceSpan::new(
-                    ByteOffset::from(range.start as usize - 1).into(),
-                    ByteOffset::from((u32::from(range.end) - range.start) as usize).into(),
-                )
-            }),
-        }
-    }
-}
-
-/// Returns Ok(()) if the condition is true, otherwise returns Err()
-/// with the diagnostic produced by the provided callback
-pub fn invariant<F>(cond: bool, f: F) -> Result<(), BuildDiagnostic>
-where
-    F: Fn() -> BuildDiagnostic,
-{
-    if cond {
-        Ok(())
-    } else {
-        Err(f())
-    }
 }

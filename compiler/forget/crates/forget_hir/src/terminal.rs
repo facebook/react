@@ -78,7 +78,7 @@ impl<'a> TerminalValue<'a> {
 
 #[derive(Debug)]
 pub struct UnsupportedTerminal<'a> {
-    phantom: std::marker::PhantomData<&'a ()>
+    phantom: std::marker::PhantomData<&'a ()>,
 }
 
 #[derive(Debug)]
