@@ -16,6 +16,7 @@ fn fixtures() {
         println!("fixture {}", path.to_str().unwrap());
         let input = std::fs::read_to_string(path).unwrap();
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
+        println!("ok parse");
 
         let mut output = String::new();
 
@@ -39,11 +40,15 @@ fn fixtures() {
                             // let mut out = String::new();
                             // fun.print(&fun.body, &mut out).unwrap();
                             // println!("{out}");
-
+                            println!("ok build");
                             enter_ssa(&environment, &mut fun).unwrap();
+                            println!("ok enter_ssa");
                             eliminate_redundant_phis(&environment, &mut fun);
+                            println!("ok eliminate_redundant_phis");
                             constant_propagation(&environment, &mut fun);
+                            println!("ok constant_propagation");
                             fun.print(&fun.body, &mut output).unwrap();
+                            println!("ok print");
                         }
                         Err(error) => {
                             write!(&mut output, "{}", error,).unwrap();

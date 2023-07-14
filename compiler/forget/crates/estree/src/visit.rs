@@ -1,7 +1,7 @@
 use crate::{
-    AssignmentTarget, Expression, ExpressionOrSpread, ForInInit, ForInit, Function, FunctionBody,
-    Identifier, ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal, ModuleItem,
-    Pattern, Program, Statement, SwitchCase, VariableDeclarator,
+    AssignmentTarget, Expression, ExpressionOrSpread, ExpressionOrSuper, ForInInit, ForInit,
+    Function, FunctionBody, Identifier, ImportDeclarationSpecifier, ImportOrExportDeclaration,
+    Literal, ModuleItem, Pattern, Program, Statement, SwitchCase, VariableDeclarator,
 };
 
 /// Trait for visiting an estree
@@ -24,7 +24,11 @@ pub trait Visitor<'ast> {
     }
 
     fn default_visit_function(&mut self, function: &'ast Function) {
-        // todo: params and such
+        self.visit_lvalue(|visitor| {
+            for param in &function.params {
+                visitor.visit_pattern(param);
+            }
+        });
         match &function.body {
             Some(FunctionBody::BlockStatement(body)) => {
                 for stmt in &body.body {
@@ -247,7 +251,7 @@ pub trait Visitor<'ast> {
     }
 
     fn visit_expression(&mut self, expr: &'ast Expression) {
-        self.visit_expression(expr);
+        self.default_visit_expression(expr);
     }
 
     fn default_visit_expression(&mut self, expr: &'ast Expression) {
@@ -276,6 +280,17 @@ pub trait Visitor<'ast> {
             }
             Expression::Literal(expr) => self.visit_literal(expr),
             Expression::FunctionExpression(expr) => self.visit_function(&expr.function),
+            Expression::MemberExpression(expr) => {
+                match &expr.object {
+                    ExpressionOrSuper::Super(_object) => {
+                        // todo
+                    }
+                    ExpressionOrSuper::Expression(object) => self.visit_expression(object),
+                };
+                if !expr.computed {
+                    self.visit_expression(&expr.property)
+                }
+            }
             _ => {
                 todo!("more expression types")
             }

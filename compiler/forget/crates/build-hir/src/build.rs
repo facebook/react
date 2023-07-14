@@ -440,7 +440,9 @@ fn lower_function<'a>(
     expr: FunctionExpression,
 ) -> Result<hir::FunctionExpression<'a>, BuildDiagnostic> {
     let FunctionExpression { function, .. } = expr;
+    println!("get_context_identifiers() ...");
     let context_identifiers = get_context_identifiers(env, &function);
+    println!("ok");
     let mut context = env.vec_new();
     let mut seen = HashSet::new();
     for identifier in context_identifiers {

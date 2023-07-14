@@ -50,40 +50,6 @@ impl<'ast> Visitor<'ast> for ContextVisitor<'ast> {
         self.lvalue = prev_lvalue;
     }
 
-    fn visit_function(&mut self, function: &'ast Function) {
-        self.visit_lvalue(|visitor| {
-            for param in &function.params {
-                visitor.visit_pattern(param);
-            }
-        });
-        self.default_visit_function(function);
-    }
-
-    fn visit_expression(&mut self, expr: &'ast Expression) {
-        if let Expression::AssignmentExpression(expr) = expr {
-            self.visit_lvalue(|visitor| visitor.visit_assignment_target(&expr.left));
-            self.visit_expression(&expr.right);
-            return;
-        }
-        let mut object = expr;
-        while let Expression::MemberExpression(expr) = object {
-            match &expr.object {
-                ExpressionOrSuper::Super(_) => return,
-                ExpressionOrSuper::Expression(expr) => {
-                    object = expr;
-                }
-            }
-            if expr.computed {
-                self.visit_expression(&expr.property);
-            }
-        }
-        if let Expression::Identifier(identifier) = object {
-            self.visit_identifier(identifier);
-        } else {
-            self.default_visit_expression(expr);
-        }
-    }
-
     fn visit_identifier(&mut self, identifier: &'ast Identifier) {
         let binding = identifier.binding.unwrap();
         match binding {
