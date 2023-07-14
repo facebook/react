@@ -40,6 +40,32 @@ impl<'a> Instruction<'a> {
         }
     }
 
+    pub fn try_each_identifier_store<F, E>(&mut self, mut f: F) -> Result<(), E>
+    where
+        F: FnMut(&mut LValue<'a>) -> Result<(), E>,
+    {
+        match &mut self.value {
+            InstructionValue::DeclareContext(instr) => {
+                f(&mut instr.lvalue)?;
+            }
+            InstructionValue::DeclareLocal(instr) => {
+                f(&mut instr.lvalue)?;
+            }
+            InstructionValue::StoreLocal(instr) => {
+                f(&mut instr.lvalue)?;
+            }
+            InstructionValue::Array(_)
+            | InstructionValue::Binary(_)
+            | InstructionValue::LoadContext(_)
+            | InstructionValue::LoadGlobal(_)
+            | InstructionValue::LoadLocal(_)
+            | InstructionValue::Primitive(_)
+            | InstructionValue::Function(_)
+            | InstructionValue::Tombstone => {}
+        }
+        Ok(())
+    }
+
     pub fn each_identifier_load<F>(&mut self, mut f: F) -> ()
     where
         F: FnMut(&mut IdentifierOperand<'a>) -> (),

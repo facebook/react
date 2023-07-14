@@ -2,18 +2,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use bumpalo::collections::{CollectIn, Vec};
+use forget_diagnostics::{invariant, Diagnostic};
 use forget_hir::{
     BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
     IdentifierOperand, Instruction, InstructionValue, LValue, MutableRange, Phi,
 };
 use indexmap::{IndexMap, IndexSet};
-use thiserror::Error;
 
-#[derive(Error, Debug)]
-#[error("Error constructing SSA form")]
-pub struct SSAError;
-
-pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<(), SSAError> {
+pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<(), Diagnostic> {
     assert!(fun.context.is_empty());
     enter_ssa_impl(env, fun, None)
 }
@@ -22,7 +18,7 @@ pub fn enter_ssa_impl<'a>(
     env: &Environment<'a>,
     fun: &mut Function<'a>,
     context_defs: Option<IndexMap<IdentifierId, Identifier<'a>>>,
-) -> Result<(), SSAError> {
+) -> Result<(), Diagnostic> {
     let blocks = &fun.body.blocks;
     let instructions = &mut fun.body.instructions;
     let mut builder = Builder::new(env, fun.body.entry, blocks);
@@ -48,11 +44,11 @@ fn visit_instructions<'a, 'e, 'f>(
     env: &Environment<'a>,
     builder: &mut Builder<'a, 'e, 'f>,
     instructions: &mut Vec<'a, Instruction<'a>>,
-) -> Result<(), SSAError> {
+) -> Result<(), Diagnostic> {
     builder.each_block(|block, builder| {
         for instr_ix in &block.instructions {
             let instr = &mut instructions[usize::from(*instr_ix)];
-            instr.each_identifier_store(|store| builder.visit_store(store));
+            instr.try_each_identifier_store(|store| builder.visit_store(store))?;
             instr.each_identifier_load(|load| builder.visit_load(load));
 
             if let InstructionValue::Function(fun) = &mut instr.value {
@@ -143,24 +139,27 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         self.env.next_identifier_id()
     }
 
-    fn visit_store(&mut self, lvalue: &mut LValue<'a>) -> () {
+    fn visit_store(&mut self, lvalue: &mut LValue<'a>) -> Result<(), Diagnostic> {
         let old_identifier = &lvalue.identifier.identifier;
         // TODO: use Result (?)
-        assert!(
-            !self.unknown.contains(&old_identifier.id),
-            "EnterSSA: Expected identifier to be defined before being used. Identifier {old_identifier:?} is undefined."
-        );
+        invariant(!self.unknown.contains(&old_identifier.id), || {
+            Diagnostic::invariant(
+                "EnterSSA: Expected identifier to be defined before being used",
+                None,
+            )
+        })?;
 
         if self.context.contains(&old_identifier.id) {
             let new_identifier = self.get_id_at(self.current, old_identifier);
             lvalue.identifier.identifier = new_identifier;
-            return;
+            return Ok(());
         }
 
         let new_identifier = self.make_identifier(old_identifier);
         let state = self.states.get_mut(&self.current).unwrap();
         state.defs.insert(old_identifier.id, new_identifier.clone());
         lvalue.identifier.identifier = new_identifier;
+        Ok(())
     }
 
     fn visit_param(&mut self, param: &mut IdentifierOperand<'a>) -> () {
@@ -258,9 +257,9 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         }
     }
 
-    fn each_block<F>(&mut self, mut f: F) -> Result<(), SSAError>
+    fn each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
     where
-        F: FnMut(&BasicBlock<'a>, &mut Self) -> Result<(), SSAError>,
+        F: FnMut(&BasicBlock<'a>, &mut Self) -> Result<(), Diagnostic>,
     {
         let mut visited = IndexSet::new();
         let block_ids: Vec<_> = self.blocks.keys().cloned().collect_in(self.env.allocator);

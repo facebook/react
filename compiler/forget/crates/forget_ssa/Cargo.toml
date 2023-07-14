@@ -15,6 +15,7 @@ repository.workspace  = true
 [dependencies]
 forget_hir = { workspace = true }
 forget_utils = { workspace = true }
+forget_diagnostics = { workspace = true }
 bumpalo = { workspace = true }
 indexmap = { workspace = true }
 miette = { workspace = true }

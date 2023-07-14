@@ -549,6 +549,7 @@ name = "forget_ssa"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
+ "forget_diagnostics",
  "forget_hir",
  "forget_utils",
  "indexmap 2.0.0",
