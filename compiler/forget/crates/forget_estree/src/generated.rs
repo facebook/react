@@ -1,3 +1,5 @@
+// @generated
+#![cfg_attr(rustfmt, rustfmt_skip)]
 use std::num::NonZeroU32;
 use serde::{Serialize, Deserialize};
 use crate::{JsValue, Binding, SourceRange};

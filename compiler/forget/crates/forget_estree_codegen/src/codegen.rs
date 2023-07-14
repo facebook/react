@@ -13,7 +13,11 @@ pub fn estree() -> String {
     let raw = grammar.codegen().to_string();
 
     let parsed = syn::parse_file(&raw).unwrap();
-    prettyplease::unparse(&parsed)
+    format!(
+        "// {}generated\n#![cfg_attr(rustfmt, rustfmt_skip)]\n{}",
+        '\u{0040}',
+        prettyplease::unparse(&parsed)
+    )
 }
 
 #[derive(Serialize, Deserialize, Debug)]
