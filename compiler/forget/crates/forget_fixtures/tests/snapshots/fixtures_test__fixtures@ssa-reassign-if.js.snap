@@ -1,0 +1,73 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/ssa-reassign-if.js
+---
+Input:
+function Component(a, b) {
+  let x;
+  let y = 0;
+  let z = 10;
+  if (a) {
+    x = 1;
+    if (b) {
+      z = 20;
+    } else {
+      z = 30;
+    }
+  } else {
+    x = 2;
+  }
+  return x + y + z;
+}
+
+
+Output:
+function Component(
+  unknown a$5,
+  unknown b$6,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = DeclareLocal Let unknown x$7
+  [1] #1 = 0
+  [2] #2 = StoreLocal Let unknown y$8 = unknown #1
+  [3] #3 = 10
+  [4] #4 = StoreLocal Let unknown z$9 = unknown #3
+  [5] #14 = LoadLocal unknown a$5
+  [6] If unknown #14 consequent=bb2 alternate=bb6 fallthrough=bb1
+bb2 (block)
+  predecessors: bb0
+  [7] #5 = 1
+  [8] #6 = StoreLocal Reassign unknown x$10 = unknown #5
+  [9] #11 = LoadLocal unknown b$6
+  [10] If unknown #11 consequent=bb4 alternate=bb5 fallthrough=bb3
+bb4 (block)
+  predecessors: bb2
+  [11] #7 = 20
+  [12] #8 = StoreLocal Reassign unknown z$11 = unknown #7
+  [13] Goto bb3
+bb5 (block)
+  predecessors: bb2
+  [14] #9 = 30
+  [15] #10 = StoreLocal Reassign unknown z$12 = unknown #9
+  [16] Goto bb3
+bb3 (block)
+  predecessors: bb4, bb5
+  z$19: phi(bb4: z$11, bb5: z$12)
+  [17] Goto bb1
+bb6 (block)
+  predecessors: bb0
+  [18] #12 = 2
+  [19] #13 = StoreLocal Reassign unknown x$13 = unknown #12
+  [20] Goto bb1
+bb1 (block)
+  predecessors: bb3, bb6
+  x$14: phi(bb3: x$10, bb6: x$13)
+  z$18: phi(bb3: z$19, bb6: z$9)
+  [21] #15 = LoadLocal unknown x$14
+  [22] #16 = 0
+  [23] #17 = Binary unknown #15 + unknown #16
+  [24] #18 = LoadLocal unknown z$18
+  [25] #19 = Binary unknown #17 + unknown #18
+  [26] Return unknown #19

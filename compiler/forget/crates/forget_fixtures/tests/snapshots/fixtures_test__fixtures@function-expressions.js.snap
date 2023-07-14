@@ -1,0 +1,100 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/function-expressions.js
+---
+Input:
+function Component(props) {
+  const x = 2;
+  const foo = function foo(y) {
+    let a = 1;
+    let b;
+    if (a === 1) {
+      b = 5 + 3;
+    } else {
+      b = false;
+    }
+    x + y + a + b;
+    const bar = function bar(z) {
+      let c = 2;
+      let d;
+      d = 3;
+      x + y + a + b + z + c + d;
+    };
+    bar;
+    foo;
+  };
+}
+
+
+Output:
+function Component(
+  unknown props$11,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = 2
+  [1] #1 = StoreLocal Const unknown x$12 = unknown #0
+  [2] #2 = Function @deps[] @context[unknown x$12, unknown foo$1]:
+      function foo(
+        unknown y$13,
+      )
+      entry bb1
+      bb1 (block)
+        [0] #0 = 1
+        [1] #1 = StoreLocal Let unknown a$14 = unknown #0
+        [2] #2 = DeclareLocal Let unknown b$15
+        [3] #9 = 1
+        [4] #10 = 1
+        [5] #11 = true
+        [6] Goto bb3
+      bb3 (block)
+        predecessors: bb1
+        [7] #3 = 5
+        [8] #4 = 3
+        [9] #5 = 8
+        [10] #6 = StoreLocal Reassign unknown b$16 = unknown #5
+        [11] Goto bb2
+      bb2 (block)
+        predecessors: bb3
+        [12] #12 = 2
+        [13] #13 = LoadLocal unknown y$13
+        [14] #14 = Binary unknown #12 + unknown #13
+        [15] #15 = 1
+        [16] #16 = Binary unknown #14 + unknown #15
+        [17] #17 = 8
+        [18] #18 = Binary unknown #16 + unknown #17
+        [19] #19 = Function @deps[] @context[unknown x$18, unknown y$19, unknown a$20, unknown b$21]:
+            function bar(
+              unknown z$22,
+            )
+            entry bb5
+            bb5 (block)
+              [0] #0 = 2
+              [1] #1 = StoreLocal Let unknown c$23 = unknown #0
+              [2] #2 = DeclareLocal Let unknown d$24
+              [3] #3 = 3
+              [4] #4 = StoreLocal Reassign unknown d$25 = unknown #3
+              [5] #5 = LoadLocal unknown x$18
+              [6] #6 = LoadLocal unknown y$19
+              [7] #7 = Binary unknown #5 + unknown #6
+              [8] #8 = LoadLocal unknown a$20
+              [9] #9 = Binary unknown #7 + unknown #8
+              [10] #10 = LoadLocal unknown b$21
+              [11] #11 = Binary unknown #9 + unknown #10
+              [12] #12 = LoadLocal unknown z$22
+              [13] #13 = Binary unknown #11 + unknown #12
+              [14] #14 = 2
+              [15] #15 = Binary unknown #13 + unknown #14
+              [16] #16 = 3
+              [17] #17 = Binary unknown #15 + unknown #16
+              [18] #18 = <undefined>
+              [19] Return unknown #18
+        [20] #20 = StoreLocal Const unknown bar$26 = unknown #19
+        [21] #21 = LoadLocal unknown bar$26
+        [22] #22 = LoadLocal unknown foo$1
+        [23] #23 = <undefined>
+        [24] Return unknown #23
+  [3] #3 = StoreLocal Const unknown foo$28 = unknown #2
+  [4] #4 = <undefined>
+  [5] Return unknown #4

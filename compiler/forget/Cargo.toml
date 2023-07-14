@@ -1,17 +1,54 @@
 [workspace]
 resolver = "2"
-members = [
-    "crates/build-hir",
-    "crates/fixtures",
-    "crates/hir",
-    "crates/hir-ssa",
-    "crates/hir-optimization",
-    "crates/swc-demo",
-    "crates/estree",
-    "crates/estree-codegen",
-    "crates/estree-swc",
-    "crates/utils"
-]
+members = ["crates/*"]
+
+[workspace.package]
+authors     = ["The React Team https://react.dev/community/team"]
+description = "React Forget Compiler"
+edition     = "2021"
+homepage    = "https://github.com/facebook/react-forget"
+keywords    = ["JavaScript", "TypeScript", "React", "React Forget", "Forget", "Compiler"]
+license     = "MIT"
+repository  = "https://github.com/facebook/react-forget"
+
+[workspace.dependencies]
+# workspace crates
+forget_build_hir = { path = "crates/forget_build_hir" }
+forget_estree = { path = "crates/forget_estree" }
+forget_estree_codegen = { path = "crates/forget_estree_codegen" }
+forget_estree_swc = { path = "crates/forget_estree_swc" }
+forget_fixtures = { path = "crates/forget_fixtures" }
+forget_hir = { path = "crates/forget_hir" }
+forget_optimization = { path = "crates/forget_optimization" }
+forget_ssa = { path = "crates/forget_ssa" }
+forget_swc_demo = { path = "crates/forget_swc_demo" }
+forget_utils = { path = "crates/forget_utils" }
+
+# dependencies
+bumpalo = { version = "3.13.0", features = ["boxed", "collections"] }
+indexmap = { version = "2.0.0", features = ["serde"] }
+insta = { version = "1.30.0", features = ["glob"] }
+miette = { version = "5.9.0" }
+prettyplease = "0.2.10"
+quote = "1.0.29"
+serde = { version = "1.0.167", features = ["serde_derive"] }
+serde_json = "1.0.100"
+stacker = "0.1.15"
+static_assertions = "1.1.0"
+swc = "0.264.8"
+swc_core = { version = "0.79.9", features = ["swc_ecma_visit", "__ecma_transforms", "swc_ecma_ast", "swc_common", "swc", "swc_ecma_parser", "__ecma", "__common", "ecma_ast", "__visit", "__parser"] }
+syn = "2.0.23"
+thiserror = "1.0.41"
+
+[profile.release]
+# configuration adapted from oxc
+# https://github.com/Boshen/oxc/blob/ea85ee9f2d64dd284c5b7410f491d81fb879abae/Cargo.toml#L89-L97
+opt-level     = 3
+lto           = "fat"
+codegen-units = 1
+strip         = "symbols"
+debug         = false
+panic         = "abort"   # Let it crash and force ourselves to write safe Rust.
 
 # Make insta run faster by compiling with release mode optimizations
 # https://docs.rs/insta/latest/insta/#optional-faster-runs

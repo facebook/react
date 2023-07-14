@@ -1,0 +1,54 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/for-statement.js
+---
+Input:
+function foo() {
+  let x = 0;
+  for (let i = 0; i < 10; i = i + 1) {
+    x = x + i;
+  }
+  return x;
+}
+
+
+Output:
+function foo(
+)
+entry bb0
+bb0 (block)
+  [0] #0 = 0
+  [1] #1 = StoreLocal Let unknown x$2 = unknown #0
+  [2] For init=bb3 test=bb1 update=bb4 body=bb5 fallthrough=bb2
+bb3 (loop)
+  predecessors: bb0
+  [3] #2 = 0
+  [4] #3 = StoreLocal Let unknown i$3 = unknown #2
+  [5] Goto bb1
+bb1 (loop)
+  predecessors: bb3, bb4
+  i$4: phi(bb3: i$3, bb4: i$7)
+  x$5: phi(bb3: x$2, bb4: x$6)
+  [6] #12 = LoadLocal unknown i$4
+  [7] #13 = 10
+  [8] #14 = Binary unknown #12 < unknown #13
+  [9] Branch unknown #14 consequent=bb5 alternate=bb2
+bb5 (block)
+  predecessors: bb1
+  [10] #8 = LoadLocal unknown x$5
+  [11] #9 = LoadLocal unknown i$4
+  [12] #10 = Binary unknown #8 + unknown #9
+  [13] #11 = StoreLocal Reassign unknown x$6 = unknown #10
+  [14] Goto bb4
+bb4 (loop)
+  predecessors: bb5
+  [15] #4 = LoadLocal unknown i$4
+  [16] #5 = 1
+  [17] #6 = Binary unknown #4 + unknown #5
+  [18] #7 = StoreLocal Reassign unknown i$7 = unknown #6
+  [19] Goto bb1
+bb2 (block)
+  predecessors: bb1
+  [20] #15 = LoadLocal unknown x$5
+  [21] Return unknown #15

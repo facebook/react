@@ -1,0 +1,198 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/constant-propagation.js
+---
+Input:
+function Component(props) {
+  // global propagation
+  let a;
+  a = Math;
+  a; // Math
+
+  // primitive propagation w phi
+  let b;
+  if (props) {
+    b = true;
+  } else {
+    b = true;
+  }
+  b; // true
+
+  // primitive propagation fails if different values
+  let c;
+  if (props) {
+    c = true;
+  } else {
+    c = 42;
+  }
+  c; // <no change>
+
+  // constant evaluation
+  42 + 1; // 43
+  42 - 1; // 41
+  42 * 2; // 84
+  42 / 2; // 21
+  0 == 1; // false
+  0 != 1; // true
+  0 === 1; // false
+  0 !== 1; // true
+  0 == 0; // true
+  // TODO: unary operators
+  //   0 == -0; // false
+  //   0 != -0; // true
+  //   0 === -0; // false
+  //   0 !== -0; // true
+  NaN == NaN; // false
+  NaN != NaN; // true
+  NaN !== NaN; // true
+  NaN !== NaN; // true
+  "hello" == "hello"; // true
+  "hello" != "hello"; // false
+  "hello" === "hello"; // true
+  "hello" !== "hello"; // false
+  "hello" == "world"; // false
+  "hello" != "world"; // true
+  "hello" === "world"; // false
+  "hello" !== "world"; // true
+  true == true; // true
+  true != true; // false
+  true === true; // true
+  true !== true; // false
+
+  // constant evaluation through variable
+  let x = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+  x;
+}
+
+
+Output:
+function Component(
+  unknown props$5,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = DeclareLocal Let unknown a$6
+  [1] #1 = LoadGlobal Math
+  [2] #2 = StoreLocal Reassign unknown a$7 = unknown #1
+  [3] #3 = LoadGlobal Math
+  [4] #4 = DeclareLocal Let unknown b$8
+  [5] #9 = LoadLocal unknown props$5
+  [6] If unknown #9 consequent=bb2 alternate=bb3 fallthrough=bb1
+bb2 (block)
+  predecessors: bb0
+  [7] #5 = true
+  [8] #6 = StoreLocal Reassign unknown b$9 = unknown #5
+  [9] Goto bb1
+bb3 (block)
+  predecessors: bb0
+  [10] #7 = true
+  [11] #8 = StoreLocal Reassign unknown b$10 = unknown #7
+  [12] Goto bb1
+bb1 (block)
+  predecessors: bb2, bb3
+  b$11: phi(bb2: b$9, bb3: b$10)
+  [13] #10 = true
+  [14] #11 = DeclareLocal Let unknown c$12
+  [15] #16 = LoadLocal unknown props$5
+  [16] If unknown #16 consequent=bb5 alternate=bb6 fallthrough=bb4
+bb5 (block)
+  predecessors: bb1
+  [17] #12 = true
+  [18] #13 = StoreLocal Reassign unknown c$14 = unknown #12
+  [19] Goto bb4
+bb6 (block)
+  predecessors: bb1
+  [20] #14 = 42
+  [21] #15 = StoreLocal Reassign unknown c$15 = unknown #14
+  [22] Goto bb4
+bb4 (block)
+  predecessors: bb5, bb6
+  c$16: phi(bb5: c$14, bb6: c$15)
+  [23] #17 = LoadLocal unknown c$16
+  [24] #18 = 42
+  [25] #19 = 1
+  [26] #20 = 43
+  [27] #21 = 42
+  [28] #22 = 1
+  [29] #23 = 41
+  [30] #24 = 42
+  [31] #25 = 2
+  [32] #26 = 84
+  [33] #27 = 42
+  [34] #28 = 2
+  [35] #29 = 21
+  [36] #30 = 0
+  [37] #31 = 1
+  [38] #32 = false
+  [39] #33 = 0
+  [40] #34 = 1
+  [41] #35 = true
+  [42] #36 = 0
+  [43] #37 = 1
+  [44] #38 = false
+  [45] #39 = 0
+  [46] #40 = 1
+  [47] #41 = true
+  [48] #42 = 0
+  [49] #43 = 0
+  [50] #44 = true
+  [51] #45 = LoadGlobal NaN
+  [52] #46 = LoadGlobal NaN
+  [53] #47 = Binary unknown #45 == unknown #46
+  [54] #48 = LoadGlobal NaN
+  [55] #49 = LoadGlobal NaN
+  [56] #50 = Binary unknown #48 != unknown #49
+  [57] #51 = LoadGlobal NaN
+  [58] #52 = LoadGlobal NaN
+  [59] #53 = Binary unknown #51 !== unknown #52
+  [60] #54 = LoadGlobal NaN
+  [61] #55 = LoadGlobal NaN
+  [62] #56 = Binary unknown #54 !== unknown #55
+  [63] #57 = "hello"
+  [64] #58 = "hello"
+  [65] #59 = true
+  [66] #60 = "hello"
+  [67] #61 = "hello"
+  [68] #62 = false
+  [69] #63 = "hello"
+  [70] #64 = "hello"
+  [71] #65 = true
+  [72] #66 = "hello"
+  [73] #67 = "hello"
+  [74] #68 = false
+  [75] #69 = "hello"
+  [76] #70 = "world"
+  [77] #71 = false
+  [78] #72 = "hello"
+  [79] #73 = "world"
+  [80] #74 = true
+  [81] #75 = "hello"
+  [82] #76 = "world"
+  [83] #77 = false
+  [84] #78 = "hello"
+  [85] #79 = "world"
+  [86] #80 = true
+  [87] #81 = true
+  [88] #82 = true
+  [89] #83 = true
+  [90] #84 = true
+  [91] #85 = true
+  [92] #86 = false
+  [93] #87 = true
+  [94] #88 = true
+  [95] #89 = true
+  [96] #90 = true
+  [97] #91 = true
+  [98] #92 = false
+  [99] #93 = 5
+  [100] #94 = 60
+  [101] #95 = 300
+  [102] #96 = 60
+  [103] #97 = 18000
+  [104] #98 = 1000
+  [105] #99 = 18000000
+  [106] #100 = StoreLocal Let unknown x$17 = unknown #99
+  [107] #101 = 18000000
+  [108] #102 = <undefined>
+  [109] Return unknown #102

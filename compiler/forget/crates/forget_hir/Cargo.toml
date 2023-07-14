@@ -1,0 +1,20 @@
+[package]
+name = "forget_hir"
+version = "0.1.0"
+publish               = false
+authors.workspace     = true
+description.workspace = true
+edition.workspace     = true
+homepage.workspace    = true
+keywords.workspace    = true
+license.workspace     = true
+repository.workspace  = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bumpalo = { workspace = true }
+forget_estree = { workspace = true }
+indexmap = { workspace = true }
+serde = { workspace = true }
+forget_utils = { workspace = true }
