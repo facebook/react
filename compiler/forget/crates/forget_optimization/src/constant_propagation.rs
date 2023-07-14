@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
-use forget_build_hir::initialize_hir;
 use forget_estree::BinaryOperator;
 use forget_hir::{
-    BlockKind, Environment, Function, GotoKind, GotoTerminal, IdentifierId, Instruction,
-    InstructionValue, LoadGlobal, Operand, Primitive, PrimitiveValue, TerminalValue,
+    initialize_hir, BlockKind, Environment, Function, GotoKind, GotoTerminal, IdentifierId,
+    Instruction, InstructionValue, LoadGlobal, Operand, Primitive, PrimitiveValue, TerminalValue,
 };
 use forget_ssa::eliminate_redundant_phis;
 

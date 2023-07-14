@@ -521,10 +521,12 @@ name = "forget_hir"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
+ "forget_diagnostics",
  "forget_estree",
  "forget_utils",
  "indexmap 2.0.0",
  "serde",
+ "thiserror",
 ]
 
 [[package]]

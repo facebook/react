@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use bumpalo::boxed::Box;
 use bumpalo::collections::String;
-use forget_diagnostics::{Diagnostic, DiagnosticSeverity};
+use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
     Function, FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement,

@@ -1,4 +1,3 @@
-use forget_hir::BlockId;
 use thiserror::Error;
 
 /// Errors which can occur during HIR construction
@@ -31,10 +30,6 @@ pub enum BuildHIRError {
     /// ErrorSeverity::InvalidReact
     #[error("React functions may not reassign variables defined outside of the component or hook")]
     ReassignedGlobal,
-
-    /// ErrorSeverity::Invariant
-    #[error("Invariant: Expected block {block} not to have been visited yet")]
-    BlockVisitedTwice { block: BlockId },
 
     /// ErrorSeverity::InvalidSyntax
     #[error("Could not resolve a target for `break` statement")]
