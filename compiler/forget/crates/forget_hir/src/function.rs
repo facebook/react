@@ -62,7 +62,7 @@ impl<'a> Blocks<'a> {
         self.data.keys().cloned().collect()
     }
 
-    pub fn take(&mut self, id: BlockId) -> Box<BasicBlock<'a>> {
+    pub fn remove(&mut self, id: BlockId) -> Box<BasicBlock<'a>> {
         self.data.remove(&id).unwrap().unwrap()
     }
 
@@ -146,7 +146,26 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
         }
     }
 
-    pub fn each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
+    pub fn each_block<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> BlockRewriterAction<'a>,
+    {
+        let keys = self.blocks.block_ids();
+        for block_id in keys {
+            self.current = block_id;
+            let block = self.blocks.data.get_mut(&block_id).unwrap().take().unwrap();
+            match f(block, self) {
+                BlockRewriterAction::Keep(block) => {
+                    self.blocks.data.insert(block_id, Some(block));
+                }
+                BlockRewriterAction::Remove => {
+                    self.blocks.data.remove(&block_id);
+                }
+            }
+        }
+    }
+
+    pub fn try_each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
     where
         F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> Result<BlockRewriterAction<'a>, Diagnostic>,
     {
@@ -159,11 +178,16 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
                     self.blocks.data.insert(block_id, Some(block));
                 }
                 BlockRewriterAction::Remove => {
-                    // nothing to do, already removed from the blocks
+                    self.blocks.data.remove(&block_id);
                 }
             }
         }
         Ok(())
+    }
+
+    pub fn contains(&self, block_id: BlockId) -> bool {
+        assert_ne!(block_id, self.current);
+        self.blocks.data.contains_key(&block_id)
     }
 
     pub fn block(&self, block_id: BlockId) -> &BasicBlock<'a> {

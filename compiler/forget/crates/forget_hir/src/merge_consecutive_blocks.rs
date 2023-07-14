@@ -27,7 +27,7 @@ pub fn merge_consecutive_blocks<'a>(
     let mut rewriter = BlockRewriter::new(blocks, fun.body.entry);
     let mut has_changes = false;
 
-    rewriter.each_block(|mut block, rewriter| {
+    rewriter.try_each_block(|mut block, rewriter| {
         let block_id = block.id;
         // Visit instructions to merge blocks within function expressions
         for instr_ix in &block.instructions {

@@ -3,7 +3,10 @@ use std::collections::HashSet;
 use forget_diagnostics::{invariant, Diagnostic};
 use thiserror::Error;
 
-use crate::{BlockId, Blocks, GotoKind, GotoTerminal, InstructionIdGenerator, TerminalValue, HIR};
+use crate::{
+    BlockId, BlockRewriter, BlockRewriterAction, Blocks, GotoKind, GotoTerminal,
+    InstructionIdGenerator, TerminalValue, HIR,
+};
 
 /// Runs a variety of passes to put the HIR in canonical form. This should be called
 /// after initial HIR construction and after any transformations that change the
@@ -65,7 +68,7 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
     // NOTE: could consider sorting the blocks in-place by key
     let mut blocks = Blocks::with_capacity(hir.blocks.len());
     for id in postorder.iter().rev().cloned() {
-        blocks.insert(hir.blocks.take(id));
+        blocks.insert(hir.blocks.remove(id));
     }
 
     hir.blocks = blocks;
@@ -73,52 +76,49 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable
 pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
-    let block_ids = hir.blocks.block_ids();
-
-    for block in hir.blocks.iter_mut() {
+    BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         if let TerminalValue::For(terminal) = &mut block.terminal.value {
             if let Some(update) = terminal.update {
-                if !block_ids.contains(&update) {
+                if !rewriter.contains(update) {
                     terminal.update = None;
                 }
             }
         }
-    }
+        BlockRewriterAction::Keep(block)
+    });
 }
 
 /// Prunes unreachable fallthrough values, setting them to None if the referenced
 /// block was not otherwise reachable.
 pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
-    let block_ids = hir.blocks.block_ids();
-
-    for block in hir.blocks.iter_mut() {
+    BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         block
             .terminal
             .value
             .map_optional_fallthroughs(|fallthrough| {
-                if block_ids.contains(&fallthrough) {
+                if rewriter.contains(fallthrough) {
                     Some(fallthrough)
                 } else {
                     None
                 }
-            })
-    }
+            });
+        BlockRewriterAction::Keep(block)
+    });
 }
 
 /// Rewrites DoWhile statements into Gotos if the test block is not reachable
 pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
-    let block_ids = hir.blocks.block_ids();
-
-    for block in hir.blocks.iter_mut() {
+    BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         if let TerminalValue::DoWhile(terminal) = &mut block.terminal.value {
-            if !block_ids.contains(&terminal.test) {
+            if !rewriter.contains(terminal.test) {
                 block.terminal.value = TerminalValue::Goto(GotoTerminal {
                     block: terminal.body,
                     kind: GotoKind::Break,
                 });
             }
         }
-    }
+        BlockRewriterAction::Keep(block)
+    });
 }
 
 /// Updates the instruction ids for all instructions and blocks
