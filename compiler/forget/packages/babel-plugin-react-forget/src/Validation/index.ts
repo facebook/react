@@ -8,4 +8,5 @@
 export { validateFrozenLambdas } from "./ValidateFrozenLambdas";
 export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateNoRefAccessInRender } from "./ValidateNoRefAccesInRender";
+export { validateNoSetStateInRender } from "./ValidateNoSetStateInRender";
 export { validateUnconditionalHooks } from "./ValidateUnconditionalHooks";

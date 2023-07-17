@@ -55,6 +55,7 @@ import {
   validateFrozenLambdas,
   validateHooksUsage,
   validateNoRefAccessInRender,
+  validateNoSetStateInRender,
   validateUnconditionalHooks,
 } from "../Validation";
 
@@ -135,6 +136,13 @@ export function* run(
   if (env.validateRefAccessDuringRender) {
     validateNoRefAccessInRender(hir);
   }
+
+  const noSetStateInRenderResult = validateNoSetStateInRender(hir).unwrap();
+  yield log({
+    kind: "debug",
+    name: "ValidateNoSetStateInRender",
+    value: noSetStateInRenderResult.debug(),
+  });
 
   leaveSSA(hir);
   yield log({ kind: "hir", name: "LeaveSSA", value: hir });
