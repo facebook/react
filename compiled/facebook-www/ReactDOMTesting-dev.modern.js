@@ -121,7 +121,9 @@ var disableInputAttributeSyncing =
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
-    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect; // On WWW, true is used for a new modern build.
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableSchedulerTimeoutInWorkLoop =
+    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -30205,7 +30207,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   var shouldTimeSlice =
     !includesBlockingLane(root, lanes) &&
     !includesExpiredLane(root, lanes) &&
-    !didTimeout;
+    (disableSchedulerTimeoutInWorkLoop || !didTimeout);
   var exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
@@ -34421,7 +34423,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-65b5d253";
+var ReactVersion = "18.3.0-www-modern-65d997e2";
 
 function createPortal$1(
   children,

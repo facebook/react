@@ -76,6 +76,8 @@ var ReactSharedInternals =
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableSchedulerTimeoutInWorkLoop =
+    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -7865,7 +7867,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   var exitStatus =
     includesBlockingLane(root, lanes) ||
     0 !== (lanes & root.expiredLanes) ||
-    didTimeout
+    (!disableSchedulerTimeoutInWorkLoop && didTimeout)
       ? renderRootSync(root, lanes)
       : renderRootConcurrent(root, lanes);
   if (0 !== exitStatus) {
@@ -9773,7 +9775,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-968fdb5d",
+    version: "18.3.0-www-modern-c04e88ed",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1286 = {
@@ -9804,7 +9806,7 @@ var internals$jscomp$inline_1286 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-968fdb5d"
+  reconcilerVersion: "18.3.0-www-modern-c04e88ed"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1287 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

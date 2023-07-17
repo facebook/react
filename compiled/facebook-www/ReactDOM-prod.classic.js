@@ -57,6 +57,8 @@ var ReactSharedInternals =
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableSchedulerTimeoutInWorkLoop =
+    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -9864,7 +9866,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   var exitStatus =
     includesBlockingLane(root, lanes) ||
     0 !== (lanes & root.expiredLanes) ||
-    didTimeout
+    (!disableSchedulerTimeoutInWorkLoop && didTimeout)
       ? renderRootSync(root, lanes)
       : renderRootConcurrent(root, lanes);
   if (0 !== exitStatus) {
@@ -16588,7 +16590,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1803 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-916922f2",
+  version: "18.3.0-www-classic-b6ec25b4",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2162 = {
@@ -16618,7 +16620,7 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-916922f2"
+  reconcilerVersion: "18.3.0-www-classic-b6ec25b4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16846,4 +16848,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-916922f2";
+exports.version = "18.3.0-www-classic-b6ec25b4";
