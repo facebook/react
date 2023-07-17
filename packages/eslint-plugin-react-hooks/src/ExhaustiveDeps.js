@@ -1158,6 +1158,20 @@ export default {
         // Not a React Hook call that needs deps.
         return;
       }
+      function getReactiveHookCallbackIndex(callee, options) {
+  const { ignoredHooks } = options; 
+  if (ignoredHooks && ignoredHooks.includes(reactiveHookName)) {
+    return -1;
+  }
+  return callbackIndex;
+}
+    function visitCallExpression(node) {
+  const ignoredHooks = options.ignoredHooks || [];
+  const callbackIndex = getReactiveHookCallbackIndex(node.callee, {
+    ...options,
+    ignoredHooks, 
+  });
+}
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
