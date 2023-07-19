@@ -462,9 +462,6 @@ function unstable_getCurrentPriorityLevel(): PriorityLevel {
 }
 
 let isMessageLoopRunning = false;
-let scheduledHostCallback:
-  | null
-  | ((initialTime: DOMHighResTimeStamp | number) => boolean) = null;
 let taskTimeoutID: TimeoutID = (-1: any);
 
 // Scheduler periodically yields in case there is other work on the main
@@ -556,7 +553,7 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
-  if (scheduledHostCallback !== null) {
+  if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
     // has been blocked.
@@ -566,12 +563,11 @@ const performWorkUntilDeadline = () => {
     // error can be observed.
     //
     // Intentionally not using a try-catch, since that makes some debugging
-    // techniques harder. Instead, if `scheduledHostCallback` errors, then
-    // `hasMoreWork` will remain true, and we'll continue the work loop.
+    // techniques harder. Instead, if `flushWork` errors, then `hasMoreWork` will
+    // remain true, and we'll continue the work loop.
     let hasMoreWork = true;
     try {
-      // $FlowFixMe[not-a-function] found when upgrading Flow
-      hasMoreWork = scheduledHostCallback(currentTime);
+      hasMoreWork = flushWork(currentTime);
     } finally {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
@@ -579,11 +575,8 @@ const performWorkUntilDeadline = () => {
         schedulePerformWorkUntilDeadline();
       } else {
         isMessageLoopRunning = false;
-        scheduledHostCallback = null;
       }
     }
-  } else {
-    isMessageLoopRunning = false;
   }
   // Yielding to the browser will give it a chance to paint, so we can
   // reset this.
@@ -624,7 +617,6 @@ if (typeof localSetImmediate === 'function') {
 }
 
 function requestHostCallback(callback: (initialTime: number) => boolean) {
-  scheduledHostCallback = callback;
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();
