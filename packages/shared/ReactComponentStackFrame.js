@@ -125,9 +125,11 @@ export function describeNativeComponentFrame(
 
       // Before ES6, the `name` property was not configurable.
       if (
-        // $FlowFixMe[method-unbinding]
-        Object.getOwnPropertyDescriptor(this.DetermineComponentFrameRoot)
-          ?.configurable
+        Object.getOwnPropertyDescriptor(
+          // $FlowFixMe[method-unbinding]
+          this.DetermineComponentFrameRoot,
+          'name',
+        )?.configurable
       ) {
         // Configurable properties can be updated even if its writable
         // descriptor is set to `false`. V8 utilizes a function's `name`
