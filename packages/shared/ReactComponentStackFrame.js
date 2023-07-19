@@ -105,42 +105,14 @@ export function describeNativeComponentFrame(
    * Finding a common stack frame between sample and control errors can be
    * tricky given the different types and levels of stack trace truncation from
    * different JS VMs. So instead we'll attempt to control what that common
-   * frame should be through this class:
-   * Having both the sample and control errors be under the
-   * `DescribeNativeComponentFrameRoot` method call will ensure that a stack
+   * frame should be through this object method:
+   * Having both the sample and control errors be in the function under the
+   * `DescribeNativeComponentFrameRoot` property, + setting the `name` and
+   * `displayName` properties of the function ensures that a stack
    * frame exists that has the method name `DescribeNativeComponentFrameRoot` in
    * it for both control and sample stacks.
-   *
-   * Note that we're using a class method here instead of a plain object
-   * property to prevent Closure compiler from eliding away the object and the
-   * extra method call.
    */
-  class RunInRootFrame {
-    constructor() {
-      // Bun and Safari will require setting these properties should the class
-      // ever get transpiled into an ES2015 constructor function.
-      // $FlowFixMe[method-unbinding]
-      this.DetermineComponentFrameRoot.displayName =
-        'DetermineComponentFrameRoot';
-
-      // Before ES6, the `name` property was not configurable.
-      if (
-        Object.getOwnPropertyDescriptor(
-          // $FlowFixMe[method-unbinding]
-          this.DetermineComponentFrameRoot,
-          'name',
-        )?.configurable
-      ) {
-        // Configurable properties can be updated even if its writable
-        // descriptor is set to `false`. V8 utilizes a function's `name`
-        // property when generating a stack trace.
-        // $FlowFixMe[method-unbinding]
-        Object.defineProperty(this.DetermineComponentFrameRoot, 'name', {
-          value: 'DetermineComponentFrameRoot',
-        });
-      }
-    }
-
+  const RunInRootFrame = {
     DetermineComponentFrameRoot(): [?string, ?string] {
       let control;
       try {
@@ -202,12 +174,31 @@ export function describeNativeComponentFrame(
         }
       }
       return [null, null];
-    }
+    },
+  };
+  // $FlowFixMe[prop-missing]
+  RunInRootFrame.DetermineComponentFrameRoot.displayName =
+    'DetermineComponentFrameRoot';
+  const namePropDescriptor = Object.getOwnPropertyDescriptor(
+    RunInRootFrame.DetermineComponentFrameRoot,
+    'name',
+  );
+  // Before ES6, the `name` property was not configurable.
+  if (namePropDescriptor && namePropDescriptor.configurable) {
+    // Configurable properties can be updated even if its writable
+    // descriptor is set to `false`. V8 utilizes a function's `name`
+    // property when generating a stack trace.
+    Object.defineProperty(
+      RunInRootFrame.DetermineComponentFrameRoot,
+      // $FlowFixMe[cannot-write]
+      'name',
+      {value: 'DetermineComponentFrameRoot'},
+    );
   }
 
   try {
     const [sampleStack, controlStack] =
-      new RunInRootFrame().DetermineComponentFrameRoot();
+      RunInRootFrame.DetermineComponentFrameRoot();
     if (sampleStack && controlStack) {
       // This extracts the first frame from the sample that isn't also in the control.
       // Skipping one frame that we assume is the frame that calls the two.
