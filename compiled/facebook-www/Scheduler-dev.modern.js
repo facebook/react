@@ -344,7 +344,7 @@ function handleTimeout(currentTime) {
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     } else {
       var firstTimer = peek(timerQueue);
 
@@ -355,7 +355,7 @@ function handleTimeout(currentTime) {
   }
 }
 
-function flushWork(hasTimeRemaining, initialTime) {
+function flushWork(initialTime) {
   if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
   } // We'll need a host callback the next time work is scheduled.
@@ -374,7 +374,7 @@ function flushWork(hasTimeRemaining, initialTime) {
   try {
     if (enableProfiling) {
       try {
-        return workLoop(hasTimeRemaining, initialTime);
+        return workLoop(initialTime);
       } catch (error) {
         if (currentTask !== null) {
           var currentTime = exports.unstable_now(); // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -388,7 +388,7 @@ function flushWork(hasTimeRemaining, initialTime) {
       }
     } else {
       // No catch in prod code path.
-      return workLoop(hasTimeRemaining, initialTime);
+      return workLoop(initialTime);
     }
   } finally {
     currentTask = null;
@@ -403,16 +403,13 @@ function flushWork(hasTimeRemaining, initialTime) {
   }
 }
 
-function workLoop(hasTimeRemaining, initialTime) {
+function workLoop(initialTime) {
   var currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
 
   while (currentTask !== null && !isSchedulerPaused) {
-    if (
-      currentTask.expirationTime > currentTime &&
-      (!hasTimeRemaining || shouldYieldToHost())
-    ) {
+    if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
       // This currentTask hasn't expired, and we've reached the deadline.
       break;
     } // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -632,7 +629,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     }
   }
 
@@ -648,7 +645,7 @@ function unstable_continueExecution() {
 
   if (!isHostCallbackScheduled && !isPerformingWork) {
     isHostCallbackScheduled = true;
-    requestHostCallback(flushWork);
+    requestHostCallback();
   }
 }
 
@@ -675,7 +672,6 @@ function unstable_getCurrentPriorityLevel() {
 }
 
 var isMessageLoopRunning = false;
-var scheduledHostCallback = null;
 var taskTimeoutID = -1; // Scheduler periodically yields in case there is other work on the main
 // thread, like user events. By default, it yields multiple times per frame.
 // It does not attempt to align with frame boundaries, since most tasks don't
@@ -761,23 +757,21 @@ function forceFrameRate(fps) {
 }
 
 var performWorkUntilDeadline = function () {
-  if (scheduledHostCallback !== null) {
+  if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now(); // Keep track of the start time so we can measure how long the main thread
     // has been blocked.
 
-    startTime = currentTime;
-    var hasTimeRemaining = true; // If a scheduler task throws, exit the current browser task so the
+    startTime = currentTime; // If a scheduler task throws, exit the current browser task so the
     // error can be observed.
     //
     // Intentionally not using a try-catch, since that makes some debugging
-    // techniques harder. Instead, if `scheduledHostCallback` errors, then
-    // `hasMoreWork` will remain true, and we'll continue the work loop.
+    // techniques harder. Instead, if `flushWork` errors, then `hasMoreWork` will
+    // remain true, and we'll continue the work loop.
 
     var hasMoreWork = true;
 
     try {
-      // $FlowFixMe[not-a-function] found when upgrading Flow
-      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
+      hasMoreWork = flushWork(currentTime);
     } finally {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
@@ -785,11 +779,8 @@ var performWorkUntilDeadline = function () {
         schedulePerformWorkUntilDeadline();
       } else {
         isMessageLoopRunning = false;
-        scheduledHostCallback = null;
       }
     }
-  } else {
-    isMessageLoopRunning = false;
   } // Yielding to the browser will give it a chance to paint, so we can
   // reset this.
 
@@ -832,8 +823,6 @@ if (typeof localSetImmediate === "function") {
 }
 
 function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
-
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();

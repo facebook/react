@@ -108,70 +108,14 @@ function handleTimeout(currentTime) {
   advanceTimers(currentTime);
   if (!isHostCallbackScheduled)
     if (null !== peek(taskQueue))
-      (isHostCallbackScheduled = !0), requestHostCallback(flushWork);
+      (isHostCallbackScheduled = !0), requestHostCallback();
     else {
       var firstTimer = peek(timerQueue);
       null !== firstTimer &&
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
     }
 }
-function flushWork(hasTimeRemaining, initialTime) {
-  isHostCallbackScheduled = !1;
-  isHostTimeoutScheduled &&
-    ((isHostTimeoutScheduled = !1),
-    localClearTimeout(taskTimeoutID),
-    (taskTimeoutID = -1));
-  isPerformingWork = !0;
-  var previousPriorityLevel = currentPriorityLevel;
-  try {
-    a: {
-      advanceTimers(initialTime);
-      for (
-        currentTask = peek(taskQueue);
-        !(
-          null === currentTask ||
-          isSchedulerPaused ||
-          (currentTask.expirationTime > initialTime &&
-            (!hasTimeRemaining || shouldYieldToHost()))
-        );
-
-      ) {
-        var callback = currentTask.callback;
-        if ("function" === typeof callback) {
-          currentTask.callback = null;
-          currentPriorityLevel = currentTask.priorityLevel;
-          var continuationCallback = callback(
-            currentTask.expirationTime <= initialTime
-          );
-          initialTime = exports.unstable_now();
-          if ("function" === typeof continuationCallback) {
-            currentTask.callback = continuationCallback;
-            advanceTimers(initialTime);
-            var JSCompiler_inline_result = !0;
-            break a;
-          } else
-            currentTask === peek(taskQueue) && pop(taskQueue),
-              advanceTimers(initialTime);
-        } else pop(taskQueue);
-        currentTask = peek(taskQueue);
-      }
-      if (null !== currentTask) JSCompiler_inline_result = !0;
-      else {
-        var firstTimer = peek(timerQueue);
-        null !== firstTimer &&
-          requestHostTimeout(handleTimeout, firstTimer.startTime - initialTime);
-        JSCompiler_inline_result = !1;
-      }
-    }
-    return JSCompiler_inline_result;
-  } finally {
-    (currentTask = null),
-      (currentPriorityLevel = previousPriorityLevel),
-      (isPerformingWork = !1);
-  }
-}
 var isMessageLoopRunning = !1,
-  scheduledHostCallback = null,
   taskTimeoutID = -1,
   frameInterval = 5,
   startTime = -1,
@@ -187,18 +131,76 @@ function shouldYieldToHost() {
   return !0;
 }
 function performWorkUntilDeadline() {
-  if (null !== scheduledHostCallback) {
+  if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now();
     startTime = currentTime;
     var hasMoreWork = !0;
     try {
-      hasMoreWork = scheduledHostCallback(!0, currentTime);
+      a: {
+        isHostCallbackScheduled = !1;
+        isHostTimeoutScheduled &&
+          ((isHostTimeoutScheduled = !1),
+          localClearTimeout(taskTimeoutID),
+          (taskTimeoutID = -1));
+        isPerformingWork = !0;
+        var previousPriorityLevel = currentPriorityLevel;
+        try {
+          b: {
+            advanceTimers(currentTime);
+            for (
+              currentTask = peek(taskQueue);
+              !(
+                null === currentTask ||
+                isSchedulerPaused ||
+                (currentTask.expirationTime > currentTime &&
+                  shouldYieldToHost())
+              );
+
+            ) {
+              var callback = currentTask.callback;
+              if ("function" === typeof callback) {
+                currentTask.callback = null;
+                currentPriorityLevel = currentTask.priorityLevel;
+                var continuationCallback = callback(
+                  currentTask.expirationTime <= currentTime
+                );
+                currentTime = exports.unstable_now();
+                if ("function" === typeof continuationCallback) {
+                  currentTask.callback = continuationCallback;
+                  advanceTimers(currentTime);
+                  hasMoreWork = !0;
+                  break b;
+                }
+                currentTask === peek(taskQueue) && pop(taskQueue);
+                advanceTimers(currentTime);
+              } else pop(taskQueue);
+              currentTask = peek(taskQueue);
+            }
+            if (null !== currentTask) hasMoreWork = !0;
+            else {
+              var firstTimer = peek(timerQueue);
+              null !== firstTimer &&
+                requestHostTimeout(
+                  handleTimeout,
+                  firstTimer.startTime - currentTime
+                );
+              hasMoreWork = !1;
+            }
+          }
+          break a;
+        } finally {
+          (currentTask = null),
+            (currentPriorityLevel = previousPriorityLevel),
+            (isPerformingWork = !1);
+        }
+        hasMoreWork = void 0;
+      }
     } finally {
       hasMoreWork
         ? schedulePerformWorkUntilDeadline()
-        : ((isMessageLoopRunning = !1), (scheduledHostCallback = null));
+        : (isMessageLoopRunning = !1);
     }
-  } else isMessageLoopRunning = !1;
+  }
   needsPaint = !1;
 }
 var schedulePerformWorkUntilDeadline;
@@ -217,8 +219,7 @@ else if ("undefined" !== typeof MessageChannel) {
   schedulePerformWorkUntilDeadline = function () {
     localSetTimeout(performWorkUntilDeadline, 0);
   };
-function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
+function requestHostCallback() {
   isMessageLoopRunning ||
     ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline());
 }
@@ -240,7 +241,7 @@ exports.unstable_continueExecution = function () {
   isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
-    ((isHostCallbackScheduled = !0), requestHostCallback(flushWork));
+    ((isHostCallbackScheduled = !0), requestHostCallback());
 };
 exports.unstable_forceFrameRate = function (fps) {
   0 > fps || 125 < fps
@@ -352,7 +353,7 @@ exports.unstable_scheduleCallback = function (
       push(taskQueue, priorityLevel),
       isHostCallbackScheduled ||
         isPerformingWork ||
-        ((isHostCallbackScheduled = !0), requestHostCallback(flushWork)));
+        ((isHostCallbackScheduled = !0), requestHostCallback()));
   return priorityLevel;
 };
 exports.unstable_shouldYield = shouldYieldToHost;

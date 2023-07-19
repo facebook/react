@@ -165,61 +165,21 @@ function handleTimeout(currentTime) {
   advanceTimers(currentTime);
   if (!isHostCallbackScheduled)
     if (null !== peek(taskQueue))
-      (isHostCallbackScheduled = !0), requestHostCallback(flushWork);
+      (isHostCallbackScheduled = !0), requestHostCallback();
     else {
       var firstTimer = peek(timerQueue);
       null !== firstTimer &&
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
     }
 }
-function flushWork(hasTimeRemaining, initialTime) {
-  enableProfilingFeatureFlag &&
-    enableProfilingFeatureFlag &&
-    null !== eventLog &&
-    logEvent([8, 1e3 * initialTime, mainThreadIdCounter]);
-  isHostCallbackScheduled = !1;
-  isHostTimeoutScheduled &&
-    ((isHostTimeoutScheduled = !1),
-    localClearTimeout(taskTimeoutID),
-    (taskTimeoutID = -1));
-  isPerformingWork = !0;
-  var previousPriorityLevel = currentPriorityLevel;
-  try {
-    if (enableProfilingFeatureFlag)
-      try {
-        return workLoop(hasTimeRemaining, initialTime);
-      } catch (error) {
-        if (null !== currentTask) {
-          var currentTime = exports.unstable_now();
-          enableProfilingFeatureFlag &&
-            null !== eventLog &&
-            logEvent([3, 1e3 * currentTime, currentTask.id]);
-          currentTask.isQueued = !1;
-        }
-        throw error;
-      }
-    else return workLoop(hasTimeRemaining, initialTime);
-  } finally {
-    (currentTask = null),
-      (currentPriorityLevel = previousPriorityLevel),
-      (isPerformingWork = !1),
-      enableProfilingFeatureFlag &&
-        ((hasTimeRemaining = exports.unstable_now()),
-        enableProfilingFeatureFlag &&
-          (mainThreadIdCounter++,
-          null !== eventLog &&
-            logEvent([7, 1e3 * hasTimeRemaining, mainThreadIdCounter])));
-  }
-}
-function workLoop(hasTimeRemaining, initialTime) {
+function workLoop(initialTime) {
   advanceTimers(initialTime);
   for (
     currentTask = peek(taskQueue);
     !(
       null === currentTask ||
       isSchedulerPaused ||
-      (currentTask.expirationTime > initialTime &&
-        (!hasTimeRemaining || shouldYieldToHost()))
+      (currentTask.expirationTime > initialTime && shouldYieldToHost())
     );
 
   ) {
@@ -258,13 +218,12 @@ function workLoop(hasTimeRemaining, initialTime) {
     currentTask = peek(taskQueue);
   }
   if (null !== currentTask) return !0;
-  hasTimeRemaining = peek(timerQueue);
-  null !== hasTimeRemaining &&
-    requestHostTimeout(handleTimeout, hasTimeRemaining.startTime - initialTime);
+  callback = peek(timerQueue);
+  null !== callback &&
+    requestHostTimeout(handleTimeout, callback.startTime - initialTime);
   return !1;
 }
 var isMessageLoopRunning = !1,
-  scheduledHostCallback = null,
   taskTimeoutID = -1,
   frameInterval = 5,
   startTime = -1,
@@ -280,18 +239,64 @@ function shouldYieldToHost() {
   return !0;
 }
 function performWorkUntilDeadline() {
-  if (null !== scheduledHostCallback) {
+  if (isMessageLoopRunning) {
     var currentTime = exports.unstable_now();
     startTime = currentTime;
     var hasMoreWork = !0;
     try {
-      hasMoreWork = scheduledHostCallback(!0, currentTime);
+      a: {
+        enableProfilingFeatureFlag &&
+          enableProfilingFeatureFlag &&
+          null !== eventLog &&
+          logEvent([8, 1e3 * currentTime, mainThreadIdCounter]);
+        isHostCallbackScheduled = !1;
+        isHostTimeoutScheduled &&
+          ((isHostTimeoutScheduled = !1),
+          localClearTimeout(taskTimeoutID),
+          (taskTimeoutID = -1));
+        isPerformingWork = !0;
+        var previousPriorityLevel = currentPriorityLevel;
+        try {
+          if (enableProfilingFeatureFlag)
+            try {
+              hasMoreWork = workLoop(currentTime);
+              break a;
+            } catch (error) {
+              if (null !== currentTask) {
+                var currentTime$jscomp$0 = exports.unstable_now();
+                enableProfilingFeatureFlag &&
+                  null !== eventLog &&
+                  logEvent([3, 1e3 * currentTime$jscomp$0, currentTask.id]);
+                currentTask.isQueued = !1;
+              }
+              throw error;
+            }
+          else {
+            hasMoreWork = workLoop(currentTime);
+            break a;
+          }
+        } finally {
+          if (
+            ((currentTask = null),
+            (currentPriorityLevel = previousPriorityLevel),
+            (isPerformingWork = !1),
+            enableProfilingFeatureFlag)
+          ) {
+            var currentTime$0 = exports.unstable_now();
+            enableProfilingFeatureFlag &&
+              (mainThreadIdCounter++,
+              null !== eventLog &&
+                logEvent([7, 1e3 * currentTime$0, mainThreadIdCounter]));
+          }
+        }
+        hasMoreWork = void 0;
+      }
     } finally {
       hasMoreWork
         ? schedulePerformWorkUntilDeadline()
-        : ((isMessageLoopRunning = !1), (scheduledHostCallback = null));
+        : (isMessageLoopRunning = !1);
     }
-  } else isMessageLoopRunning = !1;
+  }
   needsPaint = !1;
 }
 var schedulePerformWorkUntilDeadline;
@@ -310,8 +315,7 @@ else if ("undefined" !== typeof MessageChannel) {
   schedulePerformWorkUntilDeadline = function () {
     localSetTimeout(performWorkUntilDeadline, 0);
   };
-function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
+function requestHostCallback() {
   isMessageLoopRunning ||
     ((isMessageLoopRunning = !0), schedulePerformWorkUntilDeadline());
 }
@@ -346,7 +350,7 @@ exports.unstable_continueExecution = function () {
   isSchedulerPaused = !1;
   isHostCallbackScheduled ||
     isPerformingWork ||
-    ((isHostCallbackScheduled = !0), requestHostCallback(flushWork));
+    ((isHostCallbackScheduled = !0), requestHostCallback());
 };
 exports.unstable_forceFrameRate = function (fps) {
   0 > fps || 125 < fps
@@ -469,7 +473,7 @@ exports.unstable_scheduleCallback = function (
         (priorityLevel.isQueued = !0)),
       isHostCallbackScheduled ||
         isPerformingWork ||
-        ((isHostCallbackScheduled = !0), requestHostCallback(flushWork)));
+        ((isHostCallbackScheduled = !0), requestHostCallback()));
   return priorityLevel;
 };
 exports.unstable_shouldYield = shouldYieldToHost;
