@@ -822,7 +822,7 @@ if (typeof localSetImmediate === "function") {
   };
 }
 
-function requestHostCallback(callback) {
+function requestHostCallback() {
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();
