@@ -1445,7 +1445,8 @@ function collectRecommendations({
       if (
         isEffect &&
         !key.endsWith('.current') &&
-        !externalDependencies.has(key)
+        !externalDependencies.has(key) && 
+        (warnWithNonLegitDependencies === true || !key.endsWith('.current'))
       ) {
         // Effects are allowed extra "unnecessary" deps.
         // Such as resetting scroll when ID changes.
