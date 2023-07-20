@@ -14,12 +14,11 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {
   ClassComponent,
   HostRoot,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   ContextProvider,
@@ -103,7 +102,6 @@ function unwindWork(
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
       if (
         (flags & ShouldCapture) !== NoFlags &&
@@ -117,7 +115,7 @@ function unwindWork(
       // We unwound to the root without completing it. Exit.
       return null;
     }
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       // TODO: popHydrationState
@@ -234,10 +232,9 @@ function unwindInterruptedWork(
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
-      resetMutableSourceWorkInProgressVersions();
       break;
     }
-    case HostResource:
+    case HostHoistable:
     case HostSingleton:
     case HostComponent: {
       popHostContext(interruptedWork);

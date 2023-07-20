@@ -1998,7 +1998,7 @@
 | `colSpan=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `colSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `content` (on `<meta>` inside `<div>`)
+## `content` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `content=(string)`| (changed)| `"a string"` |
@@ -3347,6 +3347,81 @@
 | `externalResourcesRequired=(function)`| (initial, warning)| `<null>` |
 | `externalResourcesRequired=(null)`| (initial)| `<null>` |
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
+
+## `fetchPriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
+
+## `fetchpriority` (on `<img>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchpriority=(string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(array with string)`| (changed, warning)| `"high"` |
+| `fetchpriority=(empty array)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(object)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(numeric string)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(-1)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(0)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(integer)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(float)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'true')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'false')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'on')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(string 'off')`| (initial, warning)| `"auto"` |
+| `fetchpriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(null)`| (initial, warning)| `"auto"` |
+| `fetchpriority=(undefined)`| (initial, warning)| `"auto"` |
+
+## `fetchPriority` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `fetchPriority=(string)`| (changed)| `"high"` |
+| `fetchPriority=(empty string)`| (initial)| `"auto"` |
+| `fetchPriority=(array with string)`| (changed)| `"high"` |
+| `fetchPriority=(empty array)`| (initial)| `"auto"` |
+| `fetchPriority=(object)`| (initial)| `"auto"` |
+| `fetchPriority=(numeric string)`| (initial)| `"auto"` |
+| `fetchPriority=(-1)`| (initial)| `"auto"` |
+| `fetchPriority=(0)`| (initial)| `"auto"` |
+| `fetchPriority=(integer)`| (initial)| `"auto"` |
+| `fetchPriority=(NaN)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(float)`| (initial)| `"auto"` |
+| `fetchPriority=(true)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(false)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(string 'true')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'false')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'on')`| (initial)| `"auto"` |
+| `fetchPriority=(string 'off')`| (initial)| `"auto"` |
+| `fetchPriority=(symbol)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(function)`| (initial, warning)| `"auto"` |
+| `fetchPriority=(null)`| (initial)| `"auto"` |
+| `fetchPriority=(undefined)`| (initial)| `"auto"` |
 
 ## `fill` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -5048,7 +5123,7 @@
 | `htmlFor=(null)`| (initial)| `<empty string>` |
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
-## `http-equiv` (on `<meta>` inside `<div>`)
+## `http-equiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `http-equiv=(string)`| (changed, warning)| `"a string"` |
@@ -5073,7 +5148,7 @@
 | `http-equiv=(null)`| (initial, warning)| `<empty string>` |
 | `http-equiv=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `httpEquiv` (on `<meta>` inside `<div>`)
+## `httpEquiv` (on `<meta>` inside `<head>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `httpEquiv=(string)`| (changed)| `"a string"` |
@@ -6118,6 +6193,31 @@
 | `lang=(string 'false')`| (changed)| `"false"` |
 | `lang=(string 'on')`| (changed)| `"on"` |
 | `lang=(string 'off')`| (changed)| `"off"` |
+| `lang=(symbol)`| (initial, warning)| `<empty string>` |
+| `lang=(function)`| (initial, warning)| `<empty string>` |
+| `lang=(null)`| (initial)| `<empty string>` |
+| `lang=(undefined)`| (initial)| `<empty string>` |
+
+## `lang` (on `<html>` inside `<document>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `lang=(string)`| (changed, ssr mismatch)| `"a string"` |
+| `lang=(empty string)`| (initial)| `<empty string>` |
+| `lang=(array with string)`| (changed, ssr mismatch)| `"string"` |
+| `lang=(empty array)`| (initial)| `<empty string>` |
+| `lang=(object)`| (changed, ssr mismatch)| `"result of toString()"` |
+| `lang=(numeric string)`| (changed, ssr mismatch)| `"42"` |
+| `lang=(-1)`| (changed, ssr mismatch)| `"-1"` |
+| `lang=(0)`| (changed, ssr mismatch)| `"0"` |
+| `lang=(integer)`| (changed, ssr mismatch)| `"1"` |
+| `lang=(NaN)`| (changed, warning, ssr mismatch)| `"NaN"` |
+| `lang=(float)`| (changed, ssr mismatch)| `"99.99"` |
+| `lang=(true)`| (initial, warning)| `<empty string>` |
+| `lang=(false)`| (initial, warning)| `<empty string>` |
+| `lang=(string 'true')`| (changed, ssr mismatch)| `"true"` |
+| `lang=(string 'false')`| (changed, ssr mismatch)| `"false"` |
+| `lang=(string 'on')`| (changed, ssr mismatch)| `"on"` |
+| `lang=(string 'off')`| (changed, ssr mismatch)| `"off"` |
 | `lang=(symbol)`| (initial, warning)| `<empty string>` |
 | `lang=(function)`| (initial, warning)| `<empty string>` |
 | `lang=(null)`| (initial)| `<empty string>` |
@@ -11298,6 +11398,56 @@
 | `transform=(null)`| (initial)| `[]` |
 | `transform=(undefined)`| (initial)| `[]` |
 
+## `transform-origin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transform-origin=(string)`| (changed, warning)| `"a string"` |
+| `transform-origin=(empty string)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(array with string)`| (changed, warning)| `"string"` |
+| `transform-origin=(empty array)`| (changed, warning)| `<empty string>` |
+| `transform-origin=(object)`| (changed, warning)| `"result of toString()"` |
+| `transform-origin=(numeric string)`| (changed, warning)| `"42"` |
+| `transform-origin=(-1)`| (changed, warning)| `"-1"` |
+| `transform-origin=(0)`| (changed, warning)| `"0"` |
+| `transform-origin=(integer)`| (changed, warning)| `"1"` |
+| `transform-origin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transform-origin=(float)`| (changed, warning)| `"99.99"` |
+| `transform-origin=(true)`| (initial, warning)| `<null>` |
+| `transform-origin=(false)`| (initial, warning)| `<null>` |
+| `transform-origin=(string 'true')`| (changed, warning)| `"true"` |
+| `transform-origin=(string 'false')`| (changed, warning)| `"false"` |
+| `transform-origin=(string 'on')`| (changed, warning)| `"on"` |
+| `transform-origin=(string 'off')`| (changed, warning)| `"off"` |
+| `transform-origin=(symbol)`| (initial, warning)| `<null>` |
+| `transform-origin=(function)`| (initial, warning)| `<null>` |
+| `transform-origin=(null)`| (initial, warning)| `<null>` |
+| `transform-origin=(undefined)`| (initial, warning)| `<null>` |
+
+## `transformOrigin` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `transformOrigin=(string)`| (changed)| `"a string"` |
+| `transformOrigin=(empty string)`| (changed)| `<empty string>` |
+| `transformOrigin=(array with string)`| (changed)| `"string"` |
+| `transformOrigin=(empty array)`| (changed)| `<empty string>` |
+| `transformOrigin=(object)`| (changed)| `"result of toString()"` |
+| `transformOrigin=(numeric string)`| (changed)| `"42"` |
+| `transformOrigin=(-1)`| (changed)| `"-1"` |
+| `transformOrigin=(0)`| (changed)| `"0"` |
+| `transformOrigin=(integer)`| (changed)| `"1"` |
+| `transformOrigin=(NaN)`| (changed, warning)| `"NaN"` |
+| `transformOrigin=(float)`| (changed)| `"99.99"` |
+| `transformOrigin=(true)`| (initial, warning)| `<null>` |
+| `transformOrigin=(false)`| (initial, warning)| `<null>` |
+| `transformOrigin=(string 'true')`| (changed)| `"true"` |
+| `transformOrigin=(string 'false')`| (changed)| `"false"` |
+| `transformOrigin=(string 'on')`| (changed)| `"on"` |
+| `transformOrigin=(string 'off')`| (changed)| `"off"` |
+| `transformOrigin=(symbol)`| (initial, warning)| `<null>` |
+| `transformOrigin=(function)`| (initial, warning)| `<null>` |
+| `transformOrigin=(null)`| (initial)| `<null>` |
+| `transformOrigin=(undefined)`| (initial)| `<null>` |
+
 ## `type` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -12401,23 +12551,23 @@
 ## `viewTarget` (on `<view>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `viewTarget=(string)`| (changed, ssr mismatch)| `"a string"` |
-| `viewTarget=(empty string)`| (changed, ssr mismatch)| `<empty string>` |
-| `viewTarget=(array with string)`| (changed, ssr mismatch)| `"string"` |
-| `viewTarget=(empty array)`| (changed, ssr mismatch)| `<empty string>` |
-| `viewTarget=(object)`| (changed, ssr mismatch)| `"result of toString()"` |
-| `viewTarget=(numeric string)`| (changed, ssr mismatch)| `"42"` |
-| `viewTarget=(-1)`| (changed, ssr mismatch)| `"-1"` |
-| `viewTarget=(0)`| (changed, ssr mismatch)| `"0"` |
-| `viewTarget=(integer)`| (changed, ssr mismatch)| `"1"` |
-| `viewTarget=(NaN)`| (changed, warning, ssr mismatch)| `"NaN"` |
-| `viewTarget=(float)`| (changed, ssr mismatch)| `"99.99"` |
+| `viewTarget=(string)`| (changed)| `"a string"` |
+| `viewTarget=(empty string)`| (changed)| `<empty string>` |
+| `viewTarget=(array with string)`| (changed)| `"string"` |
+| `viewTarget=(empty array)`| (changed)| `<empty string>` |
+| `viewTarget=(object)`| (changed)| `"result of toString()"` |
+| `viewTarget=(numeric string)`| (changed)| `"42"` |
+| `viewTarget=(-1)`| (changed)| `"-1"` |
+| `viewTarget=(0)`| (changed)| `"0"` |
+| `viewTarget=(integer)`| (changed)| `"1"` |
+| `viewTarget=(NaN)`| (changed, warning)| `"NaN"` |
+| `viewTarget=(float)`| (changed)| `"99.99"` |
 | `viewTarget=(true)`| (initial, warning)| `<null>` |
 | `viewTarget=(false)`| (initial, warning)| `<null>` |
-| `viewTarget=(string 'true')`| (changed, ssr mismatch)| `"true"` |
-| `viewTarget=(string 'false')`| (changed, ssr mismatch)| `"false"` |
-| `viewTarget=(string 'on')`| (changed, ssr mismatch)| `"on"` |
-| `viewTarget=(string 'off')`| (changed, ssr mismatch)| `"off"` |
+| `viewTarget=(string 'true')`| (changed)| `"true"` |
+| `viewTarget=(string 'false')`| (changed)| `"false"` |
+| `viewTarget=(string 'on')`| (changed)| `"on"` |
+| `viewTarget=(string 'off')`| (changed)| `"off"` |
 | `viewTarget=(symbol)`| (initial, warning)| `<null>` |
 | `viewTarget=(function)`| (initial, warning)| `<null>` |
 | `viewTarget=(null)`| (initial)| `<null>` |

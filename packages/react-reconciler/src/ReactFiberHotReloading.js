@@ -11,7 +11,7 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Instance} from './ReactFiberHostConfig';
+import type {Instance} from './ReactFiberConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {enableHostSingletons, enableFloat} from 'shared/ReactFeatureFlags';
@@ -23,13 +23,13 @@ import {
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {updateContainer} from './ReactFiberReconciler';
 import {emptyContextObject} from './ReactFiberContext';
-import {SyncLane, NoTimestamp} from './ReactFiberLane';
+import {SyncLane} from './ReactFiberLane';
 import {
   ClassComponent,
   FunctionComponent,
   ForwardRef,
   HostComponent,
-  HostResource,
+  HostHoistable,
   HostSingleton,
   HostPortal,
   HostRoot,
@@ -41,7 +41,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {supportsSingletons} from './ReactFiberHostConfig';
+import {supportsSingletons} from './ReactFiberConfig';
 
 export type Family = {
   current: any,
@@ -274,7 +274,7 @@ function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
   updatedFamilies: Set<Family>,
   staleFamilies: Set<Family>,
-) {
+): void {
   if (__DEV__) {
     const {alternate, child, sibling, tag, type} = fiber;
 
@@ -328,7 +328,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (needsRemount || needsRender) {
       const root = enqueueConcurrentRenderForLane(fiber, SyncLane);
       if (root !== null) {
-        scheduleUpdateOnFiber(root, fiber, SyncLane, NoTimestamp);
+        scheduleUpdateOnFiber(root, fiber, SyncLane);
       }
     }
     if (child !== null && !needsRemount) {
@@ -353,7 +353,7 @@ export const findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   families: Array<Family>,
 ): Set<Instance> => {
   if (__DEV__) {
-    const hostInstances = new Set();
+    const hostInstances = new Set<Instance>();
     const types = new Set(families.map(family => family.current));
     findHostInstancesForMatchingFibersRecursively(
       root.current,
@@ -468,7 +468,7 @@ function findChildHostInstancesForFiberShallowly(
     while (true) {
       if (
         node.tag === HostComponent ||
-        (enableFloat ? node.tag === HostResource : false) ||
+        (enableFloat ? node.tag === HostHoistable : false) ||
         (enableHostSingletons && supportsSingletons
           ? node.tag === HostSingleton
           : false)

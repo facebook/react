@@ -43,6 +43,7 @@ function List() {
   );
 }
 
+// $FlowFixMe[missing-local-annot]
 function ListItem({label}) {
   return <li data-testname="ListItem">{label}</li>;
 }

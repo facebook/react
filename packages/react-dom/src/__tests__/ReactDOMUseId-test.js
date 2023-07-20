@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 let JSDOM;
 let React;
 let ReactDOMClient;
-let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
 let Stream;
@@ -23,6 +23,7 @@ let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
+let waitForPaint;
 
 describe('useId', () => {
   beforeEach(() => {
@@ -30,13 +31,15 @@ describe('useId', () => {
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    Scheduler = require('scheduler');
-    clientAct = require('jest-react').act;
+    clientAct = require('internal-test-utils').act;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
     useId = React.useId;
     useState = React.useState;
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForPaint = InternalTestUtils.waitForPaint;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -442,7 +445,7 @@ describe('useId', () => {
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
           id="container"
@@ -523,7 +526,7 @@ describe('useId', () => {
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
       const root = ReactDOMClient.hydrateRoot(container, <App />);
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      await waitForPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
           id="container"

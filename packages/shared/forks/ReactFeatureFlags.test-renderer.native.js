@@ -13,7 +13,6 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
-export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -24,36 +23,29 @@ export const enableCache = true;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+export const enableFormActions = true; // Doesn't affect Test Renderer
+export const enableBinaryFlight = true;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
+export const disableIEWorkarounds = true;
 export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
-export const warnAboutDefaultPropsOnFunctionComponents = true;
-export const warnAboutStringRefs = true;
 export const disableLegacyContext = false;
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
-export const warnAboutSpreadingKeyToJSX = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const disableNativeComponentFrames = false;
-export const skipUnmountedBoundaries = false;
-export const deletedTreeCleanUpLevel = 3;
 export const enableGetInspectorDataForInstanceInProduction = false;
-export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseHook = true;
 export const enableUseMemoCacheHook = false;
-export const enableUseEventHook = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
@@ -61,12 +53,12 @@ export const enableUseRefAccessWarning = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
-export const enableSyncDefaultUpdates = true;
+export const forceConcurrentByDefaultForTesting = false;
+export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
-export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
@@ -74,6 +66,13 @@ export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableDeferRootSchedulingToMicrotask = true;
+
+export const diffInCommitPhase = true;
+export const enableAsyncActions = false;
+
+export const alwaysThrottleRetries = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

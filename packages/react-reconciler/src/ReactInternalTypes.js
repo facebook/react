@@ -11,10 +11,6 @@ import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
-  MutableSourceSubscribeFn,
-  MutableSourceGetSnapshotFn,
-  MutableSourceVersion,
-  MutableSource,
   StartTransitionOptions,
   Wakeable,
   Usable,
@@ -29,7 +25,8 @@ import type {
   TimeoutHandle,
   NoTimeout,
   SuspenseInstance,
-} from './ReactFiberHostConfig';
+  TransitionStatus,
+} from './ReactFiberConfig';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {
   TracingMarkerInstance,
@@ -44,7 +41,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
-  | 'useEvent'
+  | 'useEffectEvent'
   | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
@@ -53,10 +50,10 @@ export type HookType =
   | 'useDebugValue'
   | 'useDeferredValue'
   | 'useTransition'
-  | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
-  | 'useCacheRefresh';
+  | 'useCacheRefresh'
+  | 'useOptimistic';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -227,20 +224,22 @@ type BaseFiberRootProperties = {
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
+  // When a root has a pending commit scheduled, calling this function will
+  // cancel it.
+  // TODO: Can this be consolidated with timeoutHandle?
+  cancelPendingCommit: null | (() => void),
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
 
-  // Used by useMutableSource hook to avoid tearing during hydration.
-  mutableSourceEagerHydrationData?: Array<
-    MutableSource<any> | MutableSourceVersion,
-  > | null,
+  // Used to create a linked list that represent all the roots that have
+  // pending work scheduled on them.
+  next: FiberRoot | null,
 
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: any,
   callbackPriority: Lane,
-  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
   hiddenUpdates: LaneMap<Array<ConcurrentUpdate> | null>,
 
@@ -248,8 +247,8 @@ type BaseFiberRootProperties = {
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
   expiredLanes: Lanes,
-  mutableReadLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
+  shellSuspendCounter: number,
 
   finishedLanes: Lanes,
 
@@ -365,7 +364,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {
-  use?: <T>(Usable<T>) => T,
+  use: <T>(Usable<T>) => T,
   readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
@@ -379,7 +378,7 @@ export type Dispatcher = {
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
-  useEvent?: <Args, Return, F: (...Array<Args>) => Return>(callback: F) => F,
+  useEffectEvent?: <Args, F: (...Array<Args>) => mixed>(callback: F) => F,
   useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
@@ -401,11 +400,6 @@ export type Dispatcher = {
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
   ],
-  useMutableSource<Source, Snapshot>(
-    source: MutableSource<Source>,
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-  ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
@@ -414,6 +408,11 @@ export type Dispatcher = {
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
   useMemoCache?: (size: number) => Array<any>,
+  useHostTransitionStatus?: () => TransitionStatus,
+  useOptimistic?: <S, A>(
+    passthrough: S,
+    reducer: ?(S, A) => S,
+  ) => [S, (A) => void],
 };
 
 export type CacheDispatcher = {

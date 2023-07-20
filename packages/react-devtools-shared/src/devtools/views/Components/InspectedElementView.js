@@ -61,13 +61,8 @@ export default function InspectedElementView({
   toggleParseHookNames,
 }: Props): React.Node {
   const {id} = element;
-  const {
-    owners,
-    rendererPackageName,
-    rendererVersion,
-    rootType,
-    source,
-  } = inspectedElement;
+  const {owners, rendererPackageName, rendererVersion, rootType, source} =
+    inspectedElement;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -297,10 +292,8 @@ function OwnerView({
   type,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
-  const {
-    highlightNativeElement,
-    clearHighlightNativeElement,
-  } = useHighlightNativeElement();
+  const {highlightNativeElement, clearHighlightNativeElement} =
+    useHighlightNativeElement();
 
   const handleClick = useCallback(() => {
     logEvent({

@@ -42,13 +42,12 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useEvent,
+  useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
@@ -59,6 +58,7 @@ import {
   useCacheRefresh,
   use,
   useMemoCache,
+  useOptimistic,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -66,7 +66,6 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createServerContext} from './ReactServerContext';
-import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -92,7 +91,6 @@ const Children = {
 
 export {
   Children,
-  createMutableSource,
   createRef,
   Component,
   PureComponent,
@@ -105,13 +103,13 @@ export {
   useCallback,
   useContext,
   useEffect,
-  useEvent as experimental_useEvent,
+  useEffectEvent as experimental_useEffectEvent,
   useImperativeHandle,
   useDebugValue,
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
+  useOptimistic as experimental_useOptimistic,
   useSyncExternalStore,
   useReducer,
   useRef,
@@ -132,7 +130,7 @@ export {
   useTransition,
   startTransition,
   useDeferredValue,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_OFFSCREEN_TYPE as unstable_Offscreen,
   getCacheSignal as unstable_getCacheSignal,

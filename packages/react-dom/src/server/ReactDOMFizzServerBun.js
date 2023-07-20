@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -20,9 +20,10 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 type Options = {
   identifierPrefix?: string,
@@ -49,7 +50,7 @@ function renderToReadableStream(
   return new Promise((resolve, reject) => {
     let onFatalError;
     let onAllReady;
-    const allReady = new Promise((res, rej) => {
+    const allReady = new Promise<void>((res, rej) => {
       onAllReady = res;
       onFatalError = rej;
     });
@@ -66,7 +67,7 @@ function renderToReadableStream(
             abort(request);
           },
         },
-        // $FlowFixMe size() methods are not allowed on byte streams.
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
         {highWaterMark: 2048},
       ): any);
       // TODO: Move to sub-classing ReadableStream.
@@ -80,9 +81,12 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
+    const resources = createResources();
     const request = createRequest(
       children,
+      resources,
       createResponseState(
+        resources,
         options ? options.identifierPrefix : undefined,
         options ? options.nonce : undefined,
         options ? options.bootstrapScriptContent : undefined,

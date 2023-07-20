@@ -16,8 +16,7 @@ import ReactDOM = require('react-dom');
 import ReactDOMClient = require('react-dom/client');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
-import internalAct = require('jest-react');
-import ReactFeatureFlags = require('shared/ReactFeatureFlags')
+import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 // Before Each
 
@@ -25,7 +24,6 @@ let container;
 let root;
 let attachedListener = null;
 let renderedName = null;
-let act = internalAct.act;
 
 class Inner extends React.Component {
   getName() {
@@ -39,7 +37,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  act(() => root.render(element));
+  ReactDOM.flushSync(() => root.render(element));
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -332,7 +330,7 @@ describe('ReactTypeScriptClass', function() {
   it('throws if no render function is defined', function() {
     expect(() => {
       expect(() =>
-        act(() => root.render(React.createElement(Empty)))
+        ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
       ).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
@@ -367,7 +365,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    act(() => ref.current.changeState());
+    ReactDOM.flushSync(() => ref.current.changeState());
     test(React.createElement(StateBasedOnProps), 'SPAN', 'bar');
   });
 
@@ -402,7 +400,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      act(() =>
+      ReactDOM.flushSync(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -421,7 +419,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      act(() =>
+      ReactDOM.flushSync(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -438,7 +436,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      act(() =>
+      ReactDOM.flushSync(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -462,7 +460,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      act(() =>
+      ReactDOM.flushSync(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -514,16 +512,16 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(Foo, {update: true}), 'DIV', 'updated');
   });
 
-  it('renders based on context in the constructor', function() {
-    test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
-  });
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it('renders based on context in the constructor', function() {
+      test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
+    });
+  }
 
   it('renders only once when setting state in componentWillMount', function() {
     renderCount = 0;
     test(React.createElement(RenderOnce, {initialValue: 'foo'}), 'SPAN', 'bar');
-    // This is broken with deferRenderPhaseUpdateToNextBatch flag on.
-    // We can't use the gate feature in TypeScript.
-    expect(renderCount).toBe(global.__WWW__ && !global.__VARIANT__ ? 2 : 1);
+    expect(renderCount).toBe(1);
   });
 
   it('should warn with non-object in the initial state property', function() {
@@ -548,7 +546,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -567,7 +565,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    act(() => attachedListener());
+    ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -591,31 +589,33 @@ describe('ReactTypeScriptClass', function() {
       {},
     ]);
     lifeCycles = []; // reset
-    act(() => root.unmount(container));
+    ReactDOM.flushSync(() => root.unmount(container));
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
-  it(
-    'warns when classic properties are defined on the instance, ' +
-      'but does not invoke them.',
-    function() {
-      getInitialStateWasCalled = false;
-      getDefaultPropsWasCalled = false;
-      expect(() =>
-        test(React.createElement(ClassicProperties), 'SPAN', 'foo')
-      ).toErrorDev([
-        'getInitialState was defined on ClassicProperties, ' +
-          'a plain JavaScript class.',
-        'getDefaultProps was defined on ClassicProperties, ' +
-          'a plain JavaScript class.',
-        'propTypes was defined as an instance property on ClassicProperties.',
-        'contextTypes was defined as an instance property on ClassicProperties.',
-        'contextType was defined as an instance property on ClassicProperties.',
-      ]);
-      expect(getInitialStateWasCalled).toBe(false);
-      expect(getDefaultPropsWasCalled).toBe(false);
-    }
-  );
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it(
+      'warns when classic properties are defined on the instance, ' +
+        'but does not invoke them.',
+      function() {
+        getInitialStateWasCalled = false;
+        getDefaultPropsWasCalled = false;
+        expect(() =>
+          test(React.createElement(ClassicProperties), 'SPAN', 'foo')
+        ).toErrorDev([
+          'getInitialState was defined on ClassicProperties, ' +
+            'a plain JavaScript class.',
+          'getDefaultProps was defined on ClassicProperties, ' +
+            'a plain JavaScript class.',
+          'propTypes was defined as an instance property on ClassicProperties.',
+          'contextTypes was defined as an instance property on ClassicProperties.',
+          'contextType was defined as an instance property on ClassicProperties.',
+        ]);
+        expect(getInitialStateWasCalled).toBe(false);
+        expect(getDefaultPropsWasCalled).toBe(false);
+      }
+    );
+  }
 
   it(
     'does not warn about getInitialState() on class components ' +
@@ -683,25 +683,23 @@ describe('ReactTypeScriptClass', function() {
     );
   });
 
-  it('supports this.context passed via getChildContext', function() {
-    test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
-  });
+  if (!ReactFeatureFlags.disableLegacyContext) {
+    it('supports this.context passed via getChildContext', function() {
+      test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
+    });
+  }
 
   it('supports string refs', function() {
     const ref = React.createRef();
     expect(() => {
       test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
-    }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? [
-            'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
-              'Support for string refs will be removed in a future major release. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-              '    in ClassicRefs (at **)',
-          ]
-        : [],
-    );
+    }).toErrorDev([
+      'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in ClassicRefs (at **)',
+    ]);
     expect(ref.current.refs.inner.getName()).toBe('foo');
   });
 

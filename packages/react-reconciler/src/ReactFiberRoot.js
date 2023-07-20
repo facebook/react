@@ -15,9 +15,9 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent';
-import type {Container} from './ReactFiberHostConfig';
+import type {Container} from './ReactFiberConfig';
 
-import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
+import {noTimeout} from './ReactFiberConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {
   NoLane,
@@ -45,11 +45,13 @@ export type RootState = {
 };
 
 function FiberRootNode(
-  containerInfo,
+  this: $FlowFixMe,
+  containerInfo: any,
+  // $FlowFixMe[missing-local-annot]
   tag,
-  hydrate,
-  identifierPrefix,
-  onRecoverableError,
+  hydrate: any,
+  identifierPrefix: any,
+  onRecoverableError: any,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -58,20 +60,21 @@ function FiberRootNode(
   this.pingCache = null;
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
+  this.cancelPendingCommit = null;
   this.context = null;
   this.pendingContext = null;
+  this.next = null;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
-  this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
+  this.shellSuspendCounter = 0;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
@@ -84,10 +87,6 @@ function FiberRootNode(
   if (enableCache) {
     this.pooledCache = null;
     this.pooledCacheLanes = NoLanes;
-  }
-
-  if (supportsHydration) {
-    this.mutableSourceEagerHydrationData = null;
   }
 
   if (enableSuspenseCallback) {

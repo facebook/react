@@ -237,6 +237,8 @@ function getRenderedAttributeValue(
       return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     } else if (containerTagName === 'document') {
       return document.implementation.createHTMLDocument('');
+    } else if (containerTagName === 'head') {
+      return document.implementation.createHTMLDocument('').head;
     } else {
       return document.createElement(containerTagName);
     }
@@ -282,12 +284,12 @@ function getRenderedAttributeValue(
   try {
     let container = createContainer();
     renderer.render(react.createElement(tagName, baseProps), container);
-    defaultValue = read(container.firstChild);
+    defaultValue = read(container.lastChild);
     canonicalDefaultValue = getCanonicalizedValue(defaultValue);
 
     container = createContainer();
     renderer.render(react.createElement(tagName, props), container);
-    result = read(container.firstChild);
+    result = read(container.lastChild);
     canonicalResult = getCanonicalizedValue(result);
     didWarn = _didWarn;
     didError = false;
@@ -303,6 +305,12 @@ function getRenderedAttributeValue(
   try {
     let container;
     if (containerTagName === 'document') {
+      const html = serverRenderer.renderToString(
+        react.createElement(tagName, props)
+      );
+      container = createContainer();
+      container.innerHTML = html;
+    } else if (containerTagName === 'head') {
       const html = serverRenderer.renderToString(
         react.createElement(tagName, props)
       );
@@ -764,7 +772,7 @@ class App extends React.Component {
       ReactDOMStable:
         'https://unpkg.com/react-dom@latest/umd/react-dom.development.js',
       ReactDOMServerStable:
-        'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
+        'https://unpkg.com/react-dom@latest/umd/react-dom-server-legacy.browser.development.js',
       ReactNext: '/react.development.js',
       ReactDOMNext: '/react-dom.development.js',
       ReactDOMServerNext: '/react-dom-server-legacy.browser.development.js',
@@ -902,8 +910,9 @@ class App extends React.Component {
 
     let log = '';
     for (let attribute of attributes) {
-      log += `## \`${attribute.name}\` (on \`<${attribute.tagName ||
-        'div'}>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
+      log += `## \`${attribute.name}\` (on \`<${
+        attribute.tagName || 'div'
+      }>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
       log += '| Test Case | Flags | Result |\n';
       log += '| --- | --- | --- |\n';
 

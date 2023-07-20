@@ -87,9 +87,9 @@ export function loadHookNames(
   }
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -97,7 +97,7 @@ export function loadHookNames(
       displayName: `Loading hook names for ${element.displayName || 'Unknown'}`,
     };
 
-    let timeoutID;
+    let timeoutID: $FlowFixMe | null;
     let didTimeout = false;
     let status = 'unknown';
     let resolvedHookNames: HookNames | null = null;
@@ -143,7 +143,8 @@ export function loadHookNames(
             }
 
             if (hookNames) {
-              const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
+              const resolvedRecord =
+                ((newRecord: any): ResolvedRecord<HookNames>);
               resolvedRecord.status = Resolved;
               resolvedRecord.value = hookNames;
             } else {

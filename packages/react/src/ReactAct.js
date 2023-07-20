@@ -106,7 +106,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       });
 
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
           thenable.then(
             returnValue => {
@@ -184,7 +184,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         ReactCurrentActQueue.current = null;
       }
       return {
-        then(resolve, reject) {
+        then(resolve: T => mixed, reject: mixed => mixed) {
           didAwaitActCall = true;
           if (prevActScopeDepth === 0) {
             // If the `act` call is awaited, restore the queue we were
@@ -205,7 +205,10 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
   }
 }
 
-function popActScope(prevActQueue, prevActScopeDepth) {
+function popActScope(
+  prevActQueue: null | Array<RendererTask>,
+  prevActScopeDepth: number,
+) {
   if (__DEV__) {
     if (prevActScopeDepth !== actScopeDepth - 1) {
       console.error(
@@ -252,7 +255,7 @@ function recursivelyFlushAsyncActWork<T>(
 }
 
 let isFlushing = false;
-function flushActQueue(queue) {
+function flushActQueue(queue: Array<RendererTask>) {
   if (__DEV__) {
     if (!isFlushing) {
       // Prevent re-entrance.
@@ -304,7 +307,7 @@ function flushActQueue(queue) {
 // environment it may cause the warning to fire too late.
 const queueSeveralMicrotasks =
   typeof queueMicrotask === 'function'
-    ? callback => {
+    ? (callback: () => void) => {
         queueMicrotask(() => queueMicrotask(callback));
       }
     : queueMacrotask;

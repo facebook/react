@@ -191,9 +191,8 @@ export function processTransitionCallbacks(
 // tracing marker can be logged as complete
 // This code lives separate from the ReactFiberTransition code because
 // we push and pop on the tracing marker, not the suspense boundary
-const markerInstanceStack: StackCursor<Array<TracingMarkerInstance> | null> = createCursor(
-  null,
-);
+const markerInstanceStack: StackCursor<Array<TracingMarkerInstance> | null> =
+  createCursor(null);
 
 export function pushRootMarkerInstance(workInProgress: Fiber): void {
   if (enableTransitionTracing) {

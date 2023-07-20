@@ -16,24 +16,22 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
   disableInputAttributeSyncing,
+  disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  skipUnmountedBoundaries,
-  createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
-  disableNativeComponentFrames,
-  disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
-  enableSyncDefaultUpdates,
-  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
-  enableClientRenderFallbackOnTextMismatch,
+  enableUnifiedSyncLane,
   enableTransitionTracing,
+  enableCustomElementPropertySupport,
+  enableDeferRootSchedulingToMicrotask,
+  diffInCommitPhase,
+  enableAsyncActions,
+  alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableSchedulerTimeoutInWorkLoop,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -47,14 +45,17 @@ export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
+export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
+
 export const enableCPUSuspense = true;
 export const enableFloat = true;
-export const enableUseHook = true;
 export const enableUseMemoCacheHook = true;
-export const enableUseEventHook = true;
+export const enableUseEffectEventHook = true;
 export const enableHostSingletons = true;
+export const enableClientRenderFallbackOnTextMismatch = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -64,16 +65,17 @@ export const enableSchedulingProfiler: boolean =
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
 // At least this will let us stop shipping <Profiler> implementation to all users.
 export const enableSchedulerDebugging = true;
-export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
-export const warnAboutStringRefs = true;
-export const warnAboutDefaultPropsOnFunctionComponents = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
+
+export const enableFormActions = false;
+
+export const enableBinaryFlight = true;
 
 export const disableJavaScriptURLs = true;
 
@@ -97,18 +99,13 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
 
-export const deletedTreeCleanUpLevel = 3;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableServerContext = true;
 
-// Some www surfaces are still using this. Remove once they have been migrated.
-export const enableUseMutableSource = true;
-
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
-
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
+
+export const forceConcurrentByDefaultForTesting = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

@@ -19,7 +19,7 @@ describe('ReactDOMInvalidARIAHook', () => {
     React = require('react');
     ReactTestUtils = require('react-dom/test-utils');
 
-    mountComponent = function(props) {
+    mountComponent = function (props) {
       ReactTestUtils.renderIntoDocument(<div {...props} />);
     };
   });

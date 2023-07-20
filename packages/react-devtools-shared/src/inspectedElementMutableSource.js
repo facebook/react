@@ -39,12 +39,10 @@ import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError'
 // This doens't work properly though when component filters are changed,
 // because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
 // So instead we key on Element ID (which is stable in this case) and use an LRU for eviction.
-const inspectedElementCache: LRUCache<
-  number,
-  InspectedElementFrontend,
-> = new LRU({
-  max: 25,
-});
+const inspectedElementCache: LRUCache<number, InspectedElementFrontend> =
+  new LRU({
+    max: 25,
+  });
 
 type Path = Array<string | number>;
 

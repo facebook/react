@@ -584,6 +584,10 @@ describe('ReactLegacyErrorBoundaries', () => {
     };
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('does not swallow exceptions on mounting without boundaries', () => {
     let container = document.createElement('div');
     expect(() => {
@@ -677,10 +681,10 @@ describe('ReactLegacyErrorBoundaries', () => {
     );
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(console.error.mock.calls[0][0]).toContain(
         'ReactDOM.render is no longer supported',
       );
-      expect(console.error.calls.argsFor(1)[0]).toContain(
+      expect(console.error.mock.calls[1][0]).toContain(
         'The above error occurred in the <BrokenRender> component:',
       );
     }
@@ -796,6 +800,7 @@ describe('ReactLegacyErrorBoundaries', () => {
     expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('renders an error state if context provider throws in componentWillMount', () => {
     class BrokenComponentWillMountWithContext extends React.Component {
       static childContextTypes = {foo: PropTypes.number};
@@ -1035,10 +1040,7 @@ describe('ReactLegacyErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      // Render third child, even though an earlier sibling threw.
-      'Normal constructor',
-      'Normal componentWillMount',
-      'Normal render',
+      // Skip the remaining siblings
       // Finish mounting with null children
       'ErrorBoundary componentDidMount',
       // Handle the error

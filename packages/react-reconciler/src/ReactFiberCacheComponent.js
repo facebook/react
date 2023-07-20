@@ -21,7 +21,9 @@ import * as Scheduler from 'scheduler';
 const AbortControllerLocal: typeof AbortController = enableCache
   ? typeof AbortController !== 'undefined'
     ? AbortController
-    : (function AbortControllerShim() {
+    : // $FlowFixMe[missing-this-annot]
+      // $FlowFixMe[prop-missing]
+      function AbortControllerShim() {
         const listeners = [];
         const signal = (this.signal = {
           aborted: false,
@@ -34,11 +36,12 @@ const AbortControllerLocal: typeof AbortController = enableCache
           signal.aborted = true;
           listeners.forEach(listener => listener());
         };
-      }: AbortController)
-  : (null: any);
+      }
+  : // $FlowFixMe[incompatible-type]
+    null;
 
 export type Cache = {
-  controller: AbortControllerLocal,
+  controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
 };

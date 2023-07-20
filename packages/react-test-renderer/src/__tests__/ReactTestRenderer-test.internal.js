@@ -14,12 +14,14 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
-const prettyFormat = require('pretty-format');
+const {format: prettyFormat} = require('pretty-format');
 
 // Isolate noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
-const Scheduler = require('scheduler');
+
+const InternalTestUtils = require('internal-test-utils');
+const waitForAll = InternalTestUtils.waitForAll;
 
 // Kind of hacky, but we nullify all the instances to test the tree structure
 // with jasmine's deep equality function, and test the instances separate. We
@@ -1015,7 +1017,7 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  it('can concurrently render context with a "primary" renderer', () => {
+  it('can concurrently render context with a "primary" renderer', async () => {
     const Context = React.createContext(null);
     const Indirection = React.Fragment;
     const App = () => (
@@ -1026,7 +1028,7 @@ describe('ReactTestRenderer', () => {
       </Context.Provider>
     );
     ReactNoop.render(<App />);
-    expect(Scheduler).toFlushWithoutYielding();
+    await waitForAll([]);
     ReactTestRenderer.create(<App />);
   });
 

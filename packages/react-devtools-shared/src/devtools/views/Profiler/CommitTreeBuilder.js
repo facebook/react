@@ -28,7 +28,7 @@ import type {
   ProfilingDataForRootFrontend,
 } from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cCommitTreeBuilder %c${methodName}`,
@@ -84,7 +84,7 @@ export function getCommitTree({
     // If this is the very first commit, start with the cached snapshot and apply the first mutation.
     // Otherwise load (or generate) the previous commit and append a mutation to it.
     if (index === 0) {
-      const nodes = new Map();
+      const nodes = new Map<number, CommitTreeNode>();
 
       // Construct the initial tree.
       recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
@@ -150,6 +150,7 @@ function updateTree(
 
   // Clone nodes before mutating them so edits don't affect them.
   const getClonedNode = (id: number): CommitTreeNode => {
+    // $FlowFixMe[prop-missing] - recommended fix is to use object spread operator
     const clonedNode = ((Object.assign(
       {},
       nodes.get(id),
@@ -162,7 +163,7 @@ function updateTree(
   let id: number = ((null: any): number);
 
   // Reassemble the string table.
-  const stringTable = [
+  const stringTable: Array<null | string> = [
     null, // ID = 0 corresponds to the null string.
   ];
   const stringTableSize = operations[i++];

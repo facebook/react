@@ -10,30 +10,29 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
   Thenable,
   Usable,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactServerFormatConfig';
+import type {ResponseState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
+import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
-import {makeId} from './ReactServerFormatConfig';
+import {makeId, NotPendingTransition} from './ReactFizzConfig';
 
 import {
   enableCache,
-  enableUseHook,
-  enableUseEventHook,
+  enableUseEffectEventHook,
   enableUseMemoCacheHook,
+  enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -291,7 +290,7 @@ function useContext<T>(context: ReactContext<T>): T {
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
-  // $FlowFixMe: Flow doesn't like mixed types
+  // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
   return typeof action === 'function' ? action(state) : action;
 }
 
@@ -440,28 +439,11 @@ function useRef<T>(initialValue: T): {current: T} {
   }
 }
 
-export function useLayoutEffect(
-  create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
-) {
-  if (__DEV__) {
-    currentHookNameInDev = 'useLayoutEffect';
-    console.error(
-      'useLayoutEffect does nothing on the server, because its effect cannot ' +
-        "be encoded into the server renderer's output format. This will lead " +
-        'to a mismatch between the initial, non-hydrated UI and the intended ' +
-        'UI. To avoid this, useLayoutEffect should only be used in ' +
-        'components that render exclusively on the client. ' +
-        'See https://reactjs.org/link/uselayouteffect-ssr for common fixes.',
-    );
-  }
-}
-
 function dispatchAction<A>(
   componentIdentity: Object,
   queue: UpdateQueue<A>,
   action: A,
-) {
+): void {
   if (numberOfReRenders >= RE_RENDER_LIMIT) {
     throw new Error(
       'Too many re-renders. React limits the number of renders to prevent ' +
@@ -507,29 +489,17 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
-function throwOnUseEventCall() {
+function throwOnUseEffectEventCall() {
   throw new Error(
-    "A function wrapped in useEvent can't be called during rendering.",
+    "A function wrapped in useEffectEvent can't be called during rendering.",
   );
 }
 
-export function useEvent<Args, Return, F: (...Array<Args>) => Return>(
+export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   callback: F,
 ): F {
   // $FlowIgnore[incompatible-return]
-  return throwOnUseEventCall;
-}
-
-// TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
+  return throwOnUseEffectEventCall;
 }
 
 function useSyncExternalStore<T>(
@@ -563,6 +533,23 @@ function useTransition(): [
   return [false, unsupportedStartTransition];
 }
 
+function useHostTransitionStatus(): TransitionStatus {
+  resolveCurrentlyRenderingComponent();
+  return NotPendingTransition;
+}
+
+function unsupportedSetOptimisticState() {
+  throw new Error('Cannot update optimistic state while rendering.');
+}
+
+function useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  resolveCurrentlyRenderingComponent();
+  return [passthrough, unsupportedSetOptimisticState];
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
@@ -584,15 +571,7 @@ function use<T>(usable: Usable<T>): T {
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
-
-      // Track the position of the thenable within this fiber.
-      const index = thenableIndexCounter;
-      thenableIndexCounter += 1;
-
-      if (thenableState === null) {
-        thenableState = createThenableState();
-      }
-      return trackUsedThenable(thenableState, thenable, index);
+      return unwrapThenable(thenable);
     } else if (
       usable.$$typeof === REACT_CONTEXT_TYPE ||
       usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
@@ -606,6 +585,15 @@ function use<T>(usable: Usable<T>): T {
   throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }
 
+export function unwrapThenable<T>(thenable: Thenable<T>): T {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    thenableState = createThenableState();
+  }
+  return trackUsedThenable(thenableState, thenable, index);
+}
+
 function unsupportedRefresh() {
   throw new Error('Cache cannot be refreshed during server rendering.');
 }
@@ -615,7 +603,7 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
 }
 
 function useMemoCache(size: number): Array<any> {
-  const data = new Array(size);
+  const data = new Array<any>(size);
   for (let i = 0; i < size; i++) {
     data[i] = REACT_MEMO_CACHE_SENTINEL;
   }
@@ -626,13 +614,14 @@ function noop(): void {}
 
 export const HooksDispatcher: Dispatcher = {
   readContext,
+  use,
   useContext,
   useMemo,
   useReducer,
   useRef,
   useState,
   useInsertionEffect: noop,
-  useLayoutEffect,
+  useLayoutEffect: noop,
   useCallback,
   // useImperativeHandle is not run in the server environment
   useImperativeHandle: noop,
@@ -644,21 +633,23 @@ export const HooksDispatcher: Dispatcher = {
   useTransition,
   useId,
   // Subscriptions are not setup in a server environment.
-  useMutableSource,
   useSyncExternalStore,
 };
 
 if (enableCache) {
   HooksDispatcher.useCacheRefresh = useCacheRefresh;
 }
-if (enableUseEventHook) {
-  HooksDispatcher.useEvent = useEvent;
+if (enableUseEffectEventHook) {
+  HooksDispatcher.useEffectEvent = useEffectEvent;
 }
 if (enableUseMemoCacheHook) {
   HooksDispatcher.useMemoCache = useMemoCache;
 }
-if (enableUseHook) {
-  HooksDispatcher.use = use;
+if (enableFormActions && enableAsyncActions) {
+  HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
+}
+if (enableAsyncActions) {
+  HooksDispatcher.useOptimistic = useOptimistic;
 }
 
 export let currentResponseState: null | ResponseState = (null: any);

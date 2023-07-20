@@ -18,7 +18,7 @@ let EventBatching;
 let EventPluginUtils;
 let ResponderEventPlugin;
 
-const touch = function(nodeHandle, i) {
+const touch = function (nodeHandle, i) {
   return {target: nodeHandle, identifier: i};
 };
 
@@ -37,7 +37,7 @@ function injectComponentTree(ComponentTree) {
  * @return {TouchEvent} Model of a touch event that is compliant with responder
  * system plugin.
  */
-const touchEvent = function(nodeHandle, touches, changedTouches) {
+const touchEvent = function (nodeHandle, touches, changedTouches) {
   return {
     target: nodeHandle,
     changedTouches: changedTouches,
@@ -45,7 +45,7 @@ const touchEvent = function(nodeHandle, touches, changedTouches) {
   };
 };
 
-const subsequence = function(arr, indices) {
+const subsequence = function (arr, indices) {
   const ret = [];
   for (let i = 0; i < indices.length; i++) {
     const index = indices[i];
@@ -54,7 +54,7 @@ const subsequence = function(arr, indices) {
   return ret;
 };
 
-const antiSubsequence = function(arr, indices) {
+const antiSubsequence = function (arr, indices) {
   const ret = [];
   for (let i = 0; i < arr.length; i++) {
     if (indices.indexOf(i) === -1) {
@@ -68,7 +68,7 @@ const antiSubsequence = function(arr, indices) {
  * Helper for creating touch test config data.
  * @param allTouchHandles
  */
-const _touchConfig = function(
+const _touchConfig = function (
   topType,
   targetNodeHandle,
   allTouchHandles,
@@ -117,7 +117,7 @@ const _touchConfig = function(
  * @return {object} Config data used by test cases for extracting responder
  * events.
  */
-const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
+const startConfig = function (nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
     'topTouchStart',
     nodeHandle,
@@ -130,7 +130,7 @@ const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
 /**
  * @see `startConfig`
  */
-const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
+const moveConfig = function (nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
     'topTouchMove',
     nodeHandle,
@@ -143,7 +143,7 @@ const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
 /**
  * @see `startConfig`
  */
-const endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
+const endConfig = function (nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
     'topTouchEnd',
     nodeHandle,
@@ -181,7 +181,7 @@ const endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  *
  */
 const NA = -1;
-const oneEventLoopTestConfig = function(readableIDToID) {
+const oneEventLoopTestConfig = function (readableIDToID) {
   const ret = {
     // Negotiation
     scrollShouldSetResponder: {bubbled: {}, captured: {}},
@@ -228,9 +228,9 @@ const oneEventLoopTestConfig = function(readableIDToID) {
  * @param {object} eventTestConfig
  * @param {object} readableIDToID
  */
-const registerTestHandlers = function(eventTestConfig, readableIDToID) {
+const registerTestHandlers = function (eventTestConfig, readableIDToID) {
   const runs = {dispatchCount: 0};
-  const neverFire = function(readableID, registrationName) {
+  const neverFire = function (readableID, registrationName) {
     runs.dispatchCount++;
     expect('').toBe(
       'Event type: ' +
@@ -243,7 +243,10 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
     );
   };
 
-  const registerOneEventType = function(registrationName, eventTypeTestConfig) {
+  const registerOneEventType = function (
+    registrationName,
+    eventTypeTestConfig,
+  ) {
     for (const readableID in eventTypeTestConfig) {
       const nodeConfig = eventTypeTestConfig[readableID];
       const id = readableIDToID[readableID];
@@ -252,7 +255,7 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
           ? neverFire.bind(null, readableID, registrationName)
           : // We partially apply readableID and nodeConfig, as they change in the
             // parent closure across iterations.
-            function(rID, config, e) {
+            function (rID, config, e) {
               expect(
                 rID +
                   '->' +
@@ -292,9 +295,9 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
   return runs;
 };
 
-const run = function(config, hierarchyConfig, nativeEventConfig) {
+const run = function (config, hierarchyConfig, nativeEventConfig) {
   let max = NA;
-  const searchForMax = function(nodeConfig) {
+  const searchForMax = function (nodeConfig) {
     for (const readableID in nodeConfig) {
       const order = nodeConfig[readableID].order;
       max = order > max ? order : max;
@@ -408,8 +411,8 @@ describe('ResponderEventPlugin', () => {
 
     EventBatching = require('react-native-renderer/src/legacy-events/EventBatching');
     EventPluginUtils = require('react-native-renderer/src/legacy-events/EventPluginUtils');
-    ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
-      .default;
+    ResponderEventPlugin =
+      require('react-native-renderer/src/legacy-events/ResponderEventPlugin').default;
 
     deleteAllListeners(GRANDPARENT_INST);
     deleteAllListeners(PARENT_INST);
@@ -1379,8 +1382,8 @@ describe('ResponderEventPlugin', () => {
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
     const ReactTestUtils = require('react-dom/test-utils');
-    const getLowestCommonAncestor = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
-      .getLowestCommonAncestor;
+    const getLowestCommonAncestor =
+      require('react-native-renderer/src/legacy-events/ResponderEventPlugin').getLowestCommonAncestor;
     // This works by accident and will likely break in the future.
     const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
 
@@ -1401,7 +1404,6 @@ describe('ResponderEventPlugin', () => {
 
     class ParentComponent extends React.Component {
       pRef = React.createRef();
-      p_P1Ref = React.createRef();
       p_P1Ref = React.createRef();
       p_P1_C1Ref = React.createRef();
       p_P1_C2Ref = React.createRef();

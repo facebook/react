@@ -34,7 +34,7 @@ const {
   // on scheduler/unstable_mock, which we'll need inside act()
   // and for internal testing
   unstable_flushAllWithoutAsserting,
-  unstable_yieldValue,
+  log,
   unstable_setDisableYieldValue,
 } = ReactInternals.Scheduler;
 
@@ -57,6 +57,6 @@ export {
   unstable_IdlePriority,
   unstable_forceFrameRate,
   unstable_flushAllWithoutAsserting,
-  unstable_yieldValue,
+  log,
   unstable_setDisableYieldValue,
 };

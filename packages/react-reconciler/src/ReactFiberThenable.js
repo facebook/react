@@ -14,6 +14,8 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
@@ -30,6 +32,17 @@ export const SuspenseException: mixed = new Error(
     'To handle async errors, wrap your component in an error boundary, or ' +
     "call the promise's `.catch` method and pass the result to `use`",
 );
+
+export const SuspenseyCommitException: mixed = new Error(
+  'Suspense Exception: This is not a real error, and should not leak into ' +
+    "userspace. If you're seeing this, it's likely a bug in React.",
+);
+
+// This is a noop thenable that we use to trigger a fallback in throwException.
+// TODO: It would be better to refactor throwException into multiple functions
+// so we can trigger a fallback directly without having to check the type. But
+// for now this will do.
+export const noopSuspenseyCommitThenable = {then() {}};
 
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
@@ -81,6 +94,7 @@ export function trackUsedThenable<T>(
     }
     case 'rejected': {
       const rejectedError = thenable.reason;
+      checkIfUseWrappedInAsyncCatch(rejectedError);
       throw rejectedError;
     }
     default: {
@@ -88,7 +102,36 @@ export function trackUsedThenable<T>(
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
         // some custom userspace implementation. We treat it as "pending".
+        // Attach a dummy listener, to ensure that any lazy initialization can
+        // happen. Flight lazily parses JSON when the value is actually awaited.
+        thenable.then(noop, noop);
       } else {
+        // This is an uncached thenable that we haven't seen before.
+
+        // Detect infinite ping loops caused by uncached promises.
+        const root = getWorkInProgressRoot();
+        if (root !== null && root.shellSuspendCounter > 100) {
+          // This root has suspended repeatedly in the shell without making any
+          // progress (i.e. committing something). This is highly suggestive of
+          // an infinite ping loop, often caused by an accidental Async Client
+          // Component.
+          //
+          // During a transition, we can suspend the work loop until the promise
+          // to resolve, but this is a sync render, so that's not an option. We
+          // also can't show a fallback, because none was provided. So our last
+          // resort is to throw an error.
+          //
+          // TODO: Remove this error in a future release. Other ways of handling
+          // this case include forcing a concurrent render, or putting the whole
+          // root into offscreen mode.
+          throw new Error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        }
+
         const pendingThenable: PendingThenable<T> = (thenable: any);
         pendingThenable.status = 'pending';
         pendingThenable.then(
@@ -108,7 +151,7 @@ export function trackUsedThenable<T>(
           },
         );
 
-        // Check one more time in case the thenable resolved synchronously
+        // Check one more time in case the thenable resolved synchronously.
         switch (thenable.status) {
           case 'fulfilled': {
             const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
@@ -116,7 +159,9 @@ export function trackUsedThenable<T>(
           }
           case 'rejected': {
             const rejectedThenable: RejectedThenable<T> = (thenable: any);
-            throw rejectedThenable.reason;
+            const rejectedError = rejectedThenable.reason;
+            checkIfUseWrappedInAsyncCatch(rejectedError);
+            throw rejectedError;
           }
         }
       }
@@ -135,6 +180,14 @@ export function trackUsedThenable<T>(
       throw SuspenseException;
     }
   }
+}
+
+export function suspendCommit(): void {
+  // This extra indirection only exists so it can handle passing
+  // noopSuspenseyCommitThenable through to throwException.
+  // TODO: Factor the thenable check out of throwException
+  suspendedThenable = noopSuspenseyCommitThenable;
+  throw SuspenseyCommitException;
 }
 
 // This is used to track the actual thenable that suspended so it can be
@@ -172,4 +225,21 @@ export function checkIfUseWrappedInTryCatch(): boolean {
     }
   }
   return false;
+}
+
+export function checkIfUseWrappedInAsyncCatch(rejectedReason: any) {
+  // This check runs in prod, too, because it prevents a more confusing
+  // downstream error, where SuspenseException is caught by a promise and
+  // thrown asynchronously.
+  // TODO: Another way to prevent SuspenseException from leaking into an async
+  // execution context is to check the dispatcher every time `use` is called,
+  // or some equivalent. That might be preferable for other reasons, too, since
+  // it matches how we prevent similar mistakes for other hooks.
+  if (rejectedReason === SuspenseException) {
+    throw new Error(
+      'Hooks are not supported inside an async component. This ' +
+        "error is often caused by accidentally adding `'use client'` " +
+        'to a module that was originally written for the server.',
+    );
+  }
 }

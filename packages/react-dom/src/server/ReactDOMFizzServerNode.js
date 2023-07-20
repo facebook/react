@@ -7,9 +7,10 @@
  * @flow
  */
 
+import type {Request} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -22,15 +23,16 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
+  createResources,
   createResponseState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactDOMServerFormatConfig';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-function createDrainHandler(destination: Destination, request) {
+function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
 
-function createAbortHandler(request, reason) {
+function createAbortHandler(request: Request, reason: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
   return () => abort(request, new Error(reason));
 }
@@ -58,9 +60,12 @@ type PipeableStream = {
 };
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
+  const resources = createResources();
   return createRequest(
     children,
+    resources,
     createResponseState(
+      resources,
       options ? options.identifierPrefix : undefined,
       options ? options.nonce : undefined,
       options ? options.bootstrapScriptContent : undefined,

@@ -12,7 +12,7 @@ describe('ReactOffscreenStrictMode', () => {
     React = require('react');
     Offscreen = React.unstable_Offscreen;
     ReactNoop = require('react-noop-renderer');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
   });
 
   function Component({label}) {
@@ -32,8 +32,8 @@ describe('ReactOffscreenStrictMode', () => {
   }
 
   // @gate __DEV__ && enableOffscreen
-  it('should trigger strict effects when offscreen is visible', () => {
-    act(() => {
+  it('should trigger strict effects when offscreen is visible', async () => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="visible">
@@ -55,9 +55,31 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
+  // @gate __DEV__ && enableOffscreen && enableDO_NOT_USE_disableStrictPassiveEffect
+  it('does not trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
+    await act(() => {
+      ReactNoop.render(
+        <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
+          <Offscreen>
+            <Component label="A" />
+          </Offscreen>
+        </React.StrictMode>,
+      );
+    });
+
+    expect(log).toEqual([
+      'A: render',
+      'A: render',
+      'A: useLayoutEffect mount',
+      'A: useEffect mount',
+      'A: useLayoutEffect unmount',
+      'A: useLayoutEffect mount',
+    ]);
+  });
+
   // @gate __DEV__ && enableOffscreen && useModernStrictMode
-  it('should not trigger strict effects when offscreen is hidden', () => {
-    act(() => {
+  it('should not trigger strict effects when offscreen is hidden', async () => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="hidden">
@@ -71,7 +93,7 @@ describe('ReactOffscreenStrictMode', () => {
 
     log = [];
 
-    act(() => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="hidden">
@@ -86,7 +108,7 @@ describe('ReactOffscreenStrictMode', () => {
 
     log = [];
 
-    act(() => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="visible">
@@ -109,7 +131,7 @@ describe('ReactOffscreenStrictMode', () => {
 
     log = [];
 
-    act(() => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="hidden">
@@ -127,7 +149,7 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
-  it('should not cause infinite render loop when StrictMode is used with Suspense and synchronous set states', () => {
+  it('should not cause infinite render loop when StrictMode is used with Suspense and synchronous set states', async () => {
     // This is a regression test, see https://github.com/facebook/react/pull/25179 for more details.
     function App() {
       const [state, setState] = React.useState(false);
@@ -143,7 +165,7 @@ describe('ReactOffscreenStrictMode', () => {
       return state;
     }
 
-    act(() => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <React.Suspense>
@@ -193,7 +215,7 @@ describe('ReactOffscreenStrictMode', () => {
       return null;
     }
 
-    act(() => {
+    await act(() => {
       ReactNoop.render(
         <React.StrictMode>
           <Offscreen mode="visible">
@@ -205,7 +227,7 @@ describe('ReactOffscreenStrictMode', () => {
 
     log.push('------------------------------');
 
-    await act(async () => {
+    await act(() => {
       resolve();
       shouldSuspend = false;
     });

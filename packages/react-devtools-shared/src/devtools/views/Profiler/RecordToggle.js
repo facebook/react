@@ -20,9 +20,8 @@ export type Props = {
 };
 
 export default function RecordToggle({disabled}: Props): React.Node {
-  const {isProfiling, startProfiling, stopProfiling} = useContext(
-    ProfilerContext,
-  );
+  const {isProfiling, startProfiling, stopProfiling} =
+    useContext(ProfilerContext);
 
   let className = styles.InactiveRecordToggle;
   if (disabled) {

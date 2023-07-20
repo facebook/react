@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let Scheduler;
 let PropTypes;
 let act;
 let useMemo;
@@ -29,7 +28,7 @@ describe('ReactStrictMode', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    act = require('jest-react').act;
+    act = require('internal-test-utils').act;
     useMemo = React.useMemo;
     useState = React.useState;
     useReducer = React.useReducer;
@@ -525,10 +524,10 @@ describe('Concurrent Mode', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    Scheduler = require('scheduler');
+    act = require('internal-test-utils').act;
   });
 
-  it('should warn about unsafe legacy lifecycle methods anywhere in a StrictMode tree', () => {
+  it('should warn about unsafe legacy lifecycle methods anywhere in a StrictMode tree', async () => {
     function StrictRoot() {
       return (
         <React.StrictMode>
@@ -571,8 +570,9 @@ describe('Concurrent Mode', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    root.render(<StrictRoot />);
-    expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+    await expect(
+      async () => await act(() => root.render(<StrictRoot />)),
+    ).toErrorDev(
       [
         /* eslint-disable max-len */
         `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
@@ -597,11 +597,10 @@ Please update the following components: App`,
     );
 
     // Dedupe
-    root.render(<App />);
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<App />));
   });
 
-  it('should coalesce warnings by lifecycle name', () => {
+  it('should coalesce warnings by lifecycle name', async () => {
     function StrictRoot() {
       return (
         <React.StrictMode>
@@ -633,10 +632,11 @@ Please update the following components: App`,
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    root.render(<StrictRoot />);
 
-    expect(() => {
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+    await expect(async () => {
+      await expect(
+        async () => await act(() => root.render(<StrictRoot />)),
+      ).toErrorDev(
         [
           /* eslint-disable max-len */
           `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
@@ -686,11 +686,10 @@ Please update the following components: Parent`,
       {withoutStack: true},
     );
     // Dedupe
-    root.render(<StrictRoot />);
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<StrictRoot />));
   });
 
-  it('should warn about components not present during the initial render', () => {
+  it('should warn about components not present during the initial render', async () => {
     function StrictRoot({foo}) {
       return <React.StrictMode>{foo ? <Foo /> : <Bar />}</React.StrictMode>;
     }
@@ -709,27 +708,23 @@ Please update the following components: Parent`,
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    root.render(<StrictRoot foo={true} />);
-    expect(() =>
-      Scheduler.unstable_flushAll(),
-    ).toErrorDev(
+    await expect(async () => {
+      await act(() => root.render(<StrictRoot foo={true} />));
+    }).toErrorDev(
       'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
-    root.render(<StrictRoot foo={false} />);
-    expect(() =>
-      Scheduler.unstable_flushAll(),
-    ).toErrorDev(
+    await expect(async () => {
+      await act(() => root.render(<StrictRoot foo={false} />));
+    }).toErrorDev(
       'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
     // Dedupe
-    root.render(<StrictRoot foo={true} />);
-    Scheduler.unstable_flushAll();
-    root.render(<StrictRoot foo={false} />);
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<StrictRoot foo={true} />));
+    await act(() => root.render(<StrictRoot foo={false} />));
   });
 
   it('should also warn inside of "strict" mode trees', () => {
@@ -770,9 +765,7 @@ Please update the following components: Parent`,
 
     const container = document.createElement('div');
 
-    expect(() =>
-      ReactDOM.render(<SyncRoot />, container),
-    ).toErrorDev(
+    expect(() => ReactDOM.render(<SyncRoot />, container)).toErrorDev(
       'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
@@ -926,18 +919,11 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? 'Warning: Component "StrictMode" contains the string ref "somestring". ' +
-            'Support for string refs will be removed in a future major release. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in OuterComponent (at **)'
-        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-            'String refs are a source of potential bugs and should be avoided. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in OuterComponent (at **)',
+      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in OuterComponent (at **)',
     );
 
     // Dedup
@@ -973,20 +959,12 @@ describe('string refs', () => {
     expect(() => {
       ReactDOM.render(<OuterComponent />, container);
     }).toErrorDev(
-      ReactFeatureFlags.warnAboutStringRefs
-        ? 'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
-            'Support for string refs will be removed in a future major release. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in InnerComponent (at **)\n' +
-            '    in OuterComponent (at **)'
-        : 'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
-            'String refs are a source of potential bugs and should be avoided. ' +
-            'We recommend using useRef() or createRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref\n' +
-            '    in InnerComponent (at **)\n' +
-            '    in OuterComponent (at **)',
+      'Warning: Component "InnerComponent" contains the string ref "somestring". ' +
+        'Support for string refs will be removed in a future major release. ' +
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
+        '    in InnerComponent (at **)\n' +
+        '    in OuterComponent (at **)',
     );
 
     // Dedup
@@ -1003,6 +981,11 @@ describe('context legacy', () => {
     PropTypes = require('prop-types');
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn if the legacy context API have been used in strict mode', () => {
     class LegacyContextProvider extends React.Component {
       getChildContext() {

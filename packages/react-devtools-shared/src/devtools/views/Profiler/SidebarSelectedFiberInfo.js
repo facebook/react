@@ -38,6 +38,7 @@ export default function SidebarSelectedFiberInfo(_: Props): React.Node {
     rootID: ((rootID: any): number),
   });
 
+  // $FlowFixMe[missing-local-annot]
   const handleKeyDown = event => {
     switch (event.key) {
       case 'ArrowUp':
@@ -107,7 +108,6 @@ export default function SidebarSelectedFiberInfo(_: Props): React.Node {
         </div>
 
         <Button
-          className={styles.IconButton}
           onClick={() => selectFiber(null, null)}
           title="Back to commit view">
           <ButtonIcon type="close" />

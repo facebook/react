@@ -43,7 +43,10 @@ type UseEditableValueState = {
   parsedValue: any,
 };
 
-function useEditableValueReducer(state, action) {
+function useEditableValueReducer(
+  state: UseEditableValueState,
+  action: UseEditableValueAction,
+) {
   switch (action.type) {
     case 'RESET':
       return {
@@ -165,7 +168,7 @@ export function useLocalStorage<T>(
   const [storedValue, setStoredValue] = useState<any>(getValueFromLocalStorage);
 
   const setValue = useCallback(
-    value => {
+    (value: $FlowFixMe) => {
       try {
         const valueToStore =
           value instanceof Function ? (value: any)(storedValue) : value;
@@ -188,6 +191,7 @@ export function useLocalStorage<T>(
   // Listen for changes to this local storage value made from other windows.
   // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
   useLayoutEffect(() => {
+    // $FlowFixMe[missing-local-annot]
     const onStorage = event => {
       const newValue = getValueFromLocalStorage();
       if (key === event.key && storedValue !== newValue) {

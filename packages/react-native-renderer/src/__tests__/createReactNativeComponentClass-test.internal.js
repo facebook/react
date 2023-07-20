@@ -18,10 +18,9 @@ describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
-
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
-      .ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass =
+      require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+        .ReactNativeViewConfigRegistry.register;
     React = require('react');
     ReactNative = require('react-native-renderer');
   });

@@ -35,7 +35,7 @@ import {
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
-  unstable_yieldValue,
+  log,
   unstable_setDisableYieldValue,
 } from './Scheduler';
 import {setSuppressWarning} from 'shared/consoleWithStackDev';
@@ -201,8 +201,8 @@ export function onCommitUnmount(fiber: Fiber) {
 
 export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
   if (consoleManagedByDevToolsDuringStrictMode) {
-    if (typeof unstable_yieldValue === 'function') {
-      // We're in a test because Scheduler.unstable_yieldValue only exists
+    if (typeof log === 'function') {
+      // We're in a test because Scheduler.log only exists
       // in SchedulerMock. To reduce the noise in strict mode tests,
       // suppress warnings and disable scheduler yielding during the double render
       unstable_setDisableYieldValue(newIsStrictMode);
