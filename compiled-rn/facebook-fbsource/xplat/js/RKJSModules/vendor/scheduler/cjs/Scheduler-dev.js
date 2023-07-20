@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bf6139f486580812339baacd8463bb4a>>
+ * @generated SignedSource<<1abf312e1d56cca433168107a67d78d1>>
  */
 
 'use strict';
@@ -577,7 +577,7 @@ if (typeof localSetImmediate === "function") {
   };
 }
 
-function requestHostCallback(callback) {
+function requestHostCallback() {
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();
