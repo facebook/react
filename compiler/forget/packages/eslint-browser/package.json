@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "eslint": "^8.25.0",
-    "hermes-eslint": "^0.9.0"
+    "hermes-eslint": "^0.14.0"
   },
   "devDependencies": {
     "node-polyfill-webpack-plugin": "^2.0.1",

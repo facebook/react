@@ -28,7 +28,7 @@
     "@babel/types": "^7.19.0",
     "chalk": "4",
     "invariant": "^2.2.4",
-    "prettier": "2.7.1",
+    "prettier": "2.8.8",
     "pretty-format": "^24"
   },
   "devDependencies": {

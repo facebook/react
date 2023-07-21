@@ -16,7 +16,7 @@
   "dependencies": {
     "@babel/core": "^7.19.1",
     "babel-plugin-react-forget": "*",
-    "hermes-parser": "^0.12.1"
+    "hermes-parser": "^0.14.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
