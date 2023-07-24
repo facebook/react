@@ -17,6 +17,7 @@
     "client.node.js",
     "server.js",
     "server.node.js",
+    "server.browser.js",
     "cjs/",
     "esm/"
   ],
@@ -32,6 +33,7 @@
       "react-server": "./server.node.js",
       "default": "./server.js"
     },
+    "./server.browser": "./server.browser.js",
     "./server.node": "./server.node.js",
     "./node-loader": "./esm/react-server-dom-esm-node-loader.production.min.js",
     "./src/*": "./src/*.js",
