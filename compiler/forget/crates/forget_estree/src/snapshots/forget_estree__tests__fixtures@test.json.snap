@@ -358,10 +358,12 @@ Input:
 
 Output:
 {
+  "type": "Program",
   "body": [
     {
       "type": "FunctionDeclaration",
       "id": {
+        "type": "Identifier",
         "name": "foo",
         "loc": {
           "source": null,
@@ -381,12 +383,14 @@ Output:
       },
       "params": [],
       "body": {
+        "type": "BlockStatement",
         "body": [
           {
             "type": "ReturnStatement",
             "argument": {
               "type": "JSXElement",
               "openingElement": {
+                "type": "JSXOpeningElement",
                 "name": {
                   "type": "JSXMemberExpression",
                   "object": {
@@ -409,6 +413,7 @@ Output:
                     }
                   },
                   "property": {
+                    "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": {
                       "source": null,
@@ -541,6 +546,7 @@ Output:
               },
               "children": [],
               "closingElement": {
+                "type": "JSXClosingElement",
                 "name": {
                   "type": "JSXMemberExpression",
                   "object": {
@@ -563,6 +569,7 @@ Output:
                     }
                   },
                   "property": {
+                    "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": {
                       "source": null,

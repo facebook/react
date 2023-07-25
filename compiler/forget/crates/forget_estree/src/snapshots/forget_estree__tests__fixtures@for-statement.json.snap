@@ -535,10 +535,12 @@ Input:
 
 Output:
 {
+  "type": "Program",
   "body": [
     {
       "type": "FunctionDeclaration",
       "id": {
+        "type": "Identifier",
         "name": "Component",
         "loc": {
           "source": null,
@@ -578,12 +580,14 @@ Output:
         }
       ],
       "body": {
+        "type": "BlockStatement",
         "body": [
           {
             "type": "VariableDeclaration",
             "kind": "let",
             "declarations": [
               {
+                "type": "VariableDeclarator",
                 "id": {
                   "type": "Identifier",
                   "name": "x",
@@ -662,9 +666,11 @@ Output:
           {
             "type": "ForStatement",
             "init": {
+              "type": "VariableDeclaration",
               "kind": "let",
               "declarations": [
                 {
+                  "type": "VariableDeclarator",
                   "id": {
                     "type": "Identifier",
                     "name": "i",

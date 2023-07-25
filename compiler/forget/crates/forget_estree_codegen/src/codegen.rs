@@ -21,7 +21,7 @@ pub fn estree() -> String {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Grammar {
     pub objects: IndexMap<String, Object>,
     pub nodes: IndexMap<String, Node>,
@@ -57,7 +57,8 @@ impl Grammar {
 
         quote! {
             use std::num::NonZeroU32;
-            use serde::{Serialize, Deserialize};
+            use serde::ser::{Serializer, SerializeMap};
+            use serde::{Serialize,Deserialize};
             use crate::{JsValue, Binding, SourceRange};
 
             #(#objects)*
@@ -72,7 +73,7 @@ impl Grammar {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Object {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
@@ -97,14 +98,19 @@ impl Object {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Node {
+    #[serde(default)]
+    #[serde(rename = "type")]
+    pub type_: Option<String>,
+
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
 }
 
 impl Node {
     pub fn codegen(&self, name: &str) -> TokenStream {
+        let name_str = name;
         let name = format_ident!("{}", name);
         let fields: Vec<_> = self
             .fields
@@ -112,8 +118,37 @@ impl Node {
             .map(|(name, field)| field.codegen_node(name))
             .collect();
 
+        let type_serializer = if let Some(type_) = &self.type_ {
+            quote! {
+                state.serialize_entry("type", #type_)?;
+            }
+        } else {
+            quote! {
+                state.serialize_entry("type", #name_str)?;
+            }
+        };
+
+        let mut field_serializers = Vec::with_capacity(self.fields.len()); // type, loc, range
+        for (field_name_str, field) in &self.fields {
+            if field.skip {
+                continue;
+            }
+            let field_name = format_ident!("{}", field_name_str);
+            let serialized_field_name = field.rename.as_ref().unwrap_or(field_name_str);
+            let serializer = if field.flatten {
+                quote! {
+                    Serialize::serialize(&self.#field_name, serde::__private::ser::FlatMapSerializer(&mut state))?;
+                }
+            } else {
+                quote! {
+                    state.serialize_entry(#serialized_field_name, &self.#field_name)?;
+                }
+            };
+            field_serializers.push(serializer);
+        }
+
         quote! {
-            #[derive(Serialize, Deserialize, Clone, Debug)]
+            #[derive(Deserialize, Clone, Debug)]
             pub struct #name {
                 #(#fields,)*
 
@@ -123,12 +158,26 @@ impl Node {
                 #[serde(default)]
                 pub range: Option<SourceRange>,
             }
+
+            impl Serialize for #name {
+                fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                where
+                    S: Serializer,
+                {
+                    let mut state = serializer.serialize_map(None)?;
+                    #type_serializer
+                    #(#field_serializers)*
+                    state.serialize_entry("loc", &self.loc)?;
+                    state.serialize_entry("range", &self.range)?;
+                    state.end()
+                }
+            }
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Field {
     #[serde(rename = "type")]
     pub type_: String,
@@ -144,6 +193,10 @@ pub struct Field {
 
     #[serde(default)]
     pub skip: bool,
+
+    #[serde(default)]
+    #[serde(rename = "TODO")]
+    pub todo: Option<String>,
 }
 
 impl Field {
@@ -217,7 +270,7 @@ impl Field {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Enum {
     pub variants: Vec<String>,
 }
@@ -227,6 +280,7 @@ impl Enum {
         let mut sorted_variants: Vec<_> = self.variants.iter().collect();
         sorted_variants.sort();
 
+        let name_str = name;
         let name = format_ident!("{}", name);
         let variants: Vec<_> = sorted_variants
             .iter()
@@ -239,24 +293,6 @@ impl Enum {
                 }
             })
             .collect();
-
-        let enum_ = quote! {
-            pub enum #name {
-                #(#variants),*
-            }
-        };
-        let enum_ = if sorted_variants.iter().any(|name| enums.contains_key(*name)) {
-            // contains recursive enum, use untagged serialization
-            quote! {
-                #[serde(untagged)]
-                #enum_
-            }
-        } else {
-            quote! {
-                #[serde(tag = "type")]
-                #enum_
-            }
-        };
 
         let enum_tag = format_ident!("__{}Tag", name);
         let mut seen = HashSet::new();
@@ -325,7 +361,10 @@ impl Enum {
         }
         quote! {
             #[derive(Serialize, Clone, Debug)]
-            #enum_
+            #[serde(untagged)]
+            pub enum #name {
+                #(#variants),*
+            }
 
             #[derive(Deserialize, Debug)]
             enum #enum_tag {
@@ -337,7 +376,7 @@ impl Enum {
                 where D: serde::Deserializer<'de> {
                     let tagged = serde::Deserializer::deserialize_any(
                         deserializer,
-                        serde::__private::de::TaggedContentVisitor::<#enum_tag>::new("type", "Pattern")
+                        serde::__private::de::TaggedContentVisitor::<#enum_tag>::new("type", #name_str)
                     )?;
                     match tagged.0 {
                         #(#tag_matches),*
@@ -350,7 +389,7 @@ impl Enum {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
-// #[serde(deny_unknown_fields)]
+#[serde(deny_unknown_fields)]
 pub struct Operator {
     pub variants: IndexMap<String, String>,
 }

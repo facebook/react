@@ -1,6 +1,7 @@
 // @generated
 #![cfg_attr(rustfmt, rustfmt_skip)]
 use std::num::NonZeroU32;
+use serde::ser::{Serializer, SerializeMap};
 use serde::{Serialize, Deserialize};
 use crate::{JsValue, Binding, SourceRange};
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -35,7 +36,7 @@ pub struct RegExpValue {
     pub pattern: String,
     pub flags: String,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Identifier {
     pub name: String,
     #[serde(skip)]
@@ -46,7 +47,20 @@ pub struct Identifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Identifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Identifier")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct Literal {
     pub value: JsValue,
     #[serde(default)]
@@ -58,7 +72,22 @@ pub struct Literal {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Literal {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Literal")?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("raw", &self.raw)?;
+        state.serialize_entry("regex", &self.regex)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct Program {
     pub body: Vec<ModuleItem>,
     #[serde(rename = "sourceType")]
@@ -69,7 +98,21 @@ pub struct Program {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Program {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Program")?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("sourceType", &self.source_type)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ExpressionStatement {
     pub expression: Expression,
     #[serde(default)]
@@ -79,7 +122,21 @@ pub struct ExpressionStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ExpressionStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ExpressionStatement")?;
+        state.serialize_entry("expression", &self.expression)?;
+        state.serialize_entry("directive", &self.directive)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct BlockStatement {
     pub body: Vec<Statement>,
     #[serde(default)]
@@ -87,21 +144,58 @@ pub struct BlockStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for BlockStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "BlockStatement")?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct EmptyStatement {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for EmptyStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "EmptyStatement")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct DebuggerStatement {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for DebuggerStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "DebuggerStatement")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct WithStatement {
     pub object: Expression,
     pub body: Statement,
@@ -110,7 +204,21 @@ pub struct WithStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for WithStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "WithStatement")?;
+        state.serialize_entry("object", &self.object)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ReturnStatement {
     pub argument: Option<Expression>,
     #[serde(default)]
@@ -118,7 +226,20 @@ pub struct ReturnStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ReturnStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ReturnStatement")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct LabeledStatement {
     pub label: Identifier,
     pub body: Statement,
@@ -127,7 +248,21 @@ pub struct LabeledStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for LabeledStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "LabeledStatement")?;
+        state.serialize_entry("label", &self.label)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct BreakStatement {
     pub label: Option<Identifier>,
     #[serde(default)]
@@ -135,7 +270,20 @@ pub struct BreakStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for BreakStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "BreakStatement")?;
+        state.serialize_entry("label", &self.label)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ContinueStatement {
     pub label: Option<Identifier>,
     #[serde(default)]
@@ -143,7 +291,20 @@ pub struct ContinueStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ContinueStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ContinueStatement")?;
+        state.serialize_entry("label", &self.label)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct IfStatement {
     pub test: Expression,
     pub consequent: Statement,
@@ -153,7 +314,22 @@ pub struct IfStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for IfStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "IfStatement")?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("consequent", &self.consequent)?;
+        state.serialize_entry("alternate", &self.alternate)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct SwitchStatement {
     pub discriminant: Expression,
     pub cases: Vec<SwitchCase>,
@@ -162,7 +338,21 @@ pub struct SwitchStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for SwitchStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "SwitchStatement")?;
+        state.serialize_entry("discriminant", &self.discriminant)?;
+        state.serialize_entry("cases", &self.cases)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct SwitchCase {
     pub test: Option<Expression>,
     pub consequent: Vec<Statement>,
@@ -171,7 +361,21 @@ pub struct SwitchCase {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for SwitchCase {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "SwitchCase")?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("consequent", &self.consequent)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ThrowStatement {
     pub argument: Expression,
     #[serde(default)]
@@ -179,7 +383,20 @@ pub struct ThrowStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ThrowStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ThrowStatement")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct TryStatement {
     pub block: BlockStatement,
     pub handler: Option<CatchClause>,
@@ -189,7 +406,22 @@ pub struct TryStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for TryStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "TryStatement")?;
+        state.serialize_entry("block", &self.block)?;
+        state.serialize_entry("handler", &self.handler)?;
+        state.serialize_entry("finalizer", &self.finalizer)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct CatchClause {
     pub param: Pattern,
     pub body: BlockStatement,
@@ -198,7 +430,21 @@ pub struct CatchClause {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for CatchClause {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "CatchClause")?;
+        state.serialize_entry("param", &self.param)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct WhileStatement {
     pub test: Expression,
     pub body: Statement,
@@ -207,7 +453,21 @@ pub struct WhileStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for WhileStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "WhileStatement")?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct DoWhileStatement {
     pub body: Statement,
     pub test: Expression,
@@ -216,7 +476,21 @@ pub struct DoWhileStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for DoWhileStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "DoWhileStatement")?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ForStatement {
     pub init: Option<ForInit>,
     pub test: Option<Expression>,
@@ -227,7 +501,23 @@ pub struct ForStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ForStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ForStatement")?;
+        state.serialize_entry("init", &self.init)?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("update", &self.update)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ForInStatement {
     pub left: ForInInit,
     pub right: Expression,
@@ -237,7 +527,22 @@ pub struct ForInStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ForInStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ForInStatement")?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ForOfStatement {
     pub left: ForInInit,
     pub right: Expression,
@@ -247,7 +552,22 @@ pub struct ForOfStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ForOfStatement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ForOfStatement")?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct FunctionDeclaration {
     #[serde(flatten)]
     pub function: Function,
@@ -256,7 +576,23 @@ pub struct FunctionDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for FunctionDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "FunctionDeclaration")?;
+        Serialize::serialize(
+            &self.function,
+            serde::__private::ser::FlatMapSerializer(&mut state),
+        )?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct Class {
     pub id: Option<Identifier>,
     #[serde(rename = "superClass")]
@@ -267,7 +603,22 @@ pub struct Class {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Class {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Class")?;
+        state.serialize_entry("id", &self.id)?;
+        state.serialize_entry("superClass", &self.super_class)?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ClassDeclaration {
     #[serde(flatten)]
     pub class: Class,
@@ -276,7 +627,23 @@ pub struct ClassDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ClassDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ClassDeclaration")?;
+        Serialize::serialize(
+            &self.class,
+            serde::__private::ser::FlatMapSerializer(&mut state),
+        )?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ClassExpression {
     #[serde(flatten)]
     pub class: Class,
@@ -285,7 +652,23 @@ pub struct ClassExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ClassExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ClassExpression")?;
+        Serialize::serialize(
+            &self.class,
+            serde::__private::ser::FlatMapSerializer(&mut state),
+        )?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ClassBody {
     pub body: Vec<MethodDefinition>,
     #[serde(default)]
@@ -293,7 +676,20 @@ pub struct ClassBody {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ClassBody {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ClassBody")?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct MethodDefinition {
     pub key: Expression,
     pub value: FunctionExpression,
@@ -307,7 +703,24 @@ pub struct MethodDefinition {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for MethodDefinition {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "MethodDefinition")?;
+        state.serialize_entry("key", &self.key)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("kind", &self.kind)?;
+        state.serialize_entry("computed", &self.is_computed)?;
+        state.serialize_entry("static", &self.is_static)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct VariableDeclaration {
     pub kind: VariableDeclarationKind,
     pub declarations: Vec<VariableDeclarator>,
@@ -316,7 +729,21 @@ pub struct VariableDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for VariableDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "VariableDeclaration")?;
+        state.serialize_entry("kind", &self.kind)?;
+        state.serialize_entry("declarations", &self.declarations)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct VariableDeclarator {
     pub id: Pattern,
     pub init: Option<Expression>,
@@ -325,14 +752,40 @@ pub struct VariableDeclarator {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for VariableDeclarator {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "VariableDeclarator")?;
+        state.serialize_entry("id", &self.id)?;
+        state.serialize_entry("init", &self.init)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ThisExpression {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ThisExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ThisExpression")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ArrayExpression {
     pub elements: Vec<Option<ExpressionOrSpread>>,
     #[serde(default)]
@@ -340,7 +793,20 @@ pub struct ArrayExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ArrayExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ArrayExpression")?;
+        state.serialize_entry("elements", &self.elements)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ObjectExpression {
     pub properties: Vec<Property>,
     #[serde(default)]
@@ -348,7 +814,20 @@ pub struct ObjectExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ObjectExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ObjectExpression")?;
+        state.serialize_entry("properties", &self.properties)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct Property {
     pub key: Expression,
     pub value: Expression,
@@ -364,7 +843,25 @@ pub struct Property {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Property {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Property")?;
+        state.serialize_entry("key", &self.key)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("kind", &self.kind)?;
+        state.serialize_entry("method", &self.is_method)?;
+        state.serialize_entry("shorthand", &self.is_shorthand)?;
+        state.serialize_entry("computed", &self.is_computed)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct FunctionExpression {
     #[serde(flatten)]
     pub function: Function,
@@ -373,7 +870,23 @@ pub struct FunctionExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for FunctionExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "FunctionExpression")?;
+        Serialize::serialize(
+            &self.function,
+            serde::__private::ser::FlatMapSerializer(&mut state),
+        )?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ArrowFunctionExpression {
     #[serde(flatten)]
     pub function: Function,
@@ -384,7 +897,24 @@ pub struct ArrowFunctionExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ArrowFunctionExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ArrowFunctionExpression")?;
+        Serialize::serialize(
+            &self.function,
+            serde::__private::ser::FlatMapSerializer(&mut state),
+        )?;
+        state.serialize_entry("expression", &self.is_expression)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct UnaryExpression {
     pub operator: UnaryOperator,
     pub prefix: bool,
@@ -394,7 +924,22 @@ pub struct UnaryExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for UnaryExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "UnaryExpression")?;
+        state.serialize_entry("operator", &self.operator)?;
+        state.serialize_entry("prefix", &self.prefix)?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct UpdateExpression {
     pub operator: UpdateOperator,
     pub argument: Expression,
@@ -404,7 +949,22 @@ pub struct UpdateExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for UpdateExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "UpdateExpression")?;
+        state.serialize_entry("operator", &self.operator)?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("prefix", &self.prefix)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct BinaryExpression {
     pub left: Expression,
     pub operator: BinaryOperator,
@@ -414,7 +974,22 @@ pub struct BinaryExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for BinaryExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "BinaryExpression")?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("operator", &self.operator)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct AssignmentExpression {
     pub operator: AssignmentOperator,
     pub left: AssignmentTarget,
@@ -424,7 +999,22 @@ pub struct AssignmentExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for AssignmentExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "AssignmentExpression")?;
+        state.serialize_entry("operator", &self.operator)?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct LogicalExpression {
     pub operator: LogicalOperator,
     pub left: Expression,
@@ -434,7 +1024,22 @@ pub struct LogicalExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for LogicalExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "LogicalExpression")?;
+        state.serialize_entry("operator", &self.operator)?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct MemberExpression {
     pub object: ExpressionOrSuper,
     pub property: Expression,
@@ -444,7 +1049,22 @@ pub struct MemberExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for MemberExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "MemberExpression")?;
+        state.serialize_entry("object", &self.object)?;
+        state.serialize_entry("property", &self.property)?;
+        state.serialize_entry("computed", &self.computed)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ConditionalExpression {
     pub test: Expression,
     pub alternate: Expression,
@@ -454,7 +1074,22 @@ pub struct ConditionalExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ConditionalExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ConditionalExpression")?;
+        state.serialize_entry("test", &self.test)?;
+        state.serialize_entry("alternate", &self.alternate)?;
+        state.serialize_entry("consequent", &self.consequent)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct CallExpression {
     pub callee: ExpressionOrSuper,
     pub arguments: Vec<ExpressionOrSpread>,
@@ -463,7 +1098,21 @@ pub struct CallExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for CallExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "CallExpression")?;
+        state.serialize_entry("callee", &self.callee)?;
+        state.serialize_entry("arguments", &self.arguments)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct NewExpression {
     pub callee: Expression,
     pub arguments: Vec<ExpressionOrSpread>,
@@ -472,7 +1121,21 @@ pub struct NewExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for NewExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "NewExpression")?;
+        state.serialize_entry("callee", &self.callee)?;
+        state.serialize_entry("arguments", &self.arguments)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct SequenceExpression {
     pub expressions: Vec<Expression>,
     #[serde(default)]
@@ -480,14 +1143,39 @@ pub struct SequenceExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for SequenceExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "SequenceExpression")?;
+        state.serialize_entry("expressions", &self.expressions)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct Super {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for Super {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Super")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct SpreadElement {
     pub argument: Expression,
     #[serde(default)]
@@ -495,7 +1183,20 @@ pub struct SpreadElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for SpreadElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "SpreadElement")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct YieldExpression {
     #[serde(default)]
     pub argument: Option<Expression>,
@@ -506,7 +1207,21 @@ pub struct YieldExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for YieldExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "YieldExpression")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("delegate", &self.is_delegate)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ImportDeclaration {
     pub specifiers: Vec<ImportDeclarationSpecifier>,
     pub source: Literal,
@@ -515,7 +1230,21 @@ pub struct ImportDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ImportDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ImportDeclaration")?;
+        state.serialize_entry("specifiers", &self.specifiers)?;
+        state.serialize_entry("source", &self.source)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ImportSpecifier {
     pub imported: Identifier,
     pub local: Identifier,
@@ -524,7 +1253,21 @@ pub struct ImportSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ImportSpecifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ImportSpecifier")?;
+        state.serialize_entry("imported", &self.imported)?;
+        state.serialize_entry("local", &self.local)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ImportDefaultSpecifier {
     pub local: Identifier,
     #[serde(default)]
@@ -532,7 +1275,20 @@ pub struct ImportDefaultSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ImportDefaultSpecifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ImportDefaultSpecifier")?;
+        state.serialize_entry("local", &self.local)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ImportNamespaceSpecifier {
     pub local: Identifier,
     #[serde(default)]
@@ -540,7 +1296,20 @@ pub struct ImportNamespaceSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ImportNamespaceSpecifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ImportNamespaceSpecifier")?;
+        state.serialize_entry("local", &self.local)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ExportNamedDeclaration {
     pub declaration: Option<Declaration>,
     pub specifiers: Vec<ExportSpecifier>,
@@ -550,7 +1319,22 @@ pub struct ExportNamedDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ExportNamedDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ExportNamedDeclaration")?;
+        state.serialize_entry("declaration", &self.declaration)?;
+        state.serialize_entry("specifiers", &self.specifiers)?;
+        state.serialize_entry("source", &self.source)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ExportSpecifier {
     pub exported: Identifier,
     #[serde(default)]
@@ -558,7 +1342,20 @@ pub struct ExportSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ExportSpecifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ExportSpecifier")?;
+        state.serialize_entry("exported", &self.exported)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ExportDefaultDeclaration {
     pub declaration: Declaration,
     #[serde(default)]
@@ -566,7 +1363,20 @@ pub struct ExportDefaultDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ExportDefaultDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ExportDefaultDeclaration")?;
+        state.serialize_entry("declaration", &self.declaration)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ExportAllDeclaration {
     pub source: Literal,
     #[serde(default)]
@@ -574,7 +1384,20 @@ pub struct ExportAllDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ExportAllDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ExportAllDeclaration")?;
+        state.serialize_entry("source", &self.source)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXIdentifier {
     pub name: String,
     #[serde(default)]
@@ -582,7 +1405,20 @@ pub struct JSXIdentifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXIdentifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXIdentifier")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXNamespacedName {
     pub namespace: JSXIdentifier,
     pub name: JSXIdentifier,
@@ -591,7 +1427,21 @@ pub struct JSXNamespacedName {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXNamespacedName {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXNamespacedName")?;
+        state.serialize_entry("namespace", &self.namespace)?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXMemberExpression {
     pub object: JSXMemberExpressionOrIdentifier,
     pub property: JSXIdentifier,
@@ -600,14 +1450,40 @@ pub struct JSXMemberExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXMemberExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXMemberExpression")?;
+        state.serialize_entry("object", &self.object)?;
+        state.serialize_entry("property", &self.property)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXEmptyExpression {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXEmptyExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXEmptyExpression")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXExpressionContainer {
     pub expression: JSXExpressionOrEmpty,
     #[serde(default)]
@@ -615,7 +1491,20 @@ pub struct JSXExpressionContainer {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXExpressionContainer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXExpressionContainer")?;
+        state.serialize_entry("expression", &self.expression)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXSpreadChild {
     pub expression: Expression,
     #[serde(default)]
@@ -623,7 +1512,20 @@ pub struct JSXSpreadChild {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXSpreadChild {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXSpreadChild")?;
+        state.serialize_entry("expression", &self.expression)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXOpeningElement {
     pub name: JSXElementName,
     pub attributes: Vec<JSXAttributeOrSpread>,
@@ -634,7 +1536,22 @@ pub struct JSXOpeningElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXOpeningElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXOpeningElement")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("attributes", &self.attributes)?;
+        state.serialize_entry("selfClosing", &self.self_closing)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXClosingElement {
     pub name: JSXElementName,
     #[serde(default)]
@@ -642,7 +1559,20 @@ pub struct JSXClosingElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXClosingElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXClosingElement")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXAttribute {
     pub name: JSXIdentifierOrNamespacedName,
     pub value: Option<JSXAttributeValue>,
@@ -651,7 +1581,21 @@ pub struct JSXAttribute {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXAttribute {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXAttribute")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXSpreadAttribute {
     pub argument: Expression,
     #[serde(default)]
@@ -659,7 +1603,20 @@ pub struct JSXSpreadAttribute {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXSpreadAttribute {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXSpreadAttribute")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXText {
     pub value: String,
     pub raw: String,
@@ -668,7 +1625,21 @@ pub struct JSXText {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXText {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXText")?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("raw", &self.raw)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXElement {
     #[serde(rename = "openingElement")]
     pub opening_element: JSXOpeningElement,
@@ -680,7 +1651,22 @@ pub struct JSXElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXElement")?;
+        state.serialize_entry("openingElement", &self.opening_element)?;
+        state.serialize_entry("children", &self.children)?;
+        state.serialize_entry("closingElement", &self.closing_element)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXFragment {
     #[serde(rename = "openingFragment")]
     pub opening_fragment: JSXOpeningFragment,
@@ -692,21 +1678,60 @@ pub struct JSXFragment {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXFragment {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXFragment")?;
+        state.serialize_entry("openingFragment", &self.opening_fragment)?;
+        state.serialize_entry("children", &self.children)?;
+        state.serialize_entry("closingFragment", &self.closing_fragment)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXOpeningFragment {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXOpeningFragment {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXOpeningFragment")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct JSXClosingFragment {
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for JSXClosingFragment {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXClosingFragment")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ArrayPattern {
     pub elements: Vec<Option<Pattern>>,
     #[serde(default)]
@@ -714,7 +1739,20 @@ pub struct ArrayPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ArrayPattern {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ArrayPattern")?;
+        state.serialize_entry("elements", &self.elements)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ObjectPattern {
     pub properties: Vec<AssignmentProperty>,
     #[serde(default)]
@@ -722,7 +1760,20 @@ pub struct ObjectPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for ObjectPattern {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ObjectPattern")?;
+        state.serialize_entry("properties", &self.properties)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct AssignmentProperty {
     pub key: PropertyKey,
     pub value: Pattern,
@@ -733,7 +1784,23 @@ pub struct AssignmentProperty {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for AssignmentProperty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "Property")?;
+        state.serialize_entry("key", &self.key)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("kind", &self.kind)?;
+        state.serialize_entry("method", &self.method)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct RestElement {
     pub argument: Pattern,
     #[serde(default)]
@@ -741,7 +1808,20 @@ pub struct RestElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
-#[derive(Serialize, Deserialize, Clone, Debug)]
+impl Serialize for RestElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "RestElement")?;
+        state.serialize_entry("argument", &self.argument)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct AssignmentPattern {
     pub left: Pattern,
     pub right: Expression,
@@ -750,8 +1830,22 @@ pub struct AssignmentPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl Serialize for AssignmentPattern {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "AssignmentPattern")?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum Statement {
     BlockStatement(Box<BlockStatement>),
     BreakStatement(Box<BreakStatement>),
@@ -808,7 +1902,7 @@ impl<'de> serde::Deserialize<'de> for Statement {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __StatementTag,
-            >::new("type", "Pattern"),
+            >::new("type", "Statement"),
         )?;
         match tagged.0 {
             __StatementTag::BlockStatement => {
@@ -983,7 +2077,7 @@ impl<'de> serde::Deserialize<'de> for Statement {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum Expression {
     ArrayExpression(Box<ArrayExpression>),
     ArrowFunctionExpression(Box<ArrowFunctionExpression>),
@@ -1038,7 +2132,7 @@ impl<'de> serde::Deserialize<'de> for Expression {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ExpressionTag,
-            >::new("type", "Pattern"),
+            >::new("type", "Expression"),
         )?;
         match tagged.0 {
             __ExpressionTag::ArrayExpression => {
@@ -1205,7 +2299,7 @@ impl<'de> serde::Deserialize<'de> for Expression {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum Declaration {
     ClassDeclaration(Box<ClassDeclaration>),
     FunctionDeclaration(Box<FunctionDeclaration>),
@@ -1226,7 +2320,7 @@ impl<'de> serde::Deserialize<'de> for Declaration {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __DeclarationTag,
-            >::new("type", "Pattern"),
+            >::new("type", "Declaration"),
         )?;
         match tagged.0 {
             __DeclarationTag::ClassDeclaration => {
@@ -1257,7 +2351,7 @@ impl<'de> serde::Deserialize<'de> for Declaration {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum ImportDeclarationSpecifier {
     ImportDefaultSpecifier(Box<ImportDefaultSpecifier>),
     ImportNamespaceSpecifier(Box<ImportNamespaceSpecifier>),
@@ -1278,7 +2372,7 @@ impl<'de> serde::Deserialize<'de> for ImportDeclarationSpecifier {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ImportDeclarationSpecifierTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ImportDeclarationSpecifier"),
         )?;
         match tagged.0 {
             __ImportDeclarationSpecifierTag::ImportSpecifier => {
@@ -1351,7 +2445,7 @@ impl<'de> serde::Deserialize<'de> for ModuleItem {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ModuleItemTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ModuleItem"),
         )?;
         match tagged.0 {
             __ModuleItemTag::ImportDeclaration => {
@@ -1574,7 +2668,7 @@ impl<'de> serde::Deserialize<'de> for ModuleItem {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum ImportOrExportDeclaration {
     ExportAllDeclaration(Box<ExportAllDeclaration>),
     ExportDefaultDeclaration(Box<ExportDefaultDeclaration>),
@@ -1597,7 +2691,7 @@ impl<'de> serde::Deserialize<'de> for ImportOrExportDeclaration {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ImportOrExportDeclarationTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ImportOrExportDeclaration"),
         )?;
         match tagged.0 {
             __ImportOrExportDeclarationTag::ImportDeclaration => {
@@ -1674,7 +2768,7 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSuper {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ExpressionOrSuperTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ExpressionOrSuper"),
         )?;
         match tagged.0 {
             __ExpressionOrSuperTag::ArrayExpression => {
@@ -1895,7 +2989,7 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSpread {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ExpressionOrSpreadTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ExpressionOrSpread"),
         )?;
         match tagged.0 {
             __ExpressionOrSpreadTag::ArrayExpression => {
@@ -2120,7 +3214,7 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __FunctionBodyTag,
-            >::new("type", "Pattern"),
+            >::new("type", "FunctionBody"),
         )?;
         match tagged.0 {
             __FunctionBodyTag::BlockStatement => {
@@ -2295,7 +3389,7 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum Pattern {
     ArrayPattern(Box<ArrayPattern>),
     AssignmentPattern(Box<AssignmentPattern>),
@@ -2405,7 +3499,7 @@ impl<'de> serde::Deserialize<'de> for ForInit {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ForInitTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ForInit"),
         )?;
         match tagged.0 {
             __ForInitTag::ArrayExpression => {
@@ -2603,7 +3697,7 @@ impl<'de> serde::Deserialize<'de> for ForInInit {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __ForInInitTag,
-            >::new("type", "Pattern"),
+            >::new("type", "ForInInit"),
         )?;
         match tagged.0 {
             __ForInInitTag::Identifier => {
@@ -2658,7 +3752,7 @@ impl<'de> serde::Deserialize<'de> for ForInInit {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum PropertyKey {
     Identifier(Box<Identifier>),
     Literal(Box<Literal>),
@@ -2677,7 +3771,7 @@ impl<'de> serde::Deserialize<'de> for PropertyKey {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __PropertyKeyTag,
-            >::new("type", "Pattern"),
+            >::new("type", "PropertyKey"),
         )?;
         match tagged.0 {
             __PropertyKeyTag::Identifier => {
@@ -2741,7 +3835,7 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __AssignmentTargetTag,
-            >::new("type", "Pattern"),
+            >::new("type", "AssignmentTarget"),
         )?;
         match tagged.0 {
             __AssignmentTargetTag::ArrayExpression => {
@@ -2944,7 +4038,7 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXMemberExpressionOrIdentifier {
     JSXIdentifier(Box<JSXIdentifier>),
     JSXMemberExpression(Box<JSXMemberExpression>),
@@ -2963,7 +4057,7 @@ impl<'de> serde::Deserialize<'de> for JSXMemberExpressionOrIdentifier {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXMemberExpressionOrIdentifierTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXMemberExpressionOrIdentifier"),
         )?;
         match tagged.0 {
             __JSXMemberExpressionOrIdentifierTag::JSXMemberExpression => {
@@ -3024,7 +4118,7 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXExpressionOrEmptyTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXExpressionOrEmpty"),
         )?;
         match tagged.0 {
             __JSXExpressionOrEmptyTag::ArrayExpression => {
@@ -3219,7 +4313,7 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXAttributeOrSpread {
     JSXAttribute(Box<JSXAttribute>),
     JSXSpreadAttribute(Box<JSXSpreadAttribute>),
@@ -3238,7 +4332,7 @@ impl<'de> serde::Deserialize<'de> for JSXAttributeOrSpread {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXAttributeOrSpreadTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXAttributeOrSpread"),
         )?;
         match tagged.0 {
             __JSXAttributeOrSpreadTag::JSXAttribute => {
@@ -3261,7 +4355,7 @@ impl<'de> serde::Deserialize<'de> for JSXAttributeOrSpread {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXAttributeValue {
     JSXElement(Box<JSXElement>),
     JSXExpressionContainer(Box<JSXExpressionContainer>),
@@ -3284,7 +4378,7 @@ impl<'de> serde::Deserialize<'de> for JSXAttributeValue {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXAttributeValueTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXAttributeValue"),
         )?;
         match tagged.0 {
             __JSXAttributeValueTag::Literal => {
@@ -3323,7 +4417,7 @@ impl<'de> serde::Deserialize<'de> for JSXAttributeValue {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXElementName {
     JSXIdentifier(Box<JSXIdentifier>),
     JSXMemberExpression(Box<JSXMemberExpression>),
@@ -3344,7 +4438,7 @@ impl<'de> serde::Deserialize<'de> for JSXElementName {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXElementNameTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXElementName"),
         )?;
         match tagged.0 {
             __JSXElementNameTag::JSXIdentifier => {
@@ -3375,7 +4469,7 @@ impl<'de> serde::Deserialize<'de> for JSXElementName {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXIdentifierOrNamespacedName {
     JSXIdentifier(Box<JSXIdentifier>),
     JSXNamespacedName(Box<JSXNamespacedName>),
@@ -3394,7 +4488,7 @@ impl<'de> serde::Deserialize<'de> for JSXIdentifierOrNamespacedName {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXIdentifierOrNamespacedNameTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXIdentifierOrNamespacedName"),
         )?;
         match tagged.0 {
             __JSXIdentifierOrNamespacedNameTag::JSXIdentifier => {
@@ -3417,7 +4511,7 @@ impl<'de> serde::Deserialize<'de> for JSXIdentifierOrNamespacedName {
     }
 }
 #[derive(Serialize, Clone, Debug)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum JSXChildItem {
     JSXElement(Box<JSXElement>),
     JSXExpressionContainer(Box<JSXExpressionContainer>),
@@ -3442,7 +4536,7 @@ impl<'de> serde::Deserialize<'de> for JSXChildItem {
             deserializer,
             serde::__private::de::TaggedContentVisitor::<
                 __JSXChildItemTag,
-            >::new("type", "Pattern"),
+            >::new("type", "JSXChildItem"),
         )?;
         match tagged.0 {
             __JSXChildItemTag::JSXText => {

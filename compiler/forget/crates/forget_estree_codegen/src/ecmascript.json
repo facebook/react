@@ -780,7 +780,7 @@
             }
         },
         "AssignmentProperty": {
-            "tag": "Property",
+            "type": "Property",
             "fields": {
                 "key": {
                     "type": "PropertyKey"

@@ -196,10 +196,12 @@ Input:
 
 Output:
 {
+  "type": "Program",
   "body": [
     {
       "type": "FunctionDeclaration",
       "id": {
+        "type": "Identifier",
         "name": "Component",
         "loc": {
           "source": null,
@@ -239,6 +241,7 @@ Output:
         }
       ],
       "body": {
+        "type": "BlockStatement",
         "body": [
           {
             "type": "ReturnStatement",
