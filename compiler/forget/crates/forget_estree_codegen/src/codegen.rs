@@ -21,7 +21,7 @@ pub fn estree() -> String {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Grammar {
     pub objects: IndexMap<String, Object>,
     pub nodes: IndexMap<String, Node>,
@@ -72,7 +72,7 @@ impl Grammar {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Object {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
@@ -97,7 +97,7 @@ impl Object {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Node {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
@@ -128,7 +128,7 @@ impl Node {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Field {
     #[serde(rename = "type")]
     pub type_: String,
@@ -217,7 +217,7 @@ impl Field {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Enum {
     pub variants: Vec<String>,
 }
@@ -350,7 +350,7 @@ impl Enum {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(transparent)]
-#[serde(deny_unknown_fields)]
+// #[serde(deny_unknown_fields)]
 pub struct Operator {
     pub variants: IndexMap<String, String>,
 }

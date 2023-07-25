@@ -299,6 +299,64 @@
                 }
             }
         },
+        "Class": {
+            "fields": {
+                "id": {
+                    "type": "Option<Identifier>"
+                },
+                "super_class": {
+                    "type": "Option<Expression>",
+                    "rename": "superClass"
+                },
+                "body": {
+                    "type": "ClassBody"
+                }
+            }
+        },
+        "ClassDeclaration": {
+            "fields": {
+                "class": {
+                    "type": "Class",
+                    "flatten": true
+                }
+            }
+        },
+        "ClassExpression": {
+            "fields": {
+                "class": {
+                    "type": "Class",
+                    "flatten": true
+                }
+            }
+        },
+        "ClassBody": {
+            "fields": {
+                "body": {
+                    "type": "Vec<MethodDefinition>"
+                }
+            }
+        },
+        "MethodDefinition": {
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "FunctionExpression"
+                },
+                "kind": {
+                    "type": "MethodKind"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            }
+        },
         "VariableDeclaration": {
             "fields": {
                 "kind": {
@@ -337,13 +395,25 @@
         "Property": {
             "fields": {
                 "key": {
-                    "type": "PropertyKey"
+                    "type": "Expression"
                 },
                 "value": {
                     "type": "Expression"
                 },
                 "kind": {
                     "type": "PropertyKind"
+                },
+                "is_method": {
+                    "type": "bool",
+                    "rename": "method"
+                },
+                "is_shorthand": {
+                    "type": "bool",
+                    "rename": "shorthand"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
                 }
             }
         },
@@ -539,6 +609,40 @@
                 }
             }
         },
+        "ExportNamedDeclaration": {
+            "fields": {
+                "declaration": {
+                    "type": "Option<Declaration>"
+                },
+                "specifiers": {
+                    "type": "Vec<ExportSpecifier>"
+                },
+                "source": {
+                    "type": "Option<Literal>"
+                }
+            }
+        },
+        "ExportSpecifier": {
+            "fields": {
+                "exported": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "ExportDefaultDeclaration": {
+            "fields": {
+                "declaration": {
+                    "type": "Declaration"
+                }
+            }
+        },
+        "ExportAllDeclaration": {
+            "fields": {
+                "source": {
+                    "type": "Literal"
+                }
+            }
+        },
         "JSXIdentifier": {
             "fields": {
                 "name": {
@@ -660,12 +764,63 @@
             }
         },
         "JSXOpeningFragment": {},
-        "JSXClosingFragment": {}
+        "JSXClosingFragment": {},
+        "ArrayPattern": {
+            "fields": {
+                "elements": {
+                    "type": "Vec<Option<Pattern>>"
+                }
+            }
+        },
+        "ObjectPattern": {
+            "fields": {
+                "properties": {
+                    "type": "Vec<AssignmentProperty>"
+                }
+            }
+        },
+        "AssignmentProperty": {
+            "tag": "Property",
+            "fields": {
+                "key": {
+                    "type": "PropertyKey"
+                },
+                "value": {
+                    "type": "Pattern"
+                },
+                "kind": {
+                    "type": "PropertyKind",
+                    "TODO": "fixed value `init`"
+                },
+                "method": {
+                    "type": "bool",
+                    "TODO": "fixed value `false`" 
+                }
+            }
+        },
+        "RestElement": {
+            "fields": {
+                "argument": {
+                    "type": "Pattern"
+                }
+            }
+        },
+        "AssignmentPattern": {
+            "fields": {
+                "left": {
+                    "type": "Pattern"
+                },
+                "right": {
+                    "type": "Expression"
+                }
+            }
+        }
     },
     "enums": {
         "Statement": [
             "BlockStatement",
             "BreakStatement",
+            "ClassDeclaration",
             "ContinueStatement",
             "DebuggerStatement",
             "DoWhileStatement",
@@ -691,9 +846,11 @@
             "AssignmentExpression",
             "BinaryExpression",
             "CallExpression",
+            "ClassExpression",
             "ConditionalExpression",
             "FunctionExpression",
             "Identifier",
+            "JSXElement",
             "Literal",
             "LogicalExpression",
             "MemberExpression",
@@ -703,8 +860,12 @@
             "ThisExpression",
             "UnaryExpression",
             "UpdateExpression",
-            "YieldExpression",
-            "JSXElement"
+            "YieldExpression"
+        ],
+        "Declaration": [
+            "ClassDeclaration",
+            "FunctionDeclaration",
+            "VariableDeclaration"
         ],
         "ImportDeclarationSpecifier": [
             "ImportSpecifier",
@@ -716,7 +877,10 @@
             "Statement"
         ],
         "ImportOrExportDeclaration": [
-            "ImportDeclaration"
+            "ImportDeclaration",
+            "ExportNamedDeclaration",
+            "ExportDefaultDeclaration",
+            "ExportAllDeclaration"
         ],
         "ExpressionOrSuper": [
             "Expression",
@@ -731,7 +895,11 @@
             "Expression"
         ],
         "Pattern": [
-            "Identifier"
+            "Identifier",
+            "ArrayPattern",
+            "ObjectPattern",
+            "RestElement",
+            "AssignmentPattern"
         ],
         "ForInit": [
             "Expression",
@@ -853,6 +1021,12 @@
         "SourceType": {
             "Script": "script",
             "Module": "module"
+        },
+        "MethodKind": {
+            "Constructor": "constructor",
+            "Method": "method",
+            "Get": "get",
+            "Set": "set"
         }
     }
 }

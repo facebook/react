@@ -56,6 +56,12 @@ pub fn build<'a>(
                 )?;
                 params.push(identifier);
             }
+            _ => {
+                return Err(Diagnostic::todo(
+                    "Support non-identifier params",
+                    param.range(),
+                ));
+            }
         }
     }
 
@@ -174,27 +180,37 @@ fn lower_statement<'a>(
                         value,
                     )?;
                 } else {
-                    if let Pattern::Identifier(id) = declaration.id {
-                        // TODO: handle unbound variables
-                        let binding = builder.resolve_identifier(&id)?;
-                        let identifier = match binding {
-                            Binding::Local(identifier) => identifier,
-                            _ => {
-                                return Err(Diagnostic::invariant(
-                                    BuildHIRError::VariableDeclarationBindingIsNonLocal,
-                                    id.range,
-                                ));
-                            }
-                        };
-                        builder.push(InstructionValue::DeclareLocal(forget_hir::DeclareLocal {
-                            lvalue: LValue {
-                                identifier: IdentifierOperand {
-                                    identifier,
-                                    effect: None,
+                    match declaration.id {
+                        Pattern::Identifier(id) => {
+                            // TODO: handle unbound variables
+                            let binding = builder.resolve_identifier(&id)?;
+                            let identifier = match binding {
+                                Binding::Local(identifier) => identifier,
+                                _ => {
+                                    return Err(Diagnostic::invariant(
+                                        BuildHIRError::VariableDeclarationBindingIsNonLocal,
+                                        id.range,
+                                    ));
+                                }
+                            };
+                            builder.push(InstructionValue::DeclareLocal(
+                                forget_hir::DeclareLocal {
+                                    lvalue: LValue {
+                                        identifier: IdentifierOperand {
+                                            identifier,
+                                            effect: None,
+                                        },
+                                        kind,
+                                    },
                                 },
-                                kind,
-                            },
-                        }));
+                            ));
+                        }
+                        _ => {
+                            return Err(Diagnostic::todo(
+                                "Handle non-identifier variable declarations",
+                                declaration.range,
+                            ));
+                        }
                     }
                 }
             }
