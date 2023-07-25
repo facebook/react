@@ -45,7 +45,7 @@ try {
 export default function getVersionTags() {
   return new Promise(resolve => {
     if (canUseSessionStorage) {
-      let cachedTags = sessionStorage.getItem(TAGS_CACHE_KEY);
+      const cachedTags = sessionStorage.getItem(TAGS_CACHE_KEY);
 
       if (cachedTags) {
         resolve(JSON.parse(cachedTags));
