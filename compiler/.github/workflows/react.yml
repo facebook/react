@@ -1,0 +1,27 @@
+name: react
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: forget/yarn.lock
+      - run: yarn install --immutable --immutable-cache
+        working-directory: forget
+      - run: yarn workspace babel-plugin-react-forget run build
+        working-directory: forget
+      - run: yarn install --ci
+        working-directory: react
+      - run: yarn build --ci
+        working-directory: react
+      - run: yarn test --ci
+        working-directory: react
