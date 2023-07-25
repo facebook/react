@@ -54,6 +54,8 @@ import type {
   RegExpComponentFilter,
 } from 'react-devtools-shared/src/types';
 
+const vscodeFilepath = 'vscode://file/{path}:{line}';
+
 export default function ComponentsSettings(_: {}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
@@ -94,8 +96,6 @@ export default function ComponentsSettings(_: {}): React.Node {
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
     getDefaultOpenInEditorURL(),
   );
-
-  const vscodeFilepath = 'vscode://file/{path}:{line}';
 
   const [componentFilters, setComponentFilters] = useState<
     Array<ComponentFilter>,
