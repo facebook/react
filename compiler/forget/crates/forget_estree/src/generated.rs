@@ -5,17 +5,20 @@ use serde::ser::{Serializer, SerializeMap};
 use serde::{Serialize, Deserialize};
 use crate::{JsValue, Binding, SourceRange};
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct SourceLocation {
     pub source: Option<String>,
     pub start: Position,
     pub end: Position,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Position {
     pub line: NonZeroU32,
     pub column: u32,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Function {
     pub id: Option<Identifier>,
     pub params: Vec<Pattern>,
@@ -32,11 +35,13 @@ pub struct Function {
     pub range: Option<SourceRange>,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct RegExpValue {
     pub pattern: String,
     pub flags: String,
 }
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct TemplateElementValue {
     pub cooked: Option<String>,
     pub raw: String,

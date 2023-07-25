@@ -90,6 +90,7 @@ impl Object {
 
         quote! {
             #[derive(Serialize, Deserialize, Clone, Debug)]
+            #[serde(deny_unknown_fields)]
             pub struct #name {
                 #(#fields),*
             }
