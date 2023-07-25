@@ -44,13 +44,12 @@ try {
  */
 export default function getVersionTags() {
   return new Promise(resolve => {
-    let cachedTags;
     if (canUseSessionStorage) {
-      cachedTags = sessionStorage.getItem(TAGS_CACHE_KEY);
-    }
-    if (cachedTags) {
-      cachedTags = JSON.parse(cachedTags);
-      resolve(cachedTags);
+      let cachedTags = sessionStorage.getItem(TAGS_CACHE_KEY);
+
+      if (cachedTags) {
+        resolve(JSON.parse(cachedTags));
+      } 
     } else {
       fetch('https://api.github.com/repos/facebook/react/tags?per_page=1000', {
         mode: 'cors',
