@@ -614,6 +614,7 @@ Output:
                   },
                   "raw": "0",
                   "regex": null,
+                  "bigint": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -697,6 +698,7 @@ Output:
                     },
                     "raw": "0",
                     "regex": null,
+                    "bigint": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -775,6 +777,7 @@ Output:
                 },
                 "raw": "10",
                 "regex": null,
+                "bigint": null,
                 "loc": {
                   "source": null,
                   "start": {

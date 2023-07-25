@@ -355,6 +355,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                         }
                     })
                     .collect(),
+                is_optional: false,
                 loc: None,
                 range: convert_span(&expr.span),
             }))
@@ -419,6 +420,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 loc: None,
                 regex: None,
                 range,
+                bigint: None,
             }))
         }
         Expr::Assign(expr) => forget_estree::Expression::AssignmentExpression(Box::new(
@@ -511,8 +513,8 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> forget_estree::
     forget_estree::MemberExpression {
         object: forget_estree::ExpressionOrSuper::Expression(convert_expression(cx, &expr.obj)),
         property,
-        computed: is_computed,
-        // optional: false, // TODO
+        is_computed,
+        is_optional: false,
         loc: None,
         range: convert_span(&expr.span),
     }

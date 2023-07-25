@@ -63,6 +63,16 @@
                     "type": "String"
                 }
             }
+        },
+        "TemplateElementValue": {
+            "fields": {
+                "cooked": {
+                    "type": "Option<String>"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            }
         }
     },
     "nodes": {
@@ -89,6 +99,10 @@
                 },
                 "regex": {
                     "type": "Option<RegExpValue>",
+                    "optional": true
+                },
+                "bigint": {
+                    "type": "Option<String>",
                     "optional": true
                 }
             }
@@ -222,7 +236,7 @@
         "CatchClause": {
             "fields": {
                 "param": {
-                    "type": "Pattern"
+                    "type": "Option<Pattern>"
                 },
                 "body": {
                     "type": "BlockStatement"
@@ -280,6 +294,11 @@
         },
         "ForOfStatement": {
             "fields": {
+                "is_await": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "await"
+                },
                 "left": {
                     "type": "ForInInit"
                 },
@@ -388,7 +407,7 @@
         "ObjectExpression": {
             "fields": {
                 "properties": {
-                    "type": "Vec<Property>"
+                    "type": "Vec<PropertyOrSpreadElement>"
                 }
             }
         },
@@ -510,8 +529,14 @@
                 "property": {
                     "type": "Expression"
                 },
-                "computed": {
-                    "type": "bool"
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
                 }
             }
         },
@@ -535,6 +560,11 @@
                 },
                 "arguments": {
                     "type": "Vec<ExpressionOrSpread>"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
                 }
             }
         },
@@ -640,6 +670,10 @@
             "fields": {
                 "source": {
                     "type": "Literal"
+                },
+                "exported": {
+                    "type": "Option<Identifier>",
+                    "optional": true
                 }
             }
         },
@@ -775,7 +809,7 @@
         "ObjectPattern": {
             "fields": {
                 "properties": {
-                    "type": "Vec<AssignmentProperty>"
+                    "type": "Vec<AssignmentPropertyOrRestElement>"
                 }
             }
         },
@@ -814,6 +848,67 @@
                     "type": "Expression"
                 }
             }
+        },
+        "TemplateLiteral": {
+            "fields": {
+                "quasis": {
+                    "type": "Vec<TemplateElement>"
+                },
+                "expressions": {
+                    "type": "Vec<Expression>"
+                }
+            }
+        },
+        "TemplateElement": {
+            "fields": {
+                "tail": {
+                    "type": "bool"
+                },
+                "value": {
+                    "type": "TemplateElementValue"
+                }
+            }
+        },
+        "TaggedTemplateExpression": {
+            "fields": {
+                "tag": {
+                    "type": "Expression"
+                },
+                "quasi": {
+                    "type": "TemplateLiteral"
+                }
+            }
+        },
+        "MetaProperty": {
+            "fields": {
+                "meta": {
+                    "type": "Identifier"
+                },
+                "property": {
+                    "type": "Identifier"
+                }
+            }
+        },
+        "AwaitExpression": {
+            "fields": {
+                "argument": {
+                    "type": "Expression"
+                }
+            }
+        },
+        "ChainExpression": {
+            "fields": {
+                "expression": {
+                    "type": "ChainElement"
+                }
+            }
+        },
+        "ImportExpression": {
+            "fields": {
+                "source": {
+                    "type": "Expression"
+                }
+            }
         }
     },
     "enums": {
@@ -844,19 +939,25 @@
             "ArrayExpression",
             "ArrowFunctionExpression",
             "AssignmentExpression",
+            "AwaitExpression",
             "BinaryExpression",
             "CallExpression",
+            "ChainExpression",
             "ClassExpression",
             "ConditionalExpression",
             "FunctionExpression",
             "Identifier",
+            "ImportExpression",
             "JSXElement",
             "Literal",
             "LogicalExpression",
             "MemberExpression",
+            "MetaProperty",
             "NewExpression",
             "ObjectExpression",
             "SequenceExpression",
+            "TaggedTemplateExpression",
+            "TemplateLiteral",
             "ThisExpression",
             "UnaryExpression",
             "UpdateExpression",
@@ -909,6 +1010,14 @@
             "Pattern",
             "VariableDeclaration"
         ],
+        "PropertyOrSpreadElement": [
+            "Property",
+            "SpreadElement"
+        ],
+        "AssignmentPropertyOrRestElement": [
+            "AssignmentProperty",
+            "RestElement"
+        ],
         "PropertyKey": [
             "Identifier",
             "Literal"
@@ -916,6 +1025,10 @@
         "AssignmentTarget": [
             "Expression",
             "Pattern"
+        ],
+        "ChainElement": [
+            "CallExpression",
+            "MemberExpression"
         ],
         "JSXMemberExpressionOrIdentifier": [
             "JSXMemberExpression",
@@ -983,6 +1096,7 @@
             "BinaryXor": "^",
             "Divide": "/",
             "Equals": "==",
+            "Exponent": "**",
             "GreaterThan": ">",
             "GreaterThanOrEqual": ">=",
             "In": "in",
@@ -1005,13 +1119,17 @@
             "BinaryXorEquals": "^=",
             "DivideEquals": "/=",
             "Equals": "=",
+            "Exponent": "**=",
             "MinusEquals": "-=",
             "ModuloEquals": "%=",
             "MultiplyEquals": "*=",
             "PlusEquals": "+=",
             "ShiftLeftEquals": "<<=",
             "ShiftRightEquals": ">>=",
-            "UnsignedShiftRightEquals": ">>>="
+            "UnsignedShiftRightEquals": ">>>=",
+            "AndEquals": "&&=",
+            "OrEquals": "||=",
+            "NullCoalescingEquals": "??="
         },
         "LogicalOperator": {
             "And": "&&",

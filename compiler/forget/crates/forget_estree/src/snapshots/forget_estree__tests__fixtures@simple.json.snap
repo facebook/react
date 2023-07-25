@@ -286,6 +286,7 @@ Output:
                 }
               },
               "computed": false,
+              "optional": false,
               "loc": {
                 "source": null,
                 "start": {

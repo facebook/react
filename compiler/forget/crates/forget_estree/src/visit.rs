@@ -1,9 +1,9 @@
 use crate::{
-    AssignmentTarget, Class, Declaration, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportNamedDeclaration, Expression, ExpressionOrSpread, ExpressionOrSuper, ForInInit, ForInit,
-    Function, FunctionBody, Identifier, ImportDeclaration, ImportDeclarationSpecifier,
-    ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem, Pattern, Program, Statement,
-    SwitchCase, VariableDeclarator,
+    AssignmentPropertyOrRestElement, AssignmentTarget, Class, Declaration, ExportAllDeclaration,
+    ExportDefaultDeclaration, ExportNamedDeclaration, Expression, ExpressionOrSpread,
+    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, ImportDeclaration,
+    ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem,
+    Pattern, Program, Statement, SwitchCase, VariableDeclarator,
 };
 
 /// Trait for visiting an estree
@@ -219,7 +219,9 @@ pub trait Visitor<'ast> {
                     self.visit_statement(item);
                 }
                 if let Some(handler) = &stmt.handler {
-                    self.visit_lvalue(|visitor| visitor.visit_pattern(&handler.param));
+                    if let Some(param) = &handler.param {
+                        self.visit_lvalue(|visitor| visitor.visit_pattern(param));
+                    }
                     for item in &handler.body.body {
                         self.visit_statement(item);
                     }
@@ -318,7 +320,14 @@ pub trait Visitor<'ast> {
             }
             Pattern::ObjectPattern(pattern) => {
                 for property in &pattern.properties {
-                    self.visit_pattern(&property.value);
+                    match property {
+                        AssignmentPropertyOrRestElement::AssignmentProperty(property) => {
+                            self.visit_pattern(&property.value);
+                        }
+                        AssignmentPropertyOrRestElement::RestElement(property) => {
+                            self.visit_pattern(&property.argument);
+                        }
+                    }
                 }
             }
             Pattern::RestElement(pattern) => self.visit_pattern(&pattern.argument),
@@ -385,7 +394,7 @@ pub trait Visitor<'ast> {
                     }
                     ExpressionOrSuper::Expression(object) => self.visit_expression(object),
                 };
-                if !expr.computed {
+                if !expr.is_computed {
                     self.visit_expression(&expr.property)
                 }
             }

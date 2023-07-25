@@ -161,6 +161,7 @@ Output:
         },
         "raw": "'react'",
         "regex": null,
+        "bigint": null,
         "loc": {
           "source": null,
           "start": {
