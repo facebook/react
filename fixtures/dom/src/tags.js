@@ -49,7 +49,7 @@ export default function getVersionTags() {
 
       if (cachedTags) {
         resolve(JSON.parse(cachedTags));
-      } 
+      }
     } else {
       fetch('https://api.github.com/repos/facebook/react/tags?per_page=1000', {
         mode: 'cors',
