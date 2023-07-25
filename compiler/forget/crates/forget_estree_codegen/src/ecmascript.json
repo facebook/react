@@ -903,6 +903,40 @@
                 }
             }
         },
+        "OptionalMemberExpression": {
+            "fields": {
+                "object": {
+                    "type": "Expression"
+                },
+                "property": {
+                    "type": "Identifier"
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
+                }
+            }
+        },
+        "OptionalCallExpression": {
+            "fields": {
+                "callee": {
+                    "type": "ExpressionOrSuper"
+                },
+                "arguments": {
+                    "type": "Vec<ExpressionOrSpread>"
+                },
+                "is_optional": {
+                    "type": "bool",
+                    "optional": true,
+                    "rename": "optional"
+                }
+            }
+        },
         "ImportExpression": {
             "fields": {
                 "source": {
@@ -955,6 +989,8 @@
             "MetaProperty",
             "NewExpression",
             "ObjectExpression",
+            "OptionalCallExpression",
+            "OptionalMemberExpression",
             "SequenceExpression",
             "TaggedTemplateExpression",
             "TemplateLiteral",

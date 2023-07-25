@@ -8,9 +8,9 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, Callee, Decl, EsVersion, Expr, ExprOrSpread,
-    Function, Ident, Lit, MemberExpr, MemberProp, ModuleItem, Pat, PatOrExpr, Program, Stmt,
-    UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, CallExpr, Callee, Decl, EsVersion, Expr,
+    ExprOrSpread, Function, Ident, Lit, MemberExpr, MemberProp, ModuleItem, OptChainBase, Pat,
+    PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -334,27 +334,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                     }
                     _ => todo!(),
                 },
-                arguments: expr
-                    .args
-                    .iter()
-                    .map(|arg| match arg {
-                        ExprOrSpread {
-                            spread: Some(spread),
-                            expr,
-                        } => forget_estree::ExpressionOrSpread::SpreadElement(Box::new(
-                            forget_estree::SpreadElement {
-                                argument: convert_expression(cx, expr),
-                                loc: None,
-                                range: convert_span(&spread),
-                            },
-                        )),
-                        ExprOrSpread { spread: None, expr } => {
-                            forget_estree::ExpressionOrSpread::Expression(convert_expression(
-                                cx, expr,
-                            ))
-                        }
-                    })
-                    .collect(),
+                arguments: convert_arguments(cx, &expr.args),
                 is_optional: false,
                 loc: None,
                 range: convert_span(&expr.span),
@@ -471,8 +451,51 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 range: convert_span(&expr.span),
             },
         )),
+        Expr::OptChain(expr) => match expr.base.as_ref() {
+            OptChainBase::Call(base) => forget_estree::Expression::OptionalCallExpression(
+                Box::new(forget_estree::OptionalCallExpression {
+                    callee: forget_estree::ExpressionOrSuper::Expression(convert_expression(
+                        cx,
+                        &base.callee,
+                    )),
+                    arguments: convert_arguments(cx, &base.args),
+                    is_optional: expr.optional,
+                    loc: None,
+                    range: convert_span(&expr.span),
+                }),
+            ),
+            OptChainBase::Member(base) => {
+                let mut member = convert_member_expression(cx, base);
+                member.is_optional = expr.optional;
+                forget_estree::Expression::MemberExpression(Box::new(member))
+            }
+        },
         _ => todo!("translate expression {:#?}", expr),
     }
+}
+
+fn convert_arguments(
+    cx: &Context,
+    arguments: &[ExprOrSpread],
+) -> Vec<forget_estree::ExpressionOrSpread> {
+    arguments
+        .iter()
+        .map(|arg| match arg {
+            ExprOrSpread {
+                spread: Some(spread),
+                expr,
+            } => forget_estree::ExpressionOrSpread::SpreadElement(Box::new(
+                forget_estree::SpreadElement {
+                    argument: convert_expression(cx, expr),
+                    loc: None,
+                    range: convert_span(&spread),
+                },
+            )),
+            ExprOrSpread { spread: None, expr } => {
+                forget_estree::ExpressionOrSpread::Expression(convert_expression(cx, expr))
+            }
+        })
+        .collect()
 }
 
 fn convert_assignment_target(cx: &Context, target: &PatOrExpr) -> forget_estree::AssignmentTarget {
@@ -554,7 +577,7 @@ fn convert_binary_operator(op: BinaryOp) -> Operator {
         BinaryOp::Div => Operator::Binary(forget_estree::BinaryOperator::Divide),
         BinaryOp::EqEq => Operator::Binary(forget_estree::BinaryOperator::Equals),
         BinaryOp::EqEqEq => Operator::Binary(forget_estree::BinaryOperator::StrictEquals),
-        // BinaryOp::Exp => Operator::Binary(forget_estree::BinaryOperator::AsteriskAsterisk),
+        BinaryOp::Exp => Operator::Binary(forget_estree::BinaryOperator::Exponent),
         BinaryOp::Gt => Operator::Binary(forget_estree::BinaryOperator::GreaterThan),
         BinaryOp::GtEq => Operator::Binary(forget_estree::BinaryOperator::GreaterThanOrEqual),
         BinaryOp::In => Operator::Binary(forget_estree::BinaryOperator::In),
@@ -577,8 +600,6 @@ fn convert_binary_operator(op: BinaryOp) -> Operator {
         BinaryOp::NullishCoalescing => {
             Operator::Logical(forget_estree::LogicalOperator::NullCoalescing)
         }
-
-        _ => panic!("Unsupported binary operator `{}`", op),
     }
 }
 

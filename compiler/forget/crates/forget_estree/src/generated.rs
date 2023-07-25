@@ -2008,6 +2008,63 @@ impl Serialize for ChainExpression {
     }
 }
 #[derive(Deserialize, Clone, Debug)]
+pub struct OptionalMemberExpression {
+    pub object: Expression,
+    pub property: Identifier,
+    #[serde(rename = "computed")]
+    pub is_computed: bool,
+    #[serde(rename = "optional")]
+    #[serde(default)]
+    pub is_optional: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for OptionalMemberExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "OptionalMemberExpression")?;
+        state.serialize_entry("object", &self.object)?;
+        state.serialize_entry("property", &self.property)?;
+        state.serialize_entry("computed", &self.is_computed)?;
+        state.serialize_entry("optional", &self.is_optional)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct OptionalCallExpression {
+    pub callee: ExpressionOrSuper,
+    pub arguments: Vec<ExpressionOrSpread>,
+    #[serde(rename = "optional")]
+    #[serde(default)]
+    pub is_optional: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for OptionalCallExpression {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "OptionalCallExpression")?;
+        state.serialize_entry("callee", &self.callee)?;
+        state.serialize_entry("arguments", &self.arguments)?;
+        state.serialize_entry("optional", &self.is_optional)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
 pub struct ImportExpression {
     pub source: Expression,
     #[serde(default)]
@@ -2282,6 +2339,8 @@ pub enum Expression {
     MetaProperty(Box<MetaProperty>),
     NewExpression(Box<NewExpression>),
     ObjectExpression(Box<ObjectExpression>),
+    OptionalCallExpression(Box<OptionalCallExpression>),
+    OptionalMemberExpression(Box<OptionalMemberExpression>),
     SequenceExpression(Box<SequenceExpression>),
     TaggedTemplateExpression(Box<TaggedTemplateExpression>),
     TemplateLiteral(Box<TemplateLiteral>),
@@ -2311,6 +2370,8 @@ enum __ExpressionTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -2482,6 +2543,22 @@ impl<'de> serde::Deserialize<'de> for Expression {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(Expression::ObjectExpression(node))
+            }
+            __ExpressionTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Expression::OptionalCallExpression(node))
+            }
+            __ExpressionTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Expression::OptionalMemberExpression(node))
             }
             __ExpressionTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -3000,6 +3077,8 @@ enum __ExpressionOrSuperTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -3181,6 +3260,30 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSuper {
                 )?;
                 Ok(ExpressionOrSuper::Expression(Expression::ObjectExpression(node)))
             }
+            __ExpressionOrSuperTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrSuper::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrSuperTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrSuper::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
+            }
             __ExpressionOrSuperTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
                     SequenceExpression,
@@ -3279,6 +3382,8 @@ enum __ExpressionOrSpreadTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -3464,6 +3569,30 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSpread {
                 )?;
                 Ok(ExpressionOrSpread::Expression(Expression::ObjectExpression(node)))
             }
+            __ExpressionOrSpreadTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrSpread::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrSpreadTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrSpread::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
+            }
             __ExpressionOrSpreadTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
                     SequenceExpression,
@@ -3563,6 +3692,8 @@ enum __FunctionBodyTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -3743,6 +3874,22 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
                 )?;
                 Ok(FunctionBody::Expression(Expression::ObjectExpression(node)))
             }
+            __FunctionBodyTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(FunctionBody::Expression(Expression::OptionalCallExpression(node)))
+            }
+            __FunctionBodyTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(FunctionBody::Expression(Expression::OptionalMemberExpression(node)))
+            }
             __FunctionBodyTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
                     SequenceExpression,
@@ -3901,6 +4048,8 @@ enum __ForInitTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -4073,6 +4222,22 @@ impl<'de> serde::Deserialize<'de> for ForInit {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(ForInit::Expression(Expression::ObjectExpression(node)))
+            }
+            __ForInitTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ForInit::Expression(Expression::OptionalCallExpression(node)))
+            }
+            __ForInitTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ForInit::Expression(Expression::OptionalMemberExpression(node)))
             }
             __ForInitTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -4372,6 +4537,8 @@ enum __AssignmentTargetTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -4551,6 +4718,30 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(AssignmentTarget::Expression(Expression::ObjectExpression(node)))
+            }
+            __AssignmentTargetTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    AssignmentTarget::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __AssignmentTargetTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    AssignmentTarget::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
             }
             __AssignmentTargetTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -4758,6 +4949,8 @@ enum __JSXExpressionOrEmptyTag {
     MetaProperty,
     NewExpression,
     ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
     SequenceExpression,
     TaggedTemplateExpression,
     TemplateLiteral,
@@ -4946,6 +5139,30 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(JSXExpressionOrEmpty::Expression(Expression::ObjectExpression(node)))
+            }
+            __JSXExpressionOrEmptyTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    JSXExpressionOrEmpty::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __JSXExpressionOrEmptyTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    JSXExpressionOrEmpty::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
             }
             __JSXExpressionOrEmptyTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
