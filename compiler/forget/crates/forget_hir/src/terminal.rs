@@ -17,7 +17,7 @@ pub enum TerminalValue<'a> {
     For(ForTerminal),
     Goto(GotoTerminal),
     If(IfTerminal),
-    // Label(LabelTerminal),
+    Label(LabelTerminal),
     // Logical(LogicalTerminal),
     // Optional(OptionalTerminal),
     Return(ReturnTerminal),
@@ -36,6 +36,12 @@ impl<'a> TerminalValue<'a> {
     {
         match self {
             Self::If(terminal) => {
+                terminal.fallthrough = match terminal.fallthrough {
+                    Some(fallthrough) => f(fallthrough),
+                    _ => None,
+                }
+            }
+            Self::Label(terminal) => {
                 terminal.fallthrough = match terminal.fallthrough {
                     Some(fallthrough) => f(fallthrough),
                     _ => None,
@@ -69,10 +75,29 @@ impl<'a> TerminalValue<'a> {
             Self::Goto(terminal) => {
                 vec![terminal.block]
             }
+            Self::Label(terminal) => {
+                vec![terminal.block]
+            }
             Self::Return(_) => {
                 vec![]
             }
             Self::Unsupported(_) => panic!("Unexpected unsupported terminal"),
+        }
+    }
+
+    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(&mut Operand) -> (),
+    {
+        match self {
+            TerminalValue::Branch(terminal) => f(&mut terminal.test),
+            TerminalValue::If(terminal) => f(&mut terminal.test),
+            TerminalValue::Return(terminal) => f(&mut terminal.value),
+            TerminalValue::DoWhile(_)
+            | TerminalValue::For(_)
+            | TerminalValue::Label(_)
+            | TerminalValue::Goto(_)
+            | TerminalValue::Unsupported(_) => {}
         }
     }
 }
@@ -128,4 +153,10 @@ pub struct ForTerminal {
     pub update: Option<BlockId>,
     pub body: BlockId,
     pub fallthrough: BlockId,
+}
+
+#[derive(Debug)]
+pub struct LabelTerminal {
+    pub block: BlockId,
+    pub fallthrough: Option<BlockId>,
 }

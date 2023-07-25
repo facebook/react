@@ -5,13 +5,14 @@ use thiserror::Error;
 
 use crate::{
     BlockId, BlockRewriter, BlockRewriterAction, Blocks, GotoKind, GotoTerminal,
-    InstructionIdGenerator, TerminalValue, HIR,
+    InstructionIdGenerator, InstructionValue, TerminalValue, HIR,
 };
 
 /// Runs a variety of passes to put the HIR in canonical form. This should be called
 /// after initial HIR construction and after any transformations that change the
 /// shape of the control-flow graph.
 pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
+    prune_tombstones(hir);
     reverse_postorder_blocks(hir);
     remove_unreachable_for_updates(hir);
     remove_unreachable_fallthroughs(hir);
@@ -19,6 +20,16 @@ pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     mark_instruction_ids(hir)?;
     mark_predecessors(hir);
     Ok(())
+}
+
+pub fn prune_tombstones<'a>(hir: &mut HIR<'a>) {
+    for block in hir.blocks.iter_mut() {
+        block.instructions.retain(|ix| {
+            let instr = &hir.instructions[usize::from(*ix)];
+            // Retain all values that are not the tombstone
+            !matches!(instr.value, InstructionValue::Tombstone)
+        });
+    }
 }
 
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before
@@ -54,6 +65,9 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
                 visit(terminal.body, hir, visited, postorder);
             }
             TerminalValue::Goto(terminal) => {
+                visit(terminal.block, hir, visited, postorder);
+            }
+            TerminalValue::Label(terminal) => {
                 visit(terminal.block, hir, visited, postorder);
             }
             TerminalValue::Return(..) => { /* no-op */ }

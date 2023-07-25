@@ -4,6 +4,7 @@ mod features;
 mod function;
 mod id_types;
 mod initialize;
+mod inline_use_memo;
 mod instruction;
 mod merge_consecutive_blocks;
 mod print;
@@ -21,6 +22,7 @@ pub use initialize::{
     remove_unreachable_do_while_statements, remove_unreachable_fallthroughs,
     remove_unreachable_for_updates, reverse_postorder_blocks,
 };
+pub use inline_use_memo::inline_use_memo;
 pub use instruction::*;
 pub use merge_consecutive_blocks::merge_consecutive_blocks;
 pub use print::Print;

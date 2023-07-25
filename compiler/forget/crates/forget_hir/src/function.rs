@@ -2,7 +2,7 @@ use bumpalo::collections::{String, Vec};
 use forget_diagnostics::Diagnostic;
 use indexmap::IndexMap;
 
-use crate::{BasicBlock, BlockId, IdentifierOperand, Instruction};
+use crate::{BasicBlock, BlockId, FunctionExpression, IdentifierOperand, InstrIx, Instruction};
 
 /// Represents either a React function or a function expression
 #[derive(Debug)]
@@ -30,6 +30,27 @@ pub struct HIR<'a> {
 
     /// All instructions for the block. This may contain unused items,
     pub instructions: Vec<'a, Instruction<'a>>,
+}
+
+impl<'a> HIR<'a> {
+    pub fn inline(&mut self, other: FunctionExpression<'a>) -> () {
+        let offset = self.instructions.len();
+        for mut instr in other.lowered_function.body.instructions.into_iter() {
+            instr.each_operand(|operand| {
+                operand.ix = InstrIx::new((offset + usize::from(operand.ix)) as u32);
+            });
+            self.instructions.push(instr);
+        }
+        for mut block in other.lowered_function.body.blocks.into_iter() {
+            for ix in block.instructions.iter_mut() {
+                *ix = InstrIx::new((offset + usize::from(*ix)) as u32);
+            }
+            block.terminal.value.each_operand(|operand| {
+                operand.ix = InstrIx::new((offset + usize::from(operand.ix)) as u32);
+            });
+            self.blocks.insert(block);
+        }
+    }
 }
 
 #[derive(Default, Debug)]
@@ -66,6 +87,14 @@ impl<'a> Blocks<'a> {
         self.data.remove(&id).unwrap().unwrap()
     }
 
+    pub fn extend(&mut self, other: Self) {
+        self.data.extend(other.data);
+    }
+
+    pub fn into_iter(self) -> BlocksIntoIter<'a> {
+        BlocksIntoIter::new(self.data.into_iter())
+    }
+
     pub fn block(&self, id: BlockId) -> &BasicBlock<'a> {
         self.data.get(&id).unwrap().as_ref().unwrap()
     }
@@ -80,6 +109,33 @@ impl<'a> Blocks<'a> {
 
     pub fn iter_mut(&mut self) -> BlocksIterMut<'_, 'a> {
         BlocksIterMut::new(self.data.iter_mut())
+    }
+}
+pub struct BlocksIntoIter<'a> {
+    iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock<'a>>>>,
+}
+
+impl<'a> BlocksIntoIter<'a> {
+    fn new(iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock<'a>>>>) -> Self {
+        Self { iter }
+    }
+}
+
+impl<'a> Iterator for BlocksIntoIter<'a> {
+    type Item = Box<BasicBlock<'a>>;
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.iter.next() {
+                Some((_, Some(next))) => return Some(next),
+                Some((_, None)) => continue,
+                None => return None,
+            }
+        }
     }
 }
 
@@ -136,6 +192,7 @@ impl<'b, 'a> Iterator for BlocksIterMut<'b, 'a> {
 pub struct BlockRewriter<'blocks, 'a> {
     blocks: &'blocks mut Blocks<'a>,
     current: BlockId,
+    new_blocks: std::vec::Vec<Box<BasicBlock<'a>>>,
 }
 
 impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
@@ -143,6 +200,7 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
         Self {
             blocks,
             current: entry,
+            new_blocks: Default::default(),
         }
     }
 
@@ -150,17 +208,28 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
     where
         F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> BlockRewriterAction<'a>,
     {
-        let keys = self.blocks.block_ids();
-        for block_id in keys {
-            self.current = block_id;
-            let block = self.blocks.data.get_mut(&block_id).unwrap().take().unwrap();
-            match f(block, self) {
-                BlockRewriterAction::Keep(block) => {
-                    self.blocks.data.insert(block_id, Some(block));
+        let mut keys = self.blocks.block_ids();
+        loop {
+            for block_id in keys {
+                self.current = block_id;
+                let block = self.blocks.data.get_mut(&block_id).unwrap().take().unwrap();
+                match f(block, self) {
+                    BlockRewriterAction::Keep(block) => {
+                        self.blocks.data.insert(block_id, Some(block));
+                    }
+                    BlockRewriterAction::Remove => {
+                        self.blocks.data.remove(&block_id);
+                    }
                 }
-                BlockRewriterAction::Remove => {
-                    self.blocks.data.remove(&block_id);
+            }
+            if !self.new_blocks.is_empty() {
+                keys = self.new_blocks.iter().map(|block| block.id).collect();
+                for block in self.new_blocks.drain(..) {
+                    self.blocks.insert(block);
                 }
+                continue;
+            } else {
+                break;
             }
         }
     }
@@ -169,17 +238,28 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
     where
         F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> Result<BlockRewriterAction<'a>, Diagnostic>,
     {
-        let keys = self.blocks.block_ids();
-        for block_id in keys {
-            self.current = block_id;
-            let block = self.blocks.data.get_mut(&block_id).unwrap().take().unwrap();
-            match f(block, self)? {
-                BlockRewriterAction::Keep(block) => {
-                    self.blocks.data.insert(block_id, Some(block));
+        let mut keys = self.blocks.block_ids();
+        loop {
+            for block_id in keys {
+                self.current = block_id;
+                let block = self.blocks.data.get_mut(&block_id).unwrap().take().unwrap();
+                match f(block, self)? {
+                    BlockRewriterAction::Keep(block) => {
+                        self.blocks.data.insert(block_id, Some(block));
+                    }
+                    BlockRewriterAction::Remove => {
+                        self.blocks.data.remove(&block_id);
+                    }
                 }
-                BlockRewriterAction::Remove => {
-                    self.blocks.data.remove(&block_id);
+            }
+            if !self.new_blocks.is_empty() {
+                keys = self.new_blocks.iter().map(|block| block.id).collect();
+                for block in self.new_blocks.drain(..) {
+                    self.blocks.insert(block);
                 }
+                continue;
+            } else {
+                break;
             }
         }
         Ok(())
@@ -198,6 +278,10 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
     pub fn block_mut(&mut self, block_id: BlockId) -> &mut BasicBlock<'a> {
         assert_ne!(block_id, self.current);
         self.blocks.block_mut(block_id)
+    }
+
+    pub fn add_block(&mut self, block: Box<BasicBlock<'a>>) {
+        self.new_blocks.push(block);
     }
 }
 

@@ -8,9 +8,9 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, Decl, EsVersion, Expr, Function, Ident, Lit, MemberExpr,
-    MemberProp, ModuleItem, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind,
-    VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, Callee, Decl, EsVersion, Expr, ExprOrSpread,
+    Function, Ident, Lit, MemberExpr, MemberProp, ModuleItem, Pat, PatOrExpr, Program, Stmt,
+    UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::Syntax;
 use swc_core::ecma::transforms::base::resolver;
@@ -303,20 +303,55 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 elements: expr
                     .elems
                     .iter()
-                    .map(|item| {
-                        // TODO: represent holes in array expressions
-                        let value = item.as_ref()?;
-                        match value.spread {
-                            Some(spread) => Some(forget_estree::ExpressionOrSpread::SpreadElement(
-                                Box::new(forget_estree::SpreadElement {
-                                    argument: convert_expression(cx, &value.expr),
-                                    loc: None,
-                                    range: convert_span(&spread),
-                                }),
-                            )),
-                            None => Some(forget_estree::ExpressionOrSpread::Expression(
-                                convert_expression(cx, &value.expr),
-                            )),
+                    .map(|item| match item {
+                        Some(ExprOrSpread {
+                            spread: Some(spread),
+                            expr,
+                        }) => Some(forget_estree::ExpressionOrSpread::SpreadElement(Box::new(
+                            forget_estree::SpreadElement {
+                                argument: convert_expression(cx, expr),
+                                loc: None,
+                                range: convert_span(&spread),
+                            },
+                        ))),
+                        Some(ExprOrSpread { spread: None, expr }) => {
+                            Some(forget_estree::ExpressionOrSpread::Expression(
+                                convert_expression(cx, expr),
+                            ))
+                        }
+                        None => None,
+                    })
+                    .collect(),
+                loc: None,
+                range: convert_span(&expr.span),
+            }))
+        }
+        Expr::Call(expr) => {
+            forget_estree::Expression::CallExpression(Box::new(forget_estree::CallExpression {
+                callee: match &expr.callee {
+                    Callee::Expr(callee) => {
+                        forget_estree::ExpressionOrSuper::Expression(convert_expression(cx, callee))
+                    }
+                    _ => todo!(),
+                },
+                arguments: expr
+                    .args
+                    .iter()
+                    .map(|arg| match arg {
+                        ExprOrSpread {
+                            spread: Some(spread),
+                            expr,
+                        } => forget_estree::ExpressionOrSpread::SpreadElement(Box::new(
+                            forget_estree::SpreadElement {
+                                argument: convert_expression(cx, expr),
+                                loc: None,
+                                range: convert_span(&spread),
+                            },
+                        )),
+                        ExprOrSpread { spread: None, expr } => {
+                            forget_estree::ExpressionOrSpread::Expression(convert_expression(
+                                cx, expr,
+                            ))
                         }
                     })
                     .collect(),
@@ -403,6 +438,35 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 function: convert_function(cx, expr.ident.as_ref(), &expr.function),
                 loc: None,
                 range: convert_span(&expr.function.span),
+            },
+        )),
+        Expr::Arrow(expr) => forget_estree::Expression::ArrowFunctionExpression(Box::new(
+            forget_estree::ArrowFunctionExpression {
+                function: forget_estree::Function {
+                    id: None,
+                    body: match expr.body.as_ref() {
+                        BlockStmtOrExpr::Expr(body) => Some(
+                            forget_estree::FunctionBody::Expression(convert_expression(cx, body)),
+                        ),
+                        BlockStmtOrExpr::BlockStmt(body) => {
+                            Some(forget_estree::FunctionBody::BlockStatement(Box::new(
+                                convert_block_statement(cx, body),
+                            )))
+                        }
+                    },
+                    params: expr
+                        .params
+                        .iter()
+                        .map(|param| convert_pattern(cx, param))
+                        .collect(),
+                    is_generator: expr.is_generator,
+                    is_async: expr.is_async,
+                    loc: None,
+                    range: convert_span(&expr.span),
+                },
+                is_expression: true, // TODO
+                loc: None,
+                range: convert_span(&expr.span),
             },
         )),
         _ => todo!("translate expression {:#?}", expr),

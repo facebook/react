@@ -50,4 +50,7 @@ pub enum BuildHIRError {
     /// ErrorSeverity::InvalidSyntax
     #[error("Expected function to have a body")]
     EmptyFunction,
+
+    #[error("`super` is not suppported")]
+    UnsupportedSuperExpression,
 }

@@ -5,7 +5,7 @@ use bumpalo::Bump;
 use forget_build_hir::build;
 use forget_estree::{ModuleItem, Statement};
 use forget_estree_swc::parse;
-use forget_hir::{Environment, Features, Print, Registry};
+use forget_hir::{inline_use_memo, Environment, Features, Print, Registry};
 use forget_optimization::constant_propagation;
 use forget_ssa::{eliminate_redundant_phis, enter_ssa};
 use insta::{assert_snapshot, glob};
@@ -48,6 +48,8 @@ fn fixtures() {
                             println!("ok eliminate_redundant_phis");
                             constant_propagation(&environment, &mut fun).unwrap();
                             println!("ok constant_propagation");
+                            inline_use_memo(&environment, &mut fun).unwrap();
+                            println!("ok inline_use_memo");
                             fun.print(&fun.body, &mut output).unwrap();
                             println!("ok print");
                         }

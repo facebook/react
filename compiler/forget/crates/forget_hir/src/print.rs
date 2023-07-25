@@ -3,8 +3,8 @@ use std::fmt::{Result, Write};
 use forget_utils::ensure_sufficient_stack;
 
 use crate::{
-    ArrayElement, BasicBlock, Function, Identifier, IdentifierOperand, Instruction,
-    InstructionValue, LValue, Operand, Phi, PrimitiveValue, Terminal, TerminalValue, HIR,
+    BasicBlock, Function, Identifier, IdentifierOperand, Instruction, InstructionValue, LValue,
+    Operand, Phi, PlaceOrSpread, PrimitiveValue, Terminal, TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -14,6 +14,14 @@ use crate::{
 /// are pretty tedious, we can make something much simpler.
 pub trait Print<'a> {
     fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result;
+}
+
+impl<'a> Function<'a> {
+    pub fn debug(&self) {
+        let mut out = String::new();
+        self.print(&self.body, &mut out).unwrap();
+        println!("{out}");
+    }
 }
 
 impl<'a> Print<'a> for Function<'a> {
@@ -61,6 +69,10 @@ impl<'a> Print<'a> for BasicBlock<'a> {
             writeln!(out)?;
         }
         for ix in &self.instructions {
+            if usize::from(*ix) >= hir.instructions.len() {
+                writeln!(out, "  <out of bounds {}>", ix)?;
+                continue;
+            }
             let instr = &hir.instructions[usize::from(*ix)];
             write!(out, "  {} {} = ", instr.id, ix)?;
             instr.value.print(hir, out)?;
@@ -113,6 +125,18 @@ impl<'a> Print<'a> for InstructionValue<'a> {
                     }
                 }
                 write!(out, "]")?;
+            }
+            InstructionValue::Call(value) => {
+                write!(out, "Call ")?;
+                value.callee.print(hir, out)?;
+                write!(out, "(")?;
+                for (ix, arg) in value.arguments.iter().enumerate() {
+                    if ix != 0 {
+                        write!(out, ", ")?;
+                    }
+                    arg.print(hir, out)?;
+                }
+                write!(out, ")")?;
             }
             InstructionValue::LoadGlobal(value) => {
                 write!(out, "LoadGlobal {}", &value.name)?;
@@ -187,11 +211,11 @@ impl<'a> Print<'a> for InstructionValue<'a> {
     }
 }
 
-impl<'a> Print<'a> for ArrayElement {
+impl<'a> Print<'a> for PlaceOrSpread {
     fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
         match self {
-            ArrayElement::Place(place) => place.print(hir, out),
-            ArrayElement::Spread(place) => {
+            PlaceOrSpread::Place(place) => place.print(hir, out),
+            PlaceOrSpread::Spread(place) => {
                 write!(out, "...")?;
                 place.print(hir, out)?;
                 Ok(())
@@ -298,12 +322,26 @@ impl<'a> Print<'a> for TerminalValue<'a> {
                     terminal.init,
                     terminal.test,
                     match terminal.update {
-                        Some(fallthrough) => format!("{fallthrough}"),
+                        Some(update) => format!("{update}"),
                         None => "<none>".to_string(),
                     },
                     terminal.body,
                     terminal.fallthrough,
                 )?;
+            }
+            TerminalValue::Label(terminal) => {
+                write!(
+                    out,
+                    "Label block={} fallthrough={}",
+                    terminal.block,
+                    match terminal.fallthrough {
+                        Some(fallthrough) => format!("{fallthrough}"),
+                        None => "<none>".to_string(),
+                    },
+                )?;
+            }
+            TerminalValue::Unsupported(_) => {
+                write!(out, "Unsupported")?;
             }
             _ => write!(out, "{:?}", self)?,
         }

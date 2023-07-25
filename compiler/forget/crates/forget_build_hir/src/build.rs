@@ -1,16 +1,15 @@
 use std::collections::HashSet;
 
-use bumpalo::boxed::Box;
 use bumpalo::collections::String;
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    AssignmentTarget, BinaryExpression, BlockStatement, Expression, ForInit, ForStatement,
-    Function, FunctionExpression, IfStatement, JsValue, Literal, Pattern, Statement,
-    VariableDeclarationKind,
+    AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
+    ExpressionOrSuper, ForInit, ForStatement, Function, IfStatement, JsValue, Literal, Pattern,
+    Statement, VariableDeclarationKind,
 };
 use forget_hir::{
-    ArrayElement, BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand,
-    InstrIx, InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal, Operand,
+    BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand, InstrIx,
+    InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal, Operand, PlaceOrSpread,
     PrimitiveValue, TerminalValue,
 };
 
@@ -27,7 +26,7 @@ use crate::error::BuildHIRError;
 pub fn build<'a>(
     env: &'a Environment<'a>,
     fun: Function,
-) -> Result<Box<'a, forget_hir::Function<'a>>, Diagnostic> {
+) -> Result<Box<forget_hir::Function<'a>>, Diagnostic> {
     let mut builder = Builder::new(env);
 
     match fun.body {
@@ -77,7 +76,7 @@ pub fn build<'a>(
     );
 
     let body = builder.build()?;
-    Ok(env.box_new(forget_hir::Function {
+    Ok(Box::new(forget_hir::Function {
         id: fun
             .id
             .map(|id| String::from_str_in(&id.name, &env.allocator)),
@@ -365,13 +364,13 @@ fn lower_expression<'a>(
             for expr in expr.elements {
                 let element = match expr {
                     Some(forget_estree::ExpressionOrSpread::SpreadElement(expr)) => {
-                        Some(ArrayElement::Spread(Operand {
+                        Some(PlaceOrSpread::Spread(Operand {
                             ix: lower_expression(env, builder, expr.argument)?,
                             effect: None,
                         }))
                     }
                     Some(forget_estree::ExpressionOrSpread::Expression(expr)) => {
-                        Some(ArrayElement::Place(Operand {
+                        Some(PlaceOrSpread::Place(Operand {
                             ix: lower_expression(env, builder, expr)?,
                             effect: None,
                         }))
@@ -420,7 +419,37 @@ fn lower_expression<'a>(
         }
 
         Expression::FunctionExpression(expr) => {
-            InstructionValue::Function(lower_function(env, builder, *expr)?)
+            InstructionValue::Function(lower_function(env, builder, expr.function)?)
+        }
+
+        Expression::ArrowFunctionExpression(expr) => {
+            InstructionValue::Function(lower_function(env, builder, expr.function)?)
+        }
+
+        Expression::CallExpression(expr) => {
+            let callee_expr = match expr.callee {
+                ExpressionOrSuper::Super(callee) => {
+                    return Err(Diagnostic::unsupported(
+                        BuildHIRError::UnsupportedSuperExpression,
+                        callee.range,
+                    ));
+                }
+                ExpressionOrSuper::Expression(callee) => callee,
+            };
+
+            if matches!(&callee_expr, Expression::MemberExpression(_)) {
+                return Err(Diagnostic::todo("Support method calls", expr.range));
+            }
+
+            let callee = lower_expression(env, builder, callee_expr)?;
+            let arguments = lower_arguments(env, builder, expr.arguments)?;
+            InstructionValue::Call(forget_hir::Call {
+                callee: Operand {
+                    ix: callee,
+                    effect: None,
+                },
+                arguments,
+            })
         }
 
         _ => todo!("Lower expr {expr:#?}"),
@@ -428,12 +457,35 @@ fn lower_expression<'a>(
     Ok(builder.push(value))
 }
 
+fn lower_arguments<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    args: Vec<ExpressionOrSpread>,
+) -> Result<bumpalo::collections::Vec<'a, PlaceOrSpread>, Diagnostic> {
+    let mut arguments = env.vec_with_capacity(args.len());
+    for arg in args {
+        let element = match arg {
+            forget_estree::ExpressionOrSpread::SpreadElement(arg) => {
+                PlaceOrSpread::Spread(Operand {
+                    ix: lower_expression(env, builder, arg.argument)?,
+                    effect: None,
+                })
+            }
+            forget_estree::ExpressionOrSpread::Expression(arg) => PlaceOrSpread::Place(Operand {
+                ix: lower_expression(env, builder, arg)?,
+                effect: None,
+            }),
+        };
+        arguments.push(element);
+    }
+    Ok(arguments)
+}
+
 fn lower_function<'a>(
     env: &'a Environment<'a>,
     builder: &mut Builder<'a>,
-    expr: FunctionExpression,
+    function: forget_estree::Function,
 ) -> Result<forget_hir::FunctionExpression<'a>, Diagnostic> {
-    let FunctionExpression { function, .. } = expr;
     println!("get_context_identifiers() ...");
     let context_identifiers = get_context_identifiers(env, &function);
     println!("ok");

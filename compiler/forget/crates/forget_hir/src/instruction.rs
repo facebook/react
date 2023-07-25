@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
 
-use bumpalo::boxed::Box;
 use bumpalo::collections::{String, Vec};
 use forget_estree::BinaryOperator;
 
@@ -31,6 +30,7 @@ impl<'a> Instruction<'a> {
             }
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
+            | InstructionValue::Call(_)
             | InstructionValue::LoadContext(_)
             | InstructionValue::LoadGlobal(_)
             | InstructionValue::LoadLocal(_)
@@ -56,6 +56,7 @@ impl<'a> Instruction<'a> {
             }
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
+            | InstructionValue::Call(_)
             | InstructionValue::LoadContext(_)
             | InstructionValue::LoadGlobal(_)
             | InstructionValue::LoadLocal(_)
@@ -74,6 +75,7 @@ impl<'a> Instruction<'a> {
             InstructionValue::LoadLocal(instr) => f(&mut instr.place),
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
+            | InstructionValue::Call(_)
             | InstructionValue::DeclareContext(_)
             | InstructionValue::DeclareLocal(_)
             | InstructionValue::LoadContext(_)
@@ -84,6 +86,51 @@ impl<'a> Instruction<'a> {
             | InstructionValue::Tombstone => {}
         }
     }
+
+    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(&mut Operand) -> (),
+    {
+        match &mut self.value {
+            InstructionValue::Array(value) => {
+                for item in &mut value.elements {
+                    match item {
+                        Some(PlaceOrSpread::Place(item)) => f(item),
+                        Some(PlaceOrSpread::Spread(item)) => f(item),
+                        None => {}
+                    }
+                }
+            }
+            InstructionValue::Binary(value) => {
+                f(&mut value.left);
+                f(&mut value.right);
+            }
+            InstructionValue::Call(value) => {
+                f(&mut value.callee);
+                for arg in &mut value.arguments {
+                    match arg {
+                        PlaceOrSpread::Place(item) => f(item),
+                        PlaceOrSpread::Spread(item) => f(item),
+                    }
+                }
+            }
+            InstructionValue::StoreLocal(value) => {
+                f(&mut value.value);
+            }
+            InstructionValue::Function(value) => {
+                for dep in &mut value.dependencies {
+                    f(dep)
+                }
+            }
+            InstructionValue::DeclareContext(_)
+            | InstructionValue::LoadContext(_)
+            | InstructionValue::LoadGlobal(_)
+            | InstructionValue::DeclareLocal(_)
+            | InstructionValue::LoadLocal(_)
+            | InstructionValue::Primitive(_)
+            | InstructionValue::Tombstone => {}
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -91,7 +138,7 @@ pub enum InstructionValue<'a> {
     Array(Array<'a>),
     // Await(Await<'a>),
     Binary(Binary),
-    // Call(Call<'a>),
+    Call(Call<'a>),
     // ComputedDelete(ComputedDelete<'a>),
     // ComputedLoad(ComputedLoad<'a>),
     // ComputedStore(ComputedStore<'a>),
@@ -125,11 +172,11 @@ pub enum InstructionValue<'a> {
 
 #[derive(Debug)]
 pub struct Array<'a> {
-    pub elements: Vec<'a, Option<ArrayElement>>,
+    pub elements: Vec<'a, Option<PlaceOrSpread>>,
 }
 
 #[derive(Debug)]
-pub enum ArrayElement {
+pub enum PlaceOrSpread {
     Place(Operand),
     Spread(Operand),
 }
@@ -142,9 +189,15 @@ pub struct Binary {
 }
 
 #[derive(Debug)]
+pub struct Call<'a> {
+    pub callee: Operand,
+    pub arguments: Vec<'a, PlaceOrSpread>,
+}
+
+#[derive(Debug)]
 pub struct FunctionExpression<'a> {
     pub dependencies: Vec<'a, Operand>,
-    pub lowered_function: Box<'a, Function<'a>>,
+    pub lowered_function: Box<Function<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
