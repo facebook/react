@@ -97,7 +97,6 @@
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
     "web-streams-polyfill": "^3.1.1",
-    "webpack": "^4.41.2",
     "yargs": "^15.3.1"
   },
   "devEngines": {
