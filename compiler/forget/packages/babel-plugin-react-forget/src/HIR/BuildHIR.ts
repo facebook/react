@@ -2215,6 +2215,20 @@ function lowerMemberExpression(
   const object =
     loweredObject ?? lowerExpressionToTemporary(builder, objectNode);
 
+  if (objectNode.isIdentifier() && objectNode.node.name === "React") {
+    builder.errors.push({
+      reason: `(BuildHIR::lowerMemberExpression) Handle loading properties from React namespace`,
+      severity: ErrorSeverity.Todo,
+      loc: propertyNode.node.loc ?? null,
+      suggestions: null,
+    });
+    return {
+      object,
+      property: propertyNode.toString(),
+      value: { kind: "UnsupportedNode", node: exprNode, loc: exprLoc },
+    };
+  }
+
   if (!expr.node.computed) {
     if (!propertyNode.isIdentifier()) {
       builder.errors.push({
