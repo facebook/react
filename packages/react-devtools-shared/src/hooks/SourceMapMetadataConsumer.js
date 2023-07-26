@@ -46,7 +46,7 @@ function normalizeSourcePath(
   // Always ensure that absolute sources are internally stored relative to
   // the source root, if the source root is absolute. Not doing this would
   // be particularly problematic when the source root is a prefix of the
-  // source (valid, but why??). See github issue #199 and bugzil.la/1188982.
+  // source (valid, but why??). See GitHub issue #199 and bugzil.la/1188982.
   source =
     sourceRoot != null && util.isAbsolute(sourceRoot) && util.isAbsolute(source)
       ? util.relative(sourceRoot, source)
