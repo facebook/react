@@ -158,7 +158,7 @@ export function* eachInstructionValueOperand(
       for (const element of instrValue.elements) {
         if (element.kind === "Identifier") {
           yield element;
-        } else {
+        } else if (element.kind === "Spread") {
           yield element.place;
         }
       }
@@ -253,6 +253,8 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
           yield item;
         } else if (item.kind === "Spread") {
           yield item.place;
+        } else if (item.kind === "Hole") {
+          continue;
         } else {
           assertExhaustive(
             item,
@@ -424,8 +426,10 @@ export function mapInstructionOperands(
       instrValue.elements = instrValue.elements.map((element) => {
         if (element.kind === "Identifier") {
           return fn(element);
-        } else {
+        } else if (element.kind === "Spread") {
           element.place = fn(element.place);
+          return element;
+        } else {
           return element;
         }
       });
@@ -496,8 +500,10 @@ export function mapPatternOperands(
       pattern.items = pattern.items.map((item) => {
         if (item.kind === "Identifier") {
           return fn(item);
-        } else {
+        } else if (item.kind === "Spread") {
           item.place = fn(item.place);
+          return item;
+        } else {
           return item;
         }
       });

@@ -472,7 +472,17 @@ export type LValuePattern = {
   kind: InstructionKind;
 };
 
+export type ArrayExpression = {
+  kind: "ArrayExpression";
+  elements: Array<Place | SpreadPattern | Hole>;
+  loc: SourceLocation;
+};
+
 export type Pattern = ArrayPattern | ObjectPattern;
+
+export type Hole = {
+  kind: "Hole";
+};
 
 export type SpreadPattern = {
   kind: "Spread";
@@ -481,7 +491,7 @@ export type SpreadPattern = {
 
 export type ArrayPattern = {
   kind: "ArrayPattern";
-  items: Array<Place | SpreadPattern>;
+  items: Array<Place | SpreadPattern | Hole>;
 };
 
 export type ObjectPattern = {
@@ -648,11 +658,7 @@ export type InstructionValue =
       properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
-  | {
-      kind: "ArrayExpression";
-      elements: Array<Place | SpreadPattern>;
-      loc: SourceLocation;
-    }
+  | ArrayExpression
   | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
   | {
       kind: "RegExpLiteral";

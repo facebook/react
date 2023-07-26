@@ -628,7 +628,7 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
       for (const item of pattern.items) {
         if (item.kind === "Identifier") {
           lvalues.push({ place: item, level: MemoizationLevel.Conditional });
-        } else {
+        } else if (item.kind === "Spread") {
           lvalues.push({ place: item.place, level: MemoizationLevel.Memoized });
         }
       }

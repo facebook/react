@@ -716,8 +716,10 @@ function codegenInstructionValue(
       const elements = instrValue.elements.map((element) => {
         if (element.kind === "Identifier") {
           return codegenPlace(cx, element);
-        } else {
+        } else if (element.kind === "Spread") {
           return t.spreadElement(codegenPlace(cx, element.place));
+        } else {
+          return null;
         }
       });
       value = t.arrayExpression(elements);
@@ -1245,7 +1247,14 @@ function codegenLValue(
 ): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
   switch (pattern.kind) {
     case "ArrayPattern": {
-      return t.arrayPattern(pattern.items.map((item) => codegenLValue(item)));
+      return t.arrayPattern(
+        pattern.items.map((item) => {
+          if (item.kind === "Hole") {
+            return null;
+          }
+          return codegenLValue(item);
+        })
+      );
     }
     case "ObjectPattern": {
       return t.objectPattern(

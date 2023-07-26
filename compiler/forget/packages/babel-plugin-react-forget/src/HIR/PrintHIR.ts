@@ -239,6 +239,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
   return value;
 }
 
+function printHole(): string {
+  return "<hole>";
+}
+
 export function printInstructionValue(instrValue: ReactiveValue): string {
   let value = "";
   switch (instrValue.kind) {
@@ -247,6 +251,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         .map((element) => {
           if (element.kind === "Identifier") {
             return printPlace(element);
+          } else if (element.kind === "Hole") {
+            return printHole();
           } else {
             return `...${printPlace(element.place)}`;
           }
@@ -554,7 +560,16 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
   switch (pattern.kind) {
     case "ArrayPattern": {
       return (
-        "[ " + pattern.items.map((item) => printPattern(item)).join(", ") + " ]"
+        "[ " +
+        pattern.items
+          .map((item) => {
+            if (item.kind === "Hole") {
+              return "<hole>";
+            }
+            return printPattern(item);
+          })
+          .join(", ") +
+        " ]"
       );
     }
     case "ObjectPattern": {

@@ -17,6 +17,7 @@ import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { Environment } from "./Environment";
 import {
+  ArrayExpression,
   ArrayPattern,
   BlockId,
   BranchTerminal,
@@ -1064,14 +1065,11 @@ function lowerExpression(
     }
     case "ArrayExpression": {
       const expr = exprPath as NodePath<t.ArrayExpression>;
-      let elements: Array<Place | SpreadPattern> = [];
+      let elements: ArrayExpression["elements"] = [];
       for (const element of expr.get("elements")) {
         if (element.node == null) {
-          builder.errors.push({
-            reason: `(BuildHIR::lowerExpression) Handle ${element.type} elements in ArrayExpression`,
-            severity: ErrorSeverity.Todo,
-            loc: null,
-            suggestions: null,
+          elements.push({
+            kind: "Hole",
           });
           continue;
         } else if (element.isExpression()) {
@@ -2696,6 +2694,9 @@ function lowerAssignment(
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
         if (element.node == null) {
+          items.push({
+            kind: "Hole",
+          });
           continue;
         }
         if (element.isRestElement()) {

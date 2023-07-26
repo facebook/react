@@ -114,7 +114,7 @@ function visitInstruction(instr: Instruction, state: State): void {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
-          } else {
+          } else if (item.kind === "Spread") {
             if (state.used(item.place.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
