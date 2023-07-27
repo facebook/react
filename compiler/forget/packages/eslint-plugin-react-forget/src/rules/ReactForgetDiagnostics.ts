@@ -90,7 +90,10 @@ const rule: Rule.RuleModule = {
           filename,
           highlightCode: false,
           retainLines: true,
-          plugins: [[ReactForgetBabelPlugin, COMPILER_OPTIONS]],
+          plugins: [
+            ["@babel/plugin-proposal-private-methods", { loose: true }],
+            [ReactForgetBabelPlugin, COMPILER_OPTIONS],
+          ],
           sourceType: "module",
         });
       } catch (err) {
