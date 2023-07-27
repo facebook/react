@@ -6258,12 +6258,24 @@ hermes-estree@0.14.0:
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.14.0.tgz#c663eea1400980802283338a09d0087c448729e7"
   integrity sha512-L6M67+0/eSEbt6Ha2XOBFXL++7MR34EOJMgm+j7YCaI4L/jZqrVAg6zYQKzbs1ZCFDLvEQpOgLlapTX4gpFriA==
 
-hermes-parser@0.14.0, hermes-parser@^0.14.0:
+hermes-estree@0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.15.0.tgz#e32f6210ab18c7b705bdcb375f7700f2db15d6ba"
+  integrity sha512-lLYvAd+6BnOqWdnNbP/Q8xfl8LOGw4wVjfrNd9Gt8eoFzhNBRVD95n4l2ksfMVOoxuVyegs85g83KS9QOsxbVQ==
+
+hermes-parser@0.14.0:
   version "0.14.0"
   resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.14.0.tgz#edb2e7172fce996d2c8bbba250d140b70cc1aaaf"
   integrity sha512-pt+8uRiJhVlErY3fiXB3gKhZ72RxM6E1xRMpvfZ5n6Z5TQKQQXKorgRCRzoe02mmvLKBJFP5nPDGv75MWAgCTw==
   dependencies:
     hermes-estree "0.14.0"
+
+hermes-parser@^0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.15.0.tgz#f611a297c2a2dbbfbce8af8543242254f604c382"
+  integrity sha512-Q1uks5rjZlE9RjMMjSUCkGrEIPI5pKJILeCtK1VmTj7U4pf3wVPoo+cxfu+s4cBAPy2JzikIIdCZgBoR6x7U1Q==
+  dependencies:
+    hermes-estree "0.15.0"
 
 hmac-drbg@^1.0.1:
   version "1.0.1"

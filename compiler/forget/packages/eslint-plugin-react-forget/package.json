@@ -17,7 +17,7 @@
     "@babel/core": "^7.19.1",
     "@babel/plugin-proposal-private-methods": "^7.18.6",
     "babel-plugin-react-forget": "*",
-    "hermes-parser": "^0.14.0"
+    "hermes-parser": "^0.15.0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.19.1",
