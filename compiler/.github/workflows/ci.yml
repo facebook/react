@@ -15,7 +15,7 @@ jobs:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: forget/yarn.lock
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install --frozen-lockfile
         working-directory: forget
       - run: yarn build
         working-directory: forget

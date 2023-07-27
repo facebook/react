@@ -15,11 +15,11 @@ jobs:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: forget/yarn.lock
-      - run: yarn install --immutable --immutable-cache
+      - run: yarn install --frozen-lockfile
         working-directory: forget
       - run: yarn workspace babel-plugin-react-forget run build
         working-directory: forget
-      - run: yarn install --ci
+      - run: yarn install --frozen-lockfile
         working-directory: react
       - run: yarn test --ci
         working-directory: react
