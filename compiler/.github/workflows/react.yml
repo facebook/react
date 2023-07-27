@@ -21,7 +21,5 @@ jobs:
         working-directory: forget
       - run: yarn install --ci
         working-directory: react
-      - run: yarn build --ci
-        working-directory: react
       - run: yarn test --ci
         working-directory: react
