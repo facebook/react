@@ -137,12 +137,14 @@ export function* run(
     validateNoRefAccessInRender(hir);
   }
 
-  const noSetStateInRenderResult = validateNoSetStateInRender(hir).unwrap();
-  yield log({
-    kind: "debug",
-    name: "ValidateNoSetStateInRender",
-    value: noSetStateInRenderResult.debug(),
-  });
+  if (env.validateNoSetStateInRender) {
+    const noSetStateInRenderResult = validateNoSetStateInRender(hir).unwrap();
+    yield log({
+      kind: "debug",
+      name: "ValidateNoSetStateInRender",
+      value: noSetStateInRenderResult.debug(),
+    });
+  }
 
   leaveSSA(hir);
   yield log({ kind: "hir", name: "LeaveSSA", value: hir });

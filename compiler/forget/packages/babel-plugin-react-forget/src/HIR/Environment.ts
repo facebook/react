@@ -84,6 +84,14 @@ export type EnvironmentConfig = Partial<{
   validateFrozenLambdas: boolean;
 
   /**
+   * Validates that setState is not unconditionally called during render, as it can lead to
+   * infinite loops.
+   *
+   * Defaults to false
+   */
+  validateNoSetStateInRender: boolean;
+
+  /**
    * Enable inlining of `useMemo()` function expressions so that they can be more optimally
    * compiled.
    *
@@ -176,6 +184,7 @@ export class Environment {
   validateHooksUsage: boolean;
   validateRefAccessDuringRender: boolean;
   validateFrozenLambdas: boolean;
+  validateNoSetStateInRender: boolean;
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
@@ -231,6 +240,8 @@ export class Environment {
     this.enableOptimizeFunctionExpressions =
       config?.enableOptimizeFunctionExpressions ?? true;
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
+    this.validateNoSetStateInRender =
+      config?.validateNoSetStateInRender ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
   }

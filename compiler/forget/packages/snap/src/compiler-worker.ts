@@ -97,6 +97,7 @@ export async function compile(
     let enableTreatHooksAsFunctions = true;
     let disableAllMemoization = false;
     let validateRefAccessDuringRender = true;
+    let validateNoSetStateInRender = true;
     let enableEmitFreeze = null;
     let enableOptimizeFunctionExpressions = true;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
@@ -132,6 +133,9 @@ export async function compile(
     if (firstLine.includes("@validateRefAccessDuringRender false")) {
       validateRefAccessDuringRender = false;
     }
+    if (firstLine.includes("@validateNoSetStateInRender false")) {
+      validateNoSetStateInRender = false;
+    }
     if (firstLine.includes("@enableOptimizeFunctionExpressions false")) {
       enableOptimizeFunctionExpressions = false;
     }
@@ -165,6 +169,7 @@ export async function compile(
         validateHooksUsage: true,
         validateRefAccessDuringRender,
         validateFrozenLambdas: true,
+        validateNoSetStateInRender,
         enableEmitFreeze,
         enableOptimizeFunctionExpressions,
         assertValidMutableRanges: true,
