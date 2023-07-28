@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use forget_hir::{BlockId, Environment, Function, Identifier, IdentifierId, InstructionValue};
-use forget_utils::RetainMut;
 
 /// Pass to eliminate redundant phi nodes:
 /// all operands are the same identifier, ie `x2 = phi(x1, x1, x1)`.
@@ -15,8 +14,8 @@ use forget_utils::RetainMut;
 /// phi is encountered we add a mapping (eg x2 -> x1) to a rewrite table. Subsequent instructions, terminals,
 /// and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
 /// until there are no new rewrites: for a CFG without back-edges it completes in a single pass.
-type Rewrites<'a> = HashMap<IdentifierId, Identifier<'a>>;
-pub fn eliminate_redundant_phis<'a>(env: &Environment, fun: &mut Function<'a>) {
+type Rewrites = HashMap<IdentifierId, Identifier>;
+pub fn eliminate_redundant_phis(env: &Environment, fun: &mut Function) {
     let hir = &mut fun.body;
     let mut rewrites = Rewrites::new();
 
@@ -97,7 +96,7 @@ pub fn eliminate_redundant_phis<'a>(env: &Environment, fun: &mut Function<'a>) {
     }
 }
 
-fn rewrite<'a>(rewrites: &Rewrites<'a>, identifier: &mut Identifier<'a>) {
+fn rewrite(rewrites: &Rewrites, identifier: &mut Identifier) {
     if let Some(rewrite) = rewrites.get(&identifier.id) {
         *identifier = rewrite.clone()
     }

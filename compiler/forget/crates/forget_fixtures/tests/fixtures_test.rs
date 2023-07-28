@@ -1,7 +1,6 @@
 use std::env;
 use std::fmt::Write;
 
-use bumpalo::Bump;
 use forget_build_hir::build;
 use forget_estree::{ModuleItem, Statement};
 use forget_estree_swc::parse;
@@ -24,14 +23,12 @@ fn fixtures() {
         for (ix, item) in ast.body.into_iter().enumerate() {
             if let ModuleItem::Statement(stmt) = item {
                 if let Statement::FunctionDeclaration(fun) = stmt {
-                    let allocator = Bump::new();
-                    let environment = allocator.alloc(Environment::new(
-                        &allocator,
+                    let environment = Environment::new(
                         Features {
                             validate_frozen_lambdas: true,
                         },
                         Registry,
-                    ));
+                    );
                     if ix != 0 {
                         output.push_str("\n\n");
                     }

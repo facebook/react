@@ -12,7 +12,7 @@ use crate::{Identifier, InstrIx, Terminal};
 ///
 /// [1] Assuming no exceptions are thrown.
 #[derive(Debug)]
-pub struct BasicBlock<'a> {
+pub struct BasicBlock {
     /// The identifier for the block
     pub id: BlockId,
 
@@ -23,21 +23,21 @@ pub struct BasicBlock<'a> {
     pub kind: BlockKind,
 
     /// The ordered instructions in this block
-    pub instructions: bumpalo::collections::Vec<'a, InstrIx>,
+    pub instructions: Vec<InstrIx>,
 
     /// The terminal instruction for the block
-    pub terminal: Terminal<'a>,
+    pub terminal: Terminal,
 
     /// The immediate predecessors of this block
     pub predecessors: IndexSet<BlockId>,
 
-    pub phis: bumpalo::collections::Vec<'a, Phi<'a>>,
+    pub phis: Vec<Phi>,
 }
 
 #[derive(Debug)]
-pub struct Phi<'a> {
-    pub identifier: Identifier<'a>,
-    pub operands: IndexMap<BlockId, Identifier<'a>>,
+pub struct Phi {
+    pub identifier: Identifier,
+    pub operands: IndexMap<BlockId, Identifier>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

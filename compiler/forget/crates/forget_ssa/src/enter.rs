@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use bumpalo::collections::Vec;
 use forget_diagnostics::{invariant, Diagnostic};
 use forget_hir::{
     BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
@@ -9,15 +8,15 @@ use forget_hir::{
 };
 use indexmap::{IndexMap, IndexSet};
 
-pub fn enter_ssa<'a>(env: &Environment<'a>, fun: &mut Function<'a>) -> Result<(), Diagnostic> {
+pub fn enter_ssa(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
     assert!(fun.context.is_empty());
     enter_ssa_impl(env, fun, None)
 }
 
-pub fn enter_ssa_impl<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-    context_defs: Option<IndexMap<IdentifierId, Identifier<'a>>>,
+pub fn enter_ssa_impl(
+    env: &Environment,
+    fun: &mut Function,
+    context_defs: Option<IndexMap<IdentifierId, Identifier>>,
 ) -> Result<(), Diagnostic> {
     let blocks = &fun.body.blocks;
     let instructions = &mut fun.body.instructions;
@@ -40,10 +39,10 @@ pub fn enter_ssa_impl<'a>(
     Ok(())
 }
 
-fn visit_instructions<'a, 'e, 'f>(
-    env: &Environment<'a>,
-    builder: &mut Builder<'a, 'e, 'f>,
-    instructions: &mut Vec<'a, Instruction<'a>>,
+fn visit_instructions<'e, 'f>(
+    env: &Environment,
+    builder: &mut Builder<'e, 'f>,
+    instructions: &mut Vec<Instruction>,
 ) -> Result<(), Diagnostic> {
     builder.each_block(|block, builder| {
         for instr_ix in &block.instructions {
@@ -75,11 +74,11 @@ fn visit_instructions<'a, 'e, 'f>(
 }
 
 #[derive(Debug)]
-struct Builder<'a, 'e, 'f> {
-    env: &'e Environment<'a>,
-    blocks: &'f Blocks<'a>,
+struct Builder<'e, 'f> {
+    env: &'e Environment,
+    blocks: &'f Blocks,
 
-    states: IndexMap<BlockId, BlockState<'a>>,
+    states: IndexMap<BlockId, BlockState>,
     current: BlockId,
     unsealed_predecessors: IndexMap<BlockId, usize>,
     unknown: IndexSet<IdentifierId>,
@@ -87,34 +86,34 @@ struct Builder<'a, 'e, 'f> {
 }
 
 #[derive(Debug)]
-struct BlockState<'a> {
-    defs: IndexMap<IdentifierId, Identifier<'a>>,
-    incomplete_phis: Vec<'a, IncompletePhi<'a>>,
-    phis: Vec<'a, Phi<'a>>,
+struct BlockState {
+    defs: IndexMap<IdentifierId, Identifier>,
+    incomplete_phis: Vec<IncompletePhi>,
+    phis: Vec<Phi>,
 }
 
-impl<'a> BlockState<'a> {
-    fn new(env: &Environment<'a>) -> Self {
+impl BlockState {
+    fn new() -> Self {
         Self {
             defs: Default::default(),
-            incomplete_phis: env.vec_new(),
-            phis: env.vec_new(),
+            incomplete_phis: Default::default(),
+            phis: Default::default(),
         }
     }
 }
 
 #[derive(Debug)]
-struct IncompletePhi<'a> {
-    old_id: Identifier<'a>,
-    new_id: Identifier<'a>,
+struct IncompletePhi {
+    old_id: Identifier,
+    new_id: Identifier,
 }
 
-impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
-    fn new(env: &'e Environment<'a>, entry: BlockId, blocks: &'f Blocks<'a>) -> Self {
+impl<'e, 'f> Builder<'e, 'f> {
+    fn new(env: &'e Environment, entry: BlockId, blocks: &'f Blocks) -> Self {
         let states = blocks
             .block_ids()
             .into_iter()
-            .map(|block_id| (block_id, BlockState::new(env)))
+            .map(|block_id| (block_id, BlockState::new()))
             .collect();
         Self {
             env,
@@ -127,12 +126,12 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         }
     }
 
-    fn initialize_context(&mut self, defs: IndexMap<IdentifierId, Identifier<'a>>) {
+    fn initialize_context(&mut self, defs: IndexMap<IdentifierId, Identifier>) {
         let state = self.states.get_mut(&self.current).unwrap();
         state.defs = defs;
     }
 
-    fn complete(self) -> IndexMap<BlockId, BlockState<'a>> {
+    fn complete(self) -> IndexMap<BlockId, BlockState> {
         self.states
     }
 
@@ -140,7 +139,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         self.env.next_identifier_id()
     }
 
-    fn visit_store(&mut self, lvalue: &mut LValue<'a>) -> Result<(), Diagnostic> {
+    fn visit_store(&mut self, lvalue: &mut LValue) -> Result<(), Diagnostic> {
         let old_identifier = &lvalue.identifier.identifier;
         // TODO: use Result (?)
         invariant(!self.unknown.contains(&old_identifier.id), || {
@@ -163,7 +162,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         Ok(())
     }
 
-    fn visit_param(&mut self, param: &mut IdentifierOperand<'a>) -> () {
+    fn visit_param(&mut self, param: &mut IdentifierOperand) -> () {
         let old_identifier = &param.identifier;
         let new_identifier = self.make_identifier(old_identifier);
         let state = self.states.get_mut(&self.current).unwrap();
@@ -171,12 +170,12 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         param.identifier = new_identifier;
     }
 
-    fn visit_load(&mut self, local: &mut IdentifierOperand<'a>) -> () {
+    fn visit_load(&mut self, local: &mut IdentifierOperand) -> () {
         let new_identifier = self.get_id_at(self.current, &local.identifier);
         local.identifier = new_identifier;
     }
 
-    fn get_id_at(&mut self, block_id: BlockId, old_identifier: &Identifier<'a>) -> Identifier<'a> {
+    fn get_id_at(&mut self, block_id: BlockId, old_identifier: &Identifier) -> Identifier {
         // Check if we've already resolved this identifier in this block
         let state = self.states.get(&block_id).unwrap();
         if let Some(identifier) = state.defs.get(&old_identifier.id) {
@@ -219,9 +218,9 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
     fn add_phi(
         &mut self,
         block_id: BlockId,
-        old_identifier: &Identifier<'a>,
-        new_identifier: Identifier<'a>,
-    ) -> Identifier<'a> {
+        old_identifier: &Identifier,
+        new_identifier: Identifier,
+    ) -> Identifier {
         let mut phi = Phi {
             identifier: new_identifier.clone(),
             operands: Default::default(),
@@ -237,7 +236,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
         new_identifier
     }
 
-    fn make_identifier(&self, old_identifier: &Identifier<'a>) -> Identifier<'a> {
+    fn make_identifier(&self, old_identifier: &Identifier) -> Identifier {
         let old_data = old_identifier.data.borrow();
         Identifier {
             id: self.next_ssa_id(),
@@ -252,7 +251,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
 
     fn fix_incomplete_phis(&mut self, block_id: BlockId) -> () {
         let state = self.states.get_mut(&block_id).unwrap();
-        let incomplete_phis = std::mem::replace(&mut state.incomplete_phis, self.env.vec_new());
+        let incomplete_phis = std::mem::take(&mut state.incomplete_phis);
         for phi in incomplete_phis {
             self.add_phi(block_id, &phi.old_id, phi.new_id);
         }
@@ -260,7 +259,7 @@ impl<'a, 'e, 'f> Builder<'a, 'e, 'f> {
 
     fn each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
     where
-        F: FnMut(&BasicBlock<'a>, &mut Self) -> Result<(), Diagnostic>,
+        F: FnMut(&BasicBlock, &mut Self) -> Result<(), Diagnostic>,
     {
         let mut visited = IndexSet::new();
         let block_ids = self.blocks.block_ids();

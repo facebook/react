@@ -9,18 +9,15 @@ use forget_hir::{
 };
 use forget_ssa::eliminate_redundant_phis;
 
-pub fn constant_propagation<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-) -> Result<(), Diagnostic> {
+pub fn constant_propagation(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
     let mut constants = Constants::new();
     constant_propagation_impl(env, fun, &mut constants)
 }
 
-fn constant_propagation_impl<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-    constants: &mut Constants<'a>,
+fn constant_propagation_impl(
+    env: &Environment,
+    fun: &mut Function,
+    constants: &mut Constants,
 ) -> Result<(), Diagnostic> {
     loop {
         let have_terminals_changed = apply_constant_propagation(env, fun, constants)?;
@@ -55,16 +52,16 @@ fn constant_propagation_impl<'a>(
     Ok(())
 }
 
-fn apply_constant_propagation<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-    constants: &mut Constants<'a>,
+fn apply_constant_propagation(
+    env: &Environment,
+    fun: &mut Function,
+    constants: &mut Constants,
 ) -> Result<bool, Diagnostic> {
     let mut has_changes = false;
 
     for block in fun.body.blocks.iter_mut() {
         for phi in block.phis.iter() {
-            let mut value: Option<Constant<'a>> = None;
+            let mut value: Option<Constant> = None;
             for (_, operand) in &phi.operands {
                 if let Some(operand_value) = constants.get(&operand.id) {
                     match &mut value {
@@ -128,10 +125,7 @@ fn apply_constant_propagation<'a>(
     Ok(has_changes)
 }
 
-fn read_primitive_instruction<'a>(
-    instrs: &[Instruction<'a>],
-    operand: &Operand,
-) -> Option<Primitive<'a>> {
+fn read_primitive_instruction(instrs: &[Instruction], operand: &Operand) -> Option<Primitive> {
     let instr = &instrs[usize::from(operand.ix)].value;
     if let InstructionValue::Primitive(primitive) = instr {
         Some(primitive.clone())
@@ -140,11 +134,11 @@ fn read_primitive_instruction<'a>(
     }
 }
 
-fn evaluate_instruction<'a>(
-    env: &Environment<'a>,
-    instrs: &[Instruction<'a>],
-    mut instr: &mut InstructionValue<'a>,
-    constants: &mut Constants<'a>,
+fn evaluate_instruction(
+    env: &Environment,
+    instrs: &[Instruction],
+    mut instr: &mut InstructionValue,
+    constants: &mut Constants,
 ) -> Result<(), Diagnostic> {
     let read_constant = |operand: &Operand| {
         let instr = &instrs[usize::from(operand.ix)].value;
@@ -189,7 +183,7 @@ fn evaluate_instruction<'a>(
             //   the function (using its context variables list)
             // - Track the last such filtered Constants instance we visited the function
             //   with. Only visit again if the Constants have changed.
-            let mut inner_constants: Constants<'a> = value
+            let mut inner_constants: Constants = value
                 .lowered_function
                 .context
                 .iter()
@@ -207,12 +201,12 @@ fn evaluate_instruction<'a>(
     Ok(())
 }
 
-fn apply_binary_operator<'a>(
-    _env: &Environment<'a>,
-    left: Primitive<'a>,
+fn apply_binary_operator(
+    _env: &Environment,
+    left: Primitive,
     operator: BinaryOperator,
-    right: Primitive<'a>,
-) -> Option<Primitive<'a>> {
+    right: Primitive,
+) -> Option<Primitive> {
     match (left.value, right.value) {
         (PrimitiveValue::Number(left), PrimitiveValue::Number(right)) => match operator {
             BinaryOperator::Add => Some(Primitive {
@@ -271,16 +265,16 @@ fn apply_binary_operator<'a>(
     }
 }
 
-type Constants<'a> = HashMap<IdentifierId, Constant<'a>>;
+type Constants = HashMap<IdentifierId, Constant>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum Constant<'a> {
-    Global(LoadGlobal<'a>),
-    Primitive(Primitive<'a>),
+enum Constant {
+    Global(LoadGlobal),
+    Primitive(Primitive),
 }
 
-impl<'a> From<&Constant<'a>> for InstructionValue<'a> {
-    fn from(value: &Constant<'a>) -> Self {
+impl From<&Constant> for InstructionValue {
+    fn from(value: &Constant) -> Self {
         match value {
             Constant::Global(value) => InstructionValue::LoadGlobal(value.clone()),
             Constant::Primitive(value) => InstructionValue::Primitive(value.clone()),
@@ -288,8 +282,8 @@ impl<'a> From<&Constant<'a>> for InstructionValue<'a> {
     }
 }
 
-impl<'a> From<Constant<'a>> for InstructionValue<'a> {
-    fn from(value: Constant<'a>) -> Self {
+impl From<Constant> for InstructionValue {
+    fn from(value: Constant) -> Self {
         match value {
             Constant::Global(value) => InstructionValue::LoadGlobal(value),
             Constant::Primitive(value) => InstructionValue::Primitive(value),

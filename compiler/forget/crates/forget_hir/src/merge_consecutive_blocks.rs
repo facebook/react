@@ -17,10 +17,7 @@ use crate::{
 /// Note that this pass leaves value/loop blocks alone because they cannot
 /// be merged without breaking the structure of the high-level terminals
 /// that reference them.
-pub fn merge_consecutive_blocks<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-) -> Result<(), Diagnostic> {
+pub fn merge_consecutive_blocks(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
     let mut merged = MergedBlocks::default();
     let blocks = &mut fun.body.blocks;
     let instructions = &mut fun.body.instructions;

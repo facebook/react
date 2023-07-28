@@ -12,11 +12,11 @@ use crate::{
 /// handle things like indentation and maybe wrapping long lines. The
 /// `pretty` crate seems to have a lot of usage but the type signatures
 /// are pretty tedious, we can make something much simpler.
-pub trait Print<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result;
+pub trait Print {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result;
 }
 
-impl<'a> Function<'a> {
+impl Function {
     pub fn debug(&self) {
         let mut out = String::new();
         self.print(&self.body, &mut out).unwrap();
@@ -24,8 +24,8 @@ impl<'a> Function<'a> {
     }
 }
 
-impl<'a> Print<'a> for Function<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Function {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         ensure_sufficient_stack(|| {
             writeln!(
                 out,
@@ -51,8 +51,8 @@ impl<'a> Print<'a> for Function<'a> {
     }
 }
 
-impl<'a> Print<'a> for BasicBlock<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for BasicBlock {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         writeln!(out, "{} ({})", self.id, self.kind)?;
         if !self.predecessors.is_empty() {
             write!(out, "  predecessors: ")?;
@@ -83,8 +83,8 @@ impl<'a> Print<'a> for BasicBlock<'a> {
     }
 }
 
-impl<'a> Print<'a> for Phi<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Phi {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         write!(out, "  ")?;
         self.identifier.print(hir, out)?;
         write!(out, ": phi(")?;
@@ -100,8 +100,8 @@ impl<'a> Print<'a> for Phi<'a> {
     }
 }
 
-impl<'a> Print<'a> for Instruction<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Instruction {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         write!(out, "  {} ", self.id)?;
         self.value.print(hir, out)?;
         writeln!(out, "")?;
@@ -109,8 +109,8 @@ impl<'a> Print<'a> for Instruction<'a> {
     }
 }
 
-impl<'a> Print<'a> for InstructionValue<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for InstructionValue {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         match self {
             InstructionValue::Array(value) => {
                 write!(out, "Array [")?;
@@ -211,8 +211,8 @@ impl<'a> Print<'a> for InstructionValue<'a> {
     }
 }
 
-impl<'a> Print<'a> for PlaceOrSpread {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for PlaceOrSpread {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         match self {
             PlaceOrSpread::Place(place) => place.print(hir, out),
             PlaceOrSpread::Spread(place) => {
@@ -224,8 +224,8 @@ impl<'a> Print<'a> for PlaceOrSpread {
     }
 }
 
-impl<'a> Print<'a> for Operand {
-    fn print(&self, _hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Operand {
+    fn print(&self, _hir: &HIR, out: &mut impl Write) -> Result {
         write!(
             out,
             "{} {}",
@@ -238,15 +238,15 @@ impl<'a> Print<'a> for Operand {
     }
 }
 
-impl<'a> Print<'a> for LValue<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for LValue {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         write!(out, "{} ", self.kind)?;
         self.identifier.print(hir, out)
     }
 }
 
-impl<'a> Print<'a> for IdentifierOperand<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for IdentifierOperand {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         write!(
             out,
             "{} ",
@@ -259,8 +259,8 @@ impl<'a> Print<'a> for IdentifierOperand<'a> {
     }
 }
 
-impl<'a> Print<'a> for Identifier<'a> {
-    fn print(&self, _hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Identifier {
+    fn print(&self, _hir: &HIR, out: &mut impl Write) -> Result {
         write!(
             out,
             "{}{}",
@@ -273,8 +273,8 @@ impl<'a> Print<'a> for Identifier<'a> {
     }
 }
 
-impl<'a> Print<'a> for Terminal<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for Terminal {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         write!(out, "  {} ", self.id)?;
         self.value.print(hir, out)?;
         writeln!(out, "")?;
@@ -282,8 +282,8 @@ impl<'a> Print<'a> for Terminal<'a> {
     }
 }
 
-impl<'a> Print<'a> for TerminalValue<'a> {
-    fn print(&self, hir: &HIR<'a>, out: &mut impl Write) -> Result {
+impl Print for TerminalValue {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
         match self {
             TerminalValue::Return(terminal) => {
                 write!(out, "Return ")?;

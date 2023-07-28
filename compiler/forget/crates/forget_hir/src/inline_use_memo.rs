@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use bumpalo::collections::String;
 use forget_diagnostics::Diagnostic;
 
 use crate::{
@@ -63,10 +62,7 @@ use crate::{
 ///   [13] StoreLocal 'x', #6
 /// ```
 ///
-pub fn inline_use_memo<'a>(
-    env: &Environment<'a>,
-    fun: &mut Function<'a>,
-) -> Result<(), Diagnostic> {
+pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
     let mut use_memo_globals: HashSet<InstrIx> = Default::default();
     let mut functions: HashSet<InstrIx> = Default::default();
 
@@ -108,7 +104,7 @@ pub fn inline_use_memo<'a>(
                     let temporary = Identifier {
                         id: temporary_id,
                         // NOTE: for memoization to work correctly this variable has to be named
-                        name: Some(String::from_str_in("t", &env.allocator)),
+                        name: Some("t".to_string()),
                         data: Rc::new(RefCell::new(IdentifierData {
                             mutable_range: MutableRange::new(),
                             scope: None,
@@ -232,7 +228,7 @@ pub fn inline_use_memo<'a>(
                         id: continuation_block_id,
                         instructions: continuation_instructions,
                         kind: block.kind,
-                        phis: env.vec_new(),
+                        phis: Default::default(),
                         predecessors: Default::default(),
                         terminal,
                     });

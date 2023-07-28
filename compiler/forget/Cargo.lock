@@ -450,7 +450,6 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 name = "forget_build_hir"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_diagnostics",
  "forget_estree",
  "forget_hir",
@@ -472,7 +471,6 @@ dependencies = [
 name = "forget_estree"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_estree_codegen",
  "insta",
  "serde",
@@ -505,7 +503,6 @@ dependencies = [
 name = "forget_fixtures"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_build_hir",
  "forget_estree",
  "forget_estree_swc",
@@ -520,7 +517,6 @@ dependencies = [
 name = "forget_hir"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_diagnostics",
  "forget_estree",
  "forget_utils",
@@ -533,7 +529,6 @@ dependencies = [
 name = "forget_optimization"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_build_hir",
  "forget_diagnostics",
  "forget_estree",
@@ -549,7 +544,6 @@ dependencies = [
 name = "forget_ssa"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "forget_diagnostics",
  "forget_hir",
  "forget_utils",
@@ -562,7 +556,6 @@ dependencies = [
 name = "forget_utils"
 version = "0.1.0"
 dependencies = [
- "bumpalo",
  "stacker",
 ]
 

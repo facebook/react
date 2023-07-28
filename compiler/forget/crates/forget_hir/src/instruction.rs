@@ -2,21 +2,20 @@ use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
 
-use bumpalo::collections::{String, Vec};
 use forget_estree::BinaryOperator;
 
 use crate::{Function, IdentifierId, InstrIx, InstructionId, ScopeId, Type};
 
 #[derive(Debug)]
-pub struct Instruction<'a> {
+pub struct Instruction {
     pub id: InstructionId,
-    pub value: InstructionValue<'a>,
+    pub value: InstructionValue,
 }
 
-impl<'a> Instruction<'a> {
+impl Instruction {
     pub fn each_identifier_store<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(&mut LValue<'a>) -> (),
+        F: FnMut(&mut LValue) -> (),
     {
         match &mut self.value {
             InstructionValue::DeclareContext(instr) => {
@@ -43,7 +42,7 @@ impl<'a> Instruction<'a> {
 
     pub fn try_each_identifier_store<F, E>(&mut self, mut f: F) -> Result<(), E>
     where
-        F: FnMut(&mut LValue<'a>) -> Result<(), E>,
+        F: FnMut(&mut LValue) -> Result<(), E>,
     {
         match &mut self.value {
             InstructionValue::DeclareContext(instr) => {
@@ -71,7 +70,7 @@ impl<'a> Instruction<'a> {
 
     pub fn each_identifier_load<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(&mut IdentifierOperand<'a>) -> (),
+        F: FnMut(&mut IdentifierOperand) -> (),
     {
         match &mut self.value {
             InstructionValue::LoadLocal(instr) => f(&mut instr.place),
@@ -151,46 +150,46 @@ impl<'a> Instruction<'a> {
 }
 
 #[derive(Debug)]
-pub enum InstructionValue<'a> {
-    Array(Array<'a>),
-    // Await(Await<'a>),
+pub enum InstructionValue {
+    Array(Array),
+    // Await(Await),
     Binary(Binary),
-    Call(Call<'a>),
-    // ComputedDelete(ComputedDelete<'a>),
-    // ComputedLoad(ComputedLoad<'a>),
-    // ComputedStore(ComputedStore<'a>),
-    // Debugger(Debugger<'a>),
-    DeclareContext(DeclareContext<'a>),
-    DeclareLocal(DeclareLocal<'a>),
-    // Destructure(Destructure<'a>),
-    Function(FunctionExpression<'a>),
-    JSXElement(JSXElement<'a>),
-    // JsxFragment(JsxFragment<'a>),
-    // JsxText(JsxText<'a>),
+    Call(Call),
+    // ComputedDelete(ComputedDelete),
+    // ComputedLoad(ComputedLoad),
+    // ComputedStore(ComputedStore),
+    // Debugger(Debugger),
+    DeclareContext(DeclareContext),
+    DeclareLocal(DeclareLocal),
+    // Destructure(Destructure),
+    Function(FunctionExpression),
+    JSXElement(JSXElement),
+    // JsxFragment(JsxFragment),
+    // JsxText(JsxText),
     LoadContext(LoadContext),
-    LoadGlobal(LoadGlobal<'a>),
-    LoadLocal(LoadLocal<'a>),
-    // MethodCall(MethodCall<'a>),
-    // New(New<'a>),
-    // NextIterable(NextIterable<'a>),
-    // Object(Object<'a>),
-    Primitive(Primitive<'a>),
-    // PropertyDelete(PropertyDelete<'a>),
-    // PropertyLoad(PropertyLoad<'a>),
-    // PropertyStore(PropertyStore<'a>),
-    // RegExp(RegExp<'a>),
-    // StoreContext(StoreContext<'a>),
-    StoreLocal(StoreLocal<'a>),
-    // TaggedTemplate(TaggedTemplate<'a>),
-    // Template(Template<'a>),
-    // TypeCast(TypeCast<'a>),
-    // Unary(Unary<'a>),
+    LoadGlobal(LoadGlobal),
+    LoadLocal(LoadLocal),
+    // MethodCall(MethodCall),
+    // New(New),
+    // NextIterable(NextIterable),
+    // Object(Object),
+    Primitive(Primitive),
+    // PropertyDelete(PropertyDelete),
+    // PropertyLoad(PropertyLoad),
+    // PropertyStore(PropertyStore),
+    // RegExp(RegExp),
+    // StoreContext(StoreContext),
+    StoreLocal(StoreLocal),
+    // TaggedTemplate(TaggedTemplate),
+    // Template(Template),
+    // TypeCast(TypeCast),
+    // Unary(Unary),
     Tombstone,
 }
 
 #[derive(Debug)]
-pub struct Array<'a> {
-    pub elements: Vec<'a, Option<PlaceOrSpread>>,
+pub struct Array {
+    pub elements: Vec<Option<PlaceOrSpread>>,
 }
 
 #[derive(Debug)]
@@ -207,32 +206,32 @@ pub struct Binary {
 }
 
 #[derive(Debug)]
-pub struct Call<'a> {
+pub struct Call {
     pub callee: Operand,
-    pub arguments: Vec<'a, PlaceOrSpread>,
+    pub arguments: Vec<PlaceOrSpread>,
 }
 
 #[derive(Debug)]
-pub struct FunctionExpression<'a> {
-    pub dependencies: Vec<'a, Operand>,
-    pub lowered_function: Box<Function<'a>>,
+pub struct FunctionExpression {
+    pub dependencies: Vec<Operand>,
+    pub lowered_function: Box<Function>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Primitive<'a> {
-    pub value: PrimitiveValue<'a>,
+pub struct Primitive {
+    pub value: PrimitiveValue,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PrimitiveValue<'a> {
+pub enum PrimitiveValue {
     Boolean(bool),
     Null,
     Number(Number),
-    String(String<'a>),
+    String(String),
     Undefined,
 }
 
-impl<'a> PrimitiveValue<'a> {
+impl PrimitiveValue {
     pub fn is_truthy(&self) -> bool {
         match &self {
             PrimitiveValue::Boolean(value) => *value,
@@ -370,8 +369,8 @@ impl std::ops::Div for Number {
 }
 
 #[derive(Debug)]
-pub struct LoadLocal<'a> {
-    pub place: IdentifierOperand<'a>,
+pub struct LoadLocal {
+    pub place: IdentifierOperand,
 }
 
 #[derive(Debug)]
@@ -380,37 +379,37 @@ pub struct LoadContext {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct LoadGlobal<'a> {
-    pub name: String<'a>,
+pub struct LoadGlobal {
+    pub name: String,
 }
 
 #[derive(Debug)]
-pub struct DeclareLocal<'a> {
-    pub lvalue: LValue<'a>,
+pub struct DeclareLocal {
+    pub lvalue: LValue,
 }
 
 #[derive(Debug)]
-pub struct DeclareContext<'a> {
-    pub lvalue: LValue<'a>, // note: kind must be InstructionKind::Let
+pub struct DeclareContext {
+    pub lvalue: LValue, // note: kind must be InstructionKind::Let
 }
 
 #[derive(Debug)]
-pub struct StoreLocal<'a> {
-    pub lvalue: LValue<'a>,
+pub struct StoreLocal {
+    pub lvalue: LValue,
     pub value: Operand,
 }
 
 #[derive(Debug)]
-pub struct JSXElement<'a> {
+pub struct JSXElement {
     pub tag: Operand,
-    pub props: Vec<'a, JSXAttribute<'a>>,
-    pub children: Option<Vec<'a, Operand>>,
+    pub props: Vec<JSXAttribute>,
+    pub children: Option<Vec<Operand>>,
 }
 
 #[derive(Debug)]
-pub enum JSXAttribute<'a> {
+pub enum JSXAttribute {
     Spread { argument: Operand },
-    Attribute { name: String<'a>, value: Operand },
+    Attribute { name: String, value: Operand },
 }
 
 #[derive(Clone, Debug)]
@@ -420,14 +419,14 @@ pub struct Operand {
 }
 
 #[derive(Clone, Debug)]
-pub struct IdentifierOperand<'a> {
-    pub identifier: Identifier<'a>,
+pub struct IdentifierOperand {
+    pub identifier: Identifier,
     pub effect: Option<Effect>,
 }
 
 #[derive(Debug)]
-pub struct LValue<'a> {
-    pub identifier: IdentifierOperand<'a>,
+pub struct LValue {
+    pub identifier: IdentifierOperand,
     pub kind: InstructionKind,
 }
 
@@ -503,10 +502,10 @@ impl Display for Effect {
 }
 
 #[derive(Clone, Debug)]
-pub struct Identifier<'a> {
+pub struct Identifier {
     /// Uniquely identifiers this identifier
     pub id: IdentifierId,
-    pub name: Option<String<'a>>,
+    pub name: Option<String>,
 
     pub data: Rc<RefCell<IdentifierData>>,
 }

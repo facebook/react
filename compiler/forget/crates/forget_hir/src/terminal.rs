@@ -4,13 +4,13 @@ use crate::{BlockId, InstructionId};
 /// Terminals represent statements or expressions that affect control flow,
 /// such as for-of, if-else, return, logical (??), ternaries (?:), etc.
 #[derive(Debug)]
-pub struct Terminal<'a> {
+pub struct Terminal {
     pub id: InstructionId,
-    pub value: TerminalValue<'a>,
+    pub value: TerminalValue,
 }
 
 #[derive(Debug)]
-pub enum TerminalValue<'a> {
+pub enum TerminalValue {
     Branch(BranchTerminal),
     DoWhile(DoWhileTerminal),
     // ForOf(ForOfTerminal),
@@ -25,11 +25,11 @@ pub enum TerminalValue<'a> {
     // Switch(SwitchTerminal),
     // Ternary(TernaryTerminal),
     // Throw(ThrowTerminal),
-    Unsupported(UnsupportedTerminal<'a>),
+    Unsupported(UnsupportedTerminal),
     // While(WhileTerminal),
 }
 
-impl<'a> TerminalValue<'a> {
+impl TerminalValue {
     pub fn map_optional_fallthroughs<F>(&mut self, f: F) -> ()
     where
         F: Fn(BlockId) -> Option<BlockId>,
@@ -103,9 +103,7 @@ impl<'a> TerminalValue<'a> {
 }
 
 #[derive(Debug)]
-pub struct UnsupportedTerminal<'a> {
-    phantom: std::marker::PhantomData<&'a ()>,
-}
+pub struct UnsupportedTerminal {}
 
 #[derive(Debug)]
 pub struct BranchTerminal {

@@ -13,7 +13,6 @@ repository.workspace  = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bumpalo = { workspace = true }
 insta = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

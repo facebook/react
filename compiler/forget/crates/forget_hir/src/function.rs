@@ -1,4 +1,3 @@
-use bumpalo::collections::{String, Vec};
 use forget_diagnostics::Diagnostic;
 use indexmap::IndexMap;
 
@@ -6,11 +5,11 @@ use crate::{BasicBlock, BlockId, FunctionExpression, IdentifierOperand, InstrIx,
 
 /// Represents either a React function or a function expression
 #[derive(Debug)]
-pub struct Function<'a> {
-    pub id: Option<String<'a>>,
-    pub body: HIR<'a>,
-    pub params: Vec<'a, IdentifierOperand<'a>>,
-    pub context: Vec<'a, IdentifierOperand<'a>>,
+pub struct Function {
+    pub id: Option<String>,
+    pub body: HIR,
+    pub params: Vec<IdentifierOperand>,
+    pub context: Vec<IdentifierOperand>,
     pub is_async: bool,
     pub is_generator: bool,
 }
@@ -20,20 +19,20 @@ pub struct Function<'a> {
 /// so that compiler passes can complete forward data flow analysis in a
 /// single pass over the CFG in the case where there are no loops.
 #[derive(Debug)]
-pub struct HIR<'a> {
+pub struct HIR {
     /// The id of the first block
     pub entry: BlockId,
 
     /// Blocks are stored in a map for easy retrieval by their id,
     /// but the blocks are in reverse postorder
-    pub blocks: Blocks<'a>,
+    pub blocks: Blocks,
 
     /// All instructions for the block. This may contain unused items,
-    pub instructions: Vec<'a, Instruction<'a>>,
+    pub instructions: Vec<Instruction>,
 }
 
-impl<'a> HIR<'a> {
-    pub fn inline(&mut self, other: FunctionExpression<'a>) -> () {
+impl HIR {
+    pub fn inline(&mut self, other: FunctionExpression) -> () {
         let offset = self.instructions.len();
         for mut instr in other.lowered_function.body.instructions.into_iter() {
             instr.each_operand(|operand| {
@@ -54,11 +53,11 @@ impl<'a> HIR<'a> {
 }
 
 #[derive(Default, Debug)]
-pub struct Blocks<'a> {
-    data: IndexMap<BlockId, Option<Box<BasicBlock<'a>>>>,
+pub struct Blocks {
+    data: IndexMap<BlockId, Option<Box<BasicBlock>>>,
 }
 
-impl<'a> Blocks<'a> {
+impl Blocks {
     pub fn new() -> Self {
         Self {
             data: Default::default(),
@@ -75,7 +74,7 @@ impl<'a> Blocks<'a> {
         self.data.len()
     }
 
-    pub fn insert(&mut self, block: Box<BasicBlock<'a>>) -> Option<Option<Box<BasicBlock<'a>>>> {
+    pub fn insert(&mut self, block: Box<BasicBlock>) -> Option<Option<Box<BasicBlock>>> {
         self.data.insert(block.id, Some(block))
     }
 
@@ -83,7 +82,7 @@ impl<'a> Blocks<'a> {
         self.data.keys().cloned().collect()
     }
 
-    pub fn remove(&mut self, id: BlockId) -> Box<BasicBlock<'a>> {
+    pub fn remove(&mut self, id: BlockId) -> Box<BasicBlock> {
         self.data.remove(&id).unwrap().unwrap()
     }
 
@@ -91,38 +90,38 @@ impl<'a> Blocks<'a> {
         self.data.extend(other.data);
     }
 
-    pub fn into_iter(self) -> BlocksIntoIter<'a> {
+    pub fn into_iter(self) -> BlocksIntoIter {
         BlocksIntoIter::new(self.data.into_iter())
     }
 
-    pub fn block(&self, id: BlockId) -> &BasicBlock<'a> {
+    pub fn block(&self, id: BlockId) -> &BasicBlock {
         self.data.get(&id).unwrap().as_ref().unwrap()
     }
 
-    pub fn block_mut(&mut self, id: BlockId) -> &mut BasicBlock<'a> {
+    pub fn block_mut(&mut self, id: BlockId) -> &mut BasicBlock {
         self.data.get_mut(&id).unwrap().as_mut().unwrap()
     }
 
-    pub fn iter(&self) -> BlocksIter<'_, 'a> {
+    pub fn iter(&self) -> BlocksIter<'_> {
         BlocksIter::new(self.data.iter())
     }
 
-    pub fn iter_mut(&mut self) -> BlocksIterMut<'_, 'a> {
+    pub fn iter_mut(&mut self) -> BlocksIterMut<'_> {
         BlocksIterMut::new(self.data.iter_mut())
     }
 }
-pub struct BlocksIntoIter<'a> {
-    iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock<'a>>>>,
+pub struct BlocksIntoIter {
+    iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock>>>,
 }
 
-impl<'a> BlocksIntoIter<'a> {
-    fn new(iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock<'a>>>>) -> Self {
+impl BlocksIntoIter {
+    fn new(iter: indexmap::map::IntoIter<BlockId, Option<Box<BasicBlock>>>) -> Self {
         Self { iter }
     }
 }
 
-impl<'a> Iterator for BlocksIntoIter<'a> {
-    type Item = Box<BasicBlock<'a>>;
+impl Iterator for BlocksIntoIter {
+    type Item = Box<BasicBlock>;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -139,18 +138,18 @@ impl<'a> Iterator for BlocksIntoIter<'a> {
     }
 }
 
-pub struct BlocksIter<'b, 'a> {
-    iter: indexmap::map::Iter<'b, BlockId, Option<Box<BasicBlock<'a>>>>,
+pub struct BlocksIter<'b> {
+    iter: indexmap::map::Iter<'b, BlockId, Option<Box<BasicBlock>>>,
 }
 
-impl<'b, 'a> BlocksIter<'b, 'a> {
-    fn new(iter: indexmap::map::Iter<'b, BlockId, Option<Box<BasicBlock<'a>>>>) -> Self {
+impl<'b> BlocksIter<'b> {
+    fn new(iter: indexmap::map::Iter<'b, BlockId, Option<Box<BasicBlock>>>) -> Self {
         Self { iter }
     }
 }
 
-impl<'b, 'a> Iterator for BlocksIter<'b, 'a> {
-    type Item = &'b BasicBlock<'a>;
+impl<'b> Iterator for BlocksIter<'b> {
+    type Item = &'b BasicBlock;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -164,18 +163,18 @@ impl<'b, 'a> Iterator for BlocksIter<'b, 'a> {
     }
 }
 
-pub struct BlocksIterMut<'b, 'a> {
-    iter: indexmap::map::IterMut<'b, BlockId, Option<Box<BasicBlock<'a>>>>,
+pub struct BlocksIterMut<'b> {
+    iter: indexmap::map::IterMut<'b, BlockId, Option<Box<BasicBlock>>>,
 }
 
-impl<'b, 'a> BlocksIterMut<'b, 'a> {
-    fn new(iter: indexmap::map::IterMut<'b, BlockId, Option<Box<BasicBlock<'a>>>>) -> Self {
+impl<'b> BlocksIterMut<'b> {
+    fn new(iter: indexmap::map::IterMut<'b, BlockId, Option<Box<BasicBlock>>>) -> Self {
         Self { iter }
     }
 }
 
-impl<'b, 'a> Iterator for BlocksIterMut<'b, 'a> {
-    type Item = &'b mut BasicBlock<'a>;
+impl<'b> Iterator for BlocksIterMut<'b> {
+    type Item = &'b mut BasicBlock;
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
@@ -189,14 +188,14 @@ impl<'b, 'a> Iterator for BlocksIterMut<'b, 'a> {
     }
 }
 
-pub struct BlockRewriter<'blocks, 'a> {
-    blocks: &'blocks mut Blocks<'a>,
+pub struct BlockRewriter<'blocks> {
+    blocks: &'blocks mut Blocks,
     current: BlockId,
-    new_blocks: std::vec::Vec<Box<BasicBlock<'a>>>,
+    new_blocks: std::vec::Vec<Box<BasicBlock>>,
 }
 
-impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
-    pub fn new(blocks: &'blocks mut Blocks<'a>, entry: BlockId) -> Self {
+impl<'blocks> BlockRewriter<'blocks> {
+    pub fn new(blocks: &'blocks mut Blocks, entry: BlockId) -> Self {
         Self {
             blocks,
             current: entry,
@@ -206,7 +205,7 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
 
     pub fn each_block<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> BlockRewriterAction<'a>,
+        F: FnMut(Box<BasicBlock>, &mut Self) -> BlockRewriterAction,
     {
         let mut keys = self.blocks.block_ids();
         loop {
@@ -236,7 +235,7 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
 
     pub fn try_each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
     where
-        F: FnMut(Box<BasicBlock<'a>>, &mut Self) -> Result<BlockRewriterAction<'a>, Diagnostic>,
+        F: FnMut(Box<BasicBlock>, &mut Self) -> Result<BlockRewriterAction, Diagnostic>,
     {
         let mut keys = self.blocks.block_ids();
         loop {
@@ -270,22 +269,22 @@ impl<'blocks, 'a> BlockRewriter<'blocks, 'a> {
         self.blocks.data.contains_key(&block_id)
     }
 
-    pub fn block(&self, block_id: BlockId) -> &BasicBlock<'a> {
+    pub fn block(&self, block_id: BlockId) -> &BasicBlock {
         assert_ne!(block_id, self.current);
         self.blocks.block(block_id)
     }
 
-    pub fn block_mut(&mut self, block_id: BlockId) -> &mut BasicBlock<'a> {
+    pub fn block_mut(&mut self, block_id: BlockId) -> &mut BasicBlock {
         assert_ne!(block_id, self.current);
         self.blocks.block_mut(block_id)
     }
 
-    pub fn add_block(&mut self, block: Box<BasicBlock<'a>>) {
+    pub fn add_block(&mut self, block: Box<BasicBlock>) {
         self.new_blocks.push(block);
     }
 }
 
-pub enum BlockRewriterAction<'a> {
-    Keep(Box<BasicBlock<'a>>),
+pub enum BlockRewriterAction {
+    Keep(Box<BasicBlock>),
     Remove,
 }

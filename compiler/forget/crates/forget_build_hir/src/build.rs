@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 
-use bumpalo::collections::{CollectIn, String};
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
@@ -23,10 +22,7 @@ use crate::error::BuildHIRError;
 ///
 /// Failures generally include nonsensical input (`delete 1`) or syntax
 /// that is not yet supported.
-pub fn build<'a>(
-    env: &'a Environment<'a>,
-    fun: Function,
-) -> Result<Box<forget_hir::Function<'a>>, Diagnostic> {
+pub fn build(env: &Environment, fun: Function) -> Result<Box<forget_hir::Function>, Diagnostic> {
     let mut builder = Builder::new(env);
 
     match fun.body {
@@ -44,7 +40,7 @@ pub fn build<'a>(
         }
     }
 
-    let mut params = env.vec_with_capacity(fun.params.len());
+    let mut params = Vec::with_capacity(fun.params.len());
     for param in fun.params {
         match param {
             Pattern::Identifier(param) => {
@@ -83,21 +79,19 @@ pub fn build<'a>(
 
     let body = builder.build()?;
     Ok(Box::new(forget_hir::Function {
-        id: fun
-            .id
-            .map(|id| String::from_str_in(&id.name, &env.allocator)),
+        id: fun.id.map(|id| id.name),
         body,
         params,
         // TODO: populate context!
-        context: env.vec_new(),
+        context: Default::default(),
         is_async: fun.is_async,
         is_generator: fun.is_generator,
     }))
 }
 
-fn lower_block_statement<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_block_statement(
+    env: &Environment,
+    builder: &mut Builder,
     stmt: BlockStatement,
 ) -> Result<(), Diagnostic> {
     for stmt in stmt.body {
@@ -108,11 +102,11 @@ fn lower_block_statement<'a>(
 
 /// Convert a statement to HIR. This will often result in multiple instructions and blocks
 /// being created as statements often describe control flow.
-fn lower_statement<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_statement(
+    env: &Environment,
+    builder: &mut Builder,
     stmt: Statement,
-    label: Option<String<'a>>,
+    label: Option<String>,
 ) -> Result<(), Diagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
@@ -350,9 +344,9 @@ fn lower_statement<'a>(
 /// InstructionValue is returned, this function is recursive and may cause multiple instructions
 /// to be emitted, possibly across multiple basic blocks (in the case of expressions with control
 /// flow semenatics such as logical, conditional, and optional expressions).
-fn lower_expression<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_expression(
+    env: &Environment,
+    builder: &mut Builder,
     expr: Expression,
 ) -> Result<InstrIx, Diagnostic> {
     let value = match expr {
@@ -367,16 +361,16 @@ fn lower_expression<'a>(
                     };
                     InstructionValue::LoadLocal(LoadLocal { place })
                 }
-                Binding::Module(..) | Binding::Global => InstructionValue::LoadGlobal(LoadGlobal {
-                    name: String::from_str_in(&expr.name, &env.allocator),
-                }),
+                Binding::Module(..) | Binding::Global => {
+                    InstructionValue::LoadGlobal(LoadGlobal { name: expr.name })
+                }
             }
         }
         Expression::Literal(expr) => InstructionValue::Primitive(forget_hir::Primitive {
             value: lower_primitive(env, builder, *expr),
         }),
         Expression::ArrayExpression(expr) => {
-            let mut elements = env.vec_with_capacity(expr.elements.len());
+            let mut elements = Vec::with_capacity(expr.elements.len());
             for expr in expr.elements {
                 let element = match expr {
                     Some(forget_estree::ExpressionOrSpread::SpreadElement(expr)) => {
@@ -477,12 +471,12 @@ fn lower_expression<'a>(
     Ok(builder.push(value))
 }
 
-fn lower_arguments<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_arguments(
+    env: &Environment,
+    builder: &mut Builder,
     args: Vec<ExpressionOrSpread>,
-) -> Result<bumpalo::collections::Vec<'a, PlaceOrSpread>, Diagnostic> {
-    let mut arguments = env.vec_with_capacity(args.len());
+) -> Result<Vec<PlaceOrSpread>, Diagnostic> {
+    let mut arguments = Vec::with_capacity(args.len());
     for arg in args {
         let element = match arg {
             forget_estree::ExpressionOrSpread::SpreadElement(arg) => {
@@ -501,15 +495,15 @@ fn lower_arguments<'a>(
     Ok(arguments)
 }
 
-fn lower_function<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_function(
+    env: &Environment,
+    builder: &mut Builder,
     function: forget_estree::Function,
-) -> Result<forget_hir::FunctionExpression<'a>, Diagnostic> {
+) -> Result<forget_hir::FunctionExpression, Diagnostic> {
     println!("get_context_identifiers() ...");
     let context_identifiers = get_context_identifiers(env, &function);
     println!("ok");
-    let mut context = env.vec_new();
+    let mut context = Vec::new();
     let mut seen = HashSet::new();
     for identifier in context_identifiers {
         match builder.resolve_identifier(identifier)? {
@@ -529,17 +523,17 @@ fn lower_function<'a>(
     fun.context = context;
     Ok(forget_hir::FunctionExpression {
         // TODO: collect dependencies!
-        dependencies: env.vec_new(),
+        dependencies: Default::default(),
         lowered_function: fun,
     })
 }
 
-fn lower_jsx_element<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_jsx_element(
+    env: &Environment,
+    builder: &mut Builder,
     expr: forget_estree::JSXElement,
-) -> Result<JSXElement<'a>, Diagnostic> {
-    let props: Result<Vec<JSXAttribute<'_>>, Diagnostic> = expr
+) -> Result<JSXElement, Diagnostic> {
+    let props: Result<Vec<JSXAttribute>, Diagnostic> = expr
         .opening_element
         .attributes
         .into_iter()
@@ -567,25 +561,25 @@ fn lower_jsx_element<'a>(
     // })
 }
 
-fn lower_jsx_attribute<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_jsx_attribute(
+    env: &Environment,
+    builder: &mut Builder,
     attr: forget_estree::JSXAttributeOrSpread,
-) -> Result<JSXAttribute<'a>, Diagnostic> {
+) -> Result<JSXAttribute, Diagnostic> {
     todo!("lower jsx attribute")
 }
 
-fn lower_jsx_child<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_jsx_child(
+    env: &Environment,
+    builder: &mut Builder,
     child: forget_estree::JSXChildItem,
 ) -> Result<InstrIx, Diagnostic> {
     todo!("lower jsx child")
 }
 
-fn lower_assignment<'a>(
-    env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_assignment(
+    env: &Environment,
+    builder: &mut Builder,
     kind: InstructionKind,
     lvalue: AssignmentTarget,
     value: InstrIx,
@@ -608,12 +602,12 @@ fn lower_assignment<'a>(
     })
 }
 
-fn lower_identifier_for_assignment<'a>(
-    _env: &'a Environment<'a>,
-    builder: &mut Builder<'a>,
+fn lower_identifier_for_assignment(
+    _env: &Environment,
+    builder: &mut Builder,
     _kind: InstructionKind,
     identifier: forget_estree::Identifier,
-) -> Result<IdentifierOperand<'a>, Diagnostic> {
+) -> Result<IdentifierOperand, Diagnostic> {
     let binding = builder.resolve_identifier(&identifier)?;
     match binding {
         Binding::Module(..) | Binding::Global => Err(Diagnostic::invalid_react(
@@ -632,16 +626,12 @@ fn lower_identifier_for_assignment<'a>(
 }
 
 /// Converts an ESTree literal into a HIR primitive
-fn lower_primitive<'a>(
-    env: &'a Environment<'a>,
-    _builder: &mut Builder<'a>,
-    literal: Literal,
-) -> PrimitiveValue<'a> {
+fn lower_primitive(_env: &Environment, _builder: &mut Builder, literal: Literal) -> PrimitiveValue {
     match literal.value {
         JsValue::Bool(bool) => PrimitiveValue::Boolean(bool),
         JsValue::Null => PrimitiveValue::Null,
         JsValue::Number(value) => PrimitiveValue::Number(f64::from(value).into()),
-        JsValue::String(s) => PrimitiveValue::String(String::from_str_in(&s, &env.allocator)),
+        JsValue::String(s) => PrimitiveValue::String(s),
         _ => todo!("Lower literal {literal:#?}"),
     }
 }

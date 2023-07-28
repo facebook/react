@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use forget_estree::{Binding, BindingId, Function, Identifier, Visitor};
 use forget_hir::Environment;
 
-pub(crate) fn get_context_identifiers<'a, 'ast>(
-    _env: &'a Environment<'a>,
+pub(crate) fn get_context_identifiers<'ast>(
+    _env: &Environment,
     function: &'ast Function,
 ) -> Vec<&'ast Identifier> {
     let mut visitor = ContextVisitor::new();

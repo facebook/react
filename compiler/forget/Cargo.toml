@@ -26,7 +26,6 @@ forget_swc_demo = { path = "crates/forget_swc_demo" }
 forget_utils = { path = "crates/forget_utils" }
 
 # dependencies
-bumpalo = { version = "3.13.0", features = ["boxed", "collections"] }
 indexmap = { version = "2.0.0", features = ["serde"] }
 insta = { version = "1.30.0", features = ["glob"] }
 miette = { version = "5.9.0" }

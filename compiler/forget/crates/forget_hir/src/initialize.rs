@@ -11,7 +11,7 @@ use crate::{
 /// Runs a variety of passes to put the HIR in canonical form. This should be called
 /// after initial HIR construction and after any transformations that change the
 /// shape of the control-flow graph.
-pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
+pub fn initialize_hir(hir: &mut HIR) -> Result<(), Diagnostic> {
     prune_tombstones(hir);
     reverse_postorder_blocks(hir);
     remove_unreachable_for_updates(hir);
@@ -22,7 +22,7 @@ pub fn initialize_hir<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
     Ok(())
 }
 
-pub fn prune_tombstones<'a>(hir: &mut HIR<'a>) {
+pub fn prune_tombstones(hir: &mut HIR) {
     for block in hir.blocks.iter_mut() {
         block.instructions.retain(|ix| {
             let instr = &hir.instructions[usize::from(*ix)];
@@ -34,12 +34,12 @@ pub fn prune_tombstones<'a>(hir: &mut HIR<'a>) {
 
 /// Modifies the HIR to put the blocks in reverse postorder, with predecessors before
 /// successors (except for the case of loops)
-pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
+pub fn reverse_postorder_blocks(hir: &mut HIR) {
     let mut visited = HashSet::<BlockId>::with_capacity(hir.blocks.len());
     let mut postorder = std::vec::Vec::<BlockId>::with_capacity(hir.blocks.len());
-    fn visit<'a>(
+    fn visit(
         block_id: BlockId,
-        hir: &HIR<'a>,
+        hir: &HIR,
         visited: &mut HashSet<BlockId>,
         postorder: &mut std::vec::Vec<BlockId>,
     ) {
@@ -89,7 +89,7 @@ pub fn reverse_postorder_blocks<'a>(hir: &mut HIR<'a>) {
 }
 
 /// Prunes ForTerminal.update values (sets to None) if they are unreachable
-pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_for_updates(hir: &mut HIR) {
     BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         if let TerminalValue::For(terminal) = &mut block.terminal.value {
             if let Some(update) = terminal.update {
@@ -104,7 +104,7 @@ pub fn remove_unreachable_for_updates<'a>(hir: &mut HIR<'a>) {
 
 /// Prunes unreachable fallthrough values, setting them to None if the referenced
 /// block was not otherwise reachable.
-pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_fallthroughs(hir: &mut HIR) {
     BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         block
             .terminal
@@ -121,7 +121,7 @@ pub fn remove_unreachable_fallthroughs<'a>(hir: &mut HIR<'a>) {
 }
 
 /// Rewrites DoWhile statements into Gotos if the test block is not reachable
-pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
+pub fn remove_unreachable_do_while_statements(hir: &mut HIR) {
     BlockRewriter::new(&mut hir.blocks, hir.entry).each_block(|mut block, rewriter| {
         if let TerminalValue::DoWhile(terminal) = &mut block.terminal.value {
             if !rewriter.contains(terminal.test) {
@@ -137,7 +137,7 @@ pub fn remove_unreachable_do_while_statements<'a>(hir: &mut HIR<'a>) {
 
 /// Updates the instruction ids for all instructions and blocks
 /// Relies on the blocks being in reverse postorder to ensure that id ordering is correct
-pub fn mark_instruction_ids<'a>(hir: &mut HIR<'a>) -> Result<(), Diagnostic> {
+pub fn mark_instruction_ids(hir: &mut HIR) -> Result<(), Diagnostic> {
     let mut id_gen = InstructionIdGenerator::new();
     let mut visited = HashSet::<(usize, usize)>::new();
     for (ii, block) in hir.blocks.iter_mut().enumerate() {
@@ -161,15 +161,15 @@ pub struct BlockVisitedTwice {
 }
 
 /// Updates the predecessors of each block
-pub fn mark_predecessors<'a>(hir: &mut HIR<'a>) {
+pub fn mark_predecessors(hir: &mut HIR) {
     for block in hir.blocks.iter_mut() {
         block.predecessors.clear();
     }
     let mut visited = HashSet::<BlockId>::with_capacity(hir.blocks.len());
-    fn visit<'a>(
+    fn visit(
         block_id: BlockId,
         prev_id: Option<BlockId>,
-        hir: &mut HIR<'a>,
+        hir: &mut HIR,
         visited: &mut HashSet<BlockId>,
     ) {
         let block = hir.blocks.block_mut(block_id);

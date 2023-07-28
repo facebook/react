@@ -2,9 +2,6 @@ use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use bumpalo::boxed::Box;
-use bumpalo::collections::Vec;
-use bumpalo::Bump;
 use forget_estree::BindingId;
 
 use crate::{
@@ -15,7 +12,7 @@ use crate::{
 /// compiled. Environments may not be reused between React functions, but *are*
 /// shared between each React function and all its nested function expressions.
 #[derive(Debug)]
-pub struct Environment<'a> {
+pub struct Environment {
     /// The set of enabled compiler features
     pub features: Features,
 
@@ -23,10 +20,6 @@ pub struct Environment<'a> {
     /// precisely
     #[allow(dead_code)]
     registry: Registry,
-
-    /// Arena allocator so that data for compilation can be efficiently allocated
-    /// and the memory reclaimed when compilation completes.
-    pub allocator: &'a Bump,
 
     /// The next available block index
     next_block_id: Cell<BlockId>,
@@ -36,13 +29,12 @@ pub struct Environment<'a> {
 
     next_type_var_id: Cell<TypeVarId>,
 
-    bindings: Rc<RefCell<HashMap<(bumpalo::collections::String<'a>, BindingId), Identifier<'a>>>>,
+    bindings: Rc<RefCell<HashMap<(String, BindingId), Identifier>>>,
 }
 
-impl<'a> Environment<'a> {
-    pub fn new(allocator: &'a Bump, features: Features, registry: Registry) -> Self {
+impl Environment {
+    pub fn new(features: Features, registry: Registry) -> Self {
         Self {
-            allocator,
             features,
             registry,
             next_block_id: Cell::new(BlockId(0)),
@@ -50,23 +42,6 @@ impl<'a> Environment<'a> {
             next_type_var_id: Cell::new(TypeVarId(0)),
             bindings: Default::default(),
         }
-    }
-
-    /// Allocate a value into the environment's memory arena
-    pub fn alloc<T>(&self, value: T) -> &'a mut T {
-        self.allocator.alloc(value)
-    }
-
-    pub fn box_new<T>(&self, value: T) -> Box<'a, T> {
-        Box::new_in(value, &self.allocator)
-    }
-
-    pub fn vec_new<T>(&self) -> Vec<'a, T> {
-        Vec::new_in(&self.allocator)
-    }
-
-    pub fn vec_with_capacity<T>(&self, capacity: usize) -> Vec<'a, T> {
-        Vec::with_capacity_in(capacity, &self.allocator)
     }
 
     /// Get the next available block id
@@ -90,8 +65,8 @@ impl<'a> Environment<'a> {
         id
     }
 
-    pub fn resolve_binding_identifier(&self, name: &str, binding_id: BindingId) -> Identifier<'a> {
-        let key_name = bumpalo::collections::String::from_str_in(name, &self.allocator);
+    pub fn resolve_binding_identifier(&self, name: &str, binding_id: BindingId) -> Identifier {
+        let key_name = name.to_string();
         let mut bindings = self.bindings.borrow_mut();
         if let Some(identifier) = bindings.get(&(key_name.clone(), binding_id)) {
             identifier.clone()

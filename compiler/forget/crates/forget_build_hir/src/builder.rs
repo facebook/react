@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use bumpalo::collections::{String, Vec};
 use forget_diagnostics::Diagnostic;
 use forget_hir::{
     initialize_hir, BasicBlock, BlockId, BlockKind, Blocks, Environment, GotoKind, Identifier,
@@ -20,59 +19,59 @@ use crate::BuildHIRError;
 /// generally involves driving calls to enter/exit blocks, resolve
 /// labels and variables, and then calling `build()` when the HIR
 /// is complete.
-pub(crate) struct Builder<'a> {
+pub(crate) struct Builder<'e> {
     #[allow(dead_code)]
-    environment: &'a Environment<'a>,
+    environment: &'e Environment,
 
-    completed: Blocks<'a>,
+    completed: Blocks,
 
-    instructions: Vec<'a, Instruction<'a>>,
+    instructions: Vec<Instruction>,
 
     entry: BlockId,
 
-    wip: WipBlock<'a>,
+    wip: WipBlock,
 
     id_gen: InstructionIdGenerator,
 
-    scopes: Vec<'a, ControlFlowScope<'a>>,
+    scopes: Vec<ControlFlowScope>,
 }
 
-pub(crate) struct WipBlock<'a> {
+pub(crate) struct WipBlock {
     pub id: BlockId,
     pub kind: BlockKind,
-    pub instructions: Vec<'a, InstrIx>,
+    pub instructions: Vec<InstrIx>,
 }
 
-pub(crate) enum Binding<'a> {
-    Local(Identifier<'a>),
-    Module(Identifier<'a>),
+pub(crate) enum Binding {
+    Local(Identifier),
+    Module(Identifier),
     Global,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-enum ControlFlowScope<'a> {
-    Loop(LoopScope<'a>),
+enum ControlFlowScope {
+    Loop(LoopScope),
 
-    // Switch(SwitchScope<'a>),
+    // Switch(SwitchScope),
     #[allow(dead_code)]
-    Label(LabelScope<'a>),
+    Label(LabelScope),
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) struct LoopScope<'a> {
-    pub label: Option<String<'a>>,
+pub(crate) struct LoopScope {
+    pub label: Option<String>,
     pub continue_block: BlockId,
     pub break_block: BlockId,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) struct LabelScope<'a> {
-    pub label: String<'a>,
+pub(crate) struct LabelScope {
+    pub label: String,
     pub block: BlockId,
 }
 
-impl<'a> ControlFlowScope<'a> {
-    fn label(&self) -> Option<&String<'a>> {
+impl ControlFlowScope {
+    fn label(&self) -> Option<&String> {
         match self {
             Self::Loop(scope) => scope.label.as_ref(),
             Self::Label(scope) => Some(&scope.label),
@@ -87,22 +86,22 @@ impl<'a> ControlFlowScope<'a> {
     }
 }
 
-impl<'a> Builder<'a> {
-    pub(crate) fn new(environment: &'a Environment<'a>) -> Self {
+impl<'e> Builder<'e> {
+    pub(crate) fn new(environment: &'e Environment) -> Self {
         let entry = environment.next_block_id();
         let current = WipBlock {
             id: entry,
             kind: BlockKind::Block,
-            instructions: environment.vec_new(),
+            instructions: Default::default(),
         };
         Self {
             environment,
             completed: Default::default(),
-            instructions: environment.vec_new(),
+            instructions: Default::default(),
             entry,
             wip: current,
             id_gen: InstructionIdGenerator::new(),
-            scopes: environment.vec_new(),
+            scopes: Default::default(),
         }
     }
 
@@ -111,7 +110,7 @@ impl<'a> Builder<'a> {
     ///
     /// TODO: refine the type, only invariants should be possible here,
     /// not other types of errors
-    pub(crate) fn build(self) -> Result<HIR<'a>, Diagnostic> {
+    pub(crate) fn build(self) -> Result<HIR, Diagnostic> {
         let mut hir = HIR {
             entry: self.entry,
             blocks: self.completed,
@@ -123,7 +122,7 @@ impl<'a> Builder<'a> {
     }
 
     /// Adds a new instruction to the end of the work in progress block
-    pub(crate) fn push(&mut self, value: InstructionValue<'a>) -> InstrIx {
+    pub(crate) fn push(&mut self, value: InstructionValue) -> InstrIx {
         let instr = Instruction {
             id: self.id_gen.next(),
             value,
@@ -136,19 +135,19 @@ impl<'a> Builder<'a> {
 
     /// Terminates the work in progress block with the given terminal, and starts a new
     /// work in progress block with the given kind
-    pub(crate) fn terminate(&mut self, terminal: TerminalValue<'a>, next_kind: BlockKind) {
+    pub(crate) fn terminate(&mut self, terminal: TerminalValue, next_kind: BlockKind) {
         let next_wip = WipBlock {
             id: self.environment.next_block_id(),
             kind: next_kind,
-            instructions: self.environment.vec_new(),
+            instructions: Default::default(),
         };
         self.terminate_with_fallthrough(terminal, next_wip)
     }
 
     pub(crate) fn terminate_with_fallthrough(
         &mut self,
-        terminal: TerminalValue<'a>,
-        fallthrough: WipBlock<'a>,
+        terminal: TerminalValue,
+        fallthrough: WipBlock,
     ) {
         let prev_wip = std::mem::replace(&mut self.wip, fallthrough);
         self.completed.insert(Box::new(BasicBlock {
@@ -160,21 +159,21 @@ impl<'a> Builder<'a> {
                 value: terminal,
             },
             predecessors: Default::default(),
-            phis: self.environment.vec_new(),
+            phis: Default::default(),
         }));
     }
 
-    pub(crate) fn reserve(&mut self, kind: BlockKind) -> WipBlock<'a> {
+    pub(crate) fn reserve(&mut self, kind: BlockKind) -> WipBlock {
         WipBlock {
             id: self.environment.next_block_id(),
             kind,
-            instructions: self.environment.vec_new(),
+            instructions: Default::default(),
         }
     }
 
     pub(crate) fn enter<F>(&mut self, kind: BlockKind, f: F) -> Result<BlockId, Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue, Diagnostic>,
     {
         let wip = self.reserve(kind);
         let id = wip.id;
@@ -182,9 +181,9 @@ impl<'a> Builder<'a> {
         Ok(id)
     }
 
-    fn enter_reserved<F>(&mut self, wip: WipBlock<'a>, f: F) -> Result<(), Diagnostic>
+    fn enter_reserved<F>(&mut self, wip: WipBlock, f: F) -> Result<(), Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue, Diagnostic>,
     {
         let current = std::mem::replace(&mut self.wip, wip);
 
@@ -210,18 +209,18 @@ impl<'a> Builder<'a> {
                 value: terminal,
             },
             predecessors: Default::default(),
-            phis: self.environment.vec_new(),
+            phis: Default::default(),
         }));
         result
     }
 
     pub(crate) fn enter_loop<F>(
         &mut self,
-        scope: LoopScope<'a>,
+        scope: LoopScope,
         f: F,
-    ) -> Result<TerminalValue<'a>, Diagnostic>
+    ) -> Result<TerminalValue, Diagnostic>
     where
-        F: FnOnce(&mut Self) -> Result<TerminalValue<'a>, Diagnostic>,
+        F: FnOnce(&mut Self) -> Result<TerminalValue, Diagnostic>,
     {
         self.scopes.push(ControlFlowScope::Loop(scope.clone()));
         let terminal = f(self);
@@ -235,7 +234,7 @@ impl<'a> Builder<'a> {
     /// we synthesize a temporary identifier to store the possibly-missing value
     /// into, and emit a later StoreLocal for the original identifier
     #[allow(dead_code)]
-    pub(crate) fn make_temporary(&self) -> forget_hir::Identifier<'a> {
+    pub(crate) fn make_temporary(&self) -> forget_hir::Identifier {
         forget_hir::Identifier {
             id: self.environment.next_identifier_id(),
             name: None,
@@ -318,7 +317,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn resolve_identifier(
         &mut self,
         identifier: &forget_estree::Identifier,
-    ) -> Result<Binding<'a>, Diagnostic> {
+    ) -> Result<Binding, Diagnostic> {
         match &identifier.binding {
             Some(binding) => Ok(match binding {
                 forget_estree::Binding::Global => Binding::Global,
