@@ -24,7 +24,7 @@ You can find the React documentation [on the website](https://reactjs.org/).
 
 Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) page for a quick overview.
 
-The documentation is divided into several sections:
+The documentation is divided into several sections::::::::::
 
 * [Tutorial](https://reactjs.org/tutorial/tutorial.html)
 * [Main Concepts](https://reactjs.org/docs/hello-world.html)
