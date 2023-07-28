@@ -50,13 +50,6 @@ let statusListener: StatusListener = (
 ) => {};
 let disconnectedCallback: OnDisconnectedCallback = () => {};
 
-// TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-function hookNamesModuleLoaderFunction() {
-  return import(
-    /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
-  );
-}
-
 function setContentDOMNode(value: HTMLElement): typeof DevtoolsUI {
   node = value;
 
@@ -122,7 +115,6 @@ function reload() {
       createElement(DevTools, {
         bridge: ((bridge: any): FrontendBridge),
         canViewElementSourceFunction,
-        hookNamesModuleLoaderFunction,
         showTabBar: true,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,

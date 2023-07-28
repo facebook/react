@@ -372,12 +372,6 @@ function createPanelIfReactLoaded() {
           };
         }
 
-        // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-        const hookNamesModuleLoaderFunction = () =>
-          import(
-            /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
-          );
-
         root = createRoot(document.createElement('div'));
 
         render = (overrideTab = mostRecentOverrideTab) => {
@@ -389,7 +383,6 @@ function createPanelIfReactLoaded() {
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
               fetchFileWithCaching,
-              hookNamesModuleLoaderFunction,
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
