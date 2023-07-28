@@ -267,6 +267,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cmake"
+version = "0.1.50"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a31c789563b815f77f4250caee12365734369f942439b7defd71e18a48197130"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "console"
 version = "0.15.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -514,6 +523,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "forget_hermes_parser"
+version = "0.1.0"
+dependencies = [
+ "forget_diagnostics",
+ "forget_estree",
+ "hermes",
+ "juno_support",
+]
+
+[[package]]
 name = "forget_hir"
 version = "0.1.0"
 dependencies = [
@@ -657,6 +676,18 @@ name = "hashbrown"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c6201b9ff9fd90a5a3bac2e56a830d0caa509576f0e503818ee82c181b3437a"
+
+[[package]]
+name = "hermes"
+version = "0.1.0"
+source = "git+https://github.com/facebook/hermes.git#b2618410b4093e780a04228a2ce87a3626983506"
+dependencies = [
+ "cmake",
+ "juno_support",
+ "libc",
+ "libcplusplus",
+ "thiserror",
+]
 
 [[package]]
 name = "hermit-abi"
@@ -825,6 +856,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "juno_support"
+version = "0.1.0"
+source = "git+https://github.com/facebook/hermes.git#b2618410b4093e780a04228a2ce87a3626983506"
+dependencies = [
+ "anyhow",
+ "base64",
+ "cmake",
+ "libcplusplus",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -908,6 +952,11 @@ name = "libc"
 version = "0.2.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+
+[[package]]
+name = "libcplusplus"
+version = "0.1.0"
+source = "git+https://github.com/facebook/hermes.git#b2618410b4093e780a04228a2ce87a3626983506"
 
 [[package]]
 name = "linked-hash-map"

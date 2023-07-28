@@ -19,6 +19,7 @@ forget_estree = { path = "crates/forget_estree" }
 forget_estree_codegen = { path = "crates/forget_estree_codegen" }
 forget_estree_swc = { path = "crates/forget_estree_swc" }
 forget_fixtures = { path = "crates/forget_fixtures" }
+forget_hermes_parser = { path = "crates/forget_hermes_parser" }
 forget_hir = { path = "crates/forget_hir" }
 forget_optimization = { path = "crates/forget_optimization" }
 forget_ssa = { path = "crates/forget_ssa" }
@@ -39,6 +40,8 @@ swc = "0.264.8"
 swc_core = { version = "0.79.9", features = ["swc_ecma_visit", "__ecma_transforms", "swc_ecma_ast", "swc_common", "swc", "swc_ecma_parser", "__ecma", "__common", "ecma_ast", "__visit", "__parser"] }
 syn = "2.0.23"
 thiserror = "1.0.41"
+hermes = { git = "https://github.com/facebook/hermes.git" }
+juno_support = { git = "https://github.com/facebook/hermes.git" }
 
 [profile.release]
 # configuration adapted from oxc
