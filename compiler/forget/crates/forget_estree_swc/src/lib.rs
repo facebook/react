@@ -8,11 +8,13 @@ use swc_core::common::errors::Handler;
 use swc_core::common::source_map::Pos;
 use swc_core::common::{FileName, FilePathMapping, Mark, SourceMap, Span, SyntaxContext, GLOBALS};
 use swc_core::ecma::ast::{
-    AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, CallExpr, Callee, Decl, EsVersion, Expr,
-    ExprOrSpread, Function, Ident, Lit, MemberExpr, MemberProp, ModuleItem, OptChainBase, Pat,
-    PatOrExpr, Program, Stmt, UnaryOp, VarDecl, VarDeclKind, VarDeclOrExpr,
+    AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, Callee, Decl, EsVersion, Expr, ExprOrSpread,
+    Function, Ident, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
+    JSXElementChild, JSXElementName, JSXExpr, JSXMemberExpr, JSXObject, Lit, MemberExpr,
+    MemberProp, ModuleItem, OptChainBase, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl,
+    VarDeclKind, VarDeclOrExpr,
 };
-use swc_core::ecma::parser::Syntax;
+use swc_core::ecma::parser::{Syntax, TsConfig};
 use swc_core::ecma::transforms::base::resolver;
 use swc_core::ecma::visit::FoldWith;
 
@@ -35,7 +37,10 @@ pub fn parse(
             fm.clone(),
             &handler,
             EsVersion::Es5,
-            Syntax::Typescript(Default::default()),
+            Syntax::Typescript(TsConfig {
+                tsx: true,
+                ..Default::default()
+            }),
             swc::config::IsModule::Bool(true),
             Some(&comments),
         )?;
@@ -340,13 +345,20 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 range: convert_span(&expr.span),
             }))
         }
-        Expr::Await(_expr) => {
-            // forget_estree::Expression::AwaitExpression(Box::new(forget_estree::AwaitExpression {
-            //     argument: convert_expression(cx, &expr.arg),
-            //     loc: None,
-            //     range: convert_span(&expr.span),
-            // }))
-            todo!("await expression")
+        Expr::Await(expr) => {
+            forget_estree::Expression::AwaitExpression(Box::new(forget_estree::AwaitExpression {
+                argument: convert_expression(cx, &expr.arg),
+                loc: None,
+                range: convert_span(&expr.span),
+            }))
+        }
+        Expr::Yield(expr) => {
+            forget_estree::Expression::YieldExpression(Box::new(forget_estree::YieldExpression {
+                argument: expr.arg.as_ref().map(|arg| convert_expression(cx, arg)),
+                is_delegate: expr.delegate,
+                loc: None,
+                range: convert_span(&expr.span),
+            }))
         }
         Expr::Unary(expr) => {
             forget_estree::Expression::UnaryExpression(Box::new(forget_estree::UnaryExpression {
@@ -377,32 +389,7 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 },
             )),
         },
-        Expr::Lit(expr) => {
-            let (value, range) = match expr {
-                Lit::Bool(expr) => (
-                    forget_estree::JsValue::Bool(expr.value),
-                    convert_span(&expr.span),
-                ),
-                Lit::Num(expr) => (
-                    forget_estree::JsValue::Number(expr.value.into()),
-                    convert_span(&expr.span),
-                ),
-                Lit::Str(expr) => (
-                    forget_estree::JsValue::String(expr.value.to_string()),
-                    convert_span(&expr.span),
-                ),
-                Lit::Null(expr) => (forget_estree::JsValue::Null, convert_span(&expr.span)),
-                _ => todo!(),
-            };
-            forget_estree::Expression::Literal(Box::new(forget_estree::Literal {
-                value,
-                raw: None,
-                loc: None,
-                regex: None,
-                range,
-                bigint: None,
-            }))
-        }
+        Expr::Lit(expr) => forget_estree::Expression::Literal(Box::new(convert_literal(cx, expr))),
         Expr::Assign(expr) => forget_estree::Expression::AssignmentExpression(Box::new(
             forget_estree::AssignmentExpression {
                 operator: convert_assignment_operator(expr.op),
@@ -470,7 +457,262 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 forget_estree::Expression::MemberExpression(Box::new(member))
             }
         },
+        Expr::JSXElement(expr) => {
+            forget_estree::Expression::JSXElement(Box::new(convert_jsx_element(cx, expr)))
+        }
+        Expr::Paren(expr) => convert_expression(cx, &expr.expr),
         _ => todo!("translate expression {:#?}", expr),
+    }
+}
+
+fn convert_jsx_element(cx: &Context, expr: &JSXElement) -> forget_estree::JSXElement {
+    let attributes = expr
+        .opening
+        .attrs
+        .iter()
+        .map(|attr| match attr {
+            JSXAttrOrSpread::JSXAttr(attr) => forget_estree::JSXAttributeOrSpread::JSXAttribute(
+                Box::new(convert_jsx_attribute(cx, attr)),
+            ),
+            JSXAttrOrSpread::SpreadElement(attr) => {
+                forget_estree::JSXAttributeOrSpread::JSXSpreadAttribute(Box::new(
+                    forget_estree::JSXSpreadAttribute {
+                        argument: convert_expression(cx, &attr.expr),
+                        loc: None,
+                        range: None, // sigh, no span
+                    },
+                ))
+            }
+        })
+        .collect();
+    let opening_element = forget_estree::JSXOpeningElement {
+        attributes,
+        name: convert_jsx_name(cx, &expr.opening.name),
+        self_closing: expr.opening.self_closing,
+        loc: None,
+        range: convert_span(&expr.opening.span),
+    };
+    let children = expr
+        .children
+        .iter()
+        .map(|child| convert_jsx_child(cx, child))
+        .collect();
+    let closing_element = expr
+        .closing
+        .as_ref()
+        .map(|closing| forget_estree::JSXClosingElement {
+            name: convert_jsx_name(cx, &closing.name),
+            loc: None,
+            range: convert_span(&closing.span),
+        });
+    forget_estree::JSXElement {
+        opening_element,
+        children,
+        closing_element,
+        loc: None,
+        range: convert_span(&expr.span),
+    }
+}
+
+fn convert_jsx_name(cx: &Context, name: &JSXElementName) -> forget_estree::JSXElementName {
+    match name {
+        JSXElementName::Ident(name) => {
+            forget_estree::JSXElementName::JSXIdentifier(Box::new(convert_jsx_identifier(cx, name)))
+        }
+        JSXElementName::JSXMemberExpr(name) => forget_estree::JSXElementName::JSXMemberExpression(
+            Box::new(convert_jsx_member_expression(cx, name)),
+        ),
+        JSXElementName::JSXNamespacedName(name) => {
+            forget_estree::JSXElementName::JSXNamespacedName(Box::new(
+                forget_estree::JSXNamespacedName {
+                    namespace: convert_jsx_identifier(cx, &name.ns),
+                    name: convert_jsx_identifier(cx, &name.name),
+                    loc: None,
+                    range: None, // sigh, swc doesn't have a span for the entire name
+                },
+            ))
+        }
+    }
+}
+
+fn convert_jsx_member_expression(
+    cx: &Context,
+    expr: &JSXMemberExpr,
+) -> forget_estree::JSXMemberExpression {
+    forget_estree::JSXMemberExpression {
+        object: match &expr.obj {
+            JSXObject::JSXMemberExpr(obj) => {
+                forget_estree::JSXMemberExpressionOrIdentifier::JSXMemberExpression(Box::new(
+                    convert_jsx_member_expression(cx, obj),
+                ))
+            }
+            JSXObject::Ident(obj) => forget_estree::JSXMemberExpressionOrIdentifier::JSXIdentifier(
+                Box::new(convert_jsx_identifier(cx, obj)),
+            ),
+        },
+        property: convert_jsx_identifier(cx, &expr.prop),
+        loc: None,
+        range: None, // sigh, swc doesn't have a span for the member expr
+    }
+}
+
+fn convert_jsx_child(cx: &Context, child: &JSXElementChild) -> forget_estree::JSXChildItem {
+    match child {
+        JSXElementChild::JSXText(child) => {
+            forget_estree::JSXChildItem::JSXText(Box::new(forget_estree::JSXText {
+                value: child.value.to_string(),
+                raw: child.raw.to_string(),
+                loc: None,
+                range: convert_span(&child.span),
+            }))
+        }
+        JSXElementChild::JSXElement(child) => {
+            forget_estree::JSXChildItem::JSXElement(Box::new(convert_jsx_element(cx, child)))
+        }
+        JSXElementChild::JSXExprContainer(child) => {
+            forget_estree::JSXChildItem::JSXExpressionContainer(Box::new(
+                forget_estree::JSXExpressionContainer {
+                    expression: match &child.expr {
+                        JSXExpr::Expr(expr) => forget_estree::JSXExpressionOrEmpty::Expression(
+                            convert_expression(cx, expr),
+                        ),
+                        JSXExpr::JSXEmptyExpr(expr) => {
+                            forget_estree::JSXExpressionOrEmpty::JSXEmptyExpression(Box::new(
+                                forget_estree::JSXEmptyExpression {
+                                    loc: None,
+                                    range: convert_span(&expr.span),
+                                },
+                            ))
+                        }
+                    },
+                    loc: None,
+                    range: convert_span(&child.span),
+                },
+            ))
+        }
+        _ => todo!("handle other jsx child types"),
+    }
+}
+
+fn convert_jsx_attribute(cx: &Context, attr: &JSXAttr) -> forget_estree::JSXAttribute {
+    let name = match &attr.name {
+        JSXAttrName::Ident(name) => {
+            forget_estree::JSXIdentifierOrNamespacedName::JSXIdentifier(Box::new({
+                let ident = convert_identifier(cx, name);
+                forget_estree::JSXIdentifier {
+                    name: ident.name,
+                    binding: ident.binding,
+                    loc: ident.loc,
+                    range: ident.range,
+                }
+            }))
+        }
+        JSXAttrName::JSXNamespacedName(name) => {
+            forget_estree::JSXIdentifierOrNamespacedName::JSXNamespacedName(Box::new(
+                forget_estree::JSXNamespacedName {
+                    namespace: convert_jsx_identifier(cx, &name.ns),
+                    name: convert_jsx_identifier(cx, &name.name),
+                    loc: None,
+                    range: None, // sigh, swc doesn't have a span for the entire name
+                },
+            ))
+        }
+    };
+    let value = attr.value.as_ref().map(|attr| match attr {
+        JSXAttrValue::Lit(value) => {
+            forget_estree::JSXAttributeValue::Literal(Box::new(convert_literal(cx, value)))
+        }
+        JSXAttrValue::JSXElement(value) => {
+            forget_estree::JSXAttributeValue::JSXElement(Box::new(convert_jsx_element(cx, value)))
+        }
+        JSXAttrValue::JSXExprContainer(value) => {
+            forget_estree::JSXAttributeValue::JSXExpressionContainer(Box::new(
+                forget_estree::JSXExpressionContainer {
+                    expression: match &value.expr {
+                        JSXExpr::Expr(expr) => forget_estree::JSXExpressionOrEmpty::Expression(
+                            convert_expression(cx, expr),
+                        ),
+                        JSXExpr::JSXEmptyExpr(expr) => {
+                            forget_estree::JSXExpressionOrEmpty::JSXEmptyExpression(Box::new(
+                                forget_estree::JSXEmptyExpression {
+                                    loc: None,
+                                    range: convert_span(&expr.span),
+                                },
+                            ))
+                        }
+                    },
+                    loc: None,
+                    range: convert_span(&value.span),
+                },
+            ))
+        }
+        _ => todo!("handle other attribute value types"),
+    });
+    forget_estree::JSXAttribute {
+        name,
+        value,
+        loc: None,
+        range: convert_span(&attr.span),
+    }
+}
+
+fn convert_literal(_cx: &Context, expr: &Lit) -> forget_estree::Literal {
+    let (value, range, regex, bigint) = match expr {
+        Lit::Bool(expr) => (
+            forget_estree::JsValue::Bool(expr.value),
+            convert_span(&expr.span),
+            None,
+            None,
+        ),
+        Lit::Num(expr) => (
+            forget_estree::JsValue::Number(expr.value.into()),
+            convert_span(&expr.span),
+            None,
+            None,
+        ),
+        Lit::Str(expr) => (
+            forget_estree::JsValue::String(expr.value.to_string()),
+            convert_span(&expr.span),
+            None,
+            None,
+        ),
+        Lit::Null(expr) => (
+            forget_estree::JsValue::Null,
+            convert_span(&expr.span),
+            None,
+            None,
+        ),
+        Lit::Regex(expr) => (
+            forget_estree::JsValue::Undefined,
+            convert_span(&expr.span),
+            Some(forget_estree::RegExpValue {
+                pattern: expr.exp.to_string(),
+                flags: expr.flags.to_string(),
+            }),
+            None,
+        ),
+        Lit::BigInt(expr) => (
+            forget_estree::JsValue::Undefined,
+            convert_span(&expr.span),
+            None,
+            Some(
+                expr.raw
+                    .as_ref()
+                    .expect("Expected bigint to have a raw value")
+                    .to_string(),
+            ),
+        ),
+        Lit::JSXText(_) => {
+            panic!("Unexpected expression: JSXText is not an expression")
+        }
+    };
+    forget_estree::Literal {
+        value,
+        raw: None,
+        loc: None,
+        regex,
+        range,
+        bigint,
     }
 }
 
@@ -631,6 +873,16 @@ fn convert_binding(context: &Context, binding_cx: SyntaxContext) -> Option<Bindi
 fn convert_identifier(cx: &Context, identifier: &Ident) -> forget_estree::Identifier {
     let name = identifier.sym.as_ref().to_string();
     forget_estree::Identifier {
+        name,
+        binding: convert_binding(cx, identifier.span.ctxt),
+        loc: None,
+        range: convert_span(&identifier.span),
+    }
+}
+
+fn convert_jsx_identifier(cx: &Context, identifier: &Ident) -> forget_estree::JSXIdentifier {
+    let name = identifier.sym.as_ref().to_string();
+    forget_estree::JSXIdentifier {
         name,
         binding: convert_binding(cx, identifier.span.ctxt),
         loc: None,

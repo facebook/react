@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use bumpalo::collections::String;
+use bumpalo::collections::{CollectIn, String};
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
@@ -9,8 +9,8 @@ use forget_estree::{
 };
 use forget_hir::{
     BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand, InstrIx,
-    InstructionKind, InstructionValue, LValue, LoadGlobal, LoadLocal, Operand, PlaceOrSpread,
-    PrimitiveValue, TerminalValue,
+    InstructionKind, InstructionValue, JSXAttribute, JSXElement, LValue, LoadGlobal, LoadLocal,
+    Operand, PlaceOrSpread, PrimitiveValue, TerminalValue,
 };
 
 use crate::builder::{Binding, Builder, LoopScope};
@@ -468,6 +468,10 @@ fn lower_expression<'a>(
             })
         }
 
+        Expression::JSXElement(expr) => {
+            InstructionValue::JSXElement(lower_jsx_element(env, builder, *expr)?)
+        }
+
         _ => todo!("Lower expr {expr:#?}"),
     };
     Ok(builder.push(value))
@@ -528,6 +532,55 @@ fn lower_function<'a>(
         dependencies: env.vec_new(),
         lowered_function: fun,
     })
+}
+
+fn lower_jsx_element<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    expr: forget_estree::JSXElement,
+) -> Result<JSXElement<'a>, Diagnostic> {
+    let props: Result<Vec<JSXAttribute<'_>>, Diagnostic> = expr
+        .opening_element
+        .attributes
+        .into_iter()
+        .map(|attr| lower_jsx_attribute(env, builder, attr))
+        .collect();
+    let props = props?;
+    let children: Result<Vec<Operand>, Diagnostic> = expr
+        .children
+        .into_iter()
+        .map(|child| {
+            let ix = lower_jsx_child(env, builder, child)?;
+            Ok(Operand { effect: None, ix })
+        })
+        .collect();
+    let children = children?;
+    todo!("lower jsx element");
+    // Ok(JSXElement {
+    //     tag: todo!(),
+    //     props,
+    //     children: if children.is_empty() {
+    //         None
+    //     } else {
+    //         Some(children)
+    //     },
+    // })
+}
+
+fn lower_jsx_attribute<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    attr: forget_estree::JSXAttributeOrSpread,
+) -> Result<JSXAttribute<'a>, Diagnostic> {
+    todo!("lower jsx attribute")
+}
+
+fn lower_jsx_child<'a>(
+    env: &'a Environment<'a>,
+    builder: &mut Builder<'a>,
+    child: forget_estree::JSXChildItem,
+) -> Result<InstrIx, Diagnostic> {
+    todo!("lower jsx child")
 }
 
 fn lower_assignment<'a>(

@@ -395,7 +395,10 @@ Output:
                   "type": "JSXMemberExpression",
                   "object": {
                     "type": "JSXIdentifier",
+                    "type": "Identifier",
                     "name": "Foo",
+                    "loc": null,
+                    "range": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -414,7 +417,10 @@ Output:
                   },
                   "property": {
                     "type": "JSXIdentifier",
+                    "type": "Identifier",
                     "name": "Bar",
+                    "loc": null,
+                    "range": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -452,7 +458,10 @@ Output:
                     "type": "JSXAttribute",
                     "name": {
                       "type": "JSXIdentifier",
+                      "type": "Identifier",
                       "name": "a",
+                      "loc": null,
+                      "range": null,
                       "loc": {
                         "source": null,
                         "start": {
@@ -552,7 +561,10 @@ Output:
                   "type": "JSXMemberExpression",
                   "object": {
                     "type": "JSXIdentifier",
+                    "type": "Identifier",
                     "name": "Foo",
+                    "loc": null,
+                    "range": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -571,7 +583,10 @@ Output:
                   },
                   "property": {
                     "type": "JSXIdentifier",
+                    "type": "Identifier",
                     "name": "Bar",
+                    "loc": null,
+                    "range": null,
                     "loc": {
                       "source": null,
                       "start": {

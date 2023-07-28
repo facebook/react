@@ -36,6 +36,7 @@ impl<'a> Instruction<'a> {
             | InstructionValue::LoadLocal(_)
             | InstructionValue::Primitive(_)
             | InstructionValue::Function(_)
+            | InstructionValue::JSXElement(_)
             | InstructionValue::Tombstone => {}
         }
     }
@@ -62,6 +63,7 @@ impl<'a> Instruction<'a> {
             | InstructionValue::LoadLocal(_)
             | InstructionValue::Primitive(_)
             | InstructionValue::Function(_)
+            | InstructionValue::JSXElement(_)
             | InstructionValue::Tombstone => {}
         }
         Ok(())
@@ -83,6 +85,7 @@ impl<'a> Instruction<'a> {
             | InstructionValue::Primitive(_)
             | InstructionValue::StoreLocal(_)
             | InstructionValue::Function(_)
+            | InstructionValue::JSXElement(_)
             | InstructionValue::Tombstone => {}
         }
     }
@@ -122,6 +125,20 @@ impl<'a> Instruction<'a> {
                     f(dep)
                 }
             }
+            InstructionValue::JSXElement(value) => {
+                f(&mut value.tag);
+                for attr in &mut value.props {
+                    match attr {
+                        JSXAttribute::Spread { argument } => f(argument),
+                        JSXAttribute::Attribute { name: _, value } => f(value),
+                    }
+                }
+                if let Some(children) = &mut value.children {
+                    for child in children {
+                        f(child)
+                    }
+                }
+            }
             InstructionValue::DeclareContext(_)
             | InstructionValue::LoadContext(_)
             | InstructionValue::LoadGlobal(_)
@@ -147,6 +164,7 @@ pub enum InstructionValue<'a> {
     DeclareLocal(DeclareLocal<'a>),
     // Destructure(Destructure<'a>),
     Function(FunctionExpression<'a>),
+    JSXElement(JSXElement<'a>),
     // JsxFragment(JsxFragment<'a>),
     // JsxText(JsxText<'a>),
     LoadContext(LoadContext),
@@ -380,6 +398,19 @@ pub struct DeclareContext<'a> {
 pub struct StoreLocal<'a> {
     pub lvalue: LValue<'a>,
     pub value: Operand,
+}
+
+#[derive(Debug)]
+pub struct JSXElement<'a> {
+    pub tag: Operand,
+    pub props: Vec<'a, JSXAttribute<'a>>,
+    pub children: Option<Vec<'a, Operand>>,
+}
+
+#[derive(Debug)]
+pub enum JSXAttribute<'a> {
+    Spread { argument: Operand },
+    Attribute { name: String<'a>, value: Operand },
 }
 
 #[derive(Clone, Debug)]

@@ -1429,6 +1429,9 @@ impl Serialize for ExportAllDeclaration {
 #[derive(Deserialize, Clone, Debug)]
 pub struct JSXIdentifier {
     pub name: String,
+    #[serde(skip)]
+    #[serde(default)]
+    pub binding: Option<Binding>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]

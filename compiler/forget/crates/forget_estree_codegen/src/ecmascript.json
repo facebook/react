@@ -681,6 +681,11 @@
             "fields": {
                 "name": {
                     "type": "String"
+                },
+                "binding": {
+                    "type": "Option<Binding>",
+                    "optional": true,
+                    "skip": true
                 }
             }
         },
