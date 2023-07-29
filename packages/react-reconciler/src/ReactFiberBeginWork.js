@@ -116,7 +116,11 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
+import {
+  REACT_LAZY_TYPE,
+  REACT_PROVIDER_TYPE,
+  getIteratorFn,
+} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
@@ -1831,12 +1835,13 @@ function mountLazyComponent(
   }
   let hint = '';
   if (__DEV__) {
-    if (
-      Component !== null &&
-      typeof Component === 'object' &&
-      Component.$$typeof === REACT_LAZY_TYPE
-    ) {
-      hint = ' Did you wrap a component in React.lazy() more than once?';
+    if (Component !== null && typeof Component === 'object') {
+      if (Component.$$typeof === REACT_LAZY_TYPE) {
+        hint = ' Did you wrap a component in React.lazy() more than once?';
+      } else if (Component.type.$$typeof === REACT_PROVIDER_TYPE) {
+        hint =
+          ' Context Providers cannot be lazily rendered without being wrapped in a component.';
+      }
     }
   }
 
