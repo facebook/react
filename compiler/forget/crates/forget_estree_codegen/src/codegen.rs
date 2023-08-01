@@ -74,7 +74,7 @@ impl Grammar {
             use std::num::NonZeroU32;
             use serde::ser::{Serializer, SerializeMap};
             use serde::{Serialize,Deserialize};
-            use crate::{JsValue, Binding, SourceRange, Number};
+            use crate::{JsValue, Binding, SourceRange, Number, ESTreeNode};
 
             #(#objects)*
 
@@ -220,6 +220,8 @@ impl Node {
                 #[serde(default)]
                 pub range: Option<SourceRange>,
             }
+
+            impl ESTreeNode for #name {}
 
             impl Serialize for #name {
                 fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

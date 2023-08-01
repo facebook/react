@@ -1,6 +1,9 @@
 // Manual extensions to generated types
 use crate::{Pattern, SourceRange, SourceType};
 
+/// Sentinel trait to distinguish AST *node* types
+pub trait ESTreeNode {}
+
 impl Default for SourceType {
     fn default() -> Self {
         Self::Script

@@ -3,7 +3,7 @@
 use std::num::NonZeroU32;
 use serde::ser::{Serializer, SerializeMap};
 use serde::{Serialize, Deserialize};
-use crate::{JsValue, Binding, SourceRange, Number};
+use crate::{JsValue, Binding, SourceRange, Number, ESTreeNode};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct SourceLocation {
@@ -68,6 +68,7 @@ pub struct Identifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for Identifier {}
 impl Serialize for Identifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -96,6 +97,7 @@ pub struct Literal {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for Literal {}
 impl Serialize for Literal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -120,6 +122,7 @@ pub struct NumericLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for NumericLiteral {}
 impl Serialize for NumericLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -141,6 +144,7 @@ pub struct BooleanLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for BooleanLiteral {}
 impl Serialize for BooleanLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -161,6 +165,7 @@ pub struct NullLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for NullLiteral {}
 impl Serialize for NullLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -181,6 +186,7 @@ pub struct StringLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for StringLiteral {}
 impl Serialize for StringLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -203,6 +209,7 @@ pub struct RegExpLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for RegExpLiteral {}
 impl Serialize for RegExpLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -228,6 +235,7 @@ pub struct Program {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for Program {}
 impl Serialize for Program {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -252,6 +260,7 @@ pub struct ExpressionStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ExpressionStatement {}
 impl Serialize for ExpressionStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -274,6 +283,7 @@ pub struct BlockStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for BlockStatement {}
 impl Serialize for BlockStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -294,6 +304,7 @@ pub struct EmptyStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for EmptyStatement {}
 impl Serialize for EmptyStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -313,6 +324,7 @@ pub struct DebuggerStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for DebuggerStatement {}
 impl Serialize for DebuggerStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -334,6 +346,7 @@ pub struct WithStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for WithStatement {}
 impl Serialize for WithStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -356,6 +369,7 @@ pub struct ReturnStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ReturnStatement {}
 impl Serialize for ReturnStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -378,6 +392,7 @@ pub struct LabeledStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for LabeledStatement {}
 impl Serialize for LabeledStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -400,6 +415,7 @@ pub struct BreakStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for BreakStatement {}
 impl Serialize for BreakStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -421,6 +437,7 @@ pub struct ContinueStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ContinueStatement {}
 impl Serialize for ContinueStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -444,6 +461,7 @@ pub struct IfStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for IfStatement {}
 impl Serialize for IfStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -468,6 +486,7 @@ pub struct SwitchStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for SwitchStatement {}
 impl Serialize for SwitchStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -491,6 +510,7 @@ pub struct SwitchCase {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for SwitchCase {}
 impl Serialize for SwitchCase {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -513,6 +533,7 @@ pub struct ThrowStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ThrowStatement {}
 impl Serialize for ThrowStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -536,6 +557,7 @@ pub struct TryStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TryStatement {}
 impl Serialize for TryStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -560,6 +582,7 @@ pub struct CatchClause {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for CatchClause {}
 impl Serialize for CatchClause {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -583,6 +606,7 @@ pub struct WhileStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for WhileStatement {}
 impl Serialize for WhileStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -606,6 +630,7 @@ pub struct DoWhileStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for DoWhileStatement {}
 impl Serialize for DoWhileStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -631,6 +656,7 @@ pub struct ForStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ForStatement {}
 impl Serialize for ForStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -657,6 +683,7 @@ pub struct ForInStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ForInStatement {}
 impl Serialize for ForInStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -685,6 +712,7 @@ pub struct ForOfStatement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ForOfStatement {}
 impl Serialize for ForOfStatement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -710,6 +738,7 @@ pub struct FunctionDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for FunctionDeclaration {}
 impl Serialize for FunctionDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -735,6 +764,7 @@ pub struct ClassDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ClassDeclaration {}
 impl Serialize for ClassDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -760,6 +790,7 @@ pub struct ClassExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ClassExpression {}
 impl Serialize for ClassExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -784,6 +815,7 @@ pub struct ClassBody {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ClassBody {}
 impl Serialize for ClassBody {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -811,6 +843,7 @@ pub struct MethodDefinition {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for MethodDefinition {}
 impl Serialize for MethodDefinition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -837,6 +870,7 @@ pub struct VariableDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for VariableDeclaration {}
 impl Serialize for VariableDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -860,6 +894,7 @@ pub struct VariableDeclarator {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for VariableDeclarator {}
 impl Serialize for VariableDeclarator {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -881,6 +916,7 @@ pub struct ThisExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ThisExpression {}
 impl Serialize for ThisExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -901,6 +937,7 @@ pub struct ArrayExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ArrayExpression {}
 impl Serialize for ArrayExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -922,6 +959,7 @@ pub struct ObjectExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ObjectExpression {}
 impl Serialize for ObjectExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -951,6 +989,7 @@ pub struct Property {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for Property {}
 impl Serialize for Property {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -978,6 +1017,7 @@ pub struct FunctionExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for FunctionExpression {}
 impl Serialize for FunctionExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1005,6 +1045,7 @@ pub struct ArrowFunctionExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ArrowFunctionExpression {}
 impl Serialize for ArrowFunctionExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1032,6 +1073,7 @@ pub struct UnaryExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for UnaryExpression {}
 impl Serialize for UnaryExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1057,6 +1099,7 @@ pub struct UpdateExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for UpdateExpression {}
 impl Serialize for UpdateExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1082,6 +1125,7 @@ pub struct BinaryExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for BinaryExpression {}
 impl Serialize for BinaryExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1107,6 +1151,7 @@ pub struct AssignmentExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for AssignmentExpression {}
 impl Serialize for AssignmentExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1132,6 +1177,7 @@ pub struct LogicalExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for LogicalExpression {}
 impl Serialize for LogicalExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1158,6 +1204,7 @@ pub struct MemberExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for MemberExpression {}
 impl Serialize for MemberExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1183,6 +1230,7 @@ pub struct ConditionalExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ConditionalExpression {}
 impl Serialize for ConditionalExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1207,6 +1255,7 @@ pub struct CallExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for CallExpression {}
 impl Serialize for CallExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1230,6 +1279,7 @@ pub struct NewExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for NewExpression {}
 impl Serialize for NewExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1252,6 +1302,7 @@ pub struct SequenceExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for SequenceExpression {}
 impl Serialize for SequenceExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1272,6 +1323,7 @@ pub struct Super {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for Super {}
 impl Serialize for Super {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1292,6 +1344,7 @@ pub struct SpreadElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for SpreadElement {}
 impl Serialize for SpreadElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1316,6 +1369,7 @@ pub struct YieldExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for YieldExpression {}
 impl Serialize for YieldExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1339,6 +1393,7 @@ pub struct ImportDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ImportDeclaration {}
 impl Serialize for ImportDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1362,6 +1417,7 @@ pub struct ImportSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ImportSpecifier {}
 impl Serialize for ImportSpecifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1384,6 +1440,7 @@ pub struct ImportDefaultSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ImportDefaultSpecifier {}
 impl Serialize for ImportDefaultSpecifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1405,6 +1462,7 @@ pub struct ImportNamespaceSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ImportNamespaceSpecifier {}
 impl Serialize for ImportNamespaceSpecifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1428,6 +1486,7 @@ pub struct ExportNamedDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ExportNamedDeclaration {}
 impl Serialize for ExportNamedDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1451,6 +1510,7 @@ pub struct ExportSpecifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ExportSpecifier {}
 impl Serialize for ExportSpecifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1472,6 +1532,7 @@ pub struct ExportDefaultDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ExportDefaultDeclaration {}
 impl Serialize for ExportDefaultDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1495,6 +1556,7 @@ pub struct ExportAllDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ExportAllDeclaration {}
 impl Serialize for ExportAllDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1520,6 +1582,7 @@ pub struct JSXIdentifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXIdentifier {}
 impl Serialize for JSXIdentifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1542,6 +1605,7 @@ pub struct JSXNamespacedName {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXNamespacedName {}
 impl Serialize for JSXNamespacedName {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1565,6 +1629,7 @@ pub struct JSXMemberExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXMemberExpression {}
 impl Serialize for JSXMemberExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1586,6 +1651,7 @@ pub struct JSXEmptyExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXEmptyExpression {}
 impl Serialize for JSXEmptyExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1606,6 +1672,7 @@ pub struct JSXExpressionContainer {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXExpressionContainer {}
 impl Serialize for JSXExpressionContainer {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1627,6 +1694,7 @@ pub struct JSXSpreadChild {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXSpreadChild {}
 impl Serialize for JSXSpreadChild {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1651,6 +1719,7 @@ pub struct JSXOpeningElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXOpeningElement {}
 impl Serialize for JSXOpeningElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1674,6 +1743,7 @@ pub struct JSXClosingElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXClosingElement {}
 impl Serialize for JSXClosingElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1696,6 +1766,7 @@ pub struct JSXAttribute {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXAttribute {}
 impl Serialize for JSXAttribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1718,6 +1789,7 @@ pub struct JSXSpreadAttribute {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXSpreadAttribute {}
 impl Serialize for JSXSpreadAttribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1740,6 +1812,7 @@ pub struct JSXText {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXText {}
 impl Serialize for JSXText {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1763,6 +1836,7 @@ pub struct JSXStringLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXStringLiteral {}
 impl Serialize for JSXStringLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1789,6 +1863,7 @@ pub struct JSXElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXElement {}
 impl Serialize for JSXElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1816,6 +1891,7 @@ pub struct JSXFragment {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXFragment {}
 impl Serialize for JSXFragment {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1838,6 +1914,7 @@ pub struct JSXOpeningFragment {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXOpeningFragment {}
 impl Serialize for JSXOpeningFragment {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1857,6 +1934,7 @@ pub struct JSXClosingFragment {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for JSXClosingFragment {}
 impl Serialize for JSXClosingFragment {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1877,6 +1955,7 @@ pub struct ArrayPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ArrayPattern {}
 impl Serialize for ArrayPattern {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1898,6 +1977,7 @@ pub struct ObjectPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ObjectPattern {}
 impl Serialize for ObjectPattern {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1922,6 +2002,7 @@ pub struct AssignmentProperty {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for AssignmentProperty {}
 impl Serialize for AssignmentProperty {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1946,6 +2027,7 @@ pub struct RestElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for RestElement {}
 impl Serialize for RestElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1968,6 +2050,7 @@ pub struct AssignmentPattern {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for AssignmentPattern {}
 impl Serialize for AssignmentPattern {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1991,6 +2074,7 @@ pub struct TemplateLiteral {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TemplateLiteral {}
 impl Serialize for TemplateLiteral {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2014,6 +2098,7 @@ pub struct TemplateElement {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TemplateElement {}
 impl Serialize for TemplateElement {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2037,6 +2122,7 @@ pub struct TaggedTemplateExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TaggedTemplateExpression {}
 impl Serialize for TaggedTemplateExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2060,6 +2146,7 @@ pub struct MetaProperty {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for MetaProperty {}
 impl Serialize for MetaProperty {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2082,6 +2169,7 @@ pub struct AwaitExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for AwaitExpression {}
 impl Serialize for AwaitExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2103,6 +2191,7 @@ pub struct ChainExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ChainExpression {}
 impl Serialize for ChainExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2130,6 +2219,7 @@ pub struct OptionalMemberExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for OptionalMemberExpression {}
 impl Serialize for OptionalMemberExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2158,6 +2248,7 @@ pub struct OptionalCallExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for OptionalCallExpression {}
 impl Serialize for OptionalCallExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2181,6 +2272,7 @@ pub struct ImportExpression {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ImportExpression {}
 impl Serialize for ImportExpression {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2208,6 +2300,7 @@ pub struct ClassProperty {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ClassProperty {}
 impl Serialize for ClassProperty {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2236,6 +2329,7 @@ pub struct ClassPrivateProperty {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for ClassPrivateProperty {}
 impl Serialize for ClassPrivateProperty {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2259,6 +2353,7 @@ pub struct PrivateName {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for PrivateName {}
 impl Serialize for PrivateName {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2280,6 +2375,7 @@ pub struct PrivateIdentifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for PrivateIdentifier {}
 impl Serialize for PrivateIdentifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2301,6 +2397,7 @@ pub struct StaticBlock {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for StaticBlock {}
 impl Serialize for StaticBlock {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2323,6 +2420,7 @@ pub struct CoverTypedIdentifier {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for CoverTypedIdentifier {}
 impl Serialize for CoverTypedIdentifier {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2344,6 +2442,7 @@ pub struct TSTypeAnnotation {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TSTypeAnnotation {}
 impl Serialize for TSTypeAnnotation {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -2363,6 +2462,7 @@ pub struct TSTypeAliasDeclaration {
     #[serde(default)]
     pub range: Option<SourceRange>,
 }
+impl ESTreeNode for TSTypeAliasDeclaration {}
 impl Serialize for TSTypeAliasDeclaration {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
