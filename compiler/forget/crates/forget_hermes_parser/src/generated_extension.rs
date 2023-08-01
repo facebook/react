@@ -2,9 +2,9 @@ use std::num::NonZeroU32;
 
 use forget_estree::{
     ArrowFunctionExpression, AssignmentProperty, Class, ClassBody, ClassDeclaration,
-    ClassExpression, ClassPrivateProperty, Expression, ExpressionOrSpread, Function, FunctionBody,
-    FunctionDeclaration, FunctionExpression, Identifier, Number, Pattern, SourceRange,
-    TemplateElement, TemplateElementValue,
+    ClassExpression, Expression, ExpressionOrSpread, Function, FunctionBody, FunctionDeclaration,
+    FunctionExpression, Identifier, Number, Pattern, SourceRange, TemplateElement,
+    TemplateElementValue,
 };
 use hermes::parser::{
     hermes_get_ArrowFunctionExpression_async, hermes_get_ArrowFunctionExpression_body,

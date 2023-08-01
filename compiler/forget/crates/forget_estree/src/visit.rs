@@ -1,10 +1,11 @@
 use crate::{
-    AssignmentPropertyOrRestElement, AssignmentTarget, Class, ClassItem, Declaration,
-    DeclarationOrExpression, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportNamedDeclaration, Expression, ExpressionOrPrivateIdentifier, ExpressionOrSpread,
-    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, ImportDeclaration,
-    ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem,
-    Pattern, Program, Statement, SwitchCase, VariableDeclarator, _Literal,
+    AssignmentPropertyOrRestElement, AssignmentTarget, Class, ClassItem, ClassPrivateProperty,
+    ClassProperty, Declaration, DeclarationOrExpression, ExportAllDeclaration,
+    ExportDefaultDeclaration, ExportNamedDeclaration, Expression, ExpressionOrPrivateIdentifier,
+    ExpressionOrSpread, ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal,
+    MethodDefinition, ModuleItem, Pattern, PrivateIdentifier, PrivateName, Program, Statement,
+    StaticBlock, Super, SwitchCase, VariableDeclarator, _Literal,
 };
 
 /// Trait for visiting an estree
@@ -271,15 +272,45 @@ pub trait Visitor<'ast> {
             match item {
                 ClassItem::MethodDefinition(item) => self.visit_method_definition(class, item),
                 ClassItem::ClassProperty(item) => {
-                    todo!("visit ClassProperty")
+                    self.visit_class_property(class, item);
                 }
                 ClassItem::ClassPrivateProperty(item) => {
-                    todo!("visit ClassPrivateProperty")
+                    self.visit_class_private_property(class, item);
                 }
                 ClassItem::StaticBlock(item) => {
-                    todo!("visit StaticBlock")
+                    self.visit_static_block(class, item);
                 }
             }
+        }
+    }
+
+    fn visit_class_property(&mut self, _class: &'ast Class, property: &'ast ClassProperty) {
+        self.visit_expression(&property.key);
+        if let Some(value) = &property.value {
+            self.visit_expression(value)
+        }
+    }
+
+    fn visit_class_private_property(
+        &mut self,
+        _class: &'ast Class,
+        property: &'ast ClassPrivateProperty,
+    ) {
+        match &property.key {
+            ExpressionOrPrivateIdentifier::Expression(key) => self.visit_expression(key),
+            ExpressionOrPrivateIdentifier::PrivateIdentifier(key) => {
+                self.visit_private_identifier(key)
+            }
+            ExpressionOrPrivateIdentifier::PrivateName(key) => self.visit_private_name(key),
+        }
+        if let Some(value) = &property.value {
+            self.visit_expression(value)
+        }
+    }
+
+    fn visit_static_block(&mut self, _class: &'ast Class, property: &'ast StaticBlock) {
+        for stmt in &property.body {
+            self.visit_statement(stmt)
         }
     }
 
@@ -412,9 +443,7 @@ pub trait Visitor<'ast> {
             Expression::ArrowFunctionExpression(expr) => self.visit_function(&expr.function),
             Expression::MemberExpression(expr) => {
                 match &expr.object {
-                    ExpressionOrSuper::Super(_object) => {
-                        // todo
-                    }
+                    ExpressionOrSuper::Super(object) => self.visit_super(object),
                     ExpressionOrSuper::Expression(object) => self.visit_expression(object),
                 };
                 if !expr.is_computed {
@@ -423,10 +452,10 @@ pub trait Visitor<'ast> {
                             self.visit_expression(property)
                         }
                         ExpressionOrPrivateIdentifier::PrivateIdentifier(property) => {
-                            todo!("visit PrivateIdentifier property")
+                            self.visit_private_identifier(property);
                         }
                         ExpressionOrPrivateIdentifier::PrivateName(property) => {
-                            todo!("visit PrivateName property")
+                            self.visit_private_name(property);
                         }
                     }
                 }
@@ -437,8 +466,19 @@ pub trait Visitor<'ast> {
         }
     }
 
+    fn visit_super(&mut self, _super: &'ast Super) {
+        todo!("Implement visit_super")
+    }
+
+    fn visit_private_identifier(&mut self, _identifier: &'ast PrivateIdentifier) {
+        todo!("Implement visit_private_identifier()")
+    }
+
+    fn visit_private_name(&mut self, _identifier: &'ast PrivateName) {
+        todo!("Implement visit_private_name()")
+    }
+
     fn visit_identifier(&mut self, _identifier: &'ast Identifier) {
-        // nothing to do unless overridden
         todo!("Implement visit_identifier()")
     }
 
