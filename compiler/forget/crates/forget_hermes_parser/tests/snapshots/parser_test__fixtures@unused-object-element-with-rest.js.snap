@@ -1,0 +1,196 @@
+---
+source: crates/forget_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_hermes_parser/tests/fixtures/unused-object-element-with-rest.js
+---
+Input:
+function Foo(props) {
+  // can't remove `unused` since it affects which properties are copied into `rest`
+  const { unused, ...rest } = props.a;
+  return rest;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": {
+            "start": 0,
+            "end": 1
+          }
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ObjectPattern",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "unused",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "unused",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    {
+                      "type": "RestElement",
+                      "argument": {
+                        "type": "Identifier",
+                        "name": "rest",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    }
+                  ],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              }
+            ],
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "rest",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          }
+        ],
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      },
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      }
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": {
+    "start": 0,
+    "end": 1
+  }
+}

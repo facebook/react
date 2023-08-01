@@ -1,0 +1,807 @@
+---
+source: crates/forget_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_hermes_parser/tests/fixtures/useEffect-nested-lambdas.js
+---
+Input:
+function Component(props) {
+  const item = useMutable(props.itemId);
+  const dispatch = useDispatch();
+  useFreeze(dispatch);
+
+  const exit = useCallback(() => {
+    dispatch(createExitAction());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const cleanup = GlobalEventEmitter.addListener("onInput", () => {
+      if (item.value) {
+        exit();
+      }
+    });
+    return () => cleanup.remove();
+  }, [exit, item]);
+
+  maybeMutate(item);
+
+  return <div />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": {
+            "start": 0,
+            "end": 1
+          }
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "item",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMutable",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "itemId",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    }
+                  ],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              }
+            ],
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "dispatch",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useDispatch",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              }
+            ],
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useFreeze",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "dispatch",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                }
+              ],
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "directive": null,
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "exit",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useCallback",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "Identifier",
+                                "name": "dispatch",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "arguments": [
+                                {
+                                  "type": "CallExpression",
+                                  "callee": {
+                                    "type": "Identifier",
+                                    "name": "createExitAction",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": {
+                                      "start": 0,
+                                      "end": 1
+                                    }
+                                  },
+                                  "arguments": [],
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  }
+                                }
+                              ],
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "directive": null,
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          }
+                        ],
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      },
+                      "expression": false,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "Identifier",
+                          "name": "dispatch",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": {
+                            "start": 0,
+                            "end": 1
+                          }
+                        }
+                      ],
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    }
+                  ],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              }
+            ],
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useEffect",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "arguments": [
+                {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "VariableDeclaration",
+                        "kind": "const",
+                        "declarations": [
+                          {
+                            "type": "VariableDeclarator",
+                            "id": {
+                              "type": "Identifier",
+                              "name": "cleanup",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "init": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "GlobalEventEmitter",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  }
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "addListener",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  }
+                                },
+                                "computed": false,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "arguments": [
+                                {
+                                  "type": "StringLiteral",
+                                  "value": "onInput",
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  }
+                                },
+                                {
+                                  "type": "ArrowFunctionExpression",
+                                  "id": null,
+                                  "params": [],
+                                  "body": {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "IfStatement",
+                                        "test": {
+                                          "type": "MemberExpression",
+                                          "object": {
+                                            "type": "Identifier",
+                                            "name": "item",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": {
+                                              "start": 0,
+                                              "end": 1
+                                            }
+                                          },
+                                          "property": {
+                                            "type": "Identifier",
+                                            "name": "value",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": {
+                                              "start": 0,
+                                              "end": 1
+                                            }
+                                          },
+                                          "computed": false,
+                                          "loc": null,
+                                          "range": {
+                                            "start": 0,
+                                            "end": 1
+                                          }
+                                        },
+                                        "consequent": {
+                                          "type": "BlockStatement",
+                                          "body": [
+                                            {
+                                              "type": "ExpressionStatement",
+                                              "expression": {
+                                                "type": "CallExpression",
+                                                "callee": {
+                                                  "type": "Identifier",
+                                                  "name": "exit",
+                                                  "typeAnnotation": null,
+                                                  "loc": null,
+                                                  "range": {
+                                                    "start": 0,
+                                                    "end": 1
+                                                  }
+                                                },
+                                                "arguments": [],
+                                                "loc": null,
+                                                "range": {
+                                                  "start": 0,
+                                                  "end": 1
+                                                }
+                                              },
+                                              "directive": null,
+                                              "loc": null,
+                                              "range": {
+                                                "start": 0,
+                                                "end": 1
+                                              }
+                                            }
+                                          ],
+                                          "loc": null,
+                                          "range": {
+                                            "start": 0,
+                                            "end": 1
+                                          }
+                                        },
+                                        "alternate": null,
+                                        "loc": null,
+                                        "range": {
+                                          "start": 0,
+                                          "end": 1
+                                        }
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": {
+                                      "start": 0,
+                                      "end": 1
+                                    }
+                                  },
+                                  "generator": false,
+                                  "async": false,
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  },
+                                  "expression": false,
+                                  "loc": null,
+                                  "range": {
+                                    "start": 0,
+                                    "end": 1
+                                  }
+                                }
+                              ],
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          }
+                        ],
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      {
+                        "type": "ReturnStatement",
+                        "argument": {
+                          "type": "ArrowFunctionExpression",
+                          "id": null,
+                          "params": [],
+                          "body": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "cleanup",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "remove",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "arguments": [],
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          },
+                          "generator": true,
+                          "async": false,
+                          "loc": null,
+                          "range": {
+                            "start": 0,
+                            "end": 1
+                          },
+                          "expression": true,
+                          "loc": null,
+                          "range": {
+                            "start": 0,
+                            "end": 1
+                          }
+                        },
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      }
+                    ],
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  },
+                  "expression": false,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "exit",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "item",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    }
+                  ],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                }
+              ],
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "directive": null,
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "maybeMutate",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "item",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                }
+              ],
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "directive": null,
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "attributes": [],
+                "selfClosing": true,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          }
+        ],
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      },
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      }
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": {
+    "start": 0,
+    "end": 1
+  }
+}

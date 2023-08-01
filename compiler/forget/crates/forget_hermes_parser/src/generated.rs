@@ -9,15 +9,19 @@ use hermes::utf::utf8_with_surrogates_to_string;
 use crate::generated_extension::*;
 impl FromHermes for Identifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::Identifier);
         let range = convert_range(node);
         let name = convert_string(
             cx,
             unsafe { hermes::parser::hermes_get_Identifier_name(node) },
         );
         let binding = Default::default();
+        let type_annotation = Default::default();
         Self {
             name,
             binding,
+            type_annotation,
             loc: None,
             range: Some(range),
         }
@@ -25,6 +29,8 @@ impl FromHermes for Identifier {
 }
 impl FromHermes for NumericLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::NumericLiteral);
         let range = convert_range(node);
         let value = convert_number(unsafe {
             hermes::parser::hermes_get_NumericLiteral_value(node)
@@ -38,6 +44,8 @@ impl FromHermes for NumericLiteral {
 }
 impl FromHermes for BooleanLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::BooleanLiteral);
         let range = convert_range(node);
         let value = unsafe { hermes::parser::hermes_get_BooleanLiteral_value(node) };
         Self {
@@ -49,6 +57,8 @@ impl FromHermes for BooleanLiteral {
 }
 impl FromHermes for NullLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::NullLiteral);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -58,6 +68,8 @@ impl FromHermes for NullLiteral {
 }
 impl FromHermes for StringLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::StringLiteral);
         let range = convert_range(node);
         let value = convert_string_value(
             cx,
@@ -70,8 +82,31 @@ impl FromHermes for StringLiteral {
         }
     }
 }
+impl FromHermes for RegExpLiteral {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::RegExpLiteral);
+        let range = convert_range(node);
+        let pattern = convert_string(
+            cx,
+            unsafe { hermes::parser::hermes_get_RegExpLiteral_pattern(node) },
+        );
+        let flags = convert_string(
+            cx,
+            unsafe { hermes::parser::hermes_get_RegExpLiteral_flags(node) },
+        );
+        Self {
+            pattern,
+            flags,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
 impl FromHermes for Program {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::Program);
         let range = convert_range(node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_Program_body(node) },
@@ -88,6 +123,8 @@ impl FromHermes for Program {
 }
 impl FromHermes for ExpressionStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ExpressionStatement);
         let range = convert_range(node);
         let expression = Expression::convert(
             cx,
@@ -104,6 +141,8 @@ impl FromHermes for ExpressionStatement {
 }
 impl FromHermes for BlockStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::BlockStatement);
         let range = convert_range(node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_BlockStatement_body(node) },
@@ -118,6 +157,8 @@ impl FromHermes for BlockStatement {
 }
 impl FromHermes for EmptyStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::EmptyStatement);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -127,6 +168,8 @@ impl FromHermes for EmptyStatement {
 }
 impl FromHermes for DebuggerStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::DebuggerStatement);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -136,6 +179,8 @@ impl FromHermes for DebuggerStatement {
 }
 impl FromHermes for WithStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::WithStatement);
         let range = convert_range(node);
         let object = Expression::convert(
             cx,
@@ -155,6 +200,8 @@ impl FromHermes for WithStatement {
 }
 impl FromHermes for ReturnStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ReturnStatement);
         let range = convert_range(node);
         let argument = convert_option(
             unsafe { hermes::parser::hermes_get_ReturnStatement_argument(node) },
@@ -169,6 +216,8 @@ impl FromHermes for ReturnStatement {
 }
 impl FromHermes for LabeledStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::LabeledStatement);
         let range = convert_range(node);
         let label = Identifier::convert(
             cx,
@@ -188,6 +237,8 @@ impl FromHermes for LabeledStatement {
 }
 impl FromHermes for BreakStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::BreakStatement);
         let range = convert_range(node);
         let label = convert_option(
             unsafe { hermes::parser::hermes_get_BreakStatement_label(node) },
@@ -202,6 +253,8 @@ impl FromHermes for BreakStatement {
 }
 impl FromHermes for ContinueStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ContinueStatement);
         let range = convert_range(node);
         let label = convert_option(
             unsafe { hermes::parser::hermes_get_ContinueStatement_label(node) },
@@ -216,6 +269,8 @@ impl FromHermes for ContinueStatement {
 }
 impl FromHermes for IfStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::IfStatement);
         let range = convert_range(node);
         let test = Expression::convert(
             cx,
@@ -240,6 +295,8 @@ impl FromHermes for IfStatement {
 }
 impl FromHermes for SwitchStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::SwitchStatement);
         let range = convert_range(node);
         let discriminant = Expression::convert(
             cx,
@@ -259,6 +316,8 @@ impl FromHermes for SwitchStatement {
 }
 impl FromHermes for SwitchCase {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::SwitchCase);
         let range = convert_range(node);
         let test = convert_option(
             unsafe { hermes::parser::hermes_get_SwitchCase_test(node) },
@@ -278,6 +337,8 @@ impl FromHermes for SwitchCase {
 }
 impl FromHermes for ThrowStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ThrowStatement);
         let range = convert_range(node);
         let argument = Expression::convert(
             cx,
@@ -292,6 +353,8 @@ impl FromHermes for ThrowStatement {
 }
 impl FromHermes for TryStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::TryStatement);
         let range = convert_range(node);
         let block = BlockStatement::convert(
             cx,
@@ -316,6 +379,8 @@ impl FromHermes for TryStatement {
 }
 impl FromHermes for CatchClause {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::CatchClause);
         let range = convert_range(node);
         let param = convert_option(
             unsafe { hermes::parser::hermes_get_CatchClause_param(node) },
@@ -335,6 +400,8 @@ impl FromHermes for CatchClause {
 }
 impl FromHermes for WhileStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::WhileStatement);
         let range = convert_range(node);
         let test = Expression::convert(
             cx,
@@ -354,6 +421,8 @@ impl FromHermes for WhileStatement {
 }
 impl FromHermes for DoWhileStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::DoWhileStatement);
         let range = convert_range(node);
         let body = Statement::convert(
             cx,
@@ -373,6 +442,8 @@ impl FromHermes for DoWhileStatement {
 }
 impl FromHermes for ForStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ForStatement);
         let range = convert_range(node);
         let init = convert_option(
             unsafe { hermes::parser::hermes_get_ForStatement_init(node) },
@@ -402,6 +473,8 @@ impl FromHermes for ForStatement {
 }
 impl FromHermes for ForInStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ForInStatement);
         let range = convert_range(node);
         let left = ForInInit::convert(
             cx,
@@ -426,6 +499,8 @@ impl FromHermes for ForInStatement {
 }
 impl FromHermes for ForOfStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ForOfStatement);
         let range = convert_range(node);
         let is_await = unsafe { hermes::parser::hermes_get_ForOfStatement_await(node) };
         let left = ForInInit::convert(
@@ -452,10 +527,12 @@ impl FromHermes for ForOfStatement {
 }
 impl FromHermes for ClassBody {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ClassBody);
         let range = convert_range(node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_ClassBody_body(node) },
-            |node| MethodDefinition::convert(cx, node),
+            |node| ClassItem::convert(cx, node),
         );
         Self {
             body,
@@ -466,6 +543,8 @@ impl FromHermes for ClassBody {
 }
 impl FromHermes for MethodDefinition {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::MethodDefinition);
         let range = convert_range(node);
         let key = Expression::convert(
             cx,
@@ -498,6 +577,8 @@ impl FromHermes for MethodDefinition {
 }
 impl FromHermes for VariableDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::VariableDeclaration);
         let range = convert_range(node);
         let kind = VariableDeclarationKind::convert(
             cx,
@@ -517,6 +598,8 @@ impl FromHermes for VariableDeclaration {
 }
 impl FromHermes for VariableDeclarator {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::VariableDeclarator);
         let range = convert_range(node);
         let id = Pattern::convert(
             cx,
@@ -536,6 +619,8 @@ impl FromHermes for VariableDeclarator {
 }
 impl FromHermes for ThisExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ThisExpression);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -545,6 +630,8 @@ impl FromHermes for ThisExpression {
 }
 impl FromHermes for ArrayExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ArrayExpression);
         let range = convert_range(node);
         let elements = convert_array_expression_elements(
             cx,
@@ -559,6 +646,8 @@ impl FromHermes for ArrayExpression {
 }
 impl FromHermes for ObjectExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ObjectExpression);
         let range = convert_range(node);
         let properties = convert_vec(
             unsafe { hermes::parser::hermes_get_ObjectExpression_properties(node) },
@@ -573,6 +662,8 @@ impl FromHermes for ObjectExpression {
 }
 impl FromHermes for Property {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::Property);
         let range = convert_range(node);
         let key = Expression::convert(
             cx,
@@ -605,6 +696,8 @@ impl FromHermes for Property {
 }
 impl FromHermes for UnaryExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::UnaryExpression);
         let range = convert_range(node);
         let operator = UnaryOperator::convert(
             cx,
@@ -626,6 +719,8 @@ impl FromHermes for UnaryExpression {
 }
 impl FromHermes for UpdateExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::UpdateExpression);
         let range = convert_range(node);
         let operator = UpdateOperator::convert(
             cx,
@@ -647,6 +742,8 @@ impl FromHermes for UpdateExpression {
 }
 impl FromHermes for BinaryExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::BinaryExpression);
         let range = convert_range(node);
         let left = Expression::convert(
             cx,
@@ -671,6 +768,8 @@ impl FromHermes for BinaryExpression {
 }
 impl FromHermes for AssignmentExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::AssignmentExpression);
         let range = convert_range(node);
         let operator = AssignmentOperator::convert(
             cx,
@@ -695,6 +794,8 @@ impl FromHermes for AssignmentExpression {
 }
 impl FromHermes for LogicalExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::LogicalExpression);
         let range = convert_range(node);
         let operator = LogicalOperator::convert(
             cx,
@@ -719,12 +820,14 @@ impl FromHermes for LogicalExpression {
 }
 impl FromHermes for MemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::MemberExpression);
         let range = convert_range(node);
         let object = ExpressionOrSuper::convert(
             cx,
             unsafe { hermes::parser::hermes_get_MemberExpression_object(node) },
         );
-        let property = Expression::convert(
+        let property = ExpressionOrPrivateIdentifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_MemberExpression_property(node) },
         );
@@ -742,6 +845,8 @@ impl FromHermes for MemberExpression {
 }
 impl FromHermes for ConditionalExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ConditionalExpression);
         let range = convert_range(node);
         let test = Expression::convert(
             cx,
@@ -766,6 +871,8 @@ impl FromHermes for ConditionalExpression {
 }
 impl FromHermes for CallExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::CallExpression);
         let range = convert_range(node);
         let callee = ExpressionOrSuper::convert(
             cx,
@@ -785,6 +892,8 @@ impl FromHermes for CallExpression {
 }
 impl FromHermes for NewExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::NewExpression);
         let range = convert_range(node);
         let callee = Expression::convert(
             cx,
@@ -804,6 +913,8 @@ impl FromHermes for NewExpression {
 }
 impl FromHermes for SequenceExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::SequenceExpression);
         let range = convert_range(node);
         let expressions = convert_vec(
             unsafe { hermes::parser::hermes_get_SequenceExpression_expressions(node) },
@@ -818,6 +929,8 @@ impl FromHermes for SequenceExpression {
 }
 impl FromHermes for Super {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::Super);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -827,6 +940,8 @@ impl FromHermes for Super {
 }
 impl FromHermes for SpreadElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::SpreadElement);
         let range = convert_range(node);
         let argument = Expression::convert(
             cx,
@@ -841,6 +956,8 @@ impl FromHermes for SpreadElement {
 }
 impl FromHermes for YieldExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::YieldExpression);
         let range = convert_range(node);
         let argument = convert_option(
             unsafe { hermes::parser::hermes_get_YieldExpression_argument(node) },
@@ -859,6 +976,8 @@ impl FromHermes for YieldExpression {
 }
 impl FromHermes for ImportDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ImportDeclaration);
         let range = convert_range(node);
         let specifiers = convert_vec(
             unsafe { hermes::parser::hermes_get_ImportDeclaration_specifiers(node) },
@@ -878,6 +997,8 @@ impl FromHermes for ImportDeclaration {
 }
 impl FromHermes for ImportSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ImportSpecifier);
         let range = convert_range(node);
         let imported = Identifier::convert(
             cx,
@@ -897,6 +1018,8 @@ impl FromHermes for ImportSpecifier {
 }
 impl FromHermes for ImportDefaultSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ImportDefaultSpecifier);
         let range = convert_range(node);
         let local = Identifier::convert(
             cx,
@@ -911,6 +1034,8 @@ impl FromHermes for ImportDefaultSpecifier {
 }
 impl FromHermes for ImportNamespaceSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ImportNamespaceSpecifier);
         let range = convert_range(node);
         let local = Identifier::convert(
             cx,
@@ -925,6 +1050,8 @@ impl FromHermes for ImportNamespaceSpecifier {
 }
 impl FromHermes for ExportNamedDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ExportNamedDeclaration);
         let range = convert_range(node);
         let declaration = convert_option(
             unsafe {
@@ -953,6 +1080,8 @@ impl FromHermes for ExportNamedDeclaration {
 }
 impl FromHermes for ExportSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ExportSpecifier);
         let range = convert_range(node);
         let exported = Identifier::convert(
             cx,
@@ -967,8 +1096,10 @@ impl FromHermes for ExportSpecifier {
 }
 impl FromHermes for ExportDefaultDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ExportDefaultDeclaration);
         let range = convert_range(node);
-        let declaration = Declaration::convert(
+        let declaration = DeclarationOrExpression::convert(
             cx,
             unsafe {
                 hermes::parser::hermes_get_ExportDefaultDeclaration_declaration(node)
@@ -983,6 +1114,8 @@ impl FromHermes for ExportDefaultDeclaration {
 }
 impl FromHermes for ExportAllDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ExportAllDeclaration);
         let range = convert_range(node);
         let source = _Literal::convert(
             cx,
@@ -999,6 +1132,8 @@ impl FromHermes for ExportAllDeclaration {
 }
 impl FromHermes for JSXIdentifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXIdentifier);
         let range = convert_range(node);
         let name = convert_string(
             cx,
@@ -1015,6 +1150,8 @@ impl FromHermes for JSXIdentifier {
 }
 impl FromHermes for JSXNamespacedName {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXNamespacedName);
         let range = convert_range(node);
         let namespace = JSXIdentifier::convert(
             cx,
@@ -1034,6 +1171,8 @@ impl FromHermes for JSXNamespacedName {
 }
 impl FromHermes for JSXMemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXMemberExpression);
         let range = convert_range(node);
         let object = JSXMemberExpressionOrIdentifier::convert(
             cx,
@@ -1053,6 +1192,8 @@ impl FromHermes for JSXMemberExpression {
 }
 impl FromHermes for JSXEmptyExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXEmptyExpression);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -1062,6 +1203,8 @@ impl FromHermes for JSXEmptyExpression {
 }
 impl FromHermes for JSXExpressionContainer {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXExpressionContainer);
         let range = convert_range(node);
         let expression = JSXExpressionOrEmpty::convert(
             cx,
@@ -1076,6 +1219,8 @@ impl FromHermes for JSXExpressionContainer {
 }
 impl FromHermes for JSXSpreadChild {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXSpreadChild);
         let range = convert_range(node);
         let expression = Expression::convert(
             cx,
@@ -1090,6 +1235,8 @@ impl FromHermes for JSXSpreadChild {
 }
 impl FromHermes for JSXOpeningElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXOpeningElement);
         let range = convert_range(node);
         let name = JSXElementName::convert(
             cx,
@@ -1113,6 +1260,8 @@ impl FromHermes for JSXOpeningElement {
 }
 impl FromHermes for JSXClosingElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXClosingElement);
         let range = convert_range(node);
         let name = JSXElementName::convert(
             cx,
@@ -1127,6 +1276,8 @@ impl FromHermes for JSXClosingElement {
 }
 impl FromHermes for JSXAttribute {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXAttribute);
         let range = convert_range(node);
         let name = JSXIdentifierOrNamespacedName::convert(
             cx,
@@ -1146,6 +1297,8 @@ impl FromHermes for JSXAttribute {
 }
 impl FromHermes for JSXSpreadAttribute {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXSpreadAttribute);
         let range = convert_range(node);
         let argument = Expression::convert(
             cx,
@@ -1160,6 +1313,8 @@ impl FromHermes for JSXSpreadAttribute {
 }
 impl FromHermes for JSXText {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXText);
         let range = convert_range(node);
         let value = convert_string_value(
             cx,
@@ -1177,8 +1332,31 @@ impl FromHermes for JSXText {
         }
     }
 }
+impl FromHermes for JSXStringLiteral {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXStringLiteral);
+        let range = convert_range(node);
+        let value = convert_string_value(
+            cx,
+            unsafe { hermes::parser::hermes_get_JSXStringLiteral_value(node) },
+        );
+        let raw = convert_string(
+            cx,
+            unsafe { hermes::parser::hermes_get_JSXStringLiteral_raw(node) },
+        );
+        Self {
+            value,
+            raw,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
 impl FromHermes for JSXElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXElement);
         let range = convert_range(node);
         let opening_element = JSXOpeningElement::convert(
             cx,
@@ -1203,6 +1381,8 @@ impl FromHermes for JSXElement {
 }
 impl FromHermes for JSXFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXFragment);
         let range = convert_range(node);
         let opening_fragment = JSXOpeningFragment::convert(
             cx,
@@ -1227,6 +1407,8 @@ impl FromHermes for JSXFragment {
 }
 impl FromHermes for JSXOpeningFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXOpeningFragment);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -1236,6 +1418,8 @@ impl FromHermes for JSXOpeningFragment {
 }
 impl FromHermes for JSXClosingFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::JSXClosingFragment);
         let range = convert_range(node);
         Self {
             loc: None,
@@ -1245,6 +1429,8 @@ impl FromHermes for JSXClosingFragment {
 }
 impl FromHermes for ArrayPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ArrayPattern);
         let range = convert_range(node);
         let elements = convert_vec_of_option(
             unsafe { hermes::parser::hermes_get_ArrayPattern_elements(node) },
@@ -1259,6 +1445,8 @@ impl FromHermes for ArrayPattern {
 }
 impl FromHermes for ObjectPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ObjectPattern);
         let range = convert_range(node);
         let properties = convert_vec(
             unsafe { hermes::parser::hermes_get_ObjectPattern_properties(node) },
@@ -1273,6 +1461,8 @@ impl FromHermes for ObjectPattern {
 }
 impl FromHermes for RestElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::RestElement);
         let range = convert_range(node);
         let argument = Pattern::convert(
             cx,
@@ -1287,6 +1477,8 @@ impl FromHermes for RestElement {
 }
 impl FromHermes for AssignmentPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::AssignmentPattern);
         let range = convert_range(node);
         let left = Pattern::convert(
             cx,
@@ -1306,6 +1498,8 @@ impl FromHermes for AssignmentPattern {
 }
 impl FromHermes for TemplateLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::TemplateLiteral);
         let range = convert_range(node);
         let quasis = convert_vec(
             unsafe { hermes::parser::hermes_get_TemplateLiteral_quasis(node) },
@@ -1325,6 +1519,8 @@ impl FromHermes for TemplateLiteral {
 }
 impl FromHermes for TaggedTemplateExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::TaggedTemplateExpression);
         let range = convert_range(node);
         let tag = Expression::convert(
             cx,
@@ -1344,6 +1540,8 @@ impl FromHermes for TaggedTemplateExpression {
 }
 impl FromHermes for MetaProperty {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::MetaProperty);
         let range = convert_range(node);
         let meta = Identifier::convert(
             cx,
@@ -1363,6 +1561,8 @@ impl FromHermes for MetaProperty {
 }
 impl FromHermes for AwaitExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::AwaitExpression);
         let range = convert_range(node);
         let argument = Expression::convert(
             cx,
@@ -1377,6 +1577,8 @@ impl FromHermes for AwaitExpression {
 }
 impl FromHermes for OptionalMemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::OptionalMemberExpression);
         let range = convert_range(node);
         let object = Expression::convert(
             cx,
@@ -1404,6 +1606,8 @@ impl FromHermes for OptionalMemberExpression {
 }
 impl FromHermes for OptionalCallExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::OptionalCallExpression);
         let range = convert_range(node);
         let callee = ExpressionOrSuper::convert(
             cx,
@@ -1427,6 +1631,8 @@ impl FromHermes for OptionalCallExpression {
 }
 impl FromHermes for ImportExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ImportExpression);
         let range = convert_range(node);
         let source = Expression::convert(
             cx,
@@ -1434,6 +1640,117 @@ impl FromHermes for ImportExpression {
         );
         Self {
             source,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for ClassProperty {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ClassProperty);
+        let range = convert_range(node);
+        let key = Expression::convert(
+            cx,
+            unsafe { hermes::parser::hermes_get_ClassProperty_key(node) },
+        );
+        let value = convert_option(
+            unsafe { hermes::parser::hermes_get_ClassProperty_value(node) },
+            |node| Expression::convert(cx, node),
+        );
+        let is_computed = unsafe {
+            hermes::parser::hermes_get_ClassProperty_computed(node)
+        };
+        let is_static = unsafe { hermes::parser::hermes_get_ClassProperty_static(node) };
+        Self {
+            key,
+            value,
+            is_computed,
+            is_static,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for ClassPrivateProperty {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::ClassPrivateProperty);
+        let range = convert_range(node);
+        let key = ExpressionOrPrivateIdentifier::convert(
+            cx,
+            unsafe { hermes::parser::hermes_get_ClassPrivateProperty_key(node) },
+        );
+        let value = convert_option(
+            unsafe { hermes::parser::hermes_get_ClassPrivateProperty_value(node) },
+            |node| Expression::convert(cx, node),
+        );
+        let is_static = unsafe {
+            hermes::parser::hermes_get_ClassPrivateProperty_static(node)
+        };
+        Self {
+            key,
+            value,
+            is_static,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for PrivateName {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::PrivateName);
+        let range = convert_range(node);
+        let id = Identifier::convert(
+            cx,
+            unsafe { hermes::parser::hermes_get_PrivateName_id(node) },
+        );
+        Self {
+            id,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for CoverTypedIdentifier {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::CoverTypedIdentifier);
+        let range = convert_range(node);
+        let left = Identifier::convert(
+            cx,
+            unsafe { hermes::parser::hermes_get_CoverTypedIdentifier_left(node) },
+        );
+        let right = convert_option(
+            unsafe { hermes::parser::hermes_get_CoverTypedIdentifier_right(node) },
+            |node| TypeAnnotation::convert(cx, node),
+        );
+        Self {
+            left,
+            right,
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for TSTypeAnnotation {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::TSTypeAnnotation);
+        let range = convert_range(node);
+        Self {
+            loc: None,
+            range: Some(range),
+        }
+    }
+}
+impl FromHermes for TSTypeAliasDeclaration {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        assert_eq!(node_ref.kind, NodeKind::TSTypeAliasDeclaration);
+        let range = convert_range(node);
+        Self {
             loc: None,
             range: Some(range),
         }
@@ -1515,6 +1832,10 @@ impl FromHermes for Statement {
                 let node = TryStatement::convert(cx, node);
                 Statement::TryStatement(Box::new(node))
             }
+            NodeKind::TSTypeAliasDeclaration => {
+                let node = TSTypeAliasDeclaration::convert(cx, node);
+                Statement::TSTypeAliasDeclaration(Box::new(node))
+            }
             NodeKind::VariableDeclaration => {
                 let node = VariableDeclaration::convert(cx, node);
                 Statement::VariableDeclaration(Box::new(node))
@@ -1527,7 +1848,11 @@ impl FromHermes for Statement {
                 let node = WithStatement::convert(cx, node);
                 Statement::WithStatement(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "Statement"
+                )
+            }
         }
     }
 }
@@ -1571,6 +1896,10 @@ impl FromHermes for Expression {
                 let node = ConditionalExpression::convert(cx, node);
                 Expression::ConditionalExpression(Box::new(node))
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                Expression::CoverTypedIdentifier(Box::new(node))
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 Expression::FunctionExpression(Box::new(node))
@@ -1586,6 +1915,10 @@ impl FromHermes for Expression {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 Expression::JSXElement(Box::new(node))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                Expression::JSXFragment(Box::new(node))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -1623,6 +1956,10 @@ impl FromHermes for Expression {
                 let node = OptionalMemberExpression::convert(cx, node);
                 Expression::OptionalMemberExpression(Box::new(node))
             }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                Expression::RegExpLiteral(Box::new(node))
+            }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
                 Expression::SequenceExpression(Box::new(node))
@@ -1655,7 +1992,11 @@ impl FromHermes for Expression {
                 let node = YieldExpression::convert(cx, node);
                 Expression::YieldExpression(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "Expression"
+                )
+            }
         }
     }
 }
@@ -1679,7 +2020,9 @@ impl FromHermes for _Literal {
                 let node = NumericLiteral::convert(cx, node);
                 _Literal::NumericLiteral(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!("Unexpected node kind `{:?}` for `{}`", node_ref.kind, "_Literal")
+            }
         }
     }
 }
@@ -1699,7 +2042,15 @@ impl FromHermes for Declaration {
                 let node = VariableDeclaration::convert(cx, node);
                 Declaration::VariableDeclaration(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            NodeKind::TSTypeAliasDeclaration => {
+                let node = TSTypeAliasDeclaration::convert(cx, node);
+                Declaration::TSTypeAliasDeclaration(Box::new(node))
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "Declaration"
+                )
+            }
         }
     }
 }
@@ -1719,7 +2070,12 @@ impl FromHermes for ImportDeclarationSpecifier {
                 let node = ImportNamespaceSpecifier::convert(cx, node);
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "ImportDeclarationSpecifier"
+                )
+            }
         }
     }
 }
@@ -1823,6 +2179,10 @@ impl FromHermes for ModuleItem {
                 let node = TryStatement::convert(cx, node);
                 ModuleItem::Statement(Statement::TryStatement(Box::new(node)))
             }
+            NodeKind::TSTypeAliasDeclaration => {
+                let node = TSTypeAliasDeclaration::convert(cx, node);
+                ModuleItem::Statement(Statement::TSTypeAliasDeclaration(Box::new(node)))
+            }
             NodeKind::VariableDeclaration => {
                 let node = VariableDeclaration::convert(cx, node);
                 ModuleItem::Statement(Statement::VariableDeclaration(Box::new(node)))
@@ -1835,7 +2195,11 @@ impl FromHermes for ModuleItem {
                 let node = WithStatement::convert(cx, node);
                 ModuleItem::Statement(Statement::WithStatement(Box::new(node)))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "ModuleItem"
+                )
+            }
         }
     }
 }
@@ -1859,7 +2223,12 @@ impl FromHermes for ImportOrExportDeclaration {
                 let node = ExportAllDeclaration::convert(cx, node);
                 ImportOrExportDeclaration::ExportAllDeclaration(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "ImportOrExportDeclaration"
+                )
+            }
         }
     }
 }
@@ -1917,6 +2286,12 @@ impl FromHermes for ExpressionOrSuper {
                     Expression::ConditionalExpression(Box::new(node)),
                 )
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                ExpressionOrSuper::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 ExpressionOrSuper::Expression(
@@ -1936,6 +2311,10 @@ impl FromHermes for ExpressionOrSuper {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 ExpressionOrSuper::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                ExpressionOrSuper::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -1982,6 +2361,10 @@ impl FromHermes for ExpressionOrSuper {
                 ExpressionOrSuper::Expression(
                     Expression::OptionalMemberExpression(Box::new(node)),
                 )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                ExpressionOrSuper::Expression(Expression::RegExpLiteral(Box::new(node)))
             }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
@@ -2031,7 +2414,12 @@ impl FromHermes for ExpressionOrSuper {
                 let node = Super::convert(cx, node);
                 ExpressionOrSuper::Super(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "ExpressionOrSuper"
+                )
+            }
         }
     }
 }
@@ -2093,6 +2481,12 @@ impl FromHermes for ExpressionOrSpread {
                     Expression::ConditionalExpression(Box::new(node)),
                 )
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                ExpressionOrSpread::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 ExpressionOrSpread::Expression(
@@ -2112,6 +2506,10 @@ impl FromHermes for ExpressionOrSpread {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 ExpressionOrSpread::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                ExpressionOrSpread::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -2160,6 +2558,10 @@ impl FromHermes for ExpressionOrSpread {
                 ExpressionOrSpread::Expression(
                     Expression::OptionalMemberExpression(Box::new(node)),
                 )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                ExpressionOrSpread::Expression(Expression::RegExpLiteral(Box::new(node)))
             }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
@@ -2211,7 +2613,12 @@ impl FromHermes for ExpressionOrSpread {
                 let node = SpreadElement::convert(cx, node);
                 ExpressionOrSpread::SpreadElement(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "ExpressionOrSpread"
+                )
+            }
         }
     }
 }
@@ -2265,6 +2672,12 @@ impl FromHermes for FunctionBody {
                     Expression::ConditionalExpression(Box::new(node)),
                 )
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                FunctionBody::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 FunctionBody::Expression(Expression::FunctionExpression(Box::new(node)))
@@ -2280,6 +2693,10 @@ impl FromHermes for FunctionBody {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 FunctionBody::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                FunctionBody::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -2321,6 +2738,10 @@ impl FromHermes for FunctionBody {
                     Expression::OptionalMemberExpression(Box::new(node)),
                 )
             }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                FunctionBody::Expression(Expression::RegExpLiteral(Box::new(node)))
+            }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
                 FunctionBody::Expression(Expression::SequenceExpression(Box::new(node)))
@@ -2355,7 +2776,11 @@ impl FromHermes for FunctionBody {
                 let node = YieldExpression::convert(cx, node);
                 FunctionBody::Expression(Expression::YieldExpression(Box::new(node)))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "FunctionBody"
+                )
+            }
         }
     }
 }
@@ -2383,7 +2808,7 @@ impl FromHermes for Pattern {
                 let node = AssignmentPattern::convert(cx, node);
                 Pattern::AssignmentPattern(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => panic!("Unexpected node kind `{:?}` for `{}`", node_ref.kind, "Pattern"),
         }
     }
 }
@@ -2427,6 +2852,10 @@ impl FromHermes for ForInit {
                 let node = ConditionalExpression::convert(cx, node);
                 ForInit::Expression(Expression::ConditionalExpression(Box::new(node)))
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                ForInit::Expression(Expression::CoverTypedIdentifier(Box::new(node)))
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 ForInit::Expression(Expression::FunctionExpression(Box::new(node)))
@@ -2442,6 +2871,10 @@ impl FromHermes for ForInit {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 ForInit::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                ForInit::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -2479,6 +2912,10 @@ impl FromHermes for ForInit {
                 let node = OptionalMemberExpression::convert(cx, node);
                 ForInit::Expression(Expression::OptionalMemberExpression(Box::new(node)))
             }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                ForInit::Expression(Expression::RegExpLiteral(Box::new(node)))
+            }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
                 ForInit::Expression(Expression::SequenceExpression(Box::new(node)))
@@ -2515,7 +2952,7 @@ impl FromHermes for ForInit {
                 let node = VariableDeclaration::convert(cx, node);
                 ForInit::VariableDeclaration(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => panic!("Unexpected node kind `{:?}` for `{}`", node_ref.kind, "ForInit"),
         }
     }
 }
@@ -2547,7 +2984,11 @@ impl FromHermes for ForInInit {
                 let node = VariableDeclaration::convert(cx, node);
                 ForInInit::VariableDeclaration(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "ForInInit"
+                )
+            }
         }
     }
 }
@@ -2563,7 +3004,12 @@ impl FromHermes for PropertyOrSpreadElement {
                 let node = SpreadElement::convert(cx, node);
                 PropertyOrSpreadElement::SpreadElement(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "PropertyOrSpreadElement"
+                )
+            }
         }
     }
 }
@@ -2579,7 +3025,12 @@ impl FromHermes for AssignmentPropertyOrRestElement {
                 let node = RestElement::convert(cx, node);
                 AssignmentPropertyOrRestElement::RestElement(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "AssignmentPropertyOrRestElement"
+                )
+            }
         }
     }
 }
@@ -2591,7 +3042,11 @@ impl FromHermes for PropertyKey {
                 let node = Identifier::convert(cx, node);
                 PropertyKey::Identifier(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "PropertyKey"
+                )
+            }
         }
     }
 }
@@ -2643,6 +3098,12 @@ impl FromHermes for AssignmentTarget {
                     Expression::ConditionalExpression(Box::new(node)),
                 )
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                AssignmentTarget::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 AssignmentTarget::Expression(
@@ -2662,6 +3123,10 @@ impl FromHermes for AssignmentTarget {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 AssignmentTarget::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                AssignmentTarget::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -2708,6 +3173,10 @@ impl FromHermes for AssignmentTarget {
                 AssignmentTarget::Expression(
                     Expression::OptionalMemberExpression(Box::new(node)),
                 )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                AssignmentTarget::Expression(Expression::RegExpLiteral(Box::new(node)))
             }
             NodeKind::SequenceExpression => {
                 let node = SequenceExpression::convert(cx, node);
@@ -2763,7 +3232,12 @@ impl FromHermes for AssignmentTarget {
                 let node = AssignmentPattern::convert(cx, node);
                 AssignmentTarget::Pattern(Pattern::AssignmentPattern(Box::new(node)))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "AssignmentTarget"
+                )
+            }
         }
     }
 }
@@ -2779,7 +3253,11 @@ impl FromHermes for ChainElement {
                 let node = MemberExpression::convert(cx, node);
                 ChainElement::MemberExpression(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "ChainElement"
+                )
+            }
         }
     }
 }
@@ -2795,7 +3273,12 @@ impl FromHermes for JSXMemberExpressionOrIdentifier {
                 let node = JSXIdentifier::convert(cx, node);
                 JSXMemberExpressionOrIdentifier::JSXIdentifier(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXMemberExpressionOrIdentifier"
+                )
+            }
         }
     }
 }
@@ -2857,6 +3340,12 @@ impl FromHermes for JSXExpressionOrEmpty {
                     Expression::ConditionalExpression(Box::new(node)),
                 )
             }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                JSXExpressionOrEmpty::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
             NodeKind::FunctionExpression => {
                 let node = FunctionExpression::convert(cx, node);
                 JSXExpressionOrEmpty::Expression(
@@ -2876,6 +3365,10 @@ impl FromHermes for JSXExpressionOrEmpty {
             NodeKind::JSXElement => {
                 let node = JSXElement::convert(cx, node);
                 JSXExpressionOrEmpty::Expression(Expression::JSXElement(Box::new(node)))
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                JSXExpressionOrEmpty::Expression(Expression::JSXFragment(Box::new(node)))
             }
             NodeKind::LogicalExpression => {
                 let node = LogicalExpression::convert(cx, node);
@@ -2927,6 +3420,12 @@ impl FromHermes for JSXExpressionOrEmpty {
                 let node = OptionalMemberExpression::convert(cx, node);
                 JSXExpressionOrEmpty::Expression(
                     Expression::OptionalMemberExpression(Box::new(node)),
+                )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                JSXExpressionOrEmpty::Expression(
+                    Expression::RegExpLiteral(Box::new(node)),
                 )
             }
             NodeKind::SequenceExpression => {
@@ -2981,7 +3480,12 @@ impl FromHermes for JSXExpressionOrEmpty {
                 let node = JSXEmptyExpression::convert(cx, node);
                 JSXExpressionOrEmpty::JSXEmptyExpression(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXExpressionOrEmpty"
+                )
+            }
         }
     }
 }
@@ -2997,7 +3501,12 @@ impl FromHermes for JSXAttributeOrSpread {
                 let node = JSXSpreadAttribute::convert(cx, node);
                 JSXAttributeOrSpread::JSXSpreadAttribute(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXAttributeOrSpread"
+                )
+            }
         }
     }
 }
@@ -3017,7 +3526,16 @@ impl FromHermes for JSXAttributeValue {
                 let node = JSXFragment::convert(cx, node);
                 JSXAttributeValue::JSXFragment(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            NodeKind::JSXStringLiteral => {
+                let node = JSXStringLiteral::convert(cx, node);
+                JSXAttributeValue::JSXStringLiteral(Box::new(node))
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXAttributeValue"
+                )
+            }
         }
     }
 }
@@ -3037,7 +3555,12 @@ impl FromHermes for JSXElementName {
                 let node = JSXNamespacedName::convert(cx, node);
                 JSXElementName::JSXNamespacedName(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXElementName"
+                )
+            }
         }
     }
 }
@@ -3053,7 +3576,12 @@ impl FromHermes for JSXIdentifierOrNamespacedName {
                 let node = JSXNamespacedName::convert(cx, node);
                 JSXIdentifierOrNamespacedName::JSXNamespacedName(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "JSXIdentifierOrNamespacedName"
+                )
+            }
         }
     }
 }
@@ -3064,6 +3592,10 @@ impl FromHermes for JSXChildItem {
             NodeKind::JSXText => {
                 let node = JSXText::convert(cx, node);
                 JSXChildItem::JSXText(Box::new(node))
+            }
+            NodeKind::JSXStringLiteral => {
+                let node = JSXStringLiteral::convert(cx, node);
+                JSXChildItem::JSXStringLiteral(Box::new(node))
             }
             NodeKind::JSXExpressionContainer => {
                 let node = JSXExpressionContainer::convert(cx, node);
@@ -3081,7 +3613,502 @@ impl FromHermes for JSXChildItem {
                 let node = JSXFragment::convert(cx, node);
                 JSXChildItem::JSXFragment(Box::new(node))
             }
-            _ => panic!("Unexpected node"),
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "JSXChildItem"
+                )
+            }
+        }
+    }
+}
+impl FromHermes for DeclarationOrExpression {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        match node_ref.kind {
+            NodeKind::ClassDeclaration => {
+                let node = ClassDeclaration::convert(cx, node);
+                DeclarationOrExpression::Declaration(
+                    Declaration::ClassDeclaration(Box::new(node)),
+                )
+            }
+            NodeKind::FunctionDeclaration => {
+                let node = FunctionDeclaration::convert(cx, node);
+                DeclarationOrExpression::Declaration(
+                    Declaration::FunctionDeclaration(Box::new(node)),
+                )
+            }
+            NodeKind::VariableDeclaration => {
+                let node = VariableDeclaration::convert(cx, node);
+                DeclarationOrExpression::Declaration(
+                    Declaration::VariableDeclaration(Box::new(node)),
+                )
+            }
+            NodeKind::TSTypeAliasDeclaration => {
+                let node = TSTypeAliasDeclaration::convert(cx, node);
+                DeclarationOrExpression::Declaration(
+                    Declaration::TSTypeAliasDeclaration(Box::new(node)),
+                )
+            }
+            NodeKind::ArrayExpression => {
+                let node = ArrayExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ArrayExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ArrowFunctionExpression => {
+                let node = ArrowFunctionExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ArrowFunctionExpression(Box::new(node)),
+                )
+            }
+            NodeKind::AssignmentExpression => {
+                let node = AssignmentExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::AssignmentExpression(Box::new(node)),
+                )
+            }
+            NodeKind::AwaitExpression => {
+                let node = AwaitExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::AwaitExpression(Box::new(node)),
+                )
+            }
+            NodeKind::BinaryExpression => {
+                let node = BinaryExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::BinaryExpression(Box::new(node)),
+                )
+            }
+            NodeKind::BooleanLiteral => {
+                let node = BooleanLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::BooleanLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::CallExpression => {
+                let node = CallExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::CallExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ClassExpression => {
+                let node = ClassExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ClassExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ConditionalExpression => {
+                let node = ConditionalExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ConditionalExpression(Box::new(node)),
+                )
+            }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
+            NodeKind::FunctionExpression => {
+                let node = FunctionExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::FunctionExpression(Box::new(node)),
+                )
+            }
+            NodeKind::Identifier => {
+                let node = Identifier::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::Identifier(Box::new(node)),
+                )
+            }
+            NodeKind::ImportExpression => {
+                let node = ImportExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ImportExpression(Box::new(node)),
+                )
+            }
+            NodeKind::JSXElement => {
+                let node = JSXElement::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::JSXElement(Box::new(node)),
+                )
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::JSXFragment(Box::new(node)),
+                )
+            }
+            NodeKind::LogicalExpression => {
+                let node = LogicalExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::LogicalExpression(Box::new(node)),
+                )
+            }
+            NodeKind::MemberExpression => {
+                let node = MemberExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::MemberExpression(Box::new(node)),
+                )
+            }
+            NodeKind::MetaProperty => {
+                let node = MetaProperty::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::MetaProperty(Box::new(node)),
+                )
+            }
+            NodeKind::NewExpression => {
+                let node = NewExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::NewExpression(Box::new(node)),
+                )
+            }
+            NodeKind::NullLiteral => {
+                let node = NullLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::NullLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::NumericLiteral => {
+                let node = NumericLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::NumericLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::ObjectExpression => {
+                let node = ObjectExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ObjectExpression(Box::new(node)),
+                )
+            }
+            NodeKind::OptionalCallExpression => {
+                let node = OptionalCallExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::OptionalCallExpression(Box::new(node)),
+                )
+            }
+            NodeKind::OptionalMemberExpression => {
+                let node = OptionalMemberExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::OptionalMemberExpression(Box::new(node)),
+                )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::RegExpLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::SequenceExpression => {
+                let node = SequenceExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::SequenceExpression(Box::new(node)),
+                )
+            }
+            NodeKind::StringLiteral => {
+                let node = StringLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::StringLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::TaggedTemplateExpression => {
+                let node = TaggedTemplateExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::TaggedTemplateExpression(Box::new(node)),
+                )
+            }
+            NodeKind::TemplateLiteral => {
+                let node = TemplateLiteral::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::TemplateLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::ThisExpression => {
+                let node = ThisExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::ThisExpression(Box::new(node)),
+                )
+            }
+            NodeKind::UnaryExpression => {
+                let node = UnaryExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::UnaryExpression(Box::new(node)),
+                )
+            }
+            NodeKind::UpdateExpression => {
+                let node = UpdateExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::UpdateExpression(Box::new(node)),
+                )
+            }
+            NodeKind::YieldExpression => {
+                let node = YieldExpression::convert(cx, node);
+                DeclarationOrExpression::Expression(
+                    Expression::YieldExpression(Box::new(node)),
+                )
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "DeclarationOrExpression"
+                )
+            }
+        }
+    }
+}
+impl FromHermes for ClassItem {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        match node_ref.kind {
+            NodeKind::MethodDefinition => {
+                let node = MethodDefinition::convert(cx, node);
+                ClassItem::MethodDefinition(Box::new(node))
+            }
+            NodeKind::ClassProperty => {
+                let node = ClassProperty::convert(cx, node);
+                ClassItem::ClassProperty(Box::new(node))
+            }
+            NodeKind::ClassPrivateProperty => {
+                let node = ClassPrivateProperty::convert(cx, node);
+                ClassItem::ClassPrivateProperty(Box::new(node))
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "ClassItem"
+                )
+            }
+        }
+    }
+}
+impl FromHermes for ExpressionOrPrivateIdentifier {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        match node_ref.kind {
+            NodeKind::ArrayExpression => {
+                let node = ArrayExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ArrayExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ArrowFunctionExpression => {
+                let node = ArrowFunctionExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ArrowFunctionExpression(Box::new(node)),
+                )
+            }
+            NodeKind::AssignmentExpression => {
+                let node = AssignmentExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::AssignmentExpression(Box::new(node)),
+                )
+            }
+            NodeKind::AwaitExpression => {
+                let node = AwaitExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::AwaitExpression(Box::new(node)),
+                )
+            }
+            NodeKind::BinaryExpression => {
+                let node = BinaryExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::BinaryExpression(Box::new(node)),
+                )
+            }
+            NodeKind::BooleanLiteral => {
+                let node = BooleanLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::BooleanLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::CallExpression => {
+                let node = CallExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::CallExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ClassExpression => {
+                let node = ClassExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ClassExpression(Box::new(node)),
+                )
+            }
+            NodeKind::ConditionalExpression => {
+                let node = ConditionalExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ConditionalExpression(Box::new(node)),
+                )
+            }
+            NodeKind::CoverTypedIdentifier => {
+                let node = CoverTypedIdentifier::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::CoverTypedIdentifier(Box::new(node)),
+                )
+            }
+            NodeKind::FunctionExpression => {
+                let node = FunctionExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::FunctionExpression(Box::new(node)),
+                )
+            }
+            NodeKind::Identifier => {
+                let node = Identifier::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::Identifier(Box::new(node)),
+                )
+            }
+            NodeKind::ImportExpression => {
+                let node = ImportExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ImportExpression(Box::new(node)),
+                )
+            }
+            NodeKind::JSXElement => {
+                let node = JSXElement::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::JSXElement(Box::new(node)),
+                )
+            }
+            NodeKind::JSXFragment => {
+                let node = JSXFragment::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::JSXFragment(Box::new(node)),
+                )
+            }
+            NodeKind::LogicalExpression => {
+                let node = LogicalExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::LogicalExpression(Box::new(node)),
+                )
+            }
+            NodeKind::MemberExpression => {
+                let node = MemberExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::MemberExpression(Box::new(node)),
+                )
+            }
+            NodeKind::MetaProperty => {
+                let node = MetaProperty::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::MetaProperty(Box::new(node)),
+                )
+            }
+            NodeKind::NewExpression => {
+                let node = NewExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::NewExpression(Box::new(node)),
+                )
+            }
+            NodeKind::NullLiteral => {
+                let node = NullLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::NullLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::NumericLiteral => {
+                let node = NumericLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::NumericLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::ObjectExpression => {
+                let node = ObjectExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ObjectExpression(Box::new(node)),
+                )
+            }
+            NodeKind::OptionalCallExpression => {
+                let node = OptionalCallExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::OptionalCallExpression(Box::new(node)),
+                )
+            }
+            NodeKind::OptionalMemberExpression => {
+                let node = OptionalMemberExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::OptionalMemberExpression(Box::new(node)),
+                )
+            }
+            NodeKind::RegExpLiteral => {
+                let node = RegExpLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::RegExpLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::SequenceExpression => {
+                let node = SequenceExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::SequenceExpression(Box::new(node)),
+                )
+            }
+            NodeKind::StringLiteral => {
+                let node = StringLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::StringLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::TaggedTemplateExpression => {
+                let node = TaggedTemplateExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::TaggedTemplateExpression(Box::new(node)),
+                )
+            }
+            NodeKind::TemplateLiteral => {
+                let node = TemplateLiteral::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::TemplateLiteral(Box::new(node)),
+                )
+            }
+            NodeKind::ThisExpression => {
+                let node = ThisExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::ThisExpression(Box::new(node)),
+                )
+            }
+            NodeKind::UnaryExpression => {
+                let node = UnaryExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::UnaryExpression(Box::new(node)),
+                )
+            }
+            NodeKind::UpdateExpression => {
+                let node = UpdateExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::UpdateExpression(Box::new(node)),
+                )
+            }
+            NodeKind::YieldExpression => {
+                let node = YieldExpression::convert(cx, node);
+                ExpressionOrPrivateIdentifier::Expression(
+                    Expression::YieldExpression(Box::new(node)),
+                )
+            }
+            NodeKind::PrivateName => {
+                let node = PrivateName::convert(cx, node);
+                ExpressionOrPrivateIdentifier::PrivateName(Box::new(node))
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "ExpressionOrPrivateIdentifier"
+                )
+            }
+        }
+    }
+}
+impl FromHermes for TypeAnnotation {
+    fn convert(cx: &mut Context, node: NodePtr) -> Self {
+        let node_ref = node.as_ref();
+        match node_ref.kind {
+            NodeKind::TSTypeAnnotation => {
+                let node = TSTypeAnnotation::convert(cx, node);
+                TypeAnnotation::TSTypeAnnotation(Box::new(node))
+            }
+            _ => {
+                panic!(
+                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind,
+                    "TypeAnnotation"
+                )
+            }
         }
     }
 }

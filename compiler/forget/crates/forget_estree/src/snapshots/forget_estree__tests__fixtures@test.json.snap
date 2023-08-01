@@ -365,6 +365,7 @@ Output:
       "id": {
         "type": "Identifier",
         "name": "foo",
+        "typeAnnotation": null,
         "loc": {
           "source": null,
           "start": {

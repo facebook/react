@@ -121,6 +121,7 @@ Output:
           "local": {
             "type": "Identifier",
             "name": "React",
+            "typeAnnotation": null,
             "loc": {
               "source": null,
               "start": {

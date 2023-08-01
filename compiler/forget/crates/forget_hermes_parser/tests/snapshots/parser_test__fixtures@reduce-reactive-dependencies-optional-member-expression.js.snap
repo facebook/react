@@ -1,0 +1,423 @@
+---
+source: crates/forget_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_hermes_parser/tests/fixtures/reduce-reactive-dependencies-optional-member-expression.js
+---
+Input:
+function Component(props) {
+  const x = [];
+  x.push(props.items?.length);
+  x.push(props.items?.edges?.map?.(render)?.filter?.(Boolean) ?? []);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": {
+            "start": 0,
+            "end": 1
+          }
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              }
+            ],
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "computed": false,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "arguments": [
+                {
+                  "type": "OptionalMemberExpression",
+                  "object": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "items",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "length",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "computed": false,
+                  "optional": true,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                }
+              ],
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "directive": null,
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                },
+                "computed": false,
+                "loc": null,
+                "range": {
+                  "start": 0,
+                  "end": 1
+                }
+              },
+              "arguments": [
+                {
+                  "type": "LogicalExpression",
+                  "operator": "??",
+                  "left": {
+                    "type": "OptionalCallExpression",
+                    "callee": {
+                      "type": "OptionalMemberExpression",
+                      "object": {
+                        "type": "OptionalCallExpression",
+                        "callee": {
+                          "type": "OptionalMemberExpression",
+                          "object": {
+                            "type": "OptionalMemberExpression",
+                            "object": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "items",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": {
+                                  "start": 0,
+                                  "end": 1
+                                }
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "edges",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": {
+                                "start": 0,
+                                "end": 1
+                              }
+                            },
+                            "computed": false,
+                            "optional": true,
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "map",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          },
+                          "computed": false,
+                          "optional": true,
+                          "loc": null,
+                          "range": {
+                            "start": 0,
+                            "end": 1
+                          }
+                        },
+                        "arguments": [
+                          {
+                            "type": "Identifier",
+                            "name": "render",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": {
+                              "start": 0,
+                              "end": 1
+                            }
+                          }
+                        ],
+                        "optional": true,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "filter",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      },
+                      "computed": false,
+                      "optional": true,
+                      "loc": null,
+                      "range": {
+                        "start": 0,
+                        "end": 1
+                      }
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "Boolean",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": {
+                          "start": 0,
+                          "end": 1
+                        }
+                      }
+                    ],
+                    "optional": true,
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "right": {
+                    "type": "ArrayExpression",
+                    "elements": [],
+                    "loc": null,
+                    "range": {
+                      "start": 0,
+                      "end": 1
+                    }
+                  },
+                  "loc": null,
+                  "range": {
+                    "start": 0,
+                    "end": 1
+                  }
+                }
+              ],
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "directive": null,
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": {
+                "start": 0,
+                "end": 1
+              }
+            },
+            "loc": null,
+            "range": {
+              "start": 0,
+              "end": 1
+            }
+          }
+        ],
+        "loc": null,
+        "range": {
+          "start": 0,
+          "end": 1
+        }
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      },
+      "loc": null,
+      "range": {
+        "start": 0,
+        "end": 1
+      }
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": {
+    "start": 0,
+    "end": 1
+  }
+}

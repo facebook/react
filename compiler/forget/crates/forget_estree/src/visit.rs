@@ -1,6 +1,7 @@
 use crate::{
-    AssignmentPropertyOrRestElement, AssignmentTarget, Class, Declaration, ExportAllDeclaration,
-    ExportDefaultDeclaration, ExportNamedDeclaration, Expression, ExpressionOrSpread,
+    AssignmentPropertyOrRestElement, AssignmentTarget, Class, ClassItem, Declaration,
+    DeclarationOrExpression, ExportAllDeclaration, ExportDefaultDeclaration,
+    ExportNamedDeclaration, Expression, ExpressionOrPrivateIdentifier, ExpressionOrSpread,
     ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, ImportDeclaration,
     ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem,
     Pattern, Program, Statement, SwitchCase, VariableDeclarator, _Literal,
@@ -82,7 +83,12 @@ pub trait Visitor<'ast> {
     }
 
     fn visit_export_default_declaration(&mut self, declaration: &'ast ExportDefaultDeclaration) {
-        self.visit_declaration(&declaration.declaration);
+        match &declaration.declaration {
+            DeclarationOrExpression::Declaration(declaration) => {
+                self.visit_declaration(declaration)
+            }
+            DeclarationOrExpression::Expression(declaration) => self.visit_expression(declaration),
+        }
     }
 
     fn visit_export_named_declaration(&mut self, declaration: &'ast ExportNamedDeclaration) {
@@ -128,6 +134,9 @@ pub trait Visitor<'ast> {
                 for declarator in &declaration.declarations {
                     self.visit_variable_declarator(declarator)
                 }
+            }
+            Declaration::TSTypeAliasDeclaration(declaration) => {
+                todo!("visit TSTypeAliasDeclaration")
             }
         }
     }
@@ -245,6 +254,9 @@ pub trait Visitor<'ast> {
                 self.visit_expression(&stmt.object);
                 self.visit_statement(&stmt.body);
             }
+            Statement::TSTypeAliasDeclaration(stmt) => {
+                todo!("visit TSTypeAliasDeclaration")
+            }
         }
     }
 
@@ -255,8 +267,19 @@ pub trait Visitor<'ast> {
         if let Some(super_class) = &class.super_class {
             self.visit_expression(super_class);
         }
-        for method in &class.body.body {
-            self.visit_method_definition(class, method)
+        for item in &class.body.body {
+            match item {
+                ClassItem::MethodDefinition(item) => self.visit_method_definition(class, item),
+                ClassItem::ClassProperty(item) => {
+                    todo!("visit ClassProperty")
+                }
+                ClassItem::ClassPrivateProperty(item) => {
+                    todo!("visit ClassPrivateProperty")
+                }
+                ClassItem::StaticBlock(item) => {
+                    todo!("visit StaticBlock")
+                }
+            }
         }
     }
 
@@ -395,7 +418,17 @@ pub trait Visitor<'ast> {
                     ExpressionOrSuper::Expression(object) => self.visit_expression(object),
                 };
                 if !expr.is_computed {
-                    self.visit_expression(&expr.property)
+                    match &expr.property {
+                        ExpressionOrPrivateIdentifier::Expression(property) => {
+                            self.visit_expression(property)
+                        }
+                        ExpressionOrPrivateIdentifier::PrivateIdentifier(property) => {
+                            todo!("visit PrivateIdentifier property")
+                        }
+                        ExpressionOrPrivateIdentifier::PrivateName(property) => {
+                            todo!("visit PrivateName property")
+                        }
+                    }
                 }
             }
             _ => {

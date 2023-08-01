@@ -1,8 +1,10 @@
+use std::num::NonZeroU32;
+
 use forget_estree::{
     ArrowFunctionExpression, AssignmentProperty, Class, ClassBody, ClassDeclaration,
-    ClassExpression, Expression, ExpressionOrSpread, Function, FunctionBody, FunctionDeclaration,
-    FunctionExpression, Identifier, Number, Pattern, SourceRange, TemplateElement,
-    TemplateElementValue,
+    ClassExpression, ClassPrivateProperty, Expression, ExpressionOrSpread, Function, FunctionBody,
+    FunctionDeclaration, FunctionExpression, Identifier, Number, Pattern, SourceRange,
+    TemplateElement, TemplateElementValue,
 };
 use hermes::parser::{
     hermes_get_ArrowFunctionExpression_async, hermes_get_ArrowFunctionExpression_body,
@@ -68,7 +70,10 @@ where
 
 pub fn convert_range(node: NodePtr) -> SourceRange {
     let _range = node.as_ref().source_range;
-    todo!()
+    SourceRange {
+        start: 0,
+        end: NonZeroU32::new(1).unwrap(),
+    }
 }
 
 #[allow(dead_code)]

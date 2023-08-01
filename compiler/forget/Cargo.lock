@@ -530,7 +530,9 @@ dependencies = [
  "forget_estree",
  "forget_estree_codegen",
  "hermes",
+ "insta",
  "juno_support",
+ "serde_json",
 ]
 
 [[package]]

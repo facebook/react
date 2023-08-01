@@ -99,6 +99,13 @@
                     "type": "Option<Binding>",
                     "optional": true,
                     "skip": true
+                },
+                "type_annotation": {
+                    "type": "Option<TypeAnnotation>",
+                    "optional": true,
+                    "rename": "typeAnnotation",
+                    "hermes_default": true,
+                    "TODO": "support HermesParser"
                 }
             }
         },
@@ -143,6 +150,16 @@
                 "value": {
                     "type": "String",
                     "hermes_convert_with": "convert_string_value"
+                }
+            }
+        },
+        "RegExpLiteral": {
+            "fields": {
+                "pattern": {
+                    "type": "String"
+                },
+                "flags": {
+                    "type": "String"
                 }
             }
         },
@@ -381,7 +398,7 @@
         "ClassBody": {
             "fields": {
                 "body": {
-                    "type": "Vec<MethodDefinition>"
+                    "type": "Vec<ClassItem>"
                 }
             }
         },
@@ -560,7 +577,7 @@
                     "type": "ExpressionOrSuper"
                 },
                 "property": {
-                    "type": "Expression"
+                    "type": "ExpressionOrPrivateIdentifier"
                 },
                 "is_computed": {
                     "type": "bool",
@@ -685,7 +702,7 @@
         "ExportDefaultDeclaration": {
             "fields": {
                 "declaration": {
-                    "type": "Declaration"
+                    "type": "DeclarationOrExpression"
                 }
             }
         },
@@ -796,6 +813,18 @@
                     "type": "String"
                 }
             }
+        },
+        "JSXStringLiteral": {
+            "fields": {
+                "value": {
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
+                },
+                "raw": {
+                    "type": "String"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
         },
         "JSXElement": {
             "fields": {
@@ -977,7 +1006,82 @@
                     "type": "Expression"
                 }
             }
-        }
+        },
+        "ClassProperty": {
+            "fields": {
+                "key": {
+                    "type": "Expression"
+                },
+                "value": {
+                    "type": "Option<Expression>",
+                    "optional": true
+                },
+                "is_computed": {
+                    "type": "bool",
+                    "rename": "computed"
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            }
+        },
+        "ClassPrivateProperty": {
+            "fields": {
+                "key": {
+                    "type": "ExpressionOrPrivateIdentifier"
+                },
+                "value": {
+                    "type": "Option<Expression>",
+                    "optional": true
+                },
+                "is_static": {
+                    "type": "bool",
+                    "rename": "static"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "PrivateName": {
+            "fields": {
+                "id": {
+                    "type": "Identifier"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "PrivateIdentifier": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "name": {
+                    "type": "String"
+                }
+            }
+        },
+        "StaticBlock": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
+            "fields": {
+                "body": {
+                    "type": "Vec<Statement>"
+                }
+            },
+            "TODO": "not yet supported in HermesParser"
+        },
+        "CoverTypedIdentifier": {
+            "fields": {
+                "left": {
+                    "type": "Identifier"
+                },
+                "right": {
+                    "type": "Option<TypeAnnotation>"
+                }
+            },
+            "TODO": "Non-standard HermesParser node"
+        },
+        "TSTypeAnnotation": {},
+        "TSTypeAliasDeclaration": {}
     },
     "enums": {
         "Statement": [
@@ -999,6 +1103,7 @@
             "SwitchStatement",
             "ThrowStatement",
             "TryStatement",
+            "TSTypeAliasDeclaration",
             "VariableDeclaration",
             "WhileStatement",
             "WithStatement"
@@ -1014,10 +1119,12 @@
             "ChainExpression",
             "ClassExpression",
             "ConditionalExpression",
+            "CoverTypedIdentifier",
             "FunctionExpression",
             "Identifier",
             "ImportExpression",
             "JSXElement",
+            "JSXFragment",
             "Literal",
             "LogicalExpression",
             "MemberExpression",
@@ -1028,6 +1135,7 @@
             "ObjectExpression",
             "OptionalCallExpression",
             "OptionalMemberExpression",
+            "RegExpLiteral",
             "SequenceExpression",
             "StringLiteral",
             "TaggedTemplateExpression",
@@ -1047,7 +1155,8 @@
         "Declaration": [
             "ClassDeclaration",
             "FunctionDeclaration",
-            "VariableDeclaration"
+            "VariableDeclaration",
+            "TSTypeAliasDeclaration"
         ],
         "ImportDeclarationSpecifier": [
             "ImportSpecifier",
@@ -1127,7 +1236,8 @@
             "Literal",
             "JSXExpressionContainer",
             "JSXElement",
-            "JSXFragment"
+            "JSXFragment",
+            "JSXStringLiteral"
         ],
         "JSXElementName": [
             "JSXIdentifier",
@@ -1140,10 +1250,29 @@
         ],
         "JSXChildItem": [
             "JSXText", 
+            "JSXStringLiteral",
             "JSXExpressionContainer",
             "JSXSpreadChild",
             "JSXElement",
             "JSXFragment"
+        ],
+        "DeclarationOrExpression": [
+            "Declaration",
+            "Expression"
+        ],
+        "ClassItem": [
+            "MethodDefinition",
+            "ClassProperty",
+            "ClassPrivateProperty",
+            "StaticBlock"
+        ],
+        "ExpressionOrPrivateIdentifier": [
+            "Expression",
+            "PrivateIdentifier",
+            "PrivateName"
+        ],
+        "TypeAnnotation": [
+            "TSTypeAnnotation"
         ]
     },
     "operators": {

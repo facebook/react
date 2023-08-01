@@ -542,6 +542,7 @@ Output:
       "id": {
         "type": "Identifier",
         "name": "Component",
+        "typeAnnotation": null,
         "loc": {
           "source": null,
           "start": {
@@ -562,6 +563,7 @@ Output:
         {
           "type": "Identifier",
           "name": "props",
+          "typeAnnotation": null,
           "loc": {
             "source": null,
             "start": {
@@ -591,6 +593,7 @@ Output:
                 "id": {
                   "type": "Identifier",
                   "name": "x",
+                  "typeAnnotation": null,
                   "loc": {
                     "source": null,
                     "start": {
@@ -675,6 +678,7 @@ Output:
                   "id": {
                     "type": "Identifier",
                     "name": "i",
+                    "typeAnnotation": null,
                     "loc": {
                       "source": null,
                       "start": {
@@ -753,6 +757,7 @@ Output:
               "left": {
                 "type": "Identifier",
                 "name": "i",
+                "typeAnnotation": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -816,6 +821,7 @@ Output:
               "argument": {
                 "type": "Identifier",
                 "name": "i",
+                "typeAnnotation": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -860,6 +866,7 @@ Output:
                     "left": {
                       "type": "Identifier",
                       "name": "x",
+                      "typeAnnotation": null,
                       "loc": {
                         "source": null,
                         "start": {
@@ -879,6 +886,7 @@ Output:
                     "right": {
                       "type": "Identifier",
                       "name": "i",
+                      "typeAnnotation": null,
                       "loc": {
                         "source": null,
                         "start": {
@@ -966,6 +974,7 @@ Output:
             "argument": {
               "type": "Identifier",
               "name": "x",
+              "typeAnnotation": null,
               "loc": {
                 "source": null,
                 "start": {

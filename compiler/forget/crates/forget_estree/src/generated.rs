@@ -60,6 +60,9 @@ pub struct Identifier {
     #[serde(skip)]
     #[serde(default)]
     pub binding: Option<Binding>,
+    #[serde(rename = "typeAnnotation")]
+    #[serde(default)]
+    pub type_annotation: Option<TypeAnnotation>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -73,6 +76,7 @@ impl Serialize for Identifier {
         let mut state = serializer.serialize_map(None)?;
         state.serialize_entry("type", "Identifier")?;
         state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("typeAnnotation", &self.type_annotation)?;
         state.serialize_entry("loc", &self.loc)?;
         state.serialize_entry("range", &self.range)?;
         state.end()
@@ -185,6 +189,29 @@ impl Serialize for StringLiteral {
         let mut state = serializer.serialize_map(None)?;
         state.serialize_entry("type", "StringLiteral")?;
         state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct RegExpLiteral {
+    pub pattern: String,
+    pub flags: String,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for RegExpLiteral {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "RegExpLiteral")?;
+        state.serialize_entry("pattern", &self.pattern)?;
+        state.serialize_entry("flags", &self.flags)?;
         state.serialize_entry("loc", &self.loc)?;
         state.serialize_entry("range", &self.range)?;
         state.end()
@@ -751,7 +778,7 @@ impl Serialize for ClassExpression {
 }
 #[derive(Deserialize, Clone, Debug)]
 pub struct ClassBody {
-    pub body: Vec<MethodDefinition>,
+    pub body: Vec<ClassItem>,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -1123,7 +1150,7 @@ impl Serialize for LogicalExpression {
 #[derive(Deserialize, Clone, Debug)]
 pub struct MemberExpression {
     pub object: ExpressionOrSuper,
-    pub property: Expression,
+    pub property: ExpressionOrPrivateIdentifier,
     #[serde(rename = "computed")]
     pub is_computed: bool,
     #[serde(default)]
@@ -1439,7 +1466,7 @@ impl Serialize for ExportSpecifier {
 }
 #[derive(Deserialize, Clone, Debug)]
 pub struct ExportDefaultDeclaration {
-    pub declaration: Declaration,
+    pub declaration: DeclarationOrExpression,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -1720,6 +1747,29 @@ impl Serialize for JSXText {
     {
         let mut state = serializer.serialize_map(None)?;
         state.serialize_entry("type", "JSXText")?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("raw", &self.raw)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct JSXStringLiteral {
+    pub value: String,
+    pub raw: String,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for JSXStringLiteral {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "JSXStringLiteral")?;
         state.serialize_entry("value", &self.value)?;
         state.serialize_entry("raw", &self.raw)?;
         state.serialize_entry("loc", &self.loc)?;
@@ -2144,6 +2194,187 @@ impl Serialize for ImportExpression {
         state.end()
     }
 }
+#[derive(Deserialize, Clone, Debug)]
+pub struct ClassProperty {
+    pub key: Expression,
+    #[serde(default)]
+    pub value: Option<Expression>,
+    #[serde(rename = "computed")]
+    pub is_computed: bool,
+    #[serde(rename = "static")]
+    pub is_static: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for ClassProperty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ClassProperty")?;
+        state.serialize_entry("key", &self.key)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("computed", &self.is_computed)?;
+        state.serialize_entry("static", &self.is_static)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct ClassPrivateProperty {
+    pub key: ExpressionOrPrivateIdentifier,
+    #[serde(default)]
+    pub value: Option<Expression>,
+    #[serde(rename = "static")]
+    pub is_static: bool,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for ClassPrivateProperty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "ClassPrivateProperty")?;
+        state.serialize_entry("key", &self.key)?;
+        state.serialize_entry("value", &self.value)?;
+        state.serialize_entry("static", &self.is_static)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct PrivateName {
+    pub id: Identifier,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for PrivateName {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "PrivateName")?;
+        state.serialize_entry("id", &self.id)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct PrivateIdentifier {
+    pub name: String,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for PrivateIdentifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "PrivateIdentifier")?;
+        state.serialize_entry("name", &self.name)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct StaticBlock {
+    pub body: Vec<Statement>,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for StaticBlock {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "StaticBlock")?;
+        state.serialize_entry("body", &self.body)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct CoverTypedIdentifier {
+    pub left: Identifier,
+    pub right: Option<TypeAnnotation>,
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for CoverTypedIdentifier {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "CoverTypedIdentifier")?;
+        state.serialize_entry("left", &self.left)?;
+        state.serialize_entry("right", &self.right)?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct TSTypeAnnotation {
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for TSTypeAnnotation {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "TSTypeAnnotation")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
+#[derive(Deserialize, Clone, Debug)]
+pub struct TSTypeAliasDeclaration {
+    #[serde(default)]
+    pub loc: Option<SourceLocation>,
+    #[serde(default)]
+    pub range: Option<SourceRange>,
+}
+impl Serialize for TSTypeAliasDeclaration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_map(None)?;
+        state.serialize_entry("type", "TSTypeAliasDeclaration")?;
+        state.serialize_entry("loc", &self.loc)?;
+        state.serialize_entry("range", &self.range)?;
+        state.end()
+    }
+}
 #[derive(Serialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum Statement {
@@ -2163,6 +2394,7 @@ pub enum Statement {
     LabeledStatement(Box<LabeledStatement>),
     ReturnStatement(Box<ReturnStatement>),
     SwitchStatement(Box<SwitchStatement>),
+    TSTypeAliasDeclaration(Box<TSTypeAliasDeclaration>),
     ThrowStatement(Box<ThrowStatement>),
     TryStatement(Box<TryStatement>),
     VariableDeclaration(Box<VariableDeclaration>),
@@ -2189,6 +2421,7 @@ enum __StatementTag {
     SwitchStatement,
     ThrowStatement,
     TryStatement,
+    TSTypeAliasDeclaration,
     VariableDeclaration,
     WhileStatement,
     WithStatement,
@@ -2349,6 +2582,14 @@ impl<'de> serde::Deserialize<'de> for Statement {
                 )?;
                 Ok(Statement::TryStatement(node))
             }
+            __StatementTag::TSTypeAliasDeclaration => {
+                let node: Box<TSTypeAliasDeclaration> = <Box<
+                    TSTypeAliasDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Statement::TSTypeAliasDeclaration(node))
+            }
             __StatementTag::VariableDeclaration => {
                 let node: Box<VariableDeclaration> = <Box<
                     VariableDeclaration,
@@ -2389,10 +2630,12 @@ pub enum Expression {
     ChainExpression(Box<ChainExpression>),
     ClassExpression(Box<ClassExpression>),
     ConditionalExpression(Box<ConditionalExpression>),
+    CoverTypedIdentifier(Box<CoverTypedIdentifier>),
     FunctionExpression(Box<FunctionExpression>),
     Identifier(Box<Identifier>),
     ImportExpression(Box<ImportExpression>),
     JSXElement(Box<JSXElement>),
+    JSXFragment(Box<JSXFragment>),
     Literal(Box<Literal>),
     LogicalExpression(Box<LogicalExpression>),
     MemberExpression(Box<MemberExpression>),
@@ -2403,6 +2646,7 @@ pub enum Expression {
     ObjectExpression(Box<ObjectExpression>),
     OptionalCallExpression(Box<OptionalCallExpression>),
     OptionalMemberExpression(Box<OptionalMemberExpression>),
+    RegExpLiteral(Box<RegExpLiteral>),
     SequenceExpression(Box<SequenceExpression>),
     StringLiteral(Box<StringLiteral>),
     TaggedTemplateExpression(Box<TaggedTemplateExpression>),
@@ -2424,10 +2668,12 @@ enum __ExpressionTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -2438,6 +2684,7 @@ enum __ExpressionTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -2539,6 +2786,14 @@ impl<'de> serde::Deserialize<'de> for Expression {
                 )?;
                 Ok(Expression::ConditionalExpression(node))
             }
+            __ExpressionTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Expression::CoverTypedIdentifier(node))
+            }
             __ExpressionTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -2570,6 +2825,14 @@ impl<'de> serde::Deserialize<'de> for Expression {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(Expression::JSXElement(node))
+            }
+            __ExpressionTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Expression::JSXFragment(node))
             }
             __ExpressionTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -2650,6 +2913,14 @@ impl<'de> serde::Deserialize<'de> for Expression {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(Expression::OptionalMemberExpression(node))
+            }
+            __ExpressionTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Expression::RegExpLiteral(node))
             }
             __ExpressionTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -2795,6 +3066,7 @@ impl<'de> serde::Deserialize<'de> for _Literal {
 pub enum Declaration {
     ClassDeclaration(Box<ClassDeclaration>),
     FunctionDeclaration(Box<FunctionDeclaration>),
+    TSTypeAliasDeclaration(Box<TSTypeAliasDeclaration>),
     VariableDeclaration(Box<VariableDeclaration>),
 }
 #[derive(Deserialize, Debug)]
@@ -2802,6 +3074,7 @@ enum __DeclarationTag {
     ClassDeclaration,
     FunctionDeclaration,
     VariableDeclaration,
+    TSTypeAliasDeclaration,
 }
 impl<'de> serde::Deserialize<'de> for Declaration {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -2838,6 +3111,14 @@ impl<'de> serde::Deserialize<'de> for Declaration {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(Declaration::VariableDeclaration(node))
+            }
+            __DeclarationTag::TSTypeAliasDeclaration => {
+                let node: Box<TSTypeAliasDeclaration> = <Box<
+                    TSTypeAliasDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(Declaration::TSTypeAliasDeclaration(node))
             }
         }
     }
@@ -2924,6 +3205,7 @@ enum __ModuleItemTag {
     SwitchStatement,
     ThrowStatement,
     TryStatement,
+    TSTypeAliasDeclaration,
     VariableDeclaration,
     WhileStatement,
     WithStatement,
@@ -3132,6 +3414,14 @@ impl<'de> serde::Deserialize<'de> for ModuleItem {
                 )?;
                 Ok(ModuleItem::Statement(Statement::TryStatement(node)))
             }
+            __ModuleItemTag::TSTypeAliasDeclaration => {
+                let node: Box<TSTypeAliasDeclaration> = <Box<
+                    TSTypeAliasDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ModuleItem::Statement(Statement::TSTypeAliasDeclaration(node)))
+            }
             __ModuleItemTag::VariableDeclaration => {
                 let node: Box<VariableDeclaration> = <Box<
                     VariableDeclaration,
@@ -3239,10 +3529,12 @@ enum __ExpressionOrSuperTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -3253,6 +3545,7 @@ enum __ExpressionOrSuperTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -3363,6 +3656,14 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSuper {
                     ),
                 )
             }
+            __ExpressionOrSuperTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrSuper::Expression(Expression::CoverTypedIdentifier(node)))
+            }
             __ExpressionOrSuperTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -3394,6 +3695,14 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSuper {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(ExpressionOrSuper::Expression(Expression::JSXElement(node)))
+            }
+            __ExpressionOrSuperTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrSuper::Expression(Expression::JSXFragment(node)))
             }
             __ExpressionOrSuperTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -3482,6 +3791,14 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSuper {
                         Expression::OptionalMemberExpression(node),
                     ),
                 )
+            }
+            __ExpressionOrSuperTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrSuper::Expression(Expression::RegExpLiteral(node)))
             }
             __ExpressionOrSuperTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -3580,10 +3897,12 @@ enum __ExpressionOrSpreadTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -3594,6 +3913,7 @@ enum __ExpressionOrSpreadTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -3708,6 +4028,18 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSpread {
                     ),
                 )
             }
+            __ExpressionOrSpreadTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrSpread::Expression(
+                        Expression::CoverTypedIdentifier(node),
+                    ),
+                )
+            }
             __ExpressionOrSpreadTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -3739,6 +4071,14 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSpread {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(ExpressionOrSpread::Expression(Expression::JSXElement(node)))
+            }
+            __ExpressionOrSpreadTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrSpread::Expression(Expression::JSXFragment(node)))
             }
             __ExpressionOrSpreadTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -3827,6 +4167,14 @@ impl<'de> serde::Deserialize<'de> for ExpressionOrSpread {
                         Expression::OptionalMemberExpression(node),
                     ),
                 )
+            }
+            __ExpressionOrSpreadTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrSpread::Expression(Expression::RegExpLiteral(node)))
             }
             __ExpressionOrSpreadTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -3926,10 +4274,12 @@ enum __FunctionBodyTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -3940,6 +4290,7 @@ enum __FunctionBodyTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -4049,6 +4400,14 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
                 )?;
                 Ok(FunctionBody::Expression(Expression::ConditionalExpression(node)))
             }
+            __FunctionBodyTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(FunctionBody::Expression(Expression::CoverTypedIdentifier(node)))
+            }
             __FunctionBodyTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -4080,6 +4439,14 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(FunctionBody::Expression(Expression::JSXElement(node)))
+            }
+            __FunctionBodyTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(FunctionBody::Expression(Expression::JSXFragment(node)))
             }
             __FunctionBodyTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -4160,6 +4527,14 @@ impl<'de> serde::Deserialize<'de> for FunctionBody {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(FunctionBody::Expression(Expression::OptionalMemberExpression(node)))
+            }
+            __FunctionBodyTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(FunctionBody::Expression(Expression::RegExpLiteral(node)))
             }
             __FunctionBodyTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -4318,10 +4693,12 @@ enum __ForInitTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -4332,6 +4709,7 @@ enum __ForInitTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -4434,6 +4812,14 @@ impl<'de> serde::Deserialize<'de> for ForInit {
                 )?;
                 Ok(ForInit::Expression(Expression::ConditionalExpression(node)))
             }
+            __ForInitTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ForInit::Expression(Expression::CoverTypedIdentifier(node)))
+            }
             __ForInitTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -4465,6 +4851,14 @@ impl<'de> serde::Deserialize<'de> for ForInit {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(ForInit::Expression(Expression::JSXElement(node)))
+            }
+            __ForInitTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ForInit::Expression(Expression::JSXFragment(node)))
             }
             __ForInitTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -4545,6 +4939,14 @@ impl<'de> serde::Deserialize<'de> for ForInit {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(ForInit::Expression(Expression::OptionalMemberExpression(node)))
+            }
+            __ForInitTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ForInit::Expression(Expression::RegExpLiteral(node)))
             }
             __ForInitTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -4843,10 +5245,12 @@ enum __AssignmentTargetTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -4857,6 +5261,7 @@ enum __AssignmentTargetTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -4966,6 +5371,14 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                 )?;
                 Ok(AssignmentTarget::Expression(Expression::ConditionalExpression(node)))
             }
+            __AssignmentTargetTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Expression(Expression::CoverTypedIdentifier(node)))
+            }
             __AssignmentTargetTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -4997,6 +5410,14 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(AssignmentTarget::Expression(Expression::JSXElement(node)))
+            }
+            __AssignmentTargetTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Expression(Expression::JSXFragment(node)))
             }
             __AssignmentTargetTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -5085,6 +5506,14 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                         Expression::OptionalMemberExpression(node),
                     ),
                 )
+            }
+            __AssignmentTargetTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Expression(Expression::RegExpLiteral(node)))
             }
             __AssignmentTargetTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -5291,10 +5720,12 @@ enum __JSXExpressionOrEmptyTag {
     ChainExpression,
     ClassExpression,
     ConditionalExpression,
+    CoverTypedIdentifier,
     FunctionExpression,
     Identifier,
     ImportExpression,
     JSXElement,
+    JSXFragment,
     Literal,
     LogicalExpression,
     MemberExpression,
@@ -5305,6 +5736,7 @@ enum __JSXExpressionOrEmptyTag {
     ObjectExpression,
     OptionalCallExpression,
     OptionalMemberExpression,
+    RegExpLiteral,
     SequenceExpression,
     StringLiteral,
     TaggedTemplateExpression,
@@ -5419,6 +5851,18 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
                     ),
                 )
             }
+            __JSXExpressionOrEmptyTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    JSXExpressionOrEmpty::Expression(
+                        Expression::CoverTypedIdentifier(node),
+                    ),
+                )
+            }
             __JSXExpressionOrEmptyTag::FunctionExpression => {
                 let node: Box<FunctionExpression> = <Box<
                     FunctionExpression,
@@ -5454,6 +5898,14 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(JSXExpressionOrEmpty::Expression(Expression::JSXElement(node)))
+            }
+            __JSXExpressionOrEmptyTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(JSXExpressionOrEmpty::Expression(Expression::JSXFragment(node)))
             }
             __JSXExpressionOrEmptyTag::Literal => {
                 let node: Box<Literal> = <Box<
@@ -5542,6 +5994,14 @@ impl<'de> serde::Deserialize<'de> for JSXExpressionOrEmpty {
                         Expression::OptionalMemberExpression(node),
                     ),
                 )
+            }
+            __JSXExpressionOrEmptyTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(JSXExpressionOrEmpty::Expression(Expression::RegExpLiteral(node)))
             }
             __JSXExpressionOrEmptyTag::SequenceExpression => {
                 let node: Box<SequenceExpression> = <Box<
@@ -5674,6 +6134,7 @@ pub enum JSXAttributeValue {
     JSXElement(Box<JSXElement>),
     JSXExpressionContainer(Box<JSXExpressionContainer>),
     JSXFragment(Box<JSXFragment>),
+    JSXStringLiteral(Box<JSXStringLiteral>),
     Literal(Box<Literal>),
 }
 #[derive(Deserialize, Debug)]
@@ -5682,6 +6143,7 @@ enum __JSXAttributeValueTag {
     JSXExpressionContainer,
     JSXElement,
     JSXFragment,
+    JSXStringLiteral,
 }
 impl<'de> serde::Deserialize<'de> for JSXAttributeValue {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -5726,6 +6188,14 @@ impl<'de> serde::Deserialize<'de> for JSXAttributeValue {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(JSXAttributeValue::JSXFragment(node))
+            }
+            __JSXAttributeValueTag::JSXStringLiteral => {
+                let node: Box<JSXStringLiteral> = <Box<
+                    JSXStringLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(JSXAttributeValue::JSXStringLiteral(node))
             }
         }
     }
@@ -5831,11 +6301,13 @@ pub enum JSXChildItem {
     JSXExpressionContainer(Box<JSXExpressionContainer>),
     JSXFragment(Box<JSXFragment>),
     JSXSpreadChild(Box<JSXSpreadChild>),
+    JSXStringLiteral(Box<JSXStringLiteral>),
     JSXText(Box<JSXText>),
 }
 #[derive(Deserialize, Debug)]
 enum __JSXChildItemTag {
     JSXText,
+    JSXStringLiteral,
     JSXExpressionContainer,
     JSXSpreadChild,
     JSXElement,
@@ -5860,6 +6332,14 @@ impl<'de> serde::Deserialize<'de> for JSXChildItem {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(JSXChildItem::JSXText(node))
+            }
+            __JSXChildItemTag::JSXStringLiteral => {
+                let node: Box<JSXStringLiteral> = <Box<
+                    JSXStringLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(JSXChildItem::JSXStringLiteral(node))
             }
             __JSXChildItemTag::JSXExpressionContainer => {
                 let node: Box<JSXExpressionContainer> = <Box<
@@ -5892,6 +6372,1073 @@ impl<'de> serde::Deserialize<'de> for JSXChildItem {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(JSXChildItem::JSXFragment(node))
+            }
+        }
+    }
+}
+#[derive(Serialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum DeclarationOrExpression {
+    Declaration(Declaration),
+    Expression(Expression),
+}
+#[derive(Deserialize, Debug)]
+enum __DeclarationOrExpressionTag {
+    ClassDeclaration,
+    FunctionDeclaration,
+    VariableDeclaration,
+    TSTypeAliasDeclaration,
+    ArrayExpression,
+    ArrowFunctionExpression,
+    AssignmentExpression,
+    AwaitExpression,
+    BinaryExpression,
+    BooleanLiteral,
+    CallExpression,
+    ChainExpression,
+    ClassExpression,
+    ConditionalExpression,
+    CoverTypedIdentifier,
+    FunctionExpression,
+    Identifier,
+    ImportExpression,
+    JSXElement,
+    JSXFragment,
+    Literal,
+    LogicalExpression,
+    MemberExpression,
+    MetaProperty,
+    NewExpression,
+    NullLiteral,
+    NumericLiteral,
+    ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
+    RegExpLiteral,
+    SequenceExpression,
+    StringLiteral,
+    TaggedTemplateExpression,
+    TemplateLiteral,
+    ThisExpression,
+    UnaryExpression,
+    UpdateExpression,
+    YieldExpression,
+}
+impl<'de> serde::Deserialize<'de> for DeclarationOrExpression {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let tagged = serde::Deserializer::deserialize_any(
+            deserializer,
+            serde::__private::de::TaggedContentVisitor::<
+                __DeclarationOrExpressionTag,
+            >::new("type", "DeclarationOrExpression"),
+        )?;
+        match tagged.0 {
+            __DeclarationOrExpressionTag::ClassDeclaration => {
+                let node: Box<ClassDeclaration> = <Box<
+                    ClassDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Declaration(
+                        Declaration::ClassDeclaration(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::FunctionDeclaration => {
+                let node: Box<FunctionDeclaration> = <Box<
+                    FunctionDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Declaration(
+                        Declaration::FunctionDeclaration(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::VariableDeclaration => {
+                let node: Box<VariableDeclaration> = <Box<
+                    VariableDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Declaration(
+                        Declaration::VariableDeclaration(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::TSTypeAliasDeclaration => {
+                let node: Box<TSTypeAliasDeclaration> = <Box<
+                    TSTypeAliasDeclaration,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Declaration(
+                        Declaration::TSTypeAliasDeclaration(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::ArrayExpression => {
+                let node: Box<ArrayExpression> = <Box<
+                    ArrayExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ArrayExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::ArrowFunctionExpression => {
+                let node: Box<ArrowFunctionExpression> = <Box<
+                    ArrowFunctionExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ArrowFunctionExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::AssignmentExpression => {
+                let node: Box<AssignmentExpression> = <Box<
+                    AssignmentExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::AssignmentExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::AwaitExpression => {
+                let node: Box<AwaitExpression> = <Box<
+                    AwaitExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::AwaitExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::BinaryExpression => {
+                let node: Box<BinaryExpression> = <Box<
+                    BinaryExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::BinaryExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::BooleanLiteral => {
+                let node: Box<BooleanLiteral> = <Box<
+                    BooleanLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::BooleanLiteral(node)))
+            }
+            __DeclarationOrExpressionTag::CallExpression => {
+                let node: Box<CallExpression> = <Box<
+                    CallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::CallExpression(node)))
+            }
+            __DeclarationOrExpressionTag::ChainExpression => {
+                let node: Box<ChainExpression> = <Box<
+                    ChainExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ChainExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::ClassExpression => {
+                let node: Box<ClassExpression> = <Box<
+                    ClassExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ClassExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::ConditionalExpression => {
+                let node: Box<ConditionalExpression> = <Box<
+                    ConditionalExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ConditionalExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::CoverTypedIdentifier(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::FunctionExpression => {
+                let node: Box<FunctionExpression> = <Box<
+                    FunctionExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::FunctionExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::Identifier => {
+                let node: Box<Identifier> = <Box<
+                    Identifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::Identifier(node)))
+            }
+            __DeclarationOrExpressionTag::ImportExpression => {
+                let node: Box<ImportExpression> = <Box<
+                    ImportExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ImportExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::JSXElement => {
+                let node: Box<JSXElement> = <Box<
+                    JSXElement,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::JSXElement(node)))
+            }
+            __DeclarationOrExpressionTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::JSXFragment(node)))
+            }
+            __DeclarationOrExpressionTag::Literal => {
+                let node: Box<Literal> = <Box<
+                    Literal,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::Literal(node)))
+            }
+            __DeclarationOrExpressionTag::LogicalExpression => {
+                let node: Box<LogicalExpression> = <Box<
+                    LogicalExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::LogicalExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::MemberExpression => {
+                let node: Box<MemberExpression> = <Box<
+                    MemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::MemberExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::MetaProperty => {
+                let node: Box<MetaProperty> = <Box<
+                    MetaProperty,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::MetaProperty(node)))
+            }
+            __DeclarationOrExpressionTag::NewExpression => {
+                let node: Box<NewExpression> = <Box<
+                    NewExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::NewExpression(node)))
+            }
+            __DeclarationOrExpressionTag::NullLiteral => {
+                let node: Box<NullLiteral> = <Box<
+                    NullLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::NullLiteral(node)))
+            }
+            __DeclarationOrExpressionTag::NumericLiteral => {
+                let node: Box<NumericLiteral> = <Box<
+                    NumericLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::NumericLiteral(node)))
+            }
+            __DeclarationOrExpressionTag::ObjectExpression => {
+                let node: Box<ObjectExpression> = <Box<
+                    ObjectExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::ObjectExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::RegExpLiteral(node)))
+            }
+            __DeclarationOrExpressionTag::SequenceExpression => {
+                let node: Box<SequenceExpression> = <Box<
+                    SequenceExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::SequenceExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::StringLiteral => {
+                let node: Box<StringLiteral> = <Box<
+                    StringLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::StringLiteral(node)))
+            }
+            __DeclarationOrExpressionTag::TaggedTemplateExpression => {
+                let node: Box<TaggedTemplateExpression> = <Box<
+                    TaggedTemplateExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::TaggedTemplateExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::TemplateLiteral => {
+                let node: Box<TemplateLiteral> = <Box<
+                    TemplateLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::TemplateLiteral(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::ThisExpression => {
+                let node: Box<ThisExpression> = <Box<
+                    ThisExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(DeclarationOrExpression::Expression(Expression::ThisExpression(node)))
+            }
+            __DeclarationOrExpressionTag::UnaryExpression => {
+                let node: Box<UnaryExpression> = <Box<
+                    UnaryExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::UnaryExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::UpdateExpression => {
+                let node: Box<UpdateExpression> = <Box<
+                    UpdateExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::UpdateExpression(node),
+                    ),
+                )
+            }
+            __DeclarationOrExpressionTag::YieldExpression => {
+                let node: Box<YieldExpression> = <Box<
+                    YieldExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    DeclarationOrExpression::Expression(
+                        Expression::YieldExpression(node),
+                    ),
+                )
+            }
+        }
+    }
+}
+#[derive(Serialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ClassItem {
+    ClassPrivateProperty(Box<ClassPrivateProperty>),
+    ClassProperty(Box<ClassProperty>),
+    MethodDefinition(Box<MethodDefinition>),
+    StaticBlock(Box<StaticBlock>),
+}
+#[derive(Deserialize, Debug)]
+enum __ClassItemTag {
+    MethodDefinition,
+    ClassProperty,
+    ClassPrivateProperty,
+    StaticBlock,
+}
+impl<'de> serde::Deserialize<'de> for ClassItem {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let tagged = serde::Deserializer::deserialize_any(
+            deserializer,
+            serde::__private::de::TaggedContentVisitor::<
+                __ClassItemTag,
+            >::new("type", "ClassItem"),
+        )?;
+        match tagged.0 {
+            __ClassItemTag::MethodDefinition => {
+                let node: Box<MethodDefinition> = <Box<
+                    MethodDefinition,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ClassItem::MethodDefinition(node))
+            }
+            __ClassItemTag::ClassProperty => {
+                let node: Box<ClassProperty> = <Box<
+                    ClassProperty,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ClassItem::ClassProperty(node))
+            }
+            __ClassItemTag::ClassPrivateProperty => {
+                let node: Box<ClassPrivateProperty> = <Box<
+                    ClassPrivateProperty,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ClassItem::ClassPrivateProperty(node))
+            }
+            __ClassItemTag::StaticBlock => {
+                let node: Box<StaticBlock> = <Box<
+                    StaticBlock,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ClassItem::StaticBlock(node))
+            }
+        }
+    }
+}
+#[derive(Serialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum ExpressionOrPrivateIdentifier {
+    Expression(Expression),
+    PrivateIdentifier(Box<PrivateIdentifier>),
+    PrivateName(Box<PrivateName>),
+}
+#[derive(Deserialize, Debug)]
+enum __ExpressionOrPrivateIdentifierTag {
+    ArrayExpression,
+    ArrowFunctionExpression,
+    AssignmentExpression,
+    AwaitExpression,
+    BinaryExpression,
+    BooleanLiteral,
+    CallExpression,
+    ChainExpression,
+    ClassExpression,
+    ConditionalExpression,
+    CoverTypedIdentifier,
+    FunctionExpression,
+    Identifier,
+    ImportExpression,
+    JSXElement,
+    JSXFragment,
+    Literal,
+    LogicalExpression,
+    MemberExpression,
+    MetaProperty,
+    NewExpression,
+    NullLiteral,
+    NumericLiteral,
+    ObjectExpression,
+    OptionalCallExpression,
+    OptionalMemberExpression,
+    RegExpLiteral,
+    SequenceExpression,
+    StringLiteral,
+    TaggedTemplateExpression,
+    TemplateLiteral,
+    ThisExpression,
+    UnaryExpression,
+    UpdateExpression,
+    YieldExpression,
+    PrivateIdentifier,
+    PrivateName,
+}
+impl<'de> serde::Deserialize<'de> for ExpressionOrPrivateIdentifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let tagged = serde::Deserializer::deserialize_any(
+            deserializer,
+            serde::__private::de::TaggedContentVisitor::<
+                __ExpressionOrPrivateIdentifierTag,
+            >::new("type", "ExpressionOrPrivateIdentifier"),
+        )?;
+        match tagged.0 {
+            __ExpressionOrPrivateIdentifierTag::ArrayExpression => {
+                let node: Box<ArrayExpression> = <Box<
+                    ArrayExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ArrayExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ArrowFunctionExpression => {
+                let node: Box<ArrowFunctionExpression> = <Box<
+                    ArrowFunctionExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ArrowFunctionExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::AssignmentExpression => {
+                let node: Box<AssignmentExpression> = <Box<
+                    AssignmentExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::AssignmentExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::AwaitExpression => {
+                let node: Box<AwaitExpression> = <Box<
+                    AwaitExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::AwaitExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::BinaryExpression => {
+                let node: Box<BinaryExpression> = <Box<
+                    BinaryExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::BinaryExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::BooleanLiteral => {
+                let node: Box<BooleanLiteral> = <Box<
+                    BooleanLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::BooleanLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::CallExpression => {
+                let node: Box<CallExpression> = <Box<
+                    CallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::CallExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ChainExpression => {
+                let node: Box<ChainExpression> = <Box<
+                    ChainExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ChainExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ClassExpression => {
+                let node: Box<ClassExpression> = <Box<
+                    ClassExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ClassExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ConditionalExpression => {
+                let node: Box<ConditionalExpression> = <Box<
+                    ConditionalExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ConditionalExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::CoverTypedIdentifier => {
+                let node: Box<CoverTypedIdentifier> = <Box<
+                    CoverTypedIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::CoverTypedIdentifier(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::FunctionExpression => {
+                let node: Box<FunctionExpression> = <Box<
+                    FunctionExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::FunctionExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::Identifier => {
+                let node: Box<Identifier> = <Box<
+                    Identifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::Identifier(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ImportExpression => {
+                let node: Box<ImportExpression> = <Box<
+                    ImportExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ImportExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::JSXElement => {
+                let node: Box<JSXElement> = <Box<
+                    JSXElement,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::JSXElement(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::JSXFragment => {
+                let node: Box<JSXFragment> = <Box<
+                    JSXFragment,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::JSXFragment(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::Literal => {
+                let node: Box<Literal> = <Box<
+                    Literal,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrPrivateIdentifier::Expression(Expression::Literal(node)))
+            }
+            __ExpressionOrPrivateIdentifierTag::LogicalExpression => {
+                let node: Box<LogicalExpression> = <Box<
+                    LogicalExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::LogicalExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::MemberExpression => {
+                let node: Box<MemberExpression> = <Box<
+                    MemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::MemberExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::MetaProperty => {
+                let node: Box<MetaProperty> = <Box<
+                    MetaProperty,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::MetaProperty(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::NewExpression => {
+                let node: Box<NewExpression> = <Box<
+                    NewExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::NewExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::NullLiteral => {
+                let node: Box<NullLiteral> = <Box<
+                    NullLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::NullLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::NumericLiteral => {
+                let node: Box<NumericLiteral> = <Box<
+                    NumericLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::NumericLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ObjectExpression => {
+                let node: Box<ObjectExpression> = <Box<
+                    ObjectExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ObjectExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::OptionalCallExpression => {
+                let node: Box<OptionalCallExpression> = <Box<
+                    OptionalCallExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::OptionalCallExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::OptionalMemberExpression => {
+                let node: Box<OptionalMemberExpression> = <Box<
+                    OptionalMemberExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::OptionalMemberExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::RegExpLiteral => {
+                let node: Box<RegExpLiteral> = <Box<
+                    RegExpLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::RegExpLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::SequenceExpression => {
+                let node: Box<SequenceExpression> = <Box<
+                    SequenceExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::SequenceExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::StringLiteral => {
+                let node: Box<StringLiteral> = <Box<
+                    StringLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::StringLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::TaggedTemplateExpression => {
+                let node: Box<TaggedTemplateExpression> = <Box<
+                    TaggedTemplateExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::TaggedTemplateExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::TemplateLiteral => {
+                let node: Box<TemplateLiteral> = <Box<
+                    TemplateLiteral,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::TemplateLiteral(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::ThisExpression => {
+                let node: Box<ThisExpression> = <Box<
+                    ThisExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::ThisExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::UnaryExpression => {
+                let node: Box<UnaryExpression> = <Box<
+                    UnaryExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::UnaryExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::UpdateExpression => {
+                let node: Box<UpdateExpression> = <Box<
+                    UpdateExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::UpdateExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::YieldExpression => {
+                let node: Box<YieldExpression> = <Box<
+                    YieldExpression,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(
+                    ExpressionOrPrivateIdentifier::Expression(
+                        Expression::YieldExpression(node),
+                    ),
+                )
+            }
+            __ExpressionOrPrivateIdentifierTag::PrivateIdentifier => {
+                let node: Box<PrivateIdentifier> = <Box<
+                    PrivateIdentifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrPrivateIdentifier::PrivateIdentifier(node))
+            }
+            __ExpressionOrPrivateIdentifierTag::PrivateName => {
+                let node: Box<PrivateName> = <Box<
+                    PrivateName,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(ExpressionOrPrivateIdentifier::PrivateName(node))
+            }
+        }
+    }
+}
+#[derive(Serialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum TypeAnnotation {
+    TSTypeAnnotation(Box<TSTypeAnnotation>),
+}
+#[derive(Deserialize, Debug)]
+enum __TypeAnnotationTag {
+    TSTypeAnnotation,
+}
+impl<'de> serde::Deserialize<'de> for TypeAnnotation {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let tagged = serde::Deserializer::deserialize_any(
+            deserializer,
+            serde::__private::de::TaggedContentVisitor::<
+                __TypeAnnotationTag,
+            >::new("type", "TypeAnnotation"),
+        )?;
+        match tagged.0 {
+            __TypeAnnotationTag::TSTypeAnnotation => {
+                let node: Box<TSTypeAnnotation> = <Box<
+                    TSTypeAnnotation,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(TypeAnnotation::TSTypeAnnotation(node))
             }
         }
     }

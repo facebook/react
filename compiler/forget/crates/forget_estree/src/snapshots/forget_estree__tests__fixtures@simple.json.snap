@@ -203,6 +203,7 @@ Output:
       "id": {
         "type": "Identifier",
         "name": "Component",
+        "typeAnnotation": null,
         "loc": {
           "source": null,
           "start": {
@@ -223,6 +224,7 @@ Output:
         {
           "type": "Identifier",
           "name": "props",
+          "typeAnnotation": null,
           "loc": {
             "source": null,
             "start": {
@@ -250,6 +252,7 @@ Output:
               "object": {
                 "type": "Identifier",
                 "name": "props",
+                "typeAnnotation": null,
                 "loc": {
                   "source": null,
                   "start": {
@@ -269,6 +272,7 @@ Output:
               "property": {
                 "type": "Identifier",
                 "name": "value",
+                "typeAnnotation": null,
                 "loc": {
                   "source": null,
                   "start": {

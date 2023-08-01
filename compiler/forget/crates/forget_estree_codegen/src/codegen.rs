@@ -164,6 +164,10 @@ pub struct Node {
 
     #[serde(default)]
     pub skip_hermes_enum_variant: bool,
+
+    #[serde(default)]
+    #[serde(rename = "TODO")]
+    pub todo: Option<String>,
 }
 
 impl Node {
@@ -258,7 +262,9 @@ impl Node {
                 if let Some(convert_with) = &field.hermes_convert_with {
                     let convert_with = format_ident!("{}", convert_with);
                     return quote! {
+                        // println!("read {}.{}", #name_str, #name);
                         let #field_name = #convert_with(cx, unsafe { hermes::parser::#helper(node) } );
+                        // println!("ok");
                     }
                 }
                 match type_kind {
@@ -266,22 +272,30 @@ impl Node {
                         match type_name_str.as_ref() {
                             "bool" => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = unsafe { hermes::parser::#helper(node) };
+                                    // println!("ok");
                                 }
                             }
                             "Number" => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = convert_number(unsafe { hermes::parser::#helper(node) });
+                                    // println!("ok");
                                 }
                             }
                             "String" => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = convert_string(cx, unsafe { hermes::parser::#helper(node) });
+                                    // println!("ok");
                                 }
                             }
                             _ => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = #type_name::convert(cx, unsafe { hermes::parser::#helper(node) });
+                                    // println!("ok");
                                 }
                             }
                         }
@@ -290,33 +304,44 @@ impl Node {
                         match type_name_str.as_ref() {
                             "String" => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = convert_option_string(cx, unsafe { hermes::parser::#helper(node) });
+                                    // println!("ok");
                                 }
                             }
                             _ => {
                                 quote! {
+                                    // println!("read {}.{}", #name_str, #name);
                                     let #field_name = convert_option(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                                    // println!("ok");
                                 }
                             }
                         }
                     }
                     TypeKind::Vec => {
                         quote! {
+                            // println!("read {}.{}", #name_str, #name);
                             let #field_name = convert_vec(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                            // println!("ok");
                         }
                     }
                     TypeKind::VecOfOption => {
                         quote! {
+                            // println!("read {}.{}", #name_str, #name);
                             let #field_name = convert_vec_of_option(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                            // println!("ok");
                         }
                     }
                 }
             })
             .collect();
 
+        let type_ = format_ident!("{}", self.type_.as_ref().unwrap_or(&name_str.to_string()));
         quote! {
             impl FromHermes for #name {
                 fn convert(cx: &mut Context, node: NodePtr) -> Self {
+                    let node_ref = node.as_ref();
+                    assert_eq!(node_ref.kind, NodeKind::#type_);
                     let range = convert_range(node);
                     #(#fields)*
                     Self {
@@ -550,6 +575,7 @@ impl Enum {
     }
 
     pub fn codegen_hermes(&self, name: &str, grammar: &Grammar) -> TokenStream {
+        let name_str = name;
         let name = format_ident!("{}", name);
 
         let mut tag_matches = Vec::new();
@@ -622,7 +648,7 @@ impl Enum {
                     let node_ref = node.as_ref();
                     match node_ref.kind {
                         #(#tag_matches),*
-                        _ => panic!("Unexpected node")
+                        _ => panic!("Unexpected node kind `{:?}` for `{}`", node_ref.kind, #name_str)
                     }
                 }
             }

@@ -140,6 +140,7 @@ fn convert_function(cx: &Context, id: Option<&Ident>, fun: &Function) -> forget_
         id: id.map(|id| forget_estree::Identifier {
             name: id.sym.to_string(),
             binding: convert_binding(cx, id.span.ctxt),
+            type_annotation: None,
             loc: None,
             range: convert_span(&id.span),
         }),
@@ -767,11 +768,28 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> forget_estree::
     let (is_computed, property) = match &expr.prop {
         MemberProp::Ident(prop) => (
             false,
-            forget_estree::Expression::Identifier(Box::new(convert_identifier(cx, prop))),
+            forget_estree::ExpressionOrPrivateIdentifier::Expression(
+                forget_estree::Expression::Identifier(Box::new(convert_identifier(cx, prop))),
+            ),
         ),
-        MemberProp::Computed(prop) => (true, convert_expression(cx, &prop.expr)),
-        _ => {
-            panic!("PrivateName member expression properties are not supported")
+        MemberProp::Computed(prop) => (
+            true,
+            forget_estree::ExpressionOrPrivateIdentifier::Expression(convert_expression(
+                cx, &prop.expr,
+            )),
+        ),
+        MemberProp::PrivateName(prop) => {
+            let name = prop.id.sym.as_ref().to_string();
+            (
+                false,
+                forget_estree::ExpressionOrPrivateIdentifier::PrivateIdentifier(Box::new(
+                    forget_estree::PrivateIdentifier {
+                        name,
+                        loc: None,
+                        range: convert_span(&prop.span),
+                    },
+                )),
+            )
         }
     };
     forget_estree::MemberExpression {
@@ -873,6 +891,7 @@ fn convert_pattern(cx: &Context, pat: &Pat) -> forget_estree::Pattern {
             forget_estree::Pattern::Identifier(Box::new(forget_estree::Identifier {
                 name: pat.id.sym.to_string(),
                 binding: convert_binding(cx, pat.id.span.ctxt),
+                type_annotation: None,
                 loc: None,
                 range: convert_span(&pat.span),
             }))
@@ -897,6 +916,7 @@ fn convert_identifier(cx: &Context, identifier: &Ident) -> forget_estree::Identi
     forget_estree::Identifier {
         name,
         binding: convert_binding(cx, identifier.span.ctxt),
+        type_annotation: None,
         loc: None,
         range: convert_span(&identifier.span),
     }
