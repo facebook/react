@@ -20,6 +20,21 @@ pub fn estree() -> String {
     )
 }
 
+/// Returns prettyplease-formatted Rust source for converting HermesParser results
+/// into estree
+pub fn estree_hermes() -> String {
+    let src = include_str!("./ecmascript.json");
+    let grammar: Grammar = serde_json::from_str(src).unwrap();
+    let raw = grammar.codegen_hermes().to_string();
+
+    let parsed = syn::parse_file(&raw).unwrap();
+    format!(
+        "// {}generated\n#![cfg_attr(rustfmt, rustfmt_skip)]\n{}",
+        '\u{0040}',
+        prettyplease::unparse(&parsed)
+    )
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Grammar {
@@ -59,9 +74,45 @@ impl Grammar {
             use std::num::NonZeroU32;
             use serde::ser::{Serializer, SerializeMap};
             use serde::{Serialize,Deserialize};
-            use crate::{JsValue, Binding, SourceRange};
+            use crate::{JsValue, Binding, SourceRange, Number};
 
             #(#objects)*
+
+            #(#nodes)*
+
+            #(#enums)*
+
+            #(#operators)*
+        }
+    }
+
+    pub fn codegen_hermes(self) -> TokenStream {
+        let nodes: Vec<_> = self
+            .nodes
+            .iter()
+            .filter(|(_, node)| !node.skip_hermes_codegen)
+            .map(|(name, node)| node.codegen_hermes(name))
+            .collect();
+        let enums: Vec<_> = self
+            .enums
+            .iter()
+            .map(|(name, enum_)| enum_.codegen_hermes(name, &self))
+            .collect();
+        let operators: Vec<_> = self
+            .operators
+            .iter()
+            .map(|(name, operator)| operator.codegen_hermes(name))
+            .collect();
+
+        quote! {
+            #![allow(dead_code)]
+            #![allow(unused_variables)]
+
+            use forget_estree::*;
+            use hermes;
+            use hermes::parser::{NodePtr, NodeKind, NodeLabel };
+            use hermes::utf::{utf8_with_surrogates_to_string};
+            use crate::generated_extension::*;
 
             #(#nodes)*
 
@@ -107,6 +158,12 @@ pub struct Node {
 
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
+
+    #[serde(default)]
+    pub skip_hermes_codegen: bool,
+
+    #[serde(default)]
+    pub skip_hermes_enum_variant: bool,
 }
 
 impl Node {
@@ -175,11 +232,108 @@ impl Node {
             }
         }
     }
+
+    pub fn codegen_hermes(&self, name: &str) -> TokenStream {
+        let name_str = name;
+        let name = format_ident!("{}", name);
+        let field_names: Vec<_> = self
+            .fields
+            .iter()
+            .map(|(name, _field)| format_ident!("{}", name))
+            .collect();
+        let fields: Vec<_> = self
+            .fields
+            .iter()
+            .map(|(name, field)| {
+                let (type_name_str, type_kind) = parse_type(&field.type_).unwrap();
+                let camelcase_name = field.rename.as_ref().unwrap_or(name);
+                let field_name = format_ident!("{}", name);
+                let helper = format_ident!("hermes_get_{}_{}", name_str, camelcase_name);
+                let type_name = format_ident!("{}", type_name_str);
+                if field.skip || field.hermes_default {
+                    return quote! {
+                        let #field_name = Default::default();
+                    };
+                }
+                if let Some(convert_with) = &field.hermes_convert_with {
+                    let convert_with = format_ident!("{}", convert_with);
+                    return quote! {
+                        let #field_name = #convert_with(cx, unsafe { hermes::parser::#helper(node) } );
+                    }
+                }
+                match type_kind {
+                    TypeKind::Named => {
+                        match type_name_str.as_ref() {
+                            "bool" => {
+                                quote! {
+                                    let #field_name = unsafe { hermes::parser::#helper(node) };
+                                }
+                            }
+                            "Number" => {
+                                quote! {
+                                    let #field_name = convert_number(unsafe { hermes::parser::#helper(node) });
+                                }
+                            }
+                            "String" => {
+                                quote! {
+                                    let #field_name = convert_string(cx, unsafe { hermes::parser::#helper(node) });
+                                }
+                            }
+                            _ => {
+                                quote! {
+                                    let #field_name = #type_name::convert(cx, unsafe { hermes::parser::#helper(node) });
+                                }
+                            }
+                        }
+                    }
+                    TypeKind::Option => {
+                        match type_name_str.as_ref() {
+                            "String" => {
+                                quote! {
+                                    let #field_name = convert_option_string(cx, unsafe { hermes::parser::#helper(node) });
+                                }
+                            }
+                            _ => {
+                                quote! {
+                                    let #field_name = convert_option(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                                }
+                            }
+                        }
+                    }
+                    TypeKind::Vec => {
+                        quote! {
+                            let #field_name = convert_vec(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                        }
+                    }
+                    TypeKind::VecOfOption => {
+                        quote! {
+                            let #field_name = convert_vec_of_option(unsafe { hermes::parser::#helper(node) }, |node| #type_name::convert(cx, node));
+                        }
+                    }
+                }
+            })
+            .collect();
+
+        quote! {
+            impl FromHermes for #name {
+                fn convert(cx: &mut Context, node: NodePtr) -> Self {
+                    let range = convert_range(node);
+                    #(#fields)*
+                    Self {
+                        #(#field_names,)*
+                        loc: None,
+                        range: Some(range),
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Field {
+    // TODO: deserialize with `parse_type` into a custom type
     #[serde(rename = "type")]
     pub type_: String,
 
@@ -198,11 +352,18 @@ pub struct Field {
     #[serde(default)]
     #[serde(rename = "TODO")]
     pub todo: Option<String>,
+
+    #[serde(default)]
+    pub hermes_convert_with: Option<String>,
+
+    #[serde(default)]
+    pub hermes_default: bool,
 }
 
 impl Field {
     pub fn codegen(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
+        parse_type(&self.type_).unwrap();
         let type_name: Type = syn::parse_str(&self.type_)
             .unwrap_or_else(|_| panic!("Expected a type name, got `{}`", &self.type_));
 
@@ -237,6 +398,7 @@ impl Field {
 
     pub fn codegen_node(&self, name: &str) -> TokenStream {
         let name = format_ident!("{}", name);
+        parse_type(&self.type_).unwrap();
         let type_name: Type = syn::parse_str(&self.type_)
             .unwrap_or_else(|_| panic!("Expected a type name, got `{}`", &self.type_));
         let type_ = quote!(#type_name);
@@ -386,6 +548,86 @@ impl Enum {
             }
         }
     }
+
+    pub fn codegen_hermes(&self, name: &str, grammar: &Grammar) -> TokenStream {
+        let name = format_ident!("{}", name);
+
+        let mut tag_matches = Vec::new();
+        let mut seen = HashSet::new();
+
+        // Imagine a case like:
+        // enum ModuleItem {
+        //   ImportDeclaration, // struct
+        //   Statement // another enum
+        // }
+        // We need to generate matches for all the possible *concrete* `type` values, which means
+        // we have to expand nested enums such as `Statement`
+        for variant in self.variants.iter() {
+            if let Some(nested_enum) = grammar.enums.get(variant) {
+                let outer_variant = format_ident!("{}", variant);
+                for variant in nested_enum.variants.iter() {
+                    // Skip variants that appear in multiple nested enums, we deserialize
+                    // as the first listed outer variant
+                    if !seen.insert(variant.to_string()) {
+                        continue;
+                    }
+                    // Modeling ESTree only requires a single level of nested enums,
+                    // so that's all we support. Though in theory we could support arbitrary nesting,
+                    // since ultimately we're matching based on the final concrete types.
+                    assert!(!grammar.enums.contains_key(variant));
+                    let node = grammar.nodes.get(variant).unwrap();
+                    if node.skip_hermes_enum_variant {
+                        continue;
+                    }
+
+                    let inner_variant = format_ident!("{}", variant);
+                    let node_variant_name = node.type_.as_ref().unwrap_or(variant);
+                    let node_variant = format_ident!("{}", node_variant_name);
+
+                    tag_matches.push(quote! {
+                        NodeKind::#node_variant => {
+                            let node = #inner_variant::convert(cx, node);
+                            #name::#outer_variant(#outer_variant::#inner_variant(Box::new(node)))
+                        }
+                    });
+                }
+            } else {
+                if !seen.insert(variant.to_string()) {
+                    panic!(
+                        "Concrete variant {} was already added by a nested enum",
+                        variant
+                    );
+                }
+                let variant_name = format_ident!("{}", variant);
+                let node = grammar.nodes.get(variant).unwrap();
+                if node.skip_hermes_enum_variant {
+                    continue;
+                }
+
+                let node_variant_name = node.type_.as_ref().unwrap_or(variant);
+                let node_variant = format_ident!("{}", node_variant_name);
+
+                tag_matches.push(quote! {
+                    NodeKind::#node_variant => {
+                        let node = #variant_name::convert(cx, node);
+                        #name::#variant_name(Box::new(node))
+                    }
+                })
+            }
+        }
+
+        quote! {
+            impl FromHermes for #name {
+                fn convert(cx: &mut Context, node: NodePtr) -> Self {
+                    let node_ref = node.as_ref();
+                    match node_ref.kind {
+                        #(#tag_matches),*
+                        _ => panic!("Unexpected node")
+                    }
+                }
+            }
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -456,5 +698,68 @@ impl Operator {
                 }
             }
         }
+    }
+
+    pub fn codegen_hermes(&self, name: &str) -> TokenStream {
+        let mut sorted_variants: Vec<_> = self.variants.iter().collect();
+        sorted_variants.sort();
+
+        let name = format_ident!("{}", name);
+
+        quote! {
+            impl FromHermesLabel for #name {
+                fn convert(cx: &mut Context, label: NodeLabel) -> Self {
+                    let utf_str = utf8_with_surrogates_to_string(label.as_slice()).unwrap();
+                    utf_str.parse().unwrap()
+                }
+            }
+        }
+    }
+}
+
+enum TypeKind {
+    /// T
+    Named,
+
+    /// Option<T>
+    Option,
+
+    /// Vec<T>
+    Vec,
+
+    /// Vec<Option<T>>
+    VecOfOption,
+}
+
+/// Parses a given type into the underlying type name plus a descriptor of the
+/// kind of type. Only a subset of Rust types are supported:
+/// - T
+/// - Option<T>
+/// - Vec<T>
+/// - Vec<Option<T>>
+fn parse_type(type_: &str) -> Result<(String, TypeKind), String> {
+    let mut current = type_;
+    let mut is_list = false;
+    let mut is_option = false;
+    if current.starts_with("Vec<") {
+        current = &current[4..current.len() - 1];
+        is_list = true;
+    }
+    if current.starts_with("Option<") {
+        current = &current[7..current.len() - 1];
+        is_option = true;
+    }
+    if current.contains("<") {
+        Err(format!(
+            "Unsupported type `{current}` expected named type (`Identifier`), optional type (`Option<Identifier>`), list type (`Vec<Identifier>`), or optional list (`Vec<Option<Identifier>>`)"
+        ))
+    } else {
+        let kind = match (is_list, is_option) {
+            (true, true) => TypeKind::VecOfOption,
+            (true, false) => TypeKind::Vec,
+            (false, true) => TypeKind::Option,
+            (false, false) => TypeKind::Named,
+        };
+        Ok((current.to_string(), kind))
     }
 }

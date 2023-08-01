@@ -16,3 +16,6 @@ forget_diagnostics = { workspace = true }
 forget_estree = { workspace = true }
 hermes = { workspace = true } 
 juno_support = { workspace = true }
+
+[build-dependencies]
+forget_estree_codegen = { workspace = true }

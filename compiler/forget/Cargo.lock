@@ -528,6 +528,7 @@ version = "0.1.0"
 dependencies = [
  "forget_diagnostics",
  "forget_estree",
+ "forget_estree_codegen",
  "hermes",
  "juno_support",
 ]

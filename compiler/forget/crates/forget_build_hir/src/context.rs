@@ -65,4 +65,8 @@ impl<'ast> Visitor<'ast> for ContextVisitor<'ast> {
             _ => {}
         }
     }
+
+    fn visit_literal(&mut self, _literal: &'ast forget_estree::Literal) {
+        // no-op
+    }
 }

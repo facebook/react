@@ -23,6 +23,20 @@
                 }
             }
         },
+        "Class": {
+            "fields": {
+                "id": {
+                    "type": "Option<Identifier>"
+                },
+                "super_class": {
+                    "type": "Option<Expression>",
+                    "rename": "superClass"
+                },
+                "body": {
+                    "type": "ClassBody"
+                }
+            }
+        },
         "Function": {
             "fields": {
                 "id": {
@@ -89,6 +103,8 @@
             }
         },
         "Literal": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
             "fields": {
                 "value": {
                     "type": "JsValue"
@@ -107,6 +123,29 @@
                 }
             }
         },
+        "NumericLiteral": {
+            "fields": {
+                "value": {
+                    "type": "Number"
+                }
+            }
+        },
+        "BooleanLiteral": {
+            "fields": {
+                "value": {
+                    "type": "bool"
+                }
+            }
+        },
+        "NullLiteral": {},
+        "StringLiteral": {
+            "fields": {
+                "value": {
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
+                }
+            }
+        },
         "Program": {
             "fields": {
                 "body": {
@@ -115,7 +154,8 @@
                 "source_type": {
                     "type": "SourceType",
                     "optional": true,
-                    "rename": "sourceType"
+                    "rename": "sourceType",
+                    "hermes_default": true
                 }
             }
         },
@@ -126,7 +166,8 @@
                 },
                 "directive": {
                     "type": "Option<String>",
-                    "optional": true
+                    "optional": true,
+                    "hermes_default": true
                 }
             }
         },
@@ -311,6 +352,7 @@
             }
         },
         "FunctionDeclaration": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "function": {
                     "type": "Function",
@@ -318,21 +360,8 @@
                 }
             }
         },
-        "Class": {
-            "fields": {
-                "id": {
-                    "type": "Option<Identifier>"
-                },
-                "super_class": {
-                    "type": "Option<Expression>",
-                    "rename": "superClass"
-                },
-                "body": {
-                    "type": "ClassBody"
-                }
-            }
-        },
         "ClassDeclaration": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "class": {
                     "type": "Class",
@@ -341,6 +370,7 @@
             }
         },
         "ClassExpression": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "class": {
                     "type": "Class",
@@ -400,7 +430,8 @@
         "ArrayExpression": {
             "fields": {
                 "elements": {
-                    "type": "Vec<Option<ExpressionOrSpread>>"
+                    "type": "Vec<Option<ExpressionOrSpread>>",
+                    "hermes_convert_with": "convert_array_expression_elements"
                 }
             }
         },
@@ -437,6 +468,7 @@
             }
         },
         "FunctionExpression": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "function": {
                     "type": "Function",
@@ -445,6 +477,7 @@
             }
         },
         "ArrowFunctionExpression": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "function": {
                     "type": "Function",
@@ -532,11 +565,6 @@
                 "is_computed": {
                     "type": "bool",
                     "rename": "computed"
-                },
-                "is_optional": {
-                    "type": "bool",
-                    "optional": true,
-                    "rename": "optional"
                 }
             }
         },
@@ -560,11 +588,6 @@
                 },
                 "arguments": {
                     "type": "Vec<ExpressionOrSpread>"
-                },
-                "is_optional": {
-                    "type": "bool",
-                    "optional": true,
-                    "rename": "optional"
                 }
             }
         },
@@ -611,7 +634,7 @@
                     "type": "Vec<ImportDeclarationSpecifier>"
                 },
                 "source": {
-                    "type": "Literal"
+                    "type": "_Literal"
                 }
             }
         },
@@ -648,7 +671,7 @@
                     "type": "Vec<ExportSpecifier>"
                 },
                 "source": {
-                    "type": "Option<Literal>"
+                    "type": "Option<_Literal>"
                 }
             }
         },
@@ -669,11 +692,12 @@
         "ExportAllDeclaration": {
             "fields": {
                 "source": {
-                    "type": "Literal"
+                    "type": "_Literal"
                 },
                 "exported": {
                     "type": "Option<Identifier>",
-                    "optional": true
+                    "optional": true,
+                    "hermes_default": true
                 }
             }
         },
@@ -765,7 +789,8 @@
         "JSXText": {
             "fields": {
                 "value": {
-                    "type": "String"
+                    "type": "String",
+                    "hermes_convert_with": "convert_string_value"
                 },
                 "raw": {
                     "type": "String"
@@ -797,7 +822,7 @@
                     "type": "Vec<JSXChildItem>"
                 },
                 "closing_fragment": {
-                    "type": "Option<JSXClosingFragment>",
+                    "type": "JSXClosingFragment",
                     "rename": "closingFragment"
                 }
             }
@@ -819,6 +844,7 @@
             }
         },
         "AssignmentProperty": {
+            "skip_hermes_codegen": true,
             "type": "Property",
             "fields": {
                 "key": {
@@ -865,6 +891,7 @@
             }
         },
         "TemplateElement": {
+            "skip_hermes_codegen": true,
             "fields": {
                 "tail": {
                     "type": "bool"
@@ -902,6 +929,8 @@
             }
         },
         "ChainExpression": {
+            "skip_hermes_codegen": true,
+            "skip_hermes_enum_variant": true,
             "fields": {
                 "expression": {
                     "type": "ChainElement"
@@ -914,7 +943,7 @@
                     "type": "Expression"
                 },
                 "property": {
-                    "type": "Identifier"
+                    "type": "Expression"
                 },
                 "is_computed": {
                     "type": "bool",
@@ -980,6 +1009,7 @@
             "AssignmentExpression",
             "AwaitExpression",
             "BinaryExpression",
+            "BooleanLiteral",
             "CallExpression",
             "ChainExpression",
             "ClassExpression",
@@ -993,16 +1023,26 @@
             "MemberExpression",
             "MetaProperty",
             "NewExpression",
+            "NullLiteral",
+            "NumericLiteral",
             "ObjectExpression",
             "OptionalCallExpression",
             "OptionalMemberExpression",
             "SequenceExpression",
+            "StringLiteral",
             "TaggedTemplateExpression",
             "TemplateLiteral",
             "ThisExpression",
             "UnaryExpression",
             "UpdateExpression",
             "YieldExpression"
+        ],
+        "_Literal": [
+            "Literal",
+            "BooleanLiteral",
+            "NullLiteral",
+            "StringLiteral",
+            "NumericLiteral"
         ],
         "Declaration": [
             "ClassDeclaration",

@@ -3,7 +3,7 @@ use crate::{
     ExportDefaultDeclaration, ExportNamedDeclaration, Expression, ExpressionOrSpread,
     ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, ImportDeclaration,
     ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem,
-    Pattern, Program, Statement, SwitchCase, VariableDeclarator,
+    Pattern, Program, Statement, SwitchCase, VariableDeclarator, _Literal,
 };
 
 /// Trait for visiting an estree
@@ -97,7 +97,7 @@ pub trait Visitor<'ast> {
     fn visit_import_declaration_specifier(
         &mut self,
         specifier: &'ast ImportDeclarationSpecifier,
-        _source: &'ast Literal,
+        _source: &'ast _Literal,
     ) {
         match specifier {
             ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
@@ -406,17 +406,22 @@ pub trait Visitor<'ast> {
 
     fn visit_identifier(&mut self, _identifier: &'ast Identifier) {
         // nothing to do unless overridden
+        todo!("Implement visit_identifier()")
     }
 
-    fn visit_import_source(&mut self, literal: &'ast Literal) {
-        self.visit_literal(literal);
+    fn visit_import_source(&mut self, literal: &'ast _Literal) {
+        self.visit_any_literal(literal);
     }
 
-    fn visit_export_source(&mut self, literal: &'ast Literal) {
-        self.visit_literal(literal);
+    fn visit_export_source(&mut self, literal: &'ast _Literal) {
+        self.visit_any_literal(literal);
+    }
+
+    fn visit_any_literal(&mut self, _literal: &'ast _Literal) {
+        todo!("Implement visit_any_literal()")
     }
 
     fn visit_literal(&mut self, _literal: &'ast Literal) {
-        // nothing to do unless overridden
+        todo!("Implement visit_literal()")
     }
 }

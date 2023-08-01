@@ -340,7 +340,6 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                     _ => todo!(),
                 },
                 arguments: convert_arguments(cx, &expr.args),
-                is_optional: false,
                 loc: None,
                 range: convert_span(&expr.span),
             }))
@@ -452,9 +451,9 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
                 }),
             ),
             OptChainBase::Member(base) => {
-                let mut member = convert_member_expression(cx, base);
+                let mut member = convert_optional_member_expression(cx, base);
                 member.is_optional = expr.optional;
-                forget_estree::Expression::MemberExpression(Box::new(member))
+                forget_estree::Expression::OptionalMemberExpression(Box::new(member))
             }
         },
         Expr::JSXElement(expr) => {
@@ -777,6 +776,29 @@ fn convert_member_expression(cx: &Context, expr: &MemberExpr) -> forget_estree::
     };
     forget_estree::MemberExpression {
         object: forget_estree::ExpressionOrSuper::Expression(convert_expression(cx, &expr.obj)),
+        property,
+        is_computed,
+        loc: None,
+        range: convert_span(&expr.span),
+    }
+}
+
+fn convert_optional_member_expression(
+    cx: &Context,
+    expr: &MemberExpr,
+) -> forget_estree::OptionalMemberExpression {
+    let (is_computed, property) = match &expr.prop {
+        MemberProp::Ident(prop) => (
+            false,
+            forget_estree::Expression::Identifier(Box::new(convert_identifier(cx, prop))),
+        ),
+        MemberProp::Computed(prop) => (true, convert_expression(cx, &prop.expr)),
+        _ => {
+            panic!("PrivateName member expression properties are not supported")
+        }
+    };
+    forget_estree::OptionalMemberExpression {
+        object: convert_expression(cx, &expr.obj),
         property,
         is_computed,
         is_optional: false,
