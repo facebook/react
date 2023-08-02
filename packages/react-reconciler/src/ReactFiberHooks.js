@@ -1617,21 +1617,21 @@ function updateSyncExternalStore<T>(
       createEffectInstance(),
       null,
     );
+  }
+  
+  // Unless we're rendering a blocking lane, schedule a consistency check.
+  // Right before committing, we will walk the tree and check if any of the
+  // stores were mutated.
+  const root: FiberRoot | null = getWorkInProgressRoot();
 
-    // Unless we're rendering a blocking lane, schedule a consistency check.
-    // Right before committing, we will walk the tree and check if any of the
-    // stores were mutated.
-    const root: FiberRoot | null = getWorkInProgressRoot();
+  if (root === null) {
+    throw new Error(
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+  }
 
-    if (root === null) {
-      throw new Error(
-        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-      );
-    }
-
-    if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
-      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
-    }
+  if (!isHydrating && !includesBlockingLane(root, renderLanes)) {
+    pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
   }
 
   return nextSnapshot;
