@@ -6,6 +6,9 @@
  */
 
 const React = require("react");
-const ForgetRuntime = require("../../packages/react-forget-runtime");
-React.unstable_ForgetRuntime = ForgetRuntime;
-React.unstable_useMemoCache = ForgetRuntime.unstable_useMemoCache;
+
+// Our e2e babel transform currently only compiles functions, not programs.
+// As a result, our e2e transpiled code does not contain an import for `useMemoCache`
+// This is a hack.
+React.useMemoCache = React.unstable_useMemoCache;
+globalThis.useMemoCache = React.unstable_useMemoCache;

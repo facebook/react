@@ -4208,9 +4208,9 @@ caniuse-lite@^1.0.30001406, caniuse-lite@^1.0.30001464, caniuse-lite@^1.0.300014
   integrity sha512-2efF8SAZwgAX1FJr87KWhvuJxnGJKOnctQa8xLOskAXNXq8oiuqgl6u1kk3fFpsp3GgvzlRjiK1sl63hNtFADw==
 
 caniuse-lite@^1.0.30001503:
-  version "1.0.30001517"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001517.tgz#90fabae294215c3495807eb24fc809e11dc2f0a8"
-  integrity sha512-Vdhm5S11DaFVLlyiKu4hiUTkpZu+y1KA/rZZqVQfOD5YdDT/eQKlkt7NaE0WGOFgX32diqt9MiP9CAiFeRklaA==
+  version "1.0.30001518"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001518.tgz#b3ca93904cb4699c01218246c4d77a71dbe97150"
+  integrity sha512-rup09/e3I0BKjncL+FesTayKtPrdwKhUufQFd3riFw1hHg8JmIFoInYfB102cFcY/pPgGmdyl/iy+jgiDi2vdA==
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -4979,9 +4979,9 @@ electron-to-chromium@^1.4.411:
   integrity sha512-1KnpDTS9onwAfMzW50LcpNtyOkMyjd/OLoD2Kx/DDITZqgNYixY71XNszPHNxyQQ/Brh+FDcUnf4BaM041sdWg==
 
 electron-to-chromium@^1.4.431:
-  version "1.4.476"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.476.tgz#693df619ce1785ada6d5aec71fd3ce7ace71adc3"
-  integrity sha512-gzWl1m8pNy+5Kj17XcziNcbOhripjTqR2wAQmtdlFUngPYuFy7zUpJScVQAvCvQSFHNk3mS5fetNKW6BSpytFg==
+  version "1.4.479"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.479.tgz#ec9f676f23d3a0b0e429bc454d25e0b3253d2118"
+  integrity sha512-ABv1nHMIR8I5n3O3Een0gr6i0mfM+YcTZqjHy3pAYaOjgFG+BMquuKrSyfYf5CbEkLr9uM05RA3pOk4udNB/aQ==
 
 elliptic@^6.5.3:
   version "6.5.4"
@@ -9695,13 +9695,21 @@ rc@^1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-dom@18.2.0, react-dom@^18.2.0:
+react-dom@18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
   integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
   dependencies:
     loose-envify "^1.1.0"
     scheduler "^0.23.0"
+
+react-dom@^0.0.0-experimental-493f72b0a-20230727:
+  version "0.0.0-experimental-493f72b0a-20230727"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-493f72b0a-20230727.tgz#02b95966cbccafdb5eff411bd77cf9a99b4ac38c"
+  integrity sha512-Ms+rLKteABVNHRjqj2VIQg7biJYb3jB2paJJGGF579Mi22UQnyAVypbCTedzFUDhtpxs+LDR45QNFT5kDIEeaw==
+  dependencies:
+    loose-envify "^1.1.0"
+    scheduler "0.0.0-experimental-493f72b0a-20230727"
 
 react-is@^16.13.1, react-is@^16.8.4:
   version "16.13.1"
@@ -9718,10 +9726,17 @@ react-is@^18.0.0:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
 
-react@18.2.0, react@^18.2.0:
+react@18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
+  dependencies:
+    loose-envify "^1.1.0"
+
+react@^0.0.0-experimental-493f72b0a-20230727:
+  version "0.0.0-experimental-493f72b0a-20230727"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-493f72b0a-20230727.tgz#c1e165db1d1c2dc944e5e1759a860807b06503ed"
+  integrity sha512-AivNXEA/rd+x9Oe+5JIgsAFGaBQZg0c85upbziIYbgxW1BT6iOFUFA38i+SMfd1ktD82E1yj4nH/OpfA8kC3Cg==
   dependencies:
     loose-envify "^1.1.0"
 
@@ -10097,6 +10112,13 @@ saxes@^6.0.0:
   integrity sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==
   dependencies:
     xmlchars "^2.2.0"
+
+scheduler@0.0.0-experimental-493f72b0a-20230727:
+  version "0.0.0-experimental-493f72b0a-20230727"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-493f72b0a-20230727.tgz#a4d1fd57d9bfbd68b1b3e3c3249765f92c1a7b34"
+  integrity sha512-6bKnt2pR0XjH4ix7rYCp8+KR5eutR0hDpCiU++14SuImTH0uMYa3Gp4ayLeMyAvOEFTCgewDS/faZF1J14sRew==
+  dependencies:
+    loose-envify "^1.1.0"
 
 scheduler@^0.23.0:
   version "0.23.0"
