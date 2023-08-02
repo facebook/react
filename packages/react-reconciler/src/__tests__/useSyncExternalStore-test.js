@@ -16,6 +16,7 @@ let Scheduler;
 let act;
 let useLayoutEffect;
 let forwardRef;
+let useEffect;
 let useImperativeHandle;
 let useRef;
 let useState;
@@ -39,6 +40,7 @@ describe('useSyncExternalStore', () => {
     useLayoutEffect = React.useLayoutEffect;
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
+    useEffect = React.useEffect;
     useRef = React.useRef;
     useState = React.useState;
     useSyncExternalStore = React.useSyncExternalStore;
@@ -66,6 +68,9 @@ describe('useSyncExternalStore', () => {
         ReactNoop.batchedUpdates(() => {
           listeners.forEach(listener => listener());
         });
+      },
+      setWithoutEmit(text) {
+        currentState = text;
       },
       subscribe(listener) {
         listeners.add(listener);
@@ -164,6 +169,94 @@ describe('useSyncExternalStore', () => {
 
         // During an interleaved event, the store is mutated.
         store2.set(1);
+
+        // Then we continue rendering.
+        await waitForAll([
+          // C reads a newer value from the store than A or B, which means they
+          // are inconsistent.
+          'C1',
+
+          // Before committing the layout effects, React detects that the store
+          // has been mutated. So it throws out the entire completed tree and
+          // re-renders the new values.
+          'A1',
+          'B1',
+          'C1',
+          // The layout effects reads consistent children.
+          'Children observed during layout: A1B1C1',
+        ]);
+      });
+    },
+  );
+
+  test(
+    'detects interleaved mutations(without emitting) during a concurrent read before ' +
+      'layout effects fire',
+    async () => {
+      const store1 = createExternalStore(0);
+
+      const Child = forwardRef(({store, label}, ref) => {
+        const value = useSyncExternalStore(store.subscribe, store.getState);
+        useImperativeHandle(
+          ref,
+          () => {
+            return value;
+          },
+          [value],
+        );
+        return <Text text={label + value} />;
+      });
+
+      function App({store}) {
+        // eslint-disabxle-next-line no-unused-vars
+        const [, setCount] = useState(0);
+        const refA = useRef(null);
+        const refB = useRef(null);
+        const refC = useRef(null);
+        useLayoutEffect(() => {
+          // This layout effect reads children that depend on an external store.
+          // This demostrates whether the children are consistent when the
+          // layout phase runs.
+          const aText = refA.current;
+          const bText = refB.current;
+          const cText = refC.current;
+          Scheduler.log(
+            `Children observed during layout: A${aText}B${bText}C${cText}`,
+          );
+        });
+
+        // trigger re-render in concurrent mode
+        useEffect(() => {
+          startTransition(() => {
+            setCount(count => count + 1);
+          });
+        }, []);
+
+        return (
+          <>
+            <Child store={store} ref={refA} label="A" />
+            <Child store={store} ref={refB} label="B" />
+            <Child store={store} ref={refC} label="C" />
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        // Start a mount in legacy mode
+        root.render(<App store={store1} />);
+
+        await waitFor([
+          'A0',
+          'B0',
+          'C0',
+          'Children observed during layout: A0B0C0',
+          'A0', // re-render starts
+          'B0',
+        ]);
+
+        // During an interleaved event, the store is mutated without emitting
+        store1.setWithoutEmit(1);
 
         // Then we continue rendering.
         await waitForAll([
