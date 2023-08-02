@@ -27,9 +27,13 @@ import {
  * and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
  * until there are no new rewrites: for a CFG without back-edges it completes in a single pass.
  */
-export function eliminateRedundantPhi(fn: HIRFunction): void {
+export function eliminateRedundantPhi(
+  fn: HIRFunction,
+  sharedRewrites?: Map<Identifier, Identifier>
+): void {
   const ir = fn.body;
-  const rewrites: Map<Identifier, Identifier> = new Map();
+  const rewrites: Map<Identifier, Identifier> =
+    sharedRewrites != null ? sharedRewrites : new Map();
 
   // Whether or the CFG has a back-edge (a loop). We determine this dynamically
   // during the first iteration over the CFG by recording which blocks were already
@@ -102,6 +106,13 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
         for (const place of eachInstructionOperand(instr)) {
           rewritePlace(place, rewrites);
         }
+        if (instr.value.kind === "FunctionExpression") {
+          const { context } = instr.value.loweredFunc;
+          for (const place of context) {
+            rewritePlace(place, rewrites);
+          }
+        }
+
         rewritePlace(instr.lvalue, rewrites);
 
         // visit function expressions on first iteration of each block
@@ -110,7 +121,7 @@ export function eliminateRedundantPhi(fn: HIRFunction): void {
           instr.value.kind === "FunctionExpression" &&
           fn.env.enableOptimizeFunctionExpressions
         ) {
-          eliminateRedundantPhi(instr.value.loweredFunc);
+          eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
         }
       }
 
