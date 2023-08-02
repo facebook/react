@@ -8,24 +8,14 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
-import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
-import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {ClientManifest} from './ReactFlightServerBundlerConfig';
 
 import {
-  createRequest,
-  startWork,
-  startFlowing,
-  abort,
-} from 'react-server/src/ReactFlightServer';
-
-import {
-  createResponse,
-  close,
-  getRoot,
-} from 'react-server/src/ReactFlightReplyServer';
-
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+  renderToReadableStream as renderToReadableStreamImpl,
+  decodeReply,
+  decodeAction,
+} from 'react-server-dom/src/ReactFlightDOMServerWebStreams';
 
 export {
   registerServerReference,
@@ -45,54 +35,18 @@ function renderToReadableStream(
   webpackMap: ClientManifest,
   options?: Options,
 ): ReadableStream {
-  const request = createRequest(
+  const onError = options ? options.onError : undefined;
+  const context = options ? options.context : undefined;
+  const identifierPrefix = options ? options.identifierPrefix : undefined;
+  const signal = options ? options.signal : undefined;
+  return renderToReadableStreamImpl(
     model,
     webpackMap,
-    options ? options.onError : undefined,
-    options ? options.context : undefined,
-    options ? options.identifierPrefix : undefined,
+    onError,
+    context,
+    identifierPrefix,
+    signal,
   );
-  if (options && options.signal) {
-    const signal = options.signal;
-    if (signal.aborted) {
-      abort(request, (signal: any).reason);
-    } else {
-      const listener = () => {
-        abort(request, (signal: any).reason);
-        signal.removeEventListener('abort', listener);
-      };
-      signal.addEventListener('abort', listener);
-    }
-  }
-  const stream = new ReadableStream(
-    {
-      type: 'bytes',
-      start: (controller): ?Promise<void> => {
-        startWork(request);
-      },
-      pull: (controller): ?Promise<void> => {
-        startFlowing(request, controller);
-      },
-      cancel: (reason): ?Promise<void> => {},
-    },
-    // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
-    {highWaterMark: 0},
-  );
-  return stream;
-}
-
-function decodeReply<T>(
-  body: string | FormData,
-  webpackMap: ServerManifest,
-): Thenable<T> {
-  if (typeof body === 'string') {
-    const form = new FormData();
-    form.append('0', body);
-    body = form;
-  }
-  const response = createResponse(webpackMap, '', body);
-  close(response);
-  return getRoot(response);
 }
 
 export {renderToReadableStream, decodeReply, decodeAction};

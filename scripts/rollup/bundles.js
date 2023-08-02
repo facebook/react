@@ -68,6 +68,14 @@ const moduleTypes = {
 
 const {ISOMORPHIC, RENDERER, RENDERER_UTILS, RECONCILER} = moduleTypes;
 
+const bundlerTypes = {
+  ESM: 'esm',
+  WEBPACK: 'webpack',
+  WEBPACK_NODE: 'webpack-node',
+};
+
+const {ESM, WEBPACK, WEBPACK_NODE} = bundlerTypes;
+
 const bundles = [
   /******* Isomorphic *******/
   {
@@ -344,6 +352,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/server.browser',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -353,6 +362,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/server.node',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -362,6 +372,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK_NODE,
     entry: 'react-server-dom-webpack/server.node.unbundled',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -371,6 +382,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/server.edge',
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
@@ -382,6 +394,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/client.browser',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
@@ -391,6 +404,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/client.node',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
@@ -400,6 +414,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK_NODE,
     entry: 'react-server-dom-webpack/client.node.unbundled',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
@@ -409,6 +424,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
@@ -420,6 +436,7 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/plugin',
     global: 'ReactServerWebpackPlugin',
     minifyWithProdErrorCodes: false,
@@ -431,6 +448,7 @@ const bundles = [
   {
     bundleTypes: [ESM_PROD],
     moduleType: RENDERER_UTILS,
+    bundlerType: WEBPACK,
     entry: 'react-server-dom-webpack/node-loader',
     global: 'ReactServerWebpackNodeLoader',
     minifyWithProdErrorCodes: false,
@@ -454,6 +472,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: ESM,
     entry: 'react-server-dom-esm/server.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -464,6 +483,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
     moduleType: RENDERER,
+    bundlerType: ESM,
     entry: 'react-server-dom-esm/client.browser',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -472,6 +492,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
+    bundlerType: ESM,
     entry: 'react-server-dom-esm/client.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -1053,6 +1074,7 @@ function getFilename(bundle, bundleType) {
 module.exports = {
   bundleTypes,
   moduleTypes,
+  bundlerTypes,
   bundles,
   getFilename,
 };

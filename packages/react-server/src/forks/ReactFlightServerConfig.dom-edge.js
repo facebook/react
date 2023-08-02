@@ -6,9 +6,11 @@
  *
  * @flow
  */
-import type {Request} from 'react-server/src/ReactFizzServer';
 
-export * from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {Request} from 'react-server/src/ReactFlightServer';
+
+export * from 'react-server-dom/src/ReactFlightServerBundlerImplConfig';
+export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 // For now, we get this from the global scope, but this will likely move to a module.
 export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';

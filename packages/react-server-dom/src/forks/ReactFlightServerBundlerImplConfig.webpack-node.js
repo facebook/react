@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-server-dom-fb/src/ReactServerStreamConfigFB';
+export * from 'react-server-dom-webpack/src/ReactFlightServerBundlerConfig';

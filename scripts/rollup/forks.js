@@ -1,7 +1,8 @@
 'use strict';
 
-const {bundleTypes, moduleTypes} = require('./bundles');
+const {bundleTypes, moduleTypes, bundlerTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
+const inlinedBundlerConfigs = require('../shared/inlinedBundlerConfigs');
 
 const {
   UMD_DEV,
@@ -18,6 +19,7 @@ const {
   RN_FB_PROFILING,
 } = bundleTypes;
 const {RENDERER, RECONCILER} = moduleTypes;
+const {WEBPACK, WEBPACK_NODE, ESM} = bundlerTypes;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 
@@ -378,6 +380,164 @@ const forks = Object.freeze({
     }
     throw new Error(
       'Expected ReactFlightClientConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
+  './packages/react-server-dom/src/ReactFlightClientBundlerImplConfig.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (dependencies.indexOf('react-client') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    if (!bundle.bundlerType) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let bundlerInfo of inlinedBundlerConfigs) {
+      if (bundlerInfo.entryPoints.indexOf(entry) !== -1) {
+        return `./packages/react-server-dom/src/forks/ReactFlightClientBundlerImplConfig.${bundlerInfo.shortName}.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightClientBundlerImplConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedBundlerConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
+  './packages/react-server-dom/src/ReactFlightServerBundlerImplConfig.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (dependencies.indexOf('react-server-dom') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    if (!bundle.bundlerType) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let bundlerInfo of inlinedBundlerConfigs) {
+      if (bundlerInfo.entryPoints.indexOf(entry) !== -1) {
+        return `./packages/react-server-dom/src/forks/ReactFlightServerBundlerImplConfig.${bundlerInfo.shortName}.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightServerBundlerImplConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedBundlerConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
+  './packages/react-server-dom-webpack/src/ReactFlightClientBundlerConfig.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (dependencies.indexOf('react-server-dom-webpack') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    if (bundle.bundlerType !== WEBPACK && bundle.bundlerType !== WEBPACK_NODE) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        const bundlers = rendererInfo.bundlers;
+        if (Array.isArray(bundlers) && bundlers.length) {
+          const bundler = bundlers.find(b => b === bundle.bundlerType);
+          if (bundler) {
+            return `./packages/react-server-dom-webpack/src/forks/ReactFlightClientBundlerConfig.${bundler}.${rendererInfo.shortName}.js`;
+          } else {
+            throw new Error(
+              'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
+                `found that the "${bundle.bundlerType}" bundler was not configured for this entry ${entry} ` +
+                `in ${rendererInfo.shortName} in ./scripts/shared/inlinedHostConfigs.js.`
+            );
+          }
+        } else {
+          throw new Error(
+            'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
+              `found that entry ${entry} in ${rendererInfo.shortName} in ./scripts/shared/inlinedHostConfigs.js ` +
+              'is not configured to support bundlers.'
+          );
+        }
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
+  './packages/react-server-dom-esm/src/ReactFlightClientBundlerConfig.js': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (dependencies.indexOf('react-server-dom-esm') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    if (bundle.bundlerType !== ESM) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        const bundlers = rendererInfo.bundlers;
+        if (Array.isArray(bundlers) && bundlers.length) {
+          const bundler = bundlers.find(b => b === bundle.bundlerType);
+          if (bundler) {
+            return `./packages/react-server-dom-esm/src/forks/ReactFlightClientBundlerConfig.${bundler}.${rendererInfo.shortName}.js`;
+          } else {
+            throw new Error(
+              'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
+                `found that the "${bundle.bundlerType}" bundler was not configured for this entry ${entry} ` +
+                `in ${rendererInfo.shortName} in ./scripts/shared/inlinedHostConfigs.js.`
+            );
+          }
+        } else {
+          throw new Error(
+            'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
+              `found that entry ${entry} in ${rendererInfo.shortName} in ./scripts/shared/inlinedHostConfigs.js ` +
+              'is not configured to support bundlers.'
+          );
+        }
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightClientBundlerConfig to always be replaced with a shim, but ' +
         `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
         'Did you mean to add it there to associate it with a specific renderer?'
     );

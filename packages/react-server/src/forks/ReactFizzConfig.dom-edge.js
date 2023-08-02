@@ -6,12 +6,13 @@
  *
  * @flow
  */
-import {AsyncLocalStorage} from 'async_hooks';
 
 import type {Request} from 'react-server/src/ReactFizzServer';
 
 export * from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
-export const supportsRequestStorage = true;
-export const requestStorage: AsyncLocalStorage<Request> =
-  new AsyncLocalStorage();
+// For now, we get this from the global scope, but this will likely move to a module.
+export const supportsRequestStorage = typeof AsyncLocalStorage === 'function';
+export const requestStorage: AsyncLocalStorage<Request> = supportsRequestStorage
+  ? new AsyncLocalStorage()
+  : (null: any);

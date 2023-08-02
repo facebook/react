@@ -7,21 +7,10 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes.js';
-
-import type {Response} from 'react-client/src/ReactFlightClient';
-
-import type {Readable} from 'stream';
-
 import {
-  createResponse,
-  getRoot,
-  reportGlobalError,
-  processBinaryChunk,
-  close,
-} from 'react-client/src/ReactFlightClient';
-
-import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
+  createFromNodeStream,
+  createServerReference as createServerReferenceImpl,
+} from 'react-server-dom/src/ReactFlightDOMClientNodeStreams';
 
 function noServerCall() {
   throw new Error(
@@ -31,27 +20,11 @@ function noServerCall() {
   );
 }
 
-export function createServerReference<A: Iterable<any>, T>(
+function createServerReference<A: Iterable<any>, T>(
   id: any,
   callServer: any,
 ): (...A) => Promise<T> {
   return createServerReferenceImpl(id, noServerCall);
 }
 
-function createFromNodeStream<T>(
-  stream: Readable,
-  moduleRootPath: string,
-  moduleBaseURL: string, // TODO: Used for preloading hints
-): Thenable<T> {
-  const response: Response = createResponse(moduleRootPath, noServerCall);
-  stream.on('data', chunk => {
-    processBinaryChunk(response, chunk);
-  });
-  stream.on('error', error => {
-    reportGlobalError(response, error);
-  });
-  stream.on('end', () => close(response));
-  return getRoot(response);
-}
-
-export {createFromNodeStream};
+export {createFromNodeStream, createServerReference};

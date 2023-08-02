@@ -9,7 +9,7 @@
 
 import type {Request} from 'react-server/src/ReactFlightServer';
 
-export * from 'react-server-dom-webpack/src/ReactFlightServerConfigWebpackBundler';
+export * from 'react-server-dom/src/ReactFlightServerBundlerImplConfig';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = false;

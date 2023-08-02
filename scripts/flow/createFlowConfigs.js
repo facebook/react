@@ -11,6 +11,7 @@ const chalk = require('chalk');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
+const inlinedBundlerConfigs = require('../shared/inlinedBundlerConfigs');
 
 const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
@@ -21,8 +22,13 @@ function writeConfig(
   rendererInfo,
   isServerSupported,
   isFlightSupported,
+  bundler,
+  bundlerInfo,
 ) {
-  const folder = __dirname + '/' + renderer;
+  let folder = __dirname + '/' + renderer;
+  if (bundler) {
+    folder += '--' + bundler;
+  }
   mkdirp.sync(folder);
 
   isFlightSupported =
@@ -55,6 +61,34 @@ function writeConfig(
     }
   });
 
+  if (bundlerInfo) {
+    inlinedBundlerConfigs.forEach(bundlerConfig => {
+      if (bundlerConfig === bundlerInfo) {
+        return;
+      }
+
+      bundlerConfig.paths.forEach(otherPath => {
+        if (bundlerInfo.paths.indexOf(otherPath) !== -1) {
+          return;
+        }
+        ignoredPaths.push(`.*/packages/${otherPath}`);
+      });
+
+      ignoredPaths.push(
+        `.*/packages/.*/forks/.*\\.${bundlerConfig.shortName}.js`,
+        `.*/packages/.*/forks/.*\\.${bundlerConfig.shortName}.${renderer}.js`,
+      );
+    });
+  }
+
+  const bundlerOptions = bundler
+    ? `
+module.name_mapper='ReactFlightClientBundlerImplConfig$$' -> 'forks/ReactFlightClientBundlerImplConfig.${bundler}'
+module.name_mapper='ReactFlightServerBundlerImplConfig$$' -> 'forks/ReactFlightServerBundlerImplConfig.${bundler}'
+module.name_mapper='ReactFlightClientBundlerConfig$$' -> 'forks/ReactFlightClientBundlerConfig.${bundler}.${flightRenderer}'
+`.trim()
+    : '';
+
   const config = configTemplate
     .replace(
       '%CI_MAX_WORKERS%\n',
@@ -72,6 +106,7 @@ module.name_mapper='ReactFlightClientConfig$$' -> 'forks/ReactFlightClientConfig
 module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.default'
     `.trim(),
     )
+    .replace('%REACT_BUNDLER_FLOW_OPTIONS%', bundlerOptions)
     .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'));
 
   const disclaimer = `
@@ -105,11 +140,32 @@ ${disclaimer}
 // so that we can run those checks in parallel if we want.
 inlinedHostConfigs.forEach(rendererInfo => {
   if (rendererInfo.isFlowTyped) {
-    writeConfig(
-      rendererInfo.shortName,
-      rendererInfo,
-      rendererInfo.isServerSupported,
-      rendererInfo.isFlightSupported,
-    );
+    if (
+      Array.isArray(rendererInfo.bundlers) &&
+      rendererInfo.bundlers.length > 0
+    ) {
+      rendererInfo.bundlers.forEach(bundler => {
+        const bundlerConfig = inlinedBundlerConfigs.find(
+          info => info.shortName === bundler,
+        );
+        writeConfig(
+          rendererInfo.shortName,
+          rendererInfo,
+          rendererInfo.isServerSupported,
+          rendererInfo.isFlightSupported,
+          bundlerConfig.shortName,
+          bundlerConfig,
+        );
+      });
+    } else {
+      writeConfig(
+        rendererInfo.shortName,
+        rendererInfo,
+        rendererInfo.isServerSupported,
+        rendererInfo.isFlightSupported,
+        '',
+        null,
+      );
+    }
   }
 });

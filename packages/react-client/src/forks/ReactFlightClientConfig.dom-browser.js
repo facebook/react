@@ -8,6 +8,6 @@
  */
 
 export * from 'react-client/src/ReactFlightClientConfigBrowser';
-export * from 'react-server-dom-webpack/src/ReactFlightClientConfigWebpackBundler';
+export * from 'react-server-dom/src/ReactFlightClientBundlerImplConfig';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = false;

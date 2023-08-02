@@ -9,19 +9,13 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
-
-import type {SSRManifest} from './ReactFlightClientConfigWebpackBundler';
+import type {SSRManifest} from './ReactFlightClientBundlerConfig';
 
 import {
-  createResponse,
-  getRoot,
-  reportGlobalError,
-  processBinaryChunk,
-  close,
-} from 'react-client/src/ReactFlightClient';
-
-import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
+  createFromReadableStream as createFromReadableStreamImpl,
+  createFromFetch as createFromFetchImpl,
+  createServerReference as createServerReferenceImpl,
+} from 'react-server-dom/src/ReactFlightDOMClientWebStreams';
 
 function noServerCall() {
   throw new Error(
@@ -31,74 +25,31 @@ function noServerCall() {
   );
 }
 
-export function createServerReference<A: Iterable<any>, T>(
-  id: any,
-  callServer: any,
-): (...A) => Promise<T> {
-  return createServerReferenceImpl(id, noServerCall);
-}
-
 export type Options = {
   moduleMap?: $NonMaybeType<SSRManifest>,
 };
 
-function createResponseFromOptions(options: void | Options) {
-  return createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
-    noServerCall,
-  );
-}
-
-function startReadingFromStream(
-  response: FlightResponse,
-  stream: ReadableStream,
-): void {
-  const reader = stream.getReader();
-  function progress({
-    done,
-    value,
-  }: {
-    done: boolean,
-    value: ?any,
-    ...
-  }): void | Promise<void> {
-    if (done) {
-      close(response);
-      return;
-    }
-    const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
-    return reader.read().then(progress).catch(error);
-  }
-  function error(e: any) {
-    reportGlobalError(response, e);
-  }
-  reader.read().then(progress).catch(error);
+function createFromFetch<T>(
+  promiseForResponse: Promise<Response>,
+  options?: Options,
+): Thenable<T> {
+  const moduleMap = options && options.moduleMap ? options.moduleMap : null;
+  return createFromFetchImpl(promiseForResponse, moduleMap, noServerCall);
 }
 
 function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
-  startReadingFromStream(response, stream);
-  return getRoot(response);
+  const moduleMap = options && options.moduleMap ? options.moduleMap : null;
+  return createFromReadableStreamImpl(stream, moduleMap, noServerCall);
 }
 
-function createFromFetch<T>(
-  promiseForResponse: Promise<Response>,
-  options?: Options,
-): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
-  promiseForResponse.then(
-    function (r) {
-      startReadingFromStream(response, (r.body: any));
-    },
-    function (e) {
-      reportGlobalError(response, e);
-    },
-  );
-  return getRoot(response);
+function createServerReference<A: Iterable<any>, T>(
+  id: any,
+  callServer: any,
+): (...A) => Promise<T> {
+  return createServerReferenceImpl(id, noServerCall);
 }
 
-export {createFromFetch, createFromReadableStream};
+export {createFromFetch, createFromReadableStream, createServerReference};

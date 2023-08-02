@@ -1,0 +1,23 @@
+{
+  "name": "react-server-dom",
+  "description": "React implementation details for Server Components for DOM.",
+  "version": "18.2.0",
+  "private": true,
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-server-dom"
+  },
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "peerDependencies": {
+    "react": "^18.2.0"
+  }
+}

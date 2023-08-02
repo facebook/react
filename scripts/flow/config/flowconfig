@@ -34,6 +34,7 @@ munge_underscores=false
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
+%REACT_BUNDLER_FLOW_OPTIONS%
 
 [version]
 ^0.213.0

@@ -27,8 +27,17 @@ async function checkAll() {
     if (i % nodeTotal === nodeIndex) {
       const rendererInfo = inlinedHostConfigs[i];
       if (rendererInfo.isFlowTyped) {
-        await runFlow(rendererInfo.shortName, ['check']);
-        console.log();
+        const bundlers = rendererInfo.bundlers;
+        if (Array.isArray(bundlers) && bundlers.length) {
+          for (let j = 0; j < bundlers.length; j++) {
+            await runFlow(rendererInfo.shortName + '--' + bundlers[j], [
+              'check',
+            ]);
+          }
+        } else {
+          await runFlow(rendererInfo.shortName, ['check']);
+          console.log();
+        }
       }
     }
   }

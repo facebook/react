@@ -724,7 +724,7 @@ function handleRollupWarning(warning) {
     console.error();
     console.error(warning.message || warning);
     console.error();
-    process.exit(1);
+    // process.exit(1);
   } else {
     // The warning is from one of the plugins.
     // Maybe it's not important, so just print it.

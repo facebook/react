@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactServerStreamConfigNode';
+export * from './ReactFlightServerBundlerConfigESM';

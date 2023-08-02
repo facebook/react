@@ -9,22 +9,12 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
-
-import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
-
 import {
-  createResponse,
-  getRoot,
-  reportGlobalError,
-  processBinaryChunk,
-  close,
-} from 'react-client/src/ReactFlightClient';
-
-import {
-  processReply,
+  createFromFetch as createFromFetchImpl,
+  createFromReadableStream as createFromReadableStreamImpl,
   createServerReference,
-} from 'react-client/src/ReactFlightReplyClient';
+  encodeReply,
+} from 'react-server-dom/src/ReactFlightDOMClientWebStreams';
 
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
@@ -33,73 +23,26 @@ export type Options = {
   callServer?: CallServerCallback,
 };
 
-function createResponseFromOptions(options: void | Options) {
-  return createResponse(
-    options && options.moduleBaseURL ? options.moduleBaseURL : '',
-    options && options.callServer ? options.callServer : undefined,
-  );
-}
-
-function startReadingFromStream(
-  response: FlightResponse,
-  stream: ReadableStream,
-): void {
-  const reader = stream.getReader();
-  function progress({
-    done,
-    value,
-  }: {
-    done: boolean,
-    value: ?any,
-    ...
-  }): void | Promise<void> {
-    if (done) {
-      close(response);
-      return;
-    }
-    const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
-    return reader.read().then(progress).catch(error);
-  }
-  function error(e: any) {
-    reportGlobalError(response, e);
-  }
-  reader.read().then(progress).catch(error);
-}
-
 function createFromReadableStream<T>(
   stream: ReadableStream,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
-  startReadingFromStream(response, stream);
-  return getRoot(response);
+  const moduleBaseURL =
+    options && options.moduleBaseURL ? options.moduleBaseURL : '';
+  const callServer =
+    options && options.callServer ? options.callServer : undefined;
+  return createFromReadableStreamImpl(stream, moduleBaseURL, callServer);
 }
 
 function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
   options?: Options,
 ): Thenable<T> {
-  const response: FlightResponse = createResponseFromOptions(options);
-  promiseForResponse.then(
-    function (r) {
-      startReadingFromStream(response, (r.body: any));
-    },
-    function (e) {
-      reportGlobalError(response, e);
-    },
-  );
-  return getRoot(response);
-}
-
-function encodeReply(
-  value: ReactServerValue,
-): Promise<
-  string | URLSearchParams | FormData,
-> /* We don't use URLSearchParams yet but maybe */ {
-  return new Promise((resolve, reject) => {
-    processReply(value, '', resolve, reject);
-  });
+  const moduleBaseURL =
+    options && options.moduleBaseURL ? options.moduleBaseURL : '';
+  const callServer =
+    options && options.callServer ? options.callServer : undefined;
+  return createFromFetchImpl(promiseForResponse, moduleBaseURL, callServer);
 }
 
 export {
