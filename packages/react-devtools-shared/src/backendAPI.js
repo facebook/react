@@ -138,7 +138,7 @@ export function storeAsGlobal({
   });
 }
 
-const TIMEOUT_DELAY = 5000;
+const TIMEOUT_DELAY = 60000;
 
 let requestCounter = 0;
 
