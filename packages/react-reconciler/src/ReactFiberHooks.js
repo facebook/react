@@ -1618,7 +1618,6 @@ function updateSyncExternalStore<T>(
       null,
     );
   }
-  
   // Unless we're rendering a blocking lane, schedule a consistency check.
   // Right before committing, we will walk the tree and check if any of the
   // stores were mutated.
