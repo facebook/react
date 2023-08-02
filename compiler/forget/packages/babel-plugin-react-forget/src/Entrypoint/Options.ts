@@ -108,17 +108,11 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
   if (obj == null || typeof obj !== "object") {
     return defaultOptions;
   }
-  const invalidOptions: Array<string> = [];
   let parsedOptions: Partial<PluginOptions> = Object.create(null);
   for (const [key, value] of Object.entries(obj)) {
     if (isCompilerFlag(key)) {
       parsedOptions[key] = value;
-    } else {
-      invalidOptions.push(key);
     }
-  }
-  if (invalidOptions.length > 0) {
-    console.error(`Unexpected React Forget compiler flags: ${invalidOptions}`);
   }
   return { ...defaultOptions, ...parsedOptions };
 }
