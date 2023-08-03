@@ -566,8 +566,13 @@ dependencies = [
 name = "forget_semantic_analysis"
 version = "0.1.0"
 dependencies = [
+ "forget_diagnostics",
  "forget_estree",
+ "forget_hermes_parser",
  "forget_utils",
+ "indexmap 2.0.0",
+ "insta",
+ "serde_json",
 ]
 
 [[package]]

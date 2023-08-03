@@ -11,8 +11,8 @@ use swc_core::ecma::ast::{
     AssignOp, BinaryOp, BlockStmt, BlockStmtOrExpr, Callee, Decl, EsVersion, Expr, ExprOrSpread,
     Function, Ident, JSXAttr, JSXAttrName, JSXAttrOrSpread, JSXAttrValue, JSXElement,
     JSXElementChild, JSXElementName, JSXExpr, JSXMemberExpr, JSXObject, Lit, MemberExpr,
-    MemberProp, ModuleItem, OptChainBase, Pat, PatOrExpr, Program, Stmt, UnaryOp, VarDecl,
-    VarDeclKind, VarDeclOrExpr,
+    MemberProp, ModuleItem, OptChainBase, Pat, PatOrExpr, Program, Stmt, UnaryOp, UpdateOp,
+    VarDecl, VarDeclKind, VarDeclOrExpr,
 };
 use swc_core::ecma::parser::{Syntax, TsConfig};
 use swc_core::ecma::transforms::base::resolver;
@@ -271,6 +271,14 @@ fn convert_statement(cx: &Context, stmt: &Stmt) -> forget_estree::Statement {
                 range: convert_span(&item.span),
             }))
         }
+        Stmt::Labeled(item) => {
+            forget_estree::Statement::LabeledStatement(Box::new(forget_estree::LabeledStatement {
+                label: convert_identifier(cx, &item.label),
+                body: convert_statement(cx, &item.body),
+                loc: None,
+                range: convert_span(&item.span),
+            }))
+        }
         _ => todo!("translate statement {:#?}", stmt),
     }
 }
@@ -461,6 +469,15 @@ fn convert_expression(cx: &Context, expr: &Expr) -> forget_estree::Expression {
             forget_estree::Expression::JSXElement(Box::new(convert_jsx_element(cx, expr)))
         }
         Expr::Paren(expr) => convert_expression(cx, &expr.expr),
+        Expr::Update(expr) => {
+            forget_estree::Expression::UpdateExpression(Box::new(forget_estree::UpdateExpression {
+                operator: convert_update_operator(expr.op),
+                argument: convert_expression(cx, &expr.arg),
+                prefix: expr.prefix,
+                loc: None,
+                range: convert_span(&expr.span),
+            }))
+        }
         _ => todo!("translate expression {:#?}", expr),
     }
 }
@@ -882,6 +899,13 @@ fn convert_binary_operator(op: BinaryOp) -> Operator {
         BinaryOp::NullishCoalescing => {
             Operator::Logical(forget_estree::LogicalOperator::NullCoalescing)
         }
+    }
+}
+
+fn convert_update_operator(op: UpdateOp) -> forget_estree::UpdateOperator {
+    match op {
+        UpdateOp::MinusMinus => forget_estree::UpdateOperator::Decrement,
+        UpdateOp::PlusPlus => forget_estree::UpdateOperator::Increment,
     }
 }
 

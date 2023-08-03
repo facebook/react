@@ -2,10 +2,10 @@ use crate::{
     AssignmentPropertyOrRestElement, AssignmentTarget, Class, ClassItem, ClassPrivateProperty,
     ClassProperty, Declaration, DeclarationOrExpression, ExportAllDeclaration,
     ExportDefaultDeclaration, ExportNamedDeclaration, Expression, ExpressionOrPrivateIdentifier,
-    ExpressionOrSpread, ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportOrExportDeclaration, Literal,
-    MethodDefinition, ModuleItem, Pattern, PrivateIdentifier, PrivateName, Program, Statement,
-    StaticBlock, Super, SwitchCase, VariableDeclarator, _Literal,
+    ExpressionOrSpread, ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody,
+    FunctionDeclaration, Identifier, ImportDeclaration, ImportDeclarationSpecifier,
+    ImportOrExportDeclaration, Literal, MethodDefinition, ModuleItem, Pattern, PrivateIdentifier,
+    PrivateName, Program, Statement, StaticBlock, Super, SwitchCase, VariableDeclarator, _Literal,
 };
 
 /// Trait for visiting an estree
@@ -17,7 +17,18 @@ pub trait Visitor<'ast> {
         f(self);
     }
 
+    fn visit_rvalue<F>(&mut self, f: F)
+    where
+        F: FnOnce(&mut Self) -> (),
+    {
+        f(self);
+    }
+
     fn visit_program(&mut self, program: &'ast Program) {
+        self.default_visit_program(program)
+    }
+
+    fn default_visit_program(&mut self, program: &'ast Program) {
         for item in &program.body {
             self.visit_module_item(item);
         }
@@ -73,7 +84,7 @@ pub trait Visitor<'ast> {
     fn visit_import_declaration(&mut self, declaration: &'ast ImportDeclaration) {
         self.visit_lvalue(|visitor| {
             for specifier in &declaration.specifiers {
-                visitor.visit_import_declaration_specifier(specifier, &declaration.source)
+                visitor.visit_import_declaration_specifier(specifier);
             }
         });
         self.visit_import_source(&declaration.source);
@@ -101,11 +112,7 @@ pub trait Visitor<'ast> {
         }
     }
 
-    fn visit_import_declaration_specifier(
-        &mut self,
-        specifier: &'ast ImportDeclarationSpecifier,
-        _source: &'ast _Literal,
-    ) {
+    fn visit_import_declaration_specifier(&mut self, specifier: &'ast ImportDeclarationSpecifier) {
         match specifier {
             ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                 self.visit_identifier(&specifier.local);
@@ -129,7 +136,7 @@ pub trait Visitor<'ast> {
                 self.visit_class(&declaration.class);
             }
             Declaration::FunctionDeclaration(declaration) => {
-                self.visit_function(&declaration.function);
+                self.visit_function_declaration(declaration);
             }
             Declaration::VariableDeclaration(declaration) => {
                 for declarator in &declaration.declarations {
@@ -140,6 +147,10 @@ pub trait Visitor<'ast> {
                 todo!("visit TSTypeAliasDeclaration")
             }
         }
+    }
+
+    fn visit_function_declaration(&mut self, declaration: &'ast FunctionDeclaration) {
+        self.visit_function(&declaration.function);
     }
 
     fn visit_statement(&mut self, stmt: &'ast Statement) {
@@ -198,7 +209,7 @@ pub trait Visitor<'ast> {
                 self.visit_statement(&stmt.body);
             }
             Statement::FunctionDeclaration(stmt) => {
-                self.visit_function(&stmt.function);
+                self.visit_function_declaration(stmt);
             }
             Statement::IfStatement(stmt) => {
                 self.visit_expression(&stmt.test);
@@ -270,32 +281,28 @@ pub trait Visitor<'ast> {
         }
         for item in &class.body.body {
             match item {
-                ClassItem::MethodDefinition(item) => self.visit_method_definition(class, item),
+                ClassItem::MethodDefinition(item) => self.visit_method_definition(item),
                 ClassItem::ClassProperty(item) => {
-                    self.visit_class_property(class, item);
+                    self.visit_class_property(item);
                 }
                 ClassItem::ClassPrivateProperty(item) => {
-                    self.visit_class_private_property(class, item);
+                    self.visit_class_private_property(item);
                 }
                 ClassItem::StaticBlock(item) => {
-                    self.visit_static_block(class, item);
+                    self.visit_static_block(item);
                 }
             }
         }
     }
 
-    fn visit_class_property(&mut self, _class: &'ast Class, property: &'ast ClassProperty) {
+    fn visit_class_property(&mut self, property: &'ast ClassProperty) {
         self.visit_expression(&property.key);
         if let Some(value) = &property.value {
             self.visit_expression(value)
         }
     }
 
-    fn visit_class_private_property(
-        &mut self,
-        _class: &'ast Class,
-        property: &'ast ClassPrivateProperty,
-    ) {
+    fn visit_class_private_property(&mut self, property: &'ast ClassPrivateProperty) {
         match &property.key {
             ExpressionOrPrivateIdentifier::Expression(key) => self.visit_expression(key),
             ExpressionOrPrivateIdentifier::PrivateIdentifier(key) => {
@@ -308,21 +315,17 @@ pub trait Visitor<'ast> {
         }
     }
 
-    fn visit_static_block(&mut self, _class: &'ast Class, property: &'ast StaticBlock) {
+    fn visit_static_block(&mut self, property: &'ast StaticBlock) {
         for stmt in &property.body {
             self.visit_statement(stmt)
         }
     }
 
-    fn visit_method_definition(&mut self, class: &'ast Class, method: &'ast MethodDefinition) {
-        self.default_visit_method_definition(class, method);
+    fn visit_method_definition(&mut self, method: &'ast MethodDefinition) {
+        self.default_visit_method_definition(method);
     }
 
-    fn default_visit_method_definition(
-        &mut self,
-        _class: &'ast Class,
-        method: &'ast MethodDefinition,
-    ) {
+    fn default_visit_method_definition(&mut self, method: &'ast MethodDefinition) {
         self.visit_expression(&method.key);
         self.visit_function(&method.value.function);
     }
@@ -386,8 +389,10 @@ pub trait Visitor<'ast> {
             }
             Pattern::RestElement(pattern) => self.visit_pattern(&pattern.argument),
             Pattern::AssignmentPattern(pattern) => {
-                self.visit_expression(&pattern.right);
                 self.visit_pattern(&pattern.left);
+                self.visit_rvalue(|visitor| {
+                    visitor.visit_expression(&pattern.right);
+                });
             }
         }
     }
@@ -460,8 +465,31 @@ pub trait Visitor<'ast> {
                     }
                 }
             }
+            Expression::CallExpression(expr) => {
+                match &expr.callee {
+                    ExpressionOrSuper::Expression(callee) => self.visit_expression(callee),
+                    ExpressionOrSuper::Super(callee) => self.visit_super(callee),
+                }
+                for arg in &expr.arguments {
+                    match arg {
+                        ExpressionOrSpread::Expression(arg) => self.visit_expression(arg),
+                        ExpressionOrSpread::SpreadElement(arg) => {
+                            self.visit_expression(&arg.argument)
+                        }
+                    }
+                }
+            }
+            Expression::UpdateExpression(expr) => {
+                self.visit_expression(&expr.argument);
+            }
+            Expression::BooleanLiteral(_)
+            | Expression::NullLiteral(_)
+            | Expression::StringLiteral(_)
+            | Expression::NumericLiteral(_) => {
+                // no-op
+            }
             _ => {
-                todo!("more expression types")
+                todo!("{:#?}", expr)
             }
         }
     }

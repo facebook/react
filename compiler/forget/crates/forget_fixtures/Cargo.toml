@@ -12,7 +12,7 @@ repository.workspace  = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
+[dev-dependencies]
 insta = { workspace = true }
 forget_estree = { workspace = true }
 forget_estree_swc = { workspace = true }
