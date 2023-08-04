@@ -48,7 +48,7 @@ describe('ReactJSXElementValidator', () => {
       ReactTestUtils.renderIntoDocument(
         <Component>{[<Component />, <Component />]}</Component>,
       ),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+    ).toErrorDev('Each child in a list should have an unique "key" prop.');
   });
 
   it('warns for keys for arrays of elements with owner info', () => {
@@ -67,7 +67,7 @@ describe('ReactJSXElementValidator', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ComponentWrapper />),
     ).toErrorDev(
-      'Each child in a list should have a unique "key" prop.' +
+      'Each child in a list should have an unique "key" prop.' +
         '\n\nCheck the render method of `InnerComponent`. ' +
         'It was passed a child from ComponentWrapper. ',
     );
@@ -88,7 +88,7 @@ describe('ReactJSXElementValidator', () => {
 
     expect(() =>
       ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+    ).toErrorDev('Each child in a list should have an unique "key" prop.');
   });
 
   it('does not warn for arrays of elements with keys', () => {

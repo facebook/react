@@ -44,7 +44,7 @@ describe('ReactElementValidator', () => {
         React.createElement(ComponentClass),
         React.createElement(ComponentClass),
       ]);
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    }).toErrorDev('Each child in a list should have an unique "key" prop.');
   });
 
   it('warns for keys for arrays of elements with owner info', () => {
@@ -68,7 +68,7 @@ describe('ReactElementValidator', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(React.createElement(ComponentWrapper));
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop.' +
+      'Each child in a list should have an unique "key" prop.' +
         '\n\nCheck the render method of `InnerClass`. ' +
         'It was passed a child from ComponentWrapper. ',
     );
@@ -164,7 +164,7 @@ describe('ReactElementValidator', () => {
 
     expect(() =>
       React.createElement(ComponentClass, null, iterable),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+    ).toErrorDev('Each child in a list should have an unique "key" prop.');
   });
 
   it('does not warns for arrays of elements with keys', () => {
