@@ -2484,7 +2484,7 @@ describe('InspectedElement', () => {
 
       const container = document.createElement('div');
       await utils.withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop.'],
+        ['Warning: Each child in a list should have an unique "key" prop.'],
         async () => {
           await utils.actAsync(() =>
             legacyRender(<Example repeatWarningCount={1} />, container),
@@ -2497,7 +2497,7 @@ describe('InspectedElement', () => {
         {
           "errors": [
             [
-              "Warning: Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.
+              "Warning: Each child in a list should have an unique "key" prop. See https://reactjs.org/link/warning-keys for more information.
             at Example",
               1,
             ],

@@ -741,7 +741,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={false} />);
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have an unique "key" prop.',
     );
 
     expect(ops).toEqual([]);
@@ -938,7 +938,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={true} />);
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have an unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);

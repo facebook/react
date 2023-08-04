@@ -148,7 +148,7 @@ function validateExplicitKey(element, parentType) {
   if (__DEV__) {
     setCurrentlyValidatingElement(element);
     console.error(
-      'Each child in a list should have a unique "key" prop.' +
+      'Each child in a list should have an unique "key" prop.' +
         '%s%s See https://reactjs.org/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,

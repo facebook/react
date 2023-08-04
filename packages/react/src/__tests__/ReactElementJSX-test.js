@@ -255,7 +255,7 @@ describe('ReactElement.jsx', () => {
     expect(() =>
       ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
     ).toErrorDev(
-      'Warning: Each child in a list should have a unique "key" prop.\n\n' +
+      'Warning: Each child in a list should have an unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://reactjs.org/link/warning-keys for more information.\n' +
         '    in Child (at **)\n' +
         '    in Parent (at **)',

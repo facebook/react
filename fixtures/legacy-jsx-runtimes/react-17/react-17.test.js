@@ -221,7 +221,7 @@ it('warns for keys for arrays of elements in children position', () => {
     ReactTestUtils.renderIntoDocument(
       <Component>{[<Component />, <Component />]}</Component>
     )
-  ).toErrorDev('Each child in a list should have a unique "key" prop.');
+  ).toErrorDev('Each child in a list should have an unique "key" prop.');
 });
 
 it('warns for keys for arrays of elements with owner info', () => {
@@ -240,7 +240,7 @@ it('warns for keys for arrays of elements with owner info', () => {
   expect(() =>
     ReactTestUtils.renderIntoDocument(<ComponentWrapper />)
   ).toErrorDev(
-    'Each child in a list should have a unique "key" prop.' +
+    'Each child in a list should have an unique "key" prop.' +
       '\n\nCheck the render method of `InnerComponent`. ' +
       'It was passed a child from ComponentWrapper. '
   );
