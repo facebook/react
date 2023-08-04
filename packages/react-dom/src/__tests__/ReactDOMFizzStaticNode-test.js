@@ -86,7 +86,7 @@ describe('ReactDOMFizzStaticNode', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<link rel="preload" href="init.js" as="script"/><link rel="modulepreload" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" href="init.js" as="script" fetchPriority="low"/><link rel="modulepreload" href="init.mjs" fetchPriority="low"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

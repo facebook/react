@@ -4245,6 +4245,8 @@ export function writePreamble(
   // Flush unblocked stylesheets by precedence
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
 
+  resources.bootstrapScripts.forEach(flushResourceInPreamble, destination);
+
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
 
@@ -4321,6 +4323,9 @@ export function writeHoistables(
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
   resources.precedences.forEach(preloadLateStyles, destination);
+
+  // bootstrap scripts should flush above script priority but these can only flush in the preamble
+  // so we elide the code here for performance
 
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
@@ -4875,6 +4880,7 @@ export type Resources = {
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
+  bootstrapScripts: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
   explicitStylesheetPreloads: Set<PreloadResource>,
   // explicitImagePreloads: Set<PreloadResource>,
@@ -4901,6 +4907,7 @@ export function createResources(): Resources {
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
+    bootstrapScripts: new Set(),
     scripts: new Set(),
     explicitStylesheetPreloads: new Set(),
     // explicitImagePreloads: new Set(),
@@ -5470,6 +5477,7 @@ function preloadBootstrapScript(
     rel: 'preload',
     href: src,
     as: 'script',
+    fetchPriority: 'low',
     nonce,
     integrity,
     crossOrigin,
@@ -5481,7 +5489,7 @@ function preloadBootstrapScript(
     props,
   };
   resources.preloadsMap.set(key, resource);
-  resources.explicitScriptPreloads.add(resource);
+  resources.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 }
 
@@ -5511,6 +5519,7 @@ function preloadBootstrapModule(
   const props: PreloadModuleProps = {
     rel: 'modulepreload',
     href: src,
+    fetchPriority: 'low',
     nonce,
     integrity,
     crossOrigin,
@@ -5522,7 +5531,7 @@ function preloadBootstrapModule(
     props,
   };
   resources.preloadsMap.set(key, resource);
-  resources.explicitScriptPreloads.add(resource);
+  resources.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
 }
