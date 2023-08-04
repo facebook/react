@@ -105,7 +105,7 @@ impl Grammar {
 
             #(#operator_defs)*
 
-            pub trait Visitor2 {
+            pub trait Visitor {
                 #(#object_visitors)*
 
                 #(#node_visitors)*

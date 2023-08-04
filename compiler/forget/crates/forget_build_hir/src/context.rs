@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use forget_estree::{Binding, BindingId, Function, Identifier, Visitor};
+use forget_estree::{Binding, BindingId, Function, Identifier, Visitor_DEPRECATED};
 use forget_hir::Environment;
 
 pub(crate) fn get_context_identifiers<'ast>(
@@ -39,7 +39,7 @@ impl<'ast> ContextVisitor<'ast> {
     }
 }
 
-impl<'ast> Visitor<'ast> for ContextVisitor<'ast> {
+impl<'ast> Visitor_DEPRECATED<'ast> for ContextVisitor<'ast> {
     fn visit_lvalue<F>(&mut self, f: F)
     where
         F: FnOnce(&mut Self) -> (),

@@ -2,7 +2,7 @@ use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
     ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, JSXElementName,
-    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor2,
+    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor,
 };
 
 use crate::{AstNode, DeclarationKind, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager};
@@ -218,7 +218,7 @@ impl Analyzer {
     }
 }
 
-impl Visitor2 for Analyzer {
+impl Visitor for Analyzer {
     fn visit_function_declaration(&mut self, ast: &forget_estree::FunctionDeclaration) {
         if let Some(id) = &ast.function.id {
             let declaration = self.manager.add_declaration(

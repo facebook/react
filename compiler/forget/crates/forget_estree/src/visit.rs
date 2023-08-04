@@ -9,7 +9,9 @@ use crate::{
 };
 
 /// Trait for visiting an estree
-pub trait Visitor<'ast> {
+#[allow(non_camel_case_types)]
+#[deprecated]
+pub trait Visitor_DEPRECATED<'ast> {
     fn visit_lvalue<F>(&mut self, f: F)
     where
         F: FnOnce(&mut Self) -> (),

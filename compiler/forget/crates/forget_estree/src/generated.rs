@@ -8079,7 +8079,7 @@ impl std::str::FromStr for MethodKind {
         }
     }
 }
-pub trait Visitor2 {
+pub trait Visitor {
     fn visit_class(&mut self, ast: &Class) {
         if let Some(id) = &ast.id {
             self.visit_identifier(id);
