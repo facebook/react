@@ -183,6 +183,39 @@ impl Analyzer {
             }
         }
     }
+
+    fn visit_for_in_of(
+        &mut self,
+        ast: AstNode,
+        left: &ForInInit,
+        right: &Expression,
+        body: &Statement,
+        range: Option<SourceRange>,
+    ) {
+        // Record an anonymous label for the statement to resolve unlabeled break/continue
+        let label = self
+            .manager
+            .add_anonymous_label(self.current, LabelKind::Loop);
+        self.manager.node_labels.insert(ast, label);
+
+        let mut for_scope: Option<ScopeId> = None;
+        match left {
+            ForInInit::VariableDeclaration(left) => {
+                if left.kind != VariableDeclarationKind::Var {
+                    for_scope = Some(self.enter_scope(ScopeKind::For));
+                }
+                self.visit_variable_declaration(left);
+            }
+            ForInInit::Pattern(left) => {
+                Analyzer::visit_declaration_pattern(self, left, None);
+            }
+        }
+        self.visit_expression(right);
+        self.visit_statement(body);
+        if let Some(for_scope) = for_scope {
+            self.close_scope(for_scope);
+        }
+    }
 }
 
 impl Visitor2 for Analyzer {
@@ -401,33 +434,25 @@ impl Visitor2 for Analyzer {
     }
 
     fn visit_for_in_statement(&mut self, ast: &forget_estree::ForInStatement) {
-        // Record an anonymous label for the statement to resolve unlabeled break/continue
-        let label = self
-            .manager
-            .add_anonymous_label(self.current, LabelKind::Loop);
-        self.manager.node_labels.insert(AstNode::from(ast), label);
-
-        let mut for_scope: Option<ScopeId> = None;
-        match &ast.left {
-            ForInInit::VariableDeclaration(left) => {
-                if left.kind != VariableDeclarationKind::Var {
-                    for_scope = Some(self.enter_scope(ScopeKind::For));
-                }
-                self.visit_variable_declaration(left);
-            }
-            ForInInit::Pattern(left) => {
-                Analyzer::visit_declaration_pattern(self, left, None);
-            }
-        }
-        self.visit_expression(&ast.right);
-        self.visit_statement(&ast.body);
-        if let Some(for_scope) = for_scope {
-            self.close_scope(for_scope);
-        }
+        Analyzer::visit_for_in_of(
+            self,
+            AstNode::from(ast),
+            &ast.left,
+            &ast.right,
+            &ast.body,
+            ast.range,
+        );
     }
 
     fn visit_for_of_statement(&mut self, ast: &forget_estree::ForOfStatement) {
-        todo!("ForOfStatement")
+        Analyzer::visit_for_in_of(
+            self,
+            AstNode::from(ast),
+            &ast.left,
+            &ast.right,
+            &ast.body,
+            ast.range,
+        );
     }
 
     fn visit_identifier(&mut self, ast: &forget_estree::Identifier) {
