@@ -259,6 +259,7 @@ impl Visitor2 for Analyzer {
 
     fn visit_assignment_expression(&mut self, ast: &forget_estree::AssignmentExpression) {
         if ast.operator == AssignmentOperator::Equals {
+            // "=" operator is a reassignment, straightforward
             match &ast.left {
                 AssignmentTarget::Pattern(left) => {
                     Analyzer::visit_declaration_pattern(self, left, None);
@@ -313,6 +314,8 @@ impl Visitor2 for Analyzer {
             }
             self.visit_expression(&ast.right);
         } else {
+            // otherwise this is a update operator which reads and updates the value.
+            // the left-hand side must be an identifier, which is a ReadWrite reference.
             let left: &Identifier;
             if let AssignmentTarget::Pattern(pat) = &ast.left {
                 if let Pattern::Identifier(pat) = pat {
@@ -347,6 +350,9 @@ impl Visitor2 for Analyzer {
     }
 
     fn visit_block_statement(&mut self, ast: &forget_estree::BlockStatement) {
+        // Block statements create a new scope. In cases where we want to avoid
+        // the new scope, such as function declarations, we avoid calling this
+        // method and visit the block contents directly.
         self.enter(ScopeKind::Block, |visitor| {
             for stmt in &ast.body {
                 visitor.visit_statement(stmt);
@@ -387,6 +393,8 @@ impl Visitor2 for Analyzer {
     }
 
     fn visit_catch_clause(&mut self, ast: &forget_estree::CatchClause) {
+        // If a catch clause has a param for the value being caught, then
+        // a new scope is created for that param.
         if let Some(param) = &ast.param {
             self.enter(ScopeKind::CatchClause, |visitor| {
                 Analyzer::visit_declaration_pattern(
@@ -480,6 +488,13 @@ impl Visitor2 for Analyzer {
     }
 
     fn visit_identifier(&mut self, ast: &forget_estree::Identifier) {
+        // `Identifier` is tricky in ESTree, because the same node type is used
+        // for places that reference variables as those that are string names:
+        // `x` is an Identifier, but so is the "y" in `x.y`.
+        // We're careful to skip visiting any Identifier that is not a variable
+        // reference, such that if we reach here it *should* be a variable
+        // reference. We also take a different path for variable assignment so
+        // that this must be a variable read.
         Analyzer::visit_reference_identifier(
             self,
             &ast.name,
