@@ -2370,6 +2370,78 @@ function pushStyleContents(
   return;
 }
 
+function getImagePreloadKey(
+  href: string,
+  imageSrcSet: ?string,
+  imageSizes: ?string,
+) {
+  let uniquePart = '';
+  if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+    uniquePart += '[' + imageSrcSet + ']';
+    if (typeof imageSizes === 'string') {
+      uniquePart += '[' + imageSizes + ']';
+    }
+  } else {
+    uniquePart += '[][]' + href;
+  }
+  return getResourceKey('image', uniquePart);
+}
+
+function pushImg(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  resources: Resources,
+): null {
+  if (
+    props.loading !== 'lazy' &&
+    typeof props.src === 'string' &&
+    props.fetchPriority !== 'low'
+  ) {
+    // We have a suspensey image and ought to preload it to optimize the loading of display blocking
+    // resources.
+    const {src, imageSrcSet, imageSizes} = props;
+    const key = getImagePreloadKey(src, imageSrcSet, imageSizes);
+    let resource = resources.preloadsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preload',
+        chunks: [],
+        state: NoState,
+        props: {
+          rel: 'preload',
+          as: 'image',
+          // There is a bug in Safari where imageSrcSet is not respected on preload links
+          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // but this population is shrinking fast and is already small so we accept this tradeoff.
+          href: imageSrcSet ? undefined : src,
+          imageSrcSet,
+          imageSizes,
+          crossOrigin: props.crossOrigin,
+          integrity: props.integrity,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.referrerPolicy,
+        },
+      };
+      resources.preloadsMap.set(key, resource);
+      if (__DEV__) {
+        markAsRenderedResourceDEV(resource, props);
+      }
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+    if (
+      props.fetchPriority === 'high' ||
+      resources.highImagePreloads.size < 10
+    ) {
+      resources.highImagePreloads.add(resource);
+    } else {
+      resources.bulkPreloads.add(resource);
+    }
+  }
+  return pushSelfClosing(target, props, 'img');
+}
+
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3172,6 +3244,9 @@ export function pushStartInstance(
     case 'pre': {
       return pushStartPreformattedElement(target, props, type);
     }
+    case 'img': {
+      return pushImg(target, props, resources);
+    }
     // Omitted close tags
     case 'base':
     case 'area':
@@ -3179,7 +3254,6 @@ export function pushStartInstance(
     case 'col':
     case 'embed':
     case 'hr':
-    case 'img':
     case 'keygen':
     case 'param':
     case 'source':
@@ -4242,6 +4316,9 @@ export function writePreamble(
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear();
 
+  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
+  resources.highImagePreloads.clear();
+
   // Flush unblocked stylesheets by precedence
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
 
@@ -4250,8 +4327,8 @@ export function writePreamble(
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
 
-  resources.explicitPreloads.forEach(flushResourceInPreamble, destination);
-  resources.explicitPreloads.clear();
+  resources.bulkPreloads.forEach(flushResourceInPreamble, destination);
+  resources.bulkPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4308,6 +4385,9 @@ export function writeHoistables(
   resources.fontPreloads.forEach(flushResourceLate, destination);
   resources.fontPreloads.clear();
 
+  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
+  resources.highImagePreloads.clear();
+
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
   resources.precedences.forEach(preloadLateStyles, destination);
@@ -4318,8 +4398,8 @@ export function writeHoistables(
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
 
-  resources.explicitPreloads.forEach(flushResourceLate, destination);
-  resources.explicitPreloads.clear();
+  resources.bulkPreloads.forEach(flushResourceLate, destination);
+  resources.bulkPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4859,12 +4939,13 @@ export type Resources = {
   // Flushing queues for Resource dependencies
   preconnects: Set<PreconnectResource>,
   fontPreloads: Set<PreloadResource>,
+  highImagePreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
   bootstrapScripts: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
-  explicitPreloads: Set<PreloadResource>,
+  bulkPreloads: Set<PreloadResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -4883,12 +4964,13 @@ export function createResources(): Resources {
     // cleared on flush
     preconnects: new Set(),
     fontPreloads: new Set(),
+    highImagePreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
     bootstrapScripts: new Set(),
     scripts: new Set(),
-    explicitPreloads: new Set(),
+    bulkPreloads: new Set(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -5086,16 +5168,7 @@ export function preload(href: string, options: PreloadOptions) {
       // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
       // by varying the href. this is an edge case but it is the most correct behavior.
       const {imageSrcSet, imageSizes} = options;
-      let uniquePart = '';
-      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
-        uniquePart += '[' + imageSrcSet + ']';
-        if (typeof imageSizes === 'string') {
-          uniquePart += '[' + imageSizes + ']';
-        }
-      } else {
-        uniquePart += '[][]' + href;
-      }
-      key = getResourceKey(as, uniquePart);
+      key = getImagePreloadKey(href, imageSrcSet, imageSizes);
     } else {
       key = getResourceKey(as, href);
     }
@@ -5177,8 +5250,10 @@ export function preload(href: string, options: PreloadOptions) {
     }
     if (as === 'font') {
       resources.fontPreloads.add(resource);
+    } else if (as === 'image' && options.fetchPriority === 'high') {
+      resources.highImagePreloads.add(resource);
     } else {
-      resources.explicitPreloads.add(resource);
+      resources.bulkPreloads.add(resource);
     }
     flushResources(request);
   }
