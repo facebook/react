@@ -46,29 +46,50 @@ pub struct Grammar {
 
 impl Grammar {
     pub fn codegen(self) -> TokenStream {
-        let Self {
-            objects,
-            nodes,
-            enums,
-            operators,
-        } = self;
-
-        let objects: Vec<_> = objects
+        let object_defs: Vec<_> = self
+            .objects
             .iter()
             .map(|(name, object)| object.codegen(name))
             .collect();
-        let nodes: Vec<_> = nodes
+        let object_visitors: Vec<_> = self
+            .objects
+            .iter()
+            .filter_map(|(name, object)| {
+                if object.visitor {
+                    Some(object.codegen_visitor(name, &self))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let node_defs: Vec<_> = self
+            .nodes
             .iter()
             .map(|(name, node)| node.codegen(name))
             .collect();
-        let enums: Vec<_> = enums
+        let node_visitors: Vec<_> = self
+            .nodes
             .iter()
-            .map(|(name, enum_)| enum_.codegen(name, &enums))
+            .map(|(name, node)| node.codegen_visitor(name, &self))
             .collect();
-        let operators: Vec<_> = operators
+        let enum_defs: Vec<_> = self
+            .enums
+            .iter()
+            .map(|(name, enum_)| enum_.codegen(name, &self.enums))
+            .collect();
+        let enum_visitors: Vec<_> = self
+            .enums
+            .iter()
+            .map(|(name, enum_)| enum_.codegen_visitor(name))
+            .collect();
+        let operator_defs: Vec<_> = self
+            .operators
             .iter()
             .map(|(name, operator)| operator.codegen(name))
             .collect();
+
+        // println!("{}", quote! {#(#node_visitors)*});
+        // println!("{}", quote! {#(#enum_visitors)*});
 
         quote! {
             use std::num::NonZeroU32;
@@ -76,13 +97,21 @@ impl Grammar {
             use serde::{Serialize,Deserialize};
             use crate::{JsValue, Binding, SourceRange, Number, ESTreeNode};
 
-            #(#objects)*
+            #(#object_defs)*
 
-            #(#nodes)*
+            #(#node_defs)*
 
-            #(#enums)*
+            #(#enum_defs)*
 
-            #(#operators)*
+            #(#operator_defs)*
+
+            pub trait Visitor2 {
+                #(#object_visitors)*
+
+                #(#node_visitors)*
+
+                #(#enum_visitors)*
+            }
         }
     }
 
@@ -128,6 +157,9 @@ impl Grammar {
 pub struct Object {
     #[serde(default)]
     pub fields: IndexMap<String, Field>,
+
+    #[serde(default)]
+    pub visitor: bool,
 }
 
 impl Object {
@@ -144,6 +176,60 @@ impl Object {
             #[serde(deny_unknown_fields)]
             pub struct #name {
                 #(#fields),*
+            }
+        }
+    }
+
+    pub fn codegen_visitor(&self, name: &str, grammar: &Grammar) -> TokenStream {
+        let visitor_name = format_ident!("visit_{}", to_lower_snake_case(name));
+        let name = format_ident!("{}", name);
+        let field_visitors: Vec<_> = self
+            .fields
+            .iter()
+            .filter_map(|(name, field)| {
+                let (type_name_str, type_kind) = parse_type(&field.type_).unwrap();
+                if !grammar.nodes.contains_key(&type_name_str)
+                    && !grammar.enums.contains_key(&type_name_str)
+                {
+                    return None;
+                }
+                let visitor_name = format_ident!("visit_{}", to_lower_snake_case(&type_name_str));
+                let field_name = format_ident!("{}", name);
+                Some(match type_kind {
+                    TypeKind::Named => {
+                        quote! {
+                            self.#visitor_name(&ast.#field_name);
+                        }
+                    }
+                    TypeKind::Option => {
+                        quote! {
+                            if let Some(#field_name) = &ast.#field_name {
+                                self.#visitor_name(#field_name);
+                            }
+                        }
+                    }
+                    TypeKind::Vec => {
+                        quote! {
+                            for #field_name in &ast.#field_name {
+                                self.#visitor_name(#field_name);
+                            }
+                        }
+                    }
+                    TypeKind::VecOfOption => {
+                        quote! {
+                            for #field_name in &ast.#field_name {
+                                if let Some(#field_name) = #field_name {
+                                    self.#visitor_name(#field_name);
+                                }
+                            }
+                        }
+                    }
+                })
+            })
+            .collect();
+        quote! {
+            fn #visitor_name(&mut self, ast: &#name) {
+                #(#field_visitors)*
             }
         }
     }
@@ -235,6 +321,62 @@ impl Node {
                     state.serialize_entry("range", &self.range)?;
                     state.end()
                 }
+            }
+        }
+    }
+
+    pub fn codegen_visitor(&self, name: &str, grammar: &Grammar) -> TokenStream {
+        let visitor_name = format_ident!("visit_{}", to_lower_snake_case(name));
+        let name = format_ident!("{}", name);
+        let field_visitors: Vec<_> = self
+            .fields
+            .iter()
+            .filter_map(|(name, field)| {
+                let (type_name_str, type_kind) = parse_type(&field.type_).unwrap();
+                if (!grammar.objects.contains_key(&type_name_str)
+                    || grammar.objects.get(&type_name_str).unwrap().visitor == false)
+                    && !grammar.nodes.contains_key(&type_name_str)
+                    && !grammar.enums.contains_key(&type_name_str)
+                {
+                    return None;
+                }
+                let visitor_name = format_ident!("visit_{}", to_lower_snake_case(&type_name_str));
+                let field_name = format_ident!("{}", name);
+                Some(match type_kind {
+                    TypeKind::Named => {
+                        quote! {
+                            self.#visitor_name(&ast.#field_name);
+                        }
+                    }
+                    TypeKind::Option => {
+                        quote! {
+                            if let Some(#field_name) = &ast.#field_name {
+                                self.#visitor_name(#field_name);
+                            }
+                        }
+                    }
+                    TypeKind::Vec => {
+                        quote! {
+                            for #field_name in &ast.#field_name {
+                                self.#visitor_name(#field_name);
+                            }
+                        }
+                    }
+                    TypeKind::VecOfOption => {
+                        quote! {
+                            for #field_name in &ast.#field_name {
+                                if let Some(#field_name) = #field_name {
+                                    self.#visitor_name(#field_name);
+                                }
+                            }
+                        }
+                    }
+                })
+            })
+            .collect();
+        quote! {
+            fn #visitor_name(&mut self, ast: &#name) {
+                #(#field_visitors)*
             }
         }
     }
@@ -576,6 +718,30 @@ impl Enum {
         }
     }
 
+    pub fn codegen_visitor(&self, name: &str) -> TokenStream {
+        let visitor_name = format_ident!("visit_{}", to_lower_snake_case(name));
+        let name = format_ident!("{}", name);
+        let mut tag_matches = Vec::new();
+
+        for variant in self.variants.iter() {
+            let node_variant = format_ident!("{}", variant);
+            let visitor_name = format_ident!("visit_{}", to_lower_snake_case(variant));
+
+            tag_matches.push(quote! {
+                #name::#node_variant(ast) => {
+                    self.#visitor_name(ast);
+                }
+            })
+        }
+        quote! {
+            fn #visitor_name(&mut self, ast: &#name) {
+                match ast {
+                    #(#tag_matches),*
+                }
+            }
+        }
+    }
+
     pub fn codegen_hermes(&self, name: &str, grammar: &Grammar) -> TokenStream {
         let name_str = name;
         let name = format_ident!("{}", name);
@@ -790,4 +956,23 @@ fn parse_type(type_: &str) -> Result<(String, TypeKind), String> {
         };
         Ok((current.to_string(), kind))
     }
+}
+
+// from https://github.com/rust-lang/rust-analyzer/blob/4105378dc7479a3dbd39a4afb3eba67d083bd7f8/xtask/src/codegen/gen_syntax.rs#L406C1-L418C2
+fn to_lower_snake_case(s: &str) -> String {
+    let mut buf = String::with_capacity(s.len());
+    let mut prev = false;
+    for c in s.chars() {
+        if c.is_ascii_uppercase() {
+            if prev {
+                buf.push('_')
+            }
+            prev = false;
+        } else {
+            prev = true;
+        }
+
+        buf.push(c.to_ascii_lowercase());
+    }
+    buf
 }

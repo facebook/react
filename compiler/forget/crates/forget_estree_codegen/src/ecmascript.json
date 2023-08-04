@@ -24,6 +24,7 @@
             }
         },
         "Class": {
+            "visitor": true,
             "fields": {
                 "id": {
                     "type": "Option<Identifier>"
@@ -38,6 +39,7 @@
             }
         },
         "Function": {
+            "visitor": true,
             "fields": {
                 "id": {
                     "type": "Option<Identifier>"

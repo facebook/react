@@ -8114,3 +8114,953 @@ impl std::str::FromStr for MethodKind {
         }
     }
 }
+pub trait Visitor2 {
+    fn visit_class(&mut self, ast: &Class) {
+        if let Some(id) = &ast.id {
+            self.visit_identifier(id);
+        }
+        if let Some(super_class) = &ast.super_class {
+            self.visit_expression(super_class);
+        }
+        self.visit_class_body(&ast.body);
+    }
+    fn visit_function(&mut self, ast: &Function) {
+        if let Some(id) = &ast.id {
+            self.visit_identifier(id);
+        }
+        for params in &ast.params {
+            self.visit_pattern(params);
+        }
+        if let Some(body) = &ast.body {
+            self.visit_function_body(body);
+        }
+    }
+    fn visit_identifier(&mut self, ast: &Identifier) {
+        if let Some(type_annotation) = &ast.type_annotation {
+            self.visit_type_annotation(type_annotation);
+        }
+    }
+    fn visit_literal(&mut self, ast: &Literal) {}
+    fn visit_numeric_literal(&mut self, ast: &NumericLiteral) {}
+    fn visit_boolean_literal(&mut self, ast: &BooleanLiteral) {}
+    fn visit_null_literal(&mut self, ast: &NullLiteral) {}
+    fn visit_string_literal(&mut self, ast: &StringLiteral) {}
+    fn visit_reg_exp_literal(&mut self, ast: &RegExpLiteral) {}
+    fn visit_program(&mut self, ast: &Program) {
+        for body in &ast.body {
+            self.visit_module_item(body);
+        }
+    }
+    fn visit_expression_statement(&mut self, ast: &ExpressionStatement) {
+        self.visit_expression(&ast.expression);
+    }
+    fn visit_block_statement(&mut self, ast: &BlockStatement) {
+        for body in &ast.body {
+            self.visit_statement(body);
+        }
+    }
+    fn visit_empty_statement(&mut self, ast: &EmptyStatement) {}
+    fn visit_debugger_statement(&mut self, ast: &DebuggerStatement) {}
+    fn visit_with_statement(&mut self, ast: &WithStatement) {
+        self.visit_expression(&ast.object);
+        self.visit_statement(&ast.body);
+    }
+    fn visit_return_statement(&mut self, ast: &ReturnStatement) {
+        if let Some(argument) = &ast.argument {
+            self.visit_expression(argument);
+        }
+    }
+    fn visit_labeled_statement(&mut self, ast: &LabeledStatement) {
+        self.visit_identifier(&ast.label);
+        self.visit_statement(&ast.body);
+    }
+    fn visit_break_statement(&mut self, ast: &BreakStatement) {
+        if let Some(label) = &ast.label {
+            self.visit_identifier(label);
+        }
+    }
+    fn visit_continue_statement(&mut self, ast: &ContinueStatement) {
+        if let Some(label) = &ast.label {
+            self.visit_identifier(label);
+        }
+    }
+    fn visit_if_statement(&mut self, ast: &IfStatement) {
+        self.visit_expression(&ast.test);
+        self.visit_statement(&ast.consequent);
+        if let Some(alternate) = &ast.alternate {
+            self.visit_statement(alternate);
+        }
+    }
+    fn visit_switch_statement(&mut self, ast: &SwitchStatement) {
+        self.visit_expression(&ast.discriminant);
+        for cases in &ast.cases {
+            self.visit_switch_case(cases);
+        }
+    }
+    fn visit_switch_case(&mut self, ast: &SwitchCase) {
+        if let Some(test) = &ast.test {
+            self.visit_expression(test);
+        }
+        for consequent in &ast.consequent {
+            self.visit_statement(consequent);
+        }
+    }
+    fn visit_throw_statement(&mut self, ast: &ThrowStatement) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_try_statement(&mut self, ast: &TryStatement) {
+        self.visit_block_statement(&ast.block);
+        if let Some(handler) = &ast.handler {
+            self.visit_catch_clause(handler);
+        }
+        if let Some(finalizer) = &ast.finalizer {
+            self.visit_block_statement(finalizer);
+        }
+    }
+    fn visit_catch_clause(&mut self, ast: &CatchClause) {
+        if let Some(param) = &ast.param {
+            self.visit_pattern(param);
+        }
+        self.visit_block_statement(&ast.body);
+    }
+    fn visit_while_statement(&mut self, ast: &WhileStatement) {
+        self.visit_expression(&ast.test);
+        self.visit_statement(&ast.body);
+    }
+    fn visit_do_while_statement(&mut self, ast: &DoWhileStatement) {
+        self.visit_statement(&ast.body);
+        self.visit_expression(&ast.test);
+    }
+    fn visit_for_statement(&mut self, ast: &ForStatement) {
+        if let Some(init) = &ast.init {
+            self.visit_for_init(init);
+        }
+        if let Some(test) = &ast.test {
+            self.visit_expression(test);
+        }
+        if let Some(update) = &ast.update {
+            self.visit_expression(update);
+        }
+        self.visit_statement(&ast.body);
+    }
+    fn visit_for_in_statement(&mut self, ast: &ForInStatement) {
+        self.visit_for_in_init(&ast.left);
+        self.visit_expression(&ast.right);
+        self.visit_statement(&ast.body);
+    }
+    fn visit_for_of_statement(&mut self, ast: &ForOfStatement) {
+        self.visit_for_in_init(&ast.left);
+        self.visit_expression(&ast.right);
+        self.visit_statement(&ast.body);
+    }
+    fn visit_function_declaration(&mut self, ast: &FunctionDeclaration) {
+        self.visit_function(&ast.function);
+    }
+    fn visit_class_declaration(&mut self, ast: &ClassDeclaration) {
+        self.visit_class(&ast.class);
+    }
+    fn visit_class_expression(&mut self, ast: &ClassExpression) {
+        self.visit_class(&ast.class);
+    }
+    fn visit_class_body(&mut self, ast: &ClassBody) {
+        for body in &ast.body {
+            self.visit_class_item(body);
+        }
+    }
+    fn visit_method_definition(&mut self, ast: &MethodDefinition) {
+        self.visit_expression(&ast.key);
+        self.visit_function_expression(&ast.value);
+    }
+    fn visit_variable_declaration(&mut self, ast: &VariableDeclaration) {
+        for declarations in &ast.declarations {
+            self.visit_variable_declarator(declarations);
+        }
+    }
+    fn visit_variable_declarator(&mut self, ast: &VariableDeclarator) {
+        self.visit_pattern(&ast.id);
+        if let Some(init) = &ast.init {
+            self.visit_expression(init);
+        }
+    }
+    fn visit_this_expression(&mut self, ast: &ThisExpression) {}
+    fn visit_array_expression(&mut self, ast: &ArrayExpression) {
+        for elements in &ast.elements {
+            if let Some(elements) = elements {
+                self.visit_expression_or_spread(elements);
+            }
+        }
+    }
+    fn visit_object_expression(&mut self, ast: &ObjectExpression) {
+        for properties in &ast.properties {
+            self.visit_property_or_spread_element(properties);
+        }
+    }
+    fn visit_property(&mut self, ast: &Property) {
+        self.visit_expression(&ast.key);
+        self.visit_expression(&ast.value);
+    }
+    fn visit_function_expression(&mut self, ast: &FunctionExpression) {
+        self.visit_function(&ast.function);
+    }
+    fn visit_arrow_function_expression(&mut self, ast: &ArrowFunctionExpression) {
+        self.visit_function(&ast.function);
+    }
+    fn visit_unary_expression(&mut self, ast: &UnaryExpression) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_update_expression(&mut self, ast: &UpdateExpression) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_binary_expression(&mut self, ast: &BinaryExpression) {
+        self.visit_expression(&ast.left);
+        self.visit_expression(&ast.right);
+    }
+    fn visit_assignment_expression(&mut self, ast: &AssignmentExpression) {
+        self.visit_assignment_target(&ast.left);
+        self.visit_expression(&ast.right);
+    }
+    fn visit_logical_expression(&mut self, ast: &LogicalExpression) {
+        self.visit_expression(&ast.left);
+        self.visit_expression(&ast.right);
+    }
+    fn visit_member_expression(&mut self, ast: &MemberExpression) {
+        self.visit_expression_or_super(&ast.object);
+        self.visit_expression_or_private_identifier(&ast.property);
+    }
+    fn visit_conditional_expression(&mut self, ast: &ConditionalExpression) {
+        self.visit_expression(&ast.test);
+        self.visit_expression(&ast.alternate);
+        self.visit_expression(&ast.consequent);
+    }
+    fn visit_call_expression(&mut self, ast: &CallExpression) {
+        self.visit_expression_or_super(&ast.callee);
+        for arguments in &ast.arguments {
+            self.visit_expression_or_spread(arguments);
+        }
+    }
+    fn visit_new_expression(&mut self, ast: &NewExpression) {
+        self.visit_expression(&ast.callee);
+        for arguments in &ast.arguments {
+            self.visit_expression_or_spread(arguments);
+        }
+    }
+    fn visit_sequence_expression(&mut self, ast: &SequenceExpression) {
+        for expressions in &ast.expressions {
+            self.visit_expression(expressions);
+        }
+    }
+    fn visit_super(&mut self, ast: &Super) {}
+    fn visit_spread_element(&mut self, ast: &SpreadElement) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_yield_expression(&mut self, ast: &YieldExpression) {
+        if let Some(argument) = &ast.argument {
+            self.visit_expression(argument);
+        }
+    }
+    fn visit_import_declaration(&mut self, ast: &ImportDeclaration) {
+        for specifiers in &ast.specifiers {
+            self.visit_import_declaration_specifier(specifiers);
+        }
+        self.visit___literal(&ast.source);
+    }
+    fn visit_import_specifier(&mut self, ast: &ImportSpecifier) {
+        self.visit_identifier(&ast.imported);
+        self.visit_identifier(&ast.local);
+    }
+    fn visit_import_default_specifier(&mut self, ast: &ImportDefaultSpecifier) {
+        self.visit_identifier(&ast.local);
+    }
+    fn visit_import_namespace_specifier(&mut self, ast: &ImportNamespaceSpecifier) {
+        self.visit_identifier(&ast.local);
+    }
+    fn visit_export_named_declaration(&mut self, ast: &ExportNamedDeclaration) {
+        if let Some(declaration) = &ast.declaration {
+            self.visit_declaration(declaration);
+        }
+        for specifiers in &ast.specifiers {
+            self.visit_export_specifier(specifiers);
+        }
+        if let Some(source) = &ast.source {
+            self.visit___literal(source);
+        }
+    }
+    fn visit_export_specifier(&mut self, ast: &ExportSpecifier) {
+        self.visit_identifier(&ast.exported);
+    }
+    fn visit_export_default_declaration(&mut self, ast: &ExportDefaultDeclaration) {
+        self.visit_declaration_or_expression(&ast.declaration);
+    }
+    fn visit_export_all_declaration(&mut self, ast: &ExportAllDeclaration) {
+        self.visit___literal(&ast.source);
+        if let Some(exported) = &ast.exported {
+            self.visit_identifier(exported);
+        }
+    }
+    fn visit_jsxidentifier(&mut self, ast: &JSXIdentifier) {}
+    fn visit_jsxnamespaced_name(&mut self, ast: &JSXNamespacedName) {
+        self.visit_jsxidentifier(&ast.namespace);
+        self.visit_jsxidentifier(&ast.name);
+    }
+    fn visit_jsxmember_expression(&mut self, ast: &JSXMemberExpression) {
+        self.visit_jsxmember_expression_or_identifier(&ast.object);
+        self.visit_jsxidentifier(&ast.property);
+    }
+    fn visit_jsxempty_expression(&mut self, ast: &JSXEmptyExpression) {}
+    fn visit_jsxexpression_container(&mut self, ast: &JSXExpressionContainer) {
+        self.visit_jsxexpression_or_empty(&ast.expression);
+    }
+    fn visit_jsxspread_child(&mut self, ast: &JSXSpreadChild) {
+        self.visit_expression(&ast.expression);
+    }
+    fn visit_jsxopening_element(&mut self, ast: &JSXOpeningElement) {
+        self.visit_jsxelement_name(&ast.name);
+        for attributes in &ast.attributes {
+            self.visit_jsxattribute_or_spread(attributes);
+        }
+    }
+    fn visit_jsxclosing_element(&mut self, ast: &JSXClosingElement) {
+        self.visit_jsxelement_name(&ast.name);
+    }
+    fn visit_jsxattribute(&mut self, ast: &JSXAttribute) {
+        self.visit_jsxidentifier_or_namespaced_name(&ast.name);
+        if let Some(value) = &ast.value {
+            self.visit_jsxattribute_value(value);
+        }
+    }
+    fn visit_jsxspread_attribute(&mut self, ast: &JSXSpreadAttribute) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_jsxtext(&mut self, ast: &JSXText) {}
+    fn visit_jsxstring_literal(&mut self, ast: &JSXStringLiteral) {}
+    fn visit_jsxelement(&mut self, ast: &JSXElement) {
+        self.visit_jsxopening_element(&ast.opening_element);
+        for children in &ast.children {
+            self.visit_jsxchild_item(children);
+        }
+        if let Some(closing_element) = &ast.closing_element {
+            self.visit_jsxclosing_element(closing_element);
+        }
+    }
+    fn visit_jsxfragment(&mut self, ast: &JSXFragment) {
+        self.visit_jsxopening_fragment(&ast.opening_fragment);
+        for children in &ast.children {
+            self.visit_jsxchild_item(children);
+        }
+        self.visit_jsxclosing_fragment(&ast.closing_fragment);
+    }
+    fn visit_jsxopening_fragment(&mut self, ast: &JSXOpeningFragment) {}
+    fn visit_jsxclosing_fragment(&mut self, ast: &JSXClosingFragment) {}
+    fn visit_array_pattern(&mut self, ast: &ArrayPattern) {
+        for elements in &ast.elements {
+            if let Some(elements) = elements {
+                self.visit_pattern(elements);
+            }
+        }
+    }
+    fn visit_object_pattern(&mut self, ast: &ObjectPattern) {
+        for properties in &ast.properties {
+            self.visit_assignment_property_or_rest_element(properties);
+        }
+    }
+    fn visit_assignment_property(&mut self, ast: &AssignmentProperty) {
+        self.visit_property_key(&ast.key);
+        self.visit_pattern(&ast.value);
+    }
+    fn visit_rest_element(&mut self, ast: &RestElement) {
+        self.visit_pattern(&ast.argument);
+    }
+    fn visit_assignment_pattern(&mut self, ast: &AssignmentPattern) {
+        self.visit_pattern(&ast.left);
+        self.visit_expression(&ast.right);
+    }
+    fn visit_template_literal(&mut self, ast: &TemplateLiteral) {
+        for quasis in &ast.quasis {
+            self.visit_template_element(quasis);
+        }
+        for expressions in &ast.expressions {
+            self.visit_expression(expressions);
+        }
+    }
+    fn visit_template_element(&mut self, ast: &TemplateElement) {}
+    fn visit_tagged_template_expression(&mut self, ast: &TaggedTemplateExpression) {
+        self.visit_expression(&ast.tag);
+        self.visit_template_literal(&ast.quasi);
+    }
+    fn visit_meta_property(&mut self, ast: &MetaProperty) {
+        self.visit_identifier(&ast.meta);
+        self.visit_identifier(&ast.property);
+    }
+    fn visit_await_expression(&mut self, ast: &AwaitExpression) {
+        self.visit_expression(&ast.argument);
+    }
+    fn visit_chain_expression(&mut self, ast: &ChainExpression) {
+        self.visit_chain_element(&ast.expression);
+    }
+    fn visit_optional_member_expression(&mut self, ast: &OptionalMemberExpression) {
+        self.visit_expression(&ast.object);
+        self.visit_expression(&ast.property);
+    }
+    fn visit_optional_call_expression(&mut self, ast: &OptionalCallExpression) {
+        self.visit_expression_or_super(&ast.callee);
+        for arguments in &ast.arguments {
+            self.visit_expression_or_spread(arguments);
+        }
+    }
+    fn visit_import_expression(&mut self, ast: &ImportExpression) {
+        self.visit_expression(&ast.source);
+    }
+    fn visit_class_property(&mut self, ast: &ClassProperty) {
+        self.visit_expression(&ast.key);
+        if let Some(value) = &ast.value {
+            self.visit_expression(value);
+        }
+    }
+    fn visit_class_private_property(&mut self, ast: &ClassPrivateProperty) {
+        self.visit_expression_or_private_identifier(&ast.key);
+        if let Some(value) = &ast.value {
+            self.visit_expression(value);
+        }
+    }
+    fn visit_private_name(&mut self, ast: &PrivateName) {
+        self.visit_identifier(&ast.id);
+    }
+    fn visit_private_identifier(&mut self, ast: &PrivateIdentifier) {}
+    fn visit_static_block(&mut self, ast: &StaticBlock) {
+        for body in &ast.body {
+            self.visit_statement(body);
+        }
+    }
+    fn visit_cover_typed_identifier(&mut self, ast: &CoverTypedIdentifier) {
+        self.visit_identifier(&ast.left);
+        if let Some(right) = &ast.right {
+            self.visit_type_annotation(right);
+        }
+    }
+    fn visit_tstype_annotation(&mut self, ast: &TSTypeAnnotation) {}
+    fn visit_tstype_alias_declaration(&mut self, ast: &TSTypeAliasDeclaration) {}
+    fn visit_statement(&mut self, ast: &Statement) {
+        match ast {
+            Statement::BlockStatement(ast) => {
+                self.visit_block_statement(ast);
+            }
+            Statement::BreakStatement(ast) => {
+                self.visit_break_statement(ast);
+            }
+            Statement::ClassDeclaration(ast) => {
+                self.visit_class_declaration(ast);
+            }
+            Statement::ContinueStatement(ast) => {
+                self.visit_continue_statement(ast);
+            }
+            Statement::DebuggerStatement(ast) => {
+                self.visit_debugger_statement(ast);
+            }
+            Statement::DoWhileStatement(ast) => {
+                self.visit_do_while_statement(ast);
+            }
+            Statement::EmptyStatement(ast) => {
+                self.visit_empty_statement(ast);
+            }
+            Statement::ExpressionStatement(ast) => {
+                self.visit_expression_statement(ast);
+            }
+            Statement::ForInStatement(ast) => {
+                self.visit_for_in_statement(ast);
+            }
+            Statement::ForOfStatement(ast) => {
+                self.visit_for_of_statement(ast);
+            }
+            Statement::ForStatement(ast) => {
+                self.visit_for_statement(ast);
+            }
+            Statement::FunctionDeclaration(ast) => {
+                self.visit_function_declaration(ast);
+            }
+            Statement::IfStatement(ast) => {
+                self.visit_if_statement(ast);
+            }
+            Statement::LabeledStatement(ast) => {
+                self.visit_labeled_statement(ast);
+            }
+            Statement::ReturnStatement(ast) => {
+                self.visit_return_statement(ast);
+            }
+            Statement::SwitchStatement(ast) => {
+                self.visit_switch_statement(ast);
+            }
+            Statement::ThrowStatement(ast) => {
+                self.visit_throw_statement(ast);
+            }
+            Statement::TryStatement(ast) => {
+                self.visit_try_statement(ast);
+            }
+            Statement::TSTypeAliasDeclaration(ast) => {
+                self.visit_tstype_alias_declaration(ast);
+            }
+            Statement::VariableDeclaration(ast) => {
+                self.visit_variable_declaration(ast);
+            }
+            Statement::WhileStatement(ast) => {
+                self.visit_while_statement(ast);
+            }
+            Statement::WithStatement(ast) => {
+                self.visit_with_statement(ast);
+            }
+        }
+    }
+    fn visit_expression(&mut self, ast: &Expression) {
+        match ast {
+            Expression::ArrayExpression(ast) => {
+                self.visit_array_expression(ast);
+            }
+            Expression::ArrowFunctionExpression(ast) => {
+                self.visit_arrow_function_expression(ast);
+            }
+            Expression::AssignmentExpression(ast) => {
+                self.visit_assignment_expression(ast);
+            }
+            Expression::AwaitExpression(ast) => {
+                self.visit_await_expression(ast);
+            }
+            Expression::BinaryExpression(ast) => {
+                self.visit_binary_expression(ast);
+            }
+            Expression::BooleanLiteral(ast) => {
+                self.visit_boolean_literal(ast);
+            }
+            Expression::CallExpression(ast) => {
+                self.visit_call_expression(ast);
+            }
+            Expression::ChainExpression(ast) => {
+                self.visit_chain_expression(ast);
+            }
+            Expression::ClassExpression(ast) => {
+                self.visit_class_expression(ast);
+            }
+            Expression::ConditionalExpression(ast) => {
+                self.visit_conditional_expression(ast);
+            }
+            Expression::CoverTypedIdentifier(ast) => {
+                self.visit_cover_typed_identifier(ast);
+            }
+            Expression::FunctionExpression(ast) => {
+                self.visit_function_expression(ast);
+            }
+            Expression::Identifier(ast) => {
+                self.visit_identifier(ast);
+            }
+            Expression::ImportExpression(ast) => {
+                self.visit_import_expression(ast);
+            }
+            Expression::JSXElement(ast) => {
+                self.visit_jsxelement(ast);
+            }
+            Expression::JSXFragment(ast) => {
+                self.visit_jsxfragment(ast);
+            }
+            Expression::Literal(ast) => {
+                self.visit_literal(ast);
+            }
+            Expression::LogicalExpression(ast) => {
+                self.visit_logical_expression(ast);
+            }
+            Expression::MemberExpression(ast) => {
+                self.visit_member_expression(ast);
+            }
+            Expression::MetaProperty(ast) => {
+                self.visit_meta_property(ast);
+            }
+            Expression::NewExpression(ast) => {
+                self.visit_new_expression(ast);
+            }
+            Expression::NullLiteral(ast) => {
+                self.visit_null_literal(ast);
+            }
+            Expression::NumericLiteral(ast) => {
+                self.visit_numeric_literal(ast);
+            }
+            Expression::ObjectExpression(ast) => {
+                self.visit_object_expression(ast);
+            }
+            Expression::OptionalCallExpression(ast) => {
+                self.visit_optional_call_expression(ast);
+            }
+            Expression::OptionalMemberExpression(ast) => {
+                self.visit_optional_member_expression(ast);
+            }
+            Expression::RegExpLiteral(ast) => {
+                self.visit_reg_exp_literal(ast);
+            }
+            Expression::SequenceExpression(ast) => {
+                self.visit_sequence_expression(ast);
+            }
+            Expression::StringLiteral(ast) => {
+                self.visit_string_literal(ast);
+            }
+            Expression::TaggedTemplateExpression(ast) => {
+                self.visit_tagged_template_expression(ast);
+            }
+            Expression::TemplateLiteral(ast) => {
+                self.visit_template_literal(ast);
+            }
+            Expression::ThisExpression(ast) => {
+                self.visit_this_expression(ast);
+            }
+            Expression::UnaryExpression(ast) => {
+                self.visit_unary_expression(ast);
+            }
+            Expression::UpdateExpression(ast) => {
+                self.visit_update_expression(ast);
+            }
+            Expression::YieldExpression(ast) => {
+                self.visit_yield_expression(ast);
+            }
+        }
+    }
+    fn visit___literal(&mut self, ast: &_Literal) {
+        match ast {
+            _Literal::Literal(ast) => {
+                self.visit_literal(ast);
+            }
+            _Literal::BooleanLiteral(ast) => {
+                self.visit_boolean_literal(ast);
+            }
+            _Literal::NullLiteral(ast) => {
+                self.visit_null_literal(ast);
+            }
+            _Literal::StringLiteral(ast) => {
+                self.visit_string_literal(ast);
+            }
+            _Literal::NumericLiteral(ast) => {
+                self.visit_numeric_literal(ast);
+            }
+        }
+    }
+    fn visit_declaration(&mut self, ast: &Declaration) {
+        match ast {
+            Declaration::ClassDeclaration(ast) => {
+                self.visit_class_declaration(ast);
+            }
+            Declaration::FunctionDeclaration(ast) => {
+                self.visit_function_declaration(ast);
+            }
+            Declaration::VariableDeclaration(ast) => {
+                self.visit_variable_declaration(ast);
+            }
+            Declaration::TSTypeAliasDeclaration(ast) => {
+                self.visit_tstype_alias_declaration(ast);
+            }
+        }
+    }
+    fn visit_import_declaration_specifier(&mut self, ast: &ImportDeclarationSpecifier) {
+        match ast {
+            ImportDeclarationSpecifier::ImportSpecifier(ast) => {
+                self.visit_import_specifier(ast);
+            }
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(ast) => {
+                self.visit_import_default_specifier(ast);
+            }
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(ast) => {
+                self.visit_import_namespace_specifier(ast);
+            }
+        }
+    }
+    fn visit_module_item(&mut self, ast: &ModuleItem) {
+        match ast {
+            ModuleItem::ImportOrExportDeclaration(ast) => {
+                self.visit_import_or_export_declaration(ast);
+            }
+            ModuleItem::Statement(ast) => {
+                self.visit_statement(ast);
+            }
+        }
+    }
+    fn visit_import_or_export_declaration(&mut self, ast: &ImportOrExportDeclaration) {
+        match ast {
+            ImportOrExportDeclaration::ImportDeclaration(ast) => {
+                self.visit_import_declaration(ast);
+            }
+            ImportOrExportDeclaration::ExportNamedDeclaration(ast) => {
+                self.visit_export_named_declaration(ast);
+            }
+            ImportOrExportDeclaration::ExportDefaultDeclaration(ast) => {
+                self.visit_export_default_declaration(ast);
+            }
+            ImportOrExportDeclaration::ExportAllDeclaration(ast) => {
+                self.visit_export_all_declaration(ast);
+            }
+        }
+    }
+    fn visit_expression_or_super(&mut self, ast: &ExpressionOrSuper) {
+        match ast {
+            ExpressionOrSuper::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            ExpressionOrSuper::Super(ast) => {
+                self.visit_super(ast);
+            }
+        }
+    }
+    fn visit_expression_or_spread(&mut self, ast: &ExpressionOrSpread) {
+        match ast {
+            ExpressionOrSpread::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            ExpressionOrSpread::SpreadElement(ast) => {
+                self.visit_spread_element(ast);
+            }
+        }
+    }
+    fn visit_function_body(&mut self, ast: &FunctionBody) {
+        match ast {
+            FunctionBody::BlockStatement(ast) => {
+                self.visit_block_statement(ast);
+            }
+            FunctionBody::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+        }
+    }
+    fn visit_pattern(&mut self, ast: &Pattern) {
+        match ast {
+            Pattern::Identifier(ast) => {
+                self.visit_identifier(ast);
+            }
+            Pattern::ArrayPattern(ast) => {
+                self.visit_array_pattern(ast);
+            }
+            Pattern::ObjectPattern(ast) => {
+                self.visit_object_pattern(ast);
+            }
+            Pattern::RestElement(ast) => {
+                self.visit_rest_element(ast);
+            }
+            Pattern::AssignmentPattern(ast) => {
+                self.visit_assignment_pattern(ast);
+            }
+        }
+    }
+    fn visit_for_init(&mut self, ast: &ForInit) {
+        match ast {
+            ForInit::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            ForInit::VariableDeclaration(ast) => {
+                self.visit_variable_declaration(ast);
+            }
+        }
+    }
+    fn visit_for_in_init(&mut self, ast: &ForInInit) {
+        match ast {
+            ForInInit::Pattern(ast) => {
+                self.visit_pattern(ast);
+            }
+            ForInInit::VariableDeclaration(ast) => {
+                self.visit_variable_declaration(ast);
+            }
+        }
+    }
+    fn visit_property_or_spread_element(&mut self, ast: &PropertyOrSpreadElement) {
+        match ast {
+            PropertyOrSpreadElement::Property(ast) => {
+                self.visit_property(ast);
+            }
+            PropertyOrSpreadElement::SpreadElement(ast) => {
+                self.visit_spread_element(ast);
+            }
+        }
+    }
+    fn visit_assignment_property_or_rest_element(
+        &mut self,
+        ast: &AssignmentPropertyOrRestElement,
+    ) {
+        match ast {
+            AssignmentPropertyOrRestElement::AssignmentProperty(ast) => {
+                self.visit_assignment_property(ast);
+            }
+            AssignmentPropertyOrRestElement::RestElement(ast) => {
+                self.visit_rest_element(ast);
+            }
+        }
+    }
+    fn visit_property_key(&mut self, ast: &PropertyKey) {
+        match ast {
+            PropertyKey::Identifier(ast) => {
+                self.visit_identifier(ast);
+            }
+            PropertyKey::Literal(ast) => {
+                self.visit_literal(ast);
+            }
+        }
+    }
+    fn visit_assignment_target(&mut self, ast: &AssignmentTarget) {
+        match ast {
+            AssignmentTarget::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            AssignmentTarget::Pattern(ast) => {
+                self.visit_pattern(ast);
+            }
+        }
+    }
+    fn visit_chain_element(&mut self, ast: &ChainElement) {
+        match ast {
+            ChainElement::CallExpression(ast) => {
+                self.visit_call_expression(ast);
+            }
+            ChainElement::MemberExpression(ast) => {
+                self.visit_member_expression(ast);
+            }
+        }
+    }
+    fn visit_jsxmember_expression_or_identifier(
+        &mut self,
+        ast: &JSXMemberExpressionOrIdentifier,
+    ) {
+        match ast {
+            JSXMemberExpressionOrIdentifier::JSXMemberExpression(ast) => {
+                self.visit_jsxmember_expression(ast);
+            }
+            JSXMemberExpressionOrIdentifier::JSXIdentifier(ast) => {
+                self.visit_jsxidentifier(ast);
+            }
+        }
+    }
+    fn visit_jsxexpression_or_empty(&mut self, ast: &JSXExpressionOrEmpty) {
+        match ast {
+            JSXExpressionOrEmpty::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            JSXExpressionOrEmpty::JSXEmptyExpression(ast) => {
+                self.visit_jsxempty_expression(ast);
+            }
+        }
+    }
+    fn visit_jsxattribute_or_spread(&mut self, ast: &JSXAttributeOrSpread) {
+        match ast {
+            JSXAttributeOrSpread::JSXAttribute(ast) => {
+                self.visit_jsxattribute(ast);
+            }
+            JSXAttributeOrSpread::JSXSpreadAttribute(ast) => {
+                self.visit_jsxspread_attribute(ast);
+            }
+        }
+    }
+    fn visit_jsxattribute_value(&mut self, ast: &JSXAttributeValue) {
+        match ast {
+            JSXAttributeValue::Literal(ast) => {
+                self.visit_literal(ast);
+            }
+            JSXAttributeValue::JSXExpressionContainer(ast) => {
+                self.visit_jsxexpression_container(ast);
+            }
+            JSXAttributeValue::JSXElement(ast) => {
+                self.visit_jsxelement(ast);
+            }
+            JSXAttributeValue::JSXFragment(ast) => {
+                self.visit_jsxfragment(ast);
+            }
+            JSXAttributeValue::JSXStringLiteral(ast) => {
+                self.visit_jsxstring_literal(ast);
+            }
+        }
+    }
+    fn visit_jsxelement_name(&mut self, ast: &JSXElementName) {
+        match ast {
+            JSXElementName::JSXIdentifier(ast) => {
+                self.visit_jsxidentifier(ast);
+            }
+            JSXElementName::JSXMemberExpression(ast) => {
+                self.visit_jsxmember_expression(ast);
+            }
+            JSXElementName::JSXNamespacedName(ast) => {
+                self.visit_jsxnamespaced_name(ast);
+            }
+        }
+    }
+    fn visit_jsxidentifier_or_namespaced_name(
+        &mut self,
+        ast: &JSXIdentifierOrNamespacedName,
+    ) {
+        match ast {
+            JSXIdentifierOrNamespacedName::JSXIdentifier(ast) => {
+                self.visit_jsxidentifier(ast);
+            }
+            JSXIdentifierOrNamespacedName::JSXNamespacedName(ast) => {
+                self.visit_jsxnamespaced_name(ast);
+            }
+        }
+    }
+    fn visit_jsxchild_item(&mut self, ast: &JSXChildItem) {
+        match ast {
+            JSXChildItem::JSXText(ast) => {
+                self.visit_jsxtext(ast);
+            }
+            JSXChildItem::JSXStringLiteral(ast) => {
+                self.visit_jsxstring_literal(ast);
+            }
+            JSXChildItem::JSXExpressionContainer(ast) => {
+                self.visit_jsxexpression_container(ast);
+            }
+            JSXChildItem::JSXSpreadChild(ast) => {
+                self.visit_jsxspread_child(ast);
+            }
+            JSXChildItem::JSXElement(ast) => {
+                self.visit_jsxelement(ast);
+            }
+            JSXChildItem::JSXFragment(ast) => {
+                self.visit_jsxfragment(ast);
+            }
+        }
+    }
+    fn visit_declaration_or_expression(&mut self, ast: &DeclarationOrExpression) {
+        match ast {
+            DeclarationOrExpression::Declaration(ast) => {
+                self.visit_declaration(ast);
+            }
+            DeclarationOrExpression::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+        }
+    }
+    fn visit_class_item(&mut self, ast: &ClassItem) {
+        match ast {
+            ClassItem::MethodDefinition(ast) => {
+                self.visit_method_definition(ast);
+            }
+            ClassItem::ClassProperty(ast) => {
+                self.visit_class_property(ast);
+            }
+            ClassItem::ClassPrivateProperty(ast) => {
+                self.visit_class_private_property(ast);
+            }
+            ClassItem::StaticBlock(ast) => {
+                self.visit_static_block(ast);
+            }
+        }
+    }
+    fn visit_expression_or_private_identifier(
+        &mut self,
+        ast: &ExpressionOrPrivateIdentifier,
+    ) {
+        match ast {
+            ExpressionOrPrivateIdentifier::Expression(ast) => {
+                self.visit_expression(ast);
+            }
+            ExpressionOrPrivateIdentifier::PrivateIdentifier(ast) => {
+                self.visit_private_identifier(ast);
+            }
+            ExpressionOrPrivateIdentifier::PrivateName(ast) => {
+                self.visit_private_name(ast);
+            }
+        }
+    }
+    fn visit_type_annotation(&mut self, ast: &TypeAnnotation) {
+        match ast {
+            TypeAnnotation::TSTypeAnnotation(ast) => {
+                self.visit_tstype_annotation(ast);
+            }
+        }
+    }
+}
