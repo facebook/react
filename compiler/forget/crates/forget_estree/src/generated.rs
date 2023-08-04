@@ -1993,10 +1993,15 @@ impl Serialize for ObjectPattern {
 }
 #[derive(Deserialize, Clone, Debug)]
 pub struct AssignmentProperty {
-    pub key: PropertyKey,
+    pub key: Expression,
     pub value: Pattern,
     pub kind: PropertyKind,
-    pub method: bool,
+    #[serde(rename = "computed")]
+    pub is_computed: bool,
+    #[serde(rename = "shorthand")]
+    pub is_shorthand: bool,
+    #[serde(rename = "method")]
+    pub is_method: bool,
     #[serde(default)]
     pub loc: Option<SourceLocation>,
     #[serde(default)]
@@ -2013,7 +2018,9 @@ impl Serialize for AssignmentProperty {
         state.serialize_entry("key", &self.key)?;
         state.serialize_entry("value", &self.value)?;
         state.serialize_entry("kind", &self.kind)?;
-        state.serialize_entry("method", &self.method)?;
+        state.serialize_entry("computed", &self.is_computed)?;
+        state.serialize_entry("shorthand", &self.is_shorthand)?;
+        state.serialize_entry("method", &self.is_method)?;
         state.serialize_entry("loc", &self.loc)?;
         state.serialize_entry("range", &self.range)?;
         state.end()
@@ -5287,54 +5294,17 @@ impl<'de> serde::Deserialize<'de> for AssignmentPropertyOrRestElement {
 }
 #[derive(Serialize, Clone, Debug)]
 #[serde(untagged)]
-pub enum PropertyKey {
-    Identifier(Box<Identifier>),
-    Literal(Box<Literal>),
-}
-#[derive(Deserialize, Debug)]
-enum __PropertyKeyTag {
-    Identifier,
-    Literal,
-}
-impl<'de> serde::Deserialize<'de> for PropertyKey {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let tagged = serde::Deserializer::deserialize_any(
-            deserializer,
-            serde::__private::de::TaggedContentVisitor::<
-                __PropertyKeyTag,
-            >::new("type", "PropertyKey"),
-        )?;
-        match tagged.0 {
-            __PropertyKeyTag::Identifier => {
-                let node: Box<Identifier> = <Box<
-                    Identifier,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(PropertyKey::Identifier(node))
-            }
-            __PropertyKeyTag::Literal => {
-                let node: Box<Literal> = <Box<
-                    Literal,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(PropertyKey::Literal(node))
-            }
-        }
-    }
-}
-#[derive(Serialize, Clone, Debug)]
-#[serde(untagged)]
 pub enum AssignmentTarget {
     Expression(Expression),
     Pattern(Pattern),
 }
 #[derive(Deserialize, Debug)]
 enum __AssignmentTargetTag {
+    Identifier,
+    ArrayPattern,
+    ObjectPattern,
+    RestElement,
+    AssignmentPattern,
     ArrayExpression,
     ArrowFunctionExpression,
     AssignmentExpression,
@@ -5347,7 +5317,6 @@ enum __AssignmentTargetTag {
     ConditionalExpression,
     CoverTypedIdentifier,
     FunctionExpression,
-    Identifier,
     ImportExpression,
     JSXElement,
     JSXFragment,
@@ -5370,10 +5339,6 @@ enum __AssignmentTargetTag {
     UnaryExpression,
     UpdateExpression,
     YieldExpression,
-    ArrayPattern,
-    ObjectPattern,
-    RestElement,
-    AssignmentPattern,
 }
 impl<'de> serde::Deserialize<'de> for AssignmentTarget {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -5387,6 +5352,46 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
             >::new("type", "AssignmentTarget"),
         )?;
         match tagged.0 {
+            __AssignmentTargetTag::Identifier => {
+                let node: Box<Identifier> = <Box<
+                    Identifier,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Pattern(Pattern::Identifier(node)))
+            }
+            __AssignmentTargetTag::ArrayPattern => {
+                let node: Box<ArrayPattern> = <Box<
+                    ArrayPattern,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Pattern(Pattern::ArrayPattern(node)))
+            }
+            __AssignmentTargetTag::ObjectPattern => {
+                let node: Box<ObjectPattern> = <Box<
+                    ObjectPattern,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Pattern(Pattern::ObjectPattern(node)))
+            }
+            __AssignmentTargetTag::RestElement => {
+                let node: Box<RestElement> = <Box<
+                    RestElement,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Pattern(Pattern::RestElement(node)))
+            }
+            __AssignmentTargetTag::AssignmentPattern => {
+                let node: Box<AssignmentPattern> = <Box<
+                    AssignmentPattern,
+                > as Deserialize>::deserialize(
+                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
+                )?;
+                Ok(AssignmentTarget::Pattern(Pattern::AssignmentPattern(node)))
+            }
             __AssignmentTargetTag::ArrayExpression => {
                 let node: Box<ArrayExpression> = <Box<
                     ArrayExpression,
@@ -5486,14 +5491,6 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(AssignmentTarget::Expression(Expression::FunctionExpression(node)))
-            }
-            __AssignmentTargetTag::Identifier => {
-                let node: Box<Identifier> = <Box<
-                    Identifier,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(AssignmentTarget::Expression(Expression::Identifier(node)))
             }
             __AssignmentTargetTag::ImportExpression => {
                 let node: Box<ImportExpression> = <Box<
@@ -5682,38 +5679,6 @@ impl<'de> serde::Deserialize<'de> for AssignmentTarget {
                     serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
                 )?;
                 Ok(AssignmentTarget::Expression(Expression::YieldExpression(node)))
-            }
-            __AssignmentTargetTag::ArrayPattern => {
-                let node: Box<ArrayPattern> = <Box<
-                    ArrayPattern,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(AssignmentTarget::Pattern(Pattern::ArrayPattern(node)))
-            }
-            __AssignmentTargetTag::ObjectPattern => {
-                let node: Box<ObjectPattern> = <Box<
-                    ObjectPattern,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(AssignmentTarget::Pattern(Pattern::ObjectPattern(node)))
-            }
-            __AssignmentTargetTag::RestElement => {
-                let node: Box<RestElement> = <Box<
-                    RestElement,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(AssignmentTarget::Pattern(Pattern::RestElement(node)))
-            }
-            __AssignmentTargetTag::AssignmentPattern => {
-                let node: Box<AssignmentPattern> = <Box<
-                    AssignmentPattern,
-                > as Deserialize>::deserialize(
-                    serde::__private::de::ContentDeserializer::<D::Error>::new(tagged.1),
-                )?;
-                Ok(AssignmentTarget::Pattern(Pattern::AssignmentPattern(node)))
             }
         }
     }
@@ -8464,7 +8429,7 @@ pub trait Visitor2 {
         }
     }
     fn visit_assignment_property(&mut self, ast: &AssignmentProperty) {
-        self.visit_property_key(&ast.key);
+        self.visit_expression(&ast.key);
         self.visit_pattern(&ast.value);
     }
     fn visit_rest_element(&mut self, ast: &RestElement) {
@@ -8884,23 +8849,13 @@ pub trait Visitor2 {
             }
         }
     }
-    fn visit_property_key(&mut self, ast: &PropertyKey) {
-        match ast {
-            PropertyKey::Identifier(ast) => {
-                self.visit_identifier(ast);
-            }
-            PropertyKey::Literal(ast) => {
-                self.visit_literal(ast);
-            }
-        }
-    }
     fn visit_assignment_target(&mut self, ast: &AssignmentTarget) {
         match ast {
-            AssignmentTarget::Expression(ast) => {
-                self.visit_expression(ast);
-            }
             AssignmentTarget::Pattern(ast) => {
                 self.visit_pattern(ast);
+            }
+            AssignmentTarget::Expression(ast) => {
+                self.visit_expression(ast);
             }
         }
     }

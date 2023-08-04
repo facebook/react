@@ -1,18 +1,20 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     BreakStatement, ContinueStatement, ESTreeNode, Identifier, LabeledStatement, Program,
-    Statement, Visitor,
+    Statement, VariableDeclarationKind, Visitor,
 };
 use forget_utils::PointerAddress;
 use indexmap::IndexMap;
 
-pub fn analyze(ast: &Program) -> SemanticAnalysis {
+use crate::scope_view::ScopeView;
+
+pub fn analyze(ast: &Program) -> ScopeManager {
     let mut analyzer = Analyzer::new();
     analyzer.visit_program(ast);
     analyzer.results
 }
 
-pub struct SemanticAnalysis {
+pub struct ScopeManager {
     root: ScopeId,
 
     // Storage of the semantic information
@@ -23,27 +25,15 @@ pub struct SemanticAnalysis {
 
     // Mapping of AST nodes (by pointer address) to semantic information
     // Not all nodes will have all types of information available
-    node_scopes: IndexMap<AstNode, ScopeId>,
-    node_labels: IndexMap<AstNode, LabelId>,
-    node_declarations: IndexMap<AstNode, DeclarationId>,
-    node_references: IndexMap<AstNode, ReferenceId>,
-    diagnostics: Vec<Diagnostic>,
+    pub(crate) node_scopes: IndexMap<AstNode, ScopeId>,
+    pub(crate) node_labels: IndexMap<AstNode, LabelId>,
+    pub(crate) node_declarations: IndexMap<AstNode, DeclarationId>,
+    pub(crate) node_references: IndexMap<AstNode, ReferenceId>,
+    pub(crate) diagnostics: Vec<Diagnostic>,
 }
 
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct SemanticAnalysisDebug<'a> {
-    root: ScopeId,
-
-    // Storage of the semantic information
-    scopes: &'a Vec<Scope>,
-    labels: &'a Vec<Label>,
-    declarations: &'a Vec<Declaration>,
-    references: &'a Vec<Reference>,
-}
-
-impl SemanticAnalysis {
-    fn new() -> Self {
+impl ScopeManager {
+    pub(crate) fn new() -> Self {
         let root_id = ScopeId(0);
         Self {
             root: root_id,
@@ -67,13 +57,11 @@ impl SemanticAnalysis {
         }
     }
 
-    pub fn debug(&self) -> SemanticAnalysisDebug<'_> {
-        SemanticAnalysisDebug {
-            root: self.root,
-            scopes: &self.scopes,
-            labels: &self.labels,
-            declarations: &self.declarations,
-            references: &self.references,
+    pub fn debug(&self) -> ScopeView<'_> {
+        let root = self.root();
+        ScopeView {
+            manager: self,
+            scope: root,
         }
     }
 
@@ -93,7 +81,7 @@ impl SemanticAnalysis {
         &self.declarations[id.0]
     }
 
-    pub fn reference(&self, id: ScopeId) -> &Reference {
+    pub fn reference(&self, id: ReferenceId) -> &Reference {
         &self.references[id.0]
     }
 
@@ -147,6 +135,14 @@ impl SemanticAnalysis {
         }
     }
 
+    pub fn lookup_break(&self, scope: ScopeId) -> Option<&Label> {
+        todo!()
+    }
+
+    pub fn lookup_continue(&self, scope: ScopeId) -> Option<&Label> {
+        todo!()
+    }
+
     pub fn lookup_declaration(&self, scope: ScopeId, name: &str) -> Option<&Declaration> {
         let mut current = &self.scopes[scope.0];
         loop {
@@ -187,6 +183,14 @@ impl SemanticAnalysis {
         id
     }
 
+    pub(crate) fn add_anonymous_label(&mut self, scope: ScopeId, kind: LabelKind) -> LabelId {
+        let id = LabelId(self.labels.len());
+        let name = format!("#{}", id.0);
+        self.labels.push(Label { id, kind, scope });
+        self.scopes[scope.0].labels.insert(name, id);
+        id
+    }
+
     pub(crate) fn add_declaration(
         &mut self,
         scope: ScopeId,
@@ -194,7 +198,12 @@ impl SemanticAnalysis {
         kind: DeclarationKind,
     ) -> DeclarationId {
         let id = DeclarationId(self.declarations.len());
-        self.declarations.push(Declaration { id, kind, scope });
+        self.declarations.push(Declaration {
+            id,
+            kind,
+            name: name.clone(),
+            scope,
+        });
         self.scopes[scope.0].declarations.insert(name, id);
         id
     }
@@ -232,9 +241,13 @@ pub struct LabelId(usize);
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub enum ScopeKind {
     Global,
+    Module,
     Function,
     Class,
     Block,
+    For,
+    Switch,
+    CatchClause,
 }
 
 #[derive(Debug, Clone)]
@@ -266,12 +279,26 @@ pub enum DeclarationKind {
     Const,
     Var,
     Let,
+    FunctionDeclaration,
+    For,
+    CatchClause,
+}
+
+impl From<VariableDeclarationKind> for DeclarationKind {
+    fn from(value: VariableDeclarationKind) -> Self {
+        match value {
+            VariableDeclarationKind::Const => Self::Const,
+            VariableDeclarationKind::Let => Self::Let,
+            VariableDeclarationKind::Var => Self::Var,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Declaration {
     pub id: DeclarationId,
     pub kind: DeclarationKind,
+    pub name: String,
     pub scope: ScopeId,
 }
 
@@ -291,7 +318,7 @@ pub struct Reference {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-struct AstNode(PointerAddress);
+pub(crate) struct AstNode(PointerAddress);
 
 impl AstNode {
     fn new<T: ESTreeNode>(node: &T) -> Self {
@@ -318,14 +345,14 @@ where
 }
 
 struct Analyzer {
-    results: SemanticAnalysis,
+    results: ScopeManager,
     current: ScopeId,
     is_lvalue: bool,
 }
 
 impl Analyzer {
     fn new() -> Self {
-        let results = SemanticAnalysis::new();
+        let results = ScopeManager::new();
         let current = results.root_id();
         Self {
             results,
@@ -334,7 +361,7 @@ impl Analyzer {
         }
     }
 
-    fn enter<F>(&mut self, kind: ScopeKind, mut f: F) -> ScopeId
+    pub(crate) fn enter<F>(&mut self, kind: ScopeKind, mut f: F) -> ScopeId
     where
         F: FnMut(&mut Self) -> (),
     {
@@ -343,6 +370,17 @@ impl Analyzer {
         f(self);
         let scope = std::mem::replace(&mut self.current, previous);
         scope
+    }
+
+    pub(crate) fn enter_scope(&mut self, kind: ScopeKind) -> ScopeId {
+        let scope = self.results.add_scope(self.current, kind);
+        self.current = scope;
+        scope
+    }
+
+    pub(crate) fn close_scope(&mut self) {
+        let scope = self.results.scope(self.current);
+        self.current = scope.parent.unwrap();
     }
 }
 

@@ -17,9 +17,10 @@ use hermes::parser::{
     hermes_get_FunctionDeclaration_id, hermes_get_FunctionDeclaration_params,
     hermes_get_FunctionExpression_async, hermes_get_FunctionExpression_body,
     hermes_get_FunctionExpression_generator, hermes_get_FunctionExpression_id,
-    hermes_get_FunctionExpression_params, hermes_get_Property_key, hermes_get_Property_kind,
-    hermes_get_Property_method, hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt,
-    NodeListRef, NodePtr, NodePtrOpt, NodeString, NodeStringOpt, SMRange,
+    hermes_get_FunctionExpression_params, hermes_get_Property_computed, hermes_get_Property_key,
+    hermes_get_Property_kind, hermes_get_Property_method, hermes_get_Property_shorthand,
+    hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef, NodePtr, NodePtrOpt,
+    NodeString, NodeStringOpt, SMRange,
 };
 use hermes::utf::utf8_with_surrogates_to_string;
 
@@ -137,14 +138,18 @@ impl FromHermes for AssignmentProperty {
         let key = FromHermes::convert(cx, unsafe { hermes_get_Property_key(node) });
         let value = FromHermes::convert(cx, unsafe { hermes_get_Property_value(node) });
         let kind = FromHermesLabel::convert(cx, unsafe { hermes_get_Property_kind(node) });
-        let method = unsafe { hermes_get_Property_method(node) };
+        let is_method = unsafe { hermes_get_Property_method(node) };
+        let is_computed = unsafe { hermes_get_Property_computed(node) };
+        let is_shorthand = unsafe { hermes_get_Property_shorthand(node) };
         let loc = None;
         let range = convert_range(node);
         AssignmentProperty {
             key,
             value,
             kind,
-            method,
+            is_method,
+            is_computed,
+            is_shorthand,
             loc,
             range: Some(range),
         }

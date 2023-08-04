@@ -263,6 +263,8 @@ Output:
                         }
                       },
                       "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
                       "method": false,
                       "loc": null,
                       "range": {
@@ -310,6 +312,8 @@ Output:
                         }
                       },
                       "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
                       "method": false,
                       "loc": null,
                       "range": {
@@ -357,6 +361,8 @@ Output:
                         }
                       },
                       "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
                       "method": false,
                       "loc": null,
                       "range": {

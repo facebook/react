@@ -133,6 +133,8 @@ Output:
                         }
                       },
                       "kind": "init",
+                      "computed": true,
+                      "shorthand": false,
                       "method": false,
                       "loc": null,
                       "range": {

@@ -879,7 +879,7 @@
             "type": "Property",
             "fields": {
                 "key": {
-                    "type": "PropertyKey"
+                    "type": "Expression"
                 },
                 "value": {
                     "type": "Pattern"
@@ -888,8 +888,17 @@
                     "type": "PropertyKind",
                     "TODO": "fixed value `init`"
                 },
-                "method": {
+                "is_computed": {
                     "type": "bool",
+                    "rename": "computed"
+                },
+                "is_shorthand": {
+                    "type": "bool",
+                    "rename": "shorthand"
+                },
+                "is_method": {
+                    "type": "bool",
+                    "rename": "method",
                     "TODO": "fixed value `false`" 
                 }
             }
@@ -1210,13 +1219,9 @@
             "AssignmentProperty",
             "RestElement"
         ],
-        "PropertyKey": [
-            "Identifier",
-            "Literal"
-        ],
         "AssignmentTarget": [
-            "Expression",
-            "Pattern"
+            "Pattern",
+            "Expression"
         ],
         "ChainElement": [
             "CallExpression",

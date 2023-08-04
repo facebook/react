@@ -1,3 +1,6 @@
-mod analyze;
+mod analyzer;
+mod scope_manager;
+mod scope_view;
 
-pub use analyze::analyze;
+pub use analyzer::analyze;
+pub use scope_manager::*;

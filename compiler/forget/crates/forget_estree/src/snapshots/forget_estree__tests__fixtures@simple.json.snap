@@ -360,7 +360,7 @@ Output:
       }
     }
   ],
-  "sourceType": "script",
+  "sourceType": "module",
   "loc": {
     "source": null,
     "start": {

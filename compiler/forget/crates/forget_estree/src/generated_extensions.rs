@@ -6,7 +6,7 @@ pub trait ESTreeNode {}
 
 impl Default for SourceType {
     fn default() -> Self {
-        Self::Script
+        Self::Module
     }
 }
 

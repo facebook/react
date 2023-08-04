@@ -191,6 +191,8 @@ Output:
                         }
                       },
                       "kind": "init",
+                      "computed": false,
+                      "shorthand": false,
                       "method": false,
                       "loc": null,
                       "range": {

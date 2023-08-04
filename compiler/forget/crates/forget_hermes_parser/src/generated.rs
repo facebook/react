@@ -3034,26 +3034,30 @@ impl FromHermes for AssignmentPropertyOrRestElement {
         }
     }
 }
-impl FromHermes for PropertyKey {
+impl FromHermes for AssignmentTarget {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         match node_ref.kind {
             NodeKind::Identifier => {
                 let node = Identifier::convert(cx, node);
-                PropertyKey::Identifier(Box::new(node))
+                AssignmentTarget::Pattern(Pattern::Identifier(Box::new(node)))
             }
-            _ => {
-                panic!(
-                    "Unexpected node kind `{:?}` for `{}`", node_ref.kind, "PropertyKey"
-                )
+            NodeKind::ArrayPattern => {
+                let node = ArrayPattern::convert(cx, node);
+                AssignmentTarget::Pattern(Pattern::ArrayPattern(Box::new(node)))
             }
-        }
-    }
-}
-impl FromHermes for AssignmentTarget {
-    fn convert(cx: &mut Context, node: NodePtr) -> Self {
-        let node_ref = node.as_ref();
-        match node_ref.kind {
+            NodeKind::ObjectPattern => {
+                let node = ObjectPattern::convert(cx, node);
+                AssignmentTarget::Pattern(Pattern::ObjectPattern(Box::new(node)))
+            }
+            NodeKind::RestElement => {
+                let node = RestElement::convert(cx, node);
+                AssignmentTarget::Pattern(Pattern::RestElement(Box::new(node)))
+            }
+            NodeKind::AssignmentPattern => {
+                let node = AssignmentPattern::convert(cx, node);
+                AssignmentTarget::Pattern(Pattern::AssignmentPattern(Box::new(node)))
+            }
             NodeKind::ArrayExpression => {
                 let node = ArrayExpression::convert(cx, node);
                 AssignmentTarget::Expression(Expression::ArrayExpression(Box::new(node)))
@@ -3109,10 +3113,6 @@ impl FromHermes for AssignmentTarget {
                 AssignmentTarget::Expression(
                     Expression::FunctionExpression(Box::new(node)),
                 )
-            }
-            NodeKind::Identifier => {
-                let node = Identifier::convert(cx, node);
-                AssignmentTarget::Expression(Expression::Identifier(Box::new(node)))
             }
             NodeKind::ImportExpression => {
                 let node = ImportExpression::convert(cx, node);
@@ -3215,22 +3215,6 @@ impl FromHermes for AssignmentTarget {
             NodeKind::YieldExpression => {
                 let node = YieldExpression::convert(cx, node);
                 AssignmentTarget::Expression(Expression::YieldExpression(Box::new(node)))
-            }
-            NodeKind::ArrayPattern => {
-                let node = ArrayPattern::convert(cx, node);
-                AssignmentTarget::Pattern(Pattern::ArrayPattern(Box::new(node)))
-            }
-            NodeKind::ObjectPattern => {
-                let node = ObjectPattern::convert(cx, node);
-                AssignmentTarget::Pattern(Pattern::ObjectPattern(Box::new(node)))
-            }
-            NodeKind::RestElement => {
-                let node = RestElement::convert(cx, node);
-                AssignmentTarget::Pattern(Pattern::RestElement(Box::new(node)))
-            }
-            NodeKind::AssignmentPattern => {
-                let node = AssignmentPattern::convert(cx, node);
-                AssignmentTarget::Pattern(Pattern::AssignmentPattern(Box::new(node)))
             }
             _ => {
                 panic!(

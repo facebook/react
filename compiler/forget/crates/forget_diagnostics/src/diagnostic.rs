@@ -272,7 +272,7 @@ impl From<Diagnostic> for Diagnostics {
 
 fn source_span_from_range(range: SourceRange) -> SourceSpan {
     SourceSpan::new(
-        ByteOffset::from(range.start as usize - 1).into(),
+        ByteOffset::from(range.start as usize).into(),
         ByteOffset::from((u32::from(range.end) - range.start) as usize).into(),
     )
 }
