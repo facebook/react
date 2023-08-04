@@ -1,6 +1,6 @@
 ---
 source: crates/forget_semantic_analysis/tests/analysis_test.rs
-expression: "format!(\"Input:\\n{input}\\n\\nAST:\\n{ast_output}\\n\\nAnalysis:\\n{analysis_output}\")"
+expression: "format!(\"Input:\\n{input}\\n\\nAST:\\n{ast_output}\\n\\nAnalysis:\\n{output}\")"
 input_file: crates/forget_semantic_analysis/tests/fixtures/labels.js
 ---
 Input:
@@ -517,43 +517,8 @@ Scope {
                                 2,
                             ),
                         },
-                        "x": Declaration {
-                            id: DeclarationId(
-                                3,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
                     },
                     references: [
-                        Reference {
-                            id: ReferenceId(
-                                0,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                3,
-                            ),
-                            declaration (name): "x",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                1,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                3,
-                            ),
-                            declaration (name): "x",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
                         Reference {
                             id: ReferenceId(
                                 6,
@@ -573,13 +538,23 @@ Scope {
                             id: ScopeId(
                                 3,
                             ),
-                            kind: Block,
+                            kind: For,
                             labels: {},
-                            declarations: {},
+                            declarations: {
+                                "x": Declaration {
+                                    id: DeclarationId(
+                                        3,
+                                    ),
+                                    kind: Let,
+                                    scope: ScopeId(
+                                        3,
+                                    ),
+                                },
+                            },
                             references: [
                                 Reference {
                                     id: ReferenceId(
-                                        2,
+                                        0,
                                     ),
                                     kind: Read,
                                     declaration: DeclarationId(
@@ -592,39 +567,13 @@ Scope {
                                 },
                                 Reference {
                                     id: ReferenceId(
-                                        3,
-                                    ),
-                                    kind: ReadWrite,
-                                    declaration: DeclarationId(
-                                        2,
-                                    ),
-                                    declaration (name): "y",
-                                    scope: ScopeId(
-                                        3,
-                                    ),
-                                },
-                                Reference {
-                                    id: ReferenceId(
-                                        4,
+                                        1,
                                     ),
                                     kind: Read,
                                     declaration: DeclarationId(
                                         3,
                                     ),
                                     declaration (name): "x",
-                                    scope: ScopeId(
-                                        3,
-                                    ),
-                                },
-                                Reference {
-                                    id: ReferenceId(
-                                        5,
-                                    ),
-                                    kind: Read,
-                                    declaration: DeclarationId(
-                                        2,
-                                    ),
-                                    declaration (name): "y",
                                     scope: ScopeId(
                                         3,
                                     ),
@@ -638,14 +587,78 @@ Scope {
                                     kind: Block,
                                     labels: {},
                                     declarations: {},
-                                    references: [],
-                                    children: [],
+                                    references: [
+                                        Reference {
+                                            id: ReferenceId(
+                                                2,
+                                            ),
+                                            kind: Read,
+                                            declaration: DeclarationId(
+                                                3,
+                                            ),
+                                            declaration (name): "x",
+                                            scope: ScopeId(
+                                                4,
+                                            ),
+                                        },
+                                        Reference {
+                                            id: ReferenceId(
+                                                3,
+                                            ),
+                                            kind: ReadWrite,
+                                            declaration: DeclarationId(
+                                                2,
+                                            ),
+                                            declaration (name): "y",
+                                            scope: ScopeId(
+                                                4,
+                                            ),
+                                        },
+                                        Reference {
+                                            id: ReferenceId(
+                                                4,
+                                            ),
+                                            kind: Read,
+                                            declaration: DeclarationId(
+                                                3,
+                                            ),
+                                            declaration (name): "x",
+                                            scope: ScopeId(
+                                                4,
+                                            ),
+                                        },
+                                        Reference {
+                                            id: ReferenceId(
+                                                5,
+                                            ),
+                                            kind: Read,
+                                            declaration: DeclarationId(
+                                                2,
+                                            ),
+                                            declaration (name): "y",
+                                            scope: ScopeId(
+                                                4,
+                                            ),
+                                        },
+                                    ],
+                                    children: [
+                                        Scope {
+                                            id: ScopeId(
+                                                5,
+                                            ),
+                                            kind: Block,
+                                            labels: {},
+                                            declarations: {},
+                                            references: [],
+                                            children: [],
+                                        },
+                                    ],
                                 },
                             ],
                         },
                         Scope {
                             id: ScopeId(
-                                5,
+                                6,
                             ),
                             kind: Block,
                             labels: {},
@@ -659,3 +672,4 @@ Scope {
         },
     ],
 }
+

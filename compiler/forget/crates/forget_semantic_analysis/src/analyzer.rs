@@ -1,8 +1,8 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
-    ExpressionOrSuper, ForInInit, Function, FunctionBody, Identifier, Pattern, Program,
-    SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor2,
+    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, JSXElementName,
+    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor2,
 };
 
 use crate::{AstNode, DeclarationKind, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager};
@@ -190,7 +190,7 @@ impl Analyzer {
         left: &ForInInit,
         right: &Expression,
         body: &Statement,
-        range: Option<SourceRange>,
+        _range: Option<SourceRange>,
     ) {
         // Record an anonymous label for the statement to resolve unlabeled break/continue
         let label = self
@@ -455,17 +455,31 @@ impl Visitor2 for Analyzer {
         );
     }
 
-    fn visit_identifier(&mut self, ast: &forget_estree::Identifier) {
-        Analyzer::visit_reference_identifier(
-            self,
-            &ast.name,
-            AstNode::from(ast),
-            ReferenceKind::Read,
-            ast.range,
-        );
+    fn visit_for_statement(&mut self, ast: &forget_estree::ForStatement) {
+        let mut for_scope: Option<ScopeId> = None;
+        if let Some(init) = &ast.init {
+            if let ForInit::VariableDeclaration(init) = init {
+                if init.kind != VariableDeclarationKind::Var {
+                    for_scope = Some(self.enter_scope(ScopeKind::For));
+                }
+            }
+        }
+        if let Some(init) = &ast.init {
+            self.visit_for_init(init);
+        }
+        if let Some(test) = &ast.test {
+            self.visit_expression(test);
+        }
+        if let Some(update) = &ast.update {
+            self.visit_expression(update);
+        }
+        self.visit_statement(&ast.body);
+        if let Some(for_scope) = for_scope {
+            self.close_scope(for_scope);
+        }
     }
 
-    fn visit_jsxidentifier(&mut self, ast: &forget_estree::JSXIdentifier) {
+    fn visit_identifier(&mut self, ast: &forget_estree::Identifier) {
         Analyzer::visit_reference_identifier(
             self,
             &ast.name,
@@ -559,6 +573,84 @@ impl Visitor2 for Analyzer {
             if let Some(init) = &declaration.init {
                 self.visit_expression(init);
             }
+        }
+    }
+
+    fn visit_jsxattribute(&mut self, ast: &forget_estree::JSXAttribute) {
+        // NOTE: skip visiting the attribute name, attributes are like non-computed
+        // object properties where the identifier is not a variable reference
+        if let Some(value) = &ast.value {
+            self.visit_jsxattribute_value(value);
+        }
+    }
+
+    fn visit_jsxclosing_element(&mut self, _ast: &forget_estree::JSXClosingElement) {
+        // no-op, should not be counted as a reference
+    }
+
+    fn visit_jsxidentifier(&mut self, ast: &forget_estree::JSXIdentifier) {
+        Analyzer::visit_reference_identifier(
+            self,
+            &ast.name,
+            AstNode::from(ast),
+            ReferenceKind::Read,
+            ast.range,
+        );
+    }
+
+    fn visit_jsxfragment(&mut self, ast: &forget_estree::JSXFragment) {
+        // TODO: record the pragmas
+        for child in &ast.children {
+            self.visit_jsxchild_item(child);
+        }
+    }
+
+    fn visit_jsxmember_expression(&mut self, ast: &forget_estree::JSXMemberExpression) {
+        // NOTE: ignore the 'property' since JSX doesn't support computed properties
+        self.visit_jsxmember_expression_or_identifier(&ast.object);
+    }
+
+    fn visit_jsxnamespaced_name(&mut self, ast: &forget_estree::JSXNamespacedName) {
+        // NOTE: ignore the 'name' since it doesn't refer to a variable
+        self.visit_jsxidentifier(&ast.namespace);
+    }
+
+    fn visit_jsxopening_element(&mut self, ast: &forget_estree::JSXOpeningElement) {
+        // TODO: record jsx pragma if root_name is not an FBT name
+        let root_name = ast.name.root_name();
+
+        match &ast.name {
+            JSXElementName::JSXIdentifier(name) => {
+                // lowercase names are builtins, only visit if this is a user-defined
+                // component
+                if let Some(first) = root_name.chars().next() {
+                    if first == first.to_ascii_uppercase() {
+                        self.visit_jsxidentifier(name);
+                    }
+                } else {
+                    // TODO: this likely indicates a parse error, since a valid parse
+                    // should never result in an empty JSXIdentifier node. but just in
+                    // case we report this rather than silently fail
+                    self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                        "Expected JSXOpenintElement.name to be non-empty",
+                        name.range,
+                    ));
+                }
+            }
+            JSXElementName::JSXMemberExpression(name) => {
+                if root_name != "this" {
+                    self.visit_jsxmember_expression(name);
+                }
+            }
+            JSXElementName::JSXNamespacedName(name) => {
+                if root_name != "this" {
+                    self.visit_jsxnamespaced_name(name);
+                }
+            }
+        }
+
+        for attribute in &ast.attributes {
+            self.visit_jsxattribute_or_spread(attribute);
         }
     }
 }

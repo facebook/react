@@ -65,6 +65,10 @@ impl ScopeManager {
         }
     }
 
+    pub fn diagnostics(&mut self) -> Vec<Diagnostic> {
+        std::mem::take(&mut self.diagnostics)
+    }
+
     pub fn root(&self) -> &Scope {
         &self.scopes[self.root.0]
     }
