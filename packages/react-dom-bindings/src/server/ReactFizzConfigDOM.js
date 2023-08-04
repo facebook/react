@@ -4250,20 +4250,8 @@ export function writePreamble(
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
 
-  resources.explicitStylesheetPreloads.forEach(
-    flushResourceInPreamble,
-    destination,
-  );
-  resources.explicitStylesheetPreloads.clear();
-
-  resources.explicitScriptPreloads.forEach(
-    flushResourceInPreamble,
-    destination,
-  );
-  resources.explicitScriptPreloads.clear();
-
-  resources.explicitOtherPreloads.forEach(flushResourceInPreamble, destination);
-  resources.explicitOtherPreloads.clear();
+  resources.explicitPreloads.forEach(flushResourceInPreamble, destination);
+  resources.explicitPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4330,14 +4318,8 @@ export function writeHoistables(
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
 
-  resources.explicitStylesheetPreloads.forEach(flushResourceLate, destination);
-  resources.explicitStylesheetPreloads.clear();
-
-  resources.explicitScriptPreloads.forEach(flushResourceLate, destination);
-  resources.explicitScriptPreloads.clear();
-
-  resources.explicitOtherPreloads.forEach(flushResourceLate, destination);
-  resources.explicitOtherPreloads.clear();
+  resources.explicitPreloads.forEach(flushResourceLate, destination);
+  resources.explicitPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4882,10 +4864,7 @@ export type Resources = {
   stylePrecedences: Map<string, StyleTagResource>,
   bootstrapScripts: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
-  explicitStylesheetPreloads: Set<PreloadResource>,
-  // explicitImagePreloads: Set<PreloadResource>,
-  explicitScriptPreloads: Set<PreloadResource>,
-  explicitOtherPreloads: Set<PreloadResource>,
+  explicitPreloads: Set<PreloadResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -4909,10 +4888,7 @@ export function createResources(): Resources {
     stylePrecedences: new Map(),
     bootstrapScripts: new Set(),
     scripts: new Set(),
-    explicitStylesheetPreloads: new Set(),
-    // explicitImagePreloads: new Set(),
-    explicitScriptPreloads: new Set(),
-    explicitOtherPreloads: new Set(),
+    explicitPreloads: new Set(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -5199,22 +5175,10 @@ export function preload(href: string, options: PreloadOptions) {
 
       pushLinkImpl(resource.chunks, resource.props);
     }
-    switch (as) {
-      case 'font': {
-        resources.fontPreloads.add(resource);
-        break;
-      }
-      case 'style': {
-        resources.explicitStylesheetPreloads.add(resource);
-        break;
-      }
-      case 'script': {
-        resources.explicitScriptPreloads.add(resource);
-        break;
-      }
-      default: {
-        resources.explicitOtherPreloads.add(resource);
-      }
+    if (as === 'font') {
+      resources.fontPreloads.add(resource);
+    } else {
+      resources.explicitPreloads.add(resource);
     }
     flushResources(request);
   }
