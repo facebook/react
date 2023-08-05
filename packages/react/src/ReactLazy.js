@@ -59,20 +59,16 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     // end up fixing it if the resolution was a concurrency bug.
     thenable.then(
       moduleObject => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
-          // Transition to the next state.
-          const resolved: ResolvedPayload<T> = (payload: any);
-          resolved._status = Resolved;
-          resolved._result = moduleObject;
-        }
+        // Transition to the next state.
+        const resolved: ResolvedPayload<T> = (payload: any);
+        resolved._status = Resolved;
+        resolved._result = moduleObject;
       },
       error => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
-          // Transition to the next state.
-          const rejected: RejectedPayload = (payload: any);
-          rejected._status = Rejected;
-          rejected._result = error;
-        }
+        // Transition to the next state.
+        const rejected: RejectedPayload = (payload: any);
+        rejected._status = Rejected;
+        rejected._result = error;
       },
     );
     if (payload._status === Uninitialized) {
