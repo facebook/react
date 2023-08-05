@@ -2345,6 +2345,18 @@ export function attach(
       const prevFallbackChildSet = prevFiberChild
         ? prevFiberChild.sibling
         : null;
+
+      if (prevFallbackChildSet == null && nextFallbackChildSet != null) {
+        mountFiberRecursively(
+          nextFallbackChildSet,
+          shouldIncludeInTree ? nextFiber : parentFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
+
+        shouldResetChildren = true;
+      }
+
       if (
         nextFallbackChildSet != null &&
         prevFallbackChildSet != null &&
