@@ -4133,6 +4133,12 @@ body {
           <head>
             <link
               rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
               as="style"
               href="lowserver"
               fetchpriority="low"
@@ -4142,12 +4148,6 @@ body {
               as="style"
               href="autoserver"
               fetchpriority="auto"
-            />
-            <link
-              rel="preload"
-              as="script"
-              href="highserver"
-              fetchpriority="high"
             />
           </head>
           <body>hello</body>
@@ -4168,6 +4168,12 @@ body {
           <head>
             <link
               rel="preload"
+              as="script"
+              href="highserver"
+              fetchpriority="high"
+            />
+            <link
+              rel="preload"
               as="style"
               href="lowserver"
               fetchpriority="low"
@@ -4177,12 +4183,6 @@ body {
               as="style"
               href="autoserver"
               fetchpriority="auto"
-            />
-            <link
-              rel="preload"
-              as="script"
-              href="highserver"
-              fetchpriority="high"
             />
             <link
               rel="preload"
