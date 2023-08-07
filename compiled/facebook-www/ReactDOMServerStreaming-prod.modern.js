@@ -3409,6 +3409,10 @@ function flushCompletedQueues(request, destination) {
         resources.fontPreloads.forEach(flushResourceInPreamble, destination);
         resources.fontPreloads.clear();
         resources.precedences.forEach(flushAllStylesInPreamble, destination);
+        resources.bootstrapScripts.forEach(
+          flushResourceInPreamble,
+          destination
+        );
         resources.scripts.forEach(flushResourceInPreamble, destination);
         resources.scripts.clear();
         resources.explicitStylesheetPreloads.forEach(
@@ -3819,6 +3823,7 @@ exports.renderToStream = function (children, options) {
       fontPreloads: new Set(),
       precedences: new Map(),
       stylePrecedences: new Map(),
+      bootstrapScripts: new Set(),
       scripts: new Set(),
       explicitStylesheetPreloads: new Set(),
       explicitScriptPreloads: new Set(),
@@ -3883,13 +3888,14 @@ exports.renderToStream = function (children, options) {
           rel: "preload",
           href: externalRuntimeConfig,
           as: "script",
+          fetchPriority: "low",
           nonce: void 0,
           integrity: integrity,
           crossOrigin: scriptConfig
         },
         resource = { type: "preload", chunks: [], state: 0, props: props };
       resources.preloadsMap.set("[script]" + externalRuntimeConfig, resource);
-      resources.explicitScriptPreloads.add(resource);
+      resources.bootstrapScripts.add(resource);
       pushLinkImpl(resource.chunks, props);
       JSCompiler_inline_result.push(
         '<script src="',
@@ -3927,6 +3933,7 @@ exports.renderToStream = function (children, options) {
         (scriptConfig = {
           rel: "modulepreload",
           href: bootstrapScriptContent,
+          fetchPriority: "low",
           nonce: void 0,
           integrity: externalRuntimeConfig,
           crossOrigin: integrity
@@ -3938,7 +3945,7 @@ exports.renderToStream = function (children, options) {
           props: scriptConfig
         }),
         resources.preloadsMap.set("[script]" + bootstrapScriptContent, props),
-        resources.explicitScriptPreloads.add(props),
+        resources.bootstrapScripts.add(props),
         pushLinkImpl(props.chunks, scriptConfig),
         JSCompiler_inline_result.push(
           '<script type="module" src="',

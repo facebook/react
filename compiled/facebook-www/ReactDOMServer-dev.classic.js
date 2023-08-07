@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-8651ccc3";
+var ReactVersion = "18.3.0-www-classic-728bbc0a";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -6282,6 +6282,7 @@ function writePreamble(
   resources.fontPreloads.clear(); // Flush unblocked stylesheets by precedence
 
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
+  resources.bootstrapScripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
   resources.explicitStylesheetPreloads.forEach(
@@ -6346,7 +6347,9 @@ function writeHoistables(destination, resources, responseState) {
   resources.fontPreloads.clear(); // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
 
-  resources.precedences.forEach(preloadLateStyles, destination);
+  resources.precedences.forEach(preloadLateStyles, destination); // bootstrap scripts should flush above script priority but these can only flush in the preamble
+  // so we elide the code here for performance
+
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
   resources.explicitStylesheetPreloads.forEach(flushResourceLate, destination);
@@ -6836,6 +6839,7 @@ function createResources() {
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
+    bootstrapScripts: new Set(),
     scripts: new Set(),
     explicitStylesheetPreloads: new Set(),
     // explicitImagePreloads: new Set(),
@@ -7482,6 +7486,7 @@ function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
     rel: "preload",
     href: src,
     as: "script",
+    fetchPriority: "low",
     nonce: nonce,
     integrity: integrity,
     crossOrigin: crossOrigin
@@ -7493,7 +7498,7 @@ function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
     props: props
   };
   resources.preloadsMap.set(key, resource);
-  resources.explicitScriptPreloads.add(resource);
+  resources.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 } // This function is only safe to call at Request start time since it assumes
 // that each module has not already been preloaded. If we find a need to preload
@@ -7518,6 +7523,7 @@ function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
   var props = {
     rel: "modulepreload",
     href: src,
+    fetchPriority: "low",
     nonce: nonce,
     integrity: integrity,
     crossOrigin: crossOrigin
@@ -7529,7 +7535,7 @@ function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
     props: props
   };
   resources.preloadsMap.set(key, resource);
-  resources.explicitScriptPreloads.add(resource);
+  resources.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
 }

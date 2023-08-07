@@ -3649,6 +3649,10 @@ function flushCompletedQueues(request, destination) {
         resources.fontPreloads.forEach(flushResourceInPreamble, destination);
         resources.fontPreloads.clear();
         resources.precedences.forEach(flushAllStylesInPreamble, destination);
+        resources.bootstrapScripts.forEach(
+          flushResourceInPreamble,
+          destination
+        );
         resources.scripts.forEach(flushResourceInPreamble, destination);
         resources.scripts.clear();
         resources.explicitStylesheetPreloads.forEach(
@@ -3949,6 +3953,7 @@ function renderToStringImpl(
       fontPreloads: new Set(),
       precedences: new Map(),
       stylePrecedences: new Map(),
+      bootstrapScripts: new Set(),
       scripts: new Set(),
       explicitStylesheetPreloads: new Set(),
       explicitScriptPreloads: new Set(),
@@ -4014,4 +4019,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-849751e4";
+exports.version = "18.3.0-www-classic-e05f0ecc";
