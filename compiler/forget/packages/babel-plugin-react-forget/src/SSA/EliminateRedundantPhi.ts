@@ -106,19 +106,20 @@ export function eliminateRedundantPhi(
         for (const place of eachInstructionOperand(instr)) {
           rewritePlace(place, rewrites);
         }
-        if (instr.value.kind === "FunctionExpression") {
+
+        if (
+          instr.value.kind === "FunctionExpression" &&
+          fn.env.enableOptimizeFunctionExpressions
+        ) {
           const { context } = instr.value.loweredFunc;
           for (const place of context) {
             rewritePlace(place, rewrites);
           }
-        }
-        // visit function expressions on first iteration of each block
-        if (
-          isFirstIteration &&
-          instr.value.kind === "FunctionExpression" &&
-          fn.env.enableOptimizeFunctionExpressions
-        ) {
-          eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
+
+          // visit function expressions on first iteration of each block
+          if (isFirstIteration) {
+            eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
+          }
         }
       }
 
