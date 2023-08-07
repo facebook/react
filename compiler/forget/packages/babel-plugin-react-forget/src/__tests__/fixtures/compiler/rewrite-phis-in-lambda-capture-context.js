@@ -1,8 +1,14 @@
-function ConstantPropagationBug() {
-  const x = CONSTANT1;
-  const createPhiNode = CONSTANT2 || 5;
+function Component() {
+  const x = 4;
 
-  const getFoo = () => <Foo x={x} y={createPhiNode} />;
+  const get4 = () => {
+    while (bar()) {
+      if (baz) {
+        bar();
+      }
+    }
+    return () => x;
+  };
 
-  return getFoo();
+  return get4;
 }

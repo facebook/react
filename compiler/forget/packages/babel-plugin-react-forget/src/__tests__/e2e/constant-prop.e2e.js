@@ -96,6 +96,11 @@ test("lambda-constant-propagation-of-phi-node", () => {
     if (constantValue) {
       noopCallback();
     }
+    for (let i = 0; i < 5; i++) {
+      if (!constantValue) {
+        noopCallback();
+      }
+    }
     const getDiv = () => <div>{x}</div>;
     return getDiv();
   }

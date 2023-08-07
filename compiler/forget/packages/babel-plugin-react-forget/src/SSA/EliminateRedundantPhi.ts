@@ -46,7 +46,6 @@ export function eliminateRedundantPhi(
   // compare to see if any new rewrites were added in that iteration.
   let size = rewrites.size;
   do {
-    const isFirstIteration = !hasBackEdge;
     size = rewrites.size;
     for (const [blockId, block] of ir.blocks) {
       // On the first iteration of the loop check for any back-edges.
@@ -116,10 +115,10 @@ export function eliminateRedundantPhi(
             rewritePlace(place, rewrites);
           }
 
-          // visit function expressions on first iteration of each block
-          if (isFirstIteration) {
-            eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
-          }
+          // recursive call to:
+          // - eliminate phi nodes in child node
+          // - propagate rewrites, which may have changed between iterations
+          eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
         }
       }
 

@@ -2,13 +2,19 @@
 ## Input
 
 ```javascript
-function ConstantPropagationBug() {
-  const x = CONSTANT1;
-  const createPhiNode = CONSTANT2 || 5;
+function Component() {
+  const x = 4;
 
-  const getFoo = () => <Foo x={x} y={createPhiNode} />;
+  const get4 = () => {
+    while (bar()) {
+      if (baz) {
+        bar();
+      }
+    }
+    return () => x;
+  };
 
-  return getFoo();
+  return get4;
 }
 
 ```
@@ -17,26 +23,24 @@ function ConstantPropagationBug() {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function ConstantPropagationBug() {
-  const $ = useMemoCache(2);
-
-  const createPhiNode = CONSTANT2 || 5;
+function Component() {
+  const $ = useMemoCache(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => <Foo x={CONSTANT1} y={createPhiNode} />;
+    t0 = () => {
+      while (bar()) {
+        if (baz) {
+          bar();
+        }
+      }
+      return () => 4;
+    };
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const getFoo = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = getFoo();
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
+  const get4 = t0;
+  return get4;
 }
 
 ```
