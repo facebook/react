@@ -186,6 +186,12 @@ export function describeNativeComponentFrame(
                   frame = frame.replace('<anonymous>', fn.displayName);
                 }
 
+                // If component has displayName,
+                // replace name with displayName in errorboundary componentStack
+                if (fn.displayName && fn.name && frame.includes(fn.name)) {
+                  frame = frame.replace(fn.name, fn.displayName);
+                }
+
                 if (__DEV__) {
                   if (typeof fn === 'function') {
                     componentFrameCache.set(fn, frame);
