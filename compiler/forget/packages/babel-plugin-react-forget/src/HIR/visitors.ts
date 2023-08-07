@@ -35,6 +35,11 @@ export function* eachInstructionLValue(
       yield* eachPatternOperand(instr.value.lvalue.pattern);
       break;
     }
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
+      yield instr.value.lvalue;
+      break;
+    }
   }
 }
 
@@ -188,6 +193,11 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
+      yield instrValue.value;
+      break;
+    }
     case "Debugger":
     case "RegExpLiteral":
     case "LoadGlobal":
@@ -303,6 +313,11 @@ export function mapInstructionLValues(
     }
     case "Destructure": {
       mapPatternOperands(instr.value.lvalue.pattern, fn);
+      break;
+    }
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
+      instr.value.lvalue = fn(instr.value.lvalue);
       break;
     }
   }
@@ -460,6 +475,11 @@ export function mapInstructionOperands(
       break;
     }
     case "NextIterableOf": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
       instrValue.value = fn(instrValue.value);
       break;
     }

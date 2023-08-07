@@ -513,6 +513,18 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `Debugger`;
       break;
     }
+    case "PostfixUpdate": {
+      value = `PostfixUpdate ${printPlace(instrValue.lvalue)} = ${printPlace(
+        instrValue.value
+      )} ${instrValue.operation}`;
+      break;
+    }
+    case "PrefixUpdate": {
+      value = `PrefixUpdate ${printPlace(instrValue.lvalue)} = ${
+        instrValue.operation
+      } ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

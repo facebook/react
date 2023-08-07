@@ -237,6 +237,45 @@ function evaluateInstruction(
       }
       return null;
     }
+    case "PostfixUpdate": {
+      const previous = read(constants, value.value);
+      if (
+        previous !== null &&
+        previous.kind === "Primitive" &&
+        typeof previous.value === "number"
+      ) {
+        const next =
+          value.operation === "++" ? previous.value + 1 : previous.value - 1;
+        // Store the updated value
+        constants.set(value.lvalue.identifier.id, {
+          kind: "Primitive",
+          value: next,
+          loc: value.loc,
+        });
+        // But return the value prior to the update
+        return previous;
+      }
+      return null;
+    }
+    case "PrefixUpdate": {
+      const previous = read(constants, value.value);
+      if (
+        previous !== null &&
+        previous.kind === "Primitive" &&
+        typeof previous.value === "number"
+      ) {
+        const next: Primitive = {
+          kind: "Primitive",
+          value:
+            value.operation === "++" ? previous.value + 1 : previous.value - 1,
+          loc: value.loc,
+        };
+        // Store and return the updated value
+        constants.set(value.lvalue.identifier.id, next);
+        return next;
+      }
+      return null;
+    }
     case "BinaryExpression": {
       const lhsValue = read(constants, value.left);
       const rhsValue = read(constants, value.right);

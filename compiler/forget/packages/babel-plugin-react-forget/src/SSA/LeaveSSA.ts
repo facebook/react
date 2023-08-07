@@ -142,6 +142,24 @@ export function leaveSSA(fn: HIRFunction): void {
             place: value.lvalue.place,
           });
         }
+      } else if (
+        value.kind === "PrefixUpdate" ||
+        value.kind === "PostfixUpdate"
+      ) {
+        CompilerError.invariant(value.lvalue.identifier.name !== null, {
+          reason: `Expected update expression to be applied to a named variable`,
+          description: null,
+          loc: value.lvalue.loc,
+          suggestions: null,
+        });
+        const originalLVal = declarations.get(value.lvalue.identifier.name);
+        CompilerError.invariant(originalLVal !== undefined, {
+          reason: `Expected update expression to be applied to a previously defined variable`,
+          description: null,
+          loc: value.lvalue.loc,
+          suggestions: null,
+        });
+        originalLVal.lvalue.kind = InstructionKind.Let;
       } else if (value.kind === "StoreLocal") {
         if (value.lvalue.place.identifier.name != null) {
           const originalLVal = declarations.get(

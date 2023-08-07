@@ -1753,56 +1753,43 @@ function lowerExpression(
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
-      if (expr.node.prefix) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerExpression) Handle prefix UpdateExpression`,
-          severity: ErrorSeverity.Todo,
-          loc: exprPath.node.loc ?? null,
-          suggestions: null,
-        });
-        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
-      }
-      const primitiveTemp = lowerValueToTemporary(builder, {
-        kind: "Primitive",
-        value: 1,
-        loc: expr.node.loc ?? GeneratedSource,
-      });
-      const temp = buildTemporaryPlace(
-        builder,
-        expr.node.loc ?? GeneratedSource
-      );
-      const identifier = lowerIdentifierForAssignment(
+      const lvalue = lowerIdentifierForAssignment(
         builder,
         argument.node.loc ?? GeneratedSource,
         InstructionKind.Reassign,
-        argument as NodePath<t.Identifier>
+        argument
       );
-      if (identifier === null) {
+      if (lvalue === null) {
+        // lowerIdentifierForAssignment should have already reported an error if it returned null,
+        // we check here just in case
+        if (!builder.errors.hasErrors()) {
+          builder.errors.push({
+            reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
+            severity: ErrorSeverity.Invariant,
+            loc: exprLoc,
+            suggestions: null,
+          });
+        }
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
-      builder.push({
-        id: makeInstructionId(0),
-        lvalue: { ...temp },
-        value: {
-          kind: "BinaryExpression",
-          operator: expr.node.operator === "++" ? "+" : "-",
-          left: { ...identifier },
-          right: { ...primitiveTemp },
+      const value = lowerIdentifier(builder, argument);
+      if (expr.node.prefix) {
+        return {
+          kind: "PrefixUpdate",
+          lvalue,
+          operation: expr.node.operator,
+          value,
           loc: exprLoc,
-        },
-        loc: exprLoc,
-      });
-      lowerValueToTemporary(builder, {
-        kind: getStoreKind(builder, argument),
-        lvalue: { place: { ...identifier }, kind: InstructionKind.Reassign },
-        value: { ...temp },
-        loc: exprLoc,
-      });
-      return {
-        kind: "LoadLocal",
-        place: { ...identifier },
-        loc: exprLoc,
-      };
+        };
+      } else {
+        return {
+          kind: "PostfixUpdate",
+          lvalue,
+          operation: expr.node.operator,
+          value,
+          loc: exprLoc,
+        };
+      }
     }
     case "RegExpLiteral": {
       let expr = exprPath as NodePath<t.RegExpLiteral>;

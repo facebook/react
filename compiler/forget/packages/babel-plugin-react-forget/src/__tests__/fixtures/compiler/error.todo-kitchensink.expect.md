@@ -109,10 +109,6 @@ let moduleLocal = false;
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle ForInStatement statements (43:44)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle prefix UpdateExpression (47:47)
-
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle prefix UpdateExpression (48:48)
-
 [ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
 
 [ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)

@@ -20,7 +20,7 @@ function foo(props) {
 function foo(props) {
   let y = 0;
   while (y < props.max) {
-    y = y + 1;
+    y++;
   }
   return y;
 }

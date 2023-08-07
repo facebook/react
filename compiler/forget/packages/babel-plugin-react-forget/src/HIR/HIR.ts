@@ -736,6 +736,26 @@ export type InstructionValue =
       value: Place; // the collection
       loc: SourceLocation;
     }
+  // Models a prefix update expression such as --x or ++y
+  // This instructions increments or decrements the <lvalue>
+  // but evaluates to the value of <value> prior to the update.
+  | {
+      kind: "PrefixUpdate";
+      lvalue: Place;
+      operation: t.UpdateExpression["operator"];
+      value: Place;
+      loc: SourceLocation;
+    }
+  // Models a postfix update expression such as x-- or y++
+  // This instructions increments or decrements the <lvalue>
+  // and evaluates to the value after the update
+  | {
+      kind: "PostfixUpdate";
+      lvalue: Place;
+      operation: t.UpdateExpression["operator"];
+      value: Place;
+      loc: SourceLocation;
+    }
   // `debugger` statement
   | { kind: "Debugger"; loc: SourceLocation }
   /**

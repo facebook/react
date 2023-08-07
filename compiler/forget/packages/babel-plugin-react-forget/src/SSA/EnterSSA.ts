@@ -264,8 +264,8 @@ function enterSSAImpl(
     }
 
     for (const instr of block.instructions) {
-      mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
       mapInstructionOperands(instr, (place) => builder.getPlace(place));
+      mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
 
       if (
         instr.value.kind === "FunctionExpression" &&

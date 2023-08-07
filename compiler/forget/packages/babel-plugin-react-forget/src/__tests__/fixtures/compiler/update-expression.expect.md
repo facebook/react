@@ -18,10 +18,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(props) {
   const $ = useMemoCache(4);
   let x = props.x;
-  x = x + 1;
-  const y = x;
-  x = x - 1;
-  const z = x;
+  const y = x++;
+  const z = x--;
   const c_0 = $[0] !== x;
   const c_1 = $[1] !== y;
   const c_2 = $[2] !== z;

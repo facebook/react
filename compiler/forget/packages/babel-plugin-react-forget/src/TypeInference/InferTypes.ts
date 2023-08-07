@@ -157,6 +157,14 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
+      yield equation(value.value.identifier.type, { kind: "Primitive" });
+      yield equation(value.lvalue.identifier.type, { kind: "Primitive" });
+      yield equation(left, { kind: "Primitive" });
+      break;
+    }
+
     case "LoadGlobal": {
       const globalType = env.getGlobalDeclaration(value.name);
       if (globalType) {

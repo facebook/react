@@ -1125,6 +1125,22 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.value);
       break;
     }
+    case "PostfixUpdate": {
+      value = t.updateExpression(
+        instrValue.operation,
+        codegenPlace(cx, instrValue.lvalue),
+        false
+      );
+      break;
+    }
+    case "PrefixUpdate": {
+      value = t.updateExpression(
+        instrValue.operation,
+        codegenPlace(cx, instrValue.lvalue),
+        true
+      );
+      break;
+    }
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":

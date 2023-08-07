@@ -430,6 +430,8 @@ function computeMemoizationInputs(
         rvalues: value.children,
       };
     }
+    case "PrefixUpdate":
+    case "PostfixUpdate":
     case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":

@@ -190,6 +190,11 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       }
       return true;
     }
+    case "PostfixUpdate":
+    case "PrefixUpdate": {
+      // Updates are pruneable only if the identifier being stored to is never read later
+      return !state.used(value.lvalue.identifier);
+    }
     case "Debugger": {
       // explicitly retain debugger statements to not break debugging workflows
       return false;

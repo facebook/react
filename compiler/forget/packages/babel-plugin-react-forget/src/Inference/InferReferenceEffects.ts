@@ -933,6 +933,26 @@ function inferBlock(
         state.define(instrValue.lvalue.place, instrValue);
         continue;
       }
+      case "PostfixUpdate":
+      case "PrefixUpdate": {
+        const effect =
+          state.isDefined(instrValue.lvalue) &&
+          state.kind(instrValue.lvalue) === ValueKind.Context
+            ? Effect.ConditionallyMutate
+            : Effect.Capture;
+        state.reference(instrValue.value, effect);
+
+        const lvalue = instr.lvalue;
+        state.alias(lvalue, instrValue.value);
+        lvalue.effect = Effect.Store;
+        state.alias(instrValue.lvalue, instrValue.value);
+        // NOTE: *not* using state.reference since this is an assignment.
+        // reference() checks if the effect is valid given the value kind,
+        // but here the previous value kind doesn't matter since we are
+        // replacing it
+        instrValue.lvalue.effect = Effect.Store;
+        continue;
+      }
       case "StoreLocal": {
         const effect =
           state.isDefined(instrValue.lvalue.place) &&
