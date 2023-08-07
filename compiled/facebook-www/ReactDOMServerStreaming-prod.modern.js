@@ -1926,19 +1926,9 @@ function preload(href, options) {
         }),
         resources.preloadsMap.set(key, imageSizes),
         pushLinkImpl(imageSizes.chunks, imageSizes.props));
-      switch (as) {
-        case "font":
-          resources.fontPreloads.add(imageSizes);
-          break;
-        case "style":
-          resources.explicitStylesheetPreloads.add(imageSizes);
-          break;
-        case "script":
-          resources.explicitScriptPreloads.add(imageSizes);
-          break;
-        default:
-          resources.explicitOtherPreloads.add(imageSizes);
-      }
+      "font" === as
+        ? resources.fontPreloads.add(imageSizes)
+        : resources.explicitPreloads.add(imageSizes);
       enqueueFlush(request);
     }
   }
@@ -3415,21 +3405,11 @@ function flushCompletedQueues(request, destination) {
         );
         resources.scripts.forEach(flushResourceInPreamble, destination);
         resources.scripts.clear();
-        resources.explicitStylesheetPreloads.forEach(
+        resources.explicitPreloads.forEach(
           flushResourceInPreamble,
           destination
         );
-        resources.explicitStylesheetPreloads.clear();
-        resources.explicitScriptPreloads.forEach(
-          flushResourceInPreamble,
-          destination
-        );
-        resources.explicitScriptPreloads.clear();
-        resources.explicitOtherPreloads.forEach(
-          flushResourceInPreamble,
-          destination
-        );
-        resources.explicitOtherPreloads.clear();
+        resources.explicitPreloads.clear();
         var preloadChunks = responseState.preloadChunks;
         for (
           _responseState$extern = 0;
@@ -3474,21 +3454,8 @@ function flushCompletedQueues(request, destination) {
     resources$jscomp$0.precedences.forEach(preloadLateStyles, destination);
     resources$jscomp$0.scripts.forEach(flushResourceLate, destination);
     resources$jscomp$0.scripts.clear();
-    resources$jscomp$0.explicitStylesheetPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitStylesheetPreloads.clear();
-    resources$jscomp$0.explicitScriptPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitScriptPreloads.clear();
-    resources$jscomp$0.explicitOtherPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitOtherPreloads.clear();
+    resources$jscomp$0.explicitPreloads.forEach(flushResourceLate, destination);
+    resources$jscomp$0.explicitPreloads.clear();
     var preloadChunks$jscomp$0 = responseState$jscomp$0.preloadChunks;
     for (
       completedRootSegment = 0;
@@ -3825,9 +3792,7 @@ exports.renderToStream = function (children, options) {
       stylePrecedences: new Map(),
       bootstrapScripts: new Set(),
       scripts: new Set(),
-      explicitStylesheetPreloads: new Set(),
-      explicitScriptPreloads: new Set(),
-      explicitOtherPreloads: new Set(),
+      explicitPreloads: new Set(),
       boundaryResources: null
     },
     identifierPrefix = options ? options.identifierPrefix : void 0,

@@ -1877,19 +1877,9 @@ function preload(href, options) {
         }),
         resources.preloadsMap.set(key, imageSizes),
         pushLinkImpl(imageSizes.chunks, imageSizes.props));
-      switch (as) {
-        case "font":
-          resources.fontPreloads.add(imageSizes);
-          break;
-        case "style":
-          resources.explicitStylesheetPreloads.add(imageSizes);
-          break;
-        case "script":
-          resources.explicitScriptPreloads.add(imageSizes);
-          break;
-        default:
-          resources.explicitOtherPreloads.add(imageSizes);
-      }
+      "font" === as
+        ? resources.fontPreloads.add(imageSizes)
+        : resources.explicitPreloads.add(imageSizes);
       enqueueFlush(request);
     }
   }
@@ -3655,21 +3645,11 @@ function flushCompletedQueues(request, destination) {
         );
         resources.scripts.forEach(flushResourceInPreamble, destination);
         resources.scripts.clear();
-        resources.explicitStylesheetPreloads.forEach(
+        resources.explicitPreloads.forEach(
           flushResourceInPreamble,
           destination
         );
-        resources.explicitStylesheetPreloads.clear();
-        resources.explicitScriptPreloads.forEach(
-          flushResourceInPreamble,
-          destination
-        );
-        resources.explicitScriptPreloads.clear();
-        resources.explicitOtherPreloads.forEach(
-          flushResourceInPreamble,
-          destination
-        );
-        resources.explicitOtherPreloads.clear();
+        resources.explicitPreloads.clear();
         var preloadChunks = responseState.preloadChunks;
         for (
           _responseState$extern = 0;
@@ -3714,21 +3694,8 @@ function flushCompletedQueues(request, destination) {
     resources$jscomp$0.precedences.forEach(preloadLateStyles, destination);
     resources$jscomp$0.scripts.forEach(flushResourceLate, destination);
     resources$jscomp$0.scripts.clear();
-    resources$jscomp$0.explicitStylesheetPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitStylesheetPreloads.clear();
-    resources$jscomp$0.explicitScriptPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitScriptPreloads.clear();
-    resources$jscomp$0.explicitOtherPreloads.forEach(
-      flushResourceLate,
-      destination
-    );
-    resources$jscomp$0.explicitOtherPreloads.clear();
+    resources$jscomp$0.explicitPreloads.forEach(flushResourceLate, destination);
+    resources$jscomp$0.explicitPreloads.clear();
     var preloadChunks$jscomp$0 = responseState$jscomp$0.preloadChunks;
     for (
       completedRootSegment = 0;
@@ -3955,9 +3922,7 @@ function renderToStringImpl(
       stylePrecedences: new Map(),
       bootstrapScripts: new Set(),
       scripts: new Set(),
-      explicitStylesheetPreloads: new Set(),
-      explicitScriptPreloads: new Set(),
-      explicitOtherPreloads: new Set(),
+      explicitPreloads: new Set(),
       boundaryResources: null
     };
   children = createRequest(
@@ -4019,4 +3984,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-e05f0ecc";
+exports.version = "18.3.0-www-classic-540364ea";
