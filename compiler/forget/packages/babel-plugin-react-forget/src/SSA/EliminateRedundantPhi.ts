@@ -112,9 +112,6 @@ export function eliminateRedundantPhi(
             rewritePlace(place, rewrites);
           }
         }
-
-        rewritePlace(instr.lvalue, rewrites);
-
         // visit function expressions on first iteration of each block
         if (
           isFirstIteration &&
