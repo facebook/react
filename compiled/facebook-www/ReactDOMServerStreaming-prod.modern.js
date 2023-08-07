@@ -1205,6 +1205,8 @@ function pushStartInstance(
             (target =
               "string" === typeof props.charSet
                 ? pushSelfClosing(responseState.charsetChunks, props, "meta")
+                : "viewport" === props.name
+                ? pushSelfClosing(responseState.preconnectChunks, props, "meta")
                 : pushSelfClosing(
                     responseState.hoistableChunks,
                     props,

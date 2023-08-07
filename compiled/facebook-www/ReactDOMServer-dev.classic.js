@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-ee8ed08d";
+var ReactVersion = "18.3.0-www-classic-8651ccc3";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -4015,6 +4015,9 @@ function pushMeta(
 
       if (typeof props.charSet === "string") {
         return pushSelfClosing(responseState.charsetChunks, props, "meta");
+      } else if (props.name === "viewport") {
+        // "viewport" isn't related to preconnect but it has the right priority
+        return pushSelfClosing(responseState.preconnectChunks, props, "meta");
       } else {
         return pushSelfClosing(responseState.hoistableChunks, props, "meta");
       }
