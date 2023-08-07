@@ -1920,6 +1920,9 @@ function pushMeta(
 
       if (typeof props.charSet === 'string') {
         return pushSelfClosing(responseState.charsetChunks, props, 'meta');
+      } else if (props.name === 'viewport') {
+        // "viewport" isn't related to preconnect but it has the right priority
+        return pushSelfClosing(responseState.preconnectChunks, props, 'meta');
       } else {
         return pushSelfClosing(responseState.hoistableChunks, props, 'meta');
       }
