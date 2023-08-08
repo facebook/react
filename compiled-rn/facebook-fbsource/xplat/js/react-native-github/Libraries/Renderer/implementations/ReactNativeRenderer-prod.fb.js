@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3335b1ac142aefffdb7b1c801c3c37e8>>
+ * @generated SignedSource<<51235cc0d10c7c67758da65bf9e82cd7>>
  */
 
 "use strict";
@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_245 = {
+var injectedNamesToPlugins$jscomp$inline_242 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_245 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_246 = !1,
-  pluginName$jscomp$inline_247;
-for (pluginName$jscomp$inline_247 in injectedNamesToPlugins$jscomp$inline_245)
+  isOrderingDirty$jscomp$inline_243 = !1,
+  pluginName$jscomp$inline_244;
+for (pluginName$jscomp$inline_244 in injectedNamesToPlugins$jscomp$inline_242)
   if (
-    injectedNamesToPlugins$jscomp$inline_245.hasOwnProperty(
-      pluginName$jscomp$inline_247
+    injectedNamesToPlugins$jscomp$inline_242.hasOwnProperty(
+      pluginName$jscomp$inline_244
     )
   ) {
-    var pluginModule$jscomp$inline_248 =
-      injectedNamesToPlugins$jscomp$inline_245[pluginName$jscomp$inline_247];
+    var pluginModule$jscomp$inline_245 =
+      injectedNamesToPlugins$jscomp$inline_242[pluginName$jscomp$inline_244];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_247) ||
-      namesToPlugins[pluginName$jscomp$inline_247] !==
-        pluginModule$jscomp$inline_248
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_244) ||
+      namesToPlugins[pluginName$jscomp$inline_244] !==
+        pluginModule$jscomp$inline_245
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_247])
+      if (namesToPlugins[pluginName$jscomp$inline_244])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_247 + "`.")
+            (pluginName$jscomp$inline_244 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_247] =
-        pluginModule$jscomp$inline_248;
-      isOrderingDirty$jscomp$inline_246 = !0;
+      namesToPlugins[pluginName$jscomp$inline_244] =
+        pluginModule$jscomp$inline_245;
+      isOrderingDirty$jscomp$inline_243 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_246 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_243 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -7740,56 +7740,38 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : 0
   );
   if (0 === lanes) return null;
-  var exitStatus =
-    includesBlockingLane(root, lanes) ||
-    0 !== (lanes & root.expiredLanes) ||
-    didTimeout
-      ? renderRootSync(root, lanes)
-      : renderRootConcurrent(root, lanes);
+  var exitStatus = (didTimeout =
+    !includesBlockingLane(root, lanes) &&
+    0 === (lanes & root.expiredLanes) &&
+    !didTimeout)
+    ? renderRootConcurrent(root, lanes)
+    : renderRootSync(root, lanes);
   if (0 !== exitStatus) {
-    if (2 === exitStatus) {
-      didTimeout = lanes;
-      var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
-        root,
-        didTimeout
-      );
-      0 !== errorRetryLanes &&
-        ((lanes = errorRetryLanes),
-        (exitStatus = recoverFromConcurrentError(
-          root,
-          didTimeout,
-          errorRetryLanes
-        )));
-    }
-    if (1 === exitStatus)
-      throw (
-        ((originalCallbackNode = workInProgressRootFatalError),
-        prepareFreshStack(root, 0),
-        markRootSuspended(root, lanes),
-        ensureRootIsScheduled(root),
-        originalCallbackNode)
-      );
-    if (6 === exitStatus) markRootSuspended(root, lanes);
-    else {
-      errorRetryLanes = !includesBlockingLane(root, lanes);
-      didTimeout = root.current.alternate;
-      if (
-        errorRetryLanes &&
-        !isRenderConsistentWithExternalStores(didTimeout)
-      ) {
-        exitStatus = renderRootSync(root, lanes);
+    var renderWasConcurrent = didTimeout;
+    do {
+      if (6 === exitStatus) markRootSuspended(root, lanes);
+      else {
+        didTimeout = root.current.alternate;
+        if (
+          renderWasConcurrent &&
+          !isRenderConsistentWithExternalStores(didTimeout)
+        ) {
+          exitStatus = renderRootSync(root, lanes);
+          renderWasConcurrent = !1;
+          continue;
+        }
         if (2 === exitStatus) {
-          errorRetryLanes = lanes;
-          var errorRetryLanes$99 = getLanesToRetrySynchronouslyOnError(
+          renderWasConcurrent = lanes;
+          var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
             root,
-            errorRetryLanes
+            renderWasConcurrent
           );
-          0 !== errorRetryLanes$99 &&
-            ((lanes = errorRetryLanes$99),
+          0 !== errorRetryLanes &&
+            ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
-              errorRetryLanes,
-              errorRetryLanes$99
+              renderWasConcurrent,
+              errorRetryLanes
             )));
         }
         if (1 === exitStatus)
@@ -7800,57 +7782,59 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             ensureRootIsScheduled(root),
             originalCallbackNode)
           );
-      }
-      root.finishedWork = didTimeout;
-      root.finishedLanes = lanes;
-      a: {
-        switch (exitStatus) {
-          case 0:
-          case 1:
-            throw Error("Root did not complete. This is a bug in React.");
-          case 4:
-            if ((lanes & 8388480) === lanes) {
-              markRootSuspended(root, lanes);
-              break a;
-            }
-            break;
-          case 2:
-          case 3:
-          case 5:
-            break;
-          default:
-            throw Error("Unknown root exit status.");
-        }
-        if (
-          (lanes & 125829120) === lanes &&
-          (alwaysThrottleRetries || 3 === exitStatus) &&
-          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
-          10 < exitStatus)
-        ) {
-          markRootSuspended(root, lanes);
-          if (0 !== getNextLanes(root, 0)) break a;
-          root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              didTimeout,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes
-            ),
-            exitStatus
+        root.finishedWork = didTimeout;
+        root.finishedLanes = lanes;
+        a: {
+          renderWasConcurrent = root;
+          switch (exitStatus) {
+            case 0:
+            case 1:
+              throw Error("Root did not complete. This is a bug in React.");
+            case 4:
+              if ((lanes & 8388480) === lanes) {
+                markRootSuspended(renderWasConcurrent, lanes);
+                break a;
+              }
+              break;
+            case 2:
+            case 3:
+            case 5:
+              break;
+            default:
+              throw Error("Unknown root exit status.");
+          }
+          if (
+            (lanes & 125829120) === lanes &&
+            (alwaysThrottleRetries || 3 === exitStatus) &&
+            ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
+            10 < exitStatus)
+          ) {
+            markRootSuspended(renderWasConcurrent, lanes);
+            if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
+            renderWasConcurrent.timeoutHandle = scheduleTimeout(
+              commitRootWhenReady.bind(
+                null,
+                renderWasConcurrent,
+                didTimeout,
+                workInProgressRootRecoverableErrors,
+                workInProgressTransitions,
+                lanes
+              ),
+              exitStatus
+            );
+            break a;
+          }
+          commitRootWhenReady(
+            renderWasConcurrent,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
           );
-          break a;
         }
-        commitRootWhenReady(
-          root,
-          didTimeout,
-          workInProgressRootRecoverableErrors,
-          workInProgressTransitions,
-          lanes
-        );
       }
-    }
+      break;
+    } while (1);
   }
   ensureRootIsScheduled(root);
   scheduleTaskForRootDuringMicrotask(root, now());
@@ -8072,8 +8056,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$101) {
-      handleThrow(root, thrownValue$101);
+    } catch (thrownValue$98) {
+      handleThrow(root, thrownValue$98);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -8179,8 +8163,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$103) {
-      handleThrow(root, thrownValue$103);
+    } catch (thrownValue$100) {
+      handleThrow(root, thrownValue$100);
     }
   while (1);
   resetContextDependencies();
@@ -9690,10 +9674,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1098 = {
+  devToolsConfig$jscomp$inline_1095 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-85b40236",
+    version: "18.3.0-canary-37d552e6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9709,11 +9693,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1354 = {
-  bundleType: devToolsConfig$jscomp$inline_1098.bundleType,
-  version: devToolsConfig$jscomp$inline_1098.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1098.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1098.rendererConfig,
+var internals$jscomp$inline_1351 = {
+  bundleType: devToolsConfig$jscomp$inline_1095.bundleType,
+  version: devToolsConfig$jscomp$inline_1095.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1095.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1095.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9729,26 +9713,26 @@ var internals$jscomp$inline_1354 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1098.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1095.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-85b40236"
+  reconcilerVersion: "18.3.0-canary-37d552e6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1355 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1352 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1355.isDisabled &&
-    hook$jscomp$inline_1355.supportsFiber
+    !hook$jscomp$inline_1352.isDisabled &&
+    hook$jscomp$inline_1352.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1355.inject(
-        internals$jscomp$inline_1354
+      (rendererID = hook$jscomp$inline_1352.inject(
+        internals$jscomp$inline_1351
       )),
-        (injectedHook = hook$jscomp$inline_1355);
+        (injectedHook = hook$jscomp$inline_1352);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
