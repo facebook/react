@@ -8128,56 +8128,38 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : 0
   );
   if (0 === lanes) return null;
-  var exitStatus =
-    includesBlockingLane(root, lanes) ||
-    0 !== (lanes & root.expiredLanes) ||
-    (!disableSchedulerTimeoutInWorkLoop && didTimeout)
-      ? renderRootSync(root, lanes)
-      : renderRootConcurrent(root, lanes);
+  var exitStatus = (didTimeout =
+    !includesBlockingLane(root, lanes) &&
+    0 === (lanes & root.expiredLanes) &&
+    (disableSchedulerTimeoutInWorkLoop || !didTimeout))
+    ? renderRootConcurrent(root, lanes)
+    : renderRootSync(root, lanes);
   if (0 !== exitStatus) {
-    if (2 === exitStatus) {
-      didTimeout = lanes;
-      var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
-        root,
-        didTimeout
-      );
-      0 !== errorRetryLanes &&
-        ((lanes = errorRetryLanes),
-        (exitStatus = recoverFromConcurrentError(
-          root,
-          didTimeout,
-          errorRetryLanes
-        )));
-    }
-    if (1 === exitStatus)
-      throw (
-        ((originalCallbackNode = workInProgressRootFatalError),
-        prepareFreshStack(root, 0),
-        markRootSuspended(root, lanes),
-        ensureRootIsScheduled(root),
-        originalCallbackNode)
-      );
-    if (6 === exitStatus) markRootSuspended(root, lanes);
-    else {
-      errorRetryLanes = !includesBlockingLane(root, lanes);
-      didTimeout = root.current.alternate;
-      if (
-        errorRetryLanes &&
-        !isRenderConsistentWithExternalStores(didTimeout)
-      ) {
-        exitStatus = renderRootSync(root, lanes);
+    var renderWasConcurrent = didTimeout;
+    do {
+      if (6 === exitStatus) markRootSuspended(root, lanes);
+      else {
+        didTimeout = root.current.alternate;
+        if (
+          renderWasConcurrent &&
+          !isRenderConsistentWithExternalStores(didTimeout)
+        ) {
+          exitStatus = renderRootSync(root, lanes);
+          renderWasConcurrent = !1;
+          continue;
+        }
         if (2 === exitStatus) {
-          errorRetryLanes = lanes;
-          var errorRetryLanes$126 = getLanesToRetrySynchronouslyOnError(
+          renderWasConcurrent = lanes;
+          var errorRetryLanes = getLanesToRetrySynchronouslyOnError(
             root,
-            errorRetryLanes
+            renderWasConcurrent
           );
-          0 !== errorRetryLanes$126 &&
-            ((lanes = errorRetryLanes$126),
+          0 !== errorRetryLanes &&
+            ((lanes = errorRetryLanes),
             (exitStatus = recoverFromConcurrentError(
               root,
-              errorRetryLanes,
-              errorRetryLanes$126
+              renderWasConcurrent,
+              errorRetryLanes
             )));
         }
         if (1 === exitStatus)
@@ -8188,57 +8170,59 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             ensureRootIsScheduled(root),
             originalCallbackNode)
           );
-      }
-      root.finishedWork = didTimeout;
-      root.finishedLanes = lanes;
-      a: {
-        switch (exitStatus) {
-          case 0:
-          case 1:
-            throw Error(formatProdErrorMessage(345));
-          case 4:
-            if ((lanes & 8388480) === lanes) {
-              markRootSuspended(root, lanes);
-              break a;
-            }
-            break;
-          case 2:
-          case 3:
-          case 5:
-            break;
-          default:
-            throw Error(formatProdErrorMessage(329));
-        }
-        if (
-          (lanes & 125829120) === lanes &&
-          (alwaysThrottleRetries || 3 === exitStatus) &&
-          ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
-          10 < exitStatus)
-        ) {
-          markRootSuspended(root, lanes);
-          if (0 !== getNextLanes(root, 0)) break a;
-          root.timeoutHandle = scheduleTimeout(
-            commitRootWhenReady.bind(
-              null,
-              root,
-              didTimeout,
-              workInProgressRootRecoverableErrors,
-              workInProgressTransitions,
-              lanes
-            ),
-            exitStatus
+        root.finishedWork = didTimeout;
+        root.finishedLanes = lanes;
+        a: {
+          renderWasConcurrent = root;
+          switch (exitStatus) {
+            case 0:
+            case 1:
+              throw Error(formatProdErrorMessage(345));
+            case 4:
+              if ((lanes & 8388480) === lanes) {
+                markRootSuspended(renderWasConcurrent, lanes);
+                break a;
+              }
+              break;
+            case 2:
+            case 3:
+            case 5:
+              break;
+            default:
+              throw Error(formatProdErrorMessage(329));
+          }
+          if (
+            (lanes & 125829120) === lanes &&
+            (alwaysThrottleRetries || 3 === exitStatus) &&
+            ((exitStatus = globalMostRecentFallbackTime + 300 - now()),
+            10 < exitStatus)
+          ) {
+            markRootSuspended(renderWasConcurrent, lanes);
+            if (0 !== getNextLanes(renderWasConcurrent, 0)) break a;
+            renderWasConcurrent.timeoutHandle = scheduleTimeout(
+              commitRootWhenReady.bind(
+                null,
+                renderWasConcurrent,
+                didTimeout,
+                workInProgressRootRecoverableErrors,
+                workInProgressTransitions,
+                lanes
+              ),
+              exitStatus
+            );
+            break a;
+          }
+          commitRootWhenReady(
+            renderWasConcurrent,
+            didTimeout,
+            workInProgressRootRecoverableErrors,
+            workInProgressTransitions,
+            lanes
           );
-          break a;
         }
-        commitRootWhenReady(
-          root,
-          didTimeout,
-          workInProgressRootRecoverableErrors,
-          workInProgressTransitions,
-          lanes
-        );
       }
-    }
+      break;
+    } while (1);
   }
   ensureRootIsScheduled(root);
   scheduleTaskForRootDuringMicrotask(root, now());
@@ -8467,8 +8451,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$128) {
-      handleThrow(root, thrownValue$128);
+    } catch (thrownValue$125) {
+      handleThrow(root, thrownValue$125);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -8573,8 +8557,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$130) {
-      handleThrow(root, thrownValue$130);
+    } catch (thrownValue$127) {
+      handleThrow(root, thrownValue$127);
     }
   while (1);
   resetContextDependencies();
@@ -10105,19 +10089,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1134 = {
+  devToolsConfig$jscomp$inline_1131 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-7dfaef2c",
+    version: "18.3.0-www-classic-5c10ec1e",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1306 = {
-  bundleType: devToolsConfig$jscomp$inline_1134.bundleType,
-  version: devToolsConfig$jscomp$inline_1134.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1134.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1134.rendererConfig,
+var internals$jscomp$inline_1303 = {
+  bundleType: devToolsConfig$jscomp$inline_1131.bundleType,
+  version: devToolsConfig$jscomp$inline_1131.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1131.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1131.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10134,26 +10118,26 @@ var internals$jscomp$inline_1306 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1134.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1131.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-7dfaef2c"
+  reconcilerVersion: "18.3.0-www-classic-5c10ec1e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1307 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1307.isDisabled &&
-    hook$jscomp$inline_1307.supportsFiber
+    !hook$jscomp$inline_1304.isDisabled &&
+    hook$jscomp$inline_1304.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1307.inject(
-        internals$jscomp$inline_1306
+      (rendererID = hook$jscomp$inline_1304.inject(
+        internals$jscomp$inline_1303
       )),
-        (injectedHook = hook$jscomp$inline_1307);
+        (injectedHook = hook$jscomp$inline_1304);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
