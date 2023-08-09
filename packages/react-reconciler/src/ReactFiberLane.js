@@ -27,7 +27,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
-import {clz32} from './clz32';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -532,7 +531,7 @@ export function pickArbitraryLane(lanes: Lanes): Lane {
 }
 
 function pickArbitraryLaneIndex(lanes: Lanes) {
-  return 31 - clz32(lanes);
+  return 31 - Math.clz32(lanes);
 }
 
 function laneToIndex(lane: Lane) {
