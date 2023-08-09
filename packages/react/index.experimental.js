@@ -33,6 +33,7 @@ export {
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_Offscreen,
+  unstable_postpone,
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_SuspenseList,
