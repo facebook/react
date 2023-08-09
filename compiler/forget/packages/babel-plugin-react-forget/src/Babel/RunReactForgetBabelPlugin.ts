@@ -7,11 +7,12 @@
 
 import type * as BabelCore from "@babel/core";
 import { transformFromAstSync } from "@babel/core";
-import * as parser from "@babel/parser";
+import * as BabelParser from "@babel/parser";
+import * as HermesParser from "hermes-parser";
 import invariant from "invariant";
 import prettier from "prettier";
-import ReactForgetBabelPlugin from "./BabelPlugin";
 import type { PluginOptions } from "../Entrypoint";
+import ReactForgetBabelPlugin from "./BabelPlugin";
 
 type ReactForgetBabelPluginResult = {
   ast: BabelCore.BabelFileResult["ast"];
@@ -21,16 +22,26 @@ type ReactForgetBabelPluginResult = {
 
 export function runReactForgetBabelPlugin(
   text: string,
-
   file: string,
   language: "flow" | "typescript",
   options: PluginOptions | null
 ): ReactForgetBabelPluginResult {
-  const ast = parser.parse(text, {
-    sourceFilename: file,
-    plugins: ["jsx", language],
-    sourceType: "module",
-  });
+  let ast;
+  if (language === "flow") {
+    ast = HermesParser.parse(text, {
+      babel: true,
+      flow: "all",
+      sourceFilename: file,
+      sourceType: "module",
+      enableExperimentalComponentSyntax: true,
+    });
+  } else {
+    ast = BabelParser.parse(text, {
+      sourceFilename: file,
+      plugins: ["typescript", "jsx"],
+      sourceType: "module",
+    });
+  }
   const result = transformFromAstSync(ast, text, {
     filename: file,
     highlightCode: false,

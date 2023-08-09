@@ -87,6 +87,13 @@ export type PluginOptions = {
    * Defaults to false
    */
   noEmit: boolean;
+
+  /**
+   * Enable to make Forget only compile components written in ReactScript syntax
+   * and parsed by hermes-parser.
+   *
+   */
+  enableOnlyOnReactScript: boolean;
 };
 
 export type Logger = {
@@ -94,6 +101,7 @@ export type Logger = {
 };
 
 export const defaultOptions: PluginOptions = {
+  enableOnlyOnReactScript: false,
   enableOnlyOnUseForgetDirective: false,
   panicOnBailout: true,
   environment: null,

@@ -16,7 +16,6 @@ function Component(props) {
 ## Code
 
 ```javascript
-// @flow
 function Component(props) {
   const x = foo();
   return x;

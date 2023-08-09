@@ -87,6 +87,7 @@ export async function compile(
 
     // Extract the first line to quickly check for custom test directives
     const firstLine = input.substring(0, input.indexOf("\n"));
+    let language = parseLanguage(firstLine);
 
     let enableOnlyOnUseForgetDirective = false;
     let gating = null;
@@ -100,6 +101,7 @@ export async function compile(
     let validateNoSetStateInRender = true;
     let enableEmitFreeze = null;
     let enableOptimizeFunctionExpressions = true;
+    let enableOnlyOnReactScript = false;
     if (firstLine.indexOf("@forgetDirective") !== -1) {
       enableOnlyOnUseForgetDirective = true;
     }
@@ -145,11 +147,12 @@ export async function compile(
         importSpecifierName: "makeReadOnly",
       };
     }
-
-    const language = parseLanguage(firstLine);
+    if (firstLine.indexOf("@reactScriptDirective") !== -1) {
+      enableOnlyOnReactScript = true;
+      language = "flow";
+    }
 
     code = runReactForgetBabelPlugin(input, basename, language, {
-      enableOnlyOnUseForgetDirective,
       environment: {
         customHooks: new Map([
           [
@@ -174,6 +177,8 @@ export async function compile(
         enableOptimizeFunctionExpressions,
         assertValidMutableRanges: true,
       },
+      enableOnlyOnUseForgetDirective,
+      enableOnlyOnReactScript,
       logger: null,
       gating,
       instrumentForget,

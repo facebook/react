@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/// <reference path="./plugin-syntax-jsx.d.ts" />
+/// <reference path="./types.d.ts" />
 
-import jsx from "@babel/plugin-syntax-jsx";
 import type * as BabelCore from "@babel/core";
+import jsx from "@babel/plugin-syntax-jsx";
 import { compileProgram, parsePluginOptions } from "../Entrypoint";
 
 /**

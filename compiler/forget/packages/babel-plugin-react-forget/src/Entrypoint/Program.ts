@@ -329,6 +329,12 @@ function shouldVisitNode(
   fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
   pass: CompilerPass
 ): boolean {
+  if (pass.opts.enableOnlyOnReactScript) {
+    if (!fn.get("__componentDeclaration")) {
+      return false;
+    }
+  }
+
   if (pass.opts.enableOnlyOnUseForgetDirective) {
     const body = fn.get("body");
     if (!body.isBlockStatement()) {

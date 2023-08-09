@@ -6,3 +6,4 @@
  */
 
 declare module "@babel/plugin-syntax-jsx";
+declare module "hermes-parser";
