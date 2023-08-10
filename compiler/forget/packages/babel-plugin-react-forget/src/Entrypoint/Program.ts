@@ -14,6 +14,7 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { GeneratedSource } from "../HIR";
+import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { getOrInsertDefault } from "../Utils/utils";
 import { addInstrumentForget } from "./Instrumentation";
 import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
@@ -330,9 +331,7 @@ function shouldVisitNode(
   pass: CompilerPass
 ): boolean {
   if (pass.opts.enableOnlyOnReactScript) {
-    // Typescript gets angry about lookup the magic prop
-    let fnAny = fn as any;
-    if (!fnAny.node.__componentDeclaration) {
+    if (!isComponentDeclaration(fn.node)) {
       return false;
     }
   }
