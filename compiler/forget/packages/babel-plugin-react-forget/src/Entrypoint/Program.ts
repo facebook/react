@@ -331,26 +331,17 @@ function shouldVisitNode(
   pass: CompilerPass
 ): boolean {
   if (pass.opts.enableOnlyOnReactScript) {
-    if (!isComponentDeclaration(fn.node)) {
-      return false;
-    }
+    return isComponentDeclaration(fn.node);
   }
 
   if (pass.opts.enableOnlyOnUseForgetDirective) {
     const body = fn.get("body");
-    if (!body.isBlockStatement()) {
-      return false;
-    }
-    if (!hasAnyUseForgetDirectives(body.node.directives)) {
-      return false;
+    if (body.isBlockStatement()) {
+      return hasAnyUseForgetDirectives(body.node.directives);
     }
   }
 
-  if (fn.scope.getProgramParent() !== fn.scope.parent) {
-    return false;
-  }
-
-  return true;
+  return fn.scope.getProgramParent() === fn.scope.parent;
 }
 
 function log(error: CompilerError, filename: string | null): void {
