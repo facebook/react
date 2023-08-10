@@ -5014,7 +5014,7 @@ function getResourceKey(as: string, href: string): string {
   return `[${as}]${href}`;
 }
 
-export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
+function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5073,7 +5073,7 @@ export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   }
 }
 
-export function preconnect(href: string, options?: ?PreconnectOptions) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5136,7 +5136,7 @@ export function preconnect(href: string, options?: ?PreconnectOptions) {
   }
 }
 
-export function preload(href: string, options: PreloadOptions) {
+function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
   }
