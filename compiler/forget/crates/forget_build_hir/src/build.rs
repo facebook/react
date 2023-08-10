@@ -3,8 +3,9 @@ use std::collections::HashSet;
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
-    ExpressionOrSuper, ForInit, ForStatement, Function, IfStatement, JsValue, Literal, Pattern,
-    Statement, VariableDeclarationKind,
+    ExpressionOrSuper, ForInit, ForStatement, Function, FunctionExpression, IfStatement,
+    IntoFunction, JsValue, Literal, Pattern, Statement, VariableDeclaration,
+    VariableDeclarationKind,
 };
 use forget_hir::{
     BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand, InstrIx,
@@ -22,33 +23,18 @@ use crate::error::BuildHIRError;
 ///
 /// Failures generally include nonsensical input (`delete 1`) or syntax
 /// that is not yet supported.
-pub fn build(env: &Environment, fun: Function) -> Result<Box<forget_hir::Function>, Diagnostic> {
+pub fn build(env: &Environment, fun: &Function) -> Result<Box<forget_hir::Function>, Diagnostic> {
     let mut builder = Builder::new(env);
 
-    match fun.body {
-        Some(forget_estree::FunctionBody::BlockStatement(body)) => {
-            lower_block_statement(env, &mut builder, *body)?
-        }
-        Some(forget_estree::FunctionBody::Expression(body)) => {
-            lower_expression(env, &mut builder, body)?;
-        }
-        None => {
-            return Err(Diagnostic::invalid_syntax(
-                BuildHIRError::EmptyFunction,
-                fun.range,
-            ));
-        }
-    }
-
     let mut params = Vec::with_capacity(fun.params.len());
-    for param in fun.params {
+    for param in &fun.params {
         match param {
             Pattern::Identifier(param) => {
                 let identifier = lower_identifier_for_assignment(
                     env,
                     &mut builder,
                     InstructionKind::Let,
-                    *param,
+                    param,
                 )?;
                 params.push(identifier);
             }
@@ -58,6 +44,21 @@ pub fn build(env: &Environment, fun: Function) -> Result<Box<forget_hir::Functio
                     param.range(),
                 ));
             }
+        }
+    }
+
+    match &fun.body {
+        Some(forget_estree::FunctionBody::BlockStatement(body)) => {
+            lower_block_statement(env, &mut builder, body)?
+        }
+        Some(forget_estree::FunctionBody::Expression(body)) => {
+            lower_expression(env, &mut builder, body)?;
+        }
+        None => {
+            return Err(Diagnostic::invalid_syntax(
+                BuildHIRError::EmptyFunction,
+                fun.range,
+            ));
         }
     }
 
@@ -79,7 +80,7 @@ pub fn build(env: &Environment, fun: Function) -> Result<Box<forget_hir::Functio
 
     let body = builder.build()?;
     Ok(Box::new(forget_hir::Function {
-        id: fun.id.map(|id| id.name),
+        id: fun.id.as_ref().map(|id| id.name.clone()),
         body,
         params,
         // TODO: populate context!
@@ -92,9 +93,9 @@ pub fn build(env: &Environment, fun: Function) -> Result<Box<forget_hir::Functio
 fn lower_block_statement(
     env: &Environment,
     builder: &mut Builder,
-    stmt: BlockStatement,
+    stmt: &BlockStatement,
 ) -> Result<(), Diagnostic> {
-    for stmt in stmt.body {
+    for stmt in &stmt.body {
         lower_statement(env, builder, stmt, None)?;
     }
     Ok(())
@@ -105,12 +106,12 @@ fn lower_block_statement(
 fn lower_statement(
     env: &Environment,
     builder: &mut Builder,
-    stmt: Statement,
+    stmt: &Statement,
     label: Option<String>,
 ) -> Result<(), Diagnostic> {
     match stmt {
         Statement::BlockStatement(stmt) => {
-            lower_block_statement(env, builder, *stmt)?;
+            lower_block_statement(env, builder, stmt)?;
         }
         Statement::BreakStatement(stmt) => {
             let block = builder.resolve_break(stmt.label.as_ref())?;
@@ -133,7 +134,7 @@ fn lower_statement(
             );
         }
         Statement::ReturnStatement(stmt) => {
-            let ix = match stmt.argument {
+            let ix = match &stmt.argument {
                 Some(argument) => lower_expression(env, builder, argument)?,
                 None => builder.push(InstructionValue::Primitive(forget_hir::Primitive {
                     value: PrimitiveValue::Undefined,
@@ -147,82 +148,21 @@ fn lower_statement(
             );
         }
         Statement::ExpressionStatement(stmt) => {
-            lower_expression(env, builder, stmt.expression)?;
+            lower_expression(env, builder, &stmt.expression)?;
         }
         Statement::EmptyStatement(_) => {
             // no-op
         }
         Statement::VariableDeclaration(stmt) => {
-            let kind = match stmt.kind {
-                VariableDeclarationKind::Const => InstructionKind::Const,
-                VariableDeclarationKind::Let => InstructionKind::Let,
-                VariableDeclarationKind::Var => {
-                    return Err(Diagnostic::unsupported(
-                        BuildHIRError::VariableDeclarationKindIsVar,
-                        stmt.range,
-                    ));
-                }
-            };
-            for declaration in stmt.declarations {
-                if let Some(init) = declaration.init {
-                    let value = lower_expression(env, builder, init)?;
-                    lower_assignment(
-                        env,
-                        builder,
-                        kind,
-                        AssignmentTarget::Pattern(declaration.id.into()),
-                        value,
-                    )?;
-                } else {
-                    match declaration.id {
-                        Pattern::Identifier(id) => {
-                            // TODO: handle unbound variables
-                            let binding = builder.resolve_identifier(&id)?;
-                            let identifier = match binding {
-                                Binding::Local(identifier) => identifier,
-                                _ => {
-                                    return Err(Diagnostic::invariant(
-                                        BuildHIRError::VariableDeclarationBindingIsNonLocal,
-                                        id.range,
-                                    ));
-                                }
-                            };
-                            builder.push(InstructionValue::DeclareLocal(
-                                forget_hir::DeclareLocal {
-                                    lvalue: LValue {
-                                        identifier: IdentifierOperand {
-                                            identifier,
-                                            effect: None,
-                                        },
-                                        kind,
-                                    },
-                                },
-                            ));
-                        }
-                        _ => {
-                            return Err(Diagnostic::todo(
-                                "Handle non-identifier variable declarations",
-                                declaration.range,
-                            ));
-                        }
-                    }
-                }
-            }
+            lower_variable_declaration(env, builder, stmt)?;
         }
         Statement::IfStatement(stmt) => {
             // block for what follows the if statement, though this may
             // not be reachable
             let fallthrough_block = builder.reserve(BlockKind::Block);
 
-            let IfStatement {
-                test,
-                consequent,
-                alternate,
-                ..
-            } = *stmt;
-
             let consequent_block = builder.enter(BlockKind::Block, |builder| {
-                lower_statement(env, builder, consequent, None)?;
+                lower_statement(env, builder, &stmt.consequent, None)?;
                 Ok(TerminalValue::Goto(forget_hir::GotoTerminal {
                     block: fallthrough_block.id,
                     kind: GotoKind::Break,
@@ -230,7 +170,7 @@ fn lower_statement(
             })?;
 
             let alternate_block = builder.enter(BlockKind::Block, |builder| {
-                if let Some(alternate) = alternate {
+                if let Some(alternate) = &stmt.alternate {
                     lower_statement(env, builder, alternate, None)?;
                 }
                 Ok(TerminalValue::Goto(forget_hir::GotoTerminal {
@@ -239,7 +179,7 @@ fn lower_statement(
                 }))
             })?;
 
-            let test = lower_expression(env, builder, test)?;
+            let test = lower_expression(env, builder, &stmt.test)?;
             let terminal = TerminalValue::If(forget_hir::IfTerminal {
                 test: Operand {
                     ix: test,
@@ -252,14 +192,6 @@ fn lower_statement(
             builder.terminate_with_fallthrough(terminal, fallthrough_block);
         }
         Statement::ForStatement(stmt) => {
-            let ForStatement {
-                init,
-                test,
-                update,
-                body,
-                ..
-            } = *stmt;
-
             // Block for the loop's test condition
             let test_block = builder.reserve(BlockKind::Loop);
 
@@ -267,8 +199,8 @@ fn lower_statement(
             let fallthrough_block = builder.reserve(BlockKind::Block);
 
             let init_block = builder.enter(BlockKind::Loop, |builder| {
-                if let Some(ForInit::VariableDeclaration(decl)) = init {
-                    lower_statement(env, builder, Statement::VariableDeclaration(decl), None)?;
+                if let Some(ForInit::VariableDeclaration(decl)) = &stmt.init {
+                    lower_variable_declaration(env, builder, decl)?;
                     Ok(TerminalValue::Goto(forget_hir::GotoTerminal {
                         block: test_block.id,
                         kind: GotoKind::Break,
@@ -281,7 +213,9 @@ fn lower_statement(
                 }
             })?;
 
-            let update_block = update
+            let update_block = stmt
+                .update
+                .as_ref()
                 .map(|update| {
                     builder.enter(BlockKind::Loop, |builder| {
                         lower_expression(env, builder, update)?;
@@ -300,7 +234,7 @@ fn lower_statement(
                     break_block: fallthrough_block.id,
                 };
                 builder.enter_loop(loop_, |builder| {
-                    lower_statement(env, builder, body, None)?;
+                    lower_statement(env, builder, &stmt.body, None)?;
                     Ok(TerminalValue::Goto(forget_hir::GotoTerminal {
                         block: update_block.unwrap_or(test_block.id),
                         kind: GotoKind::Continue,
@@ -317,7 +251,7 @@ fn lower_statement(
             });
             builder.terminate_with_fallthrough(terminal, test_block);
 
-            if let Some(test) = test {
+            if let Some(test) = &stmt.test {
                 let test_value = lower_expression(env, builder, test)?;
                 let terminal = TerminalValue::Branch(BranchTerminal {
                     test: Operand {
@@ -340,6 +274,58 @@ fn lower_statement(
     Ok(())
 }
 
+fn lower_variable_declaration(
+    env: &Environment,
+    builder: &mut Builder,
+    stmt: &VariableDeclaration,
+) -> Result<(), Diagnostic> {
+    let kind = match stmt.kind {
+        VariableDeclarationKind::Const => InstructionKind::Const,
+        VariableDeclarationKind::Let => InstructionKind::Let,
+        VariableDeclarationKind::Var => {
+            return Err(Diagnostic::unsupported(
+                BuildHIRError::VariableDeclarationKindIsVar,
+                stmt.range,
+            ));
+        }
+    };
+    for declaration in &stmt.declarations {
+        if let Some(init) = &declaration.init {
+            let value = lower_expression(env, builder, init)?;
+            lower_assignment_pattern(env, builder, kind, &declaration.id, value)?;
+        } else {
+            match &declaration.id {
+                Pattern::Identifier(id) => {
+                    let identifier = env.resolve_variable_declaration(id.as_ref(), &id.name);
+                    if let Some(identifier) = identifier {
+                        builder.push(InstructionValue::DeclareLocal(forget_hir::DeclareLocal {
+                            lvalue: LValue {
+                                identifier: IdentifierOperand {
+                                    identifier,
+                                    effect: None,
+                                },
+                                kind,
+                            },
+                        }));
+                    } else {
+                        return Err(Diagnostic::invariant(
+                            BuildHIRError::VariableDeclarationBindingIsNonLocal,
+                            id.range,
+                        ));
+                    }
+                }
+                _ => {
+                    return Err(Diagnostic::todo(
+                        "Handle non-identifier variable declarations",
+                        declaration.range,
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Converts an ESTree Expression into an HIR InstructionValue. Note that while only a single
 /// InstructionValue is returned, this function is recursive and may cause multiple instructions
 /// to be emitted, possibly across multiple basic blocks (in the case of expressions with control
@@ -347,35 +333,33 @@ fn lower_statement(
 fn lower_expression(
     env: &Environment,
     builder: &mut Builder,
-    expr: Expression,
+    expr: &Expression,
 ) -> Result<InstrIx, Diagnostic> {
     let value = match expr {
         Expression::Identifier(expr) => {
-            // TODO: handle unbound variables
-            let binding = builder.resolve_identifier(&expr)?;
-            match binding {
-                Binding::Local(identifier) => {
-                    let place = IdentifierOperand {
-                        effect: None,
-                        identifier,
-                    };
-                    InstructionValue::LoadLocal(LoadLocal { place })
-                }
-                Binding::Module(..) | Binding::Global => {
-                    InstructionValue::LoadGlobal(LoadGlobal { name: expr.name })
-                }
+            let identifier = env.resolve_variable_reference(expr.as_ref());
+            if let Some(identifier) = identifier {
+                let place = IdentifierOperand {
+                    effect: None,
+                    identifier,
+                };
+                InstructionValue::LoadLocal(LoadLocal { place })
+            } else {
+                InstructionValue::LoadGlobal(LoadGlobal {
+                    name: expr.name.clone(),
+                })
             }
         }
         Expression::Literal(expr) => InstructionValue::Primitive(forget_hir::Primitive {
-            value: lower_primitive(env, builder, *expr),
+            value: lower_primitive(env, builder, expr),
         }),
         Expression::ArrayExpression(expr) => {
             let mut elements = Vec::with_capacity(expr.elements.len());
-            for expr in expr.elements {
+            for expr in &expr.elements {
                 let element = match expr {
                     Some(forget_estree::ExpressionOrSpread::SpreadElement(expr)) => {
                         Some(PlaceOrSpread::Spread(Operand {
-                            ix: lower_expression(env, builder, expr.argument)?,
+                            ix: lower_expression(env, builder, &expr.argument)?,
                             effect: None,
                         }))
                     }
@@ -394,12 +378,12 @@ fn lower_expression(
 
         Expression::AssignmentExpression(expr) => match expr.operator {
             forget_estree::AssignmentOperator::Equals => {
-                let right = lower_expression(env, builder, expr.right)?;
+                let right = lower_expression(env, builder, &expr.right)?;
                 return Ok(lower_assignment(
                     env,
                     builder,
                     InstructionKind::Reassign,
-                    expr.left,
+                    &expr.left,
                     right,
                 )?);
             }
@@ -407,20 +391,14 @@ fn lower_expression(
         },
 
         Expression::BinaryExpression(expr) => {
-            let BinaryExpression {
-                left,
-                operator,
-                right,
-                ..
-            } = *expr;
-            let left = lower_expression(env, builder, left)?;
-            let right = lower_expression(env, builder, right)?;
+            let left = lower_expression(env, builder, &expr.left)?;
+            let right = lower_expression(env, builder, &expr.right)?;
             InstructionValue::Binary(forget_hir::Binary {
                 left: Operand {
                     ix: left,
                     effect: None,
                 },
-                operator,
+                operator: expr.operator,
                 right: Operand {
                     ix: right,
                     effect: None,
@@ -429,15 +407,15 @@ fn lower_expression(
         }
 
         Expression::FunctionExpression(expr) => {
-            InstructionValue::Function(lower_function(env, builder, expr.function)?)
+            InstructionValue::Function(lower_function(env, builder, expr.as_ref())?)
         }
 
         Expression::ArrowFunctionExpression(expr) => {
-            InstructionValue::Function(lower_function(env, builder, expr.function)?)
+            InstructionValue::Function(lower_function(env, builder, expr.as_ref())?)
         }
 
         Expression::CallExpression(expr) => {
-            let callee_expr = match expr.callee {
+            let callee_expr = match &expr.callee {
                 ExpressionOrSuper::Super(callee) => {
                     return Err(Diagnostic::unsupported(
                         BuildHIRError::UnsupportedSuperExpression,
@@ -451,8 +429,8 @@ fn lower_expression(
                 return Err(Diagnostic::todo("Support method calls", expr.range));
             }
 
-            let callee = lower_expression(env, builder, callee_expr)?;
-            let arguments = lower_arguments(env, builder, expr.arguments)?;
+            let callee = lower_expression(env, builder, &callee_expr)?;
+            let arguments = lower_arguments(env, builder, &expr.arguments)?;
             InstructionValue::Call(forget_hir::Call {
                 callee: Operand {
                     ix: callee,
@@ -463,7 +441,7 @@ fn lower_expression(
         }
 
         Expression::JSXElement(expr) => {
-            InstructionValue::JSXElement(lower_jsx_element(env, builder, *expr)?)
+            InstructionValue::JSXElement(lower_jsx_element(env, builder, expr)?)
         }
 
         _ => todo!("Lower expr {expr:#?}"),
@@ -474,14 +452,14 @@ fn lower_expression(
 fn lower_arguments(
     env: &Environment,
     builder: &mut Builder,
-    args: Vec<ExpressionOrSpread>,
+    args: &[ExpressionOrSpread],
 ) -> Result<Vec<PlaceOrSpread>, Diagnostic> {
     let mut arguments = Vec::with_capacity(args.len());
     for arg in args {
         let element = match arg {
             forget_estree::ExpressionOrSpread::SpreadElement(arg) => {
                 PlaceOrSpread::Spread(Operand {
-                    ix: lower_expression(env, builder, arg.argument)?,
+                    ix: lower_expression(env, builder, &arg.argument)?,
                     effect: None,
                 })
             }
@@ -495,31 +473,28 @@ fn lower_arguments(
     Ok(arguments)
 }
 
-fn lower_function(
+fn lower_function<T: IntoFunction>(
     env: &Environment,
-    builder: &mut Builder,
-    function: forget_estree::Function,
+    _builder: &mut Builder,
+    function: &T,
 ) -> Result<forget_hir::FunctionExpression, Diagnostic> {
     println!("get_context_identifiers() ...");
-    let context_identifiers = get_context_identifiers(env, &function);
+    let context_identifiers = get_context_identifiers(env, function);
     println!("ok");
     let mut context = Vec::new();
     let mut seen = HashSet::new();
-    for identifier in context_identifiers {
-        match builder.resolve_identifier(identifier)? {
-            Binding::Local(identifier) => {
-                if !seen.insert(identifier.id) {
-                    continue;
-                }
-                context.push(IdentifierOperand {
-                    effect: None,
-                    identifier,
-                });
+    for declaration_id in context_identifiers {
+        if let Some(identifier) = env.resolve_declaration_id(declaration_id) {
+            if !seen.insert(identifier.id) {
+                continue;
             }
-            _ => {}
+            context.push(IdentifierOperand {
+                effect: None,
+                identifier,
+            });
         }
     }
-    let mut fun = build(env, function)?;
+    let mut fun = build(env, function.function())?;
     fun.context = context;
     Ok(forget_hir::FunctionExpression {
         // TODO: collect dependencies!
@@ -531,18 +506,18 @@ fn lower_function(
 fn lower_jsx_element(
     env: &Environment,
     builder: &mut Builder,
-    expr: forget_estree::JSXElement,
+    expr: &forget_estree::JSXElement,
 ) -> Result<JSXElement, Diagnostic> {
     let props: Result<Vec<JSXAttribute>, Diagnostic> = expr
         .opening_element
         .attributes
-        .into_iter()
+        .iter()
         .map(|attr| lower_jsx_attribute(env, builder, attr))
         .collect();
     let props = props?;
     let children: Result<Vec<Operand>, Diagnostic> = expr
         .children
-        .into_iter()
+        .iter()
         .map(|child| {
             let ix = lower_jsx_child(env, builder, child)?;
             Ok(Operand { effect: None, ix })
@@ -564,7 +539,7 @@ fn lower_jsx_element(
 fn lower_jsx_attribute(
     env: &Environment,
     builder: &mut Builder,
-    attr: forget_estree::JSXAttributeOrSpread,
+    attr: &forget_estree::JSXAttributeOrSpread,
 ) -> Result<JSXAttribute, Diagnostic> {
     todo!("lower jsx attribute")
 }
@@ -572,7 +547,7 @@ fn lower_jsx_attribute(
 fn lower_jsx_child(
     env: &Environment,
     builder: &mut Builder,
-    child: forget_estree::JSXChildItem,
+    child: &forget_estree::JSXChildItem,
 ) -> Result<InstrIx, Diagnostic> {
     todo!("lower jsx child")
 }
@@ -581,57 +556,83 @@ fn lower_assignment(
     env: &Environment,
     builder: &mut Builder,
     kind: InstructionKind,
-    lvalue: AssignmentTarget,
+    lvalue: &AssignmentTarget,
     value: InstrIx,
 ) -> Result<InstrIx, Diagnostic> {
     Ok(match lvalue {
-        AssignmentTarget::Pattern(lvalue) => match lvalue {
-            Pattern::Identifier(lvalue) => {
-                let identifier = lower_identifier_for_assignment(env, builder, kind, *lvalue)?;
-                builder.push(InstructionValue::StoreLocal(forget_hir::StoreLocal {
-                    lvalue: LValue { identifier, kind },
-                    value: Operand {
-                        ix: value,
-                        effect: None,
-                    },
-                }))
-            }
-            _ => todo!("lower assignment pattern for {:#?}", lvalue),
-        },
+        AssignmentTarget::Pattern(lvalue) => {
+            lower_assignment_pattern(env, builder, kind, lvalue, value)?
+        }
         _ => todo!("lower assignment for {:#?}", lvalue),
     })
 }
 
-fn lower_identifier_for_assignment(
-    _env: &Environment,
+fn lower_assignment_pattern(
+    env: &Environment,
     builder: &mut Builder,
-    _kind: InstructionKind,
-    identifier: forget_estree::Identifier,
+    kind: InstructionKind,
+    lvalue: &Pattern,
+    value: InstrIx,
+) -> Result<InstrIx, Diagnostic> {
+    Ok(match lvalue {
+        Pattern::Identifier(lvalue) => {
+            let identifier = lower_identifier_for_assignment(env, builder, kind, lvalue)?;
+            builder.push(InstructionValue::StoreLocal(forget_hir::StoreLocal {
+                lvalue: LValue { identifier, kind },
+                value: Operand {
+                    ix: value,
+                    effect: None,
+                },
+            }))
+        }
+        _ => todo!("lower assignment pattern for {:#?}", lvalue),
+    })
+}
+
+fn lower_identifier_for_assignment(
+    env: &Environment,
+    builder: &mut Builder,
+    kind: InstructionKind,
+    node: &forget_estree::Identifier,
 ) -> Result<IdentifierOperand, Diagnostic> {
-    let binding = builder.resolve_identifier(&identifier)?;
-    match binding {
-        Binding::Module(..) | Binding::Global => Err(Diagnostic::invalid_react(
-            BuildHIRError::ReassignedGlobal,
-            identifier.range,
-        )
-        .annotate(
-            format!("Cannot reassign `{}`", &identifier.name),
-            identifier.range,
-        )),
-        Binding::Local(id) => Ok(IdentifierOperand {
-            identifier: id,
-            effect: None,
-        }),
+    match kind {
+        InstructionKind::Reassign => {
+            let identifier = env.resolve_variable_reference(node);
+            if let Some(identifier) = identifier {
+                Ok(IdentifierOperand {
+                    identifier,
+                    effect: None,
+                })
+            } else {
+                // Reassigning a global
+                Err(
+                    Diagnostic::invalid_react(BuildHIRError::ReassignedGlobal, node.range)
+                        .annotate(format!("Cannot reassign `{}`", &node.name), node.range),
+                )
+            }
+        }
+        _ => {
+            // Declaration
+            let identifier = env.resolve_variable_declaration(node, &node.name).unwrap();
+            Ok(IdentifierOperand {
+                identifier,
+                effect: None,
+            })
+        }
     }
 }
 
 /// Converts an ESTree literal into a HIR primitive
-fn lower_primitive(_env: &Environment, _builder: &mut Builder, literal: Literal) -> PrimitiveValue {
-    match literal.value {
-        JsValue::Bool(bool) => PrimitiveValue::Boolean(bool),
+fn lower_primitive(
+    _env: &Environment,
+    _builder: &mut Builder,
+    literal: &Literal,
+) -> PrimitiveValue {
+    match &literal.value {
+        JsValue::Bool(bool) => PrimitiveValue::Boolean(*bool),
         JsValue::Null => PrimitiveValue::Null,
-        JsValue::Number(value) => PrimitiveValue::Number(f64::from(value).into()),
-        JsValue::String(s) => PrimitiveValue::String(s),
+        JsValue::Number(value) => PrimitiveValue::Number(f64::from(*value).into()),
+        JsValue::String(s) => PrimitiveValue::String(s.clone()),
         _ => todo!("Lower literal {literal:#?}"),
     }
 }

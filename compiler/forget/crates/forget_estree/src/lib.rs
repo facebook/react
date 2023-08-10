@@ -7,7 +7,7 @@ mod visit;
 
 pub use binding::{Binding, BindingId};
 pub use generated::*;
-pub use generated_extensions::ESTreeNode;
+pub use generated_extensions::*;
 pub use js_value::{JsValue, Number};
 pub use range::SourceRange;
 pub use visit::*;

@@ -18,4 +18,5 @@ indexmap = { workspace = true }
 serde = { workspace = true }
 forget_utils = { workspace = true }
 forget_diagnostics = { workspace = true }
+forget_semantic_analysis = { workspace = true }
 thiserror = { workspace = true }

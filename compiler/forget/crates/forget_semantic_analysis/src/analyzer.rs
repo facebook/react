@@ -1,8 +1,9 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
-    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, JSXElementName,
-    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor,
+    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, IntoFunction,
+    JSXElementName, Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind,
+    Visitor,
 };
 
 use crate::{AstNode, DeclarationKind, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager};
@@ -48,8 +49,9 @@ impl Analyzer {
         self.current = scope.parent.unwrap();
     }
 
-    fn visit_function(&mut self, function: &Function) {
-        self.enter(ScopeKind::Function, |visitor| {
+    fn visit_function<T: IntoFunction>(&mut self, node: &T) {
+        let function = node.function();
+        let scope = self.enter(ScopeKind::Function, |visitor| {
             for param in &function.params {
                 // `this` parameters don't declare variables, nor can they have
                 // default values
@@ -80,6 +82,9 @@ impl Analyzer {
                 }
             }
         });
+        self.manager
+            .node_scopes
+            .insert(AstNode::from(function), scope);
     }
 
     fn visit_reference_identifier(
@@ -230,7 +235,7 @@ impl Visitor for Analyzer {
                 .node_declarations
                 .insert(AstNode::from(id), declaration);
         }
-        Analyzer::visit_function(self, &ast.function);
+        Analyzer::visit_function(self, ast);
     }
 
     fn visit_function_expression(&mut self, ast: &forget_estree::FunctionExpression) {
@@ -247,14 +252,14 @@ impl Visitor for Analyzer {
                 .insert(AstNode::from(id), declaration);
         }
 
-        Analyzer::visit_function(self, &ast.function);
+        Analyzer::visit_function(self, ast);
         if let Some(function_scope) = function_scope {
             self.close_scope(function_scope);
         }
     }
 
     fn visit_arrow_function_expression(&mut self, ast: &forget_estree::ArrowFunctionExpression) {
-        Analyzer::visit_function(self, &ast.function);
+        Analyzer::visit_function(self, ast);
     }
 
     fn visit_assignment_expression(&mut self, ast: &forget_estree::AssignmentExpression) {

@@ -1,10 +1,84 @@
 use indexmap::IndexMap;
 
-use crate::{Declaration, Label, Reference, Scope, ScopeManager};
+use crate::{
+    Declaration, DeclarationId, DeclarationKind, Label, Reference, ReferenceId, ReferenceKind,
+    Scope, ScopeId, ScopeKind, ScopeManager,
+};
 
+#[derive(Clone, Copy)]
 pub struct ScopeView<'m> {
     pub(crate) manager: &'m ScopeManager,
     pub(crate) scope: &'m Scope,
+}
+
+impl<'m> ScopeView<'m> {
+    pub fn id(&self) -> ScopeId {
+        self.scope.id
+    }
+
+    pub fn kind(&self) -> ScopeKind {
+        self.scope.kind
+    }
+
+    pub fn parent(&self) -> Option<ScopeView<'m>> {
+        self.scope.parent.map(|id| {
+            let scope = self.manager.scope(id);
+            ScopeView {
+                manager: &self.manager,
+                scope,
+            }
+        })
+    }
+
+    pub fn declarations(&self) -> Vec<DeclarationView<'m>> {
+        self.scope
+            .declarations
+            .values()
+            .cloned()
+            .map(|id| {
+                let declaration = self.manager.declaration(id);
+                DeclarationView {
+                    manager: &self.manager,
+                    declaration,
+                }
+            })
+            .collect()
+    }
+
+    pub fn references(&self) -> Vec<ReferenceView<'m>> {
+        self.scope
+            .references
+            .iter()
+            .cloned()
+            .map(|id| {
+                let reference = self.manager.reference(id);
+                ReferenceView {
+                    manager: &self.manager,
+                    reference,
+                }
+            })
+            .collect()
+    }
+
+    pub fn children(&self) -> Vec<ScopeView<'m>> {
+        self.scope
+            .children
+            .iter()
+            .cloned()
+            .map(|id| {
+                let scope = self.manager.scope(id);
+                ScopeView {
+                    manager: &self.manager,
+                    scope,
+                }
+            })
+            .collect()
+    }
+
+    pub fn is_descendant_of(&self, maybe_ancestor: Self) -> bool {
+        self.manager
+            .is_descendant_of(self.scope.id, maybe_ancestor.scope.id)
+    }
 }
 
 impl<'m> std::fmt::Debug for ScopeView<'m> {
@@ -66,9 +140,10 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct LabelView<'m> {
-    manager: &'m ScopeManager,
-    label: &'m Label,
+    pub(crate) manager: &'m ScopeManager,
+    pub(crate) label: &'m Label,
 }
 
 impl<'m> std::fmt::Debug for LabelView<'m> {
@@ -81,9 +156,32 @@ impl<'m> std::fmt::Debug for LabelView<'m> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct DeclarationView<'m> {
-    manager: &'m ScopeManager,
-    declaration: &'m Declaration,
+    pub(crate) manager: &'m ScopeManager,
+    pub(crate) declaration: &'m Declaration,
+}
+
+impl<'m> DeclarationView<'m> {
+    pub fn id(&self) -> DeclarationId {
+        self.declaration.id
+    }
+
+    pub fn name(&self) -> &str {
+        &self.declaration.name
+    }
+
+    pub fn kind(&self) -> DeclarationKind {
+        self.declaration.kind
+    }
+
+    pub fn scope(&self) -> ScopeView<'m> {
+        let scope = self.manager.scope(self.declaration.scope);
+        ScopeView {
+            manager: &self.manager,
+            scope,
+        }
+    }
 }
 
 impl<'m> std::fmt::Debug for DeclarationView<'m> {
@@ -96,9 +194,36 @@ impl<'m> std::fmt::Debug for DeclarationView<'m> {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct ReferenceView<'m> {
-    manager: &'m ScopeManager,
-    reference: &'m Reference,
+    pub(crate) manager: &'m ScopeManager,
+    pub(crate) reference: &'m Reference,
+}
+
+impl<'m> ReferenceView<'m> {
+    pub fn id(&self) -> ReferenceId {
+        self.reference.id
+    }
+
+    pub fn kind(&self) -> ReferenceKind {
+        self.reference.kind
+    }
+
+    pub fn scope(&self) -> ScopeView<'m> {
+        let scope = self.manager.scope(self.reference.scope);
+        ScopeView {
+            manager: &self.manager,
+            scope,
+        }
+    }
+
+    pub fn declaration(&self) -> DeclarationView<'m> {
+        let declaration = self.manager.declaration(self.reference.declaration);
+        DeclarationView {
+            manager: &self.manager,
+            declaration,
+        }
+    }
 }
 
 impl<'m> std::fmt::Debug for ReferenceView<'m> {

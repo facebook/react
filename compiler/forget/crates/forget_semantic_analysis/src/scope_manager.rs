@@ -1,12 +1,11 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    BreakStatement, ContinueStatement, ESTreeNode, Identifier, LabeledStatement,
-    VariableDeclarationKind,
+    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, VariableDeclarationKind,
 };
 use forget_utils::PointerAddress;
 use indexmap::IndexMap;
 
-use crate::scope_view::ScopeView;
+use crate::scope_view::{DeclarationView, ReferenceView, ScopeView};
 
 pub struct ScopeManager {
     root: ScopeId,
@@ -24,6 +23,12 @@ pub struct ScopeManager {
     pub(crate) node_declarations: IndexMap<AstNode, DeclarationId>,
     pub(crate) node_references: IndexMap<AstNode, ReferenceId>,
     pub(crate) diagnostics: Vec<Diagnostic>,
+}
+
+impl std::fmt::Debug for ScopeManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&self.debug(), f)
+    }
 }
 
 impl ScopeManager {
@@ -71,6 +76,21 @@ impl ScopeManager {
         &self.scopes[id.0]
     }
 
+    pub fn is_descendant_of(&self, maybe_descendant: ScopeId, maybe_ancestor: ScopeId) -> bool {
+        let mut current = maybe_descendant;
+        loop {
+            if current == maybe_ancestor {
+                return true;
+            }
+            let scope = self.scope(current);
+            if let Some(parent) = scope.parent {
+                current = parent;
+            } else {
+                return false;
+            }
+        }
+    }
+
     pub fn label(&self, id: LabelId) -> &Label {
         &self.labels[id.0]
     }
@@ -87,6 +107,15 @@ impl ScopeManager {
         self.node_scopes
             .get(&AstNode::from(node))
             .map(|id| &self.scopes[id.0])
+    }
+
+    pub fn node_scope_view<T: ESTreeNode>(&self, node: &T) -> Option<ScopeView<'_>> {
+        self.node_scopes
+            .get(&AstNode::from(node))
+            .map(|id| ScopeView {
+                manager: self,
+                scope: &self.scopes[id.0],
+            })
     }
 
     pub fn node_label(&self, node: &LabeledStatement) -> Option<&Label> {
@@ -107,16 +136,34 @@ impl ScopeManager {
             .map(|id| &self.labels[id.0])
     }
 
-    pub fn node_declaration(&self, node: &Identifier) -> Option<&Declaration> {
+    pub fn node_declaration<T: ESTreeNode>(&self, node: &T) -> Option<&Declaration> {
         self.node_declarations
             .get(&AstNode::from(node))
             .map(|id| &self.declarations[id.0])
     }
 
-    pub fn node_reference(&self, node: &Identifier) -> Option<&Reference> {
+    pub fn node_declaration_view<T: ESTreeNode>(&self, node: &T) -> Option<DeclarationView<'_>> {
+        self.node_declarations
+            .get(&AstNode::from(node))
+            .map(|id| DeclarationView {
+                manager: self,
+                declaration: &self.declarations[id.0],
+            })
+    }
+
+    pub fn node_reference<T: ESTreeNode>(&self, node: &T) -> Option<&Reference> {
         self.node_references
             .get(&AstNode::from(node))
             .map(|id| &self.references[id.0])
+    }
+
+    pub fn node_reference_view<T: ESTreeNode>(&self, node: &T) -> Option<ReferenceView<'_>> {
+        self.node_references
+            .get(&AstNode::from(node))
+            .map(|id| ReferenceView {
+                manager: self,
+                reference: &self.references[id.0],
+            })
     }
 
     pub fn lookup_label(&self, scope: ScopeId, name: &str) -> Option<&Label> {
@@ -316,10 +363,10 @@ pub struct Reference {
 }
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-pub(crate) struct AstNode(PointerAddress);
+pub struct AstNode(PointerAddress);
 
 impl AstNode {
-    fn new<T: ESTreeNode>(node: &T) -> Self {
+    pub fn new<T: ESTreeNode>(node: &T) -> Self {
         Self(PointerAddress::new(node))
     }
 }

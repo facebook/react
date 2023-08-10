@@ -17,4 +17,5 @@ forget_hir = { workspace = true }
 forget_estree = { workspace = true}
 indexmap = { workspace = true }
 forget_diagnostics = { workspace = true }
+forget_semantic_analysis = { workspace = true }
 thiserror = { workspace = true }

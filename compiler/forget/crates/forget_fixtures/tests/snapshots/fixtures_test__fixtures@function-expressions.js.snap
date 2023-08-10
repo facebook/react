@@ -29,54 +29,54 @@ function Component(props) {
 
 Output:
 function Component(
-  unknown props$11,
+  unknown props$10,
 )
 entry bb0
 bb0 (block)
   [0] #0 = 2
-  [1] #1 = StoreLocal Const unknown x$12 = unknown #0
-  [2] #2 = Function @deps[] @context[unknown x$12, unknown foo$1]:
+  [1] #1 = StoreLocal Const unknown x$11 = unknown #0
+  [2] #2 = Function @deps[] @context[unknown x$11]:
       function foo(
-        unknown y$13,
+        unknown y$12,
       )
       entry bb1
       bb1 (block)
         [0] #0 = 1
-        [1] #1 = StoreLocal Let unknown a$14 = unknown #0
-        [2] #2 = DeclareLocal Let unknown b$15
+        [1] #1 = StoreLocal Let unknown a$13 = unknown #0
+        [2] #2 = DeclareLocal Let unknown b$14
         [3] #9 = 1
         [4] #10 = 1
         [5] #11 = true
         [6] #3 = 5
         [7] #4 = 3
         [8] #5 = 8
-        [9] #6 = StoreLocal Reassign unknown b$16 = unknown #5
+        [9] #6 = StoreLocal Reassign unknown b$15 = unknown #5
         [10] #12 = 2
-        [11] #13 = LoadLocal unknown y$13
+        [11] #13 = LoadLocal unknown y$12
         [12] #14 = Binary unknown #12 + unknown #13
         [13] #15 = 1
         [14] #16 = Binary unknown #14 + unknown #15
         [15] #17 = 8
         [16] #18 = Binary unknown #16 + unknown #17
-        [17] #19 = Function @deps[] @context[unknown x$18, unknown y$19, unknown a$20, unknown b$21]:
+        [17] #19 = Function @deps[] @context[unknown x$17, unknown y$18, unknown a$19, unknown b$20]:
             function bar(
-              unknown z$22,
+              unknown z$21,
             )
             entry bb5
             bb5 (block)
               [0] #0 = 2
-              [1] #1 = StoreLocal Let unknown c$23 = unknown #0
-              [2] #2 = DeclareLocal Let unknown d$24
+              [1] #1 = StoreLocal Let unknown c$22 = unknown #0
+              [2] #2 = DeclareLocal Let unknown d$23
               [3] #3 = 3
-              [4] #4 = StoreLocal Reassign unknown d$25 = unknown #3
-              [5] #5 = LoadLocal unknown x$18
-              [6] #6 = LoadLocal unknown y$19
+              [4] #4 = StoreLocal Reassign unknown d$24 = unknown #3
+              [5] #5 = LoadLocal unknown x$17
+              [6] #6 = LoadLocal unknown y$18
               [7] #7 = Binary unknown #5 + unknown #6
-              [8] #8 = LoadLocal unknown a$20
+              [8] #8 = LoadLocal unknown a$19
               [9] #9 = Binary unknown #7 + unknown #8
-              [10] #10 = LoadLocal unknown b$21
+              [10] #10 = LoadLocal unknown b$20
               [11] #11 = Binary unknown #9 + unknown #10
-              [12] #12 = LoadLocal unknown z$22
+              [12] #12 = LoadLocal unknown z$21
               [13] #13 = Binary unknown #11 + unknown #12
               [14] #14 = 2
               [15] #15 = Binary unknown #13 + unknown #14
@@ -84,11 +84,11 @@ bb0 (block)
               [17] #17 = Binary unknown #15 + unknown #16
               [18] #18 = <undefined>
               [19] Return unknown #18
-        [18] #20 = StoreLocal Const unknown bar$26 = unknown #19
-        [19] #21 = LoadLocal unknown bar$26
-        [20] #22 = LoadLocal unknown foo$1
+        [18] #20 = StoreLocal Const unknown bar$25 = unknown #19
+        [19] #21 = LoadLocal unknown bar$25
+        [20] #22 = LoadGlobal foo
         [21] #23 = <undefined>
         [22] Return unknown #23
-  [3] #3 = StoreLocal Const unknown foo$28 = unknown #2
+  [3] #3 = StoreLocal Const unknown foo$26 = unknown #2
   [4] #4 = <undefined>
   [5] Return unknown #4

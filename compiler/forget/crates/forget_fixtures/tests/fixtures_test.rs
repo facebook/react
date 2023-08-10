@@ -6,6 +6,7 @@ use forget_estree::{ModuleItem, Statement};
 use forget_estree_swc::parse;
 use forget_hir::{inline_use_memo, Environment, Features, Print, Registry};
 use forget_optimization::constant_propagation;
+use forget_semantic_analysis::analyze;
 use forget_ssa::{eliminate_redundant_phis, enter_ssa};
 use insta::{assert_snapshot, glob};
 use miette::{NamedSource, Report};
@@ -20,19 +21,22 @@ fn fixtures() {
 
         let mut output = String::new();
 
-        for (ix, item) in ast.body.into_iter().enumerate() {
+        let analysis = analyze(&ast);
+        // println!("{:#?}", analysis.debug());
+        let environment = Environment::new(
+            Features {
+                validate_frozen_lambdas: true,
+            },
+            Registry,
+            analysis,
+        );
+        for (ix, item) in ast.body.iter().enumerate() {
             if let ModuleItem::Statement(stmt) = item {
                 if let Statement::FunctionDeclaration(fun) = stmt {
-                    let environment = Environment::new(
-                        Features {
-                            validate_frozen_lambdas: true,
-                        },
-                        Registry,
-                    );
                     if ix != 0 {
                         output.push_str("\n\n");
                     }
-                    match build(&environment, fun.function) {
+                    match build(&environment, &fun.function) {
                         Ok(mut fun) => {
                             // println!("{fun:#?}");
                             // let mut out = String::new();

@@ -462,6 +462,7 @@ dependencies = [
  "forget_diagnostics",
  "forget_estree",
  "forget_hir",
+ "forget_semantic_analysis",
  "indexmap 2.0.0",
  "thiserror",
 ]
@@ -517,6 +518,7 @@ dependencies = [
  "forget_estree_swc",
  "forget_hir",
  "forget_optimization",
+ "forget_semantic_analysis",
  "forget_ssa",
  "insta",
  "miette 5.9.0",
@@ -541,6 +543,7 @@ version = "0.1.0"
 dependencies = [
  "forget_diagnostics",
  "forget_estree",
+ "forget_semantic_analysis",
  "forget_utils",
  "indexmap 2.0.0",
  "serde",

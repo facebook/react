@@ -313,27 +313,4 @@ impl<'e> Builder<'e> {
             None,
         ))
     }
-
-    pub(crate) fn resolve_identifier(
-        &mut self,
-        identifier: &forget_estree::Identifier,
-    ) -> Result<Binding, Diagnostic> {
-        match &identifier.binding {
-            Some(binding) => Ok(match binding {
-                forget_estree::Binding::Global => Binding::Global,
-                forget_estree::Binding::Local(id) => Binding::Local(
-                    self.environment
-                        .resolve_binding_identifier(&identifier.name, *id),
-                ),
-                forget_estree::Binding::Module(id) => Binding::Module(
-                    self.environment
-                        .resolve_binding_identifier(&identifier.name, *id),
-                ),
-            }),
-            _ => Err(Diagnostic::invariant(
-                BuildHIRError::UnknownIdentifier,
-                identifier.range.clone(),
-            )),
-        }
-    }
 }

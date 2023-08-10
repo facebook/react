@@ -1,0 +1,46 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/simple-function.js
+---
+Input:
+function Component(a) {
+  Math;
+  let b = 0;
+  const foo = function foo_(c) {
+    let d = 1;
+    return a + b + c + d;
+  };
+  return foo();
+}
+
+
+Output:
+function Component(
+  unknown a$5,
+)
+entry bb0
+bb0 (block)
+  [0] #0 = LoadGlobal Math
+  [1] #1 = 0
+  [2] #2 = StoreLocal Let unknown b$6 = unknown #1
+  [3] #3 = Function @deps[] @context[unknown a$5, unknown b$6]:
+      function foo_(
+        unknown c$7,
+      )
+      entry bb1
+      bb1 (block)
+        [0] #0 = 1
+        [1] #1 = StoreLocal Let unknown d$8 = unknown #0
+        [2] #2 = LoadLocal unknown a$5
+        [3] #3 = 0
+        [4] #4 = Binary unknown #2 + unknown #3
+        [5] #5 = LoadLocal unknown c$7
+        [6] #6 = Binary unknown #4 + unknown #5
+        [7] #7 = 1
+        [8] #8 = Binary unknown #6 + unknown #7
+        [9] Return unknown #8
+  [4] #4 = StoreLocal Const unknown foo$9 = unknown #3
+  [5] #5 = LoadLocal unknown foo$9
+  [6] #6 = Call unknown #5()
+  [7] Return unknown #6

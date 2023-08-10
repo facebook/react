@@ -1,72 +1,58 @@
 use std::collections::HashSet;
 
-use forget_estree::{Binding, BindingId, Function, Identifier, Visitor_DEPRECATED};
+use forget_estree::IntoFunction;
 use forget_hir::Environment;
+use forget_semantic_analysis::{DeclarationId, ScopeView};
 
-pub(crate) fn get_context_identifiers<'ast>(
-    _env: &Environment,
-    function: &'ast Function,
-) -> Vec<&'ast Identifier> {
-    let mut visitor = ContextVisitor::new();
-    visitor.visit_function(function);
-    let ContextVisitor {
-        free_variables,
-        defined,
-        ..
-    } = visitor;
-    free_variables
-        .into_iter()
-        .filter(|identifier| match &identifier.binding {
-            Some(Binding::Local(id)) if !defined.contains(id) => true,
-            _ => false,
-        })
-        .collect()
+pub(crate) fn get_context_identifiers<T: IntoFunction>(
+    env: &Environment,
+    node: &T,
+) -> Vec<DeclarationId> {
+    let function_scope = env.scope(node.function()).unwrap();
+    println!(
+        "get_context_identifiers for function scope {:?}",
+        function_scope.id()
+    );
+    let mut free = FreeVariables::default();
+    let mut seen = HashSet::new();
+    populate_free_variable_references(&mut free, &mut seen, function_scope);
+    free
 }
 
-struct ContextVisitor<'ast> {
-    free_variables: Vec<&'ast Identifier>,
-    defined: HashSet<BindingId>,
-    lvalue: bool,
-}
+type FreeVariables = Vec<DeclarationId>;
 
-impl<'ast> ContextVisitor<'ast> {
-    fn new() -> Self {
-        Self {
-            free_variables: Default::default(),
-            defined: Default::default(),
-            lvalue: false,
+fn populate_free_variable_references(
+    free: &mut FreeVariables,
+    seen: &mut HashSet<DeclarationId>,
+    scope: ScopeView<'_>,
+) {
+    for reference in scope.references() {
+        if !seen.insert(reference.declaration().id()) {
+            println!(
+                "skip {}${:?}",
+                reference.declaration().name(),
+                reference.declaration().id()
+            );
+            continue;
+        }
+        let declaration_scope = reference.declaration().scope();
+        if !declaration_scope.is_descendant_of(scope) {
+            println!(
+                "free variable: not descendant {}${:?}",
+                reference.declaration().name(),
+                reference.declaration().id()
+            );
+            free.push(reference.declaration().id())
+        } else {
+            println!(
+                "local variable: descendant {}${:?} scope={:?}",
+                reference.declaration().name(),
+                reference.declaration().id(),
+                reference.declaration().scope().id()
+            );
         }
     }
-}
-
-impl<'ast> Visitor_DEPRECATED<'ast> for ContextVisitor<'ast> {
-    fn visit_lvalue<F>(&mut self, f: F)
-    where
-        F: FnOnce(&mut Self) -> (),
-    {
-        let prev_lvalue = self.lvalue;
-        self.lvalue = true;
-        f(self);
-        self.lvalue = prev_lvalue;
-    }
-
-    fn visit_identifier(&mut self, identifier: &'ast Identifier) {
-        let binding = identifier.binding.unwrap();
-        match binding {
-            Binding::Local(binding_id) => {
-                if self.lvalue {
-                    // println!("lvalue {identifier:?}");
-                    self.defined.insert(binding_id);
-                } else {
-                    // println!("rvalue {identifier:?}");
-                    self.free_variables.push(identifier);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    fn visit_literal(&mut self, _literal: &'ast forget_estree::Literal) {
-        // no-op
+    for child in scope.children() {
+        populate_free_variable_references(free, seen, child);
     }
 }

@@ -12,15 +12,12 @@ fn fixtures() {
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
         let mut analysis = analyze(&ast);
 
-        let ast_output = serde_json::to_string_pretty(&ast).unwrap();
         let mut output = String::new();
         writeln!(&mut output, "{:#?}", analysis.debug()).unwrap();
         let diagnostics = analysis.diagnostics();
         for diagnostic in diagnostics {
             writeln!(&mut output, "{:#?}", diagnostic).unwrap();
         }
-        assert_snapshot!(format!(
-            "Input:\n{input}\n\nAST:\n{ast_output}\n\nAnalysis:\n{output}"
-        ));
+        assert_snapshot!(format!("Input:\n{input}\n\nAnalysis:\n{output}"));
     });
 }

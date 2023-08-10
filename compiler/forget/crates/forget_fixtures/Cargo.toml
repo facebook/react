@@ -18,6 +18,7 @@ forget_estree = { workspace = true }
 forget_estree_swc = { workspace = true }
 forget_hir = { workspace = true }
 forget_optimization = { workspace = true }
+forget_semantic_analysis = { workspace = true }
 forget_ssa = { workspace = true }
 forget_build_hir = { workspace = true }
 miette = { workspace = true, features = ["backtrace", "fancy"] }
