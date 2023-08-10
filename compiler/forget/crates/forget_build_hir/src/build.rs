@@ -7,9 +7,9 @@ use forget_estree::{
     VariableDeclarationKind,
 };
 use forget_hir::{
-    BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand, InstrIx,
+    BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand,
     InstructionKind, InstructionValue, JSXAttribute, JSXElement, LValue, LoadGlobal, LoadLocal,
-    Operand, PlaceOrSpread, TerminalValue,
+    PlaceOrSpread, TerminalValue,
 };
 
 use crate::builder::{Builder, LoopScope};
@@ -69,10 +69,7 @@ pub fn build(env: &Environment, fun: &Function) -> Result<Box<forget_hir::Functi
     }));
     builder.terminate(
         TerminalValue::Return(forget_hir::ReturnTerminal {
-            value: Operand {
-                ix: implicit_return_value,
-                effect: None,
-            },
+            value: implicit_return_value,
         }),
         forget_hir::BlockKind::Block,
     );
@@ -133,16 +130,14 @@ fn lower_statement(
             );
         }
         Statement::ReturnStatement(stmt) => {
-            let ix = match &stmt.argument {
+            let value = match &stmt.argument {
                 Some(argument) => lower_expression(env, builder, argument)?,
                 None => builder.push(InstructionValue::Primitive(forget_hir::Primitive {
                     value: JsValue::Undefined,
                 })),
             };
             builder.terminate(
-                TerminalValue::Return(forget_hir::ReturnTerminal {
-                    value: Operand { ix, effect: None },
-                }),
+                TerminalValue::Return(forget_hir::ReturnTerminal { value }),
                 BlockKind::Block,
             );
         }
@@ -180,10 +175,7 @@ fn lower_statement(
 
             let test = lower_expression(env, builder, &stmt.test)?;
             let terminal = TerminalValue::If(forget_hir::IfTerminal {
-                test: Operand {
-                    ix: test,
-                    effect: None,
-                },
+                test,
                 consequent: consequent_block,
                 alternate: alternate_block,
                 fallthrough: Some(fallthrough_block.id),
@@ -253,10 +245,7 @@ fn lower_statement(
             if let Some(test) = &stmt.test {
                 let test_value = lower_expression(env, builder, test)?;
                 let terminal = TerminalValue::Branch(BranchTerminal {
-                    test: Operand {
-                        ix: test_value,
-                        effect: None,
-                    },
+                    test: test_value,
                     consequent: body_block,
                     alternate: fallthrough_block.id,
                 });
@@ -333,7 +322,7 @@ fn lower_expression(
     env: &Environment,
     builder: &mut Builder,
     expr: &Expression,
-) -> Result<InstrIx, Diagnostic> {
+) -> Result<IdentifierOperand, Diagnostic> {
     let value = match expr {
         Expression::Identifier(expr) => {
             let identifier = env.resolve_variable_reference(expr.as_ref());
@@ -368,17 +357,11 @@ fn lower_expression(
             let mut elements = Vec::with_capacity(expr.elements.len());
             for expr in &expr.elements {
                 let element = match expr {
-                    Some(forget_estree::ExpressionOrSpread::SpreadElement(expr)) => {
-                        Some(PlaceOrSpread::Spread(Operand {
-                            ix: lower_expression(env, builder, &expr.argument)?,
-                            effect: None,
-                        }))
-                    }
+                    Some(forget_estree::ExpressionOrSpread::SpreadElement(expr)) => Some(
+                        PlaceOrSpread::Spread(lower_expression(env, builder, &expr.argument)?),
+                    ),
                     Some(forget_estree::ExpressionOrSpread::Expression(expr)) => {
-                        Some(PlaceOrSpread::Place(Operand {
-                            ix: lower_expression(env, builder, expr)?,
-                            effect: None,
-                        }))
+                        Some(PlaceOrSpread::Place(lower_expression(env, builder, expr)?))
                     }
                     None => None,
                 };
@@ -405,15 +388,9 @@ fn lower_expression(
             let left = lower_expression(env, builder, &expr.left)?;
             let right = lower_expression(env, builder, &expr.right)?;
             InstructionValue::Binary(forget_hir::Binary {
-                left: Operand {
-                    ix: left,
-                    effect: None,
-                },
+                left,
                 operator: expr.operator,
-                right: Operand {
-                    ix: right,
-                    effect: None,
-                },
+                right,
             })
         }
 
@@ -442,13 +419,7 @@ fn lower_expression(
 
             let callee = lower_expression(env, builder, &callee_expr)?;
             let arguments = lower_arguments(env, builder, &expr.arguments)?;
-            InstructionValue::Call(forget_hir::Call {
-                callee: Operand {
-                    ix: callee,
-                    effect: None,
-                },
-                arguments,
-            })
+            InstructionValue::Call(forget_hir::Call { callee, arguments })
         }
 
         Expression::JSXElement(expr) => {
@@ -469,15 +440,11 @@ fn lower_arguments(
     for arg in args {
         let element = match arg {
             forget_estree::ExpressionOrSpread::SpreadElement(arg) => {
-                PlaceOrSpread::Spread(Operand {
-                    ix: lower_expression(env, builder, &arg.argument)?,
-                    effect: None,
-                })
+                PlaceOrSpread::Spread(lower_expression(env, builder, &arg.argument)?)
             }
-            forget_estree::ExpressionOrSpread::Expression(arg) => PlaceOrSpread::Place(Operand {
-                ix: lower_expression(env, builder, arg)?,
-                effect: None,
-            }),
+            forget_estree::ExpressionOrSpread::Expression(arg) => {
+                PlaceOrSpread::Place(lower_expression(env, builder, arg)?)
+            }
         };
         arguments.push(element);
     }
@@ -524,12 +491,12 @@ fn lower_jsx_element(
         .map(|attr| lower_jsx_attribute(env, builder, attr))
         .collect();
     let _props = props?;
-    let children: Result<Vec<Operand>, Diagnostic> = expr
+    let children: Result<Vec<IdentifierOperand>, Diagnostic> = expr
         .children
         .iter()
         .map(|child| {
-            let ix = lower_jsx_child(env, builder, child)?;
-            Ok(Operand { effect: None, ix })
+            let child = lower_jsx_child(env, builder, child)?;
+            Ok(child)
         })
         .collect();
     let _children = children?;
@@ -557,7 +524,7 @@ fn lower_jsx_child(
     _env: &Environment,
     _builder: &mut Builder,
     _child: &forget_estree::JSXChildItem,
-) -> Result<InstrIx, Diagnostic> {
+) -> Result<IdentifierOperand, Diagnostic> {
     todo!("lower jsx child")
 }
 
@@ -566,8 +533,8 @@ fn lower_assignment(
     builder: &mut Builder,
     kind: InstructionKind,
     lvalue: &AssignmentTarget,
-    value: InstrIx,
-) -> Result<InstrIx, Diagnostic> {
+    value: IdentifierOperand,
+) -> Result<IdentifierOperand, Diagnostic> {
     Ok(match lvalue {
         AssignmentTarget::Pattern(lvalue) => {
             lower_assignment_pattern(env, builder, kind, lvalue, value)?
@@ -581,17 +548,14 @@ fn lower_assignment_pattern(
     builder: &mut Builder,
     kind: InstructionKind,
     lvalue: &Pattern,
-    value: InstrIx,
-) -> Result<InstrIx, Diagnostic> {
+    value: IdentifierOperand,
+) -> Result<IdentifierOperand, Diagnostic> {
     Ok(match lvalue {
         Pattern::Identifier(lvalue) => {
             let identifier = lower_identifier_for_assignment(env, builder, kind, lvalue)?;
             builder.push(InstructionValue::StoreLocal(forget_hir::StoreLocal {
                 lvalue: LValue { identifier, kind },
-                value: Operand {
-                    ix: value,
-                    effect: None,
-                },
+                value,
             }))
         }
         _ => todo!("lower assignment pattern for {:#?}", lvalue),

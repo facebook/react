@@ -4,8 +4,8 @@ use std::rc::Rc;
 use forget_diagnostics::Diagnostic;
 use forget_hir::{
     initialize_hir, BasicBlock, BlockId, BlockKind, Blocks, Environment, GotoKind, IdentifierData,
-    InstrIx, Instruction, InstructionIdGenerator, InstructionValue, Terminal, TerminalValue, Type,
-    HIR,
+    IdentifierOperand, InstrIx, Instruction, InstructionIdGenerator, InstructionValue, Terminal,
+    TerminalValue, Type, HIR,
 };
 
 use crate::BuildHIRError;
@@ -116,15 +116,20 @@ impl<'e> Builder<'e> {
     }
 
     /// Adds a new instruction to the end of the work in progress block
-    pub(crate) fn push(&mut self, value: InstructionValue) -> InstrIx {
+    pub(crate) fn push(&mut self, value: InstructionValue) -> IdentifierOperand {
+        let lvalue = IdentifierOperand {
+            identifier: self.environment.new_temporary(),
+            effect: None,
+        };
         let instr = Instruction {
             id: self.id_gen.next(),
+            lvalue: lvalue.clone(),
             value,
         };
         let ix = InstrIx::new(self.instructions.len() as u32);
         self.instructions.push(instr);
         self.wip.instructions.push(ix);
-        ix
+        lvalue
     }
 
     /// Terminates the work in progress block with the given terminal, and starts a new

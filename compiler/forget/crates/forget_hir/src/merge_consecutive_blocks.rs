@@ -6,7 +6,7 @@ use thiserror::Error;
 use crate::{
     mark_instruction_ids, mark_predecessors, BasicBlock, BlockId, BlockKind, BlockRewriter,
     BlockRewriterAction, Environment, Function, IdentifierOperand, InstrIx, Instruction,
-    InstructionKind, InstructionValue, LValue, LoadLocal, Operand, StoreLocal, TerminalValue,
+    InstructionKind, InstructionValue, LValue, LoadLocal, StoreLocal, TerminalValue,
 };
 
 /// Merges sequences of blocks that will always execute consecutively —
@@ -59,8 +59,13 @@ pub fn merge_consecutive_blocks(env: &Environment, fun: &mut Function) -> Result
             })?;
             let (_, operand) = phi.operands.first().unwrap();
             // load the operand
+            let temporary = env.new_temporary();
             let load = Instruction {
                 id: predecessor.terminal.id,
+                lvalue: IdentifierOperand {
+                    identifier: temporary.clone(),
+                    effect: None,
+                },
                 value: InstructionValue::LoadLocal(LoadLocal {
                     place: IdentifierOperand {
                         effect: None,
@@ -74,6 +79,10 @@ pub fn merge_consecutive_blocks(env: &Environment, fun: &mut Function) -> Result
             // store it into the phi id
             let store = Instruction {
                 id: predecessor.terminal.id,
+                lvalue: IdentifierOperand {
+                    identifier: env.new_temporary(),
+                    effect: None,
+                },
                 value: InstructionValue::StoreLocal(StoreLocal {
                     lvalue: LValue {
                         kind: InstructionKind::Reassign,
@@ -82,9 +91,9 @@ pub fn merge_consecutive_blocks(env: &Environment, fun: &mut Function) -> Result
                             effect: None,
                         },
                     },
-                    value: Operand {
+                    value: IdentifierOperand {
+                        identifier: temporary,
                         effect: None,
-                        ix: load_ix,
                     },
                 }),
             };

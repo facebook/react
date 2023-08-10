@@ -14,21 +14,21 @@ function Component(x) {
 
 Output:
 function Component(
-  unknown x$2,
+  unknown x$10,
 )
 entry bb0
 bb0 (block)
-  [0] #0 = LoadGlobal useMemo
-  [1] #6 = DeclareLocal Let unknown t$4
+  [0] unknown $1 = LoadGlobal useMemo
+  [1] unknown $14 = DeclareLocal Let unknown t$12
   [2] Label block=bb1 fallthrough=bb6
 bb1 (block)
   predecessors: bb0
-  [3] #7 = LoadGlobal y
-  [4] #9 = StoreLocal Reassign unknown t$4 = unknown #7
+  [3] unknown $2 = LoadGlobal y
+  [4] unknown $13 = StoreLocal Reassign unknown t$12 = unknown $2
   [5] Goto bb6
 bb6 (block)
   predecessors: bb1
-  [6] #2 = LoadLocal unknown t$4
-  [7] #3 = StoreLocal Const unknown x$3 = unknown #2
-  [8] #4 = LoadLocal unknown x$3
-  [9] Return unknown #4
+  [6] unknown $5 = LoadLocal unknown t$12
+  [7] unknown $7 = StoreLocal Const unknown x$11 = unknown $5
+  [8] unknown $8 = LoadLocal unknown x$11
+  [9] Return unknown $8

@@ -17,30 +17,30 @@ function Component(a) {
 
 Output:
 function Component(
-  unknown a$5,
+  unknown a$23,
 )
 entry bb0
 bb0 (block)
-  [0] #0 = LoadGlobal Math
-  [1] #1 = 0
-  [2] #2 = StoreLocal Let unknown b$6 = unknown #1
-  [3] #3 = Function @deps[] @context[unknown a$5, unknown b$6]:
+  [0] unknown $1 = LoadGlobal Math
+  [1] unknown $2 = 0
+  [2] unknown $4 = StoreLocal Let unknown b$24 = unknown $2
+  [3] unknown $17 = Function @deps[] @context[unknown a$23, unknown b$24]:
       function foo_(
-        unknown c$7,
+        unknown c$25,
       )
       entry bb1
       bb1 (block)
-        [0] #0 = 1
-        [1] #1 = StoreLocal Let unknown d$8 = unknown #0
-        [2] #2 = LoadLocal unknown a$5
-        [3] #3 = 0
-        [4] #4 = Binary unknown #2 + unknown #3
-        [5] #5 = LoadLocal unknown c$7
-        [6] #6 = Binary unknown #4 + unknown #5
-        [7] #7 = 1
-        [8] #8 = Binary unknown #6 + unknown #7
-        [9] Return unknown #8
-  [4] #4 = StoreLocal Const unknown foo$9 = unknown #3
-  [5] #5 = LoadLocal unknown foo$9
-  [6] #6 = Call unknown #5()
-  [7] Return unknown #6
+        [0] unknown $6 = 1
+        [1] unknown $8 = StoreLocal Let unknown d$26 = unknown $6
+        [2] unknown $9 = LoadLocal unknown a$23
+        [3] unknown $10 = 0
+        [4] unknown $11 = Binary unknown $9 + unknown $10
+        [5] unknown $12 = LoadLocal unknown c$25
+        [6] unknown $13 = Binary unknown $11 + unknown $12
+        [7] unknown $14 = 1
+        [8] unknown $15 = Binary unknown $13 + unknown $14
+        [9] Return unknown $15
+  [4] unknown $19 = StoreLocal Const unknown foo$27 = unknown $17
+  [5] unknown $20 = LoadLocal unknown foo$27
+  [6] unknown $21 = Call unknown $20()
+  [7] Return unknown $21

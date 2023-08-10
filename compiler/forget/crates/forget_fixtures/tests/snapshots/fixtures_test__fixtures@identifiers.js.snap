@@ -24,18 +24,18 @@ function id(x) {
 
 Output:
 function id(
-  unknown x$3,
+  unknown x$14,
 )
 entry bb0
 bb0 (block)
-  [0] #0 = LoadGlobal Math
-  [1] #1 = LoadGlobal id
-  [2] #2 = true
-  [3] #3 = StoreLocal Let unknown y$4 = unknown #2
-  [4] #4 = false
-  [5] #5 = StoreLocal Reassign unknown y$5 = unknown #4
-  [6] #6 = false
-  [7] #7 = DeclareLocal Let unknown z$6
-  [8] #8 = LoadLocal unknown z$6
-  [9] #9 = LoadLocal unknown x$3
-  [10] Return unknown #9
+  [0] unknown $1 = LoadGlobal Math
+  [1] unknown $2 = LoadGlobal id
+  [2] unknown $3 = true
+  [3] unknown $5 = StoreLocal Let unknown y$15 = unknown $3
+  [4] unknown $6 = false
+  [5] unknown $7 = StoreLocal Reassign unknown y$16 = unknown $6
+  [6] unknown $8 = false
+  [7] unknown $10 = DeclareLocal Let unknown z$17
+  [8] unknown $11 = LoadLocal unknown z$17
+  [9] unknown $12 = LoadLocal unknown x$14
+  [10] Return unknown $12

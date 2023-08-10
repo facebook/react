@@ -68,131 +68,131 @@ function Component(props) {
 
 Output:
 function Component(
-  unknown props$5,
+  unknown props$108,
 )
 entry bb0
 bb0 (block)
-  [0] #0 = DeclareLocal Let unknown a$6
-  [1] #1 = LoadGlobal Math
-  [2] #2 = StoreLocal Reassign unknown a$7 = unknown #1
-  [3] #3 = LoadGlobal Math
-  [4] #4 = DeclareLocal Let unknown b$8
-  [5] #9 = LoadLocal unknown props$5
-  [6] If unknown #9 consequent=bb2 alternate=bb3 fallthrough=bb1
+  [0] unknown $2 = DeclareLocal Let unknown a$109
+  [1] unknown $3 = LoadGlobal Math
+  [2] unknown $4 = StoreLocal Reassign unknown a$110 = unknown $3
+  [3] unknown $5 = LoadGlobal Math
+  [4] unknown $7 = DeclareLocal Let unknown b$111
+  [5] unknown $12 = LoadLocal unknown props$108
+  [6] If unknown $12 consequent=bb2 alternate=bb3 fallthrough=bb1
 bb2 (block)
   predecessors: bb0
-  [7] #5 = true
-  [8] #6 = StoreLocal Reassign unknown b$9 = unknown #5
+  [7] unknown $8 = true
+  [8] unknown $9 = StoreLocal Reassign unknown b$112 = unknown $8
   [9] Goto bb1
 bb3 (block)
   predecessors: bb0
-  [10] #7 = true
-  [11] #8 = StoreLocal Reassign unknown b$10 = unknown #7
+  [10] unknown $10 = true
+  [11] unknown $11 = StoreLocal Reassign unknown b$113 = unknown $10
   [12] Goto bb1
 bb1 (block)
   predecessors: bb2, bb3
-  b$11: phi(bb2: b$9, bb3: b$10)
-  [13] #10 = true
-  [14] #11 = DeclareLocal Let unknown c$12
-  [15] #16 = LoadLocal unknown props$5
-  [16] If unknown #16 consequent=bb5 alternate=bb6 fallthrough=bb4
+  b$114: phi(bb2: b$112, bb3: b$113)
+  [13] unknown $13 = true
+  [14] unknown $15 = DeclareLocal Let unknown c$115
+  [15] unknown $20 = LoadLocal unknown props$108
+  [16] If unknown $20 consequent=bb5 alternate=bb6 fallthrough=bb4
 bb5 (block)
   predecessors: bb1
-  [17] #12 = true
-  [18] #13 = StoreLocal Reassign unknown c$14 = unknown #12
+  [17] unknown $16 = true
+  [18] unknown $17 = StoreLocal Reassign unknown c$117 = unknown $16
   [19] Goto bb4
 bb6 (block)
   predecessors: bb1
-  [20] #14 = 42
-  [21] #15 = StoreLocal Reassign unknown c$15 = unknown #14
+  [20] unknown $18 = 42
+  [21] unknown $19 = StoreLocal Reassign unknown c$118 = unknown $18
   [22] Goto bb4
 bb4 (block)
   predecessors: bb5, bb6
-  c$16: phi(bb5: c$14, bb6: c$15)
-  [23] #17 = LoadLocal unknown c$16
-  [24] #18 = 42
-  [25] #19 = 1
-  [26] #20 = 43
-  [27] #21 = 42
-  [28] #22 = 1
-  [29] #23 = 41
-  [30] #24 = 42
-  [31] #25 = 2
-  [32] #26 = 84
-  [33] #27 = 42
-  [34] #28 = 2
-  [35] #29 = 21
-  [36] #30 = 0
-  [37] #31 = 1
-  [38] #32 = false
-  [39] #33 = 0
-  [40] #34 = 1
-  [41] #35 = true
-  [42] #36 = 0
-  [43] #37 = 1
-  [44] #38 = false
-  [45] #39 = 0
-  [46] #40 = 1
-  [47] #41 = true
-  [48] #42 = 0
-  [49] #43 = 0
-  [50] #44 = true
-  [51] #45 = LoadGlobal NaN
-  [52] #46 = LoadGlobal NaN
-  [53] #47 = Binary unknown #45 == unknown #46
-  [54] #48 = LoadGlobal NaN
-  [55] #49 = LoadGlobal NaN
-  [56] #50 = Binary unknown #48 != unknown #49
-  [57] #51 = LoadGlobal NaN
-  [58] #52 = LoadGlobal NaN
-  [59] #53 = Binary unknown #51 !== unknown #52
-  [60] #54 = LoadGlobal NaN
-  [61] #55 = LoadGlobal NaN
-  [62] #56 = Binary unknown #54 !== unknown #55
-  [63] #57 = "hello"
-  [64] #58 = "hello"
-  [65] #59 = true
-  [66] #60 = "hello"
-  [67] #61 = "hello"
-  [68] #62 = false
-  [69] #63 = "hello"
-  [70] #64 = "hello"
-  [71] #65 = true
-  [72] #66 = "hello"
-  [73] #67 = "hello"
-  [74] #68 = false
-  [75] #69 = "hello"
-  [76] #70 = "world"
-  [77] #71 = false
-  [78] #72 = "hello"
-  [79] #73 = "world"
-  [80] #74 = true
-  [81] #75 = "hello"
-  [82] #76 = "world"
-  [83] #77 = false
-  [84] #78 = "hello"
-  [85] #79 = "world"
-  [86] #80 = true
-  [87] #81 = true
-  [88] #82 = true
-  [89] #83 = true
-  [90] #84 = true
-  [91] #85 = true
-  [92] #86 = false
-  [93] #87 = true
-  [94] #88 = true
-  [95] #89 = true
-  [96] #90 = true
-  [97] #91 = true
-  [98] #92 = false
-  [99] #93 = 5
-  [100] #94 = 60
-  [101] #95 = 300
-  [102] #96 = 60
-  [103] #97 = 18000
-  [104] #98 = 1000
-  [105] #99 = 18000000
-  [106] #100 = StoreLocal Let unknown x$17 = unknown #99
-  [107] #101 = 18000000
-  [108] #102 = <undefined>
-  [109] Return unknown #102
+  c$119: phi(bb5: c$117, bb6: c$118)
+  [23] unknown $21 = LoadLocal unknown c$119
+  [24] unknown $22 = 42
+  [25] unknown $23 = 1
+  [26] unknown $24 = 43
+  [27] unknown $25 = 42
+  [28] unknown $26 = 1
+  [29] unknown $27 = 41
+  [30] unknown $28 = 42
+  [31] unknown $29 = 2
+  [32] unknown $30 = 84
+  [33] unknown $31 = 42
+  [34] unknown $32 = 2
+  [35] unknown $33 = 21
+  [36] unknown $34 = 0
+  [37] unknown $35 = 1
+  [38] unknown $36 = false
+  [39] unknown $37 = 0
+  [40] unknown $38 = 1
+  [41] unknown $39 = true
+  [42] unknown $40 = 0
+  [43] unknown $41 = 1
+  [44] unknown $42 = false
+  [45] unknown $43 = 0
+  [46] unknown $44 = 1
+  [47] unknown $45 = true
+  [48] unknown $46 = 0
+  [49] unknown $47 = 0
+  [50] unknown $48 = true
+  [51] unknown $49 = LoadGlobal NaN
+  [52] unknown $50 = LoadGlobal NaN
+  [53] unknown $51 = Binary unknown $49 == unknown $50
+  [54] unknown $52 = LoadGlobal NaN
+  [55] unknown $53 = LoadGlobal NaN
+  [56] unknown $54 = Binary unknown $52 != unknown $53
+  [57] unknown $55 = LoadGlobal NaN
+  [58] unknown $56 = LoadGlobal NaN
+  [59] unknown $57 = Binary unknown $55 !== unknown $56
+  [60] unknown $58 = LoadGlobal NaN
+  [61] unknown $59 = LoadGlobal NaN
+  [62] unknown $60 = Binary unknown $58 !== unknown $59
+  [63] unknown $61 = "hello"
+  [64] unknown $62 = "hello"
+  [65] unknown $63 = true
+  [66] unknown $64 = "hello"
+  [67] unknown $65 = "hello"
+  [68] unknown $66 = false
+  [69] unknown $67 = "hello"
+  [70] unknown $68 = "hello"
+  [71] unknown $69 = true
+  [72] unknown $70 = "hello"
+  [73] unknown $71 = "hello"
+  [74] unknown $72 = false
+  [75] unknown $73 = "hello"
+  [76] unknown $74 = "world"
+  [77] unknown $75 = false
+  [78] unknown $76 = "hello"
+  [79] unknown $77 = "world"
+  [80] unknown $78 = true
+  [81] unknown $79 = "hello"
+  [82] unknown $80 = "world"
+  [83] unknown $81 = false
+  [84] unknown $82 = "hello"
+  [85] unknown $83 = "world"
+  [86] unknown $84 = true
+  [87] unknown $85 = true
+  [88] unknown $86 = true
+  [89] unknown $87 = true
+  [90] unknown $88 = true
+  [91] unknown $89 = true
+  [92] unknown $90 = false
+  [93] unknown $91 = true
+  [94] unknown $92 = true
+  [95] unknown $93 = true
+  [96] unknown $94 = true
+  [97] unknown $95 = true
+  [98] unknown $96 = false
+  [99] unknown $97 = 5
+  [100] unknown $98 = 60
+  [101] unknown $99 = 300
+  [102] unknown $100 = 60
+  [103] unknown $101 = 18000
+  [104] unknown $102 = 1000
+  [105] unknown $103 = 18000000
+  [106] unknown $105 = StoreLocal Let unknown x$120 = unknown $103
+  [107] unknown $106 = 18000000
+  [108] unknown $107 = <undefined>
+  [109] Return unknown $107

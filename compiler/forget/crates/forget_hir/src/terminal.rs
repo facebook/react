@@ -1,4 +1,4 @@
-use crate::instruction::Operand;
+use crate::instruction::IdentifierOperand;
 use crate::{BlockId, InstructionId};
 
 /// Terminals represent statements or expressions that affect control flow,
@@ -87,7 +87,7 @@ impl TerminalValue {
 
     pub fn each_operand<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(&mut Operand) -> (),
+        F: FnMut(&mut IdentifierOperand) -> (),
     {
         match self {
             TerminalValue::Branch(terminal) => f(&mut terminal.test),
@@ -107,7 +107,7 @@ pub struct UnsupportedTerminal {}
 
 #[derive(Debug)]
 pub struct BranchTerminal {
-    pub test: Operand,
+    pub test: IdentifierOperand,
     pub consequent: BlockId,
     pub alternate: BlockId,
 }
@@ -133,7 +133,7 @@ pub struct DoWhileTerminal {
 
 #[derive(Debug)]
 pub struct IfTerminal {
-    pub test: Operand,
+    pub test: IdentifierOperand,
     pub consequent: BlockId,
     pub alternate: BlockId,
     pub fallthrough: Option<BlockId>,
@@ -141,7 +141,7 @@ pub struct IfTerminal {
 
 #[derive(Debug)]
 pub struct ReturnTerminal {
-    pub value: Operand,
+    pub value: IdentifierOperand,
 }
 
 #[derive(Debug)]

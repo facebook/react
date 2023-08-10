@@ -45,29 +45,29 @@ function Component(
 )
 entry bb0
 bb0 (block)
-  [0] #0 = 1
-  [1] #1 = StoreLocal Let unknown a$5 = unknown #0
-  [2] #2 = DeclareLocal Let unknown b$6
-  [3] #7 = 1
-  [4] #8 = 1
-  [5] #9 = true
-  [6] #3 = true
-  [7] #4 = StoreLocal Reassign unknown b$7 = unknown #3
-  [8] #10 = DeclareLocal Let unknown c$9
-  [9] #15 = true
-  [10] #11 = "hello"
-  [11] #12 = StoreLocal Reassign unknown c$11 = unknown #11
-  [12] #16 = DeclareLocal Let unknown d$13
-  [13] #21 = "hello"
-  [14] #22 = "hello"
-  [15] #23 = true
-  [16] #17 = 42
-  [17] #18 = StoreLocal Reassign unknown d$15 = unknown #17
-  [18] #24 = DeclareLocal Let unknown e$17
-  [19] #29 = 42
-  [20] #30 = 42
-  [21] #31 = true
-  [22] #25 = "ok"
-  [23] #26 = StoreLocal Reassign unknown e$19 = unknown #25
-  [24] #32 = "ok"
-  [25] Return unknown #32
+  [0] unknown $0 = 1
+  [1] unknown $2 = StoreLocal Let unknown a$39 = unknown $0
+  [2] unknown $4 = DeclareLocal Let unknown b$40
+  [3] unknown $9 = 1
+  [4] unknown $10 = 1
+  [5] unknown $11 = true
+  [6] unknown $5 = true
+  [7] unknown $6 = StoreLocal Reassign unknown b$41 = unknown $5
+  [8] unknown $13 = DeclareLocal Let unknown c$43
+  [9] unknown $18 = true
+  [10] unknown $14 = "hello"
+  [11] unknown $15 = StoreLocal Reassign unknown c$45 = unknown $14
+  [12] unknown $20 = DeclareLocal Let unknown d$47
+  [13] unknown $25 = "hello"
+  [14] unknown $26 = "hello"
+  [15] unknown $27 = true
+  [16] unknown $21 = 42
+  [17] unknown $22 = StoreLocal Reassign unknown d$49 = unknown $21
+  [18] unknown $29 = DeclareLocal Let unknown e$51
+  [19] unknown $34 = 42
+  [20] unknown $35 = 42
+  [21] unknown $36 = true
+  [22] unknown $30 = "ok"
+  [23] unknown $31 = StoreLocal Reassign unknown e$53 = unknown $30
+  [24] unknown $37 = "ok"
+  [25] Return unknown $37

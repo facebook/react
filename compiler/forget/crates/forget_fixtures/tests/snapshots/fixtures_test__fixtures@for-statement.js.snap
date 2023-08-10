@@ -18,37 +18,37 @@ function foo(
 )
 entry bb0
 bb0 (block)
-  [0] #0 = 0
-  [1] #1 = StoreLocal Let unknown x$2 = unknown #0
+  [0] unknown $0 = 0
+  [1] unknown $2 = StoreLocal Let unknown x$19 = unknown $0
   [2] For init=bb3 test=bb1 update=bb4 body=bb5 fallthrough=bb2
 bb3 (loop)
   predecessors: bb0
-  [3] #2 = 0
-  [4] #3 = StoreLocal Let unknown i$3 = unknown #2
+  [3] unknown $3 = 0
+  [4] unknown $5 = StoreLocal Let unknown i$20 = unknown $3
   [5] Goto bb1
 bb1 (loop)
   predecessors: bb3, bb4
-  i$4: phi(bb3: i$3, bb4: i$7)
-  x$5: phi(bb3: x$2, bb4: x$6)
-  [6] #12 = LoadLocal unknown i$4
-  [7] #13 = 10
-  [8] #14 = Binary unknown #12 < unknown #13
-  [9] Branch unknown #14 consequent=bb5 alternate=bb2
+  i$21: phi(bb3: i$20, bb4: i$24)
+  x$22: phi(bb3: x$19, bb4: x$23)
+  [6] unknown $14 = LoadLocal unknown i$21
+  [7] unknown $15 = 10
+  [8] unknown $16 = Binary unknown $14 < unknown $15
+  [9] Branch unknown $16 consequent=bb5 alternate=bb2
 bb5 (block)
   predecessors: bb1
-  [10] #8 = LoadLocal unknown x$5
-  [11] #9 = LoadLocal unknown i$4
-  [12] #10 = Binary unknown #8 + unknown #9
-  [13] #11 = StoreLocal Reassign unknown x$6 = unknown #10
+  [10] unknown $10 = LoadLocal unknown x$22
+  [11] unknown $11 = LoadLocal unknown i$21
+  [12] unknown $12 = Binary unknown $10 + unknown $11
+  [13] unknown $13 = StoreLocal Reassign unknown x$23 = unknown $12
   [14] Goto bb4
 bb4 (loop)
   predecessors: bb5
-  [15] #4 = LoadLocal unknown i$4
-  [16] #5 = 1
-  [17] #6 = Binary unknown #4 + unknown #5
-  [18] #7 = StoreLocal Reassign unknown i$7 = unknown #6
+  [15] unknown $6 = LoadLocal unknown i$21
+  [16] unknown $7 = 1
+  [17] unknown $8 = Binary unknown $6 + unknown $7
+  [18] unknown $9 = StoreLocal Reassign unknown i$24 = unknown $8
   [19] Goto bb1
 bb2 (block)
   predecessors: bb1
-  [20] #15 = LoadLocal unknown x$5
-  [21] Return unknown #15
+  [20] unknown $17 = LoadLocal unknown x$22
+  [21] Return unknown $17

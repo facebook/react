@@ -5,7 +5,7 @@ use forget_utils::ensure_sufficient_stack;
 
 use crate::{
     BasicBlock, Function, Identifier, IdentifierOperand, Instruction, InstructionValue, LValue,
-    Operand, Phi, PlaceOrSpread, Terminal, TerminalValue, HIR,
+    Phi, PlaceOrSpread, Terminal, TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -75,7 +75,9 @@ impl Print for BasicBlock {
                 continue;
             }
             let instr = &hir.instructions[usize::from(*ix)];
-            write!(out, "  {} {} = ", instr.id, ix)?;
+            write!(out, "  {} ", instr.id)?;
+            instr.lvalue.print(hir, out)?;
+            write!(out, " = ")?;
             instr.value.print(hir, out)?;
             writeln!(out, "")?;
         }
@@ -222,20 +224,6 @@ impl Print for PlaceOrSpread {
                 Ok(())
             }
         }
-    }
-}
-
-impl Print for Operand {
-    fn print(&self, _hir: &HIR, out: &mut impl Write) -> Result {
-        write!(
-            out,
-            "{} {}",
-            match self.effect {
-                Some(effect) => format!("{}", effect),
-                None => "unknown".to_string(),
-            },
-            self.ix
-        )
     }
 }
 

@@ -1,14 +1,14 @@
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use forget_diagnostics::Diagnostic;
 
 use crate::{
     initialize_hir, BasicBlock, BlockRewriter, BlockRewriterAction, DeclareLocal, Environment,
-    Function, GotoKind, GotoTerminal, Identifier, IdentifierData, IdentifierOperand, InstrIx,
-    Instruction, InstructionKind, InstructionValue, LValue, LabelTerminal, LoadLocal, MutableRange,
-    Operand, PlaceOrSpread, ReturnTerminal, StoreLocal, Terminal, TerminalValue, Type,
+    Function, GotoKind, GotoTerminal, Identifier, IdentifierData, IdentifierId, IdentifierOperand,
+    InstrIx, Instruction, InstructionKind, InstructionValue, LValue, LabelTerminal, LoadLocal,
+    MutableRange, PlaceOrSpread, ReturnTerminal, StoreLocal, Terminal, TerminalValue, Type,
 };
 
 /// Inlines `useMemo()` calls, rewriting so that the lambda body becomes part of the
@@ -63,8 +63,8 @@ use crate::{
 /// ```
 ///
 pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
-    let mut use_memo_globals: HashSet<InstrIx> = Default::default();
-    let mut functions: HashSet<InstrIx> = Default::default();
+    let mut use_memo_globals: HashSet<IdentifierId> = Default::default();
+    let mut functions: HashMap<IdentifierId, InstrIx> = Default::default();
 
     let blocks = &mut fun.body.blocks;
     let instructions = &mut fun.body.instructions;
@@ -78,25 +78,26 @@ pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diag
             match &mut instr.value {
                 InstructionValue::LoadGlobal(value) => {
                     if value.name.as_str() == "useMemo" {
-                        use_memo_globals.insert(instr_ix);
+                        use_memo_globals.insert(instr.lvalue.identifier.id);
                     }
                 }
                 InstructionValue::Function(_) => {
-                    functions.insert(instr_ix);
+                    functions.insert(instr.lvalue.identifier.id, instr_ix);
                 }
                 InstructionValue::Call(value) => {
-                    if !use_memo_globals.contains(&value.callee.ix) {
+                    if !use_memo_globals.contains(&value.callee.identifier.id) {
                         continue;
                     }
                     // Skip useMemo calls where the argument is a spread element
-                    let lambda_ix = match &value.arguments.get(0) {
-                        Some(PlaceOrSpread::Place(place)) => place.ix,
+                    let lambda_id = match &value.arguments.get(0) {
+                        Some(PlaceOrSpread::Place(place)) => place.identifier.id,
                         _ => continue,
                     };
-                    // Skip useMemo where the argument is not a function expression
-                    if !functions.contains(&lambda_ix) {
-                        continue;
-                    }
+                    let lambda_ix = match functions.get(&lambda_id) {
+                        Some(ix) => *ix,
+                        // Skip useMemo calls where the argument is not a function expression
+                        _ => continue,
+                    };
                     let instr_id = instr.id;
 
                     // Create a temporary variable to store the useMemo result into
@@ -166,6 +167,10 @@ pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diag
                             );
                             lambda.lowered_function.body.instructions.push(Instruction {
                                 id: instr_id,
+                                lvalue: IdentifierOperand {
+                                    identifier: env.new_temporary(),
+                                    effect: None,
+                                },
                                 value: InstructionValue::StoreLocal(StoreLocal {
                                     lvalue: LValue {
                                         identifier: IdentifierOperand {
@@ -174,10 +179,7 @@ pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diag
                                         },
                                         kind: InstructionKind::Reassign,
                                     },
-                                    value: Operand {
-                                        ix: value.ix,
-                                        effect: None,
-                                    },
+                                    value: value.clone(),
                                 }),
                             });
                             block.instructions.push(store_ix);
@@ -211,6 +213,10 @@ pub fn inline_use_memo(env: &Environment, fun: &mut Function) -> Result<(), Diag
                     let declare_ix = InstrIx::new(instructions.len() as u32);
                     instructions.push(Instruction {
                         id: instr_id,
+                        lvalue: IdentifierOperand {
+                            identifier: env.new_temporary(),
+                            effect: None,
+                        },
                         value: InstructionValue::DeclareLocal(DeclareLocal {
                             lvalue: LValue {
                                 identifier: IdentifierOperand {

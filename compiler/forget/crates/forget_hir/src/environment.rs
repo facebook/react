@@ -6,7 +6,8 @@ use forget_estree::ESTreeNode;
 use forget_semantic_analysis::{DeclarationId, ScopeManager, ScopeView};
 
 use crate::{
-    BlockId, Features, Identifier, IdentifierData, IdentifierId, Registry, Type, TypeVarId,
+    BlockId, Features, Identifier, IdentifierData, IdentifierId, MutableRange, Registry, Type,
+    TypeVarId,
 };
 
 /// Stores all the contextual information about the top-level React function being
@@ -110,5 +111,17 @@ impl Environment {
 
     pub fn scope<T: ESTreeNode>(&self, node: &T) -> Option<ScopeView<'_>> {
         self.analysis.node_scope_view(node)
+    }
+
+    pub fn new_temporary(&self) -> Identifier {
+        Identifier {
+            id: self.next_identifier_id(),
+            name: None,
+            data: Rc::new(RefCell::new(IdentifierData {
+                mutable_range: MutableRange::new(),
+                scope: None,
+                type_: Type::Var(self.next_type_var_id()),
+            })),
+        }
     }
 }

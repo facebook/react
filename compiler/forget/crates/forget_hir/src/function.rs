@@ -34,19 +34,13 @@ pub struct HIR {
 impl HIR {
     pub fn inline(&mut self, other: FunctionExpression) -> () {
         let offset = self.instructions.len();
-        for mut instr in other.lowered_function.body.instructions.into_iter() {
-            instr.each_operand(|operand| {
-                operand.ix = InstrIx::new((offset + usize::from(operand.ix)) as u32);
-            });
+        for instr in other.lowered_function.body.instructions.into_iter() {
             self.instructions.push(instr);
         }
         for mut block in other.lowered_function.body.blocks.into_iter() {
             for ix in block.instructions.iter_mut() {
                 *ix = InstrIx::new((offset + usize::from(*ix)) as u32);
             }
-            block.terminal.value.each_operand(|operand| {
-                operand.ix = InstrIx::new((offset + usize::from(operand.ix)) as u32);
-            });
             self.blocks.insert(block);
         }
     }

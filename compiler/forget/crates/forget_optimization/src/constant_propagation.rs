@@ -4,13 +4,12 @@ use forget_diagnostics::Diagnostic;
 use forget_estree::{BinaryOperator, JsValue};
 use forget_hir::{
     initialize_hir, merge_consecutive_blocks, BlockKind, Environment, Function, GotoKind,
-    GotoTerminal, IdentifierId, Instruction, InstructionValue, LoadGlobal, Operand, Primitive,
-    TerminalValue,
+    GotoTerminal, IdentifierId, InstructionValue, LoadGlobal, Primitive, TerminalValue,
 };
 use forget_ssa::eliminate_redundant_phis;
 
 pub fn constant_propagation(env: &Environment, fun: &mut Function) -> Result<(), Diagnostic> {
-    let mut constants = Constants::new();
+    let mut constants = Constants::default();
     constant_propagation_impl(env, fun, &mut constants)
 }
 
@@ -63,7 +62,7 @@ fn apply_constant_propagation(
         for phi in block.phis.iter() {
             let mut value: Option<Constant> = None;
             for (_, operand) in &phi.operands {
-                if let Some(operand_value) = constants.get(&operand.id) {
+                if let Some(operand_value) = constants.get(operand.id) {
                     match &mut value {
                         Some(value) if value == operand_value => {
                             // no-op
@@ -93,21 +92,23 @@ fn apply_constant_propagation(
                 continue;
             }
             let instr_ix = usize::from(*instr_ix);
-            let mut instr = std::mem::replace(
+            let lvalue_id = fun.body.instructions[instr_ix].lvalue.identifier.id;
+            let mut value = std::mem::replace(
                 &mut fun.body.instructions[instr_ix].value,
                 InstructionValue::Tombstone,
             );
-            evaluate_instruction(env, &fun.body.instructions, &mut instr, constants)?;
-            fun.body.instructions[instr_ix].value = instr;
+            let const_value = evaluate_instruction(env, &mut value, constants)?;
+            if let Some(const_value) = const_value {
+                constants.insert(lvalue_id, const_value);
+            }
+            fun.body.instructions[instr_ix].value = value;
         }
 
         // If the block ends in an `if` and the test value is a constant primitive,
         // then convert the terminal into a goto to either the consequent or alternate
         // in this case, only the selected branch is reachable
         if let TerminalValue::If(terminal) = &mut block.terminal.value {
-            if let Some(primitive) =
-                read_primitive_instruction(&fun.body.instructions, &terminal.test)
-            {
+            if let Some(primitive) = constants.get_primitive(terminal.test.identifier.id) {
                 let target_block_id = if primitive.value.is_truthy() {
                     terminal.consequent
                 } else {
@@ -125,147 +126,145 @@ fn apply_constant_propagation(
     Ok(has_changes)
 }
 
-fn read_primitive_instruction(instrs: &[Instruction], operand: &Operand) -> Option<Primitive> {
-    let instr = &instrs[usize::from(operand.ix)].value;
-    if let InstructionValue::Primitive(primitive) = instr {
-        Some(primitive.clone())
-    } else {
-        None
-    }
-}
-
 fn evaluate_instruction(
     env: &Environment,
-    instrs: &[Instruction],
     mut instr: &mut InstructionValue,
     constants: &mut Constants,
-) -> Result<(), Diagnostic> {
-    let read_constant = |operand: &Operand| {
-        let instr = &instrs[usize::from(operand.ix)].value;
-        match instr {
-            InstructionValue::Primitive(value) => Some(Constant::Primitive(value.clone())),
-            InstructionValue::LoadGlobal(value) => Some(Constant::Global(value.clone())),
-            _ => None,
-        }
-    };
+) -> Result<Option<Constant>, Diagnostic> {
     match &mut instr {
+        InstructionValue::Primitive(value) => Ok(Some(Constant::Primitive(value.clone()))),
+        InstructionValue::LoadGlobal(value) => Ok(Some(Constant::Global(value.clone()))),
         InstructionValue::Binary(value) => {
-            let left = read_primitive_instruction(instrs, &value.left);
-            let right = read_primitive_instruction(instrs, &value.right);
+            let left = constants.get_primitive(value.left.identifier.id);
+            let right = constants.get_primitive(value.right.identifier.id);
             match (left, right) {
                 (Some(left), Some(right)) => {
-                    if let Some(result) = apply_binary_operator(env, left, value.operator, right) {
-                        *instr = InstructionValue::Primitive(result);
+                    if let Some(result) =
+                        apply_binary_operator(env, &left.value, value.operator, &right.value)
+                    {
+                        *instr = InstructionValue::Primitive(Primitive {
+                            value: result.clone(),
+                        });
+                        Ok(Some(Constant::Primitive(Primitive { value: result })))
+                    } else {
+                        Ok(None)
                     }
                 }
                 _ => {
                     // no-op, not all operands are known
+                    Ok(None)
                 }
             }
         }
         InstructionValue::LoadLocal(value) => {
-            if let Some(const_value) = constants.get(&value.place.identifier.id) {
+            if let Some(const_value) = constants.get(value.place.identifier.id) {
                 *instr = const_value.into();
+                Ok(Some(const_value.clone()))
+            } else {
+                Ok(None)
             }
         }
         InstructionValue::StoreLocal(value) => {
-            if let Some(const_value) = read_constant(&value.value) {
-                constants.insert(value.lvalue.identifier.identifier.id, const_value);
+            if let Some(const_value) = constants.get(value.value.identifier.id).cloned() {
+                constants.insert(value.lvalue.identifier.identifier.id, const_value.clone());
+                Ok(Some(const_value))
+            } else {
+                Ok(None)
             }
         }
         InstructionValue::Function(value) => {
             // TODO: due to the outer fixpoint iteration this could visit the same
             // function many times. However we only strictly have to visit the function
             // again if the context variable's constant values have changed since last
-            // time.
-            // Instead, we can:
-            // - Create a filtered Constants instance that extracts just the values for
-            //   the function (using its context variables list)
-            // - Track the last such filtered Constants instance we visited the function
-            //   with. Only visit again if the Constants have changed.
+            // time. Improve this by tracking the inner_constants value with which we
+            // last visited, and skip visiting if the same
             let mut inner_constants: Constants = value
                 .lowered_function
                 .context
                 .iter()
                 .filter_map(|id| {
-                    let value = constants.get(&id.identifier.id);
+                    let value = constants.get(id.identifier.id);
                     value.map(|value| (id.identifier.id, value.clone()))
                 })
                 .collect();
             constant_propagation_impl(env, &mut value.lowered_function, &mut inner_constants)?;
+            Ok(None)
         }
         _ => {
             // no-op, not all instructions can be processed
+            Ok(None)
         }
     }
-    Ok(())
 }
 
 fn apply_binary_operator(
     _env: &Environment,
-    left: Primitive,
+    left: &JsValue,
     operator: BinaryOperator,
-    right: Primitive,
-) -> Option<Primitive> {
-    match (left.value, right.value) {
+    right: &JsValue,
+) -> Option<JsValue> {
+    match (left, right) {
         (JsValue::Number(left), JsValue::Number(right)) => match operator {
-            BinaryOperator::Add => Some(Primitive {
-                value: JsValue::Number(left + right),
-            }),
-            BinaryOperator::Subtract => Some(Primitive {
-                value: JsValue::Number(left - right),
-            }),
-            BinaryOperator::Multiply => Some(Primitive {
-                value: JsValue::Number(left * right),
-            }),
-            BinaryOperator::Divide => Some(Primitive {
-                value: JsValue::Number(left / right),
-            }),
-            BinaryOperator::LessThan => Some(Primitive {
-                value: JsValue::Boolean(left < right),
-            }),
-            BinaryOperator::LessThanOrEqual => Some(Primitive {
-                value: JsValue::Boolean(left <= right),
-            }),
-            BinaryOperator::GreaterThan => Some(Primitive {
-                value: JsValue::Boolean(left > right),
-            }),
-            BinaryOperator::GreaterThanOrEqual => Some(Primitive {
-                value: JsValue::Boolean(left >= right),
-            }),
-            BinaryOperator::Equals => Some(Primitive {
-                value: JsValue::Boolean(left.equals(right)),
-            }),
-            BinaryOperator::NotEquals => Some(Primitive {
-                value: JsValue::Boolean(left.not_equals(right)),
-            }),
-            BinaryOperator::StrictEquals => Some(Primitive {
-                value: JsValue::Boolean(left.equals(right)),
-            }),
-            BinaryOperator::NotStrictEquals => Some(Primitive {
-                value: JsValue::Boolean(left.not_equals(right)),
-            }),
+            BinaryOperator::Add => Some(JsValue::Number(*left + *right)),
+            BinaryOperator::Subtract => Some(JsValue::Number(*left - *right)),
+            BinaryOperator::Multiply => Some(JsValue::Number(*left * *right)),
+            BinaryOperator::Divide => Some(JsValue::Number(*left / *right)),
+            BinaryOperator::LessThan => Some(JsValue::Boolean(*left < *right)),
+            BinaryOperator::LessThanOrEqual => Some(JsValue::Boolean(*left <= *right)),
+            BinaryOperator::GreaterThan => Some(JsValue::Boolean(*left > *right)),
+            BinaryOperator::GreaterThanOrEqual => Some(JsValue::Boolean(*left >= *right)),
+            BinaryOperator::Equals => Some(JsValue::Boolean(left.equals(*right))),
+            BinaryOperator::NotEquals => Some(JsValue::Boolean(left.not_equals(*right))),
+            BinaryOperator::StrictEquals => Some(JsValue::Boolean(left.equals(*right))),
+            BinaryOperator::NotStrictEquals => Some(JsValue::Boolean(left.not_equals(*right))),
             _ => None,
         },
         (left, right) => match operator {
-            BinaryOperator::Equals => left.loosely_equals(&right).map(|value| Primitive {
-                value: JsValue::Boolean(value),
-            }),
-            BinaryOperator::NotEquals => left.not_loosely_equals(&right).map(|value| Primitive {
-                value: JsValue::Boolean(value),
-            }),
-            BinaryOperator::StrictEquals => Some(Primitive {
-                value: JsValue::Boolean(left.strictly_equals(&right)),
-            }),
-            BinaryOperator::NotStrictEquals => Some(Primitive {
-                value: JsValue::Boolean(left.not_strictly_equals(&right)),
-            }),
+            BinaryOperator::Equals => left
+                .loosely_equals(&right)
+                .map(|value| JsValue::Boolean(value)),
+            BinaryOperator::NotEquals => left
+                .not_loosely_equals(&right)
+                .map(|value| JsValue::Boolean(value)),
+            BinaryOperator::StrictEquals => Some(JsValue::Boolean(left.strictly_equals(&right))),
+            BinaryOperator::NotStrictEquals => {
+                Some(JsValue::Boolean(left.not_strictly_equals(&right)))
+            }
             _ => None,
         },
     }
 }
 
-type Constants = HashMap<IdentifierId, Constant>;
+#[derive(Default)]
+struct Constants {
+    data: HashMap<IdentifierId, Constant>,
+}
+
+impl Constants {
+    fn get_primitive(&self, id: IdentifierId) -> Option<&Primitive> {
+        if let Some(Constant::Primitive(primitive)) = &self.data.get(&id) {
+            Some(primitive)
+        } else {
+            None
+        }
+    }
+
+    fn get(&self, id: IdentifierId) -> Option<&Constant> {
+        self.data.get(&id)
+    }
+
+    fn insert(&mut self, id: IdentifierId, constant: Constant) {
+        self.data.insert(id, constant);
+    }
+}
+
+impl FromIterator<(IdentifierId, Constant)> for Constants {
+    fn from_iter<T: IntoIterator<Item = (IdentifierId, Constant)>>(iter: T) -> Self {
+        Self {
+            data: FromIterator::from_iter(iter),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Constant {

@@ -4,11 +4,12 @@ use std::rc::Rc;
 
 use forget_estree::{BinaryOperator, JsValue};
 
-use crate::{Function, IdentifierId, InstrIx, InstructionId, ScopeId, Type};
+use crate::{Function, IdentifierId, InstructionId, ScopeId, Type};
 
 #[derive(Debug)]
 pub struct Instruction {
     pub id: InstructionId,
+    pub lvalue: IdentifierOperand,
     pub value: InstructionValue,
 }
 
@@ -91,7 +92,7 @@ impl Instruction {
 
     pub fn each_operand<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(&mut Operand) -> (),
+        F: FnMut(&mut IdentifierOperand) -> (),
     {
         match &mut self.value {
             InstructionValue::Array(value) => {
@@ -194,26 +195,26 @@ pub struct Array {
 
 #[derive(Debug)]
 pub enum PlaceOrSpread {
-    Place(Operand),
-    Spread(Operand),
+    Place(IdentifierOperand),
+    Spread(IdentifierOperand),
 }
 
 #[derive(Debug)]
 pub struct Binary {
-    pub left: Operand,
+    pub left: IdentifierOperand,
     pub operator: BinaryOperator,
-    pub right: Operand,
+    pub right: IdentifierOperand,
 }
 
 #[derive(Debug)]
 pub struct Call {
-    pub callee: Operand,
+    pub callee: IdentifierOperand,
     pub arguments: Vec<PlaceOrSpread>,
 }
 
 #[derive(Debug)]
 pub struct FunctionExpression {
-    pub dependencies: Vec<Operand>,
+    pub dependencies: Vec<IdentifierOperand>,
     pub lowered_function: Box<Function>,
 }
 
@@ -229,7 +230,7 @@ pub struct LoadLocal {
 
 #[derive(Debug)]
 pub struct LoadContext {
-    pub place: Operand,
+    pub place: IdentifierOperand,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -250,26 +251,25 @@ pub struct DeclareContext {
 #[derive(Debug)]
 pub struct StoreLocal {
     pub lvalue: LValue,
-    pub value: Operand,
+    pub value: IdentifierOperand,
 }
 
 #[derive(Debug)]
 pub struct JSXElement {
-    pub tag: Operand,
+    pub tag: IdentifierOperand,
     pub props: Vec<JSXAttribute>,
-    pub children: Option<Vec<Operand>>,
+    pub children: Option<Vec<IdentifierOperand>>,
 }
 
 #[derive(Debug)]
 pub enum JSXAttribute {
-    Spread { argument: Operand },
-    Attribute { name: String, value: Operand },
-}
-
-#[derive(Clone, Debug)]
-pub struct Operand {
-    pub ix: InstrIx,
-    pub effect: Option<Effect>,
+    Spread {
+        argument: IdentifierOperand,
+    },
+    Attribute {
+        name: String,
+        value: IdentifierOperand,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -357,10 +357,16 @@ impl Display for Effect {
 
 #[derive(Clone, Debug)]
 pub struct Identifier {
-    /// Uniquely identifiers this identifier
+    /// Uniquely identifies this identifier
     pub id: IdentifierId,
+
+    /// The name of the identifier, if this corresponds to a named identifier in the
+    /// original program. May also be set for generated identifiers that must be
+    /// emitted as a variable declaration.
     pub name: Option<String>,
 
+    /// Shared data, such as the mutable range and scope of the value referred to by
+    /// the identifier.
     pub data: Rc<RefCell<IdentifierData>>,
 }
 
@@ -370,6 +376,8 @@ pub struct IdentifierData {
 
     pub scope: Option<ReactiveScope>,
 
+    /// NOTE: consider moving this to `Identifier` to support control-flow specific
+    /// type information
     pub type_: Type,
 }
 
