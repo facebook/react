@@ -330,7 +330,9 @@ function shouldVisitNode(
   pass: CompilerPass
 ): boolean {
   if (pass.opts.enableOnlyOnReactScript) {
-    if (!fn.get("__componentDeclaration")) {
+    // Typescript gets angry about lookup the magic prop
+    let fnAny = fn as any;
+    if (!fnAny.node.__componentDeclaration) {
       return false;
     }
   }
