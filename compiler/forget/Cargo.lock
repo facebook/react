@@ -272,6 +272,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "forget_reactive_ir"
+version = "0.1.0"
+dependencies = [
+ "forget_hir",
+]
+
+[[package]]
 name = "forget_semantic_analysis"
 version = "0.1.0"
 dependencies = [

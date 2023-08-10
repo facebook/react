@@ -21,6 +21,7 @@ forget_fixtures = { path = "crates/forget_fixtures" }
 forget_hermes_parser = { path = "crates/forget_hermes_parser" }
 forget_hir = { path = "crates/forget_hir" }
 forget_optimization = { path = "crates/forget_optimization" }
+forget_reactive_ir = { path = "crates/forget_reactive_ir" }
 forget_semantic_analysis = { path = "crates/forget_semantic_analysis" }
 forget_ssa = { path = "crates/forget_ssa" }
 forget_utils = { path = "crates/forget_utils" }
