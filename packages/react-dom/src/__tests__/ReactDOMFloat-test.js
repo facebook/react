@@ -3771,6 +3771,163 @@ body {
     );
   });
 
+  it('can emit preloads for non-lazy images that are rendered', async () => {
+    function App() {
+      ReactDOM.preload('script', {as: 'script'});
+      ReactDOM.preload('a', {as: 'image'});
+      ReactDOM.preload('b', {as: 'image'});
+      return (
+        <html>
+          <body>
+            <img src="a" />
+            <img src="b" loading="lazy" />
+            <img src="b2" loading="lazy" />
+            <img src="c" imageSrcSet="srcsetc" />
+            <img src="d" imageSrcSet="srcsetd" imageSizes="sizesd" />
+            <img src="d" imageSrcSet="srcsetd" imageSizes="sizesd2" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    // non-lazy images are first, then arbitrary preloads like for the script and lazy images
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="a" as="image" />
+          <link rel="preload" as="image" imagesrcset="srcsetc" />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="srcsetd"
+            imagesizes="sizesd"
+          />
+          <link
+            rel="preload"
+            as="image"
+            imagesrcset="srcsetd"
+            imagesizes="sizesd2"
+          />
+          <link rel="preload" href="script" as="script" />
+          <link rel="preload" href="b" as="image" />
+        </head>
+        <body>
+          <img src="a" />
+          <img src="b" loading="lazy" />
+          <img src="b2" loading="lazy" />
+          <img src="c" imagesrcset="srcsetc" />
+          <img src="d" imagesrcset="srcsetd" imagesizes="sizesd" />
+          <img src="d" imagesrcset="srcsetd" imagesizes="sizesd2" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('Does not preload lazy images', async () => {
+    function App() {
+      ReactDOM.preload('a', {as: 'image'});
+      return (
+        <html>
+          <body>
+            <img src="a" fetchPriority="low" />
+            <img src="b" fetchPriority="low" />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" href="a" />
+        </head>
+        <body>
+          <img src="a" fetchpriority="low" />
+          <img src="b" fetchpriority="low" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('preloads up to 10 suspensey images as high priority when fetchPriority is not specified', async () => {
+    function App() {
+      ReactDOM.preload('1', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preload('auto', {as: 'image'});
+      ReactDOM.preload('low', {as: 'image', fetchPriority: 'low'});
+      ReactDOM.preload('9', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preload('10', {as: 'image', fetchPriority: 'high'});
+      return (
+        <html>
+          <body>
+            {/* skipping 1 */}
+            <img src="2" />
+            <img src="3" fetchPriority="auto" />
+            <img src="4" fetchPriority="high" />
+            <img src="5" />
+            <img src="5low" fetchPriority="low" />
+            <img src="6" />
+            <img src="7" />
+            <img src="8" />
+            <img src="9" />
+            {/* skipping 10 */}
+            <img src="11" />
+            <img src="12" fetchPriority="high" />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          {/* First we see the preloads calls that made it to the high priority image queue */}
+          <link rel="preload" as="image" href="1" fetchpriority="high" />
+          <link rel="preload" as="image" href="9" fetchpriority="high" />
+          <link rel="preload" as="image" href="10" fetchpriority="high" />
+          {/* Next we see up to 7 more images qualify for high priority image queue */}
+          <link rel="preload" as="image" href="2" />
+          <link rel="preload" as="image" href="3" fetchpriority="auto" />
+          <link rel="preload" as="image" href="4" fetchpriority="high" />
+          <link rel="preload" as="image" href="5" />
+          <link rel="preload" as="image" href="6" />
+          <link rel="preload" as="image" href="7" />
+          <link rel="preload" as="image" href="8" />
+          {/* Next we see images that are explicitly high priority and thus make it to the high priority image queue */}
+          <link rel="preload" as="image" href="12" fetchpriority="high" />
+          {/* Next we see the remaining preloads that did not make it to the high priority image queue */}
+          <link rel="preload" as="image" href="auto" />
+          <link rel="preload" as="image" href="low" fetchpriority="low" />
+          <link rel="preload" as="image" href="11" />
+        </head>
+        <body>
+          {/* skipping 1 */}
+          <img src="2" />
+          <img src="3" fetchpriority="auto" />
+          <img src="4" fetchpriority="high" />
+          <img src="5" />
+          <img src="5low" fetchpriority="low" />
+          <img src="6" />
+          <img src="7" />
+          <img src="8" />
+          <img src="9" />
+          {/* skipping 10 */}
+          <img src="11" />
+          <img src="12" fetchpriority="high" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
