@@ -2,9 +2,8 @@ use std::collections::HashSet;
 
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
-    ExpressionOrSuper, ForInit, ForStatement, Function, FunctionExpression, IfStatement,
-    IntoFunction, JsValue, Literal, Number, Pattern, Statement, VariableDeclaration,
+    AssignmentTarget, BlockStatement, Expression, ExpressionOrSpread, ExpressionOrSuper, ForInit,
+    Function, IntoFunction, JsValue, Pattern, Statement, VariableDeclaration,
     VariableDeclarationKind,
 };
 use forget_hir::{
@@ -13,7 +12,7 @@ use forget_hir::{
     Operand, PlaceOrSpread, TerminalValue,
 };
 
-use crate::builder::{Binding, Builder, LoopScope};
+use crate::builder::{Builder, LoopScope};
 use crate::context::get_context_identifiers;
 use crate::error::BuildHIRError;
 
@@ -490,9 +489,7 @@ fn lower_function<T: IntoFunction>(
     _builder: &mut Builder,
     function: &T,
 ) -> Result<forget_hir::FunctionExpression, Diagnostic> {
-    println!("get_context_identifiers() ...");
     let context_identifiers = get_context_identifiers(env, function);
-    println!("ok");
     let mut context = Vec::new();
     let mut seen = HashSet::new();
     for declaration_id in context_identifiers {
@@ -526,7 +523,7 @@ fn lower_jsx_element(
         .iter()
         .map(|attr| lower_jsx_attribute(env, builder, attr))
         .collect();
-    let props = props?;
+    let _props = props?;
     let children: Result<Vec<Operand>, Diagnostic> = expr
         .children
         .iter()
@@ -535,7 +532,7 @@ fn lower_jsx_element(
             Ok(Operand { effect: None, ix })
         })
         .collect();
-    let children = children?;
+    let _children = children?;
     todo!("lower jsx element");
     // Ok(JSXElement {
     //     tag: todo!(),
@@ -549,17 +546,17 @@ fn lower_jsx_element(
 }
 
 fn lower_jsx_attribute(
-    env: &Environment,
-    builder: &mut Builder,
-    attr: &forget_estree::JSXAttributeOrSpread,
+    _env: &Environment,
+    _builder: &mut Builder,
+    _attr: &forget_estree::JSXAttributeOrSpread,
 ) -> Result<JSXAttribute, Diagnostic> {
     todo!("lower jsx attribute")
 }
 
 fn lower_jsx_child(
-    env: &Environment,
-    builder: &mut Builder,
-    child: &forget_estree::JSXChildItem,
+    _env: &Environment,
+    _builder: &mut Builder,
+    _child: &forget_estree::JSXChildItem,
 ) -> Result<InstrIx, Diagnostic> {
     todo!("lower jsx child")
 }
@@ -603,7 +600,7 @@ fn lower_assignment_pattern(
 
 fn lower_identifier_for_assignment(
     env: &Environment,
-    builder: &mut Builder,
+    _builder: &mut Builder,
     kind: InstructionKind,
     node: &forget_estree::Identifier,
 ) -> Result<IdentifierOperand, Diagnostic> {

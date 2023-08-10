@@ -145,7 +145,7 @@ pub trait Visitor_DEPRECATED<'ast> {
                     self.visit_variable_declarator(declarator)
                 }
             }
-            Declaration::TSTypeAliasDeclaration(declaration) => {
+            Declaration::TSTypeAliasDeclaration(_declaration) => {
                 todo!("visit TSTypeAliasDeclaration")
             }
         }
@@ -268,7 +268,7 @@ pub trait Visitor_DEPRECATED<'ast> {
                 self.visit_expression(&stmt.object);
                 self.visit_statement(&stmt.body);
             }
-            Statement::TSTypeAliasDeclaration(stmt) => {
+            Statement::TSTypeAliasDeclaration(_stmt) => {
                 todo!("visit TSTypeAliasDeclaration")
             }
         }

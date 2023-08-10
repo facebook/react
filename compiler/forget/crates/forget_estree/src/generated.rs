@@ -1,5 +1,8 @@
 // @generated
 #![cfg_attr(rustfmt, rustfmt_skip)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+#![allow(non_snake_case)]
 use std::num::NonZeroU32;
 use serde::ser::{Serializer, SerializeMap};
 use serde::{Serialize, Deserialize};

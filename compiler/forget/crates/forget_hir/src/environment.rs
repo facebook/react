@@ -1,10 +1,9 @@
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
-use std::process::id;
 use std::rc::Rc;
 
-use forget_estree::{BindingId, ESTreeNode};
-use forget_semantic_analysis::{AstNode, DeclarationId, ScopeManager, ScopeView};
+use forget_estree::ESTreeNode;
+use forget_semantic_analysis::{DeclarationId, ScopeManager, ScopeView};
 
 use crate::{
     BlockId, Features, Identifier, IdentifierData, IdentifierId, Registry, Type, TypeVarId,

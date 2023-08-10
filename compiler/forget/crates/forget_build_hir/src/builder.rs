@@ -3,9 +3,9 @@ use std::rc::Rc;
 
 use forget_diagnostics::Diagnostic;
 use forget_hir::{
-    initialize_hir, BasicBlock, BlockId, BlockKind, Blocks, Environment, GotoKind, Identifier,
-    IdentifierData, InstrIx, Instruction, InstructionIdGenerator, InstructionValue, Terminal,
-    TerminalValue, Type, HIR,
+    initialize_hir, BasicBlock, BlockId, BlockKind, Blocks, Environment, GotoKind, IdentifierData,
+    InstrIx, Instruction, InstructionIdGenerator, InstructionValue, Terminal, TerminalValue, Type,
+    HIR,
 };
 
 use crate::BuildHIRError;
@@ -40,12 +40,6 @@ pub(crate) struct WipBlock {
     pub id: BlockId,
     pub kind: BlockKind,
     pub instructions: Vec<InstrIx>,
-}
-
-pub(crate) enum Binding {
-    Local(Identifier),
-    Module(Identifier),
-    Global,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]

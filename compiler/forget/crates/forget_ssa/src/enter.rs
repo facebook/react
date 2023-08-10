@@ -184,9 +184,9 @@ impl<'e, 'f> Builder<'e, 'f> {
         // Else we have to look at predecessor blocks: bail if no predecessors
         let block = self.blocks.block(block_id);
         if block.predecessors.is_empty() {
-            println!("Unable to find previous id for {old_identifier:?}");
-            self.unknown.insert(old_identifier.id);
-            return old_identifier.clone();
+            panic!("Unable to find previous id for {old_identifier:?}");
+            // self.unknown.insert(old_identifier.id);
+            // return old_identifier.clone();
         }
         // If we haven't visited all predecessors, synthesize a new identifier
         // and save it as an incomplete phi

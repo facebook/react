@@ -22,7 +22,6 @@ fn fixtures() {
         let mut output = String::new();
 
         let analysis = analyze(&ast);
-        // println!("{:#?}", analysis.debug());
         let environment = Environment::new(
             Features {
                 validate_frozen_lambdas: true,
@@ -38,10 +37,6 @@ fn fixtures() {
                     }
                     match build(&environment, &fun.function) {
                         Ok(mut fun) => {
-                            // println!("{fun:#?}");
-                            // let mut out = String::new();
-                            // fun.print(&fun.body, &mut out).unwrap();
-                            // println!("{out}");
                             println!("ok build");
                             enter_ssa(&environment, &mut fun).unwrap();
                             println!("ok enter_ssa");

@@ -1,9 +1,8 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
-    ExpressionOrSuper, ForInInit, ForInit, Function, FunctionBody, Identifier, IntoFunction,
-    JSXElementName, Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind,
-    Visitor,
+    ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier, IntoFunction, JSXElementName,
+    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor,
 };
 
 use crate::{AstNode, DeclarationKind, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager};

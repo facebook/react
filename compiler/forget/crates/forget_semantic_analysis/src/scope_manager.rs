@@ -180,11 +180,11 @@ impl ScopeManager {
         }
     }
 
-    pub fn lookup_break(&self, scope: ScopeId) -> Option<&Label> {
+    pub fn lookup_break(&self, _scope: ScopeId) -> Option<&Label> {
         todo!()
     }
 
-    pub fn lookup_continue(&self, scope: ScopeId) -> Option<&Label> {
+    pub fn lookup_continue(&self, _scope: ScopeId) -> Option<&Label> {
         todo!()
     }
 
