@@ -6,6 +6,8 @@
 export default component Foo(bar: number) {
   return <Bar bar={bar} />;
 }
+
+function shouldNotCompile() {}
 ```
 
 ## Code
@@ -26,6 +28,8 @@ export default function Foo(t7) {
   }
   return t0;
 }
+
+function shouldNotCompile() {}
 
 ```
       
