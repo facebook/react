@@ -83,20 +83,6 @@ impl<'m> ScopeView<'m> {
 
 impl<'m> std::fmt::Debug for ScopeView<'m> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let labels: IndexMap<_, _> = self
-            .scope
-            .labels
-            .iter()
-            .map(|(name, label)| {
-                (
-                    name.clone(),
-                    LabelView {
-                        manager: &self.manager,
-                        label: self.manager.label(*label),
-                    },
-                )
-            })
-            .collect();
         let declarations: IndexMap<_, _> = self
             .scope
             .declarations
@@ -132,7 +118,6 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
         f.debug_struct("Scope")
             .field("id", &self.scope.id)
             .field("kind", &self.scope.kind)
-            .field("labels", &labels)
             .field("declarations", &declarations)
             .field("references", &references)
             .field("children", &children)

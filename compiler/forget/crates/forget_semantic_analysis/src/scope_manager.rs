@@ -40,7 +40,6 @@ impl ScopeManager {
                 id: root_id,
                 kind: ScopeKind::Global,
                 parent: None,
-                labels: Default::default(),
                 declarations: Default::default(),
                 references: Default::default(),
                 children: Default::default(),
@@ -166,28 +165,6 @@ impl ScopeManager {
             })
     }
 
-    pub fn lookup_label(&self, scope: ScopeId, name: &str) -> Option<&Label> {
-        let mut current = &self.scopes[scope.0];
-        loop {
-            if let Some(id) = current.labels.get(name) {
-                return Some(&self.labels[id.0]);
-            }
-            if let Some(parent) = current.parent {
-                current = &self.scopes[parent.0];
-            } else {
-                return None;
-            }
-        }
-    }
-
-    pub fn lookup_break(&self, _scope: ScopeId) -> Option<&Label> {
-        todo!()
-    }
-
-    pub fn lookup_continue(&self, _scope: ScopeId) -> Option<&Label> {
-        todo!()
-    }
-
     pub fn lookup_declaration(&self, scope: ScopeId, name: &str) -> Option<&Declaration> {
         let mut current = &self.scopes[scope.0];
         loop {
@@ -212,7 +189,6 @@ impl ScopeManager {
             id,
             kind,
             parent: Some(parent),
-            labels: Default::default(),
             declarations: Default::default(),
             references: Default::default(),
             children: Default::default(),
@@ -223,16 +199,23 @@ impl ScopeManager {
 
     pub(crate) fn add_label(&mut self, scope: ScopeId, kind: LabelKind, name: String) -> LabelId {
         let id = LabelId(self.labels.len());
-        self.labels.push(Label { id, kind, scope });
-        self.scopes[scope.0].labels.insert(name, id);
+        self.labels.push(Label {
+            id,
+            kind,
+            scope,
+            name: Some(name),
+        });
         id
     }
 
     pub(crate) fn add_anonymous_label(&mut self, scope: ScopeId, kind: LabelKind) -> LabelId {
         let id = LabelId(self.labels.len());
-        let name = format!("#{}", id.0);
-        self.labels.push(Label { id, kind, scope });
-        self.scopes[scope.0].labels.insert(name, id);
+        self.labels.push(Label {
+            id,
+            kind,
+            scope,
+            name: None,
+        });
         id
     }
 
@@ -300,7 +283,6 @@ pub struct Scope {
     pub id: ScopeId,
     pub kind: ScopeKind,
     pub parent: Option<ScopeId>,
-    pub labels: IndexMap<String, LabelId>,
     pub declarations: IndexMap<String, DeclarationId>,
     pub references: Vec<ReferenceId>,
     pub children: Vec<ScopeId>,
@@ -317,6 +299,7 @@ pub struct Label {
     pub id: LabelId,
     pub kind: LabelKind,
     pub scope: ScopeId,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]

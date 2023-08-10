@@ -21,7 +21,6 @@ Scope {
         0,
     ),
     kind: Global,
-    labels: {},
     declarations: {},
     references: [],
     children: [
@@ -30,7 +29,6 @@ Scope {
                 1,
             ),
             kind: Module,
-            labels: {},
             declarations: {
                 "Component": Declaration {
                     id: DeclarationId(
@@ -49,7 +47,6 @@ Scope {
                         2,
                     ),
                     kind: Function,
-                    labels: {},
                     declarations: {
                         "a": Declaration {
                             id: DeclarationId(
@@ -100,7 +97,6 @@ Scope {
                                 3,
                             ),
                             kind: Function,
-                            labels: {},
                             declarations: {
                                 "foo_": Declaration {
                                     id: DeclarationId(
@@ -119,7 +115,6 @@ Scope {
                                         4,
                                     ),
                                     kind: Function,
-                                    labels: {},
                                     declarations: {
                                         "c": Declaration {
                                             id: DeclarationId(

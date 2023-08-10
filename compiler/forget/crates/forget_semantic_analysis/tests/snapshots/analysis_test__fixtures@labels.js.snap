@@ -25,7 +25,6 @@ Scope {
         0,
     ),
     kind: Global,
-    labels: {},
     declarations: {},
     references: [],
     children: [
@@ -34,7 +33,6 @@ Scope {
                 1,
             ),
             kind: Module,
-            labels: {},
             declarations: {
                 "Component": Declaration {
                     id: DeclarationId(
@@ -53,26 +51,6 @@ Scope {
                         2,
                     ),
                     kind: Function,
-                    labels: {
-                        "foo": Label {
-                            id: LabelId(
-                                0,
-                            ),
-                            kind: Loop,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "bar": Label {
-                            id: LabelId(
-                                1,
-                            ),
-                            kind: Other,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                    },
                     declarations: {
                         "props": Declaration {
                             id: DeclarationId(
@@ -114,7 +92,6 @@ Scope {
                                 3,
                             ),
                             kind: For,
-                            labels: {},
                             declarations: {
                                 "x": Declaration {
                                     id: DeclarationId(
@@ -160,7 +137,6 @@ Scope {
                                         4,
                                     ),
                                     kind: Block,
-                                    labels: {},
                                     declarations: {},
                                     references: [
                                         Reference {
@@ -222,7 +198,6 @@ Scope {
                                                 5,
                                             ),
                                             kind: Block,
-                                            labels: {},
                                             declarations: {},
                                             references: [],
                                             children: [],
@@ -236,7 +211,6 @@ Scope {
                                 6,
                             ),
                             kind: Block,
-                            labels: {},
                             declarations: {},
                             references: [],
                             children: [],

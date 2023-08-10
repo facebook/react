@@ -5,7 +5,9 @@ use forget_estree::{
     Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor,
 };
 
-use crate::{AstNode, DeclarationKind, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager};
+use crate::{
+    AstNode, DeclarationKind, LabelId, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager,
+};
 
 pub fn analyze(ast: &Program) -> ScopeManager {
     let mut analyzer = Analyzer::new();
@@ -15,6 +17,7 @@ pub fn analyze(ast: &Program) -> ScopeManager {
 
 struct Analyzer {
     manager: ScopeManager,
+    labels: Vec<LabelId>,
     current: ScopeId,
 }
 
@@ -22,7 +25,64 @@ impl Analyzer {
     fn new() -> Self {
         let manager = ScopeManager::new();
         let current = manager.root_id();
-        Self { manager, current }
+        let labels = Default::default();
+        Self {
+            manager,
+            labels,
+            current,
+        }
+    }
+
+    fn enter_label<F>(&mut self, id: LabelId, mut f: F)
+    where
+        F: FnMut(&mut Self) -> (),
+    {
+        self.labels.push(id);
+        f(self);
+        let last = self.labels.pop().unwrap();
+        assert_eq!(last, id);
+    }
+
+    fn lookup_break(&self, name: Option<&str>) -> Option<LabelId> {
+        for id in self.labels.iter().rev() {
+            let label = self.manager.label(*id);
+            match (name, &label.name) {
+                // If this is a labeled break, only return if an exact match
+                // is in scope
+                (Some(name), Some(label_name)) if name == label_name => {
+                    return Some(label.id);
+                }
+                // If this is an unlabeld break, return the innermost label id
+                (None, _) => {
+                    return Some(label.id);
+                }
+                _ => { /* no-op */ }
+            }
+        }
+        None
+    }
+
+    fn lookup_continue(&self, name: Option<&str>) -> Option<LabelId> {
+        for id in self.labels.iter().rev() {
+            let label = self.manager.label(*id);
+            // Skip labels that are not for loops, can only continue to a loop
+            if label.kind != LabelKind::Loop {
+                continue;
+            }
+            match (name, &label.name) {
+                // If this is a labeled break, only return if an exact match
+                // is in scope
+                (Some(name), Some(label_name)) if &name == label_name => {
+                    return Some(label.id);
+                }
+                // If this is an unlabeld break, return the innermost label id
+                (None, _) => {
+                    return Some(label.id);
+                }
+                _ => { /* no-op */ }
+            }
+        }
+        None
     }
 
     fn enter<F>(&mut self, kind: ScopeKind, mut f: F) -> ScopeId
@@ -196,12 +256,6 @@ impl Analyzer {
         body: &Statement,
         _range: Option<SourceRange>,
     ) {
-        // Record an anonymous label for the statement to resolve unlabeled break/continue
-        let label = self
-            .manager
-            .add_anonymous_label(self.current, LabelKind::Loop);
-        self.manager.node_labels.insert(ast, label);
-
         let mut for_scope: Option<ScopeId> = None;
         match left {
             ForInInit::VariableDeclaration(left) => {
@@ -215,7 +269,13 @@ impl Analyzer {
             }
         }
         self.visit_expression(right);
-        self.visit_statement(body);
+        let id = self
+            .manager
+            .add_anonymous_label(self.current, LabelKind::Loop);
+        self.manager.node_labels.insert(ast, id);
+        self.enter_label(id, |visitor| {
+            visitor.visit_statement(body);
+        });
         if let Some(for_scope) = for_scope {
             self.close_scope(for_scope);
         }
@@ -365,34 +425,22 @@ impl Visitor for Analyzer {
     }
 
     fn visit_break_statement(&mut self, ast: &forget_estree::BreakStatement) {
-        if let Some(label_node) = &ast.label {
-            if let Some(label) = self
-                .manager
-                .lookup_label(self.current, &label_node.name)
-                .cloned()
-            {
+        if let Some(label_id) =
+            self.lookup_break(ast.label.as_ref().map(|ident| ident.name.as_str()))
+        {
+            self.manager
+                .node_labels
+                .insert(AstNode::from(ast), label_id);
+            if let Some(label_node) = &ast.label {
                 self.manager
                     .node_labels
-                    .insert(AstNode::from(ast), label.id);
-                self.manager
-                    .node_labels
-                    .insert(AstNode::from(label_node), label.id);
-            } else {
-                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
-                    "Unknown break label",
-                    label_node.range,
-                ));
+                    .insert(AstNode::from(label_node), label_id);
             }
         } else {
-            if let Some(label) = self.manager.lookup_break(self.current).cloned() {
-                self.manager
-                    .node_labels
-                    .insert(AstNode::from(ast), label.id);
-            } else {
-                self.manager
-                    .diagnostics
-                    .push(Diagnostic::invalid_syntax("Invalid break", ast.range));
-            }
+            self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                "Non-syntactic break, could not resolve break target",
+                ast.range,
+            ));
         }
     }
 
@@ -414,34 +462,22 @@ impl Visitor for Analyzer {
     }
 
     fn visit_continue_statement(&mut self, ast: &forget_estree::ContinueStatement) {
-        if let Some(label_node) = &ast.label {
-            if let Some(label) = self
-                .manager
-                .lookup_label(self.current, &label_node.name)
-                .cloned()
-            {
+        if let Some(label_id) =
+            self.lookup_continue(ast.label.as_ref().map(|ident| ident.name.as_str()))
+        {
+            self.manager
+                .node_labels
+                .insert(AstNode::from(ast), label_id);
+            if let Some(label_node) = &ast.label {
                 self.manager
                     .node_labels
-                    .insert(AstNode::from(ast), label.id);
-                self.manager
-                    .node_labels
-                    .insert(AstNode::from(label_node), label.id);
-            } else {
-                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
-                    "Unknown continue label",
-                    label_node.range,
-                ));
+                    .insert(AstNode::from(label_node), label_id);
             }
         } else {
-            if let Some(label) = self.manager.lookup_continue(self.current).cloned() {
-                self.manager
-                    .node_labels
-                    .insert(AstNode::from(ast), label.id);
-            } else {
-                self.manager
-                    .diagnostics
-                    .push(Diagnostic::invalid_syntax("Invalid continue", ast.range));
-            }
+            self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                "Non-syntactic continue, could not resolve continue target",
+                ast.range,
+            ));
         }
     }
 
@@ -485,7 +521,13 @@ impl Visitor for Analyzer {
         if let Some(update) = &ast.update {
             self.visit_expression(update);
         }
-        self.visit_statement(&ast.body);
+        let id = self
+            .manager
+            .add_anonymous_label(self.current, LabelKind::Loop);
+        self.manager.node_labels.insert(AstNode::from(ast), id);
+        self.enter_label(id, |visitor| {
+            visitor.visit_statement(&ast.body);
+        });
         if let Some(for_scope) = for_scope {
             self.close_scope(for_scope);
         }
@@ -522,7 +564,9 @@ impl Visitor for Analyzer {
             .manager
             .add_label(self.current, kind, ast.label.name.clone());
         self.manager.node_labels.insert(AstNode::from(ast), id);
-        self.visit_statement(body);
+        self.enter_label(id, |visitor| {
+            visitor.visit_statement(body);
+        })
     }
 
     fn visit_member_expression(&mut self, ast: &forget_estree::MemberExpression) {
@@ -578,10 +622,16 @@ impl Visitor for Analyzer {
 
     fn visit_switch_statement(&mut self, ast: &forget_estree::SwitchStatement) {
         self.visit_expression(&ast.discriminant);
-        self.enter(ScopeKind::Switch, |visitor| {
-            for case_ in &ast.cases {
-                visitor.visit_switch_case(case_);
-            }
+        let id = self
+            .manager
+            .add_anonymous_label(self.current, LabelKind::Other);
+        self.manager.node_labels.insert(AstNode::from(ast), id);
+        self.enter_label(id, |visitor| {
+            visitor.enter(ScopeKind::Switch, |visitor| {
+                for case_ in &ast.cases {
+                    visitor.visit_switch_case(case_);
+                }
+            });
         });
     }
 
@@ -651,7 +701,7 @@ impl Visitor for Analyzer {
                     // should never result in an empty JSXIdentifier node. but just in
                     // case we report this rather than silently fail
                     self.manager.diagnostics.push(Diagnostic::invalid_syntax(
-                        "Expected JSXOpenintElement.name to be non-empty",
+                        "Expected JSXOpeningElement.name to be non-empty",
                         name.range,
                     ));
                 }
