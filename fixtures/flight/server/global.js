@@ -147,12 +147,17 @@ app.all('/', async function (req, res, next) {
       let root;
       let Root = () => {
         if (root) {
-          return root;
+          return React.use(root);
         }
-        root = createFromNodeStream(rscResponse, ssrBundleConfig.ssrManifest, {
-          moduleLoading: ssrBundleConfig.moduleLoading,
-        });
-        return root;
+        return React.use(
+          (root = createFromNodeStream(
+            rscResponse,
+            ssrBundleConfig.ssrManifest,
+            {
+              moduleLoading: ssrBundleConfig.moduleLoading,
+            }
+          ))
+        );
       };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');

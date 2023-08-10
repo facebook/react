@@ -5328,6 +5328,7 @@ function preinit(href: string, options: PreinitOptions): void {
         }
         return;
       }
+      case 'module':
       case 'script': {
         const src = href;
         const key = getResourceKey(as, src);

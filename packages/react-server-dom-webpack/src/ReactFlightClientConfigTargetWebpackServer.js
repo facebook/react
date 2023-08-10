@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {preinitModulesForSSR} from 'react-client/src/ReactFlightClientConfig';
+import {preinitScriptForSSR} from 'react-client/src/ReactFlightClientConfig';
 
 export type ModuleLoading = null | {
   prefix: string,
@@ -21,7 +21,7 @@ export function prepareDestinationWithChunks(
 ) {
   if (moduleLoading !== null) {
     for (let i = 1; i < chunks.length; i += 2) {
-      preinitModulesForSSR(
+      preinitScriptForSSR(
         moduleLoading.prefix + chunks[i],
         moduleLoading.crossOrigin,
       );

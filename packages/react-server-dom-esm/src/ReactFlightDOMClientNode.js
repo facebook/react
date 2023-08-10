@@ -41,9 +41,13 @@ export function createServerReference<A: Iterable<any>, T>(
 function createFromNodeStream<T>(
   stream: Readable,
   moduleRootPath: string,
-  moduleBaseURL: string, // TODO: Used for preloading hints
+  moduleBaseURL: string,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleRootPath, noServerCall);
+  const response: Response = createResponse(
+    moduleRootPath,
+    moduleBaseURL,
+    noServerCall,
+  );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);
   });

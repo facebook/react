@@ -36,6 +36,9 @@ async function renderApp(res, returnValue) {
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = returnValue ? {returnValue, root} : root;
   const {pipe} = renderToPipeableStream(payload, moduleBasePath);
+  await new Promise(res => {
+    setTimeout(res, 1000);
+  });
   pipe(res);
 }
 

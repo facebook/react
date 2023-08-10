@@ -25,6 +25,7 @@
 
 declare var $$$config: any;
 
+export opaque type ModuleLoading = mixed;
 export opaque type SSRManifest = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;

@@ -112,6 +112,7 @@ module.exports = [
       'react-server-dom-esm',
       'react-server-dom-esm/client',
       'react-server-dom-esm/client.browser',
+      'react-server-dom-esm/src/ReactFlightDOMClientBrowser.js', // react-server-dom-esm/client.browser
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -214,7 +215,8 @@ module.exports = [
       'react-server-dom-esm/client.node',
       'react-server-dom-esm/server',
       'react-server-dom-esm/server.node',
-      'react-server-dom-esm/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-server-dom-esm/src/ReactFlightDOMServerNode.js', // react-server-dom-esm/server.node
+      'react-server-dom-esm/src/ReactFlightDOMClientNode.js', // react-server-dom-esm/client.node
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
