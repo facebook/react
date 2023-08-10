@@ -676,7 +676,7 @@ fn convert_jsx_attribute(cx: &Context, attr: &JSXAttr) -> forget_estree::JSXAttr
 fn convert_literal(_cx: &Context, expr: &Lit) -> forget_estree::Literal {
     let (value, range, regex, bigint) = match expr {
         Lit::Bool(expr) => (
-            forget_estree::JsValue::Bool(expr.value),
+            forget_estree::JsValue::Boolean(expr.value),
             convert_span(&expr.span),
             None,
             None,

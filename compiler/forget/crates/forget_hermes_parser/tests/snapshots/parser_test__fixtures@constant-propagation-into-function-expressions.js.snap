@@ -62,7 +62,7 @@ Output:
                 },
                 "init": {
                   "type": "NumericLiteral",
-                  "value": 4631107791820423168,
+                  "value": 42.0,
                   "loc": null,
                   "range": {
                     "start": 0,

@@ -15,7 +15,7 @@ repository.workspace  = true
 [dev-dependencies]
 insta = { workspace = true }
 forget_estree = { workspace = true }
-forget_estree_swc = { workspace = true }
+forget_hermes_parser = { workspace = true }
 forget_hir = { workspace = true }
 forget_optimization = { workspace = true }
 forget_semantic_analysis = { workspace = true }

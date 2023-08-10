@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use forget_diagnostics::Diagnostic;
-use forget_estree::BinaryOperator;
+use forget_estree::{BinaryOperator, JsValue};
 use forget_hir::{
     initialize_hir, merge_consecutive_blocks, BlockKind, Environment, Function, GotoKind,
     GotoTerminal, IdentifierId, Instruction, InstructionValue, LoadGlobal, Operand, Primitive,
-    PrimitiveValue, TerminalValue,
+    TerminalValue,
 };
 use forget_ssa::eliminate_redundant_phis;
 
@@ -208,57 +208,57 @@ fn apply_binary_operator(
     right: Primitive,
 ) -> Option<Primitive> {
     match (left.value, right.value) {
-        (PrimitiveValue::Number(left), PrimitiveValue::Number(right)) => match operator {
+        (JsValue::Number(left), JsValue::Number(right)) => match operator {
             BinaryOperator::Add => Some(Primitive {
-                value: PrimitiveValue::Number(left + right),
+                value: JsValue::Number(left + right),
             }),
             BinaryOperator::Subtract => Some(Primitive {
-                value: PrimitiveValue::Number(left - right),
+                value: JsValue::Number(left - right),
             }),
             BinaryOperator::Multiply => Some(Primitive {
-                value: PrimitiveValue::Number(left * right),
+                value: JsValue::Number(left * right),
             }),
             BinaryOperator::Divide => Some(Primitive {
-                value: PrimitiveValue::Number(left / right),
+                value: JsValue::Number(left / right),
             }),
             BinaryOperator::LessThan => Some(Primitive {
-                value: PrimitiveValue::Boolean(left < right),
+                value: JsValue::Boolean(left < right),
             }),
             BinaryOperator::LessThanOrEqual => Some(Primitive {
-                value: PrimitiveValue::Boolean(left <= right),
+                value: JsValue::Boolean(left <= right),
             }),
             BinaryOperator::GreaterThan => Some(Primitive {
-                value: PrimitiveValue::Boolean(left > right),
+                value: JsValue::Boolean(left > right),
             }),
             BinaryOperator::GreaterThanOrEqual => Some(Primitive {
-                value: PrimitiveValue::Boolean(left >= right),
+                value: JsValue::Boolean(left >= right),
             }),
             BinaryOperator::Equals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.equals(right)),
+                value: JsValue::Boolean(left.equals(right)),
             }),
             BinaryOperator::NotEquals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.not_equals(right)),
+                value: JsValue::Boolean(left.not_equals(right)),
             }),
             BinaryOperator::StrictEquals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.equals(right)),
+                value: JsValue::Boolean(left.equals(right)),
             }),
             BinaryOperator::NotStrictEquals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.not_equals(right)),
+                value: JsValue::Boolean(left.not_equals(right)),
             }),
             _ => None,
         },
         (left, right) => match operator {
             BinaryOperator::Equals => left.loosely_equals(&right).map(|value| Primitive {
-                value: PrimitiveValue::Boolean(value),
+                value: JsValue::Boolean(value),
             }),
             BinaryOperator::NotEquals => left.not_loosely_equals(&right).map(|value| Primitive {
-                value: PrimitiveValue::Boolean(value),
+                value: JsValue::Boolean(value),
             }),
             BinaryOperator::StrictEquals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.strictly_equals(&right)),
+                value: JsValue::Boolean(left.strictly_equals(&right)),
             }),
             BinaryOperator::NotStrictEquals => Some(Primitive {
-                value: PrimitiveValue::Boolean(left.not_strictly_equals(&right)),
+                value: JsValue::Boolean(left.not_strictly_equals(&right)),
             }),
             _ => None,
         },

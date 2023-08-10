@@ -60,7 +60,7 @@ Output:
                   "elements": [
                     {
                       "type": "NumericLiteral",
-                      "value": 0,
+                      "value": 0.0,
                       "loc": null,
                       "range": {
                         "start": 0,
@@ -69,7 +69,7 @@ Output:
                     },
                     {
                       "type": "NumericLiteral",
-                      "value": 4607182418800017408,
+                      "value": 1.0,
                       "loc": null,
                       "range": {
                         "start": 0,
@@ -78,7 +78,7 @@ Output:
                     },
                     {
                       "type": "NumericLiteral",
-                      "value": 4611686018427387904,
+                      "value": 2.0,
                       "loc": null,
                       "range": {
                         "start": 0,
@@ -87,7 +87,7 @@ Output:
                     },
                     {
                       "type": "NumericLiteral",
-                      "value": 4613937818241073152,
+                      "value": 3.0,
                       "loc": null,
                       "range": {
                         "start": 0,
@@ -241,7 +241,7 @@ Output:
                     "operator": "===",
                     "right": {
                       "type": "NumericLiteral",
-                      "value": 0,
+                      "value": 0.0,
                       "loc": null,
                       "range": {
                         "start": 0,
@@ -329,7 +329,7 @@ Output:
                         "operator": "/",
                         "right": {
                           "type": "NumericLiteral",
-                          "value": 4611686018427387904,
+                          "value": 2.0,
                           "loc": null,
                           "range": {
                             "start": 0,

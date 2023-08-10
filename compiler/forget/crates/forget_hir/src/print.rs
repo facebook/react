@@ -1,10 +1,11 @@
 use std::fmt::{Result, Write};
 
+use forget_estree::JsValue;
 use forget_utils::ensure_sufficient_stack;
 
 use crate::{
     BasicBlock, Function, Identifier, IdentifierOperand, Instruction, InstructionValue, LValue,
-    Operand, Phi, PlaceOrSpread, PrimitiveValue, Terminal, TerminalValue, HIR,
+    Operand, Phi, PlaceOrSpread, Terminal, TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -149,14 +150,14 @@ impl Print for InstructionValue {
                 // Unlike other variants we don't print the variant name ("Primitive") since it's
                 // obvious
                 match &value.value {
-                    PrimitiveValue::Boolean(value) => write!(out, "{}", value)?,
-                    PrimitiveValue::Null => write!(out, "null")?,
-                    PrimitiveValue::Number(value) => write!(out, "{}", f64::from(*value))?,
+                    JsValue::Boolean(value) => write!(out, "{}", value)?,
+                    JsValue::Null => write!(out, "null")?,
+                    JsValue::Number(value) => write!(out, "{}", f64::from(*value))?,
 
                     // TODO: quote the string itself (JS version uses JSON.stringify())
-                    PrimitiveValue::String(value) => write!(out, "\"{}\"", value.as_str())?,
+                    JsValue::String(value) => write!(out, "\"{}\"", value.as_str())?,
 
-                    PrimitiveValue::Undefined => write!(out, "<undefined>")?,
+                    JsValue::Undefined => write!(out, "<undefined>")?,
                 };
             }
             InstructionValue::StoreLocal(value) => {

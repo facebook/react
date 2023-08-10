@@ -149,7 +149,7 @@ Output:
                     },
                     {
                       "type": "NumericLiteral",
-                      "value": 4617315517961601024,
+                      "value": 5.0,
                       "loc": null,
                       "range": {
                         "start": 0,

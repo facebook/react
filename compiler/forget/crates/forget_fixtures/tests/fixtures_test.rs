@@ -3,7 +3,7 @@ use std::fmt::Write;
 
 use forget_build_hir::build;
 use forget_estree::{ModuleItem, Statement};
-use forget_estree_swc::parse;
+use forget_hermes_parser::parse;
 use forget_hir::{inline_use_memo, Environment, Features, Print, Registry};
 use forget_optimization::constant_propagation;
 use forget_semantic_analysis::analyze;

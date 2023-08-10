@@ -104,7 +104,7 @@ Output:
                     },
                     "right": {
                       "type": "NumericLiteral",
-                      "value": 4621256167635550208,
+                      "value": 9.0,
                       "loc": null,
                       "range": {
                         "start": 0,

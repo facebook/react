@@ -612,9 +612,7 @@ Output:
                 },
                 "init": {
                   "type": "Literal",
-                  "value": {
-                    "Number": 0
-                  },
+                  "value": 0.0,
                   "raw": "0",
                   "regex": null,
                   "bigint": null,
@@ -697,9 +695,7 @@ Output:
                   },
                   "init": {
                     "type": "Literal",
-                    "value": {
-                      "Number": 0
-                    },
+                    "value": 0.0,
                     "raw": "0",
                     "regex": null,
                     "bigint": null,
@@ -777,9 +773,7 @@ Output:
               "operator": "<",
               "right": {
                 "type": "Literal",
-                "value": {
-                  "Number": 10
-                },
+                "value": 10.0,
                 "raw": "10",
                 "regex": null,
                 "bigint": null,

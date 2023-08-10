@@ -151,7 +151,7 @@ Output:
                     "operator": "*",
                     "right": {
                       "type": "NumericLiteral",
-                      "value": 4621819117588971520,
+                      "value": 10.0,
                       "loc": null,
                       "range": {
                         "start": 0,

@@ -515,7 +515,7 @@ version = "0.1.0"
 dependencies = [
  "forget_build_hir",
  "forget_estree",
- "forget_estree_swc",
+ "forget_hermes_parser",
  "forget_hir",
  "forget_optimization",
  "forget_semantic_analysis",

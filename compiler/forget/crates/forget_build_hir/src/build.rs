@@ -4,13 +4,13 @@ use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentTarget, BinaryExpression, BlockStatement, Expression, ExpressionOrSpread,
     ExpressionOrSuper, ForInit, ForStatement, Function, FunctionExpression, IfStatement,
-    IntoFunction, JsValue, Literal, Pattern, Statement, VariableDeclaration,
+    IntoFunction, JsValue, Literal, Number, Pattern, Statement, VariableDeclaration,
     VariableDeclarationKind,
 };
 use forget_hir::{
     BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand, InstrIx,
     InstructionKind, InstructionValue, JSXAttribute, JSXElement, LValue, LoadGlobal, LoadLocal,
-    Operand, PlaceOrSpread, PrimitiveValue, TerminalValue,
+    Operand, PlaceOrSpread, TerminalValue,
 };
 
 use crate::builder::{Binding, Builder, LoopScope};
@@ -66,7 +66,7 @@ pub fn build(env: &Environment, fun: &Function) -> Result<Box<forget_hir::Functi
     // block with an explicit `return undefined`. If the function *did* return,
     // this will be unreachable and get pruned later.
     let implicit_return_value = builder.push(InstructionValue::Primitive(forget_hir::Primitive {
-        value: PrimitiveValue::Undefined,
+        value: JsValue::Undefined,
     }));
     builder.terminate(
         TerminalValue::Return(forget_hir::ReturnTerminal {
@@ -137,7 +137,7 @@ fn lower_statement(
             let ix = match &stmt.argument {
                 Some(argument) => lower_expression(env, builder, argument)?,
                 None => builder.push(InstructionValue::Primitive(forget_hir::Primitive {
-                    value: PrimitiveValue::Undefined,
+                    value: JsValue::Undefined,
                 })),
             };
             builder.terminate(
@@ -351,7 +351,19 @@ fn lower_expression(
             }
         }
         Expression::Literal(expr) => InstructionValue::Primitive(forget_hir::Primitive {
-            value: lower_primitive(env, builder, expr),
+            value: expr.value.clone(),
+        }),
+        Expression::NumericLiteral(expr) => InstructionValue::Primitive(forget_hir::Primitive {
+            value: JsValue::Number(expr.value),
+        }),
+        Expression::BooleanLiteral(expr) => InstructionValue::Primitive(forget_hir::Primitive {
+            value: JsValue::Boolean(expr.value),
+        }),
+        Expression::StringLiteral(expr) => InstructionValue::Primitive(forget_hir::Primitive {
+            value: JsValue::String(expr.value.clone()),
+        }),
+        Expression::NullLiteral(_expr) => InstructionValue::Primitive(forget_hir::Primitive {
+            value: JsValue::Null,
         }),
         Expression::ArrayExpression(expr) => {
             let mut elements = Vec::with_capacity(expr.elements.len());
@@ -619,20 +631,5 @@ fn lower_identifier_for_assignment(
                 effect: None,
             })
         }
-    }
-}
-
-/// Converts an ESTree literal into a HIR primitive
-fn lower_primitive(
-    _env: &Environment,
-    _builder: &mut Builder,
-    literal: &Literal,
-) -> PrimitiveValue {
-    match &literal.value {
-        JsValue::Bool(bool) => PrimitiveValue::Boolean(*bool),
-        JsValue::Null => PrimitiveValue::Null,
-        JsValue::Number(value) => PrimitiveValue::Number(f64::from(*value).into()),
-        JsValue::String(s) => PrimitiveValue::String(s.clone()),
-        _ => todo!("Lower literal {literal:#?}"),
     }
 }

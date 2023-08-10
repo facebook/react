@@ -157,9 +157,7 @@ Output:
       ],
       "source": {
         "type": "Literal",
-        "value": {
-          "String": "react"
-        },
+        "value": "react",
         "raw": "'react'",
         "regex": null,
         "bigint": null,

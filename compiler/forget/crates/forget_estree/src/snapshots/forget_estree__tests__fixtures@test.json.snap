@@ -474,9 +474,7 @@ Output:
                       "type": "JSXExpressionContainer",
                       "expression": {
                         "type": "Literal",
-                        "value": {
-                          "Number": 10
-                        },
+                        "value": 10.0,
                         "raw": "10",
                         "regex": null,
                         "bigint": null,

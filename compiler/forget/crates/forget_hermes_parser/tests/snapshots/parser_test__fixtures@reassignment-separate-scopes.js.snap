@@ -317,7 +317,7 @@ Output:
                 "type": "SwitchCase",
                 "test": {
                   "type": "NumericLiteral",
-                  "value": 0,
+                  "value": 0.0,
                   "loc": null,
                   "range": {
                     "start": 0,
