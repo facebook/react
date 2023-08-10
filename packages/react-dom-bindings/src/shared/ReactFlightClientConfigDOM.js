@@ -113,6 +113,20 @@ function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
   return model;
 }
 
+export function preinitModuleForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  const dispatcher = ReactDOMCurrentDispatcher.current;
+  if (dispatcher) {
+    dispatcher.preinitModuleScript(href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
+  }
+}
+
 export function preinitScriptForSSR(
   href: string,
   nonce: ?string,
