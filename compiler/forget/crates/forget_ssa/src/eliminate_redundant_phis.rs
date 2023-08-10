@@ -24,7 +24,6 @@ pub fn eliminate_redundant_phis(env: &Environment, fun: &mut Function) {
 
     let mut len;
     loop {
-        let is_first_iteration = !has_back_edge;
         len = rewrites.len();
 
         for block in hir.blocks.iter_mut() {
@@ -75,12 +74,13 @@ pub fn eliminate_redundant_phis(env: &Environment, fun: &mut Function) {
                     rewrite(&rewrites, &mut store.identifier.identifier)
                 });
                 instr.each_identifier_load(|load| rewrite(&rewrites, &mut load.identifier));
-                // Visit function expressions on first iteration of each block to
-                // recursively eliminate any of their redundant phis
-                if is_first_iteration {
-                    if let InstructionValue::Function(fun) = &mut instr.value {
-                        eliminate_redundant_phis(env, &mut fun.lowered_function);
+
+                if let InstructionValue::Function(fun) = &mut instr.value {
+                    for context_identifier in &mut fun.lowered_function.context {
+                        rewrite(&rewrites, &mut context_identifier.identifier);
                     }
+
+                    eliminate_redundant_phis(env, &mut fun.lowered_function);
                 }
             }
         }

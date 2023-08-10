@@ -58,7 +58,7 @@ bb0 (block)
         [14] #16 = Binary unknown #14 + unknown #15
         [15] #17 = 8
         [16] #18 = Binary unknown #16 + unknown #17
-        [17] #19 = Function @deps[] @context[unknown x$17, unknown y$18, unknown a$19, unknown b$20]:
+        [17] #19 = Function @deps[] @context[unknown x$11, unknown y$12, unknown a$13, unknown b$15]:
             function bar(
               unknown z$21,
             )
