@@ -1,3 +1,2 @@
 [toolchain]
-# Sigh, because SWC 
-channel = "nightly"
+channel = "stable"

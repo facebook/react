@@ -17,14 +17,12 @@ forget_build_hir = { path = "crates/forget_build_hir" }
 forget_diagnostics = { path = "crates/forget_diagnostics" }
 forget_estree = { path = "crates/forget_estree" }
 forget_estree_codegen = { path = "crates/forget_estree_codegen" }
-forget_estree_swc = { path = "crates/forget_estree_swc" }
 forget_fixtures = { path = "crates/forget_fixtures" }
 forget_hermes_parser = { path = "crates/forget_hermes_parser" }
 forget_hir = { path = "crates/forget_hir" }
 forget_optimization = { path = "crates/forget_optimization" }
 forget_semantic_analysis = { path = "crates/forget_semantic_analysis" }
 forget_ssa = { path = "crates/forget_ssa" }
-forget_swc_demo = { path = "crates/forget_swc_demo" }
 forget_utils = { path = "crates/forget_utils" }
 
 # dependencies
@@ -37,8 +35,6 @@ serde = { version = "1.0.167", features = ["serde_derive"] }
 serde_json = "1.0.100"
 stacker = "0.1.15"
 static_assertions = "1.1.0"
-swc = "0.264.8"
-swc_core = { version = "0.79.9", features = ["swc_ecma_visit", "__ecma_transforms", "swc_ecma_ast", "swc_common", "swc", "swc_ecma_parser", "__ecma", "__common", "ecma_ast", "__visit", "__parser"] }
 syn = "2.0.23"
 thiserror = "1.0.41"
 hermes = { git = "https://github.com/facebook/hermes.git" }
