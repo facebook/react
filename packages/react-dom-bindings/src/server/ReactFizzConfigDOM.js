@@ -3245,7 +3245,9 @@ export function pushStartInstance(
       return pushStartPreformattedElement(target, props, type);
     }
     case 'img': {
-      return pushImg(target, props, resources);
+      return enableFloat
+        ? pushImg(target, props, resources)
+        : pushSelfClosing(target, props, type);
     }
     // Omitted close tags
     case 'base':
