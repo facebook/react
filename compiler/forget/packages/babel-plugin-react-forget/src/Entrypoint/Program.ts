@@ -330,7 +330,7 @@ function shouldVisitNode(
   fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
   pass: CompilerPass
 ): boolean {
-  if (pass.opts.enableOnlyOnReactScript) {
+  if (pass.opts.enableOnlyOnReactScript && fn.isFunctionDeclaration()) {
     return isComponentDeclaration(fn.node);
   }
 

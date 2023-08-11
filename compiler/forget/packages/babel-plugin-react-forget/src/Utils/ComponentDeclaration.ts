@@ -1,18 +1,17 @@
 import * as t from "@babel/types";
 
-type FunctionDeclOrExpr = t.FunctionDeclaration | t.ArrowFunctionExpression;
-type ComponentDeclaration = FunctionDeclOrExpr & {
+export type ComponentDeclaration = t.FunctionDeclaration & {
   __componentDeclaration: boolean;
 };
 
 export function isComponentDeclaration(
-  node: FunctionDeclOrExpr
+  node: t.FunctionDeclaration
 ): node is ComponentDeclaration {
   return Object.prototype.hasOwnProperty.call(node, "__componentDeclaration");
 }
 
 export function parseComponentDeclaration(
-  node: FunctionDeclOrExpr
+  node: t.FunctionDeclaration
 ): ComponentDeclaration | null {
   return isComponentDeclaration(node) ? node : null;
 }
