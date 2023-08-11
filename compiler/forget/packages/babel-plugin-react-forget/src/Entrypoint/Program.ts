@@ -53,7 +53,8 @@ function compileAndInsertNewFunctionDeclaration(
   fnPath: NodePath<t.FunctionDeclaration>,
   pass: CompilerPass
 ): boolean {
-  let compiledFn: t.FunctionDeclaration | null;
+  let compiledFn: t.FunctionDeclaration | null = null;
+  let hasForgetMutatedOriginalSource = false;
   try {
     compiledFn = compileFn(fnPath, pass.opts.environment);
   } catch (err) {
@@ -75,7 +76,6 @@ function compileAndInsertNewFunctionDeclaration(
         log(err, pass.filename ?? null);
       }
     }
-    return false;
   }
 
   if (pass.opts.noEmit === true) {
@@ -115,10 +115,10 @@ function compileAndInsertNewFunctionDeclaration(
         addInstrumentForget(gatedFn, originalIdent.name, instrumentFnName);
       }
     }
-    return true;
+    hasForgetMutatedOriginalSource = true;
   }
 
-  return false;
+  return hasForgetMutatedOriginalSource;
 }
 
 export function compileProgram(
@@ -128,7 +128,7 @@ export function compileProgram(
   const options = parsePluginOptions(pass.opts);
   const violations = [];
   const fileComments = pass.comments;
-  let hasForgetCompiledCode: boolean = false;
+  let hasForgetMutatedOriginalSource: boolean = false;
   let fileHasUseForgetDirective = false;
 
   if (Array.isArray(fileComments)) {
@@ -205,7 +205,7 @@ export function compileProgram(
           return;
         }
 
-        hasForgetCompiledCode = compileAndInsertNewFunctionDeclaration(
+        hasForgetMutatedOriginalSource = compileAndInsertNewFunctionDeclaration(
           fn,
           pass
         );
@@ -239,7 +239,7 @@ export function compileProgram(
           return;
         }
 
-        hasForgetCompiledCode = compileAndInsertNewFunctionDeclaration(
+        hasForgetMutatedOriginalSource = compileAndInsertNewFunctionDeclaration(
           loweredFn,
           pass
         );
@@ -254,7 +254,7 @@ export function compileProgram(
 
   // If there isn't already an import of * as React, insert it so useMemoCache doesn't
   // throw
-  if (hasForgetCompiledCode) {
+  if (hasForgetMutatedOriginalSource) {
     const { didInsertUseMemoCache, hasExistingReactImport } =
       findExistingImports(program);
 
