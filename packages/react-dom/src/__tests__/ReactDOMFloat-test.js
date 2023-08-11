@@ -3782,9 +3782,9 @@ body {
             <img src="a" />
             <img src="b" loading="lazy" />
             <img src="b2" loading="lazy" />
-            <img src="c" imageSrcSet="srcsetc" />
-            <img src="d" imageSrcSet="srcsetd" imageSizes="sizesd" />
-            <img src="d" imageSrcSet="srcsetd" imageSizes="sizesd2" />
+            <img src="c" srcSet="srcsetc" />
+            <img src="d" srcSet="srcsetd" sizes="sizesd" />
+            <img src="d" srcSet="srcsetd" sizes="sizesd2" />
           </body>
         </html>
       );
@@ -3819,9 +3819,9 @@ body {
           <img src="a" />
           <img src="b" loading="lazy" />
           <img src="b2" loading="lazy" />
-          <img src="c" imagesrcset="srcsetc" />
-          <img src="d" imagesrcset="srcsetd" imagesizes="sizesd" />
-          <img src="d" imagesrcset="srcsetd" imagesizes="sizesd2" />
+          <img src="c" srcset="srcsetc" />
+          <img src="d" srcset="srcsetd" sizes="sizesd" />
+          <img src="d" srcset="srcsetd" sizes="sizesd2" />
         </body>
       </html>,
     );
@@ -3923,6 +3923,47 @@ body {
           {/* skipping 10 */}
           <img src="11" />
           <img src="12" fetchpriority="high" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('preloads from rendered images properly use srcSet and sizes', async () => {
+    function App() {
+      ReactDOM.preload('1', {as: 'image', imageSrcSet: 'ss1'});
+      ReactDOM.preload('2', {
+        as: 'image',
+        imageSrcSet: 'ss2',
+        imageSizes: 's2',
+      });
+      return (
+        <html>
+          <body>
+            <img src="1" srcSet="ss1" />
+            <img src="2" srcSet="ss2" sizes="s2" />
+            <img src="3" srcSet="ss3" />
+            <img src="4" srcSet="ss4" sizes="s4" />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" as="image" imagesrcset="ss1" />
+          <link rel="preload" as="image" imagesrcset="ss2" imagesizes="s2" />
+          <link rel="preload" as="image" imagesrcset="ss3" />
+          <link rel="preload" as="image" imagesrcset="ss4" imagesizes="s4" />
+        </head>
+        <body>
+          <img src="1" srcset="ss1" />
+          <img src="2" srcset="ss2" sizes="s2" />
+          <img src="3" srcset="ss3" />
+          <img src="4" srcset="ss4" sizes="s4" />
         </body>
       </html>,
     );

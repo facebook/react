@@ -2399,8 +2399,8 @@ function pushImg(
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
     // resources.
-    const {src, imageSrcSet, imageSizes} = props;
-    const key = getImagePreloadKey(src, imageSrcSet, imageSizes);
+    const {src, srcSet, sizes} = props;
+    const key = getImagePreloadKey(src, srcSet, sizes);
     let resource = resources.preloadsMap.get(key);
     if (!resource) {
       resource = {
@@ -2414,9 +2414,9 @@ function pushImg(
           // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
           // This harms older browers that do not support imageSrcSet by making their preloads not work
           // but this population is shrinking fast and is already small so we accept this tradeoff.
-          href: imageSrcSet ? undefined : src,
-          imageSrcSet,
-          imageSizes,
+          href: srcSet ? undefined : src,
+          imageSrcSet: srcSet,
+          imageSizes: sizes,
           crossOrigin: props.crossOrigin,
           integrity: props.integrity,
           type: props.type,
