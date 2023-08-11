@@ -39,145 +39,125 @@ function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
   return false;
 }
 
+/**
+ * Runs the Compiler pipeline and mutates the source AST to include the newly compiled function.
+ * Returns a boolean denoting if the AST was mutated or not.
+ */
+function compileAndInsertNewFunctionDeclaration(
+  fnPath: NodePath<t.FunctionDeclaration>,
+  pass: CompilerPass
+): boolean {
+  let compiledFn: t.FunctionDeclaration | null;
+  try {
+    compiledFn = compileFn(fnPath, pass.opts.environment);
+  } catch (err) {
+    if (pass.opts.logger && err) {
+      pass.opts.logger.logEvent("err", err);
+    }
+    /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
+     * (eg an invariant is broken, meaning the compiler may be buggy). See
+     * {@link CompilerError.isCritical} for mappings.
+     * */
+    if (
+      pass.opts.panicOnBailout ||
+      !(err instanceof CompilerError) ||
+      (err instanceof CompilerError && err.isCritical())
+    ) {
+      throw err;
+    } else {
+      if (pass.opts.isDev) {
+        log(err, pass.filename ?? null);
+      }
+    }
+    return false;
+  }
+
+  if (pass.opts.noEmit === true) {
+    return false;
+  }
+
+  // Sucessfully compiled
+  if (compiledFn != null) {
+    // We are generating a new FunctionDeclaration node, so we must skip over it or this
+    // traversal will loop infinitely.
+    fnPath.skip();
+
+    CompilerError.invariant(fnPath.node.id != null, {
+      reason: "FunctionDeclaration must have a name",
+      description: null,
+      loc: fnPath.node.loc ?? GeneratedSource,
+      suggestions: null,
+    });
+    const originalIdent = fnPath.node.id;
+
+    let gatedFn = null;
+    if (pass.opts.gating != null) {
+      gatedFn = insertGatedFunctionDeclaration(
+        fnPath,
+        compiledFn,
+        originalIdent,
+        pass.opts.gating
+      );
+    } else {
+      fnPath.replaceWith(compiledFn);
+    }
+
+    if (pass.opts.instrumentForget != null) {
+      const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
+      addInstrumentForget(fnPath, originalIdent.name, instrumentFnName);
+      if (pass.opts.gating != null && gatedFn != null) {
+        addInstrumentForget(gatedFn, originalIdent.name, instrumentFnName);
+      }
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function insertGatedFunctionDeclaration(
+  fnPath: NodePath<t.FunctionDeclaration>,
+  compiled: t.FunctionDeclaration,
+  originalIdent: t.Identifier,
+  gating: NonNullable<PluginOptions["gating"]>
+): NodePath<t.FunctionDeclaration> {
+  // Rename existing function
+  fnPath.node.id = addSuffix(originalIdent, "_uncompiled");
+
+  // Rename and append compiled function
+  CompilerError.invariant(compiled.id != null, {
+    reason: "FunctionDeclaration must produce a name",
+    description: null,
+    loc: fnPath.node.loc ?? GeneratedSource,
+    suggestions: null,
+  });
+  compiled.id = addSuffix(compiled.id, "_forget");
+  const compiledFn = fnPath.insertAfter(compiled)[0];
+  compiledFn.skip();
+
+  // Build and append gating test
+  compiledFn.insertAfter(
+    buildGatingTest({
+      originalFnDecl: fnPath,
+      compiledIdent: compiled.id,
+      originalIdent,
+      gating,
+    })
+  );
+
+  return compiledFn;
+}
+
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
 ): void {
-  let hasForgetCompiledCode: boolean = false;
-
-  function visitFn(
-    fn: NodePath<t.FunctionDeclaration>,
-    pass: CompilerPass
-  ): void {
-    try {
-      const compiled = compileFn(fn, pass.opts.environment);
-      if (pass.opts.noEmit === true) {
-        return;
-      }
-
-      CompilerError.invariant(fn.node.id != null, {
-        reason: "FunctionDeclaration must have a name",
-        description: null,
-        loc: fn.node.loc ?? GeneratedSource,
-        suggestions: null,
-      });
-      const originalIdent = fn.node.id;
-
-      if (pass.opts.gating != null) {
-        // Rename existing function
-        fn.node.id = addSuffix(fn.node.id, "_uncompiled");
-
-        // Rename and append compiled function
-        CompilerError.invariant(compiled.id != null, {
-          reason: "FunctionDeclaration must produce a name",
-          description: null,
-          loc: fn.node.loc ?? GeneratedSource,
-          suggestions: null,
-        });
-        compiled.id = addSuffix(compiled.id, "_forget");
-        const compiledFn = fn.insertAfter(compiled)[0];
-        compiledFn.skip();
-
-        // Build and append gating test
-        compiledFn.insertAfter(
-          buildGatingTest({
-            originalFnDecl: fn,
-            compiledIdent: compiled.id,
-            originalIdent,
-            gating: pass.opts.gating,
-          })
-        );
-        if (pass.opts.instrumentForget != null) {
-          const instrumentFnName =
-            pass.opts.instrumentForget.importSpecifierName;
-          addInstrumentForget(fn, originalIdent.name, instrumentFnName);
-          addInstrumentForget(compiledFn, originalIdent.name, instrumentFnName);
-        }
-      } else {
-        fn.replaceWith(compiled);
-        if (pass.opts.instrumentForget != null) {
-          const instrumentFnName =
-            pass.opts.instrumentForget.importSpecifierName;
-          addInstrumentForget(fn, originalIdent.name, instrumentFnName);
-        }
-      }
-
-      hasForgetCompiledCode = true;
-    } catch (err) {
-      if (pass.opts.logger && err) {
-        pass.opts.logger.logEvent("err", err);
-      }
-      /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
-       * (eg an invariant is broken, meaning the compiler may be buggy). See
-       * {@link CompilerError.isCritical} for mappings.
-       * */
-      if (
-        pass.opts.panicOnBailout ||
-        !(err instanceof CompilerError) ||
-        (err instanceof CompilerError && err.isCritical())
-      ) {
-        throw err;
-      } else {
-        if (pass.opts.isDev) {
-          log(err, pass.filename ?? null);
-        }
-      }
-    } finally {
-      // We are generating a new FunctionDeclaration node, so we must skip over it or this
-      // traversal will loop infinitely.
-      fn.skip();
-    }
-  }
-
-  const visitor = {
-    FunctionDeclaration(
-      fn: NodePath<t.FunctionDeclaration>,
-      pass: CompilerPass
-    ): void {
-      if (!shouldVisitNode(fn, pass)) {
-        return;
-      }
-
-      visitFn(fn, pass);
-    },
-
-    ArrowFunctionExpression(
-      fn: NodePath<t.ArrowFunctionExpression>,
-      pass: CompilerPass
-    ): void {
-      if (!shouldVisitNode(fn, pass)) {
-        return;
-      }
-
-      const loweredFn = buildFunctionDeclaration(fn);
-      if (loweredFn instanceof CompilerErrorDetail) {
-        const error = new CompilerError();
-        error.pushErrorDetail(loweredFn);
-
-        const options = parsePluginOptions(pass.opts);
-        if (options.logger != null) {
-          options.logger.logEvent("err", error);
-        }
-
-        if (options.panicOnBailout || error.isCritical()) {
-          throw error;
-        } else {
-          if (pass.opts.isDev) {
-            log(error, pass.filename);
-          }
-        }
-        return;
-      }
-
-      visitFn(loweredFn, pass);
-    },
-  };
-
   const options = parsePluginOptions(pass.opts);
-
   const violations = [];
   const fileComments = pass.comments;
+  let hasForgetCompiledCode: boolean = false;
   let fileHasUseForgetDirective = false;
+
   if (Array.isArray(fileComments)) {
     for (const comment of fileComments) {
       if (
@@ -241,11 +221,63 @@ export function compileProgram(
     return;
   }
 
-  program.traverse(visitor, {
-    ...pass,
-    opts: { ...pass.opts, ...options },
-    filename: pass.filename ?? null,
-  });
+  // Main traversal to compile with Forget
+  program.traverse(
+    {
+      FunctionDeclaration(
+        fn: NodePath<t.FunctionDeclaration>,
+        pass: CompilerPass
+      ): void {
+        if (!shouldVisitNode(fn, pass)) {
+          return;
+        }
+
+        hasForgetCompiledCode = compileAndInsertNewFunctionDeclaration(
+          fn,
+          pass
+        );
+      },
+
+      ArrowFunctionExpression(
+        fn: NodePath<t.ArrowFunctionExpression>,
+        pass: CompilerPass
+      ): void {
+        if (!shouldVisitNode(fn, pass)) {
+          return;
+        }
+
+        const loweredFn = buildFunctionDeclaration(fn);
+        if (loweredFn instanceof CompilerErrorDetail) {
+          const error = new CompilerError();
+          error.pushErrorDetail(loweredFn);
+
+          const options = parsePluginOptions(pass.opts);
+          if (options.logger != null) {
+            options.logger.logEvent("err", error);
+          }
+
+          if (options.panicOnBailout || error.isCritical()) {
+            throw error;
+          } else {
+            if (pass.opts.isDev) {
+              log(error, pass.filename);
+            }
+          }
+          return;
+        }
+
+        hasForgetCompiledCode = compileAndInsertNewFunctionDeclaration(
+          loweredFn,
+          pass
+        );
+      },
+    },
+    {
+      ...pass,
+      opts: { ...pass.opts, ...options },
+      filename: pass.filename ?? null,
+    }
+  );
 
   // If there isn't already an import of * as React, insert it so useMemoCache doesn't
   // throw
