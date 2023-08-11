@@ -2268,7 +2268,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  setCurrentDebugFiberInDEV(unitOfWork);
   const isProfilingMode =
     enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode;
   if (isProfilingMode) {
