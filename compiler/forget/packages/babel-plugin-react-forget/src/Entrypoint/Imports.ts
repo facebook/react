@@ -66,3 +66,77 @@ export function isNonNamespacedImportOfReact(
       .every((specifier) => specifier.isImportSpecifier())
   );
 }
+
+export function findExistingImports(program: NodePath<t.Program>): {
+  didInsertUseMemoCache: boolean;
+  hasExistingReactImport: boolean;
+} {
+  let didInsertUseMemoCache = false;
+  let hasExistingReactImport = false;
+  program.traverse({
+    CallExpression(callExprPath) {
+      const callee = callExprPath.get("callee");
+      const args = callExprPath.get("arguments");
+      if (
+        callee.isIdentifier() &&
+        callee.node.name === "useMemoCache" &&
+        args.length === 1 &&
+        args[0].isNumericLiteral()
+      ) {
+        didInsertUseMemoCache = true;
+      }
+    },
+    ImportDeclaration(importDeclPath) {
+      if (isNonNamespacedImportOfReact(importDeclPath)) {
+        hasExistingReactImport = true;
+      }
+    },
+  });
+
+  return {
+    didInsertUseMemoCache,
+    hasExistingReactImport,
+  };
+}
+
+/**
+ * If an existing import of React exists (ie `import {useMemo} from 'React'`), inject useMemoCache
+ * into the list of destructured variables.
+ */
+export function updateExistingReactImportDeclaration(
+  program: NodePath<t.Program>
+): boolean {
+  let didInsertUseMemoCache = false;
+  program.traverse({
+    ImportDeclaration(importDeclPath) {
+      if (isNonNamespacedImportOfReact(importDeclPath)) {
+        importDeclPath.pushContainer(
+          "specifiers",
+          t.importSpecifier(
+            t.identifier("useMemoCache"),
+            t.identifier("unstable_useMemoCache")
+          )
+        );
+        didInsertUseMemoCache = true;
+      }
+    },
+  });
+  return didInsertUseMemoCache;
+}
+
+export function insertUseMemoCacheImportDeclaration(
+  program: NodePath<t.Program>
+): void {
+  program.unshiftContainer(
+    "body",
+    t.importDeclaration(
+      [
+        t.importSpecifier(
+          t.identifier("useMemoCache"),
+          t.identifier("unstable_useMemoCache")
+        ),
+      ],
+      t.stringLiteral("react")
+    )
+  );
+}

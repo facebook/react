@@ -16,7 +16,12 @@ import {
 import { GeneratedSource } from "../HIR";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { insertGatedFunctionDeclaration } from "./Gating";
-import { addImportsToProgram, isNonNamespacedImportOfReact } from "./Imports";
+import {
+  addImportsToProgram,
+  findExistingImports,
+  insertUseMemoCacheImportDeclaration,
+  updateExistingReactImportDeclaration,
+} from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
 import { PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
@@ -250,65 +255,22 @@ export function compileProgram(
   // If there isn't already an import of * as React, insert it so useMemoCache doesn't
   // throw
   if (hasForgetCompiledCode) {
-    let didInsertUseMemoCache = false;
-    let hasExistingReactImport = false;
-    program.traverse({
-      CallExpression(callExprPath) {
-        const callee = callExprPath.get("callee");
-        const args = callExprPath.get("arguments");
-        if (
-          callee.isIdentifier() &&
-          callee.node.name === "useMemoCache" &&
-          args.length === 1 &&
-          args[0].isNumericLiteral()
-        ) {
-          didInsertUseMemoCache = true;
-        }
-      },
-      ImportDeclaration(importDeclPath) {
-        if (isNonNamespacedImportOfReact(importDeclPath)) {
-          hasExistingReactImport = true;
-        }
-      },
-    });
+    const { didInsertUseMemoCache, hasExistingReactImport } =
+      findExistingImports(program);
+
     // If Forget did successfully compile inject/update an import of
     // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
     // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
     if (didInsertUseMemoCache) {
       if (hasExistingReactImport) {
-        let didUpdateImport = false;
-        program.traverse({
-          ImportDeclaration(importDeclPath) {
-            if (isNonNamespacedImportOfReact(importDeclPath)) {
-              importDeclPath.pushContainer(
-                "specifiers",
-                t.importSpecifier(
-                  t.identifier("useMemoCache"),
-                  t.identifier("unstable_useMemoCache")
-                )
-              );
-              didUpdateImport = true;
-            }
-          },
-        });
+        const didUpdateImport = updateExistingReactImportDeclaration(program);
         if (didUpdateImport === false) {
           throw new Error(
             "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
           );
         }
       } else {
-        program.unshiftContainer(
-          "body",
-          t.importDeclaration(
-            [
-              t.importSpecifier(
-                t.identifier("useMemoCache"),
-                t.identifier("unstable_useMemoCache")
-              ),
-            ],
-            t.stringLiteral("react")
-          )
-        );
+        insertUseMemoCacheImportDeclaration(program);
       }
     }
     const externalFunctions = [];
