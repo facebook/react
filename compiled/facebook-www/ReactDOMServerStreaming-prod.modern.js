@@ -1338,9 +1338,9 @@ function pushStartInstance(
         "low" !== props.fetchPriority
       ) {
         var src = props.src,
-          imageSrcSet = props.imageSrcSet,
-          imageSizes = props.imageSizes,
-          key$jscomp$1 = getImagePreloadKey(src, imageSrcSet, imageSizes),
+          srcSet = props.srcSet,
+          sizes = props.sizes,
+          key$jscomp$1 = getImagePreloadKey(src, srcSet, sizes),
           resource$jscomp$1 = resources.preloadsMap.get(key$jscomp$1);
         resource$jscomp$1 ||
           ((resource$jscomp$1 = {
@@ -1350,9 +1350,9 @@ function pushStartInstance(
             props: {
               rel: "preload",
               as: "image",
-              href: imageSrcSet ? void 0 : src,
-              imageSrcSet: imageSrcSet,
-              imageSizes: imageSizes,
+              href: srcSet ? void 0 : src,
+              imageSrcSet: srcSet,
+              imageSizes: sizes,
               crossOrigin: props.crossOrigin,
               integrity: props.integrity,
               type: props.type,

@@ -1309,9 +1309,9 @@ function pushStartInstance(
         "low" !== props.fetchPriority
       ) {
         var src = props.src,
-          imageSrcSet = props.imageSrcSet,
-          imageSizes = props.imageSizes,
-          key$jscomp$1 = getImagePreloadKey(src, imageSrcSet, imageSizes),
+          srcSet = props.srcSet,
+          sizes = props.sizes,
+          key$jscomp$1 = getImagePreloadKey(src, srcSet, sizes),
           resource$jscomp$1 = resources.preloadsMap.get(key$jscomp$1);
         resource$jscomp$1 ||
           ((resource$jscomp$1 = {
@@ -1321,9 +1321,9 @@ function pushStartInstance(
             props: {
               rel: "preload",
               as: "image",
-              href: imageSrcSet ? void 0 : src,
-              imageSrcSet: imageSrcSet,
-              imageSizes: imageSizes,
+              href: srcSet ? void 0 : src,
+              imageSrcSet: srcSet,
+              imageSizes: sizes,
               crossOrigin: props.crossOrigin,
               integrity: props.integrity,
               type: props.type,
@@ -4115,4 +4115,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-e3bb40fc";
+exports.version = "18.3.0-www-classic-93cba403";
