@@ -24,6 +24,8 @@ export {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';

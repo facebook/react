@@ -23,7 +23,9 @@ import type {
   PrefetchDNSOptions,
   PreconnectOptions,
   PreloadOptions,
+  PreloadModuleOptions,
   PreinitOptions,
+  PreinitModuleOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
@@ -2018,6 +2020,11 @@ type PreloadProps = {
   href: ?string,
   [string]: mixed,
 };
+type PreloadModuleProps = {
+  rel: 'modulepreload',
+  href: string,
+  [string]: mixed,
+};
 
 export type RootResources = {
   hoistableStyles: Map<string, StyleResource>,
@@ -2029,7 +2036,8 @@ export function prepareToCommitHoistables() {
 }
 
 // global collections of Resources
-const preloadPropsMap: Map<string, PreloadProps> = new Map();
+const preloadPropsMap: Map<string, PreloadProps | PreloadModuleProps> =
+  new Map();
 const preconnectsSet: Set<string> = new Set();
 
 export type HoistableRoot = Document | ShadowRoot;
@@ -2060,7 +2068,9 @@ export const ReactDOMClientDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
 };
 
 // We expect this to get inlined. It is a function mostly to communicate the special nature of
@@ -2264,6 +2274,86 @@ function preload(href: string, options: PreloadOptions) {
   }
 }
 
+function preloadModule(href: string, options?: ?PreloadModuleOptions) {
+  if (!enableFloat) {
+    return;
+  }
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && typeof options.as !== 'string') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered,
+      );
+    }
+  }
+  const ownerDocument = getDocumentForImperativeFloatMethods();
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+    const preloadSelector = `link[rel="modulepreload"][as="${escapeSelectorAttributeValueInsideDoubleQuotes(
+      as,
+    )}"][href="${escapeSelectorAttributeValueInsideDoubleQuotes(href)}"]`;
+    // Some preloads are keyed under their selector. This happens when the preload is for
+    // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
+    // Here we figure out which key to use to determine if we have a preload already.
+    let key = preloadSelector;
+    switch (as) {
+      case 'audioworklet':
+      case 'paintworklet':
+      case 'serviceworker':
+      case 'sharedworker':
+      case 'worker':
+      case 'script': {
+        key = getScriptKey(href);
+        break;
+      }
+    }
+
+    if (!preloadPropsMap.has(key)) {
+      const preloadProps = preloadModulePropsFromPreloadModuleOptions(
+        href,
+        as,
+        options,
+      );
+      preloadPropsMap.set(key, preloadProps);
+
+      if (null === ownerDocument.querySelector(preloadSelector)) {
+        switch (as) {
+          case 'audioworklet':
+          case 'paintworklet':
+          case 'serviceworker':
+          case 'sharedworker':
+          case 'worker':
+          case 'script': {
+            if (ownerDocument.querySelector(getScriptSelectorFromKey(key))) {
+              return;
+            }
+          }
+        }
+        const instance = ownerDocument.createElement('link');
+        setInitialProperties(instance, 'link', preloadProps);
+        markNodeAsHoistable(instance);
+        (ownerDocument.head: any).appendChild(instance);
+      }
+    }
+  }
+}
+
 function preloadPropsFromPreloadOptions(
   href: string,
   as: string,
@@ -2285,6 +2375,20 @@ function preloadPropsFromPreloadOptions(
     imageSrcSet: options.imageSrcSet,
     imageSizes: options.imageSizes,
     referrerPolicy: options.referrerPolicy,
+  };
+}
+
+function preloadModulePropsFromPreloadModuleOptions(
+  href: string,
+  as: string,
+  options: ?PreloadModuleOptions,
+): PreloadModuleProps {
+  return {
+    rel: 'modulepreload',
+    as: as !== 'script' ? as : undefined,
+    href,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
   };
 }
 
@@ -2417,6 +2521,107 @@ function preinit(href: string, options: PreinitOptions) {
   }
 }
 
+function preinitModule(href: string, options?: ?PreinitModuleOptions) {
+  if (!enableFloat) {
+    return;
+  }
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && options.as !== 'script') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingEnumForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s',
+        encountered,
+      );
+    } else {
+      const as =
+        options && typeof options.as === 'string' ? options.as : 'script';
+      switch (as) {
+        case 'script': {
+          break;
+        }
+
+        // We have an invalid as type and need to warn
+        default: {
+          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+          console.error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              ' module types will be supported, aligning with the import-attributes proposal. Learn more here:' +
+              ' (https://github.com/tc39/proposal-import-attributes)',
+            typeOfAs,
+            href,
+          );
+        }
+      }
+    }
+  }
+  const ownerDocument = getDocumentForImperativeFloatMethods();
+
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+
+    switch (as) {
+      case 'script': {
+        const src = href;
+        const scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
+
+        const key = getScriptKey(src);
+
+        // Check if this resource already exists
+        let resource = scripts.get(key);
+        if (resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        }
+
+        // Attempt to hydrate instance from DOM
+        let instance: null | Instance = ownerDocument.querySelector(
+          getScriptSelectorFromKey(key),
+        );
+        if (!instance) {
+          // Construct a new instance and insert it
+          const scriptProps = modulePropsFromPreinitModuleOptions(src, options);
+          // Adopt certain preload props
+          const preloadProps = preloadPropsMap.get(key);
+          if (preloadProps) {
+            adoptPreloadPropsForScript(scriptProps, preloadProps);
+          }
+          instance = ownerDocument.createElement('script');
+          markNodeAsHoistable(instance);
+          setInitialProperties(instance, 'link', scriptProps);
+          (ownerDocument.head: any).appendChild(instance);
+        }
+
+        // Construct a Resource and cache it
+        resource = {
+          type: 'script',
+          instance,
+          count: 1,
+          state: null,
+        };
+        scripts.set(key, resource);
+        return;
+      }
+    }
+  }
+}
+
 function stylesheetPropsFromPreinitOptions(
   href: string,
   precedence: string,
@@ -2443,6 +2648,19 @@ function scriptPropsFromPreinitOptions(
     integrity: options.integrity,
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
+  };
+}
+
+function modulePropsFromPreinitModuleOptions(
+  src: string,
+  options: ?PreinitModuleOptions,
+): ScriptProps {
+  return {
+    src,
+    async: true,
+    type: 'module',
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
   };
 }
 
@@ -2854,7 +3072,7 @@ function insertStylesheet(
 
 function adoptPreloadPropsForStylesheet(
   stylesheetProps: StylesheetProps,
-  preloadProps: PreloadProps,
+  preloadProps: PreloadProps | PreloadModuleProps,
 ): void {
   if (stylesheetProps.crossOrigin == null)
     stylesheetProps.crossOrigin = preloadProps.crossOrigin;
@@ -2865,7 +3083,7 @@ function adoptPreloadPropsForStylesheet(
 
 function adoptPreloadPropsForScript(
   scriptProps: ScriptProps,
-  preloadProps: PreloadProps,
+  preloadProps: PreloadProps | PreloadModuleProps,
 ): void {
   if (scriptProps.crossOrigin == null)
     scriptProps.crossOrigin = preloadProps.crossOrigin;

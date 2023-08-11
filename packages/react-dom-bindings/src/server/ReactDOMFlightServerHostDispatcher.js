@@ -12,7 +12,9 @@ import type {
   PrefetchDNSOptions,
   PreconnectOptions,
   PreloadOptions,
+  PreloadModuleOptions,
   PreinitOptions,
+  PreinitModuleOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
 import {enableFloat} from 'shared/ReactFeatureFlags';
@@ -27,7 +29,9 @@ export const ReactDOMFlightServerDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
 };
 
 function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
@@ -99,6 +103,28 @@ function preload(href: string, options: PreloadOptions) {
   }
 }
 
+function preloadModule(href: string, options?: ?PreloadModuleOptions) {
+  if (enableFloat) {
+    if (typeof href === 'string') {
+      const request = resolveRequest();
+      if (request) {
+        const hints = getHints(request);
+        const key = 'm' + href;
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+        hints.add(key);
+        if (options) {
+          emitHint(request, 'm', [href, options]);
+        } else {
+          emitHint(request, 'm', href);
+        }
+      }
+    }
+  }
+}
+
 function preinit(href: string, options: PreinitOptions) {
   if (enableFloat) {
     if (typeof href === 'string') {
@@ -112,6 +138,28 @@ function preinit(href: string, options: PreinitOptions) {
         }
         hints.add(key);
         emitHint(request, 'I', [href, options]);
+      }
+    }
+  }
+}
+
+function preinitModule(href: string, options?: ?PreinitModuleOptions) {
+  if (enableFloat) {
+    if (typeof href === 'string') {
+      const request = resolveRequest();
+      if (request) {
+        const hints = getHints(request);
+        const key = 'M' + href;
+        if (hints.has(key)) {
+          // duplicate hint
+          return;
+        }
+        hints.add(key);
+        if (options) {
+          emitHint(request, 'M', [href, options]);
+        } else {
+          emitHint(request, 'M', href);
+        }
       }
     }
   }
