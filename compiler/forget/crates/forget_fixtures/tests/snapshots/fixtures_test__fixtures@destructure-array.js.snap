@@ -1,0 +1,33 @@
+---
+source: crates/forget_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/forget_fixtures/tests/fixtures/destructure-array.js
+---
+Input:
+function Component(a, b) {
+  const [c, , ...d] = a;
+  const [[[e]], ...[f]] = b;
+  return [c, d, e, f];
+}
+
+
+Output:
+function Component(
+  unknown a$22,
+  unknown b$23,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $24 = LoadLocal unknown a$0
+  [1] unknown $25 = Destructure [ unknown c$26, <hole>, ...unknown d$27 ] = unknown $24
+  [2] unknown $28 = LoadLocal unknown b$1
+  [3] unknown $29 = Destructure [ unknown $30, ...unknown $31 ] = unknown $28
+  [4] unknown $32 = Destructure [ unknown $33 ] = unknown $30
+  [5] unknown $34 = Destructure [ unknown e$35 ] = unknown $33
+  [6] unknown $36 = Destructure [ unknown f$37 ] = unknown $31
+  [7] unknown $38 = LoadLocal unknown c$3
+  [8] unknown $39 = LoadLocal unknown d$4
+  [9] unknown $40 = LoadLocal unknown e$12
+  [10] unknown $41 = LoadLocal unknown f$14
+  [11] unknown $42 = Array [unknown $38, unknown $39, unknown $40, unknown $41]
+  [12] Return unknown $20

@@ -6,7 +6,8 @@ use forget_estree::{
 };
 
 use crate::{
-    AstNode, DeclarationKind, LabelId, LabelKind, ReferenceKind, ScopeId, ScopeKind, ScopeManager,
+    AstNode, DeclarationKind, Label, LabelId, LabelKind, ReferenceKind, ScopeId, ScopeKind,
+    ScopeManager,
 };
 
 pub fn analyze(ast: &Program) -> ScopeManager {
@@ -43,18 +44,18 @@ impl Analyzer {
         assert_eq!(last, id);
     }
 
-    fn lookup_break(&self, name: Option<&str>) -> Option<LabelId> {
+    fn lookup_break(&self, name: Option<&str>) -> Option<&Label> {
         for id in self.labels.iter().rev() {
             let label = self.manager.label(*id);
             match (name, &label.name) {
                 // If this is a labeled break, only return if an exact match
                 // is in scope
                 (Some(name), Some(label_name)) if name == label_name => {
-                    return Some(label.id);
+                    return Some(label);
                 }
                 // If this is an unlabeld break, return the innermost label id
                 (None, _) => {
-                    return Some(label.id);
+                    return Some(label);
                 }
                 _ => { /* no-op */ }
             }
@@ -62,22 +63,18 @@ impl Analyzer {
         None
     }
 
-    fn lookup_continue(&self, name: Option<&str>) -> Option<LabelId> {
+    fn lookup_continue(&self, name: Option<&str>) -> Option<&Label> {
         for id in self.labels.iter().rev() {
             let label = self.manager.label(*id);
-            // Skip labels that are not for loops, can only continue to a loop
-            if label.kind != LabelKind::Loop {
-                continue;
-            }
             match (name, &label.name) {
                 // If this is a labeled break, only return if an exact match
                 // is in scope
                 (Some(name), Some(label_name)) if &name == label_name => {
-                    return Some(label.id);
+                    return Some(label);
                 }
                 // If this is an unlabeld break, return the innermost label id
                 (None, _) => {
-                    return Some(label.id);
+                    return Some(label);
                 }
                 _ => { /* no-op */ }
             }
@@ -425,16 +422,14 @@ impl Visitor for Analyzer {
     }
 
     fn visit_break_statement(&mut self, ast: &forget_estree::BreakStatement) {
-        if let Some(label_id) =
-            self.lookup_break(ast.label.as_ref().map(|ident| ident.name.as_str()))
+        if let Some(label) = self.lookup_break(ast.label.as_ref().map(|ident| ident.name.as_str()))
         {
-            self.manager
-                .node_labels
-                .insert(AstNode::from(ast), label_id);
+            let id = label.id;
+            self.manager.node_labels.insert(AstNode::from(ast), id);
             if let Some(label_node) = &ast.label {
                 self.manager
                     .node_labels
-                    .insert(AstNode::from(label_node), label_id);
+                    .insert(AstNode::from(label_node), id);
             }
         } else {
             self.manager.diagnostics.push(Diagnostic::invalid_syntax(
@@ -462,21 +457,31 @@ impl Visitor for Analyzer {
     }
 
     fn visit_continue_statement(&mut self, ast: &forget_estree::ContinueStatement) {
-        if let Some(label_id) =
+        let range = ast
+            .label
+            .as_ref()
+            .map(|label| label.range)
+            .unwrap_or(ast.range);
+        if let Some(label) =
             self.lookup_continue(ast.label.as_ref().map(|ident| ident.name.as_str()))
         {
-            self.manager
-                .node_labels
-                .insert(AstNode::from(ast), label_id);
+            let id = label.id;
+            if label.kind != LabelKind::Loop {
+                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                    "Invalid continue statement, the named label must be for a loop",
+                    range,
+                ));
+            }
+            self.manager.node_labels.insert(AstNode::from(ast), id);
             if let Some(label_node) = &ast.label {
                 self.manager
                     .node_labels
-                    .insert(AstNode::from(label_node), label_id);
+                    .insert(AstNode::from(label_node), id);
             }
         } else {
             self.manager.diagnostics.push(Diagnostic::invalid_syntax(
                 "Non-syntactic continue, could not resolve continue target",
-                ast.range,
+                range,
             ));
         }
     }

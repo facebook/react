@@ -2,14 +2,15 @@ use std::collections::HashSet;
 
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    AssignmentTarget, BlockStatement, Expression, ExpressionOrSpread, ExpressionOrSuper, ForInit,
-    Function, IntoFunction, JsValue, Pattern, Statement, VariableDeclaration,
-    VariableDeclarationKind,
+    AssignmentPropertyOrRestElement, AssignmentTarget, BlockStatement, Expression,
+    ExpressionOrSpread, ExpressionOrSuper, ForInit, Function, IntoFunction, JsValue, Pattern,
+    Statement, VariableDeclaration, VariableDeclarationKind,
 };
 use forget_hir::{
-    BlockKind, BranchTerminal, Environment, ForTerminal, GotoKind, IdentifierOperand,
-    InstructionKind, InstructionValue, JSXAttribute, JSXElement, LValue, LoadGlobal, LoadLocal,
-    PlaceOrSpread, TerminalValue,
+    ArrayDestructureItem, BlockKind, BranchTerminal, Destructure, DestructurePattern, Environment,
+    ForTerminal, GotoKind, Identifier, IdentifierOperand, InstructionKind, InstructionValue,
+    JSXAttribute, JSXElement, LValue, LoadGlobal, LoadLocal, ObjectDestructureItem,
+    ObjectDestructureProperty, PlaceOrSpread, TerminalValue,
 };
 
 use crate::builder::{Builder, LoopScope};
@@ -303,8 +304,8 @@ fn lower_variable_declaration(
                     }
                 }
                 _ => {
-                    return Err(Diagnostic::todo(
-                        "Handle non-identifier variable declarations",
+                    return Err(Diagnostic::invalid_syntax(
+                        "Expected an identifier for variable declaration without an intializer. Destructuring requires an initial value",
                         declaration.range,
                     ));
                 }
@@ -543,6 +544,7 @@ fn lower_assignment(
     })
 }
 
+// TODO: change the success type to void, no caller uses it
 fn lower_assignment_pattern(
     env: &Environment,
     builder: &mut Builder,
@@ -557,6 +559,147 @@ fn lower_assignment_pattern(
                 lvalue: LValue { identifier, kind },
                 value,
             }))
+        }
+        Pattern::ArrayPattern(lvalue) => {
+            let mut items = Vec::with_capacity(lvalue.elements.len());
+            let mut followups: Vec<(Identifier, &Pattern)> = Vec::new();
+            for element in &lvalue.elements {
+                match element {
+                    None => items.push(ArrayDestructureItem::Hole),
+                    Some(Pattern::Identifier(element)) => {
+                        let identifier =
+                            lower_identifier_for_assignment(env, builder, kind, &element)?;
+                        items.push(ArrayDestructureItem::Value(identifier));
+                    }
+                    Some(Pattern::RestElement(element)) => {
+                        if let Pattern::Identifier(element) = &element.argument {
+                            let identifier = lower_identifier_for_assignment(
+                                env,
+                                builder,
+                                kind,
+                                element.as_ref(),
+                            )?;
+                            items.push(ArrayDestructureItem::Spread(identifier));
+                        } else {
+                            let temporary = env.new_temporary();
+                            items.push(ArrayDestructureItem::Spread(IdentifierOperand {
+                                identifier: temporary.clone(),
+                                effect: None,
+                            }));
+                            followups.push((temporary, &element.argument));
+                        }
+                    }
+                    Some(element) => {
+                        let temporary = env.new_temporary();
+                        items.push(ArrayDestructureItem::Value(IdentifierOperand {
+                            identifier: temporary.clone(),
+                            effect: None,
+                        }));
+                        followups.push((temporary, element));
+                    }
+                }
+            }
+            let temporary = builder.push(InstructionValue::Destructure(Destructure {
+                kind,
+                pattern: DestructurePattern::Array(items),
+                value,
+            }));
+            for (temporary, pattern) in followups {
+                lower_assignment_pattern(
+                    env,
+                    builder,
+                    kind,
+                    pattern,
+                    IdentifierOperand {
+                        identifier: temporary,
+                        effect: None,
+                    },
+                )?;
+            }
+            temporary
+        }
+        Pattern::ObjectPattern(lvalue) => {
+            let mut properties = Vec::with_capacity(lvalue.properties.len());
+            let mut followups: Vec<(Identifier, &Pattern)> = Vec::new();
+
+            for property in &lvalue.properties {
+                match property {
+                    AssignmentPropertyOrRestElement::RestElement(property) => {
+                        if let Pattern::Identifier(element) = &property.argument {
+                            let identifier = lower_identifier_for_assignment(
+                                env,
+                                builder,
+                                kind,
+                                element.as_ref(),
+                            )?;
+                            properties.push(ObjectDestructureItem::Spread(identifier));
+                        } else {
+                            let temporary = env.new_temporary();
+                            properties.push(ObjectDestructureItem::Spread(IdentifierOperand {
+                                identifier: temporary.clone(),
+                                effect: None,
+                            }));
+                            followups.push((temporary, &property.argument));
+                        }
+                    }
+                    AssignmentPropertyOrRestElement::AssignmentProperty(property) => {
+                        if property.is_computed {
+                            return Err(Diagnostic::todo(
+                                "Handle computed properties in ObjectPattern",
+                                property.range,
+                            ));
+                        }
+                        let key = if let Expression::Identifier(key) = &property.key {
+                            key.name.as_str()
+                        } else {
+                            return Err(Diagnostic::todo(
+                                "Support non-identifier object keys in non-computed ObjectPattern",
+                                property.range,
+                            ));
+                        };
+                        if let Pattern::Identifier(value) = &property.value {
+                            let value = lower_identifier_for_assignment(env, builder, kind, value)?;
+                            properties.push(ObjectDestructureItem::Property(
+                                ObjectDestructureProperty {
+                                    name: key.to_string(),
+                                    value,
+                                },
+                            ));
+                        } else {
+                            let temporary = env.new_temporary();
+                            properties.push(ObjectDestructureItem::Property(
+                                ObjectDestructureProperty {
+                                    name: key.to_string(),
+                                    value: IdentifierOperand {
+                                        identifier: temporary.clone(),
+                                        effect: None,
+                                    },
+                                },
+                            ));
+                            followups.push((temporary, &property.value));
+                        }
+                    }
+                }
+            }
+
+            let temporary = builder.push(InstructionValue::Destructure(Destructure {
+                kind,
+                pattern: DestructurePattern::Object(properties),
+                value,
+            }));
+            for (temporary, pattern) in followups {
+                lower_assignment_pattern(
+                    env,
+                    builder,
+                    kind,
+                    pattern,
+                    IdentifierOperand {
+                        identifier: temporary,
+                        effect: None,
+                    },
+                )?;
+            }
+            temporary
         }
         _ => todo!("lower assignment pattern for {:#?}", lvalue),
     })

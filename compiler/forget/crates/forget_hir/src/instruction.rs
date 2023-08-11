@@ -16,17 +16,20 @@ pub struct Instruction {
 impl Instruction {
     pub fn each_identifier_store<F>(&mut self, mut f: F) -> ()
     where
-        F: FnMut(&mut LValue) -> (),
+        F: FnMut(&mut IdentifierOperand) -> (),
     {
         match &mut self.value {
             InstructionValue::DeclareContext(instr) => {
-                f(&mut instr.lvalue);
+                f(&mut instr.lvalue.identifier);
             }
             InstructionValue::DeclareLocal(instr) => {
-                f(&mut instr.lvalue);
+                f(&mut instr.lvalue.identifier);
             }
             InstructionValue::StoreLocal(instr) => {
-                f(&mut instr.lvalue);
+                f(&mut instr.lvalue.identifier);
+            }
+            InstructionValue::Destructure(instr) => {
+                instr.pattern.each_operand(f);
             }
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
@@ -43,18 +46,19 @@ impl Instruction {
 
     pub fn try_each_identifier_store<F, E>(&mut self, mut f: F) -> Result<(), E>
     where
-        F: FnMut(&mut LValue) -> Result<(), E>,
+        F: FnMut(&mut IdentifierOperand) -> Result<(), E>,
     {
         match &mut self.value {
             InstructionValue::DeclareContext(instr) => {
-                f(&mut instr.lvalue)?;
+                f(&mut instr.lvalue.identifier)?;
             }
             InstructionValue::DeclareLocal(instr) => {
-                f(&mut instr.lvalue)?;
+                f(&mut instr.lvalue.identifier)?;
             }
             InstructionValue::StoreLocal(instr) => {
-                f(&mut instr.lvalue)?;
+                f(&mut instr.lvalue.identifier)?;
             }
+            InstructionValue::Destructure(instr) => instr.pattern.try_each_operand(f)?,
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
             | InstructionValue::Call(_)
@@ -73,21 +77,23 @@ impl Instruction {
     where
         F: FnMut(&mut IdentifierOperand) -> (),
     {
-        match &mut self.value {
-            InstructionValue::LoadLocal(instr) => f(&mut instr.place),
-            InstructionValue::Array(_)
-            | InstructionValue::Binary(_)
-            | InstructionValue::Call(_)
-            | InstructionValue::DeclareContext(_)
-            | InstructionValue::DeclareLocal(_)
-            | InstructionValue::LoadContext(_)
-            | InstructionValue::LoadGlobal(_)
-            | InstructionValue::Primitive(_)
-            | InstructionValue::StoreLocal(_)
-            | InstructionValue::Function(_)
-            | InstructionValue::JSXElement(_)
-            | InstructionValue::Tombstone => {}
-        }
+        // match &mut self.value {
+        //     InstructionValue::LoadLocal(instr) => f(&mut instr.place),
+        //     InstructionValue::Array(_)
+        //     | InstructionValue::Binary(_)
+        //     | InstructionValue::Call(_)
+        //     | InstructionValue::DeclareContext(_)
+        //     | InstructionValue::DeclareLocal(_)
+        //     | InstructionValue::Destructure(_)
+        //     | InstructionValue::LoadContext(_)
+        //     | InstructionValue::LoadGlobal(_)
+        //     | InstructionValue::Primitive(_)
+        //     | InstructionValue::StoreLocal(_)
+        //     | InstructionValue::Function(_)
+        //     | InstructionValue::JSXElement(_)
+        //     | InstructionValue::Tombstone => {}
+        // }
+        self.each_operand(f);
     }
 
     pub fn each_operand<F>(&mut self, mut f: F) -> ()
@@ -139,6 +145,9 @@ impl Instruction {
                     }
                 }
             }
+            InstructionValue::Destructure(value) => {
+                f(&mut value.value);
+            }
             InstructionValue::DeclareContext(_)
             | InstructionValue::LoadContext(_)
             | InstructionValue::LoadGlobal(_)
@@ -162,7 +171,7 @@ pub enum InstructionValue {
     // Debugger(Debugger),
     DeclareContext(DeclareContext),
     DeclareLocal(DeclareLocal),
-    // Destructure(Destructure),
+    Destructure(Destructure),
     Function(FunctionExpression),
     JSXElement(JSXElement),
     // JsxFragment(JsxFragment),
@@ -270,6 +279,94 @@ pub enum JSXAttribute {
         name: String,
         value: IdentifierOperand,
     },
+}
+
+#[derive(Debug)]
+pub struct Destructure {
+    pub kind: InstructionKind,
+    pub pattern: DestructurePattern,
+    pub value: IdentifierOperand,
+}
+
+#[derive(Debug)]
+pub enum DestructurePattern {
+    Array(Vec<ArrayDestructureItem>),
+    Object(Vec<ObjectDestructureItem>),
+}
+
+impl DestructurePattern {
+    pub fn try_each_operand<E, F>(&mut self, mut f: F) -> Result<(), E>
+    where
+        F: FnMut(&mut IdentifierOperand) -> Result<(), E>,
+    {
+        match self {
+            Self::Array(elements) => {
+                for item in elements {
+                    match item {
+                        ArrayDestructureItem::Hole => { /* no-op */ }
+                        ArrayDestructureItem::Value(item) => f(item)?,
+                        ArrayDestructureItem::Spread(item) => f(item)?,
+                    }
+                }
+            }
+            Self::Object(properties) => {
+                for property in properties {
+                    match property {
+                        ObjectDestructureItem::Property(property) => {
+                            f(&mut property.value)?;
+                        }
+                        ObjectDestructureItem::Spread(property) => f(property)?,
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    where
+        F: FnMut(&mut IdentifierOperand) -> (),
+    {
+        match self {
+            Self::Array(elements) => {
+                for item in elements {
+                    match item {
+                        ArrayDestructureItem::Hole => { /* no-op */ }
+                        ArrayDestructureItem::Value(item) => f(item),
+                        ArrayDestructureItem::Spread(item) => f(item),
+                    }
+                }
+            }
+            Self::Object(properties) => {
+                for property in properties {
+                    match property {
+                        ObjectDestructureItem::Property(property) => {
+                            f(&mut property.value);
+                        }
+                        ObjectDestructureItem::Spread(property) => f(property),
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ArrayDestructureItem {
+    Hole,
+    Value(IdentifierOperand),
+    Spread(IdentifierOperand),
+}
+
+#[derive(Debug)]
+pub enum ObjectDestructureItem {
+    Property(ObjectDestructureProperty),
+    Spread(IdentifierOperand),
+}
+
+#[derive(Debug)]
+pub struct ObjectDestructureProperty {
+    pub name: String,
+    pub value: IdentifierOperand,
 }
 
 #[derive(Clone, Debug)]

@@ -29,45 +29,42 @@ function Component(
 )
 entry bb0
 bb0 (block)
-  [0] unknown $3 = DeclareLocal Let unknown x$28
-  [1] unknown $4 = 0
-  [2] unknown $6 = StoreLocal Let unknown y$29 = unknown $4
-  [3] unknown $7 = 10
-  [4] unknown $9 = StoreLocal Let unknown z$30 = unknown $7
-  [5] unknown $19 = LoadLocal unknown a$26
+  [0] unknown $28 = DeclareLocal Let unknown x$29
+  [1] unknown $30 = 0
+  [2] unknown $31 = StoreLocal Let unknown y$32 = unknown $30
+  [3] unknown $33 = 10
+  [4] unknown $34 = StoreLocal Let unknown z$35 = unknown $33
+  [5] unknown $36 = LoadLocal unknown a$0
   [6] If unknown $19 consequent=bb2 alternate=bb6 fallthrough=bb1
 bb2 (block)
   predecessors: bb0
-  [7] unknown $10 = 1
-  [8] unknown $11 = StoreLocal Reassign unknown x$31 = unknown $10
-  [9] unknown $16 = LoadLocal unknown b$27
+  [7] unknown $37 = 1
+  [8] unknown $38 = StoreLocal Reassign unknown x$39 = unknown $37
+  [9] unknown $40 = LoadLocal unknown b$1
   [10] If unknown $16 consequent=bb4 alternate=bb5 fallthrough=bb3
 bb4 (block)
   predecessors: bb2
-  [11] unknown $12 = 20
-  [12] unknown $13 = StoreLocal Reassign unknown z$32 = unknown $12
+  [11] unknown $41 = 20
+  [12] unknown $42 = StoreLocal Reassign unknown z$43 = unknown $41
   [13] Goto bb3
 bb5 (block)
   predecessors: bb2
-  [14] unknown $14 = 30
-  [15] unknown $15 = StoreLocal Reassign unknown z$33 = unknown $14
+  [14] unknown $44 = 30
+  [15] unknown $45 = StoreLocal Reassign unknown z$46 = unknown $44
   [16] Goto bb3
 bb3 (block)
   predecessors: bb4, bb5
-  z$40: phi(bb4: z$32, bb5: z$33)
   [17] Goto bb1
 bb6 (block)
   predecessors: bb0
-  [18] unknown $17 = 2
-  [19] unknown $18 = StoreLocal Reassign unknown x$34 = unknown $17
+  [18] unknown $47 = 2
+  [19] unknown $48 = StoreLocal Reassign unknown x$49 = unknown $47
   [20] Goto bb1
 bb1 (block)
   predecessors: bb3, bb6
-  x$35: phi(bb3: x$31, bb6: x$34)
-  z$39: phi(bb3: z$40, bb6: z$30)
-  [21] unknown $20 = LoadLocal unknown x$35
-  [22] unknown $21 = 0
-  [23] unknown $22 = Binary unknown $20 + unknown $21
-  [24] unknown $23 = LoadLocal unknown z$39
-  [25] unknown $24 = Binary unknown $22 + unknown $23
+  [21] unknown $50 = LoadLocal unknown x$2
+  [22] unknown $51 = LoadLocal unknown y$5
+  [23] unknown $52 = Binary unknown $50 + unknown $51
+  [24] unknown $53 = LoadLocal unknown z$8
+  [25] unknown $54 = Binary unknown $52 + unknown $53
   [26] Return unknown $24

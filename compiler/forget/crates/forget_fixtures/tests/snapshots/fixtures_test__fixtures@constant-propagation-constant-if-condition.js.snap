@@ -45,29 +45,73 @@ function Component(
 )
 entry bb0
 bb0 (block)
-  [0] unknown $0 = 1
-  [1] unknown $2 = StoreLocal Let unknown a$39 = unknown $0
-  [2] unknown $4 = DeclareLocal Let unknown b$40
-  [3] unknown $9 = 1
-  [4] unknown $10 = 1
-  [5] unknown $11 = true
-  [6] unknown $5 = true
-  [7] unknown $6 = StoreLocal Reassign unknown b$41 = unknown $5
-  [8] unknown $13 = DeclareLocal Let unknown c$43
-  [9] unknown $18 = true
-  [10] unknown $14 = "hello"
-  [11] unknown $15 = StoreLocal Reassign unknown c$45 = unknown $14
-  [12] unknown $20 = DeclareLocal Let unknown d$47
-  [13] unknown $25 = "hello"
-  [14] unknown $26 = "hello"
-  [15] unknown $27 = true
-  [16] unknown $21 = 42
-  [17] unknown $22 = StoreLocal Reassign unknown d$49 = unknown $21
-  [18] unknown $29 = DeclareLocal Let unknown e$51
-  [19] unknown $34 = 42
-  [20] unknown $35 = 42
-  [21] unknown $36 = true
-  [22] unknown $30 = "ok"
-  [23] unknown $31 = StoreLocal Reassign unknown e$53 = unknown $30
-  [24] unknown $37 = "ok"
-  [25] Return unknown $37
+  [0] unknown $39 = 1
+  [1] unknown $40 = StoreLocal Let unknown a$41 = unknown $39
+  [2] unknown $42 = DeclareLocal Let unknown b$43
+  [3] unknown $44 = LoadLocal unknown a$1
+  [4] unknown $45 = 1
+  [5] unknown $46 = Binary unknown $44 === unknown $45
+  [6] If unknown $11 consequent=bb2 alternate=bb3 fallthrough=bb1
+bb2 (block)
+  predecessors: bb0
+  [7] unknown $47 = true
+  [8] unknown $48 = StoreLocal Reassign unknown b$49 = unknown $47
+  [9] Goto bb1
+bb3 (block)
+  predecessors: bb0
+  [10] unknown $50 = false
+  [11] unknown $51 = StoreLocal Reassign unknown b$52 = unknown $50
+  [12] Goto bb1
+bb1 (block)
+  predecessors: bb2, bb3
+  [13] unknown $53 = DeclareLocal Let unknown c$54
+  [14] unknown $55 = LoadLocal unknown b$3
+  [15] If unknown $18 consequent=bb5 alternate=bb6 fallthrough=bb4
+bb5 (block)
+  predecessors: bb1
+  [16] unknown $56 = "hello"
+  [17] unknown $57 = StoreLocal Reassign unknown c$58 = unknown $56
+  [18] Goto bb4
+bb6 (block)
+  predecessors: bb1
+  [19] unknown $59 = null
+  [20] unknown $60 = StoreLocal Reassign unknown c$61 = unknown $59
+  [21] Goto bb4
+bb4 (block)
+  predecessors: bb5, bb6
+  [22] unknown $62 = DeclareLocal Let unknown d$63
+  [23] unknown $64 = LoadLocal unknown c$12
+  [24] unknown $65 = "hello"
+  [25] unknown $66 = Binary unknown $64 === unknown $65
+  [26] If unknown $27 consequent=bb8 alternate=bb9 fallthrough=bb7
+bb8 (block)
+  predecessors: bb4
+  [27] unknown $67 = 42
+  [28] unknown $68 = StoreLocal Reassign unknown d$69 = unknown $67
+  [29] Goto bb7
+bb9 (block)
+  predecessors: bb4
+  [30] unknown $70 = 42.001
+  [31] unknown $71 = StoreLocal Reassign unknown d$72 = unknown $70
+  [32] Goto bb7
+bb7 (block)
+  predecessors: bb8, bb9
+  [33] unknown $73 = DeclareLocal Let unknown e$74
+  [34] unknown $75 = LoadLocal unknown d$19
+  [35] unknown $76 = 42
+  [36] unknown $77 = Binary unknown $75 === unknown $76
+  [37] If unknown $36 consequent=bb11 alternate=bb12 fallthrough=bb10
+bb11 (block)
+  predecessors: bb7
+  [38] unknown $78 = "ok"
+  [39] unknown $79 = StoreLocal Reassign unknown e$80 = unknown $78
+  [40] Goto bb10
+bb12 (block)
+  predecessors: bb7
+  [41] unknown $81 = "nope"
+  [42] unknown $82 = StoreLocal Reassign unknown e$83 = unknown $81
+  [43] Goto bb10
+bb10 (block)
+  predecessors: bb11, bb12
+  [44] unknown $84 = LoadLocal unknown e$28
+  [45] Return unknown $37

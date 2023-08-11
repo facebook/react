@@ -23,18 +23,18 @@ function foo(
 )
 entry bb0
 bb0 (block)
-  [0] unknown $6 = LoadLocal unknown a$9
+  [0] unknown $13 = LoadLocal unknown a$0
   [1] If unknown $6 consequent=bb2 alternate=bb4 fallthrough=bb1
 bb2 (block)
   predecessors: bb0
-  [2] unknown $4 = LoadLocal unknown b$10
+  [2] unknown $14 = LoadLocal unknown b$1
   [3] Return unknown $4
 bb4 (block)
   predecessors: bb0
-  [4] unknown $5 = LoadLocal unknown c$11
+  [4] unknown $15 = LoadLocal unknown c$2
   [5] Goto bb1
 bb1 (block)
   predecessors: bb4
-  [6] unknown $7 = LoadLocal unknown d$12
-  [7] unknown $8 = <undefined>
+  [6] unknown $16 = LoadLocal unknown d$3
+  [7] unknown $17 = <undefined>
   [8] Return unknown $8

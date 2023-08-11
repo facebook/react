@@ -28,14 +28,14 @@ function id(
 )
 entry bb0
 bb0 (block)
-  [0] unknown $1 = LoadGlobal Math
-  [1] unknown $2 = LoadGlobal id
-  [2] unknown $3 = true
-  [3] unknown $5 = StoreLocal Let unknown y$15 = unknown $3
-  [4] unknown $6 = false
-  [5] unknown $7 = StoreLocal Reassign unknown y$16 = unknown $6
-  [6] unknown $8 = false
-  [7] unknown $10 = DeclareLocal Let unknown z$17
-  [8] unknown $11 = LoadLocal unknown z$17
-  [9] unknown $12 = LoadLocal unknown x$14
+  [0] unknown $15 = LoadGlobal Math
+  [1] unknown $16 = LoadGlobal id
+  [2] unknown $17 = true
+  [3] unknown $18 = StoreLocal Let unknown y$19 = unknown $17
+  [4] unknown $20 = false
+  [5] unknown $21 = StoreLocal Reassign unknown y$22 = unknown $20
+  [6] unknown $23 = LoadLocal unknown y$4
+  [7] unknown $24 = DeclareLocal Let unknown z$25
+  [8] unknown $26 = LoadLocal unknown z$9
+  [9] unknown $27 = LoadLocal unknown x$0
   [10] Return unknown $12

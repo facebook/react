@@ -4,8 +4,9 @@ use forget_estree::JsValue;
 use forget_utils::ensure_sufficient_stack;
 
 use crate::{
-    BasicBlock, Function, Identifier, IdentifierOperand, Instruction, InstructionValue, LValue,
-    Phi, PlaceOrSpread, Terminal, TerminalValue, HIR,
+    ArrayDestructureItem, BasicBlock, DestructurePattern, Function, Identifier, IdentifierOperand,
+    Instruction, InstructionValue, LValue, ObjectDestructureItem, Phi, PlaceOrSpread, Terminal,
+    TerminalValue, HIR,
 };
 
 /// Trait for HIR types to describe how they print themselves.
@@ -205,6 +206,12 @@ impl Print for InstructionValue {
                     .collect();
                 write!(out, "{}", lines.join("\n"))?;
             }
+            InstructionValue::Destructure(value) => {
+                write!(out, "Destructure ")?;
+                value.pattern.print(hir, out)?;
+                write!(out, " = ")?;
+                value.value.print(hir, out)?;
+            }
             InstructionValue::Tombstone => {
                 write!(out, "Tombstone!")?;
             }
@@ -259,6 +266,54 @@ impl Print for Identifier {
             },
             self.id
         )
+    }
+}
+
+impl Print for DestructurePattern {
+    fn print(&self, hir: &HIR, out: &mut impl Write) -> Result {
+        match self {
+            DestructurePattern::Array(items) => {
+                write!(out, "[ ")?;
+                for (index, item) in items.iter().enumerate() {
+                    if index != 0 {
+                        write!(out, ", ")?;
+                    }
+                    match item {
+                        ArrayDestructureItem::Hole => {
+                            write!(out, "<hole>")?;
+                        }
+                        ArrayDestructureItem::Value(item) => {
+                            item.print(hir, out)?;
+                        }
+                        ArrayDestructureItem::Spread(item) => {
+                            write!(out, "...")?;
+                            item.print(hir, out)?;
+                        }
+                    }
+                }
+                write!(out, " ]")?;
+            }
+            DestructurePattern::Object(properties) => {
+                write!(out, "{{ ")?;
+                for (index, property) in properties.iter().enumerate() {
+                    if index != 0 {
+                        write!(out, ", ")?;
+                    }
+                    match property {
+                        ObjectDestructureItem::Property(property) => {
+                            write!(out, "{}: ", &property.name)?;
+                            property.value.print(hir, out)?;
+                        }
+                        ObjectDestructureItem::Spread(property) => {
+                            write!(out, "...")?;
+                            property.print(hir, out)?;
+                        }
+                    }
+                }
+                write!(out, " }}")?;
+            }
+        }
+        Ok(())
     }
 }
 

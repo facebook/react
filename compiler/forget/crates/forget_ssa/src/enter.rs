@@ -47,6 +47,7 @@ fn visit_instructions<'e, 'f>(
     builder.each_block(|block, builder| {
         for instr_ix in &block.instructions {
             let instr = &mut instructions[usize::from(*instr_ix)];
+            builder.visit_store(&mut instr.lvalue)?;
             instr.try_each_identifier_store(|store| builder.visit_store(store))?;
             instr.each_identifier_load(|load| builder.visit_load(load));
 
@@ -139,8 +140,8 @@ impl<'e, 'f> Builder<'e, 'f> {
         self.env.next_identifier_id()
     }
 
-    fn visit_store(&mut self, lvalue: &mut LValue) -> Result<(), Diagnostic> {
-        let old_identifier = &lvalue.identifier.identifier;
+    fn visit_store(&mut self, lvalue: &mut IdentifierOperand) -> Result<(), Diagnostic> {
+        let old_identifier = &lvalue.identifier;
         // TODO: use Result (?)
         invariant(!self.unknown.contains(&old_identifier.id), || {
             Diagnostic::invariant(
@@ -151,14 +152,14 @@ impl<'e, 'f> Builder<'e, 'f> {
 
         if self.context.contains(&old_identifier.id) {
             let new_identifier = self.get_id_at(self.current, old_identifier);
-            lvalue.identifier.identifier = new_identifier;
+            lvalue.identifier = new_identifier;
             return Ok(());
         }
 
         let new_identifier = self.make_identifier(old_identifier);
         let state = self.states.get_mut(&self.current).unwrap();
         state.defs.insert(old_identifier.id, new_identifier.clone());
-        lvalue.identifier.identifier = new_identifier;
+        lvalue.identifier = new_identifier;
         Ok(())
     }
 
