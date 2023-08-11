@@ -2392,14 +2392,32 @@ function pushImg(
   props: Object,
   resources: Resources,
 ): null {
+  const {src, srcSet} = props;
   if (
     props.loading !== 'lazy' &&
-    typeof props.src === 'string' &&
-    props.fetchPriority !== 'low'
+    (typeof src === 'string' || typeof srcSet === 'string') &&
+    props.fetchPriority !== 'low' &&
+    // We exclude data URIs in src and srcSet since these should not be preloaded
+    !(
+      typeof src === 'string' &&
+      src[4] === ':' &&
+      (src[0] === 'd' || src[0] === 'D') &&
+      (src[1] === 'a' || src[1] === 'A') &&
+      (src[2] === 't' || src[2] === 'T') &&
+      (src[3] === 'a' || src[3] === 'A')
+    ) &&
+    !(
+      typeof srcSet === 'string' &&
+      srcSet[4] === ':' &&
+      (srcSet[0] === 'd' || srcSet[0] === 'D') &&
+      (srcSet[1] === 'a' || srcSet[1] === 'A') &&
+      (srcSet[2] === 't' || srcSet[2] === 'T') &&
+      (srcSet[3] === 'a' || srcSet[3] === 'A')
+    )
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
     // resources.
-    const {src, srcSet, sizes} = props;
+    const {sizes} = props;
     const key = getImagePreloadKey(src, srcSet, sizes);
     let resource = resources.preloadsMap.get(key);
     if (!resource) {
