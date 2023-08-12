@@ -1303,14 +1303,26 @@ function pushStartInstance(
         target$jscomp$0.push("\n");
       return children$jscomp$6;
     case "img":
+      var src = props.src,
+        srcSet = props.srcSet;
       if (
         "lazy" !== props.loading &&
-        "string" === typeof props.src &&
-        "low" !== props.fetchPriority
+        ("string" === typeof src || "string" === typeof srcSet) &&
+        "low" !== props.fetchPriority &&
+        ("string" !== typeof src ||
+          ":" !== src[4] ||
+          ("d" !== src[0] && "D" !== src[0]) ||
+          ("a" !== src[1] && "A" !== src[1]) ||
+          ("t" !== src[2] && "T" !== src[2]) ||
+          ("a" !== src[3] && "A" !== src[3])) &&
+        ("string" !== typeof srcSet ||
+          ":" !== srcSet[4] ||
+          ("d" !== srcSet[0] && "D" !== srcSet[0]) ||
+          ("a" !== srcSet[1] && "A" !== srcSet[1]) ||
+          ("t" !== srcSet[2] && "T" !== srcSet[2]) ||
+          ("a" !== srcSet[3] && "A" !== srcSet[3]))
       ) {
-        var src = props.src,
-          srcSet = props.srcSet,
-          sizes = props.sizes,
+        var sizes = props.sizes,
           key$jscomp$1 = getImagePreloadKey(src, srcSet, sizes),
           resource$jscomp$1 = resources.preloadsMap.get(key$jscomp$1);
         resource$jscomp$1 ||
@@ -4115,4 +4127,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-93cba403";
+exports.version = "18.3.0-www-classic-ac75653d";

@@ -1332,14 +1332,26 @@ function pushStartInstance(
         target$jscomp$0.push("\n");
       return children$jscomp$6;
     case "img":
+      var src = props.src,
+        srcSet = props.srcSet;
       if (
         "lazy" !== props.loading &&
-        "string" === typeof props.src &&
-        "low" !== props.fetchPriority
+        ("string" === typeof src || "string" === typeof srcSet) &&
+        "low" !== props.fetchPriority &&
+        ("string" !== typeof src ||
+          ":" !== src[4] ||
+          ("d" !== src[0] && "D" !== src[0]) ||
+          ("a" !== src[1] && "A" !== src[1]) ||
+          ("t" !== src[2] && "T" !== src[2]) ||
+          ("a" !== src[3] && "A" !== src[3])) &&
+        ("string" !== typeof srcSet ||
+          ":" !== srcSet[4] ||
+          ("d" !== srcSet[0] && "D" !== srcSet[0]) ||
+          ("a" !== srcSet[1] && "A" !== srcSet[1]) ||
+          ("t" !== srcSet[2] && "T" !== srcSet[2]) ||
+          ("a" !== srcSet[3] && "A" !== srcSet[3]))
       ) {
-        var src = props.src,
-          srcSet = props.srcSet,
-          sizes = props.sizes,
+        var sizes = props.sizes,
           key$jscomp$1 = getImagePreloadKey(src, srcSet, sizes),
           resource$jscomp$1 = resources.preloadsMap.get(key$jscomp$1);
         resource$jscomp$1 ||
