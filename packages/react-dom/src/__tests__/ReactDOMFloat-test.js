@@ -3969,6 +3969,36 @@ body {
     );
   });
 
+  it('should not preload images that have a data URIs for src or srcSet', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <img src="data:1" />
+            <img src="data:2" srcSet="ss2" />
+            <img srcSet="data:3a, data:3b 2x" />
+            <img src="4" srcSet="data:4a, data4b 2x" />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <img src="data:1" />
+          <img src="data:2" srcset="ss2" />
+          <img srcset="data:3a, data:3b 2x" />
+          <img src="4" srcset="data:4a, data4b 2x" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
