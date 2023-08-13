@@ -2370,6 +2370,96 @@ function pushStyleContents(
   return;
 }
 
+function getImagePreloadKey(
+  href: string,
+  imageSrcSet: ?string,
+  imageSizes: ?string,
+) {
+  let uniquePart = '';
+  if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
+    uniquePart += '[' + imageSrcSet + ']';
+    if (typeof imageSizes === 'string') {
+      uniquePart += '[' + imageSizes + ']';
+    }
+  } else {
+    uniquePart += '[][]' + href;
+  }
+  return getResourceKey('image', uniquePart);
+}
+
+function pushImg(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  resources: Resources,
+): null {
+  const {src, srcSet} = props;
+  if (
+    props.loading !== 'lazy' &&
+    (typeof src === 'string' || typeof srcSet === 'string') &&
+    props.fetchPriority !== 'low' &&
+    // We exclude data URIs in src and srcSet since these should not be preloaded
+    !(
+      typeof src === 'string' &&
+      src[4] === ':' &&
+      (src[0] === 'd' || src[0] === 'D') &&
+      (src[1] === 'a' || src[1] === 'A') &&
+      (src[2] === 't' || src[2] === 'T') &&
+      (src[3] === 'a' || src[3] === 'A')
+    ) &&
+    !(
+      typeof srcSet === 'string' &&
+      srcSet[4] === ':' &&
+      (srcSet[0] === 'd' || srcSet[0] === 'D') &&
+      (srcSet[1] === 'a' || srcSet[1] === 'A') &&
+      (srcSet[2] === 't' || srcSet[2] === 'T') &&
+      (srcSet[3] === 'a' || srcSet[3] === 'A')
+    )
+  ) {
+    // We have a suspensey image and ought to preload it to optimize the loading of display blocking
+    // resources.
+    const {sizes} = props;
+    const key = getImagePreloadKey(src, srcSet, sizes);
+    let resource = resources.preloadsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preload',
+        chunks: [],
+        state: NoState,
+        props: {
+          rel: 'preload',
+          as: 'image',
+          // There is a bug in Safari where imageSrcSet is not respected on preload links
+          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // but this population is shrinking fast and is already small so we accept this tradeoff.
+          href: srcSet ? undefined : src,
+          imageSrcSet: srcSet,
+          imageSizes: sizes,
+          crossOrigin: props.crossOrigin,
+          integrity: props.integrity,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.referrerPolicy,
+        },
+      };
+      resources.preloadsMap.set(key, resource);
+      if (__DEV__) {
+        markAsRenderedResourceDEV(resource, props);
+      }
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+    if (
+      props.fetchPriority === 'high' ||
+      resources.highImagePreloads.size < 10
+    ) {
+      resources.highImagePreloads.add(resource);
+    } else {
+      resources.bulkPreloads.add(resource);
+    }
+  }
+  return pushSelfClosing(target, props, 'img');
+}
+
 function pushSelfClosing(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3172,6 +3262,11 @@ export function pushStartInstance(
     case 'pre': {
       return pushStartPreformattedElement(target, props, type);
     }
+    case 'img': {
+      return enableFloat
+        ? pushImg(target, props, resources)
+        : pushSelfClosing(target, props, type);
+    }
     // Omitted close tags
     case 'base':
     case 'area':
@@ -3179,7 +3274,6 @@ export function pushStartInstance(
     case 'col':
     case 'embed':
     case 'hr':
-    case 'img':
     case 'keygen':
     case 'param':
     case 'source':
@@ -4242,6 +4336,9 @@ export function writePreamble(
   resources.fontPreloads.forEach(flushResourceInPreamble, destination);
   resources.fontPreloads.clear();
 
+  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
+  resources.highImagePreloads.clear();
+
   // Flush unblocked stylesheets by precedence
   resources.precedences.forEach(flushAllStylesInPreamble, destination);
 
@@ -4250,8 +4347,8 @@ export function writePreamble(
   resources.scripts.forEach(flushResourceInPreamble, destination);
   resources.scripts.clear();
 
-  resources.explicitPreloads.forEach(flushResourceInPreamble, destination);
-  resources.explicitPreloads.clear();
+  resources.bulkPreloads.forEach(flushResourceInPreamble, destination);
+  resources.bulkPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4308,6 +4405,9 @@ export function writeHoistables(
   resources.fontPreloads.forEach(flushResourceLate, destination);
   resources.fontPreloads.clear();
 
+  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
+  resources.highImagePreloads.clear();
+
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
   resources.precedences.forEach(preloadLateStyles, destination);
@@ -4318,8 +4418,8 @@ export function writeHoistables(
   resources.scripts.forEach(flushResourceLate, destination);
   resources.scripts.clear();
 
-  resources.explicitPreloads.forEach(flushResourceLate, destination);
-  resources.explicitPreloads.clear();
+  resources.bulkPreloads.forEach(flushResourceLate, destination);
+  resources.bulkPreloads.clear();
 
   // Write embedding preloadChunks
   const preloadChunks = responseState.preloadChunks;
@@ -4859,12 +4959,13 @@ export type Resources = {
   // Flushing queues for Resource dependencies
   preconnects: Set<PreconnectResource>,
   fontPreloads: Set<PreloadResource>,
+  highImagePreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
   precedences: Map<string, Set<StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
   bootstrapScripts: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
-  explicitPreloads: Set<PreloadResource>,
+  bulkPreloads: Set<PreloadResource>,
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -4883,12 +4984,13 @@ export function createResources(): Resources {
     // cleared on flush
     preconnects: new Set(),
     fontPreloads: new Set(),
+    highImagePreloads: new Set(),
     // usedImagePreloads: new Set(),
     precedences: new Map(),
     stylePrecedences: new Map(),
     bootstrapScripts: new Set(),
     scripts: new Set(),
-    explicitPreloads: new Set(),
+    bulkPreloads: new Set(),
 
     // like a module global for currently rendering boundary
     boundaryResources: null,
@@ -5086,16 +5188,7 @@ export function preload(href: string, options: PreloadOptions) {
       // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
       // by varying the href. this is an edge case but it is the most correct behavior.
       const {imageSrcSet, imageSizes} = options;
-      let uniquePart = '';
-      if (typeof imageSrcSet === 'string' && imageSrcSet !== '') {
-        uniquePart += '[' + imageSrcSet + ']';
-        if (typeof imageSizes === 'string') {
-          uniquePart += '[' + imageSizes + ']';
-        }
-      } else {
-        uniquePart += '[][]' + href;
-      }
-      key = getResourceKey(as, uniquePart);
+      key = getImagePreloadKey(href, imageSrcSet, imageSizes);
     } else {
       key = getResourceKey(as, href);
     }
@@ -5177,8 +5270,10 @@ export function preload(href: string, options: PreloadOptions) {
     }
     if (as === 'font') {
       resources.fontPreloads.add(resource);
+    } else if (as === 'image' && options.fetchPriority === 'high') {
+      resources.highImagePreloads.add(resource);
     } else {
-      resources.explicitPreloads.add(resource);
+      resources.bulkPreloads.add(resource);
     }
     flushResources(request);
   }
