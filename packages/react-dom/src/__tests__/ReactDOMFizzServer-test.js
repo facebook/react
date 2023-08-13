@@ -610,17 +610,30 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(getVisibleChildren(container)).toEqual([
-        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
         <link
           rel="preload"
+          fetchpriority="low"
+          href="init.js"
+          as="script"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="preload"
+          fetchpriority="low"
           href="init2.js"
           as="script"
           nonce={CSPnonce}
           integrity="init2hash"
         />,
-        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
         <link
           rel="modulepreload"
+          fetchpriority="low"
+          href="init.mjs"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="modulepreload"
+          fetchpriority="low"
           href="init2.mjs"
           nonce={CSPnonce}
           integrity="init2hash"
@@ -640,17 +653,30 @@ describe('ReactDOMFizzServer', () => {
         resolve({default: Text});
       });
       expect(getVisibleChildren(container)).toEqual([
-        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
         <link
           rel="preload"
+          fetchpriority="low"
+          href="init.js"
+          as="script"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="preload"
+          fetchpriority="low"
           href="init2.js"
           as="script"
           nonce={CSPnonce}
           integrity="init2hash"
         />,
-        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
         <link
           rel="modulepreload"
+          fetchpriority="low"
+          href="init.mjs"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="modulepreload"
+          fetchpriority="low"
           href="init2.mjs"
           nonce={CSPnonce}
           integrity="init2hash"
@@ -3797,12 +3823,23 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
-          <link rel="preload" href="bar" as="script" />
-          <link rel="preload" href="baz" as="script" integrity="qux" />
-          <link rel="modulepreload" href="quux" />
-          <link rel="modulepreload" href="corge" />
-          <link rel="modulepreload" href="grault" integrity="garply" />
+          <link rel="preload" fetchpriority="low" href="foo" as="script" />
+          <link rel="preload" fetchpriority="low" href="bar" as="script" />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="baz"
+            as="script"
+            integrity="qux"
+          />
+          <link rel="modulepreload" fetchpriority="low" href="quux" />
+          <link rel="modulepreload" fetchpriority="low" href="corge" />
+          <link
+            rel="modulepreload"
+            fetchpriority="low"
+            href="grault"
+            integrity="garply"
+          />
         </head>
         <body>
           <div>hello world</div>
@@ -3866,14 +3903,27 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
-          <link rel="preload" href="bar" as="script" />
-          <link rel="preload" href="baz" as="script" crossorigin="" />
-          <link rel="preload" href="qux" as="script" crossorigin="" />
-          <link rel="modulepreload" href="quux" />
-          <link rel="modulepreload" href="corge" />
+          <link rel="preload" fetchpriority="low" href="foo" as="script" />
+          <link rel="preload" fetchpriority="low" href="bar" as="script" />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="baz"
+            as="script"
+            crossorigin=""
+          />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="qux"
+            as="script"
+            crossorigin=""
+          />
+          <link rel="modulepreload" fetchpriority="low" href="quux" />
+          <link rel="modulepreload" fetchpriority="low" href="corge" />
           <link
             rel="modulepreload"
+            fetchpriority="low"
             href="grault"
             crossorigin="use-credentials"
           />
