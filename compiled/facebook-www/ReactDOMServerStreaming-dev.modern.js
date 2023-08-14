@@ -106,21 +106,6 @@ function closeWithError(destination, error) {
   destination.error = error;
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 var assign = Object.assign;
 
 /*
@@ -1870,461 +1855,6 @@ function getValueDescriptorExpectingEnumForWarning(thing) {
     : typeof thing === "string"
     ? JSON.stringify(thing)
     : 'something with type "' + typeof thing + '"';
-}
-
-function compareResourcePropsForWarning(newProps, currentProps) {
-  {
-    var propDiffs = null;
-    var allProps = Array.from(
-      new Set(Object.keys(currentProps).concat(Object.keys(newProps)))
-    );
-
-    for (var i = 0; i < allProps.length; i++) {
-      var propName = allProps[i];
-      var newValue = newProps[propName];
-      var currentValue = currentProps[propName];
-
-      if (
-        newValue !== currentValue &&
-        !(newValue == null && currentValue == null)
-      ) {
-        if (newValue == null) {
-          if (propDiffs === null) {
-            propDiffs = {
-              missing: {},
-              extra: {},
-              different: {}
-            };
-          }
-
-          propDiffs.missing[propName] = currentValue;
-        } else if (currentValue == null) {
-          if (propDiffs === null) {
-            propDiffs = {
-              missing: {},
-              extra: {},
-              different: {}
-            };
-          }
-
-          propDiffs.extra[propName] = newValue;
-        } else {
-          if (propDiffs === null) {
-            propDiffs = {
-              missing: {},
-              extra: {},
-              different: {}
-            };
-          }
-
-          propDiffs.different[propName] = {
-            original: currentValue,
-            latest: newValue
-          };
-        }
-      }
-    }
-
-    return propDiffs;
-  }
-}
-
-function describeDifferencesForStylesheets(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-
-    if (propName === "media") {
-      description +=
-        '\n  "' +
-        propName +
-        '" missing for props, original value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue);
-    }
-  }
-
-  for (var _propName in diff.extra) {
-    var _propValue = diff.extra[_propName];
-    description +=
-      '\n  "' +
-      _propName +
-      '" prop value: ' +
-      getValueDescriptorExpectingEnumForWarning(_propValue) +
-      ", missing from original props";
-  }
-
-  for (var _propName2 in diff.different) {
-    var latestValue = diff.different[_propName2].latest;
-    var originalValue = diff.different[_propName2].original;
-    description +=
-      '\n  "' +
-      _propName2 +
-      '" prop value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", original value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
-}
-function describeDifferencesForStylesheetOverPreinit(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.extra) {
-    var propValue = diff.extra[propName];
-
-    if (
-      propName === "precedence" ||
-      propName === "crossOrigin" ||
-      propName === "integrity"
-    ) {
-      description +=
-        '\n  "' +
-        propName +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue) +
-        ", option missing";
-    } else {
-      description +=
-        '\n  "' +
-        propName +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue) +
-        ", option not available with ReactDOM.preinit()";
-    }
-  }
-
-  for (var _propName3 in diff.different) {
-    var latestValue = diff.different[_propName3].latest;
-    var originalValue = diff.different[_propName3].original;
-
-    if (_propName3 === "precedence" && originalValue === "default") {
-      description +=
-        '\n  "' +
-        _propName3 +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(latestValue) +
-        ", missing from options";
-    } else {
-      description +=
-        '\n  "' +
-        _propName3 +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(latestValue) +
-        ", option value: " +
-        getValueDescriptorExpectingEnumForWarning(originalValue);
-    }
-  }
-
-  return description;
-}
-function describeDifferencesForPreinitOverStylesheet(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-
-    if (propName === "precedence" && propValue !== "default") {
-      description +=
-        '\n  "' +
-        propName +
-        '" missing from options, prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue);
-    }
-  }
-
-  for (var _propName4 in diff.extra) {
-    var _propValue2 = diff.extra[_propName4];
-
-    if (
-      _propName4 === "precedence" ||
-      _propName4 === "crossOrigin" ||
-      _propName4 === "integrity"
-    ) {
-      description +=
-        '\n  "' +
-        _propName4 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(_propValue2) +
-        ", missing from props";
-    }
-  }
-
-  for (var _propName5 in diff.different) {
-    var latestValue = diff.different[_propName5].latest;
-    var originalValue = diff.different[_propName5].original;
-    description +=
-      '\n  "' +
-      _propName5 +
-      '" option value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", prop value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
-}
-function describeDifferencesForPreinits(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-
-    if (propName === "precedence" && propValue !== "default") {
-      description +=
-        '\n  "' +
-        propName +
-        '" missing from options, original option value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue);
-    }
-  }
-
-  for (var _propName6 in diff.extra) {
-    var _propValue3 = diff.extra[_propName6];
-
-    if (
-      (_propName6 === "precedence" && _propValue3 !== "default") ||
-      _propName6 === "crossOrigin" ||
-      _propName6 === "integrity"
-    ) {
-      description +=
-        '\n  "' +
-        _propName6 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(_propValue3) +
-        ", missing from original options";
-    }
-  }
-
-  for (var _propName7 in diff.different) {
-    var latestValue = diff.different[_propName7].latest;
-    var originalValue = diff.different[_propName7].original;
-    description +=
-      '\n  "' +
-      _propName7 +
-      '" option value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", original option value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
-}
-var preloadOptionsForComparison = ["as", "crossOrigin", "integrity", "media"];
-function describeDifferencesForPreloads(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-
-    if (preloadOptionsForComparison.includes(propName)) {
-      description +=
-        '\n  "' +
-        propName +
-        '" missing from options, original option value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue);
-    }
-  }
-
-  for (var _propName8 in diff.extra) {
-    var _propValue4 = diff.extra[_propName8];
-
-    if (preloadOptionsForComparison.includes(_propName8)) {
-      description +=
-        '\n  "' +
-        _propName8 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(_propValue4) +
-        ", missing from original options";
-    }
-  }
-
-  for (var _propName9 in diff.different) {
-    var latestValue = diff.different[_propName9].latest;
-    var originalValue = diff.different[_propName9].original;
-
-    if (preloadOptionsForComparison.includes(_propName9)) {
-      description +=
-        '\n  "' +
-        _propName9 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(latestValue) +
-        ", original option value: " +
-        getValueDescriptorExpectingEnumForWarning(originalValue);
-    }
-  }
-
-  return description;
-}
-function describeDifferencesForPreloadOverImplicitPreload(
-  newProps,
-  currentProps
-) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-
-    if (preloadOptionsForComparison.includes(propName)) {
-      description +=
-        '\n  "' +
-        propName +
-        '" missing from options, underlying prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue);
-    }
-  }
-
-  for (var _propName10 in diff.extra) {
-    var _propValue5 = diff.extra[_propName10];
-
-    if (preloadOptionsForComparison.includes(_propName10)) {
-      description +=
-        '\n  "' +
-        _propName10 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(_propValue5) +
-        ", missing from underlying props";
-    }
-  }
-
-  for (var _propName11 in diff.different) {
-    var latestValue = diff.different[_propName11].latest;
-    var originalValue = diff.different[_propName11].original;
-
-    if (preloadOptionsForComparison.includes(_propName11)) {
-      description +=
-        '\n  "' +
-        _propName11 +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(latestValue) +
-        ", underlying prop value: " +
-        getValueDescriptorExpectingEnumForWarning(originalValue);
-    }
-  }
-
-  return description;
-}
-function describeDifferencesForScripts(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.missing) {
-    var propValue = diff.missing[propName];
-    description +=
-      '\n  "' +
-      propName +
-      '" missing for props, original value: ' +
-      getValueDescriptorExpectingEnumForWarning(propValue);
-  }
-
-  for (var _propName12 in diff.extra) {
-    var _propValue6 = diff.extra[_propName12];
-    description +=
-      '\n  "' +
-      _propName12 +
-      '" prop value: ' +
-      getValueDescriptorExpectingEnumForWarning(_propValue6) +
-      ", missing from original props";
-  }
-
-  for (var _propName13 in diff.different) {
-    var latestValue = diff.different[_propName13].latest;
-    var originalValue = diff.different[_propName13].original;
-    description +=
-      '\n  "' +
-      _propName13 +
-      '" prop value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", original value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
-}
-function describeDifferencesForScriptOverPreinit(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.extra) {
-    var propValue = diff.extra[propName];
-
-    if (propName === "crossOrigin" || propName === "integrity") {
-      description +=
-        '\n  "' +
-        propName +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue) +
-        ", option missing";
-    } else {
-      description +=
-        '\n  "' +
-        propName +
-        '" prop value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue) +
-        ", option not available with ReactDOM.preinit()";
-    }
-  }
-
-  for (var _propName14 in diff.different) {
-    var latestValue = diff.different[_propName14].latest;
-    var originalValue = diff.different[_propName14].original;
-    description +=
-      '\n  "' +
-      _propName14 +
-      '" prop value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", option value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
-}
-function describeDifferencesForPreinitOverScript(newProps, currentProps) {
-  var diff = compareResourcePropsForWarning(newProps, currentProps);
-  if (!diff) return "";
-  var description = "";
-
-  for (var propName in diff.extra) {
-    var propValue = diff.extra[propName];
-
-    if (propName === "crossOrigin" || propName === "integrity") {
-      description +=
-        '\n  "' +
-        propName +
-        '" option value: ' +
-        getValueDescriptorExpectingEnumForWarning(propValue) +
-        ", missing from props";
-    }
-  }
-
-  for (var _propName15 in diff.different) {
-    var latestValue = diff.different[_propName15].latest;
-    var originalValue = diff.different[_propName15].original;
-    description +=
-      '\n  "' +
-      _propName15 +
-      '" option value: ' +
-      getValueDescriptorExpectingEnumForWarning(latestValue) +
-      ", prop value: " +
-      getValueDescriptorExpectingEnumForWarning(originalValue);
-  }
-
-  return description;
 }
 
 var ReactSharedInternals =
@@ -4110,62 +3640,6 @@ function pushLink(
         // This stylesheet refers to a Resource and we create a new one if necessary
         var resource = resources.stylesMap.get(key);
 
-        {
-          var devResource = getAsResourceDEV(resource);
-
-          if (devResource) {
-            switch (devResource.__provenance) {
-              case "rendered": {
-                var differenceDescription = describeDifferencesForStylesheets(
-                  // Diff the props from the JSX element, not the derived resource props
-                  props,
-                  devResource.__originalProps
-                );
-
-                if (differenceDescription) {
-                  error(
-                    'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
-                      ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
-                      " the props from the first encountered instance will be used and props from later instances will be ignored." +
-                      ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
-                    href,
-                    differenceDescription
-                  );
-                }
-
-                break;
-              }
-
-              case "preinit": {
-                var _differenceDescription =
-                  describeDifferencesForStylesheetOverPreinit(
-                    // Diff the props from the JSX element, not the derived resource props
-                    props,
-                    devResource.__propsEquivalent
-                  );
-
-                if (_differenceDescription) {
-                  error(
-                    'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
-                      ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
-                      " options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or" +
-                      " options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function." +
-                      " Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support" +
-                      " arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering" +
-                      " <link> tags only.%s",
-                    precedence,
-                    href,
-                    href,
-                    _differenceDescription
-                  );
-                }
-
-                break;
-              }
-            }
-          }
-        }
-
         if (!resource) {
           var resourceProps = stylesheetPropsFromRawProps(props);
           var preloadResource = resources.preloadsMap.get(key);
@@ -4192,11 +3666,6 @@ function pushLink(
             props: resourceProps
           };
           resources.stylesMap.set(key, resource);
-
-          {
-            markAsRenderedResourceDEV(resource, props);
-          }
-
           var precedenceSet = resources.precedences.get(precedence);
 
           if (!precedenceSet) {
@@ -4578,11 +4047,6 @@ function pushImg(target, props, resources) {
         }
       };
       resources.preloadsMap.set(key, resource);
-
-      {
-        markAsRenderedResourceDEV(resource, props);
-      }
-
       pushLinkImpl(resource.chunks, resource.props);
     }
 
@@ -4840,61 +4304,6 @@ function pushScript(
 
     var resource = resources.scriptsMap.get(key);
 
-    {
-      var devResource = getAsResourceDEV(resource);
-
-      if (devResource) {
-        switch (devResource.__provenance) {
-          case "rendered": {
-            var differenceDescription = describeDifferencesForScripts(
-              // Diff the props from the JSX element, not the derived resource props
-              props,
-              devResource.__originalProps
-            );
-
-            if (differenceDescription) {
-              error(
-                'React encountered a <script async={true} src="%s" .../> that has props that conflict' +
-                  " with another hoistable script with the same `src`. When rendering hoistable scripts (async scripts without any loading handlers)" +
-                  " the props from the first encountered instance will be used and props from later instances will be ignored." +
-                  " Update the props on both <script async={true} .../> instance so they agree.%s",
-                src,
-                differenceDescription
-              );
-            }
-
-            break;
-          }
-
-          case "preinit": {
-            var _differenceDescription2 =
-              describeDifferencesForScriptOverPreinit(
-                // Diff the props from the JSX element, not the derived resource props
-                props,
-                devResource.__propsEquivalent
-              );
-
-            if (_differenceDescription2) {
-              error(
-                'React encountered a <script async={true} src="%s" .../> with props that conflict' +
-                  ' with the options provided to `ReactDOM.preinit("%s", { as: "script", ... })`. React will use the first props or preinitialization' +
-                  " options encountered when rendering a hoistable script with a particular `src` and will ignore any newer props or" +
-                  " options. The first instance of this script resource was created using the `ReactDOM.preinit()` function." +
-                  " Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support" +
-                  " arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering" +
-                  " <script> tags only.%s",
-                src,
-                src,
-                _differenceDescription2
-              );
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
     if (!resource) {
       resource = {
         type: "script",
@@ -4902,11 +4311,7 @@ function pushScript(
         state: NoState,
         props: null
       };
-      resources.scriptsMap.set(key, resource);
-
-      {
-        markAsRenderedResourceDEV(resource, props);
-      } // Add to the script flushing queue
+      resources.scriptsMap.set(key, resource); // Add to the script flushing queue
 
       resources.scripts.add(resource);
       var scriptProps = props;
@@ -6910,12 +6315,7 @@ var Blocked =
 
 var PreloadFlushed =
   /*     */
-  8; // Dev extensions.
-// Stylesheets and Scripts rendered with jsx
-// Preloads, Stylesheets, and Scripts from ReactDOM.preload or ReactDOM.preinit
-// Preloads created for normal components we rendered but know we can preload early such as
-// sync Scripts and stylesheets without precedence or with onLoad/onError handlers
-// @TODO add bootstrap script to implicit preloads
+  8; // @TODO add bootstrap script to implicit preloads
 
 function createResources() {
   return {
@@ -7148,69 +6548,6 @@ function preload(href, options) {
 
     var resource = resources.preloadsMap.get(key);
 
-    {
-      var devResource = getAsResourceDEV(resource);
-
-      if (devResource) {
-        switch (devResource.__provenance) {
-          case "preload": {
-            var differenceDescription = describeDifferencesForPreloads(
-              options,
-              devResource.__originalOptions
-            );
-
-            if (differenceDescription) {
-              error(
-                'ReactDOM.preload(): The options provided conflict with another call to `ReactDOM.preload("%s", { as: "%s", ...})`.' +
-                  " React will always use the options it first encounters when preloading a resource for a given `href` and `as` type, and any later options will be ignored if different." +
-                  " Try updating all calls to `ReactDOM.preload()` with the same `href` and `as` type to use the same options, or eliminate one of the calls.%s",
-                href,
-                as,
-                differenceDescription
-              );
-            }
-
-            break;
-          }
-
-          case "implicit": {
-            var _differenceDescription3 =
-              describeDifferencesForPreloadOverImplicitPreload(
-                options,
-                devResource.__impliedProps
-              );
-
-            if (_differenceDescription3) {
-              var elementDescription =
-                as === "style"
-                  ? '<link rel="stylesheet" ... />'
-                  : as === "script"
-                  ? "<script ... />"
-                  : null;
-
-              if (elementDescription) {
-                error(
-                  'ReactDOM.preload(): For `href` "%s", The options provided conflict with props on a matching %s element. When the preload' +
-                    " options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource" +
-                    " is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead" +
-                    " and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to" +
-                    " render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call" +
-                    " may be extraneous. Try removing the call, otherwise try adjusting both the props on the %s and the options" +
-                    " passed to `ReactDOM.preload()` to agree.%s",
-                  href,
-                  elementDescription,
-                  elementDescription,
-                  _differenceDescription3
-                );
-              }
-            }
-
-            break;
-          }
-        }
-      }
-    }
-
     if (!resource) {
       resource = {
         type: "preload",
@@ -7219,17 +6556,6 @@ function preload(href, options) {
         props: preloadPropsFromPreloadOptions(href, as, options)
       };
       resources.preloadsMap.set(key, resource);
-
-      {
-        markAsImperativeResourceDEV(
-          resource,
-          "preload",
-          href,
-          options,
-          resource.props
-        );
-      }
-
       pushLinkImpl(resource.chunks, resource.props);
     }
 
@@ -7292,79 +6618,6 @@ function preinit(href, options) {
         var resource = resources.stylesMap.get(key);
         var precedence = options.precedence || "default";
 
-        {
-          var devResource = getAsResourceDEV(resource);
-
-          if (devResource) {
-            var resourceProps = stylesheetPropsFromPreinitOptions(
-              href,
-              precedence,
-              options
-            );
-
-            var propsEquivalent = assign(
-              {},
-              resourceProps,
-              _defineProperty(
-                {
-                  precedence: options.precedence
-                },
-                "data-precedence",
-                null
-              )
-            );
-
-            switch (devResource.__provenance) {
-              case "rendered": {
-                var differenceDescription =
-                  describeDifferencesForPreinitOverStylesheet(
-                    // Diff the props from the JSX element, not the derived resource props
-                    propsEquivalent,
-                    devResource.__originalProps
-                  );
-
-                if (differenceDescription) {
-                  error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
-                      " React will always use the props or options it first encounters for a hoistable stylesheet for a given `href` and any later props or options will be ignored if different." +
-                      " Generally, ReactDOM.preinit() is useful when you are not yet rendering a stylesheet but you anticipate it will be used soon." +
-                      " In this case the stylesheet was already rendered so preinitializing it does not provide any additional benefit." +
-                      ' To resolve, try making the props and options agree between the <link rel="stylesheet" .../> and the `ReactDOM.preinit()` call or' +
-                      " remove the `ReactDOM.preinit()` call.%s",
-                    href,
-                    devResource.__originalProps.precedence,
-                    href,
-                    differenceDescription
-                  );
-                }
-
-                break;
-              }
-
-              case "preinit": {
-                var _differenceDescription4 = describeDifferencesForPreinits(
-                  // Diff the props from the JSX element, not the derived resource props
-                  propsEquivalent,
-                  devResource.__propsEquivalent
-                );
-
-                if (_differenceDescription4) {
-                  error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
-                      " React will always use the options it first encounters when preinitializing a hoistable stylesheet for a given `href` and any later options will be ignored if different." +
-                      " Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s",
-                    href,
-                    href,
-                    _differenceDescription4
-                  );
-                }
-
-                break;
-              }
-            }
-          }
-        }
-
         if (!resource) {
           var state = NoState;
           var preloadResource = resources.preloadsMap.get(key);
@@ -7380,27 +6633,6 @@ function preinit(href, options) {
             props: stylesheetPropsFromPreinitOptions(href, precedence, options)
           };
           resources.stylesMap.set(key, resource);
-
-          {
-            markAsImperativeResourceDEV(
-              resource,
-              "preinit",
-              href,
-              options,
-              assign(
-                {},
-                resource.props,
-                _defineProperty(
-                  {
-                    precedence: precedence
-                  },
-                  "data-precedence",
-                  undefined
-                )
-              )
-            );
-          }
-
           var precedenceSet = resources.precedences.get(precedence);
 
           if (!precedenceSet) {
@@ -7443,61 +6675,6 @@ function preinit(href, options) {
 
         var _resource = resources.scriptsMap.get(_key);
 
-        {
-          var _devResource = getAsResourceDEV(_resource);
-
-          if (_devResource) {
-            var _propsEquivalent = scriptPropsFromPreinitOptions(src, options);
-
-            switch (_devResource.__provenance) {
-              case "rendered": {
-                var _differenceDescription5 =
-                  describeDifferencesForPreinitOverScript(
-                    // Diff the props from the JSX element, not the derived resource props
-                    _propsEquivalent,
-                    _devResource.__originalProps
-                  );
-
-                if (_differenceDescription5) {
-                  error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <script async={true} src="%s" .../> that was already rendered.' +
-                      " React will always use the props or options it first encounters for a hoistable script for a given `href` and any later props or options will be ignored if different." +
-                      " Generally, ReactDOM.preinit() is useful when you are not yet rendering a script but you anticipate it will be used soon and want to go beyond preloading it and have it" +
-                      " execute early. In this case the script was already rendered so preinitializing it does not provide any additional benefit." +
-                      " To resolve, try making the props and options agree between the <script .../> and the `ReactDOM.preinit()` call or remove the `ReactDOM.preinit()` call.%s",
-                    href,
-                    href,
-                    _differenceDescription5
-                  );
-                }
-
-                break;
-              }
-
-              case "preinit": {
-                var _differenceDescription6 = describeDifferencesForPreinits(
-                  // Diff the props from the JSX element, not the derived resource props
-                  _propsEquivalent,
-                  _devResource.__propsEquivalent
-                );
-
-                if (_differenceDescription6) {
-                  error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "script", ... })`.' +
-                      " React will always use the options it first encounters when preinitializing a hoistable script for a given `href` and any later options will be ignored if different." +
-                      " Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s",
-                    href,
-                    href,
-                    _differenceDescription6
-                  );
-                }
-
-                break;
-              }
-            }
-          }
-        }
-
         if (!_resource) {
           _resource = {
             type: "script",
@@ -7506,21 +6683,9 @@ function preinit(href, options) {
             props: null
           };
           resources.scriptsMap.set(_key, _resource);
-
-          var _resourceProps = scriptPropsFromPreinitOptions(src, options);
-
-          {
-            markAsImperativeResourceDEV(
-              _resource,
-              "preinit",
-              href,
-              options,
-              _resourceProps
-            );
-          }
-
+          var resourceProps = scriptPropsFromPreinitOptions(src, options);
           resources.scripts.add(_resource);
-          pushScriptImpl(_resource.chunks, _resourceProps);
+          pushScriptImpl(_resource.chunks, resourceProps);
           flushResources(request);
         }
 
@@ -7710,54 +6875,6 @@ function hoistResources(resources, source) {
 
   if (currentBoundaryResources) {
     source.forEach(hoistStyleResource, currentBoundaryResources);
-  }
-}
-
-function markAsRenderedResourceDEV(resource, originalProps) {
-  {
-    var devResource = resource;
-
-    if (typeof devResource.__provenance === "string") {
-      error("Resource already marked for DEV type. This is a bug in React.");
-    }
-
-    devResource.__provenance = "rendered";
-    devResource.__originalProps = originalProps;
-  }
-}
-
-function markAsImperativeResourceDEV(
-  resource,
-  provenance,
-  originalHref,
-  originalOptions,
-  propsEquivalent
-) {
-  {
-    var devResource = resource;
-
-    if (typeof devResource.__provenance === "string") {
-      error("Resource already marked for DEV type. This is a bug in React.");
-    }
-
-    devResource.__provenance = provenance;
-    devResource.__originalHref = originalHref;
-    devResource.__originalOptions = originalOptions;
-    devResource.__propsEquivalent = propsEquivalent;
-  }
-}
-
-function getAsResourceDEV(resource) {
-  {
-    if (resource) {
-      if (typeof resource.__provenance === "string") {
-        return resource;
-      }
-
-      error("Resource was not marked for DEV type. This is a bug in React.");
-    }
-
-    return null;
   }
 }
 
