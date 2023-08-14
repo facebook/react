@@ -96,29 +96,44 @@ function compileAndInsertNewFunctionDeclaration(
     });
     const originalIdent = fnPath.node.id;
 
-    let gatedFn = null;
-    if (pass.opts.gating != null) {
-      gatedFn = insertGatedFunctionDeclaration(
-        fnPath,
-        compiledFn,
-        originalIdent,
-        pass.opts.gating
-      );
-    } else {
-      fnPath.replaceWith(compiledFn);
-    }
-
-    if (pass.opts.instrumentForget != null) {
-      const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-      addInstrumentForget(fnPath, originalIdent.name, instrumentFnName);
-      if (pass.opts.gating != null && gatedFn != null) {
-        addInstrumentForget(gatedFn, originalIdent.name, instrumentFnName);
-      }
-    }
+    insertNewFunctionDeclaration(fnPath, originalIdent, compiledFn, pass);
     hasForgetMutatedOriginalSource = true;
   }
 
   return hasForgetMutatedOriginalSource;
+}
+
+function insertNewFunctionDeclaration(
+  fnPath: NodePath<t.FunctionDeclaration>,
+  originalIdent: t.Identifier,
+  compiledFn: t.FunctionDeclaration,
+  pass: CompilerPass
+): void {
+  let gatedFn = null;
+  if (pass.opts.gating != null) {
+    gatedFn = insertGatedFunctionDeclaration(
+      fnPath,
+      compiledFn,
+      originalIdent,
+      pass.opts.gating
+    );
+  } else {
+    fnPath.replaceWith(compiledFn);
+  }
+
+  if (pass.opts.instrumentForget != null) {
+    const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
+    addInstrumentForget(fnPath, originalIdent.name, instrumentFnName);
+    if (pass.opts.gating != null) {
+      CompilerError.invariant(gatedFn != null, {
+        reason: "Should have inserted a gated function declaration",
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+      addInstrumentForget(gatedFn, originalIdent.name, instrumentFnName);
+    }
+  }
 }
 
 export function compileProgram(
@@ -205,10 +220,9 @@ export function compileProgram(
           return;
         }
 
-        hasForgetMutatedOriginalSource = compileAndInsertNewFunctionDeclaration(
-          fn,
-          pass
-        );
+        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
+          hasForgetMutatedOriginalSource = true;
+        }
       },
 
       ArrowFunctionExpression(
@@ -239,10 +253,9 @@ export function compileProgram(
           return;
         }
 
-        hasForgetMutatedOriginalSource = compileAndInsertNewFunctionDeclaration(
-          loweredFn,
-          pass
-        );
+        if (compileAndInsertNewFunctionDeclaration(loweredFn, pass) === true) {
+          hasForgetMutatedOriginalSource = true;
+        }
       },
     },
     {
