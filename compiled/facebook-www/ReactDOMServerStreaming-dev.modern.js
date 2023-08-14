@@ -7012,6 +7012,7 @@ function prefetchDNS(href, options) {
     flushResources(request);
   }
 }
+
 function preconnect(href, options) {
   var request = resolveRequest();
 
@@ -7078,6 +7079,7 @@ function preconnect(href, options) {
     flushResources(request);
   }
 }
+
 function preload(href, options) {
   var request = resolveRequest();
 
