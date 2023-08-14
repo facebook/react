@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from 'babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin';
+import type { Effect, ValueKind } from 'babel-plugin-react-forget/src/HIR';
 import fs from "fs/promises";
 import { exists } from "./utils";
 
@@ -77,7 +79,7 @@ export async function compile(
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const { runReactForgetBabelPlugin } = require(compilerPath);
+    const { runReactForgetBabelPlugin } = require(compilerPath) as { runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin };
     const { toggleLogging } = require(loggerPath);
 
     // only try logging if we filtered out all but one fixture,
@@ -158,8 +160,8 @@ export async function compile(
           [
             "useFreeze",
             {
-              valueKind: "frozen",
-              effectKind: "freeze",
+              valueKind: "frozen" as ValueKind,
+              effectKind: "freeze" as Effect,
             },
           ],
         ]),
@@ -184,6 +186,7 @@ export async function compile(
       instrumentForget,
       panicOnBailout,
       isDev: true,
+      noEmit: false,
     }).code;
   } catch (e) {
     error = e;
