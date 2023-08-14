@@ -14,7 +14,7 @@ pub struct Instruction {
 }
 
 impl Instruction {
-    pub fn each_identifier_store<F>(&mut self, mut f: F) -> ()
+    pub fn each_lvalue<F>(&mut self, mut f: F) -> ()
     where
         F: FnMut(&mut IdentifierOperand) -> (),
     {
@@ -29,7 +29,7 @@ impl Instruction {
                 f(&mut instr.lvalue.identifier);
             }
             InstructionValue::Destructure(instr) => {
-                instr.pattern.each_operand(f);
+                instr.pattern.each_operand(&mut f);
             }
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
@@ -42,9 +42,10 @@ impl Instruction {
             | InstructionValue::JSXElement(_)
             | InstructionValue::Tombstone => {}
         }
+        f(&mut self.lvalue);
     }
 
-    pub fn try_each_identifier_store<F, E>(&mut self, mut f: F) -> Result<(), E>
+    pub fn try_each_lvalue<F, E>(&mut self, mut f: F) -> Result<(), E>
     where
         F: FnMut(&mut IdentifierOperand) -> Result<(), E>,
     {
@@ -58,7 +59,7 @@ impl Instruction {
             InstructionValue::StoreLocal(instr) => {
                 f(&mut instr.lvalue.identifier)?;
             }
-            InstructionValue::Destructure(instr) => instr.pattern.try_each_operand(f)?,
+            InstructionValue::Destructure(instr) => instr.pattern.try_each_operand(&mut f)?,
             InstructionValue::Array(_)
             | InstructionValue::Binary(_)
             | InstructionValue::Call(_)
@@ -70,17 +71,11 @@ impl Instruction {
             | InstructionValue::JSXElement(_)
             | InstructionValue::Tombstone => {}
         }
+        f(&mut self.lvalue)?;
         Ok(())
     }
 
-    pub fn each_identifier_load<F>(&mut self, f: F) -> ()
-    where
-        F: FnMut(&mut IdentifierOperand) -> (),
-    {
-        self.each_operand(f);
-    }
-
-    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    pub fn each_rvalue<F>(&mut self, mut f: F) -> ()
     where
         F: FnMut(&mut IdentifierOperand) -> (),
     {
@@ -281,7 +276,7 @@ pub enum DestructurePattern {
 }
 
 impl DestructurePattern {
-    pub fn try_each_operand<E, F>(&mut self, mut f: F) -> Result<(), E>
+    pub fn try_each_operand<E, F>(&mut self, f: &mut F) -> Result<(), E>
     where
         F: FnMut(&mut IdentifierOperand) -> Result<(), E>,
     {
@@ -308,7 +303,7 @@ impl DestructurePattern {
         }
         Ok(())
     }
-    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    pub fn each_operand<F>(&mut self, f: &mut F) -> ()
     where
         F: FnMut(&mut IdentifierOperand) -> (),
     {

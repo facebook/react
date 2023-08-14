@@ -1,8 +1,7 @@
 use std::cell::RefCell;
-use std::process::id;
 use std::rc::Rc;
 
-use forget_diagnostics::{invariant, Diagnostic};
+use forget_diagnostics::Diagnostic;
 use forget_hir::{
     BasicBlock, BlockId, BlockRewriter, BlockRewriterAction, Blocks, Environment, Function,
     Identifier, IdentifierData, IdentifierId, IdentifierOperand, InstructionValue, MutableRange,
@@ -52,9 +51,8 @@ fn visit_instructions<'e>(
         builder.start_block(&block);
         for instr_ix in &block.instructions {
             let instr = &mut instructions[usize::from(*instr_ix)];
-            instr.each_identifier_load(|load| builder.visit_load(load));
-            instr.try_each_identifier_store(|store| builder.visit_store(store))?;
-            builder.visit_store(&mut instr.lvalue)?;
+            instr.each_rvalue(|rvalue| builder.visit_load(rvalue));
+            instr.try_each_lvalue(|lvalue| builder.visit_store(lvalue))?;
 
             if let InstructionValue::Function(fun) = &mut instr.value {
                 // Lookup each of the context variables referenced in the function
@@ -158,14 +156,12 @@ impl<'e> Builder<'e> {
 
     fn visit_store(&mut self, lvalue: &mut IdentifierOperand) -> Result<(), Diagnostic> {
         let old_identifier = &lvalue.identifier;
-        // TODO: use Result (?)
-        invariant(!self.unknown.contains(&old_identifier.id), || {
-            Diagnostic::invariant(
+        if self.unknown.contains(&old_identifier.id) {
+            return Err(Diagnostic::invariant(
                 "EnterSSA: Expected identifier to be defined before being used",
                 None,
-            )
-        })?;
-
+            ));
+        }
         if self.context.contains(&old_identifier.id) {
             let new_identifier = self.get_id_at(self.current, old_identifier);
             lvalue.identifier = new_identifier;

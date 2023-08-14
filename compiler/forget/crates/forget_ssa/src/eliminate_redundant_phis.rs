@@ -70,8 +70,8 @@ pub fn eliminate_redundant_phis(env: &Environment, fun: &mut Function) {
 
             for instr_ix in block.instructions.iter() {
                 let instr = &mut hir.instructions[usize::from(*instr_ix)];
-                instr.each_identifier_store(|store| rewrite(&rewrites, &mut store.identifier));
-                instr.each_identifier_load(|load| rewrite(&rewrites, &mut load.identifier));
+                instr.each_lvalue(|lvalue| rewrite(&rewrites, &mut lvalue.identifier));
+                instr.each_rvalue(|rvalue| rewrite(&rewrites, &mut rvalue.identifier));
 
                 if let InstructionValue::Function(fun) = &mut instr.value {
                     for context_identifier in &mut fun.lowered_function.context {
