@@ -2872,7 +2872,7 @@ function adoptPreloadPropsForScript(
   if (scriptProps.referrerPolicy == null)
     scriptProps.referrerPolicy = preloadProps.referrerPolicy;
   if (scriptProps.integrity == null)
-    scriptProps.referrerPolicy = preloadProps.integrity;
+    scriptProps.integrity = preloadProps.integrity;
 }
 
 type KeyedTagCache = Map<string, Array<Element>>;
