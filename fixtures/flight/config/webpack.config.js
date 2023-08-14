@@ -248,6 +248,12 @@ module.exports = function (webpackEnv) {
         tsconfig: [paths.appTsConfig, paths.appJsConfig].filter(f =>
           fs.existsSync(f)
         ),
+        react: [
+          'react/',
+          'react-dom/',
+          'react-server-dom-webpack/',
+          'scheduler/',
+        ],
       },
     },
     infrastructureLogging: {

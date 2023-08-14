@@ -15,6 +15,7 @@ import type {
   ClientReferenceMetadata,
   SSRManifest,
   StringDecoder,
+  ModuleLoading,
 } from './ReactFlightClientConfig';
 
 import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
@@ -33,6 +34,7 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
+  prepareDestinationForModule,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
@@ -176,6 +178,7 @@ Chunk.prototype.then = function <T>(
 
 export type Response = {
   _bundlerConfig: SSRManifest,
+  _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
@@ -704,11 +707,13 @@ function missingCall() {
 
 export function createResponse(
   bundlerConfig: SSRManifest,
+  moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _moduleLoading: moduleLoading,
     _callServer: callServer !== undefined ? callServer : missingCall,
     _chunks: chunks,
     _stringDecoder: createStringDecoder(),
@@ -770,6 +775,8 @@ function resolveModule(
     response._bundlerConfig,
     clientReferenceMetadata,
   );
+
+  prepareDestinationForModule(response._moduleLoading, clientReferenceMetadata);
 
   // TODO: Add an option to encode modules that are lazy loaded.
   // For now we preload all modules as early as possible since it's likely

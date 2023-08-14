@@ -415,9 +415,7 @@ module.exports = {
       },
     },
     {
-      files: [
-        'packages/react-native-renderer/**/*.js',
-      ],
+      files: ['packages/react-native-renderer/**/*.js'],
       globals: {
         nativeFabricUIManager: 'readonly',
       },
@@ -426,7 +424,7 @@ module.exports = {
       files: ['packages/react-server-dom-webpack/**/*.js'],
       globals: {
         __webpack_chunk_load__: 'readonly',
-        __webpack_require__: 'readonly',
+        __webpack_require__: true,
       },
     },
     {

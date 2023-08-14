@@ -11,7 +11,10 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response} from 'react-client/src/ReactFlightClient';
 
-import type {SSRManifest} from 'react-client/src/ReactFlightClientConfig';
+import type {
+  SSRManifest,
+  ModuleLoading,
+} from 'react-client/src/ReactFlightClientConfig';
 
 import type {Readable} from 'stream';
 
@@ -24,6 +27,10 @@ import {
 } from 'react-client/src/ReactFlightClient';
 
 import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
+
+export type Options = {
+  moduleLoading?: $NonMaybeType<ModuleLoading>,
+};
 
 function noServerCall() {
   throw new Error(
@@ -43,8 +50,15 @@ export function createServerReference<A: Iterable<any>, T>(
 function createFromNodeStream<T>(
   stream: Readable,
   moduleMap: $NonMaybeType<SSRManifest>,
+  options?: Options,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleMap, noServerCall);
+  const moduleLoading =
+    options && options.moduleLoading ? options.moduleLoading : null;
+  const response: Response = createResponse(
+    moduleMap,
+    moduleLoading,
+    noServerCall,
+  );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);
   });

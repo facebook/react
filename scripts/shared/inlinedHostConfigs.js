@@ -35,6 +35,8 @@ module.exports = [
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node.unbundled',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-server-dom-webpack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerNode.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -87,6 +89,8 @@ module.exports = [
       'react-server-dom-webpack/server.browser',
       'react-server-dom-webpack/src/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack.js',
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackBrowser.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -141,6 +145,8 @@ module.exports = [
       'react-server-dom-webpack/server.edge',
       'react-server-dom-webpack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack.js',
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -172,6 +178,9 @@ module.exports = [
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node
+      'react-server-dom-webpack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack.js',
+      'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-server-dom-webpack/node-register',
       'react-server-dom-webpack/src/ReactFlightWebpackNodeRegister.js',
       'react-devtools',
@@ -226,7 +235,7 @@ module.exports = [
       'react-dom',
       'react-dom-bindings',
       'react-server-dom-webpack',
-      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Brower and *Node files
+      'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMLegacyServerNode.classic.fb.js',

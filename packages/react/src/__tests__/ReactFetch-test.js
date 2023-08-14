@@ -47,6 +47,11 @@ describe('ReactFetch', () => {
       jest.mock('react', () => require('react/react.shared-subset'));
     }
 
+    // We need to mock __webpack_require__ for browser builds
+    global.__webpack_require__ = function (id) {
+      // We don't actually expect to load any modules in this test
+    };
+
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     ReactServerDOMClient = require('react-server-dom-webpack/client');

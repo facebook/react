@@ -125,6 +125,9 @@ function mockAllConfigs(rendererInfo) {
           fs.statSync(nodePath.join(process.cwd(), 'packages', candidate));
           return jest.requireActual(candidate);
         } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
           // try without a part
         }
         parts.pop();

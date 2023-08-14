@@ -35,6 +35,8 @@ export const resolveServerReference = $$$config.resolveServerReference;
 export const preloadModule = $$$config.preloadModule;
 export const requireModule = $$$config.requireModule;
 export const dispatchHint = $$$config.dispatchHint;
+export const prepareDestinationForModule =
+  $$$config.prepareDestinationForModule;
 export const usedWithSSR = true;
 
 export opaque type Source = mixed;

@@ -11,7 +11,10 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
-import type {SSRManifest} from './ReactFlightClientConfigWebpackBundler';
+import type {
+  SSRManifest,
+  ModuleLoading,
+} from 'react-client/src/ReactFlightClientConfig';
 
 import {
   createResponse,
@@ -40,11 +43,13 @@ export function createServerReference<A: Iterable<any>, T>(
 
 export type Options = {
   moduleMap?: $NonMaybeType<SSRManifest>,
+  moduleLoading?: $NonMaybeType<ModuleLoading>,
 };
 
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
     options && options.moduleMap ? options.moduleMap : null,
+    options && options.moduleLoading ? options.moduleLoading : null,
     noServerCall,
   );
 }

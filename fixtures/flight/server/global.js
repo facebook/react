@@ -33,6 +33,7 @@ const compress = require('compression');
 const chalk = require('chalk');
 const express = require('express');
 const http = require('http');
+const React = require('react');
 
 const {renderToPipeableStream} = require('react-dom/server');
 const {createFromNodeStream} = require('react-server-dom-webpack/client');
@@ -62,6 +63,11 @@ if (process.env.NODE_ENV === 'development') {
     webpackMiddleware(compiler, {
       publicPath: paths.publicUrlOrPath.slice(0, -1),
       serverSideRender: true,
+      headers: () => {
+        return {
+          'Cache-Control': 'no-store, must-revalidate',
+        };
+      },
     })
   );
   app.use(webpackHotMiddleware(compiler));
@@ -121,9 +127,9 @@ app.all('/', async function (req, res, next) {
         buildPath = path.join(__dirname, '../build/');
       }
       // Read the module map from the virtual file system.
-      const moduleMap = JSON.parse(
+      const ssrBundleConfig = JSON.parse(
         await virtualFs.readFile(
-          path.join(buildPath, 'react-ssr-manifest.json'),
+          path.join(buildPath, 'react-ssr-bundle-config.json'),
           'utf8'
         )
       );
@@ -138,10 +144,19 @@ app.all('/', async function (req, res, next) {
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
-      const root = await createFromNodeStream(rscResponse, moduleMap);
+      let root;
+      let Root = () => {
+        if (root) {
+          return root;
+        }
+        root = createFromNodeStream(rscResponse, ssrBundleConfig.ssrManifest, {
+          moduleLoading: ssrBundleConfig.moduleLoading,
+        });
+        return root;
+      };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
-      const {pipe} = renderToPipeableStream(root, {
+      const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
       });
       pipe(res);

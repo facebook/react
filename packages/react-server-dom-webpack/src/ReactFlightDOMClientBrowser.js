@@ -35,6 +35,7 @@ export type Options = {
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
     null,
+    null,
     options && options.callServer ? options.callServer : undefined,
   );
 }
