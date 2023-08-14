@@ -15793,7 +15793,7 @@ function adoptPreloadPropsForScript(scriptProps, preloadProps) {
   null == scriptProps.referrerPolicy &&
     (scriptProps.referrerPolicy = preloadProps.referrerPolicy);
   null == scriptProps.integrity &&
-    (scriptProps.referrerPolicy = preloadProps.integrity);
+    (scriptProps.integrity = preloadProps.integrity);
 }
 var tagCaches = null;
 function getHydratableHoistableCache(type, keyAttribute, ownerDocument) {
@@ -16104,7 +16104,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1759 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-30fe9e24",
+  version: "18.3.0-www-modern-c25ea5bc",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2123 = {
@@ -16135,7 +16135,7 @@ var internals$jscomp$inline_2123 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-30fe9e24"
+  reconcilerVersion: "18.3.0-www-modern-c25ea5bc"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2124 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16291,4 +16291,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-30fe9e24";
+exports.version = "18.3.0-www-modern-c25ea5bc";

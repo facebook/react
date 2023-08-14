@@ -34557,7 +34557,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-40f533c2";
+var ReactVersion = "18.3.0-www-classic-f1396fc3";
 
 function createPortal$1(
   children,
@@ -44911,7 +44911,7 @@ function adoptPreloadPropsForScript(scriptProps, preloadProps) {
   if (scriptProps.referrerPolicy == null)
     scriptProps.referrerPolicy = preloadProps.referrerPolicy;
   if (scriptProps.integrity == null)
-    scriptProps.referrerPolicy = preloadProps.integrity;
+    scriptProps.integrity = preloadProps.integrity;
 }
 
 var tagCaches = null;
