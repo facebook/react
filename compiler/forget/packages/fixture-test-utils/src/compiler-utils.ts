@@ -85,38 +85,44 @@ export function transformFixtureInput(
     language = "flow";
   }
 
-  return pluginFn(input, basename, language, {
-    environment: {
-      customHooks: new Map([
-        [
-          "useFreeze",
-          {
-            valueKind: "frozen" as ValueKind,
-            effectKind: "freeze" as Effect,
-          },
-        ],
-      ]),
-      enableAssumeHooksFollowRulesOfReact,
-      enableFunctionCallSignatureOptimizations: true,
-      disableAllMemoization,
-      enableTreatHooksAsFunctions,
-      inlineUseMemo: true,
-      memoizeJsxElements,
-      validateHooksUsage: true,
-      validateRefAccessDuringRender,
-      validateFrozenLambdas: true,
-      validateNoSetStateInRender,
-      enableEmitFreeze,
-      enableOptimizeFunctionExpressions,
-      assertValidMutableRanges: true,
+  return pluginFn(
+    input,
+    basename,
+    language,
+    {
+      environment: {
+        customHooks: new Map([
+          [
+            "useFreeze",
+            {
+              valueKind: "frozen" as ValueKind,
+              effectKind: "freeze" as Effect,
+            },
+          ],
+        ]),
+        enableAssumeHooksFollowRulesOfReact,
+        enableFunctionCallSignatureOptimizations: true,
+        disableAllMemoization,
+        enableTreatHooksAsFunctions,
+        inlineUseMemo: true,
+        memoizeJsxElements,
+        validateHooksUsage: true,
+        validateRefAccessDuringRender,
+        validateFrozenLambdas: true,
+        validateNoSetStateInRender,
+        enableEmitFreeze,
+        enableOptimizeFunctionExpressions,
+        assertValidMutableRanges: true,
+      },
+      enableOnlyOnUseForgetDirective,
+      enableOnlyOnReactScript,
+      logger: null,
+      gating,
+      instrumentForget,
+      panicOnBailout,
+      isDev: true,
+      noEmit: false,
     },
-    enableOnlyOnUseForgetDirective,
-    enableOnlyOnReactScript,
-    logger: null,
-    gating,
-    instrumentForget,
-    panicOnBailout,
-    isDev: true,
-    noEmit: false,
-  });
+    includeAst
+  );
 }

@@ -1,0 +1,53 @@
+{
+  "name": "sprout",
+  "version": "0.0.1",
+  "public": false,
+  "main": "dist/main.js",
+  "license": "MIT",
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "build": "yarn workspace babel-plugin-react-forget run build && yarn workspace fixture-test-utils run build && rimraf dist && tsc",
+    "prettier": "prettier --write src",
+    "test": "echo 'no tests'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react-forget.git"
+  },
+  "dependencies": {
+    "@babel/generator": "7.2.0",
+    "@babel/plugin-syntax-jsx": "^7.18.6",
+    "@babel/types": "^7.19.0",
+    "@parcel/watcher": "^2.1.0",
+    "@testing-library/react": "^13.4.0",
+    "chalk": "4",
+    "fixture-test-utils": "*",
+    "jsdom": "^22.1.0",
+    "react": "^0.0.0-experimental-493f72b0a-20230727",
+    "react-dom": "^0.0.0-experimental-493f72b0a-20230727",
+    "readline": "^1.3.0",
+    "typescript": "^5.1.0",
+    "yargs": "^17.7.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.19.1",
+    "@babel/parser": "^7.19.1",
+    "@babel/plugin-syntax-typescript": "^7.18.6",
+    "@babel/plugin-transform-modules-commonjs": "^7.18.6",
+    "@babel/preset-react": "^7.18.6",
+    "@babel/traverse": "^7.19.1",
+    "@types/node": "^18.7.18",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "prettier": "2.8.8",
+    "rimraf": "^3.0.2"
+  },
+  "resolutions": {
+    "./**/@babel/parser": "7.7.4",
+    "./**/@babel/types": "7.7.4",
+    "@babel/core": "7.2.0",
+    "@babel/traverse": "7.1.6"
+  }
+}

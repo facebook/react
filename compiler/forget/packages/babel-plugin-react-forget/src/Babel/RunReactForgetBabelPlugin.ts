@@ -24,7 +24,8 @@ export function runReactForgetBabelPlugin(
   text: string,
   file: string,
   language: "flow" | "typescript",
-  options: PluginOptions | null
+  options: PluginOptions | null,
+  includeAst: boolean = false
 ): ReactForgetBabelPluginResult {
   let ast;
   if (language === "flow") {
@@ -43,6 +44,7 @@ export function runReactForgetBabelPlugin(
     });
   }
   const result = transformFromAstSync(ast, text, {
+    ast: includeAst,
     filename: file,
     highlightCode: false,
     retainLines: true,
