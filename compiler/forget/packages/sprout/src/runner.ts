@@ -5,13 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import chalk from "chalk";
 import { TestFixture } from "fixture-test-utils";
 import { getFixtures, readTestFilter } from "fixture-test-utils";
 import { Worker } from "jest-worker";
 import process from "process";
 import * as readline from "readline";
 import * as RunnerWorker from "./runner-worker";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import SproutOnlyFilterTodoRemove from "./SproutOnlyFilterTodoRemove";
+import { FILTER_FILENAME } from "fixture-test-utils";
 
 const WORKER_PATH = require.resolve("./runner-worker");
 readline.emitKeypressEvents(process.stdin);
@@ -31,10 +35,26 @@ process.on("SIGTERM", function () {
 });
 
 type RunnerOptions = {
-  useFilter: boolean;
+  filter: boolean;
   sync: boolean;
-  useTodoFilter: boolean;
 };
+
+const opts: RunnerOptions = yargs
+  .boolean("sync")
+  .describe(
+    "sync",
+    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false."
+  )
+  .default("sync", false)
+  .boolean("filter")
+  .describe(
+    "filter",
+    `Evaluate fixtures in filter mode ("${FILTER_FILENAME}")\n`
+  )
+  .default("filter", false)
+  .help("help")
+  .strict()
+  .parseSync(hideBin(process.argv));
 
 function logsEqual(a: Array<string>, b: Array<string>) {
   if (a.length !== b.length) {
@@ -43,33 +63,93 @@ function logsEqual(a: Array<string>, b: Array<string>) {
   return a.every((val, idx) => val === b[idx]);
 }
 
-function reportResults(results: Array<[string, RunnerWorker.TestResult]>) {
+function reportResults(
+  results: Array<[string, RunnerWorker.TestResult]>
+): boolean {
+  const failures: Array<[string, RunnerWorker.TestResult]> = [];
+
   for (const [fixtureName, result] of results) {
     if (result.unexpectedError !== null) {
-      console.log(`ERROR ${fixtureName}: ${result.unexpectedError}`);
+      console.log(
+        chalk.red.inverse.bold(" FAIL ") + " " + chalk.dim(fixtureName)
+      );
+      failures.push([fixtureName, result]);
       continue;
     }
     const { forgetResult, nonForgetResult } = result;
-    if (forgetResult.kind === "UnexpectedError") {
-      console.log(`ERROR ${fixtureName}: ${forgetResult.value}`);
-    } else if (nonForgetResult.kind === "UnexpectedError") {
-      console.log(`ERROR ${fixtureName}: ${nonForgetResult.value}`);
-    } else if (
+    if (
+      forgetResult.kind === "UnexpectedError" ||
+      nonForgetResult.kind === "UnexpectedError" ||
       forgetResult.kind !== nonForgetResult.kind ||
       forgetResult.value !== nonForgetResult.value ||
       !logsEqual(forgetResult.logs, nonForgetResult.logs)
     ) {
       console.log(
-        `FAIL  ${fixtureName}: Difference in forget and non-forget results. \nExpected result: ${JSON.stringify(
-          forgetResult,
-          undefined,
-          2
-        )}\nFound: ${JSON.stringify(nonForgetResult, undefined, 2)}`
+        chalk.red.inverse.bold(" FAIL ") + " " + chalk.dim(fixtureName)
       );
+      failures.push([fixtureName, result]);
     } else {
-      console.log(`PASS  ${fixtureName}`);
+      console.log(
+        chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(fixtureName)
+      );
     }
   }
+
+  if (failures.length !== 0) {
+    console.log("\n" + chalk.red.bold("Failures:") + "\n");
+
+    for (const [fixtureName, result] of failures) {
+      console.log(chalk.red.bold("FAIL:") + " " + fixtureName);
+
+      if (result.unexpectedError !== null) {
+        console.log(
+          chalk.red("Unexpected error when building fixture:") +
+            ` ${result.unexpectedError}`
+        );
+        continue;
+      }
+      const { forgetResult, nonForgetResult } = result;
+      if (forgetResult.kind === "UnexpectedError") {
+        console.log(
+          chalk.red(
+            "Unexpected error when evaluating Forget-transformed fixture:"
+          ) + ` ${forgetResult.value}`
+        );
+      }
+      if (nonForgetResult.kind === "UnexpectedError") {
+        console.log(
+          chalk.red("Unexpected error when evaluating original fixture:") +
+            ` ${nonForgetResult.value}`
+        );
+      }
+      const hasUnexpectedError =
+        forgetResult.kind === "UnexpectedError" ||
+        nonForgetResult.kind === "UnexpectedError";
+      if (
+        !hasUnexpectedError &&
+        (forgetResult.kind !== nonForgetResult.kind ||
+          forgetResult.value !== nonForgetResult.value ||
+          !logsEqual(forgetResult.logs, nonForgetResult.logs))
+      ) {
+        console.log(
+          chalk.red("Difference in forget and non-forget results.") +
+            `\nExpected result: ${JSON.stringify(
+              forgetResult,
+              undefined,
+              2
+            )}\nFound: ${JSON.stringify(nonForgetResult, undefined, 2)}`
+        );
+        failures.push([fixtureName, result]);
+      }
+    }
+  }
+
+  console.log(
+    `${results.length} Tests, ${results.length - failures.length} Passed, ${
+      failures.length
+    } Failed`
+  );
+  return failures.length === 0;
 }
 
 /**
@@ -82,16 +162,14 @@ export async function main(opts: RunnerOptions): Promise<void> {
   worker.getStderr().pipe(process.stderr);
   worker.getStdout().pipe(process.stdout);
 
-  const testFilter = opts.useFilter ? await readTestFilter() : null;
+  const testFilter = opts.filter ? await readTestFilter() : null;
   let allFixtures: Map<string, TestFixture> = getFixtures(testFilter);
 
-  if (opts.useTodoFilter) {
-    allFixtures = new Map(
-      Array.from(allFixtures.entries()).filter(([filename, _]) =>
-        SproutOnlyFilterTodoRemove.has(filename)
-      )
-    );
-  }
+  allFixtures = new Map(
+    Array.from(allFixtures.entries()).filter(([filename, _]) =>
+      SproutOnlyFilterTodoRemove.has(filename)
+    )
+  );
 
   const validFixtures = new Map();
   for (const [name, fixture] of allFixtures) {
@@ -118,10 +196,8 @@ export async function main(opts: RunnerOptions): Promise<void> {
     }
   }
 
-  reportResults(results);
-  process.exit(0);
+  const isSuccess = reportResults(results);
+  process.exit(isSuccess ? 0 : 1);
 }
 
-main({ useFilter: false, sync: true, useTodoFilter: true }).catch((error) =>
-  console.error(error)
-);
+main(opts).catch((error) => console.error(error));

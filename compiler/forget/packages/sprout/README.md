@@ -6,8 +6,8 @@ Currently, Sprout runs each fixture with a known set of inputs and annotations. 
 Sprout is currently WIP and only executes files listed in `src/SproutOnlyFilterTodoRemove.ts`.
 
 ### Milestones:
-- [✅] Render fixtures with React runtime / `testing-library/react`.
-- [ ] Make Sprout CLI -runnable and report results in process exit code.
+- [x] Render fixtures with React runtime / `testing-library/react`.
+- [x] Make Sprout CLI -runnable and report results in process exit code.
   After this point:
   - Sprout can be enabled by default and added to the Github Actions pipeline.
   - `SproutOnlyFilterTodoRemove` can be renamed to `SproutSkipFilter`.
