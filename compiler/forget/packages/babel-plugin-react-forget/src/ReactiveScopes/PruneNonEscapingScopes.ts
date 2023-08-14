@@ -430,8 +430,6 @@ function computeMemoizationInputs(
         rvalues: value.children,
       };
     }
-    case "PrefixUpdate":
-    case "PostfixUpdate":
     case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":
@@ -505,6 +503,20 @@ function computeMemoizationInputs(
       return {
         lvalues,
         rvalues: [],
+      };
+    }
+    case "PrefixUpdate":
+    case "PostfixUpdate": {
+      const lvalues = [
+        { place: value.lvalue, level: MemoizationLevel.Conditional },
+      ];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Conditional });
+      }
+      return {
+        // Indirection for the inner value, memoized if the value is
+        lvalues,
+        rvalues: [value.value],
       };
     }
     case "StoreLocal": {

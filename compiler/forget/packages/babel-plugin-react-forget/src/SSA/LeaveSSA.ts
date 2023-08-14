@@ -99,6 +99,18 @@ export function leaveSSA(fn: HIRFunction): void {
     { lvalue: LValue | LValuePattern; place: Place }
   > = new Map();
 
+  for (const param of fn.params) {
+    if (param.identifier.name !== null) {
+      declarations.set(param.identifier.name, {
+        lvalue: {
+          kind: InstructionKind.Let,
+          place: param,
+        },
+        place: param,
+      });
+    }
+  }
+
   // For non-memoizable phis, this maps original identifiers to the identifier they should be
   // *rewritten* to. The keys are the original identifiers, and the value will be _either_ the
   // phi id or, more typically, the operand that was defined prior to the phi.
