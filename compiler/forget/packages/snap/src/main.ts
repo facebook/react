@@ -17,7 +17,7 @@ if (process.stdin.isTTY) {
   process.stdin.setRawMode(true);
 }
 
-process.stdin.on("keypress", function (chunk, key) {
+process.stdin.on("keypress", function (_, key) {
   if (key && key.name === "c" && key.ctrl) {
     // handle sigint
     if (childProc) {

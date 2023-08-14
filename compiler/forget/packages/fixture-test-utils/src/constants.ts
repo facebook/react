@@ -1,0 +1,24 @@
+import path from "path";
+
+// We assume this is run from `babel-plugin-react-forget`
+export const COMPILER_PATH = path.join(
+  process.cwd(),
+  "dist",
+  "Babel",
+  "RunReactForgetBabelPlugin.js"
+);
+export const LOGGER_PATH = path.join(
+  process.cwd(),
+  "dist",
+  "Utils",
+  "logger.js"
+);
+export const FIXTURES_PATH = path.join(
+  process.cwd(),
+  "src",
+  "__tests__",
+  "fixtures",
+  "compiler"
+);
+export const FILTER_FILENAME = "testfilter.txt";
+export const FILTER_PATH = path.join(process.cwd(), FILTER_FILENAME);

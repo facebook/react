@@ -6,9 +6,8 @@
  */
 
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from 'babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin';
-import type { Effect, ValueKind } from 'babel-plugin-react-forget/src/HIR';
+import { TestFixture, transformFixtureInput, writeOutputToString } from 'fixture-test-utils';
 import fs from "fs/promises";
-import { exists } from "./utils";
 
 const originalConsoleError = console.error;
 
@@ -33,12 +32,6 @@ export type TestResult = {
   unexpectedError: string | null;
 };
 
-export type TestFixture = {
-  basename: string;
-  inputPath: string;
-  outputPath: string;
-};
-
 export async function compile(
   compilerPath: string,
   loggerPath: string,
@@ -54,11 +47,11 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { inputPath, outputPath, basename } = fixture;
-  const input = (await exists(inputPath))
+  const { inputPath, inputExists, outputPath, outputExists, basename } = fixture;
+  const input = inputExists
     ? await fs.readFile(inputPath, "utf8")
     : null;
-  const expected = (await exists(outputPath))
+  const expected = outputExists
     ? await fs.readFile(outputPath, "utf8")
     : null;
 
@@ -86,108 +79,7 @@ export async function compile(
     // since console log order is non-deterministic
     const shouldLogPragma = input.split("\n")[0].includes("@debug");
     toggleLogging(isOnlyFixture && shouldLogPragma);
-
-    // Extract the first line to quickly check for custom test directives
-    const firstLine = input.substring(0, input.indexOf("\n"));
-    let language = parseLanguage(firstLine);
-
-    let enableOnlyOnUseForgetDirective = false;
-    let gating = null;
-    let instrumentForget = null;
-    let panicOnBailout = true;
-    let memoizeJsxElements = true;
-    let enableAssumeHooksFollowRulesOfReact = false;
-    let enableTreatHooksAsFunctions = true;
-    let disableAllMemoization = false;
-    let validateRefAccessDuringRender = true;
-    let validateNoSetStateInRender = true;
-    let enableEmitFreeze = null;
-    let enableOptimizeFunctionExpressions = true;
-    let enableOnlyOnReactScript = false;
-    if (firstLine.indexOf("@forgetDirective") !== -1) {
-      enableOnlyOnUseForgetDirective = true;
-    }
-    if (firstLine.includes("@gating")) {
-      gating = {
-        source: "ReactForgetFeatureFlag",
-        importSpecifierName: "isForgetEnabled_Fixtures",
-      };
-    }
-    if (firstLine.includes("@instrumentForget")) {
-      instrumentForget = {
-        source: "react-forget-runtime",
-        importSpecifierName: "useRenderCounter",
-      };
-    }
-    if (firstLine.includes("@panicOnBailout false")) {
-      panicOnBailout = false;
-    }
-    if (firstLine.includes("@memoizeJsxElements false")) {
-      memoizeJsxElements = false;
-    }
-    if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
-      enableAssumeHooksFollowRulesOfReact = true;
-    }
-    if (firstLine.includes("@enableTreatHooksAsFunctions false")) {
-      enableTreatHooksAsFunctions = false;
-    }
-    if (firstLine.includes("@disableAllMemoization true")) {
-      disableAllMemoization = true;
-    }
-    if (firstLine.includes("@validateRefAccessDuringRender false")) {
-      validateRefAccessDuringRender = false;
-    }
-    if (firstLine.includes("@validateNoSetStateInRender false")) {
-      validateNoSetStateInRender = false;
-    }
-    if (firstLine.includes("@enableOptimizeFunctionExpressions false")) {
-      enableOptimizeFunctionExpressions = false;
-    }
-    if (firstLine.includes("@enableEmitFreeze")) {
-      enableEmitFreeze = {
-        source: "react-forget-runtime",
-        importSpecifierName: "makeReadOnly",
-      };
-    }
-    if (firstLine.indexOf("@reactScriptDirective") !== -1) {
-      enableOnlyOnReactScript = true;
-      language = "flow";
-    }
-
-    code = runReactForgetBabelPlugin(input, basename, language, {
-      environment: {
-        customHooks: new Map([
-          [
-            "useFreeze",
-            {
-              valueKind: "frozen" as ValueKind,
-              effectKind: "freeze" as Effect,
-            },
-          ],
-        ]),
-        enableAssumeHooksFollowRulesOfReact,
-        enableFunctionCallSignatureOptimizations: true,
-        disableAllMemoization,
-        enableTreatHooksAsFunctions,
-        inlineUseMemo: true,
-        memoizeJsxElements,
-        validateHooksUsage: true,
-        validateRefAccessDuringRender,
-        validateFrozenLambdas: true,
-        validateNoSetStateInRender,
-        enableEmitFreeze,
-        enableOptimizeFunctionExpressions,
-        assertValidMutableRanges: true,
-      },
-      enableOnlyOnUseForgetDirective,
-      enableOnlyOnReactScript,
-      logger: null,
-      gating,
-      instrumentForget,
-      panicOnBailout,
-      isDev: true,
-      noEmit: false,
-    }).code;
+    code = transformFixtureInput(input, basename, runReactForgetBabelPlugin).code;
   } catch (e) {
     error = e;
   }
@@ -202,92 +94,28 @@ export async function compile(
     }
   }
 
-  let output: string;
+  const output = writeOutputToString(input, code, error);
   const expectError = basename.startsWith("error.");
+  let unexpectedError: string | null = null;
   if (expectError) {
     if (error === null) {
-      return {
-        inputPath,
-        outputPath,
-        actual: code,
-        expected,
-        unexpectedError: `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`,
-      };
-    } else if (code != null) {
-      output = `${formatOutput(code)}\n${formatErrorOutput(error)}`;
-    } else {
-      output = formatErrorOutput(error);
+      unexpectedError = `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`;
     }
   } else {
     if (error !== null) {
-      return {
-        inputPath,
-        outputPath,
-        actual: code,
-        expected,
-        unexpectedError: `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error.message}`,
-      };
+      unexpectedError = `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error.message}`;
+    } else if (code == null || code.length === 0) {
+      unexpectedError = `Expected output for fixture '${basename}'.`;
     }
-    if (code == null || code.length === 0) {
-      return {
-        inputPath,
-        outputPath,
-        actual: code,
-        expected,
-        unexpectedError: `Expected output for fixture '${basename}'.`,
-      };
-    }
-    output = formatOutput(code);
   }
-
-  // leading newline intentional
-  const actual = `
-## Input
-
-${wrapWithTripleBackticks(input, "javascript")}
-
-${output}
-      `; // trailing newline + space internional
 
   console.error = originalConsoleError;
 
   return {
     inputPath,
     outputPath,
-    actual,
+    actual: output,
     expected,
-    unexpectedError: null,
+    unexpectedError,
   };
-}
-
-function formatErrorOutput(error: Error): string {
-  error.message = error.message.replace(/^\/.*?:\s/, "");
-  return `
-## Error
-
-${wrapWithTripleBackticks(error.message)}
-          `;
-}
-
-function formatOutput(code: string): string {
-  return `
-## Code
-
-${wrapWithTripleBackticks(code, "javascript")}
-        `.trim();
-}
-
-function wrapWithTripleBackticks(s: string, ext: string | null = null): string {
-  return `\`\`\`${ext ?? ""}
-${s}
-\`\`\``;
-}
-
-const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
-function parseLanguage(source: string): "flow" | "typescript" {
-  let useFlow = false;
-  for (const flowPragma of FlowPragmas) {
-    useFlow ||= !!source.match(flowPragma);
-  }
-  return useFlow ? "flow" : "typescript";
 }

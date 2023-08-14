@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "yarn workspace fixture-test-utils run build && rimraf dist && tsc",
     "test": "echo 'no tests'",
     "lint": "yarn eslint src"
   },
@@ -22,7 +22,8 @@
     "chalk": "4",
     "readline": "^1.3.0",
     "typescript": "^5.1.0",
-    "yargs": "^17.7.1"
+    "yargs": "^17.7.1",
+    "fixture-test-utils": "*"
   },
   "devDependencies": {
     "@types/node": "^18.7.18",

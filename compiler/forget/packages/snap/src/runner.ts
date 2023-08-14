@@ -7,8 +7,8 @@
 
 import watcher from "@parcel/watcher";
 import chalk from "chalk";
+import { COMPILER_PATH, LOGGER_PATH, FIXTURES_PATH, FILTER_FILENAME, FILTER_PATH, readTestFilter, TestFilter } from 'fixture-test-utils';
 import fs from "fs/promises";
-import glob from "glob";
 import invariant from "invariant";
 import { diff } from "jest-diff";
 import { Worker } from "jest-worker";
@@ -19,26 +19,10 @@ import ts from "typescript";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { TestResult } from "./compiler-worker";
-import * as compiler from "./compiler-worker.js";
-import { exists } from "./utils";
+import * as compiler from "./compiler-worker";
+import {getFixtures} from 'fixture-test-utils';
 
 const WORKER_PATH = require.resolve("./compiler-worker.js");
-const COMPILER_PATH = path.join(
-  process.cwd(),
-  "dist",
-  "Babel",
-  "RunReactForgetBabelPlugin.js"
-);
-const LOGGER_PATH = path.join(process.cwd(), "dist", "Utils", "logger.js");
-const FIXTURES_PATH = path.join(
-  process.cwd(),
-  "src",
-  "__tests__",
-  "fixtures",
-  "compiler"
-);
-const FILTER_FILENAME = "testfilter.txt";
-const FILTER_PATH = path.join(process.cwd(), FILTER_FILENAME);
 
 readline.emitKeypressEvents(process.stdin);
 
@@ -109,49 +93,6 @@ function clearConsole() {
   console.log("\u001Bc");
 }
 
-function getFixtures(
-  filter: TestFilter | null
-): Map<string, compiler.TestFixture> {
-  // search for fixtures within nested directories
-  const files = glob.sync(`**/*.{js,md}`, {
-    cwd: FIXTURES_PATH,
-  });
-  const fixtures = new Map();
-
-  for (const filePath of files) {
-    const basename = path.basename(
-      path.basename(filePath, ".js"),
-      ".expect.md"
-    );
-    // "partial" paths do not include suffixes
-    const partialRelativePath = path.join(path.dirname(filePath), basename);
-    const partialAbsolutePath = path.join(FIXTURES_PATH, partialRelativePath);
-    // Replicate jest test behavior
-    if (basename.startsWith("todo.")) {
-      continue;
-    }
-    if (filter) {
-      if (
-        filter.kind === "only" &&
-        filter.paths.indexOf(partialRelativePath) === -1
-      ) {
-        continue;
-      } else if (
-        filter.kind === "skip" &&
-        filter.paths.indexOf(partialRelativePath) !== -1
-      ) {
-        continue;
-      }
-    }
-    fixtures.set(partialRelativePath, {
-      basename,
-      inputPath: `${partialAbsolutePath}.js`,
-      outputPath: `${partialAbsolutePath}.expect.md`,
-    });
-  }
-  // console.log("fixtures!", JSON.stringify(Array.from(fixtures.keys())));
-  return fixtures;
-}
 /**
  * Do a test run and return the test results
  */
@@ -393,48 +334,6 @@ function watchSrc(
 enum Mode {
   Test = "Test",
   Update = "Update",
-}
-
-type TestFilter =
-  | {
-      kind: "only";
-      paths: Array<string>;
-    }
-  | {
-      kind: "skip";
-      paths: Array<string>;
-    };
-
-async function readTestFilter(): Promise<TestFilter | null> {
-  if (!(await exists(FILTER_PATH))) {
-    throw new Error(`testfilter file not found at ${FILTER_PATH}`);
-  }
-
-  const input = await fs.readFile(FILTER_PATH, "utf8");
-  const lines = input.trim().split("\n");
-  if (lines.length < 2) {
-    console.warn("Misformed filter file. Expected at least two lines.");
-    return null;
-  }
-
-  let filter: "only" | "skip" | null = null;
-  if (lines[0]!.indexOf("@only") !== -1) {
-    filter = "only";
-  }
-  if (lines[0]!.indexOf("@skip") !== -1) {
-    filter = "skip";
-  }
-  if (filter === null) {
-    console.warn(
-      "Misformed filter file. Expected first line to contain @only or @skip"
-    );
-    return null;
-  }
-  lines.shift();
-  return {
-    kind: filter,
-    paths: lines,
-  };
 }
 
 /**

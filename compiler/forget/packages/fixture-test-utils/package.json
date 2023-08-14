@@ -1,0 +1,25 @@
+{
+  "name": "fixture-test-utils",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "test": "echo 'no tests'",
+    "prettier": "prettier --write src"
+  },
+  "dependencies": {
+    "@parcel/watcher": "^2.1.0",
+    "chalk": "4",
+    "readline": "^1.3.0",
+    "typescript": "^5.1.0",
+    "yargs": "^17.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.18",
+    "@typescript-eslint/eslint-plugin": "^5.51.0",
+    "@typescript-eslint/parser": "^5.51.0",
+    "prettier": "2.8.8",
+    "rimraf": "^3.0.2"
+  }
+}
