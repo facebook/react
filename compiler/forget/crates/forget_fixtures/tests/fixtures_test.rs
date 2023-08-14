@@ -38,7 +38,6 @@ fn fixtures() {
                     match build(&environment, &fun.function) {
                         Ok(mut fun) => {
                             println!("ok build");
-                            fun.debug();
                             enter_ssa(&environment, &mut fun).unwrap();
                             println!("ok enter_ssa");
                             eliminate_redundant_phis(&environment, &mut fun);

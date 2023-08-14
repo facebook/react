@@ -1,10 +1,12 @@
 use std::cell::RefCell;
+use std::process::id;
 use std::rc::Rc;
 
 use forget_diagnostics::{invariant, Diagnostic};
 use forget_hir::{
-    BasicBlock, BlockId, Blocks, Environment, Function, Identifier, IdentifierData, IdentifierId,
-    IdentifierOperand, Instruction, InstructionValue, LValue, MutableRange, Phi,
+    BasicBlock, BlockId, BlockRewriter, BlockRewriterAction, Blocks, Environment, Function,
+    Identifier, IdentifierData, IdentifierId, IdentifierOperand, InstructionValue, MutableRange,
+    Phi, HIR,
 };
 use indexmap::{IndexMap, IndexSet};
 
@@ -18,16 +20,14 @@ pub fn enter_ssa_impl(
     fun: &mut Function,
     context_defs: Option<IndexMap<IdentifierId, Identifier>>,
 ) -> Result<(), Diagnostic> {
-    let blocks = &fun.body.blocks;
-    let instructions = &mut fun.body.instructions;
-    let mut builder = Builder::new(env, fun.body.entry, blocks);
+    let mut builder = Builder::new(env, fun.body.entry, &fun.body.blocks);
     if let Some(context_defs) = context_defs {
         builder.initialize_context(context_defs);
     }
     for param in &mut fun.params {
         builder.visit_param(param);
     }
-    visit_instructions(env, &mut builder, instructions)?;
+    visit_instructions(env, &mut builder, &mut fun.body)?;
 
     let mut states = builder.complete();
 
@@ -39,17 +39,22 @@ pub fn enter_ssa_impl(
     Ok(())
 }
 
-fn visit_instructions<'e, 'f>(
+fn visit_instructions<'e>(
     env: &Environment,
-    builder: &mut Builder<'e, 'f>,
-    instructions: &mut Vec<Instruction>,
+    builder: &mut Builder<'e>,
+    hir: &mut HIR,
 ) -> Result<(), Diagnostic> {
-    builder.each_block(|block, builder| {
+    let instructions = &mut hir.instructions;
+    let blocks = &mut hir.blocks;
+    let mut rewriter = BlockRewriter::new(blocks, hir.entry);
+
+    rewriter.try_each_block(|mut block, _rewriter| {
+        builder.start_block(&block);
         for instr_ix in &block.instructions {
             let instr = &mut instructions[usize::from(*instr_ix)];
-            builder.visit_store(&mut instr.lvalue)?;
-            instr.try_each_identifier_store(|store| builder.visit_store(store))?;
             instr.each_identifier_load(|load| builder.visit_load(load));
+            instr.try_each_identifier_store(|store| builder.visit_store(store))?;
+            builder.visit_store(&mut instr.lvalue)?;
 
             if let InstructionValue::Function(fun) = &mut instr.value {
                 // Lookup each of the context variables referenced in the function
@@ -70,20 +75,26 @@ fn visit_instructions<'e, 'f>(
                 enter_ssa_impl(env, &mut fun.lowered_function, Some(context_defs))?;
             }
         }
-        Ok(())
+        block
+            .terminal
+            .value
+            .each_operand(|load| builder.visit_load(load));
+        builder.close_block(&block);
+        Ok(BlockRewriterAction::Keep(block))
     })
 }
 
 #[derive(Debug)]
-struct Builder<'e, 'f> {
+struct Builder<'e> {
     env: &'e Environment,
-    blocks: &'f Blocks,
+    predecessors: IndexMap<BlockId, IndexSet<BlockId>>,
 
     states: IndexMap<BlockId, BlockState>,
     current: BlockId,
     unsealed_predecessors: IndexMap<BlockId, usize>,
     unknown: IndexSet<IdentifierId>,
     context: IndexSet<IdentifierId>,
+    visited: IndexSet<BlockId>,
 }
 
 #[derive(Debug)]
@@ -109,21 +120,26 @@ struct IncompletePhi {
     new_id: Identifier,
 }
 
-impl<'e, 'f> Builder<'e, 'f> {
-    fn new(env: &'e Environment, entry: BlockId, blocks: &'f Blocks) -> Self {
+impl<'e> Builder<'e> {
+    fn new(env: &'e Environment, entry: BlockId, blocks: &Blocks) -> Self {
         let states = blocks
             .block_ids()
             .into_iter()
             .map(|block_id| (block_id, BlockState::new()))
             .collect();
+        let predecessors = blocks
+            .iter()
+            .map(|block| (block.id, block.predecessors.clone()))
+            .collect();
         Self {
             env,
-            blocks,
+            predecessors,
             states,
             current: entry,
             unsealed_predecessors: Default::default(),
             unknown: Default::default(),
             context: Default::default(),
+            visited: Default::default(),
         }
     }
 
@@ -183,8 +199,8 @@ impl<'e, 'f> Builder<'e, 'f> {
             return identifier.clone();
         }
         // Else we have to look at predecessor blocks: bail if no predecessors
-        let block = self.blocks.block(block_id);
-        if block.predecessors.is_empty() {
+        let predecessors = self.predecessors.get(&block_id).unwrap();
+        if predecessors.is_empty() {
             panic!("Unable to find previous id for {old_identifier:?}");
             // self.unknown.insert(old_identifier.id);
             // return old_identifier.clone();
@@ -202,8 +218,8 @@ impl<'e, 'f> Builder<'e, 'f> {
             return new_identifier;
         }
         // If exactly one predecessor, check to see if we have a definition there
-        if block.predecessors.len() == 1 {
-            let predecessor = block.predecessors.iter().next().unwrap();
+        if predecessors.len() == 1 {
+            let predecessor = predecessors.first().unwrap();
             let new_identifier = self.get_id_at(*predecessor, old_identifier);
             let state = self.states.get_mut(&block_id).unwrap();
             state.defs.insert(old_identifier.id, new_identifier.clone());
@@ -226,9 +242,9 @@ impl<'e, 'f> Builder<'e, 'f> {
             identifier: new_identifier.clone(),
             operands: Default::default(),
         };
-        let block = self.blocks.block(block_id);
-        let preds = block.predecessors.clone();
-        for pred_block_id in preds {
+        // TODO: avoid clone here
+        let predecessors = self.predecessors.get(&block_id).unwrap().clone();
+        for pred_block_id in predecessors {
             let pred_id = self.get_id_at(pred_block_id, old_identifier);
             phi.operands.insert(pred_block_id, pred_id);
         }
@@ -258,30 +274,23 @@ impl<'e, 'f> Builder<'e, 'f> {
         }
     }
 
-    fn each_block<F>(&mut self, mut f: F) -> Result<(), Diagnostic>
-    where
-        F: FnMut(&BasicBlock, &mut Self) -> Result<(), Diagnostic>,
-    {
-        let mut visited = IndexSet::new();
-        let block_ids = self.blocks.block_ids();
-        for block_id in block_ids {
-            visited.insert(block_id);
-            self.current = block_id;
-            let block = self.blocks.block(block_id);
-            f(block, self)?;
-            let successors = block.terminal.value.successors();
-            for successor in successors {
-                let block = self.blocks.block(successor);
-                let count = self
-                    .unsealed_predecessors
-                    .entry(successor)
-                    .or_insert(block.predecessors.len());
-                *count -= 1;
-                if *count == 0 && visited.contains(&successor) {
-                    self.fix_incomplete_phis(successor)
-                }
+    fn start_block(&mut self, block: &BasicBlock) {
+        self.current = block.id;
+        self.visited.insert(block.id);
+    }
+
+    fn close_block(&mut self, block: &BasicBlock) {
+        let successors = block.terminal.value.successors();
+        for successor in successors {
+            let preds = &self.predecessors.get(&successor).unwrap();
+            let count = self
+                .unsealed_predecessors
+                .entry(successor)
+                .or_insert(preds.len());
+            *count -= 1;
+            if *count == 0 && self.visited.contains(&successor) {
+                self.fix_incomplete_phis(successor)
             }
         }
-        Ok(())
     }
 }

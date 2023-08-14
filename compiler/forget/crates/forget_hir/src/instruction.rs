@@ -73,26 +73,10 @@ impl Instruction {
         Ok(())
     }
 
-    pub fn each_identifier_load<F>(&mut self, mut f: F) -> ()
+    pub fn each_identifier_load<F>(&mut self, f: F) -> ()
     where
         F: FnMut(&mut IdentifierOperand) -> (),
     {
-        // match &mut self.value {
-        //     InstructionValue::LoadLocal(instr) => f(&mut instr.place),
-        //     InstructionValue::Array(_)
-        //     | InstructionValue::Binary(_)
-        //     | InstructionValue::Call(_)
-        //     | InstructionValue::DeclareContext(_)
-        //     | InstructionValue::DeclareLocal(_)
-        //     | InstructionValue::Destructure(_)
-        //     | InstructionValue::LoadContext(_)
-        //     | InstructionValue::LoadGlobal(_)
-        //     | InstructionValue::Primitive(_)
-        //     | InstructionValue::StoreLocal(_)
-        //     | InstructionValue::Function(_)
-        //     | InstructionValue::JSXElement(_)
-        //     | InstructionValue::Tombstone => {}
-        // }
         self.each_operand(f);
     }
 
@@ -148,11 +132,13 @@ impl Instruction {
             InstructionValue::Destructure(value) => {
                 f(&mut value.value);
             }
+            InstructionValue::LoadLocal(value) => {
+                f(&mut value.place);
+            }
             InstructionValue::DeclareContext(_)
             | InstructionValue::LoadContext(_)
             | InstructionValue::LoadGlobal(_)
             | InstructionValue::DeclareLocal(_)
-            | InstructionValue::LoadLocal(_)
             | InstructionValue::Primitive(_)
             | InstructionValue::Tombstone => {}
         }

@@ -24,4 +24,4 @@ bb0 (block)
   [6] unknown $16 = Array [unknown $15]
   [7] unknown $17 = Array [unknown $10, unknown $11, unknown $12, unknown $13, unknown $14, ...unknown $16]
   [8] unknown $18 = 2
-  [9] Return unknown $8
+  [9] Return unknown $18

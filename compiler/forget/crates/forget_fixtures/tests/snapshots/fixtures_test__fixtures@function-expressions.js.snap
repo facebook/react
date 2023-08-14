@@ -34,73 +34,61 @@ function Component(
 entry bb0
 bb0 (block)
   [0] unknown $59 = 2
-  [1] unknown $60 = StoreLocal Const unknown x$61 = unknown $59
-  [2] unknown $62 = Function @deps[] @context[unknown x$61]:
+  [1] unknown $61 = StoreLocal Const unknown x$60 = unknown $59
+  [2] unknown $62 = Function @deps[] @context[unknown x$60]:
       function foo(
         unknown y$63,
       )
       entry bb1
       bb1 (block)
         [0] unknown $64 = 1
-        [1] unknown $65 = StoreLocal Let unknown a$66 = unknown $64
-        [2] unknown $67 = DeclareLocal Let unknown b$68
-        [3] unknown $69 = LoadLocal unknown a$6
+        [1] unknown $66 = StoreLocal Let unknown a$65 = unknown $64
+        [2] unknown $68 = DeclareLocal Let unknown b$67
+        [3] unknown $69 = 1
         [4] unknown $70 = 1
-        [5] unknown $71 = Binary unknown $69 === unknown $70
-        [6] If unknown $18 consequent=bb3 alternate=bb4 fallthrough=bb2
-      bb3 (block)
-        predecessors: bb1
-        [7] unknown $72 = 5
-        [8] unknown $73 = 3
-        [9] unknown $74 = 8
-        [10] unknown $75 = StoreLocal Reassign unknown b$76 = unknown $74
-        [11] Goto bb2
-      bb4 (block)
-        predecessors: bb1
-        [12] unknown $77 = false
-        [13] unknown $78 = StoreLocal Reassign unknown b$79 = unknown $77
-        [14] Goto bb2
-      bb2 (block)
-        predecessors: bb3, bb4
-        b$91: phi(bb3: b$76, bb4: b$79)
-        [15] unknown $80 = LoadLocal unknown x$2
-        [16] unknown $81 = LoadLocal unknown y$4
-        [17] unknown $82 = Binary unknown $80 + unknown $81
-        [18] unknown $83 = LoadLocal unknown a$6
-        [19] unknown $84 = Binary unknown $82 + unknown $83
-        [20] unknown $85 = LoadLocal unknown b$8
-        [21] unknown $86 = Binary unknown $84 + unknown $85
-        [22] unknown $87 = Function @deps[] @context[unknown x$61, unknown y$63, unknown a$66, unknown b$91]:
+        [5] unknown $71 = true
+        [6] unknown $72 = 5
+        [7] unknown $73 = 3
+        [8] unknown $74 = 8
+        [9] unknown $76 = StoreLocal Reassign unknown b$75 = unknown $74
+        [10] unknown $81 = 2
+        [11] unknown $83 = LoadLocal unknown y$63
+        [12] unknown $84 = Binary unknown $81 + unknown $83
+        [13] unknown $86 = 1
+        [14] unknown $87 = Binary unknown $84 + unknown $86
+        [15] unknown $89 = 8
+        [16] unknown $90 = Binary unknown $87 + unknown $89
+        [17] unknown $91 = Function @deps[] @context[unknown x$60, unknown y$63, unknown a$65, unknown b$75]:
             function bar(
               unknown z$92,
             )
             entry bb5
             bb5 (block)
               [0] unknown $93 = 2
-              [1] unknown $94 = StoreLocal Let unknown c$95 = unknown $93
-              [2] unknown $96 = DeclareLocal Let unknown d$97
+              [1] unknown $95 = StoreLocal Let unknown c$94 = unknown $93
+              [2] unknown $97 = DeclareLocal Let unknown d$96
               [3] unknown $98 = 3
-              [4] unknown $99 = StoreLocal Reassign unknown d$100 = unknown $98
-              [5] unknown $101 = LoadLocal unknown x$2
-              [6] unknown $102 = LoadLocal unknown y$4
+              [4] unknown $100 = StoreLocal Reassign unknown d$99 = unknown $98
+              [5] unknown $101 = LoadLocal unknown x$80
+              [6] unknown $102 = LoadLocal unknown y$82
               [7] unknown $103 = Binary unknown $101 + unknown $102
-              [8] unknown $104 = LoadLocal unknown a$6
+              [8] unknown $104 = LoadLocal unknown a$85
               [9] unknown $105 = Binary unknown $103 + unknown $104
-              [10] unknown $106 = LoadLocal unknown b$8
+              [10] unknown $106 = LoadLocal unknown b$88
               [11] unknown $107 = Binary unknown $105 + unknown $106
-              [12] unknown $108 = LoadLocal unknown z$26
+              [12] unknown $108 = LoadLocal unknown z$92
               [13] unknown $109 = Binary unknown $107 + unknown $108
-              [14] unknown $110 = LoadLocal unknown c$28
+              [14] unknown $110 = 2
               [15] unknown $111 = Binary unknown $109 + unknown $110
-              [16] unknown $112 = LoadLocal unknown d$30
+              [16] unknown $112 = 3
               [17] unknown $113 = Binary unknown $111 + unknown $112
               [18] unknown $114 = <undefined>
-              [19] Return unknown $47
-        [23] unknown $115 = StoreLocal Const unknown bar$116 = unknown $87
-        [24] unknown $117 = LoadLocal unknown bar$49
-        [25] unknown $118 = LoadGlobal foo
-        [26] unknown $119 = <undefined>
-        [27] Return unknown $53
-  [3] unknown $120 = StoreLocal Const unknown foo$121 = unknown $62
+              [19] Return unknown $114
+        [18] unknown $116 = StoreLocal Const unknown bar$115 = unknown $91
+        [19] unknown $117 = LoadLocal unknown bar$115
+        [20] unknown $118 = LoadGlobal foo
+        [21] unknown $119 = <undefined>
+        [22] Return unknown $119
+  [3] unknown $121 = StoreLocal Const unknown foo$120 = unknown $62
   [4] unknown $122 = <undefined>
-  [5] Return unknown $57
+  [5] Return unknown $122

@@ -28,19 +28,19 @@ function Component(
 )
 entry bb0
 bb0 (block)
-  [0] unknown $32 = LoadLocal unknown a$0
-  [1] unknown $33 = Destructure { c: unknown c$34, d: unknown d$35, e: unknown $36, f: unknown $37, g: unknown $38, ...unknown i$39 } = unknown $32
-  [2] unknown $40 = Destructure { e: unknown e$41 } = unknown $36
-  [3] unknown $42 = Destructure { _f: unknown f$43 } = unknown $37
-  [4] unknown $44 = Destructure { g: unknown $45 } = unknown $38
-  [5] unknown $46 = Destructure { g: unknown $47 } = unknown $45
-  [6] unknown $48 = Destructure { g: unknown g$49, ...unknown h$50 } = unknown $47
-  [7] unknown $51 = LoadLocal unknown c$3
-  [8] unknown $52 = LoadLocal unknown d$4
-  [9] unknown $53 = LoadLocal unknown e$10
-  [10] unknown $54 = LoadLocal unknown f$12
-  [11] unknown $55 = LoadLocal unknown g$18
-  [12] unknown $56 = LoadLocal unknown h$19
-  [13] unknown $57 = LoadLocal unknown i$8
+  [0] unknown $32 = LoadLocal unknown a$30
+  [1] unknown $39 = Destructure { c: unknown c$33, d: unknown d$34, e: unknown $35, f: unknown $36, g: unknown $37, ...unknown i$38 } = unknown $32
+  [2] unknown $41 = Destructure { e: unknown e$40 } = unknown $35
+  [3] unknown $43 = Destructure { _f: unknown f$42 } = unknown $36
+  [4] unknown $45 = Destructure { g: unknown $44 } = unknown $37
+  [5] unknown $47 = Destructure { g: unknown $46 } = unknown $44
+  [6] unknown $50 = Destructure { g: unknown g$48, ...unknown h$49 } = unknown $46
+  [7] unknown $51 = LoadLocal unknown c$33
+  [8] unknown $52 = LoadLocal unknown d$34
+  [9] unknown $53 = LoadLocal unknown e$40
+  [10] unknown $54 = LoadLocal unknown f$42
+  [11] unknown $55 = LoadLocal unknown g$48
+  [12] unknown $56 = LoadLocal unknown h$49
+  [13] unknown $57 = LoadLocal unknown i$38
   [14] unknown $58 = Array [unknown $51, unknown $52, unknown $53, unknown $54, unknown $55, unknown $56, unknown $57]
-  [15] Return unknown $28
+  [15] Return unknown $58

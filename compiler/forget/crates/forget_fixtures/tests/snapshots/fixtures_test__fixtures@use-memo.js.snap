@@ -24,11 +24,11 @@ bb0 (block)
 bb1 (block)
   predecessors: bb0
   [3] unknown $13 = LoadGlobal y
-  [4] unknown $19 = StoreLocal Reassign unknown t$18 = unknown $2
+  [4] unknown $19 = StoreLocal Reassign unknown t$18 = unknown $13
   [5] Goto bb6
 bb6 (block)
   predecessors: bb1
   [6] unknown $14 = LoadLocal unknown t$18
-  [7] unknown $15 = StoreLocal Const unknown x$16 = unknown $14
-  [8] unknown $17 = LoadLocal unknown x$6
-  [9] Return unknown $8
+  [7] unknown $16 = StoreLocal Const unknown x$15 = unknown $14
+  [8] unknown $17 = LoadLocal unknown x$15
+  [9] Return unknown $17

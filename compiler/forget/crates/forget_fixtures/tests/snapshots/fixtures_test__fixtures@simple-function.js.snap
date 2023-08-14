@@ -23,24 +23,24 @@ entry bb0
 bb0 (block)
   [0] unknown $24 = LoadGlobal Math
   [1] unknown $25 = 0
-  [2] unknown $26 = StoreLocal Let unknown b$27 = unknown $25
-  [3] unknown $28 = Function @deps[] @context[unknown a$23, unknown b$27]:
+  [2] unknown $27 = StoreLocal Let unknown b$26 = unknown $25
+  [3] unknown $28 = Function @deps[] @context[unknown a$23, unknown b$26]:
       function foo_(
         unknown c$29,
       )
       entry bb1
       bb1 (block)
         [0] unknown $30 = 1
-        [1] unknown $31 = StoreLocal Let unknown d$32 = unknown $30
-        [2] unknown $33 = LoadLocal unknown a$0
-        [3] unknown $34 = LoadLocal unknown b$3
+        [1] unknown $32 = StoreLocal Let unknown d$31 = unknown $30
+        [2] unknown $33 = LoadLocal unknown a$23
+        [3] unknown $34 = 0
         [4] unknown $35 = Binary unknown $33 + unknown $34
-        [5] unknown $36 = LoadLocal unknown c$5
+        [5] unknown $36 = LoadLocal unknown c$29
         [6] unknown $37 = Binary unknown $35 + unknown $36
-        [7] unknown $38 = LoadLocal unknown d$7
+        [7] unknown $38 = 1
         [8] unknown $39 = Binary unknown $37 + unknown $38
-        [9] Return unknown $15
-  [4] unknown $40 = StoreLocal Const unknown foo$41 = unknown $28
-  [5] unknown $42 = LoadLocal unknown foo$18
+        [9] Return unknown $39
+  [4] unknown $41 = StoreLocal Const unknown foo$40 = unknown $28
+  [5] unknown $42 = LoadLocal unknown foo$40
   [6] unknown $43 = Call unknown $42()
-  [7] Return unknown $21
+  [7] Return unknown $43
