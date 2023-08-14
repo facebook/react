@@ -86,10 +86,9 @@ impl Analyzer {
     where
         F: FnMut(&mut Self) -> (),
     {
-        let scope = self.manager.add_scope(self.current, kind);
-        let previous = std::mem::replace(&mut self.current, scope);
+        let scope = self.enter_scope(kind);
         f(self);
-        let scope = std::mem::replace(&mut self.current, previous);
+        self.close_scope(scope);
         scope
     }
 
@@ -101,8 +100,26 @@ impl Analyzer {
 
     fn close_scope(&mut self, id: ScopeId) {
         assert_eq!(self.current, id, "Mismatched enter_scope/close_scope");
-        let scope = self.manager.scope(self.current);
-        self.current = scope.parent.unwrap();
+        let scope = self.manager.mut_scope(self.current);
+        let parent = scope.parent.unwrap();
+        let unresolved = std::mem::take(&mut scope.unresolved);
+        drop(scope);
+        self.current = parent;
+
+        // Lookup unresolved nodes from the child scope in the (now-current) parent scope
+        for reference in unresolved {
+            if let Some(declaration) = self
+                .manager
+                .lookup_declaration(reference.scope, &reference.name)
+            {
+                let id =
+                    self.manager
+                        .add_reference(reference.scope, reference.kind, declaration.id);
+                self.manager.node_references.insert(reference.ast, id);
+            } else {
+                self.manager.push_unresolved_reference(parent, reference);
+            }
+        }
     }
 
     fn visit_function<T: IntoFunction>(&mut self, node: &T) {
@@ -157,10 +174,8 @@ impl Analyzer {
                 .add_reference(self.current, kind, declaration.id);
             self.manager.node_references.insert(ast, id);
         } else {
-            // Oops, undefined variable
             self.manager
-                .diagnostics
-                .push(Diagnostic::invalid_syntax("Undefined variable", range));
+                .add_unresolved_reference(self.current, ast, name.to_string(), kind, range);
         }
     }
 
@@ -201,9 +216,13 @@ impl Analyzer {
                     .node_references
                     .insert(AstNode::from(ast), reference);
             } else {
-                self.manager
-                    .diagnostics
-                    .push(Diagnostic::invalid_syntax("Undefined variable", ast.range));
+                self.manager.add_unresolved_reference(
+                    self.current,
+                    AstNode::from(ast),
+                    ast.name.clone(),
+                    ReferenceKind::ReadWrite,
+                    ast.range,
+                );
             }
         }
     }
@@ -614,6 +633,24 @@ impl Visitor for Analyzer {
         } else {
             for item in &ast.body {
                 self.visit_module_item(item);
+            }
+        }
+        let scope = self.manager.mut_scope(self.current);
+        let unresolved = std::mem::take(&mut scope.unresolved);
+        for reference in unresolved {
+            if let Some(declaration) = self
+                .manager
+                .lookup_declaration(reference.scope, &reference.name)
+            {
+                let id =
+                    self.manager
+                        .add_reference(reference.scope, reference.kind, declaration.id);
+                self.manager.node_references.insert(reference.ast, id);
+            } else {
+                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                    "Undefined variable",
+                    reference.range,
+                ));
             }
         }
     }

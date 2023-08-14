@@ -1,6 +1,7 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, VariableDeclarationKind,
+    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceRange,
+    VariableDeclarationKind,
 };
 use forget_utils::PointerAddress;
 use indexmap::IndexMap;
@@ -43,6 +44,7 @@ impl ScopeManager {
                 declarations: Default::default(),
                 references: Default::default(),
                 children: Default::default(),
+                unresolved: Default::default(),
             }],
             labels: Default::default(),
             declarations: Default::default(),
@@ -73,6 +75,10 @@ impl ScopeManager {
 
     pub fn scope(&self, id: ScopeId) -> &Scope {
         &self.scopes[id.0]
+    }
+
+    pub fn mut_scope(&mut self, id: ScopeId) -> &mut Scope {
+        &mut self.scopes[id.0]
     }
 
     pub fn is_descendant_of(&self, maybe_descendant: ScopeId, maybe_ancestor: ScopeId) -> bool {
@@ -192,6 +198,7 @@ impl ScopeManager {
             declarations: Default::default(),
             references: Default::default(),
             children: Default::default(),
+            unresolved: Default::default(),
         });
         self.scopes[parent.0].children.push(id);
         id
@@ -252,6 +259,31 @@ impl ScopeManager {
         self.scopes[scope.0].references.push(id);
         id
     }
+
+    pub(crate) fn push_unresolved_reference(
+        &mut self,
+        scope: ScopeId,
+        reference: UnresolvedReference,
+    ) {
+        self.scopes[scope.0].unresolved.push(reference);
+    }
+
+    pub(crate) fn add_unresolved_reference(
+        &mut self,
+        scope: ScopeId,
+        ast: AstNode,
+        name: String,
+        kind: ReferenceKind,
+        range: Option<SourceRange>,
+    ) {
+        self.scopes[scope.0].unresolved.push(UnresolvedReference {
+            ast,
+            scope,
+            name,
+            kind,
+            range,
+        });
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
@@ -286,6 +318,16 @@ pub struct Scope {
     pub declarations: IndexMap<String, DeclarationId>,
     pub references: Vec<ReferenceId>,
     pub children: Vec<ScopeId>,
+    pub unresolved: Vec<UnresolvedReference>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UnresolvedReference {
+    pub scope: ScopeId,
+    pub ast: AstNode,
+    pub name: String,
+    pub kind: ReferenceKind,
+    pub range: Option<SourceRange>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
