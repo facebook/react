@@ -232,15 +232,63 @@ impl ScopeManager {
         name: String,
         kind: DeclarationKind,
     ) -> DeclarationId {
+        let hoisted_scope = self.get_scope_for_declaration(scope, kind);
+
         let id = DeclarationId(self.declarations.len());
         self.declarations.push(Declaration {
             id,
             kind,
             name: name.clone(),
-            scope,
+            scope: hoisted_scope,
         });
-        self.scopes[scope.0].declarations.insert(name, id);
+        self.scopes[hoisted_scope.0].declarations.insert(name, id);
         id
+    }
+
+    fn get_scope_for_declaration(&self, scope: ScopeId, kind: DeclarationKind) -> ScopeId {
+        match kind {
+            DeclarationKind::Let
+            | DeclarationKind::Const
+            | DeclarationKind::CatchClause
+            | DeclarationKind::For => scope,
+            DeclarationKind::Var => {
+                let mut current = scope;
+                loop {
+                    let scope = self.scope(current);
+                    match scope.kind {
+                        ScopeKind::Function | ScopeKind::Global | ScopeKind::StaticBlock => {
+                            return current;
+                        }
+                        _ => { /* no-op */ }
+                    }
+                    if let Some(parent) = &scope.parent {
+                        current = *parent
+                    } else {
+                        unreachable!("Expected scope without a parent to be a Global scope");
+                    }
+                }
+            }
+            DeclarationKind::FunctionDeclaration => {
+                let mut current = scope;
+                loop {
+                    let scope = self.scope(current);
+                    match scope.kind {
+                        ScopeKind::Function
+                        | ScopeKind::Module
+                        | ScopeKind::Global
+                        | ScopeKind::StaticBlock => {
+                            return current;
+                        }
+                        _ => { /* no-op */ }
+                    }
+                    if let Some(parent) = &scope.parent {
+                        current = *parent
+                    } else {
+                        unreachable!("Expected scope without a parent to be a Global scope");
+                    }
+                }
+            }
+        }
     }
 
     pub(crate) fn add_reference(
@@ -300,14 +348,15 @@ pub struct LabelId(usize);
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub enum ScopeKind {
+    Block,
+    CatchClause,
+    Class,
+    For,
+    Function,
     Global,
     Module,
-    Function,
-    Class,
-    Block,
-    For,
+    StaticBlock,
     Switch,
-    CatchClause,
 }
 
 #[derive(Debug, Clone)]

@@ -167,16 +167,8 @@ impl Analyzer {
         kind: ReferenceKind,
         range: Option<SourceRange>,
     ) {
-        let declaration = self.manager.lookup_declaration(self.current, name);
-        if let Some(declaration) = declaration {
-            let id = self
-                .manager
-                .add_reference(self.current, kind, declaration.id);
-            self.manager.node_references.insert(ast, id);
-        } else {
-            self.manager
-                .add_unresolved_reference(self.current, ast, name.to_string(), kind, range);
-        }
+        self.manager
+            .add_unresolved_reference(self.current, ast, name.to_string(), kind, range);
     }
 
     fn visit_declaration_identifier(
@@ -205,25 +197,14 @@ impl Analyzer {
                 .node_declarations
                 .insert(AstNode::from(ast), id);
         } else {
-            // Referencing an existing variable, it should be defined
-            if let Some(declaration) = self.manager.lookup_declaration(self.current, &ast.name) {
-                let reference = self.manager.add_reference(
-                    self.current,
-                    ReferenceKind::ReadWrite,
-                    declaration.id,
-                );
-                self.manager
-                    .node_references
-                    .insert(AstNode::from(ast), reference);
-            } else {
-                self.manager.add_unresolved_reference(
-                    self.current,
-                    AstNode::from(ast),
-                    ast.name.clone(),
-                    ReferenceKind::ReadWrite,
-                    ast.range,
-                );
-            }
+            // Re-assigning a variable
+            self.manager.add_unresolved_reference(
+                self.current,
+                AstNode::from(ast),
+                ast.name.to_string(),
+                ReferenceKind::Write,
+                ast.range,
+            );
         }
     }
 
