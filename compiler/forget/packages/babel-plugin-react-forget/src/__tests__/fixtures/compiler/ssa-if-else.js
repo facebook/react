@@ -8,3 +8,8 @@ function foo() {
     let z = x;
   }
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};

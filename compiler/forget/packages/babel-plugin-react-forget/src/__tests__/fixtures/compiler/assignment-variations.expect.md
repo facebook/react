@@ -10,6 +10,11 @@ function f() {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -19,6 +24,11 @@ function f() {
   const x = 3 >>> 1;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: [],
+};
 
 ```
       

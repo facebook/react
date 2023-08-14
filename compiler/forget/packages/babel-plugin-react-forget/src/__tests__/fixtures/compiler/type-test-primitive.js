@@ -4,3 +4,8 @@ function component() {
 
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+};

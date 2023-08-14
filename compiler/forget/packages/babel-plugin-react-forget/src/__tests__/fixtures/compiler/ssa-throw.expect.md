@@ -10,6 +10,11 @@ function foo() {
   throw x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -18,6 +23,11 @@ function foo() {
 function foo() {
   throw 2;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};
 
 ```
       

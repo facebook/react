@@ -5,3 +5,8 @@ function component() {
   let z = x.t;
   return z;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+};

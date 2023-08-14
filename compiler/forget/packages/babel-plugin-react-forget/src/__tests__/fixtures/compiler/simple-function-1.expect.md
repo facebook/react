@@ -9,6 +9,11 @@ function component() {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -29,6 +34,11 @@ function component() {
   const x = t0;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+};
 
 ```
       

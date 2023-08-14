@@ -11,3 +11,8 @@ function Component() {
   (console.log("A"), x).f((changeF(x), console.log("arg"), 1));
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};

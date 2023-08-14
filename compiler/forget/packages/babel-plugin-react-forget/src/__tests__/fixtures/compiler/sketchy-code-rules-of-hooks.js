@@ -4,3 +4,8 @@ function lowercasecomponent() {
   return <div>{x}</div>;
 }
 /* eslint-enable react-hooks/rules-of-hooks */
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: lowercasecomponent,
+  params: [],
+};

@@ -9,6 +9,11 @@ function g() {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: g,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -28,6 +33,11 @@ function g() {
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: g,
+  params: [],
+};
 
 ```
       

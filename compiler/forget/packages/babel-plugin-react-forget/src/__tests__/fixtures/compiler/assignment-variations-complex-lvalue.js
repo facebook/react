@@ -4,3 +4,8 @@ function g() {
   x.y.z *= 2;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: g,
+  params: [],
+};

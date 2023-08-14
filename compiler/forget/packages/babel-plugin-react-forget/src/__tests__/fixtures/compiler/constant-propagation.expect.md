@@ -21,6 +21,11 @@ function foo() {
   return j;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -30,6 +35,11 @@ function foo() {
   console.log("foo");
   return -6;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};
 
 ```
       

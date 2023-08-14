@@ -3,3 +3,8 @@ function component() {
   let p = x.t;
   return p;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+};

@@ -6,3 +6,8 @@ function Component() {
   const e = --a;
   return { a, b, c, d, e };
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};

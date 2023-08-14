@@ -11,3 +11,8 @@ function foo() {
   let t = { x: x, y: y };
   return t;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};

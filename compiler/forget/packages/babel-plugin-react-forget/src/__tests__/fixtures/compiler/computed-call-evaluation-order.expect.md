@@ -17,6 +17,11 @@ function Component() {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};
+
 ```
 
 ## Code
@@ -55,6 +60,11 @@ function Component() {
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};
 
 ```
       

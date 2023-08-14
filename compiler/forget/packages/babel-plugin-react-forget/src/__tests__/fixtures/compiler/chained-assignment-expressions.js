@@ -6,3 +6,8 @@ function foo() {
   z.z += y.y *= x.x &= 3;
   return z;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};

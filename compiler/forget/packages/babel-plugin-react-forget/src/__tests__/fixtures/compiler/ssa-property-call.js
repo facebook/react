@@ -4,3 +4,8 @@ function foo() {
   y.x.push([]);
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};

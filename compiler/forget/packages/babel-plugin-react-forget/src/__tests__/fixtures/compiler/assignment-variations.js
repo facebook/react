@@ -5,3 +5,8 @@ function f() {
   x >>>= 1;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: [],
+};

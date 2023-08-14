@@ -32,3 +32,8 @@ function Component() {
   // should constant-propagate to "ok"
   return e;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+};

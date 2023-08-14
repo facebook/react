@@ -4,3 +4,8 @@ function foo() {
   first.set(0, 2);
   return a;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [],
+};
