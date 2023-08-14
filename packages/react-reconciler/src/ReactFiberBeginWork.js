@@ -2958,7 +2958,15 @@ function updateDehydratedSuspenseComponent(
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
-      renderDidSuspendDelayIfPossible();
+      if (isSuspenseInstancePending(suspenseInstance)) {
+        // This is a dehydrated suspense instance. We don't need to suspend
+        // because we're already showing a fallback.
+        // TODO: The Fizz runtime might still stream in completed HTML, out-of-
+        // band. Should we fix this? There's a version of this bug that happens
+        // during client rendering, too. Needs more consideration.
+      } else {
+        renderDidSuspendDelayIfPossible();
+      }
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
