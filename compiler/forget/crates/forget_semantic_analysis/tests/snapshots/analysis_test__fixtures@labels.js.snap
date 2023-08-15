@@ -98,7 +98,7 @@ Scope {
                     references: [
                         Reference {
                             id: ReferenceId(
-                                4,
+                                0,
                             ),
                             kind: Read,
                             declaration: DeclarationId(
@@ -111,7 +111,7 @@ Scope {
                         },
                         Reference {
                             id: ReferenceId(
-                                5,
+                                1,
                             ),
                             kind: Read,
                             declaration: DeclarationId(
@@ -133,7 +133,7 @@ Scope {
                             references: [
                                 Reference {
                                     id: ReferenceId(
-                                        0,
+                                        2,
                                     ),
                                     kind: Read,
                                     declaration: DeclarationId(
@@ -146,7 +146,7 @@ Scope {
                                 },
                                 Reference {
                                     id: ReferenceId(
-                                        1,
+                                        3,
                                     ),
                                     kind: Write,
                                     declaration: DeclarationId(
@@ -159,7 +159,7 @@ Scope {
                                 },
                                 Reference {
                                     id: ReferenceId(
-                                        2,
+                                        4,
                                     ),
                                     kind: Read,
                                     declaration: DeclarationId(
@@ -172,7 +172,7 @@ Scope {
                                 },
                                 Reference {
                                     id: ReferenceId(
-                                        3,
+                                        5,
                                     ),
                                     kind: Read,
                                     declaration: DeclarationId(

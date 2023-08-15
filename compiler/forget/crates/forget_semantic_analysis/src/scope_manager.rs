@@ -1,6 +1,6 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceRange, SourceType,
+    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceType,
     VariableDeclarationKind,
 };
 use forget_utils::PointerAddress;
@@ -48,7 +48,6 @@ impl ScopeManager {
                 declarations: Default::default(),
                 references: Default::default(),
                 children: Default::default(),
-                unresolved: Default::default(),
             }],
             labels: Default::default(),
             declarations: Default::default(),
@@ -202,7 +201,6 @@ impl ScopeManager {
             declarations: Default::default(),
             references: Default::default(),
             children: Default::default(),
-            unresolved: Default::default(),
         });
         self.scopes[parent.0].children.push(id);
         id
@@ -256,31 +254,14 @@ impl ScopeManager {
             | DeclarationKind::Const
             | DeclarationKind::CatchClause
             | DeclarationKind::For => scope,
-            DeclarationKind::Var => {
-                let mut current = scope;
-                loop {
-                    let scope = self.scope(current);
-                    match scope.kind {
-                        ScopeKind::Function | ScopeKind::Global | ScopeKind::StaticBlock => {
-                            return current;
-                        }
-                        _ => { /* no-op */ }
-                    }
-                    if let Some(parent) = &scope.parent {
-                        current = *parent
-                    } else {
-                        unreachable!("Expected scope without a parent to be a Global scope");
-                    }
-                }
-            }
-            DeclarationKind::FunctionDeclaration => {
+            DeclarationKind::Var | DeclarationKind::FunctionDeclaration => {
                 let mut current = scope;
                 loop {
                     let scope = self.scope(current);
                     match scope.kind {
                         ScopeKind::Function
-                        | ScopeKind::Module
                         | ScopeKind::Global
+                        | ScopeKind::Module
                         | ScopeKind::StaticBlock => {
                             return current;
                         }
@@ -289,7 +270,9 @@ impl ScopeManager {
                     if let Some(parent) = &scope.parent {
                         current = *parent
                     } else {
-                        unreachable!("Expected scope without a parent to be a Global scope");
+                        unreachable!(
+                            "Expected scope without a parent to be a Global or Module scope"
+                        );
                     }
                 }
             }
@@ -311,31 +294,6 @@ impl ScopeManager {
         });
         self.scopes[scope.0].references.push(id);
         id
-    }
-
-    pub(crate) fn push_unresolved_reference(
-        &mut self,
-        scope: ScopeId,
-        reference: UnresolvedReference,
-    ) {
-        self.scopes[scope.0].unresolved.push(reference);
-    }
-
-    pub(crate) fn add_unresolved_reference(
-        &mut self,
-        scope: ScopeId,
-        ast: AstNode,
-        name: String,
-        kind: ReferenceKind,
-        range: Option<SourceRange>,
-    ) {
-        self.scopes[scope.0].unresolved.push(UnresolvedReference {
-            ast,
-            scope,
-            name,
-            kind,
-            range,
-        });
     }
 }
 
@@ -372,16 +330,6 @@ pub struct Scope {
     pub declarations: IndexMap<String, DeclarationId>,
     pub references: Vec<ReferenceId>,
     pub children: Vec<ScopeId>,
-    pub unresolved: Vec<UnresolvedReference>,
-}
-
-#[derive(Debug, Clone)]
-pub struct UnresolvedReference {
-    pub scope: ScopeId,
-    pub ast: AstNode,
-    pub name: String,
-    pub kind: ReferenceKind,
-    pub range: Option<SourceRange>,
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]

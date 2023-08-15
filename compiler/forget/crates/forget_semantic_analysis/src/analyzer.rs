@@ -14,13 +14,23 @@ use crate::{
 pub fn analyze(ast: &Program) -> ScopeManager {
     let mut analyzer = Analyzer::new(ast);
     analyzer.visit_program(ast);
-    analyzer.manager
+    analyzer.complete()
 }
 
 struct Analyzer {
     manager: ScopeManager,
     labels: Vec<LabelId>,
     current: ScopeId,
+    unresolved: Vec<UnresolvedReference>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UnresolvedReference {
+    pub scope: ScopeId,
+    pub ast: AstNode,
+    pub name: String,
+    pub kind: ReferenceKind,
+    pub range: Option<SourceRange>,
 }
 
 impl Analyzer {
@@ -32,7 +42,28 @@ impl Analyzer {
             manager,
             labels,
             current,
+            unresolved: Default::default(),
         }
+    }
+
+    fn complete(mut self) -> ScopeManager {
+        for reference in self.unresolved {
+            if let Some(declaration) = self
+                .manager
+                .lookup_declaration(reference.scope, &reference.name)
+            {
+                let id =
+                    self.manager
+                        .add_reference(reference.scope, reference.kind, declaration.id);
+                self.manager.node_references.insert(reference.ast, id);
+            } else {
+                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                    "Undefined variable",
+                    reference.range,
+                ));
+            }
+        }
+        self.manager
     }
 
     fn enter_label<F>(&mut self, id: LabelId, mut f: F)
@@ -103,24 +134,7 @@ impl Analyzer {
         assert_eq!(self.current, id, "Mismatched enter_scope/close_scope");
         let scope = self.manager.mut_scope(self.current);
         let parent = scope.parent.unwrap();
-        let unresolved = std::mem::take(&mut scope.unresolved);
-        drop(scope);
         self.current = parent;
-
-        // Lookup unresolved nodes from the child scope in the (now-current) parent scope
-        for reference in unresolved {
-            if let Some(declaration) = self
-                .manager
-                .lookup_declaration(reference.scope, &reference.name)
-            {
-                let id =
-                    self.manager
-                        .add_reference(reference.scope, reference.kind, declaration.id);
-                self.manager.node_references.insert(reference.ast, id);
-            } else {
-                self.manager.push_unresolved_reference(parent, reference);
-            }
-        }
     }
 
     fn visit_function<T: IntoFunction>(&mut self, node: &T) {
@@ -168,8 +182,13 @@ impl Analyzer {
         kind: ReferenceKind,
         range: Option<SourceRange>,
     ) {
-        self.manager
-            .add_unresolved_reference(self.current, ast, name.to_string(), kind, range);
+        self.unresolved.push(UnresolvedReference {
+            scope: self.current,
+            ast,
+            name: name.to_string(),
+            kind,
+            range,
+        });
     }
 
     fn visit_declaration_identifier(
@@ -199,13 +218,13 @@ impl Analyzer {
                 .insert(AstNode::from(ast), id);
         } else {
             // Re-assigning a variable
-            self.manager.add_unresolved_reference(
-                self.current,
-                AstNode::from(ast),
-                ast.name.to_string(),
-                ReferenceKind::Write,
-                ast.range,
-            );
+            self.unresolved.push(UnresolvedReference {
+                scope: self.current,
+                ast: AstNode::from(ast),
+                name: ast.name.to_string(),
+                kind: ReferenceKind::Write,
+                range: ast.range,
+            });
         }
     }
 
@@ -640,30 +659,6 @@ impl Visitor for Analyzer {
         unreachable!(
             "visit_pattern should not be called directly, call Analyzer::visit_declaration_pattern() instead"
         )
-    }
-
-    fn visit_program(&mut self, ast: &forget_estree::Program) {
-        for item in &ast.body {
-            self.visit_module_item(item);
-        }
-        let scope = self.manager.mut_scope(self.current);
-        let unresolved = std::mem::take(&mut scope.unresolved);
-        for reference in unresolved {
-            if let Some(declaration) = self
-                .manager
-                .lookup_declaration(reference.scope, &reference.name)
-            {
-                let id =
-                    self.manager
-                        .add_reference(reference.scope, reference.kind, declaration.id);
-                self.manager.node_references.insert(reference.ast, id);
-            } else {
-                self.manager.diagnostics.push(Diagnostic::invalid_syntax(
-                    "Undefined variable",
-                    reference.range,
-                ));
-            }
-        }
     }
 
     fn visit_property(&mut self, ast: &forget_estree::Property) {

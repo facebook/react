@@ -75,7 +75,7 @@ Scope {
             references: [
                 Reference {
                     id: ReferenceId(
-                        1,
+                        0,
                     ),
                     kind: Read,
                     declaration: DeclarationId(
@@ -88,7 +88,7 @@ Scope {
                 },
                 Reference {
                     id: ReferenceId(
-                        2,
+                        1,
                     ),
                     kind: Read,
                     declaration: DeclarationId(
@@ -150,7 +150,7 @@ Scope {
                                                             references: [
                                                                 Reference {
                                                                     id: ReferenceId(
-                                                                        0,
+                                                                        2,
                                                                     ),
                                                                     kind: Read,
                                                                     declaration: DeclarationId(
