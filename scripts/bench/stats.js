@@ -24,7 +24,7 @@ function percentChange(prev, current, prevSem, currentSem) {
     return text;
   }
 }
-
+// this is a helper function to calculate the mean and standard deviation of the ratio of two random variables
 function calculateMeanAndSdOfRatioFromDeltaMethod(
   meanControl,
   meanTest,
