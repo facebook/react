@@ -12,7 +12,7 @@ const reactUrl = 'https://github.com/facebook/react.git';
 function cleanDir() {
   return new Promise(_resolve => rimraf('remote-repo', _resolve));
 }
-
+// this is a helper function to execute a command
 function executeCommand(command) {
   return new Promise(_resolve =>
     exec(command, error => {
