@@ -1,5 +1,5 @@
 'use strict';
-
+// babel file
 module.exports = {
   plugins: [
     '@babel/plugin-syntax-jsx',
