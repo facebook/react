@@ -28,225 +28,215 @@ Scope {
     id: ScopeId(
         0,
     ),
-    kind: Global,
-    declarations: {},
+    kind: Module,
+    declarations: {
+        "Foo": Declaration {
+            id: DeclarationId(
+                0,
+            ),
+            kind: Import,
+            scope: ScopeId(
+                0,
+            ),
+        },
+        "Bar": Declaration {
+            id: DeclarationId(
+                1,
+            ),
+            kind: Import,
+            scope: ScopeId(
+                0,
+            ),
+        },
+        "Baz": Declaration {
+            id: DeclarationId(
+                2,
+            ),
+            kind: Import,
+            scope: ScopeId(
+                0,
+            ),
+        },
+        "Component": Declaration {
+            id: DeclarationId(
+                3,
+            ),
+            kind: FunctionDeclaration,
+            scope: ScopeId(
+                0,
+            ),
+        },
+    },
     references: [],
     children: [
         Scope {
             id: ScopeId(
                 1,
             ),
-            kind: Module,
+            kind: Function,
             declarations: {
-                "Foo": Declaration {
+                "props": Declaration {
                     id: DeclarationId(
-                        0,
-                    ),
-                    kind: Import,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "Bar": Declaration {
-                    id: DeclarationId(
-                        1,
-                    ),
-                    kind: Import,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "Baz": Declaration {
-                    id: DeclarationId(
-                        2,
-                    ),
-                    kind: Import,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "Component": Declaration {
-                    id: DeclarationId(
-                        3,
+                        4,
                     ),
                     kind: FunctionDeclaration,
                     scope: ScopeId(
                         1,
                     ),
                 },
+                "g": Declaration {
+                    id: DeclarationId(
+                        5,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "y": Declaration {
+                    id: DeclarationId(
+                        6,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "s": Declaration {
+                    id: DeclarationId(
+                        7,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "b": Declaration {
+                    id: DeclarationId(
+                        8,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "n": Declaration {
+                    id: DeclarationId(
+                        9,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "x": Declaration {
+                    id: DeclarationId(
+                        10,
+                    ),
+                    kind: Let,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
             },
-            references: [],
+            references: [
+                Reference {
+                    id: ReferenceId(
+                        0,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        4,
+                    ),
+                    declaration (name): "props",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                Reference {
+                    id: ReferenceId(
+                        1,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        4,
+                    ),
+                    declaration (name): "props",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                Reference {
+                    id: ReferenceId(
+                        2,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        4,
+                    ),
+                    declaration (name): "props",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                Reference {
+                    id: ReferenceId(
+                        3,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        0,
+                    ),
+                    declaration (name): "Foo",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                Reference {
+                    id: ReferenceId(
+                        4,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        1,
+                    ),
+                    declaration (name): "Bar",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                Reference {
+                    id: ReferenceId(
+                        5,
+                    ),
+                    kind: Read,
+                    declaration: DeclarationId(
+                        2,
+                    ),
+                    declaration (name): "Baz",
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+            ],
             children: [
                 Scope {
                     id: ScopeId(
                         2,
                     ),
                     kind: Function,
-                    declarations: {
-                        "props": Declaration {
-                            id: DeclarationId(
-                                4,
-                            ),
-                            kind: FunctionDeclaration,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "g": Declaration {
-                            id: DeclarationId(
-                                5,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "y": Declaration {
-                            id: DeclarationId(
-                                6,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "s": Declaration {
-                            id: DeclarationId(
-                                7,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "b": Declaration {
-                            id: DeclarationId(
-                                8,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "n": Declaration {
-                            id: DeclarationId(
-                                9,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        "x": Declaration {
-                            id: DeclarationId(
-                                10,
-                            ),
-                            kind: Let,
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                    },
-                    references: [
-                        Reference {
-                            id: ReferenceId(
-                                0,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                4,
-                            ),
-                            declaration (name): "props",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                1,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                4,
-                            ),
-                            declaration (name): "props",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                2,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                4,
-                            ),
-                            declaration (name): "props",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                3,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                0,
-                            ),
-                            declaration (name): "Foo",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                4,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                1,
-                            ),
-                            declaration (name): "Bar",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                5,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                2,
-                            ),
-                            declaration (name): "Baz",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                    ],
-                    children: [
-                        Scope {
-                            id: ScopeId(
-                                3,
-                            ),
-                            kind: Function,
-                            declarations: {},
-                            references: [],
-                            children: [],
-                        },
-                        Scope {
-                            id: ScopeId(
-                                4,
-                            ),
-                            kind: Function,
-                            declarations: {},
-                            references: [],
-                            children: [],
-                        },
-                    ],
+                    declarations: {},
+                    references: [],
+                    children: [],
+                },
+                Scope {
+                    id: ScopeId(
+                        3,
+                    ),
+                    kind: Function,
+                    declarations: {},
+                    references: [],
+                    children: [],
                 },
             ],
         },

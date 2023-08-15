@@ -2,7 +2,7 @@ use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
     ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier, ImportDeclarationSpecifier,
-    IntoFunction, JSXElementName, Pattern, Program, SourceRange, SourceType, Statement,
+    IntoFunction, JSXElementName, Pattern, Program, SourceRange, Statement,
     VariableDeclarationKind, Visitor,
 };
 
@@ -12,7 +12,7 @@ use crate::{
 };
 
 pub fn analyze(ast: &Program) -> ScopeManager {
-    let mut analyzer = Analyzer::new();
+    let mut analyzer = Analyzer::new(ast);
     analyzer.visit_program(ast);
     analyzer.manager
 }
@@ -24,8 +24,8 @@ struct Analyzer {
 }
 
 impl Analyzer {
-    fn new() -> Self {
-        let manager = ScopeManager::new();
+    fn new(program: &Program) -> Self {
+        let manager = ScopeManager::new(program.source_type);
         let current = manager.root_id();
         let labels = Default::default();
         Self {
@@ -643,16 +643,8 @@ impl Visitor for Analyzer {
     }
 
     fn visit_program(&mut self, ast: &forget_estree::Program) {
-        if ast.source_type == SourceType::Module {
-            self.enter(ScopeKind::Module, |visitor| {
-                for item in &ast.body {
-                    visitor.visit_module_item(item);
-                }
-            });
-        } else {
-            for item in &ast.body {
-                self.visit_module_item(item);
-            }
+        for item in &ast.body {
+            self.visit_module_item(item);
         }
         let scope = self.manager.mut_scope(self.current);
         let unresolved = std::mem::take(&mut scope.unresolved);

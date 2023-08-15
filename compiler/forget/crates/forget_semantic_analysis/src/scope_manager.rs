@@ -1,6 +1,6 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceRange,
+    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceRange, SourceType,
     VariableDeclarationKind,
 };
 use forget_utils::PointerAddress;
@@ -33,13 +33,17 @@ impl std::fmt::Debug for ScopeManager {
 }
 
 impl ScopeManager {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(source_type: SourceType) -> Self {
         let root_id = ScopeId(0);
+        let root_kind = match source_type {
+            SourceType::Module => ScopeKind::Module,
+            SourceType::Script => ScopeKind::Global,
+        };
         Self {
             root: root_id,
             scopes: vec![Scope {
                 id: root_id,
-                kind: ScopeKind::Global,
+                kind: root_kind,
                 parent: None,
                 declarations: Default::default(),
                 references: Default::default(),
