@@ -1,7 +1,8 @@
 // Manual extensions to generated types
 use crate::{
-    ArrowFunctionExpression, Function, FunctionDeclaration, FunctionExpression, JSXElementName,
-    JSXMemberExpression, JSXMemberExpressionOrIdentifier, Pattern, SourceRange, SourceType,
+    ArrowFunctionExpression, Function, FunctionDeclaration, FunctionExpression, ImportDeclaration,
+    ImportDeclarationSpecifier, JSXElementName, JSXMemberExpression,
+    JSXMemberExpressionOrIdentifier, Pattern, SourceRange, SourceType,
 };
 
 /// Sentinel trait to distinguish AST *node* types
@@ -21,6 +22,16 @@ impl Pattern {
             Self::Identifier(pattern) => pattern.range,
             Self::ObjectPattern(pattern) => pattern.range,
             Self::RestElement(pattern) => pattern.range,
+        }
+    }
+}
+
+impl ImportDeclarationSpecifier {
+    pub fn range(&self) -> Option<SourceRange> {
+        match self {
+            Self::ImportDefaultSpecifier(specifier) => specifier.range,
+            Self::ImportNamespaceSpecifier(specifier) => specifier.range,
+            Self::ImportSpecifier(specifier) => specifier.range,
         }
     }
 }

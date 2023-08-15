@@ -1,8 +1,9 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
-    ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier, IntoFunction, JSXElementName,
-    Pattern, Program, SourceRange, SourceType, Statement, VariableDeclarationKind, Visitor,
+    ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier, ImportDeclarationSpecifier,
+    IntoFunction, JSXElementName, Pattern, Program, SourceRange, SourceType, Statement,
+    VariableDeclarationKind, Visitor,
 };
 
 use crate::{
@@ -280,6 +281,43 @@ impl Analyzer {
 }
 
 impl Visitor for Analyzer {
+    fn visit_import_declaration_specifier(
+        &mut self,
+        ast: &forget_estree::ImportDeclarationSpecifier,
+    ) {
+        let kind = self.manager.scope(self.current).kind;
+        if kind != ScopeKind::Module {
+            self.manager.diagnostics.push(Diagnostic::invalid_syntax(
+                "`import` declarations are only allowed at the top-level of a module",
+                ast.range(),
+            ))
+        }
+        match ast {
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
+                Analyzer::visit_declaration_identifier(
+                    self,
+                    &specifier.local,
+                    Some(DeclarationKind::Import),
+                );
+            }
+            ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
+                // note: ignore the `imported` identifier
+                Analyzer::visit_declaration_identifier(
+                    self,
+                    &specifier.local,
+                    Some(DeclarationKind::Import),
+                );
+            }
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
+                Analyzer::visit_declaration_identifier(
+                    self,
+                    &specifier.local,
+                    Some(DeclarationKind::Import),
+                );
+            }
+        }
+    }
+
     fn visit_function_declaration(&mut self, ast: &forget_estree::FunctionDeclaration) {
         if let Some(id) = &ast.function.id {
             let declaration = self.manager.add_declaration(

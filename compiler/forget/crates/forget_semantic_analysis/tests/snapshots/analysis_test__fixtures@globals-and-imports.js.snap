@@ -38,9 +38,36 @@ Scope {
             ),
             kind: Module,
             declarations: {
-                "Component": Declaration {
+                "Foo": Declaration {
                     id: DeclarationId(
                         0,
+                    ),
+                    kind: Import,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "Bar": Declaration {
+                    id: DeclarationId(
+                        1,
+                    ),
+                    kind: Import,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "Baz": Declaration {
+                    id: DeclarationId(
+                        2,
+                    ),
+                    kind: Import,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "Component": Declaration {
+                    id: DeclarationId(
+                        3,
                     ),
                     kind: FunctionDeclaration,
                     scope: ScopeId(
@@ -58,7 +85,7 @@ Scope {
                     declarations: {
                         "props": Declaration {
                             id: DeclarationId(
-                                1,
+                                4,
                             ),
                             kind: FunctionDeclaration,
                             scope: ScopeId(
@@ -67,7 +94,7 @@ Scope {
                         },
                         "g": Declaration {
                             id: DeclarationId(
-                                2,
+                                5,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -76,7 +103,7 @@ Scope {
                         },
                         "y": Declaration {
                             id: DeclarationId(
-                                3,
+                                6,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -85,7 +112,7 @@ Scope {
                         },
                         "s": Declaration {
                             id: DeclarationId(
-                                4,
+                                7,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -94,7 +121,7 @@ Scope {
                         },
                         "b": Declaration {
                             id: DeclarationId(
-                                5,
+                                8,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -103,7 +130,7 @@ Scope {
                         },
                         "n": Declaration {
                             id: DeclarationId(
-                                6,
+                                9,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -112,7 +139,7 @@ Scope {
                         },
                         "x": Declaration {
                             id: DeclarationId(
-                                7,
+                                10,
                             ),
                             kind: Let,
                             scope: ScopeId(
@@ -127,7 +154,7 @@ Scope {
                             ),
                             kind: Read,
                             declaration: DeclarationId(
-                                1,
+                                4,
                             ),
                             declaration (name): "props",
                             scope: ScopeId(
@@ -140,7 +167,7 @@ Scope {
                             ),
                             kind: Read,
                             declaration: DeclarationId(
-                                1,
+                                4,
                             ),
                             declaration (name): "props",
                             scope: ScopeId(
@@ -153,9 +180,48 @@ Scope {
                             ),
                             kind: Read,
                             declaration: DeclarationId(
-                                1,
+                                4,
                             ),
                             declaration (name): "props",
+                            scope: ScopeId(
+                                2,
+                            ),
+                        },
+                        Reference {
+                            id: ReferenceId(
+                                3,
+                            ),
+                            kind: Read,
+                            declaration: DeclarationId(
+                                0,
+                            ),
+                            declaration (name): "Foo",
+                            scope: ScopeId(
+                                2,
+                            ),
+                        },
+                        Reference {
+                            id: ReferenceId(
+                                4,
+                            ),
+                            kind: Read,
+                            declaration: DeclarationId(
+                                1,
+                            ),
+                            declaration (name): "Bar",
+                            scope: ScopeId(
+                                2,
+                            ),
+                        },
+                        Reference {
+                            id: ReferenceId(
+                                5,
+                            ),
+                            kind: Read,
+                            declaration: DeclarationId(
+                                2,
+                            ),
+                            declaration (name): "Baz",
                             scope: ScopeId(
                                 2,
                             ),
@@ -186,70 +252,6 @@ Scope {
         },
     ],
 }
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    7,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    35,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    60,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    60,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
 Diagnostic(
     DiagnosticData {
         message: "Undefined variable",
@@ -371,54 +373,6 @@ Diagnostic(
                     299,
                 ),
                 length: 11,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    327,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    334,
-                ),
-                length: 3,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    341,
-                ),
-                length: 3,
             },
         ),
         related_information: [],

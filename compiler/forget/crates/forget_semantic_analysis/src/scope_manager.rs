@@ -248,6 +248,7 @@ impl ScopeManager {
     fn get_scope_for_declaration(&self, scope: ScopeId, kind: DeclarationKind) -> ScopeId {
         match kind {
             DeclarationKind::Let
+            | DeclarationKind::Import
             | DeclarationKind::Const
             | DeclarationKind::CatchClause
             | DeclarationKind::For => scope,
@@ -401,6 +402,7 @@ pub enum DeclarationKind {
     FunctionDeclaration,
     For,
     CatchClause,
+    Import,
 }
 
 impl From<VariableDeclarationKind> for DeclarationKind {
