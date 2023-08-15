@@ -1,6 +1,6 @@
 // Manual extensions to generated types
 use crate::{
-    ArrowFunctionExpression, Function, FunctionDeclaration, FunctionExpression, ImportDeclaration,
+    ArrowFunctionExpression, Function, FunctionDeclaration, FunctionExpression,
     ImportDeclarationSpecifier, JSXElementName, JSXMemberExpression,
     JSXMemberExpressionOrIdentifier, Pattern, SourceRange, SourceType,
 };

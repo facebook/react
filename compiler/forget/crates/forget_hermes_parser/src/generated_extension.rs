@@ -19,7 +19,7 @@ use hermes::parser::{
     hermes_get_FunctionExpression_generator, hermes_get_FunctionExpression_id,
     hermes_get_FunctionExpression_params, hermes_get_Property_computed, hermes_get_Property_key,
     hermes_get_Property_kind, hermes_get_Property_method, hermes_get_Property_shorthand,
-    hermes_get_Property_value, HermesParser, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef,
+    hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef,
     NodePtr, NodePtrOpt, NodeString, NodeStringOpt, SMRange,
 };
 use hermes::utf::utf8_with_surrogates_to_string;
