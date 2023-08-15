@@ -288,6 +288,7 @@ dependencies = [
  "forget_utils",
  "indexmap",
  "insta",
+ "miette",
  "serde_json",
 ]
 

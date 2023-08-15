@@ -31,8 +31,8 @@ Output:
             "typeAnnotation": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 17,
+              "end": 26
             }
           },
           "init": {
@@ -45,8 +45,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 30,
+                  "end": 35
                 }
               },
               {
@@ -55,8 +55,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 37,
+                  "end": 43
                 }
               }
             ],
@@ -69,8 +69,8 @@ Output:
                   "name": "MessageBox",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 49,
+                    "end": 59
                   }
                 },
                 "attributes": [
@@ -81,8 +81,8 @@ Output:
                       "name": "error",
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 60,
+                        "end": 65
                       }
                     },
                     "value": {
@@ -93,28 +93,28 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 67,
+                          "end": 72
                         }
                       },
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 66,
+                        "end": 73
                       }
                     },
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 60,
+                      "end": 73
                     }
                   }
                 ],
                 "selfClosing": false,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 48,
+                  "end": 74
                 }
               },
               "children": [],
@@ -125,47 +125,47 @@ Output:
                   "name": "MessageBox",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 76,
+                    "end": 86
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 74,
+                  "end": 87
                 }
               },
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 48,
+                "end": 87
               }
             },
             "generator": true,
             "async": false,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 29,
+              "end": 87
             },
             "expression": true,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 29,
+              "end": 87
             }
           },
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 17,
+            "end": 87
           }
         }
       ],
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 11,
+        "end": 88
       }
     },
     {
@@ -182,8 +182,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 103,
+                "end": 111
               }
             },
             "init": {
@@ -196,8 +196,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 115,
+                    "end": 120
                   }
                 }
               ],
@@ -210,16 +210,16 @@ Output:
                     "name": "Foo",
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 130,
+                      "end": 133
                     }
                   },
                   "attributes": [],
                   "selfClosing": false,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 129,
+                    "end": 134
                   }
                 },
                 "children": [
@@ -229,8 +229,8 @@ Output:
                     "raw": "\n    ",
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 134,
+                      "end": 139
                     }
                   },
                   {
@@ -242,16 +242,16 @@ Output:
                         "name": "Bar",
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 140,
+                          "end": 143
                         }
                       },
                       "attributes": [],
                       "selfClosing": false,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 139,
+                        "end": 144
                       }
                     },
                     "children": [],
@@ -262,20 +262,20 @@ Output:
                         "name": "Bar",
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 146,
+                          "end": 149
                         }
                       },
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 144,
+                        "end": 150
                       }
                     },
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 139,
+                      "end": 150
                     }
                   },
                   {
@@ -284,8 +284,8 @@ Output:
                     "raw": "\n    ",
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 150,
+                      "end": 155
                     }
                   },
                   {
@@ -297,16 +297,16 @@ Output:
                         "name": "ErrorView",
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 156,
+                          "end": 165
                         }
                       },
                       "attributes": [],
                       "selfClosing": false,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 155,
+                        "end": 166
                       }
                     },
                     "children": [],
@@ -317,20 +317,20 @@ Output:
                         "name": "ErrorView",
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 168,
+                          "end": 177
                         }
                       },
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 166,
+                        "end": 178
                       }
                     },
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 155,
+                      "end": 178
                     }
                   },
                   {
@@ -339,8 +339,8 @@ Output:
                     "raw": "\n  ",
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 178,
+                      "end": 181
                     }
                   }
                 ],
@@ -351,62 +351,62 @@ Output:
                     "name": "Foo",
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 183,
+                      "end": 186
                     }
                   },
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 181,
+                    "end": 187
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 129,
+                  "end": 187
                 }
               },
               "generator": true,
               "async": false,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 114,
+                "end": 189
               },
               "expression": true,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 114,
+                "end": 189
               }
             },
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 103,
+              "end": 189
             }
           }
         ],
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 97,
+          "end": 190
         }
       },
       "specifiers": [],
       "source": null,
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 90,
+        "end": 190
       }
     }
   ],
   "sourceType": "script",
   "loc": null,
   "range": {
-    "start": 0,
-    "end": 1
+    "start": 11,
+    "end": 190
   }
 }

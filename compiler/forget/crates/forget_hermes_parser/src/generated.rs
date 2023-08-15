@@ -11,7 +11,7 @@ impl FromHermes for Identifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::Identifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let name = convert_string(
             cx,
             unsafe { hermes::parser::hermes_get_Identifier_name(node) },
@@ -31,7 +31,7 @@ impl FromHermes for NumericLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::NumericLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let value = convert_number(unsafe {
             hermes::parser::hermes_get_NumericLiteral_value(node)
         });
@@ -46,7 +46,7 @@ impl FromHermes for BooleanLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::BooleanLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let value = unsafe { hermes::parser::hermes_get_BooleanLiteral_value(node) };
         Self {
             value,
@@ -59,7 +59,7 @@ impl FromHermes for NullLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::NullLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -70,7 +70,7 @@ impl FromHermes for StringLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::StringLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let value = convert_string_value(
             cx,
             unsafe { hermes::parser::hermes_get_StringLiteral_value(node) },
@@ -86,7 +86,7 @@ impl FromHermes for RegExpLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::RegExpLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let pattern = convert_string(
             cx,
             unsafe { hermes::parser::hermes_get_RegExpLiteral_pattern(node) },
@@ -107,7 +107,7 @@ impl FromHermes for Program {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::Program);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_Program_body(node) },
             |node| ModuleItem::convert(cx, node),
@@ -125,7 +125,7 @@ impl FromHermes for ExpressionStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ExpressionStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let expression = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ExpressionStatement_expression(node) },
@@ -143,7 +143,7 @@ impl FromHermes for BlockStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::BlockStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_BlockStatement_body(node) },
             |node| Statement::convert(cx, node),
@@ -159,7 +159,7 @@ impl FromHermes for EmptyStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::EmptyStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -170,7 +170,7 @@ impl FromHermes for DebuggerStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::DebuggerStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -181,7 +181,7 @@ impl FromHermes for WithStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::WithStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let object = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_WithStatement_object(node) },
@@ -202,7 +202,7 @@ impl FromHermes for ReturnStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ReturnStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = convert_option(
             unsafe { hermes::parser::hermes_get_ReturnStatement_argument(node) },
             |node| Expression::convert(cx, node),
@@ -218,7 +218,7 @@ impl FromHermes for LabeledStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::LabeledStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let label = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_LabeledStatement_label(node) },
@@ -239,7 +239,7 @@ impl FromHermes for BreakStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::BreakStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let label = convert_option(
             unsafe { hermes::parser::hermes_get_BreakStatement_label(node) },
             |node| Identifier::convert(cx, node),
@@ -255,7 +255,7 @@ impl FromHermes for ContinueStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ContinueStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let label = convert_option(
             unsafe { hermes::parser::hermes_get_ContinueStatement_label(node) },
             |node| Identifier::convert(cx, node),
@@ -271,7 +271,7 @@ impl FromHermes for IfStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::IfStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let test = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_IfStatement_test(node) },
@@ -297,7 +297,7 @@ impl FromHermes for SwitchStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::SwitchStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let discriminant = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_SwitchStatement_discriminant(node) },
@@ -318,7 +318,7 @@ impl FromHermes for SwitchCase {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::SwitchCase);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let test = convert_option(
             unsafe { hermes::parser::hermes_get_SwitchCase_test(node) },
             |node| Expression::convert(cx, node),
@@ -339,7 +339,7 @@ impl FromHermes for ThrowStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ThrowStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ThrowStatement_argument(node) },
@@ -355,7 +355,7 @@ impl FromHermes for TryStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::TryStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let block = BlockStatement::convert(
             cx,
             unsafe { hermes::parser::hermes_get_TryStatement_block(node) },
@@ -381,7 +381,7 @@ impl FromHermes for CatchClause {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::CatchClause);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let param = convert_option(
             unsafe { hermes::parser::hermes_get_CatchClause_param(node) },
             |node| Pattern::convert(cx, node),
@@ -402,7 +402,7 @@ impl FromHermes for WhileStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::WhileStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let test = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_WhileStatement_test(node) },
@@ -423,7 +423,7 @@ impl FromHermes for DoWhileStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::DoWhileStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let body = Statement::convert(
             cx,
             unsafe { hermes::parser::hermes_get_DoWhileStatement_body(node) },
@@ -444,7 +444,7 @@ impl FromHermes for ForStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ForStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let init = convert_option(
             unsafe { hermes::parser::hermes_get_ForStatement_init(node) },
             |node| ForInit::convert(cx, node),
@@ -475,7 +475,7 @@ impl FromHermes for ForInStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ForInStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let left = ForInInit::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ForInStatement_left(node) },
@@ -501,7 +501,7 @@ impl FromHermes for ForOfStatement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ForOfStatement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let is_await = unsafe { hermes::parser::hermes_get_ForOfStatement_await(node) };
         let left = ForInInit::convert(
             cx,
@@ -529,7 +529,7 @@ impl FromHermes for ClassBody {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ClassBody);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let body = convert_vec(
             unsafe { hermes::parser::hermes_get_ClassBody_body(node) },
             |node| ClassItem::convert(cx, node),
@@ -545,7 +545,7 @@ impl FromHermes for MethodDefinition {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::MethodDefinition);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let key = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_MethodDefinition_key(node) },
@@ -579,7 +579,7 @@ impl FromHermes for VariableDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::VariableDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let kind = VariableDeclarationKind::convert(
             cx,
             unsafe { hermes::parser::hermes_get_VariableDeclaration_kind(node) },
@@ -600,7 +600,7 @@ impl FromHermes for VariableDeclarator {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::VariableDeclarator);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let id = Pattern::convert(
             cx,
             unsafe { hermes::parser::hermes_get_VariableDeclarator_id(node) },
@@ -621,7 +621,7 @@ impl FromHermes for ThisExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ThisExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -632,7 +632,7 @@ impl FromHermes for ArrayExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ArrayExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let elements = convert_array_expression_elements(
             cx,
             unsafe { hermes::parser::hermes_get_ArrayExpression_elements(node) },
@@ -648,7 +648,7 @@ impl FromHermes for ObjectExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ObjectExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let properties = convert_vec(
             unsafe { hermes::parser::hermes_get_ObjectExpression_properties(node) },
             |node| PropertyOrSpreadElement::convert(cx, node),
@@ -664,7 +664,7 @@ impl FromHermes for Property {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::Property);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let key = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_Property_key(node) },
@@ -698,7 +698,7 @@ impl FromHermes for UnaryExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::UnaryExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let operator = UnaryOperator::convert(
             cx,
             unsafe { hermes::parser::hermes_get_UnaryExpression_operator(node) },
@@ -721,7 +721,7 @@ impl FromHermes for UpdateExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::UpdateExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let operator = UpdateOperator::convert(
             cx,
             unsafe { hermes::parser::hermes_get_UpdateExpression_operator(node) },
@@ -744,7 +744,7 @@ impl FromHermes for BinaryExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::BinaryExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let left = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_BinaryExpression_left(node) },
@@ -770,7 +770,7 @@ impl FromHermes for AssignmentExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::AssignmentExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let operator = AssignmentOperator::convert(
             cx,
             unsafe { hermes::parser::hermes_get_AssignmentExpression_operator(node) },
@@ -796,7 +796,7 @@ impl FromHermes for LogicalExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::LogicalExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let operator = LogicalOperator::convert(
             cx,
             unsafe { hermes::parser::hermes_get_LogicalExpression_operator(node) },
@@ -822,7 +822,7 @@ impl FromHermes for MemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::MemberExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let object = ExpressionOrSuper::convert(
             cx,
             unsafe { hermes::parser::hermes_get_MemberExpression_object(node) },
@@ -847,7 +847,7 @@ impl FromHermes for ConditionalExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ConditionalExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let test = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ConditionalExpression_test(node) },
@@ -873,7 +873,7 @@ impl FromHermes for CallExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::CallExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let callee = ExpressionOrSuper::convert(
             cx,
             unsafe { hermes::parser::hermes_get_CallExpression_callee(node) },
@@ -894,7 +894,7 @@ impl FromHermes for NewExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::NewExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let callee = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_NewExpression_callee(node) },
@@ -915,7 +915,7 @@ impl FromHermes for SequenceExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::SequenceExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let expressions = convert_vec(
             unsafe { hermes::parser::hermes_get_SequenceExpression_expressions(node) },
             |node| Expression::convert(cx, node),
@@ -931,7 +931,7 @@ impl FromHermes for Super {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::Super);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -942,7 +942,7 @@ impl FromHermes for SpreadElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::SpreadElement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_SpreadElement_argument(node) },
@@ -958,7 +958,7 @@ impl FromHermes for YieldExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::YieldExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = convert_option(
             unsafe { hermes::parser::hermes_get_YieldExpression_argument(node) },
             |node| Expression::convert(cx, node),
@@ -978,7 +978,7 @@ impl FromHermes for ImportDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ImportDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let specifiers = convert_vec(
             unsafe { hermes::parser::hermes_get_ImportDeclaration_specifiers(node) },
             |node| ImportDeclarationSpecifier::convert(cx, node),
@@ -999,7 +999,7 @@ impl FromHermes for ImportSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ImportSpecifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let imported = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ImportSpecifier_imported(node) },
@@ -1020,7 +1020,7 @@ impl FromHermes for ImportDefaultSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ImportDefaultSpecifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let local = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ImportDefaultSpecifier_local(node) },
@@ -1036,7 +1036,7 @@ impl FromHermes for ImportNamespaceSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ImportNamespaceSpecifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let local = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ImportNamespaceSpecifier_local(node) },
@@ -1052,7 +1052,7 @@ impl FromHermes for ExportNamedDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ExportNamedDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let declaration = convert_option(
             unsafe {
                 hermes::parser::hermes_get_ExportNamedDeclaration_declaration(node)
@@ -1082,7 +1082,7 @@ impl FromHermes for ExportSpecifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ExportSpecifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let exported = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ExportSpecifier_exported(node) },
@@ -1098,7 +1098,7 @@ impl FromHermes for ExportDefaultDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ExportDefaultDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let declaration = DeclarationOrExpression::convert(
             cx,
             unsafe {
@@ -1116,7 +1116,7 @@ impl FromHermes for ExportAllDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ExportAllDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let source = _Literal::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ExportAllDeclaration_source(node) },
@@ -1134,7 +1134,7 @@ impl FromHermes for JSXIdentifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXIdentifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let name = convert_string(
             cx,
             unsafe { hermes::parser::hermes_get_JSXIdentifier_name(node) },
@@ -1152,7 +1152,7 @@ impl FromHermes for JSXNamespacedName {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXNamespacedName);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let namespace = JSXIdentifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXNamespacedName_namespace(node) },
@@ -1173,7 +1173,7 @@ impl FromHermes for JSXMemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXMemberExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let object = JSXMemberExpressionOrIdentifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXMemberExpression_object(node) },
@@ -1194,7 +1194,7 @@ impl FromHermes for JSXEmptyExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXEmptyExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -1205,7 +1205,7 @@ impl FromHermes for JSXExpressionContainer {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXExpressionContainer);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let expression = JSXExpressionOrEmpty::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXExpressionContainer_expression(node) },
@@ -1221,7 +1221,7 @@ impl FromHermes for JSXSpreadChild {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXSpreadChild);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let expression = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXSpreadChild_expression(node) },
@@ -1237,7 +1237,7 @@ impl FromHermes for JSXOpeningElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXOpeningElement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let name = JSXElementName::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXOpeningElement_name(node) },
@@ -1262,7 +1262,7 @@ impl FromHermes for JSXClosingElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXClosingElement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let name = JSXElementName::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXClosingElement_name(node) },
@@ -1278,7 +1278,7 @@ impl FromHermes for JSXAttribute {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXAttribute);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let name = JSXIdentifierOrNamespacedName::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXAttribute_name(node) },
@@ -1299,7 +1299,7 @@ impl FromHermes for JSXSpreadAttribute {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXSpreadAttribute);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXSpreadAttribute_argument(node) },
@@ -1315,7 +1315,7 @@ impl FromHermes for JSXText {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXText);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let value = convert_string_value(
             cx,
             unsafe { hermes::parser::hermes_get_JSXText_value(node) },
@@ -1336,7 +1336,7 @@ impl FromHermes for JSXStringLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXStringLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let value = convert_string_value(
             cx,
             unsafe { hermes::parser::hermes_get_JSXStringLiteral_value(node) },
@@ -1357,7 +1357,7 @@ impl FromHermes for JSXElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXElement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let opening_element = JSXOpeningElement::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXElement_openingElement(node) },
@@ -1383,7 +1383,7 @@ impl FromHermes for JSXFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXFragment);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let opening_fragment = JSXOpeningFragment::convert(
             cx,
             unsafe { hermes::parser::hermes_get_JSXFragment_openingFragment(node) },
@@ -1409,7 +1409,7 @@ impl FromHermes for JSXOpeningFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXOpeningFragment);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -1420,7 +1420,7 @@ impl FromHermes for JSXClosingFragment {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::JSXClosingFragment);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -1431,7 +1431,7 @@ impl FromHermes for ArrayPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ArrayPattern);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let elements = convert_vec_of_option(
             unsafe { hermes::parser::hermes_get_ArrayPattern_elements(node) },
             |node| Pattern::convert(cx, node),
@@ -1447,7 +1447,7 @@ impl FromHermes for ObjectPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ObjectPattern);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let properties = convert_vec(
             unsafe { hermes::parser::hermes_get_ObjectPattern_properties(node) },
             |node| AssignmentPropertyOrRestElement::convert(cx, node),
@@ -1463,7 +1463,7 @@ impl FromHermes for RestElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::RestElement);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = Pattern::convert(
             cx,
             unsafe { hermes::parser::hermes_get_RestElement_argument(node) },
@@ -1479,7 +1479,7 @@ impl FromHermes for AssignmentPattern {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::AssignmentPattern);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let left = Pattern::convert(
             cx,
             unsafe { hermes::parser::hermes_get_AssignmentPattern_left(node) },
@@ -1500,7 +1500,7 @@ impl FromHermes for TemplateLiteral {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::TemplateLiteral);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let quasis = convert_vec(
             unsafe { hermes::parser::hermes_get_TemplateLiteral_quasis(node) },
             |node| TemplateElement::convert(cx, node),
@@ -1521,7 +1521,7 @@ impl FromHermes for TaggedTemplateExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::TaggedTemplateExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let tag = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_TaggedTemplateExpression_tag(node) },
@@ -1542,7 +1542,7 @@ impl FromHermes for MetaProperty {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::MetaProperty);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let meta = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_MetaProperty_meta(node) },
@@ -1563,7 +1563,7 @@ impl FromHermes for AwaitExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::AwaitExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let argument = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_AwaitExpression_argument(node) },
@@ -1579,7 +1579,7 @@ impl FromHermes for OptionalMemberExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::OptionalMemberExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let object = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_OptionalMemberExpression_object(node) },
@@ -1608,7 +1608,7 @@ impl FromHermes for OptionalCallExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::OptionalCallExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let callee = ExpressionOrSuper::convert(
             cx,
             unsafe { hermes::parser::hermes_get_OptionalCallExpression_callee(node) },
@@ -1633,7 +1633,7 @@ impl FromHermes for ImportExpression {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ImportExpression);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let source = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ImportExpression_source(node) },
@@ -1649,7 +1649,7 @@ impl FromHermes for ClassProperty {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ClassProperty);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let key = Expression::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ClassProperty_key(node) },
@@ -1676,7 +1676,7 @@ impl FromHermes for ClassPrivateProperty {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::ClassPrivateProperty);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let key = ExpressionOrPrivateIdentifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_ClassPrivateProperty_key(node) },
@@ -1701,7 +1701,7 @@ impl FromHermes for PrivateName {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::PrivateName);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let id = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_PrivateName_id(node) },
@@ -1717,7 +1717,7 @@ impl FromHermes for CoverTypedIdentifier {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::CoverTypedIdentifier);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let left = Identifier::convert(
             cx,
             unsafe { hermes::parser::hermes_get_CoverTypedIdentifier_left(node) },
@@ -1738,7 +1738,7 @@ impl FromHermes for TSTypeAnnotation {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::TSTypeAnnotation);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),
@@ -1749,7 +1749,7 @@ impl FromHermes for TSTypeAliasDeclaration {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
         let node_ref = node.as_ref();
         assert_eq!(node_ref.kind, NodeKind::TSTypeAliasDeclaration);
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         Self {
             loc: None,
             range: Some(range),

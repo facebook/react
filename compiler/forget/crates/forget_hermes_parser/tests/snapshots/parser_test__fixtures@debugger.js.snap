@@ -29,8 +29,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 9,
+          "end": 18
         }
       },
       "params": [
@@ -40,8 +40,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 19,
+            "end": 24
           }
         }
       ],
@@ -52,8 +52,8 @@ Output:
             "type": "DebuggerStatement",
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 30,
+              "end": 39
             }
           },
           {
@@ -66,8 +66,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 46,
+                  "end": 51
                 }
               },
               "property": {
@@ -76,15 +76,15 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 52,
+                  "end": 56
                 }
               },
               "computed": false,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 46,
+                "end": 56
               }
             },
             "consequent": {
@@ -94,15 +94,15 @@ Output:
                   "type": "DebuggerStatement",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 64,
+                    "end": 73
                   }
                 }
               ],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 58,
+                "end": 77
               }
             },
             "alternate": {
@@ -118,8 +118,8 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 96,
+                        "end": 101
                       }
                     },
                     "property": {
@@ -128,15 +128,15 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 102,
+                        "end": 106
                       }
                     },
                     "computed": false,
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 96,
+                      "end": 106
                     }
                   },
                   "body": {
@@ -146,49 +146,49 @@ Output:
                         "type": "DebuggerStatement",
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 116,
+                          "end": 125
                         }
                       }
                     ],
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 108,
+                      "end": 131
                     }
                   },
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 89,
+                    "end": 131
                   }
                 }
               ],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 83,
+                "end": 135
               }
             },
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 42,
+              "end": 135
             }
           },
           {
             "type": "DebuggerStatement",
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 138,
+              "end": 147
             }
           }
         ],
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 26,
+          "end": 149
         }
       },
       "generator": false,
@@ -196,12 +196,12 @@ Output:
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 149
       },
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 149
       }
     }
   ],
@@ -209,6 +209,6 @@ Output:
   "loc": null,
   "range": {
     "start": 0,
-    "end": 1
+    "end": 149
   }
 }

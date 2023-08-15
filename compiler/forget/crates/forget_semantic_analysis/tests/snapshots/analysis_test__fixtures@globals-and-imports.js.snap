@@ -192,9 +192,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    7,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -208,9 +208,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    35,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -224,9 +224,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    60,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -240,9 +240,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    60,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -256,9 +256,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    117,
                 ),
-                length: 1,
+                length: 6,
             },
         ),
         related_information: [],
@@ -272,9 +272,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    139,
                 ),
-                length: 1,
+                length: 5,
             },
         ),
         related_information: [],
@@ -288,9 +288,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    169,
                 ),
-                length: 1,
+                length: 6,
             },
         ),
         related_information: [],
@@ -304,9 +304,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    196,
                 ),
-                length: 1,
+                length: 7,
             },
         ),
         related_information: [],
@@ -320,9 +320,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    221,
                 ),
-                length: 1,
+                length: 6,
             },
         ),
         related_information: [],
@@ -336,9 +336,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    242,
                 ),
-                length: 1,
+                length: 4,
             },
         ),
         related_information: [],
@@ -352,9 +352,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    272,
                 ),
-                length: 1,
+                length: 10,
             },
         ),
         related_information: [],
@@ -368,9 +368,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    299,
                 ),
-                length: 1,
+                length: 11,
             },
         ),
         related_information: [],
@@ -384,9 +384,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    327,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -400,9 +400,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    334,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],
@@ -416,9 +416,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    341,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],

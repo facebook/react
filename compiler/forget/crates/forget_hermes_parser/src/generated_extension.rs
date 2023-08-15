@@ -19,16 +19,20 @@ use hermes::parser::{
     hermes_get_FunctionExpression_generator, hermes_get_FunctionExpression_id,
     hermes_get_FunctionExpression_params, hermes_get_Property_computed, hermes_get_Property_key,
     hermes_get_Property_kind, hermes_get_Property_method, hermes_get_Property_shorthand,
-    hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef, NodePtr, NodePtrOpt,
-    NodeString, NodeStringOpt, SMRange,
+    hermes_get_Property_value, HermesParser, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef,
+    NodePtr, NodePtrOpt, NodeString, NodeStringOpt, SMRange,
 };
 use hermes::utf::utf8_with_surrogates_to_string;
+use juno_support::NullTerminatedBuf;
 
-pub struct Context;
+pub struct Context {
+    start: usize,
+}
 
 impl Context {
-    pub fn new() -> Self {
-        Self
+    pub fn new(parser: &NullTerminatedBuf) -> Self {
+        let start: usize = unsafe { std::mem::transmute(parser.as_ptr()) };
+        Self { start }
     }
 }
 
@@ -69,11 +73,15 @@ where
         .collect()
 }
 
-pub fn convert_range(node: NodePtr) -> SourceRange {
-    let _range = node.as_ref().source_range;
+pub fn convert_range(cx: &Context, node: NodePtr) -> SourceRange {
+    let range = node.as_ref().source_range;
+    let absolute_start: usize = unsafe { std::mem::transmute(range.start.as_ptr()) };
+    let start = absolute_start - cx.start;
+    let absolute_end: usize = unsafe { std::mem::transmute(range.end.as_ptr()) };
+    let end = absolute_end - cx.start;
     SourceRange {
-        start: 0,
-        end: NonZeroU32::new(1).unwrap(),
+        start: start as u32,
+        end: NonZeroU32::new(end as u32).unwrap(),
     }
 }
 
@@ -114,7 +122,7 @@ pub fn convert_array_expression_elements(
 
 impl FromHermes for TemplateElement {
     fn convert(cx: &mut Context, node: NodePtr) -> Self {
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         let tail = unsafe { hermes::parser::hermes_get_TemplateElement_tail(node) };
         let value = TemplateElementValue {
             cooked: convert_option_string_value(cx, unsafe {
@@ -142,7 +150,7 @@ impl FromHermes for AssignmentProperty {
         let is_computed = unsafe { hermes_get_Property_computed(node) };
         let is_shorthand = unsafe { hermes_get_Property_shorthand(node) };
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         AssignmentProperty {
             key,
             value,
@@ -169,7 +177,7 @@ impl FromHermes for FunctionDeclaration {
         let is_generator = unsafe { hermes_get_FunctionDeclaration_generator(node) };
         let is_async = unsafe { hermes_get_FunctionDeclaration_async(node) };
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         FunctionDeclaration {
             function: Function {
                 id,
@@ -199,7 +207,7 @@ impl FromHermes for FunctionExpression {
         let is_generator = unsafe { hermes_get_FunctionExpression_generator(node) };
         let is_async = unsafe { hermes_get_FunctionExpression_async(node) };
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         FunctionExpression {
             function: Function {
                 id,
@@ -232,7 +240,7 @@ impl FromHermes for ArrowFunctionExpression {
         let is_async = unsafe { hermes_get_ArrowFunctionExpression_async(node) };
         let is_expression = unsafe { hermes_get_ArrowFunctionExpression_expression(node) };
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         ArrowFunctionExpression {
             function: Function {
                 id,
@@ -261,7 +269,7 @@ impl FromHermes for ClassDeclaration {
         );
         let body = ClassBody::convert(cx, unsafe { hermes_get_ClassDeclaration_body(node) });
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         ClassDeclaration {
             class: Class {
                 id,
@@ -284,7 +292,7 @@ impl FromHermes for ClassExpression {
         );
         let body = ClassBody::convert(cx, unsafe { hermes_get_ClassExpression_body(node) });
         let loc = None;
-        let range = convert_range(node);
+        let range = convert_range(cx, node);
         ClassExpression {
             class: Class {
                 id,

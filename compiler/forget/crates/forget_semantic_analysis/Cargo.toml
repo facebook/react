@@ -20,4 +20,5 @@ indexmap = { workspace = true }
 [dev-dependencies]
 forget_hermes_parser = { workspace = true }
 insta = { workspace = true }
+miette = { workspace = true, features = ["backtrace", "fancy"] }
 serde_json = { workspace = true }

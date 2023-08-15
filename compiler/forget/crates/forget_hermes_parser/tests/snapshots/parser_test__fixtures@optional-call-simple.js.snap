@@ -21,8 +21,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 9,
+          "end": 18
         }
       },
       "params": [
@@ -32,8 +32,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 19,
+            "end": 24
           }
         }
       ],
@@ -50,8 +50,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 37,
+                  "end": 40
                 }
               },
               "arguments": [
@@ -61,29 +61,29 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 43,
+                    "end": 48
                   }
                 }
               ],
               "optional": true,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 37,
+                "end": 49
               }
             },
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 30,
+              "end": 50
             }
           }
         ],
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 26,
+          "end": 52
         }
       },
       "generator": false,
@@ -91,12 +91,12 @@ Output:
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 52
       },
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 52
       }
     }
   ],
@@ -104,6 +104,6 @@ Output:
   "loc": null,
   "range": {
     "start": 0,
-    "end": 1
+    "end": 52
   }
 }

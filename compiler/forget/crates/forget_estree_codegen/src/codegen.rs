@@ -469,7 +469,7 @@ impl Node {
                 fn convert(cx: &mut Context, node: NodePtr) -> Self {
                     let node_ref = node.as_ref();
                     assert_eq!(node_ref.kind, NodeKind::#type_);
-                    let range = convert_range(node);
+                    let range = convert_range(cx, node);
                     #(#fields)*
                     Self {
                         #(#field_names,)*

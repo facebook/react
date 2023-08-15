@@ -19,7 +19,7 @@ pub fn parse(source: &str, _file: &str) -> Result<Program, Vec<Diagnostic>> {
         },
         &buf,
     );
-    let mut cx = Context::new();
+    let mut cx = Context::new(&buf);
     if result.has_errors() {
         let error_messages = result.messages();
         return Err(error_messages

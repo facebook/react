@@ -244,9 +244,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    0,
+                    156,
                 ),
-                length: 1,
+                length: 3,
             },
         ),
         related_information: [],

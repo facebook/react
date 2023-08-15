@@ -3,6 +3,7 @@ use std::fmt::Write;
 use forget_hermes_parser::parse;
 use forget_semantic_analysis::analyze;
 use insta::{assert_snapshot, glob};
+use miette::{NamedSource, Report};
 
 #[test]
 fn fixtures() {
@@ -17,6 +18,11 @@ fn fixtures() {
         let diagnostics = analysis.diagnostics();
         for diagnostic in diagnostics {
             writeln!(&mut output, "{:#?}", diagnostic).unwrap();
+            println!(
+                "{:?}",
+                Report::new(diagnostic)
+                    .with_source_code(NamedSource::new(path.to_string_lossy(), input.clone()))
+            );
         }
         assert_snapshot!(format!("Input:\n{input}\n\nAnalysis:\n{output}"));
     });

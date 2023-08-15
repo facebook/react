@@ -26,8 +26,8 @@ Output:
             "typeAnnotation": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 17,
+              "end": 26
             }
           },
           "init": {
@@ -40,8 +40,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 30,
+                  "end": 35
                 }
               },
               {
@@ -50,8 +50,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 37,
+                  "end": 43
                 }
               }
             ],
@@ -64,8 +64,8 @@ Output:
                   "name": "MessageBox",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 49,
+                    "end": 59
                   }
                 },
                 "attributes": [
@@ -76,8 +76,8 @@ Output:
                       "name": "error",
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 60,
+                        "end": 65
                       }
                     },
                     "value": {
@@ -88,28 +88,28 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 67,
+                          "end": 72
                         }
                       },
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 66,
+                        "end": 73
                       }
                     },
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 60,
+                      "end": 73
                     }
                   }
                 ],
                 "selfClosing": false,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 48,
+                  "end": 74
                 }
               },
               "children": [],
@@ -120,47 +120,47 @@ Output:
                   "name": "MessageBox",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 76,
+                    "end": 86
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 74,
+                  "end": 87
                 }
               },
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 48,
+                "end": 87
               }
             },
             "generator": true,
             "async": false,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 29,
+              "end": 87
             },
             "expression": true,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 29,
+              "end": 87
             }
           },
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 17,
+            "end": 87
           }
         }
       ],
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 11,
+        "end": 88
       }
     },
     {
@@ -171,21 +171,21 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 105,
+          "end": 114
         }
       },
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 90,
+        "end": 115
       }
     }
   ],
   "sourceType": "script",
   "loc": null,
   "range": {
-    "start": 0,
-    "end": 1
+    "start": 11,
+    "end": 115
   }
 }

@@ -48,8 +48,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 9,
+          "end": 15
         }
       },
       "params": [
@@ -59,8 +59,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 16,
+            "end": 17
           }
         },
         {
@@ -69,8 +69,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 19,
+            "end": 20
           }
         }
       ],
@@ -79,8 +79,8 @@ Output:
         "body": [],
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 22,
+          "end": 24
         }
       },
       "generator": false,
@@ -88,12 +88,12 @@ Output:
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 24
       },
       "loc": null,
       "range": {
         "start": 0,
-        "end": 1
+        "end": 24
       }
     },
     {
@@ -104,8 +104,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 35,
+          "end": 44
         }
       },
       "params": [
@@ -115,8 +115,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": {
-            "start": 0,
-            "end": 1
+            "start": 45,
+            "end": 50
           }
         }
       ],
@@ -135,8 +135,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 62,
+                    "end": 63
                   }
                 },
                 "init": {
@@ -144,21 +144,21 @@ Output:
                   "properties": [],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 66,
+                    "end": 68
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 62,
+                  "end": 68
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 56,
+              "end": 69
             }
           },
           {
@@ -173,8 +173,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 78,
+                    "end": 79
                   }
                 },
                 "init": {
@@ -186,28 +186,28 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 83,
+                        "end": 84
                       }
                     }
                   ],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 82,
+                    "end": 85
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 78,
+                  "end": 85
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 72,
+              "end": 86
             }
           },
           {
@@ -222,8 +222,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 119,
+                    "end": 120
                   }
                 },
                 "init": {
@@ -231,21 +231,21 @@ Output:
                   "properties": [],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 123,
+                    "end": 125
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 119,
+                  "end": 125
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 113,
+              "end": 126
             }
           },
           {
@@ -260,8 +260,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 135,
+                    "end": 136
                   }
                 },
                 "init": {
@@ -275,8 +275,8 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 141,
+                          "end": 142
                         }
                       },
                       "value": {
@@ -285,8 +285,8 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": {
-                          "start": 0,
-                          "end": 1
+                          "start": 141,
+                          "end": 142
                         }
                       },
                       "kind": "init",
@@ -295,28 +295,28 @@ Output:
                       "computed": false,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 141,
+                        "end": 142
                       }
                     }
                   ],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 139,
+                    "end": 144
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 135,
+                  "end": 144
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 129,
+              "end": 145
             }
           },
           {
@@ -331,8 +331,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 223,
+                    "end": 224
                   }
                 },
                 "init": {
@@ -340,21 +340,21 @@ Output:
                   "properties": [],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 227,
+                    "end": 229
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 223,
+                  "end": 229
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 217,
+              "end": 230
             }
           },
           {
@@ -370,8 +370,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 233,
+                    "end": 234
                   }
                 },
                 "property": {
@@ -380,15 +380,15 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 235,
+                    "end": 236
                   }
                 },
                 "computed": false,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 233,
+                  "end": 236
                 }
               },
               "right": {
@@ -397,21 +397,21 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 239,
+                  "end": 240
                 }
               },
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 233,
+                "end": 240
               }
             },
             "directive": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 233,
+              "end": 241
             }
           },
           {
@@ -426,8 +426,8 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 250,
+                    "end": 251
                   }
                 },
                 "init": {
@@ -438,8 +438,8 @@ Output:
                     "typeAnnotation": null,
                     "loc": null,
                     "range": {
-                      "start": 0,
-                      "end": 1
+                      "start": 254,
+                      "end": 260
                     }
                   },
                   "arguments": [
@@ -449,8 +449,8 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 261,
+                        "end": 262
                       }
                     },
                     {
@@ -459,28 +459,28 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": {
-                        "start": 0,
-                        "end": 1
+                        "start": 264,
+                        "end": 265
                       }
                     }
                   ],
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 254,
+                    "end": 266
                   }
                 },
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 250,
+                  "end": 266
                 }
               }
             ],
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 244,
+              "end": 267
             }
           },
           {
@@ -491,8 +491,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 531,
+                "end": 532
               }
             },
             "consequent": {
@@ -500,15 +500,15 @@ Output:
               "body": [],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 534,
+                "end": 539
               }
             },
             "alternate": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 527,
+              "end": 539
             }
           },
           {
@@ -519,8 +519,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 546,
+                "end": 547
               }
             },
             "consequent": {
@@ -528,15 +528,15 @@ Output:
               "body": [],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 549,
+                "end": 554
               }
             },
             "alternate": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 542,
+              "end": 554
             }
           },
           {
@@ -547,8 +547,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 561,
+                "end": 562
               }
             },
             "consequent": {
@@ -556,15 +556,15 @@ Output:
               "body": [],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 564,
+                "end": 569
               }
             },
             "alternate": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 557,
+              "end": 569
             }
           },
           {
@@ -575,8 +575,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 576,
+                "end": 577
               }
             },
             "consequent": {
@@ -584,15 +584,15 @@ Output:
               "body": [],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 579,
+                "end": 584
               }
             },
             "alternate": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 572,
+              "end": 584
             }
           },
           {
@@ -603,8 +603,8 @@ Output:
               "typeAnnotation": null,
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 591,
+                "end": 592
               }
             },
             "consequent": {
@@ -612,15 +612,15 @@ Output:
               "body": [],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 594,
+                "end": 599
               }
             },
             "alternate": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 587,
+              "end": 599
             }
           },
           {
@@ -633,8 +633,8 @@ Output:
                 "typeAnnotation": null,
                 "loc": null,
                 "range": {
-                  "start": 0,
-                  "end": 1
+                  "start": 692,
+                  "end": 698
                 }
               },
               "arguments": [
@@ -644,50 +644,50 @@ Output:
                   "typeAnnotation": null,
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 699,
+                    "end": 700
                   }
                 },
                 {
                   "type": "NullLiteral",
                   "loc": null,
                   "range": {
-                    "start": 0,
-                    "end": 1
+                    "start": 702,
+                    "end": 706
                   }
                 }
               ],
               "loc": null,
               "range": {
-                "start": 0,
-                "end": 1
+                "start": 692,
+                "end": 707
               }
             },
             "directive": null,
             "loc": null,
             "range": {
-              "start": 0,
-              "end": 1
+              "start": 692,
+              "end": 708
             }
           }
         ],
         "loc": null,
         "range": {
-          "start": 0,
-          "end": 1
+          "start": 52,
+          "end": 710
         }
       },
       "generator": false,
       "async": false,
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 26,
+        "end": 710
       },
       "loc": null,
       "range": {
-        "start": 0,
-        "end": 1
+        "start": 26,
+        "end": 710
       }
     }
   ],
@@ -695,6 +695,6 @@ Output:
   "loc": null,
   "range": {
     "start": 0,
-    "end": 1
+    "end": 710
   }
 }
