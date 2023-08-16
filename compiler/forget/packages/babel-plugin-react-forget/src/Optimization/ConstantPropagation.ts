@@ -206,6 +206,19 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
         }
         break;
       }
+      case "LoadGlobal": {
+        CompilerError.invariant(value.kind === "LoadGlobal", {
+          reason: "value kind expected to be LoadGlobal",
+          loc: null,
+          suggestions: null,
+        });
+
+        // different global values, can't constant propogate
+        if (operandValue.name !== value.name) {
+          return null;
+        }
+        break;
+      }
       default:
         return null;
     }
