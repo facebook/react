@@ -680,8 +680,7 @@ function outlineModel(request: Request, value: any): number {
   request.pendingChunks++;
   const outlinedId = request.nextChunkId++;
   // We assume that this object doesn't suspend, but a child might.
-  const processedChunk = processModelChunk(request, outlinedId, value);
-  request.completedRegularChunks.push(processedChunk);
+  emitModelChunk(request, outlinedId, value);
   return outlinedId;
 }
 
@@ -1223,6 +1222,18 @@ function emitProviderChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitModelChunk(
+  request: Request,
+  id: number,
+  model: ReactClientValue,
+): void {
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(model, request.toJSON);
+  const row = id.toString(16) + ':' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
 function retryTask(request: Request, task: Task): void {
   if (task.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1283,8 +1294,7 @@ function retryTask(request: Request, task: Task): void {
       }
     }
 
-    const processedChunk = processModelChunk(request, task.id, value);
-    request.completedRegularChunks.push(processedChunk);
+    emitModelChunk(request, task.id, value);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
@@ -1521,17 +1531,6 @@ function importServerContexts(
 
 function serializeRowHeader(tag: string, id: number) {
   return id.toString(16) + ':' + tag;
-}
-
-function processModelChunk(
-  request: Request,
-  id: number,
-  model: ReactClientValue,
-): Chunk {
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, request.toJSON);
-  const row = id.toString(16) + ':' + json + '\n';
-  return stringToChunk(row);
 }
 
 function processReferenceChunk(
