@@ -9,8 +9,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ foo: [1, 2, 3], bar: [4, 5, 6] }],
+  isComponent: false,
 };
 
 ```
@@ -38,8 +38,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ foo: [1, 2, 3], bar: [4, 5, 6] }],
+  isComponent: false,
 };
 
 ```

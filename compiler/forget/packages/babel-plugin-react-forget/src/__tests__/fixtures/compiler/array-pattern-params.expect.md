@@ -10,8 +10,8 @@ function component([a, b]) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [["val1", "val2"]],
+  isComponent: false,
 };
 
 ```
@@ -59,8 +59,8 @@ function component(t16) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [["val1", "val2"]],
+  isComponent: false,
 };
 
 ```

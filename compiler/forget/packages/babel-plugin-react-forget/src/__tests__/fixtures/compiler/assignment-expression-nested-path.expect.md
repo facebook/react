@@ -11,8 +11,8 @@ function g(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: g,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ c: 2 }],
+  isComponent: false,
 };
 
 ```
@@ -39,8 +39,8 @@ function g(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: g,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ c: 2 }],
+  isComponent: false,
 };
 
 ```

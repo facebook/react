@@ -14,8 +14,8 @@ function bar(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: bar,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [["val1", "val2"]],
+  isComponent: false,
 };
 
 ```
@@ -44,8 +44,8 @@ function bar(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: bar,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [["val1", "val2"]],
+  isComponent: false,
 };
 
 ```
