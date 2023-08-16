@@ -128,6 +128,7 @@ import {
   REACT_SERVER_CONTEXT_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
+  REACT_POSTPONE_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -137,12 +138,14 @@ import {
   enableSuspenseAvoidThisFallbackFizz,
   enableFloat,
   enableCache,
+  enablePostpone,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFizzThenable';
+import type {Postpone} from 'react/src/ReactPostpone';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
@@ -241,6 +244,9 @@ export opaque type Request = {
   // emit a different response to the stream instead.
   onShellError: (error: mixed) => void,
   onFatalError: (error: mixed) => void,
+  // onPostpone is called when postpone() is called anywhere in the tree, which will defer
+  // rendering - e.g. to the client. This is considered intentional and not an error.
+  onPostpone: (reason: string) => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -278,6 +284,7 @@ export function createRequest(
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
 ): Request {
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
@@ -303,6 +310,7 @@ export function createRequest(
     completedBoundaries: ([]: Array<SuspenseBoundary>),
     partialBoundaries: ([]: Array<SuspenseBoundary>),
     onError: onError === undefined ? defaultErrorHandler : onError,
+    onPostpone: onPostpone === undefined ? noop : onPostpone,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
@@ -508,6 +516,12 @@ function captureBoundaryErrorDetailsDev(
   }
 }
 
+function logPostpone(request: Request, reason: string): void {
+  // If this callback errors, we intentionally let that error bubble up to become a fatal error
+  // so that someone fixes the error reporting instead of hiding it.
+  request.onPostpone(reason);
+}
+
 function logRecoverableError(request: Request, error: any): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
@@ -622,7 +636,21 @@ function renderSuspenseBoundary(
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.errorDigest = logRecoverableError(request, error);
+    let errorDigest;
+    if (
+      enablePostpone &&
+      typeof error === 'object' &&
+      error !== null &&
+      error.$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (error: any);
+      logPostpone(request, postponeInstance.message);
+      // TODO: Figure out a better signal than a magic digest value.
+      errorDigest = 'POSTPONE';
+    } else {
+      errorDigest = logRecoverableError(request, error);
+    }
+    newBoundary.errorDigest = errorDigest;
     if (__DEV__) {
       captureBoundaryErrorDetailsDev(newBoundary, error);
     }
@@ -1678,7 +1706,20 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  const errorDigest = logRecoverableError(request, error);
+  let errorDigest;
+  if (
+    enablePostpone &&
+    typeof error === 'object' &&
+    error !== null &&
+    error.$$typeof === REACT_POSTPONE_TYPE
+  ) {
+    const postponeInstance: Postpone = (error: any);
+    logPostpone(request, postponeInstance.message);
+    // TODO: Figure out a better signal than a magic digest value.
+    errorDigest = 'POSTPONE';
+  } else {
+    errorDigest = logRecoverableError(request, error);
+  }
   if (boundary === null) {
     fatalError(request, error);
   } else {

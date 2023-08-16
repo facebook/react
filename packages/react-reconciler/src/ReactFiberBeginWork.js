@@ -109,6 +109,7 @@ import {
   enableHostSingletons,
   enableFormActions,
   enableAsyncActions,
+  enablePostpone,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -2859,7 +2860,8 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      let digest, message, stack;
+      let digest: ?string;
+      let message, stack;
       if (__DEV__) {
         ({digest, message, stack} =
           getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
@@ -2867,19 +2869,23 @@ function updateDehydratedSuspenseComponent(
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       }
 
-      let error;
-      if (message) {
-        // eslint-disable-next-line react-internal/prod-error-codes
-        error = new Error(message);
-      } else {
-        error = new Error(
-          'The server could not finish this Suspense boundary, likely ' +
-            'due to an error during server rendering. Switched to ' +
-            'client rendering.',
-        );
+      let capturedValue = null;
+      // TODO: Figure out a better signal than encoding a magic digest value.
+      if (!enablePostpone || digest !== 'POSTPONE') {
+        let error;
+        if (message) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          error = new Error(message);
+        } else {
+          error = new Error(
+            'The server could not finish this Suspense boundary, likely ' +
+              'due to an error during server rendering. Switched to ' +
+              'client rendering.',
+          );
+        }
+        (error: any).digest = digest;
+        capturedValue = createCapturedValue<mixed>(error, digest, stack);
       }
-      (error: any).digest = digest;
-      const capturedValue = createCapturedValue<mixed>(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
