@@ -6,6 +6,7 @@
  */
 
 import { isValidIdentifier } from "@babel/types";
+import { CompilerError } from "../CompilerError";
 import {
   Environment,
   GotoVariant,
@@ -14,6 +15,7 @@ import {
   Instruction,
   InstructionValue,
   LoadGlobal,
+  Phi,
   Place,
   Primitive,
   assertConsistentIdentifiers,
@@ -116,25 +118,7 @@ function applyConstantPropagation(
     // Note that this analysis uses a single-pass only, so it will never fill in
     // phi values for blocks that have a back-edge.
     for (const phi of block.phis) {
-      let value: Primitive | LoadGlobal | null = null;
-      for (const [, operand] of phi.operands) {
-        const operandValue = constants.get(operand.id) ?? null;
-        if (operandValue === null) {
-          value = null;
-          break;
-        }
-        if (value === null) {
-          value = operandValue;
-        } else if (
-          operandValue.kind !== value.kind ||
-          (operandValue.kind === "Primitive" &&
-            value.kind === "Primitive" &&
-            operandValue.value !== value.value)
-        ) {
-          value = null;
-          break;
-        }
-      }
+      let value = evaluatePhi(phi, constants);
       if (value !== null) {
         constants.set(phi.id.id, value);
       }
@@ -185,6 +169,49 @@ function applyConstantPropagation(
   }
 
   return hasChanges;
+}
+
+function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
+  let value: Constant | null = null;
+  for (const [, operand] of phi.operands) {
+    const operandValue = constants.get(operand.id) ?? null;
+    // did not find a constant, can't constant propogate
+    if (operandValue === null) {
+      return null;
+    }
+
+    // first iteration of the loop, let's store the operand and continue
+    // looping.
+    if (value === null) {
+      value = operandValue;
+      continue;
+    }
+
+    // found different kinds of constants, can't constant propogate
+    if (operandValue.kind !== value.kind) {
+      return null;
+    }
+
+    switch (operandValue.kind) {
+      case "Primitive": {
+        CompilerError.invariant(value.kind === "Primitive", {
+          reason: "value kind expected to be Primitive",
+          loc: null,
+          suggestions: null,
+        });
+
+        // different constant values, can't constant propogate
+        if (operandValue.value !== value.value) {
+          return null;
+        }
+        break;
+      }
+      default:
+        return null;
+    }
+  }
+
+  return value;
 }
 
 function evaluateInstruction(

@@ -16,15 +16,17 @@ function Test() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Test() {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   const { tab } = useFoo();
-  tab === WAT ? WAT : BAR;
+  const currentTab = tab === WAT ? WAT : BAR;
+  const c_0 = $[0] !== currentTab;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Foo value={WAT} />;
-    $[0] = t0;
+  if (c_0) {
+    t0 = <Foo value={currentTab} />;
+    $[0] = currentTab;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 }
