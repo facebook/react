@@ -188,6 +188,47 @@ impl ScopeManager {
         }
     }
 
+    pub fn lookup_reference(
+        &self,
+        scope: ScopeId,
+        name: &str,
+        next_declaration: DeclarationId,
+    ) -> Option<&Declaration> {
+        let mut current = &self.scopes[scope.0];
+        let mut tdz_limit = Some(next_declaration);
+        loop {
+            if let Some(id) = current.declarations.get(name) {
+                let declaration = self.declaration(*id);
+
+                // Basic static check for TDZ violations. If there is still a
+                // tdz limit (see below where we reset when leaving function scopes)
+                // then we check if the declaration is let/const and came after the
+                // reference. If so it's a TDZ violation
+                if let Some(tdz_limit) = tdz_limit {
+                    if (declaration.kind == DeclarationKind::Let
+                        || declaration.kind == DeclarationKind::Const)
+                        && id.0 >= tdz_limit.0
+                    {
+                        return None;
+                    }
+                }
+                return Some(&self.declarations[id.0]);
+            }
+            if let Some(parent) = current.parent {
+                // When leaving a function scope, clear the tdz limit.
+                // This means we won't report TDZ violations for references
+                // inside functions to hoisted let/const variables defined
+                // outside the function
+                if current.kind == ScopeKind::Function {
+                    tdz_limit = None;
+                }
+                current = &self.scopes[parent.0];
+            } else {
+                return None;
+            }
+        }
+    }
+
     pub(crate) fn root_id(&self) -> ScopeId {
         self.root
     }
@@ -294,6 +335,10 @@ impl ScopeManager {
         });
         self.scopes[scope.0].references.push(id);
         id
+    }
+
+    pub(crate) fn next_declaration_id(&self) -> DeclarationId {
+        DeclarationId(self.declarations.len())
     }
 }
 

@@ -7,8 +7,8 @@ use forget_estree::{
 };
 
 use crate::{
-    AstNode, DeclarationKind, Label, LabelId, LabelKind, ReferenceKind, ScopeId, ScopeKind,
-    ScopeManager,
+    AstNode, DeclarationId, DeclarationKind, Label, LabelId, LabelKind, ReferenceKind, ScopeId,
+    ScopeKind, ScopeManager,
 };
 
 pub fn analyze(ast: &Program) -> ScopeManager {
@@ -31,6 +31,11 @@ pub struct UnresolvedReference {
     pub name: String,
     pub kind: ReferenceKind,
     pub range: Option<SourceRange>,
+    // The next declaration id at the time the reference was created
+    // this is used to detect a subset of TDZ violations, where a
+    // reference is trivially known to refer to a let/const declaration
+    // that cannot have been initialized yet.
+    pub next_declaration: DeclarationId,
 }
 
 impl Analyzer {
@@ -48,10 +53,11 @@ impl Analyzer {
 
     fn complete(mut self) -> ScopeManager {
         for reference in self.unresolved {
-            if let Some(declaration) = self
-                .manager
-                .lookup_declaration(reference.scope, &reference.name)
-            {
+            if let Some(declaration) = self.manager.lookup_reference(
+                reference.scope,
+                &reference.name,
+                reference.next_declaration,
+            ) {
                 let id =
                     self.manager
                         .add_reference(reference.scope, reference.kind, declaration.id);
@@ -188,6 +194,7 @@ impl Analyzer {
             name: name.to_string(),
             kind,
             range,
+            next_declaration: self.manager.next_declaration_id(),
         });
     }
 
@@ -224,6 +231,7 @@ impl Analyzer {
                 name: ast.name.to_string(),
                 kind: ReferenceKind::Write,
                 range: ast.range,
+                next_declaration: self.manager.next_declaration_id(),
             });
         }
     }
