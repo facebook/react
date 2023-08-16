@@ -29,10 +29,22 @@ const PLACEHOLDER_VALUE = Symbol();
   const seen = new Map();
 
   return JSON.stringify(result, (_key, val) => {
-    if (typeof val === "object") {
+    if (typeof val === "function") {
+      return `[[ function params=${val.length} ]]`;
+    } else if (typeof val === "object") {
       let id = seen.get(val);
       if (id != null) {
         return `[[ cyclic ref *${id} ]]`;
+      } else if (val instanceof Map) {
+        return {
+          kind: "Map",
+          value: Array.from(val.entries()), // or with spread: value: [...value]
+        };
+      } else if (val instanceof Set) {
+        return {
+          kind: "Set",
+          value: Array.from(val.values()), // or with spread: value: [...value]
+        };
       }
       seen.set(val, seen.size);
     }
@@ -56,7 +68,7 @@ export function doEval(source: string): EvaluatorResult {
     let exports = {
       FIXTURE_ENTRYPOINT: {
         fn: globalThis.placeholderFn,
-        args: [],
+        params: [],
         isComponent: false,
       },
     };
@@ -64,14 +76,18 @@ export function doEval(source: string): EvaluatorResult {
     try {
       ${source}
       reachedInvoke = true;
-
-      if (exports.FIXTURE_ENTRYPOINT.isComponent) {
+      if (exports.FIXTURE_ENTRYPOINT == null || exports.FIXTURE_ENTRYPOINT.fn === globalThis.placeholderFn) {
+        return {
+          kind: "UnexpectedError",
+          value: 'FIXTURE_ENTRYPOINT not exported!',
+        };
+      } else if (exports.FIXTURE_ENTRYPOINT.isComponent) {
         // try to run fixture as a react component
         const result = render(
           React.createElement(
             exports.FIXTURE_ENTRYPOINT.fn,
             exports.FIXTURE_ENTRYPOINT.params)
-        ).asFragment().textContent;
+        ).container.innerHTML;
 
         return {
           kind: "ok",
@@ -83,7 +99,7 @@ export function doEval(source: string): EvaluatorResult {
             WrapperTestComponent,
             exports.FIXTURE_ENTRYPOINT
           )
-        ).asFragment().textContent;
+        ).container.innerHTML;
 
         return {
           kind: "ok",
@@ -95,11 +111,6 @@ export function doEval(source: string): EvaluatorResult {
         return {
           kind: "UnexpectedError",
           value: e.toString(),
-        };
-      } else if (e === PLACEHOLDER_VALUE) {
-        return {
-          kind: "UnexpectedError",
-          value: 'FIXTURE_ENTRYPOINT not defined!',
         };
       } else {
         return {

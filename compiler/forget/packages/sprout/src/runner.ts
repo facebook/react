@@ -37,6 +37,7 @@ process.on("SIGTERM", function () {
 type RunnerOptions = {
   filter: boolean;
   sync: boolean;
+  verbose: boolean;
 };
 
 const opts: RunnerOptions = yargs
@@ -52,6 +53,9 @@ const opts: RunnerOptions = yargs
     `Evaluate fixtures in filter mode ("${FILTER_FILENAME}")\n`
   )
   .default("filter", false)
+  .boolean("verbose")
+  .describe("verbose", "Print results of passing fixtures.")
+  .default("verbose", false)
   .help("help")
   .strict()
   .parseSync(hideBin(process.argv));
@@ -64,7 +68,8 @@ function logsEqual(a: Array<string>, b: Array<string>) {
 }
 
 function reportResults(
-  results: Array<[string, RunnerWorker.TestResult]>
+  results: Array<[string, RunnerWorker.TestResult]>,
+  verbose: boolean
 ): boolean {
   const failures: Array<[string, RunnerWorker.TestResult]> = [];
 
@@ -92,6 +97,15 @@ function reportResults(
       console.log(
         chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(fixtureName)
       );
+      if (verbose) {
+        console.log(
+          ` ${forgetResult.kind} ${forgetResult.value} ${
+            forgetResult.logs.length > 0
+              ? JSON.stringify(forgetResult.logs, undefined, 2)
+              : ""
+          }`
+        );
+      }
     }
   }
 
@@ -139,7 +153,6 @@ function reportResults(
               2
             )}\nFound: ${JSON.stringify(nonForgetResult, undefined, 2)}`
         );
-        failures.push([fixtureName, result]);
       }
     }
   }
@@ -196,7 +209,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     }
   }
 
-  const isSuccess = reportResults(results);
+  const isSuccess = reportResults(results, opts.verbose);
   process.exit(isSuccess ? 0 : 1);
 }
 
