@@ -7,8 +7,16 @@
 
 import watcher from "@parcel/watcher";
 import chalk from "chalk";
-import { COMPILER_PATH, LOGGER_PATH, FIXTURES_PATH, FILTER_FILENAME, FILTER_PATH, readTestFilter, TestFilter } from 'fixture-test-utils';
-import fs from "fs/promises";
+import {
+  COMPILER_PATH,
+  LOGGER_PATH,
+  FIXTURES_PATH,
+  FILTER_FILENAME,
+  FILTER_PATH,
+  readTestFilter,
+  TestFilter,
+} from "fixture-test-utils";
+import fs from "fs";
 import invariant from "invariant";
 import { diff } from "jest-diff";
 import { Worker } from "jest-worker";
@@ -20,7 +28,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { TestResult } from "./compiler-worker";
 import * as compiler from "./compiler-worker";
-import {getFixtures} from 'fixture-test-utils';
+import { getFixtures } from "fixture-test-utils";
 
 const WORKER_PATH = require.resolve("./compiler-worker.js");
 
@@ -216,7 +224,7 @@ async function update(results: Results): Promise<void> {
         chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename)
       );
       try {
-        await fs.unlink(result.outputPath);
+        fs.unlinkSync(result.outputPath);
         console.log(" remove  " + result.outputPath);
         deleted++;
       } catch (e) {
@@ -230,7 +238,7 @@ async function update(results: Results): Promise<void> {
       console.log(
         chalk.blue.inverse.bold(" UPDATE ") + " " + chalk.dim(basename)
       );
-      await fs.writeFile(result.outputPath, result.actual, "utf8");
+      fs.writeFileSync(result.outputPath, result.actual, "utf8");
       if (result.expected == null) {
         created++;
       } else {
