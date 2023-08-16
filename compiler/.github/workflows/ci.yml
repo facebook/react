@@ -15,6 +15,11 @@ jobs:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: forget/yarn.lock
+      - name: cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
         working-directory: forget
       - run: yarn build
