@@ -157,7 +157,7 @@ impl Analyzer {
                 Analyzer::visit_declaration_pattern(
                     visitor,
                     param,
-                    Some(DeclarationKind::FunctionDeclaration),
+                    Some(DeclarationKind::Function),
                 );
             }
 
@@ -204,22 +204,9 @@ impl Analyzer {
         decl_kind: Option<DeclarationKind>,
     ) {
         if let Some(decl_kind) = decl_kind {
-            // Declaring a "new" variable, report an error if this is a duplicate
-            // definition. In either case, we create a new declaration. Ie we
-            // act as if shadowing is allowed in the language
-            let previous_declaration = self.manager.lookup_declaration(self.current, &ast.name);
-            if let Some(previous_declaration) = previous_declaration {
-                if previous_declaration.scope == self.current {
-                    // duplicate definition in the same scope
-                    self.manager.diagnostics.push(Diagnostic::invalid_syntax(
-                        "Duplicate declaration",
-                        ast.range,
-                    ));
-                }
-            }
-            let id = self
-                .manager
-                .add_declaration(self.current, ast.name.clone(), decl_kind);
+            let id =
+                self.manager
+                    .add_declaration(self.current, ast.name.clone(), decl_kind, ast.range);
             self.manager
                 .node_declarations
                 .insert(AstNode::from(ast), id);
@@ -350,7 +337,8 @@ impl Visitor for Analyzer {
             let declaration = self.manager.add_declaration(
                 self.current,
                 id.name.clone(),
-                DeclarationKind::FunctionDeclaration,
+                DeclarationKind::Function,
+                id.range,
             );
             self.manager
                 .node_declarations
@@ -366,7 +354,8 @@ impl Visitor for Analyzer {
             let declaration = self.manager.add_declaration(
                 self.current,
                 id.name.clone(),
-                DeclarationKind::FunctionDeclaration,
+                DeclarationKind::Function,
+                id.range,
             );
             self.manager
                 .node_declarations

@@ -1,6 +1,6 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
-    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceType,
+    BreakStatement, ContinueStatement, ESTreeNode, LabeledStatement, SourceRange, SourceType,
     VariableDeclarationKind,
 };
 use forget_utils::PointerAddress;
@@ -174,20 +174,6 @@ impl ScopeManager {
             })
     }
 
-    pub fn lookup_declaration(&self, scope: ScopeId, name: &str) -> Option<&Declaration> {
-        let mut current = &self.scopes[scope.0];
-        loop {
-            if let Some(id) = current.declarations.get(name) {
-                return Some(&self.declarations[id.0]);
-            }
-            if let Some(parent) = current.parent {
-                current = &self.scopes[parent.0];
-            } else {
-                return None;
-            }
-        }
-    }
-
     pub fn lookup_reference(
         &self,
         scope: ScopeId,
@@ -271,20 +257,86 @@ impl ScopeManager {
 
     pub(crate) fn add_declaration(
         &mut self,
-        scope: ScopeId,
+        scope_id: ScopeId,
         name: String,
         kind: DeclarationKind,
+        range: Option<SourceRange>,
     ) -> DeclarationId {
-        let hoisted_scope = self.get_scope_for_declaration(scope, kind);
+        let scope = self.scope(scope_id);
+        // Determine the scope to which this declaration should be hoisted. This mainly applies to var declarations
+        let hoisted_scope_id = self.get_scope_for_declaration(scope_id, kind);
 
+        // Check for redeclaration. The rules are roughly:
+        // * `var` can be redeclared any number of times in a given scope. These redeclarations have no effect,
+        //    subsequent declarations are equivalent to just reassigning a value to the original declaration.
+        //    ie `var a = 1; var a = 2;` is equivalent to `var a; a = 1; a = 2`.
+        // * Other forms (in strict mode) may not be redeclared in a given scope.
+        // * This implies that `var` cannot conflict with other types of declarations, either in the scope
+        //   at which they are declared or the scope to which the var will hoist:
+        //   * `function() { {let a; var a;} }` conflicts at the declaration scope, even though the var will hoise above.
+        //   * `function() { let a; { var a; } }` conflicts bc the var hoists to the scope w a conflicting let.
+        match kind {
+            DeclarationKind::Var => {
+                if let Some(declaration) = scope.declarations.get(&name) {
+                    let declaration = self.declaration(*declaration);
+                    if is_block_scoped_declaration(declaration.kind) {
+                        // Var cannot be declared in the same scope as let/const/class/import/etc
+                        self.diagnostics
+                            .push(Diagnostic::invalid_syntax("Duplicate declaration", range));
+                    }
+                } else if hoisted_scope_id != scope_id {
+                    if let Some(declaration) = self.scope(hoisted_scope_id).declarations.get(&name)
+                    {
+                        let declaration = self.declaration(*declaration);
+                        if is_block_scoped_declaration(declaration.kind) {
+                            // Var cannot *hoist* to the same scope as let/const/class/import/etc
+                            self.diagnostics
+                                .push(Diagnostic::invalid_syntax("Duplicate declaration", range));
+                        }
+                    }
+                }
+                // Redeclaration of `var` in a given scope has no effect, subsequent declarations
+                // are equivalent to re-declarations
+                // ie `var a = 1; var a = 2;` is equivalent to `var a; a = 1; a = 2`.
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var#redeclarations
+                if let Some(declaration) = self.scope(hoisted_scope_id).declarations.get(&name) {
+                    let declaration = self.declaration(*declaration);
+                    if declaration.kind == DeclarationKind::Var {
+                        return declaration.id;
+                    }
+                }
+            }
+            DeclarationKind::CatchClause
+            | DeclarationKind::Let
+            | DeclarationKind::Const
+            | DeclarationKind::Import
+            | DeclarationKind::Class
+            | DeclarationKind::Function => {
+                // When duplicate declarations occur we report an error and then resolve references to the
+                // first declaration. It doesn't really matter which declaration we refer to, because
+                // semantic results are invalid if there are errors. The main consideration is that we do
+                // not want to report a "cannot find declaration for `x`" reference error just because there
+                // were duplicate declarations of `x`.
+                if let Some(_declaration) = scope.declarations.get(&name) {
+                    self.diagnostics
+                        .push(Diagnostic::invalid_syntax("Duplicate declaration", range));
+                }
+            }
+        }
+
+        // Always create a new declaration and id...
         let id = DeclarationId(self.declarations.len());
         self.declarations.push(Declaration {
             id,
             kind,
             name: name.clone(),
-            scope: hoisted_scope,
+            scope: hoisted_scope_id,
         });
-        self.scopes[hoisted_scope.0].declarations.insert(name, id);
+        // ...but only save the first declaration for a given name in each scope
+        self.scopes[hoisted_scope_id.0]
+            .declarations
+            .entry(name)
+            .or_insert(id);
         id
     }
 
@@ -294,8 +346,8 @@ impl ScopeManager {
             | DeclarationKind::Import
             | DeclarationKind::Const
             | DeclarationKind::CatchClause
-            | DeclarationKind::For => scope,
-            DeclarationKind::Var | DeclarationKind::FunctionDeclaration => {
+            | DeclarationKind::Class => scope,
+            DeclarationKind::Var | DeclarationKind::Function => {
                 let mut current = scope;
                 loop {
                     let scope = self.scope(current);
@@ -339,6 +391,18 @@ impl ScopeManager {
 
     pub(crate) fn next_declaration_id(&self) -> DeclarationId {
         DeclarationId(self.declarations.len())
+    }
+}
+
+fn is_block_scoped_declaration(kind: DeclarationKind) -> bool {
+    match kind {
+        DeclarationKind::Let
+        | DeclarationKind::Const
+        | DeclarationKind::Import
+        | DeclarationKind::Class
+        | DeclarationKind::Function
+        | DeclarationKind::CatchClause => true,
+        DeclarationKind::Var => false,
     }
 }
 
@@ -393,11 +457,11 @@ pub struct Label {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub enum DeclarationKind {
+    Class,
     Const,
     Var,
     Let,
-    FunctionDeclaration,
-    For,
+    Function,
     CatchClause,
     Import,
 }

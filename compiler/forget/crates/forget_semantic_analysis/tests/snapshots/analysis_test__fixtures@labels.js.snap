@@ -30,7 +30,7 @@ Scope {
             id: DeclarationId(
                 0,
             ),
-            kind: FunctionDeclaration,
+            kind: Function,
             scope: ScopeId(
                 0,
             ),
@@ -48,7 +48,7 @@ Scope {
                     id: DeclarationId(
                         1,
                     ),
-                    kind: FunctionDeclaration,
+                    kind: Function,
                     scope: ScopeId(
                         1,
                     ),

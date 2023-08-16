@@ -1,6 +1,8 @@
+import { useMemo } from "react";
+
 function Component(x) {
-  const x = useMemo(() => {
-    return y;
+  const y = useMemo(() => {
+    return x;
   });
-  return x;
+  return y;
 }

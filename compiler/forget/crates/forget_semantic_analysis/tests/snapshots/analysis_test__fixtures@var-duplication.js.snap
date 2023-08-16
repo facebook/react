@@ -1,25 +1,37 @@
 ---
 source: crates/forget_semantic_analysis/tests/analysis_test.rs
 expression: "format!(\"Input:\\n{input}\\n\\nAnalysis:\\n{output}\")"
-input_file: crates/forget_semantic_analysis/tests/fixtures/globals-and-imports.js
+input_file: crates/forget_semantic_analysis/tests/fixtures/var-duplication.js
 ---
 Input:
-import Foo from "foo";
-import * as Bar from "bar";
-import { Baz } from "baz";
+function Component() {
+  let a;
+  {
+    var a; // error, conflicts when hoisted
+  }
 
-function Component(props) {
-  let g = global;
-  let y = new Array(props.count);
-  let s = String("hello");
-  let b = Boolean(true);
-  let n = Number(0);
-  let x = Math.min(props.x, props.y);
-  setTimeout(() => {}, 0);
-  setInterval(() => {}, 0);
-  Foo;
-  Bar;
-  Baz;
+  const b = 1;
+  {
+    var b; // error, conflicts
+  }
+
+  {
+    let c;
+    var c; // error, conflicts
+  }
+
+  {
+    const d = 2;
+    var d; // error, conflicts
+  }
+
+  // there should be one instance of `e`:
+  var e = 3;
+  console.log(e); // 3
+  var e = 4;
+  console.log(e); // 4
+  var e;
+  console.log(e); // 4
 }
 
 
@@ -30,36 +42,9 @@ Scope {
     ),
     kind: Module,
     declarations: {
-        "Foo": Declaration {
-            id: DeclarationId(
-                0,
-            ),
-            kind: Import,
-            scope: ScopeId(
-                0,
-            ),
-        },
-        "Bar": Declaration {
-            id: DeclarationId(
-                1,
-            ),
-            kind: Import,
-            scope: ScopeId(
-                0,
-            ),
-        },
-        "Baz": Declaration {
-            id: DeclarationId(
-                2,
-            ),
-            kind: Import,
-            scope: ScopeId(
-                0,
-            ),
-        },
         "Component": Declaration {
             id: DeclarationId(
-                3,
+                0,
             ),
             kind: Function,
             scope: ScopeId(
@@ -75,36 +60,9 @@ Scope {
             ),
             kind: Function,
             declarations: {
-                "props": Declaration {
+                "a": Declaration {
                     id: DeclarationId(
-                        4,
-                    ),
-                    kind: Function,
-                    scope: ScopeId(
                         1,
-                    ),
-                },
-                "g": Declaration {
-                    id: DeclarationId(
-                        5,
-                    ),
-                    kind: Let,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "y": Declaration {
-                    id: DeclarationId(
-                        6,
-                    ),
-                    kind: Let,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "s": Declaration {
-                    id: DeclarationId(
-                        7,
                     ),
                     kind: Let,
                     scope: ScopeId(
@@ -113,27 +71,36 @@ Scope {
                 },
                 "b": Declaration {
                     id: DeclarationId(
-                        8,
+                        3,
                     ),
-                    kind: Let,
+                    kind: Const,
                     scope: ScopeId(
                         1,
                     ),
                 },
-                "n": Declaration {
+                "c": Declaration {
+                    id: DeclarationId(
+                        6,
+                    ),
+                    kind: Var,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "d": Declaration {
+                    id: DeclarationId(
+                        8,
+                    ),
+                    kind: Var,
+                    scope: ScopeId(
+                        1,
+                    ),
+                },
+                "e": Declaration {
                     id: DeclarationId(
                         9,
                     ),
-                    kind: Let,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "x": Declaration {
-                    id: DeclarationId(
-                        10,
-                    ),
-                    kind: Let,
+                    kind: Var,
                     scope: ScopeId(
                         1,
                     ),
@@ -146,9 +113,9 @@ Scope {
                     ),
                     kind: Read,
                     declaration: DeclarationId(
-                        4,
+                        9,
                     ),
-                    declaration (name): "props",
+                    declaration (name): "e",
                     scope: ScopeId(
                         1,
                     ),
@@ -159,9 +126,9 @@ Scope {
                     ),
                     kind: Read,
                     declaration: DeclarationId(
-                        4,
+                        9,
                     ),
-                    declaration (name): "props",
+                    declaration (name): "e",
                     scope: ScopeId(
                         1,
                     ),
@@ -172,48 +139,9 @@ Scope {
                     ),
                     kind: Read,
                     declaration: DeclarationId(
-                        4,
+                        9,
                     ),
-                    declaration (name): "props",
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                Reference {
-                    id: ReferenceId(
-                        3,
-                    ),
-                    kind: Read,
-                    declaration: DeclarationId(
-                        0,
-                    ),
-                    declaration (name): "Foo",
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                Reference {
-                    id: ReferenceId(
-                        4,
-                    ),
-                    kind: Read,
-                    declaration: DeclarationId(
-                        1,
-                    ),
-                    declaration (name): "Bar",
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                Reference {
-                    id: ReferenceId(
-                        5,
-                    ),
-                    kind: Read,
-                    declaration: DeclarationId(
-                        2,
-                    ),
-                    declaration (name): "Baz",
+                    declaration (name): "e",
                     scope: ScopeId(
                         1,
                     ),
@@ -224,7 +152,7 @@ Scope {
                     id: ScopeId(
                         2,
                     ),
-                    kind: Function,
+                    kind: Block,
                     declarations: {},
                     references: [],
                     children: [],
@@ -233,8 +161,46 @@ Scope {
                     id: ScopeId(
                         3,
                     ),
-                    kind: Function,
+                    kind: Block,
                     declarations: {},
+                    references: [],
+                    children: [],
+                },
+                Scope {
+                    id: ScopeId(
+                        4,
+                    ),
+                    kind: Block,
+                    declarations: {
+                        "c": Declaration {
+                            id: DeclarationId(
+                                5,
+                            ),
+                            kind: Let,
+                            scope: ScopeId(
+                                4,
+                            ),
+                        },
+                    },
+                    references: [],
+                    children: [],
+                },
+                Scope {
+                    id: ScopeId(
+                        5,
+                    ),
+                    kind: Block,
+                    declarations: {
+                        "d": Declaration {
+                            id: DeclarationId(
+                                7,
+                            ),
+                            kind: Const,
+                            scope: ScopeId(
+                                5,
+                            ),
+                        },
+                    },
                     references: [],
                     children: [],
                 },
@@ -244,13 +210,61 @@ Scope {
 }
 Diagnostic(
     DiagnosticData {
-        message: "Undefined variable",
+        message: "Duplicate declaration",
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    117,
+                    44,
                 ),
-                length: 6,
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    112,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    163,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Duplicate declaration",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    220,
+                ),
+                length: 1,
             },
         ),
         related_information: [],
@@ -264,39 +278,7 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    139,
-                ),
-                length: 5,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    169,
-                ),
-                length: 6,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    196,
+                    305,
                 ),
                 length: 7,
             },
@@ -312,9 +294,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    221,
+                    341,
                 ),
-                length: 6,
+                length: 7,
             },
         ),
         related_information: [],
@@ -328,41 +310,9 @@ Diagnostic(
         span: Some(
             SourceSpan {
                 offset: SourceOffset(
-                    242,
+                    373,
                 ),
-                length: 4,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    272,
-                ),
-                length: 10,
-            },
-        ),
-        related_information: [],
-        severity: InvalidSyntax,
-        data: [],
-    },
-)
-Diagnostic(
-    DiagnosticData {
-        message: "Undefined variable",
-        span: Some(
-            SourceSpan {
-                offset: SourceOffset(
-                    299,
-                ),
-                length: 11,
+                length: 7,
             },
         ),
         related_information: [],

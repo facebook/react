@@ -21,7 +21,17 @@ fn fixtures() {
 
         let mut output = String::new();
 
-        let analysis = analyze(&ast);
+        let mut analysis = analyze(&ast);
+        let diagnostics = analysis.diagnostics();
+        if !diagnostics.is_empty() {
+            for diagnostic in diagnostics {
+                eprintln!(
+                    "{:?}",
+                    Report::new(diagnostic)
+                        .with_source_code(NamedSource::new(path.to_string_lossy(), input.clone(),))
+                );
+            }
+        }
         let environment = Environment::new(
             Features {
                 validate_frozen_lambdas: true,
