@@ -38,6 +38,12 @@ function foo(props) {
   );
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -122,6 +128,12 @@ function foo(props) {
   }
   return t2;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

@@ -11,6 +11,12 @@ function Component(props) {
   return [x, y];
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -50,6 +56,12 @@ function Component(props) {
   }
   return t2;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

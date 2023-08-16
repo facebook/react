@@ -3,3 +3,9 @@ function Foo(props) {
   const { unused, ...rest } = props.a;
   return rest;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

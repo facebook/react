@@ -4,3 +4,9 @@ function foo(a, b) {
   y.push(b);
   x.push(a);
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

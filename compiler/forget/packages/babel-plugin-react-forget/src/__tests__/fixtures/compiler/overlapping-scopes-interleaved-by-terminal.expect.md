@@ -13,6 +13,12 @@ function foo(a, b, c) {
   x.push(b);
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -27,6 +33,12 @@ function foo(a, b, c) {
   y.push(a);
   x.push(b);
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

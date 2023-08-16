@@ -8,3 +8,9 @@ function Component(props) {
 
   return <input value={x} onChange={onChange} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

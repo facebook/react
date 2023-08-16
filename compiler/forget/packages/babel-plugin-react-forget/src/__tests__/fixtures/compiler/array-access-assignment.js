@@ -6,3 +6,9 @@ function foo(a, b, c) {
   z[0][0] = x[0];
   return [x, z];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

@@ -4,3 +4,9 @@ function g(props) {
   a.b.c *= 2;
   return a;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: g,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

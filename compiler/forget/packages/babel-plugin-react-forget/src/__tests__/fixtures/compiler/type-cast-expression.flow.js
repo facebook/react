@@ -7,3 +7,8 @@ function Component(props) {
     const z = (y: Foo);
     return z;
 }
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

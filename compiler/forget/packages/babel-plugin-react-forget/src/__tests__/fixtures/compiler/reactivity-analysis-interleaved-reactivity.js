@@ -17,3 +17,9 @@ function Component(props) {
   //  assert(c[0] === a);
   return [c, a];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

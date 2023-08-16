@@ -8,6 +8,12 @@ function component([a, b]) {
   return [y, z];
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -50,6 +56,12 @@ function component(t16) {
   }
   return t2;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

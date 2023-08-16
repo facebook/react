@@ -11,6 +11,12 @@ function MyApp(props) {
   }
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: MyApp,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -21,6 +27,12 @@ function MyApp(props) {
     return;
   }
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: MyApp,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

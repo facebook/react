@@ -22,6 +22,12 @@ function foo(a, b, c) {
   return [d, f, g, h, n, o, p];
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -97,6 +103,12 @@ function foo(a, b, c) {
   }
   return t5;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

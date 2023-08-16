@@ -8,3 +8,9 @@ function f(a, b) {
 
   return <div>{x}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

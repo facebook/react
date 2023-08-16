@@ -6,3 +6,9 @@ export function Component(props) {
     </div>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

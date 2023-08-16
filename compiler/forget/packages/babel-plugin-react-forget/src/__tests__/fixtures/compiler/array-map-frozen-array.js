@@ -4,3 +4,9 @@ function Component(props) {
   const y = x.map((item) => item);
   return [x, y];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

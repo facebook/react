@@ -4,3 +4,9 @@ function Component(props) {
   const y = a.push;
   return { a, x, y, z: a.concat };
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

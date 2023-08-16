@@ -13,6 +13,12 @@ function component(props) {
   return { a, b };
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -37,6 +43,12 @@ function component(props) {
   }
   return t0;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

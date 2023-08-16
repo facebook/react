@@ -10,6 +10,12 @@ function f(a) {
   return <div x={x} />;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -41,6 +47,12 @@ function f(a) {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: f,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

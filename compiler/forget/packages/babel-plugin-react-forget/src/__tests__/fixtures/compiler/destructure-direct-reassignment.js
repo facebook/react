@@ -5,3 +5,9 @@ function foo(props) {
   x = props.c;
   return x + y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

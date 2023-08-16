@@ -7,3 +7,9 @@ function TestNonOverlappingDescendantTracked(props) {
   x.c = props.a.c.x.y.z;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: TestNonOverlappingDescendantTracked,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

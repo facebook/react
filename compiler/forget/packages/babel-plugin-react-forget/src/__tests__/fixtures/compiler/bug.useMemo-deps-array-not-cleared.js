@@ -7,3 +7,9 @@ function App({ text, hasDeps }) {
   );
   return resolvedText;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: App,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

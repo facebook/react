@@ -6,3 +6,9 @@ function foo(a) {
   }
   return a + x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

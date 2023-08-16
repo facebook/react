@@ -9,3 +9,9 @@ function component(a) {
   let f = typeof t.t;
   return { z, p, q, n, m, e, f };
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

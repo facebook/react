@@ -8,6 +8,12 @@ function component(props) {
   return a ? b : props.c;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -18,6 +24,12 @@ function component(props) {
   const b = (props.a && props.b && props.c) || props.d;
   return a ? b : props.c;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

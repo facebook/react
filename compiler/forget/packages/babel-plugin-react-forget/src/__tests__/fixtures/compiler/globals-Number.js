@@ -3,3 +3,9 @@ function Component(props) {
   const y = Number(x);
   return [x, y];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

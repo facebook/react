@@ -12,6 +12,12 @@ function App({ text, hasDeps }) {
   return resolvedText;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: App,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -36,6 +42,12 @@ function App(t25) {
   const resolvedText = t18;
   return resolvedText;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: App,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

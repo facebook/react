@@ -6,3 +6,9 @@ function component(a) {
   x();
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

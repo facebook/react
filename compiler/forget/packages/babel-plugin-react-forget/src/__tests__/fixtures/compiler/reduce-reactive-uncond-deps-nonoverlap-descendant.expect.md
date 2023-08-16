@@ -12,6 +12,12 @@ function TestNonOverlappingDescendantTracked(props) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: TestNonOverlappingDescendantTracked,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -39,6 +45,12 @@ function TestNonOverlappingDescendantTracked(props) {
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: TestNonOverlappingDescendantTracked,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

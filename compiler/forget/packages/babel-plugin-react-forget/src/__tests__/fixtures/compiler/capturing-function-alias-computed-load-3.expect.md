@@ -14,6 +14,12 @@ function bar(a, b) {
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: bar,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -42,6 +48,12 @@ function bar(a, b) {
   }
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: bar,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

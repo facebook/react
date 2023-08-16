@@ -6,3 +6,9 @@ function MyApp(props) {
     res = 1;
   }
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: MyApp,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

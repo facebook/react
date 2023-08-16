@@ -33,3 +33,9 @@ function foo(props) {
     </>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

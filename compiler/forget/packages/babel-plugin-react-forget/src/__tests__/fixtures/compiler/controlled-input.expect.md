@@ -2,18 +2,25 @@
 ## Input
 
 ```javascript
+import { useState } from "react";
 function component() {
   let [x, setX] = useState(0);
   const handler = (event) => setX(event.target.value);
   return <input onChange={handler} value={x} />;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+  isComponent: true,
+};
+
 ```
 
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { useState, unstable_useMemoCache as useMemoCache } from "react";
 function component() {
   const $ = useMemoCache(4);
   const [x, setX] = useState(0);
@@ -38,6 +45,12 @@ function component() {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: component,
+  params: [],
+  isComponent: true,
+};
 
 ```
       

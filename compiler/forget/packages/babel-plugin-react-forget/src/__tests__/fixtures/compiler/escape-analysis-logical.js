@@ -6,3 +6,9 @@ function Component(props) {
   // that any of a, b, or c could return here
   return (a && b) || c;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

@@ -17,3 +17,9 @@ function foo(a, b, c) {
   } = b;
   return [d, f, g, h, n, o, p];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

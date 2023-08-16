@@ -4,3 +4,9 @@ function Component(props) {
   delete x[key];
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

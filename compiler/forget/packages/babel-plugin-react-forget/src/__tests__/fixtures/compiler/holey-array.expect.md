@@ -8,6 +8,12 @@ function t(props) {
   return props.foo;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: t,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -18,6 +24,12 @@ function t(props) {
   setstate(1);
   return props.foo;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: t,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

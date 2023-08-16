@@ -7,6 +7,12 @@ function StoreLandingUnseenGiftModalContainer(a) {
   return ((gift) => (gift.id ? giftsSeen[gift.id] : false))();
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: StoreLandingUnseenGiftModalContainer,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -27,6 +33,12 @@ function StoreLandingUnseenGiftModalContainer(a) {
   }
   return t0;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: StoreLandingUnseenGiftModalContainer,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

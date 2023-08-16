@@ -7,3 +7,9 @@ function TestOverlappingTracked(props) {
   x.a = props.a;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: TestOverlappingTracked,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

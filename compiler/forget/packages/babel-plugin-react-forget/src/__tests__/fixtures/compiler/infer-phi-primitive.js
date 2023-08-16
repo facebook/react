@@ -9,3 +9,9 @@ function foo(a, b) {
   let y = x;
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

@@ -8,3 +8,9 @@ function Component(a, [b], { c }) {
   let i = --c;
   return [a, b, c, d, e, f, g, h, i];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};

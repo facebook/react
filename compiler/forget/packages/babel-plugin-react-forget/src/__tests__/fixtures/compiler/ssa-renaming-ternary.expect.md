@@ -9,6 +9,12 @@ function foo(props) {
   return x;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
+
 ```
 
 ## Code
@@ -30,6 +36,12 @@ function foo(props) {
   props.cond ? ((x = []), x.push(props.foo)) : null;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
 
 ```
       

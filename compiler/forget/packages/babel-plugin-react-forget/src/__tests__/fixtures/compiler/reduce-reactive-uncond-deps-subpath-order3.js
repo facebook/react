@@ -7,3 +7,9 @@ function TestDepsSubpathOrder3(props) {
   x.b = props.a.b;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: TestDepsSubpathOrder3,
+  params: ["TodoAdd"],
+  isComponent: "TodoAdd",
+};
