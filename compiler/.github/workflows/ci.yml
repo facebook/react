@@ -22,11 +22,5 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
         working-directory: forget
-      - run: yarn build
-        working-directory: forget
-      - run: yarn workspace babel-plugin-react-forget run prettier:ci
-        working-directory: forget
-      - run: yarn workspace babel-plugin-react-forget run lint
-        working-directory: forget
       - run: yarn test
         working-directory: forget

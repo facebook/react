@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && tsc",
-    "test": "yarn jest && yarn snap:build && yarn snap && yarn sprout:build && yarn sprout",
+    "test": "yarn prettier:ci && yarn lint && yarn jest && yarn snap:build && yarn snap && yarn sprout:build && yarn sprout",
     "jest": "tsc && ts-node \"$(yarn --silent which jest)\"",
     "snap": "node ../snap/dist/main.js",
     "sprout": "node ../sprout/dist/main.js",
