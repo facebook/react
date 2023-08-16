@@ -628,6 +628,20 @@ function serializeBigInt(n: bigint): string {
   return '$n' + n.toString(10);
 }
 
+function serializeRowHeader(tag: string, id: number) {
+  return id.toString(16) + ':' + tag;
+}
+
+function encodeReferenceChunk(
+  request: Request,
+  id: number,
+  reference: string,
+): Chunk {
+  const json = stringify(reference);
+  const row = id.toString(16) + ':' + json + '\n';
+  return stringToChunk(row);
+}
+
 function serializeClientReference(
   request: Request,
   parent:
@@ -1208,7 +1222,7 @@ function emitHintChunk(request: Request, code: string, model: HintModel): void {
 
 function emitSymbolChunk(request: Request, id: number, name: string): void {
   const symbolReference = serializeSymbolReference(name);
-  const processedChunk = processReferenceChunk(request, id, symbolReference);
+  const processedChunk = encodeReferenceChunk(request, id, symbolReference);
   request.completedImportChunks.push(processedChunk);
 }
 
@@ -1218,7 +1232,7 @@ function emitProviderChunk(
   contextName: string,
 ): void {
   const contextReference = serializeProviderReference(contextName);
-  const processedChunk = processReferenceChunk(request, id, contextReference);
+  const processedChunk = encodeReferenceChunk(request, id, contextReference);
   request.completedRegularChunks.push(processedChunk);
 }
 
@@ -1355,7 +1369,7 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
   const ref = serializeByValueID(errorId);
-  const processedChunk = processReferenceChunk(request, task.id, ref);
+  const processedChunk = encodeReferenceChunk(request, task.id, ref);
   request.completedErrorChunks.push(processedChunk);
 }
 
@@ -1527,18 +1541,4 @@ function importServerContexts(
     return importedContext;
   }
   return rootContextSnapshot;
-}
-
-function serializeRowHeader(tag: string, id: number) {
-  return id.toString(16) + ':' + tag;
-}
-
-function processReferenceChunk(
-  request: Request,
-  id: number,
-  reference: string,
-): Chunk {
-  const json = stringify(reference);
-  const row = id.toString(16) + ':' + json + '\n';
-  return stringToChunk(row);
 }
