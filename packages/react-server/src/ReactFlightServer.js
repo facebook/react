@@ -9,7 +9,9 @@
 
 import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
-import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
+import type {Postpone} from 'react/src/ReactPostpone';
+
+import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -87,6 +89,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_POSTPONE_TYPE,
   REACT_PROVIDER_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -189,6 +192,7 @@ export type Request = {
   identifierPrefix: string,
   identifierCount: number,
   onError: (error: mixed) => ?string,
+  onPostpone: (reason: string) => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
@@ -198,6 +202,10 @@ const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
   // Don't transform to our wrapper
+}
+
+function defaultPostponeHandler(reason: string) {
+  // Noop
 }
 
 const OPEN = 0;
@@ -210,6 +218,7 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
+  onPostpone: void | ((reason: string) => void),
 ): Request {
   if (
     ReactCurrentCache.current !== null &&
@@ -248,6 +257,7 @@ export function createRequest(
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     onError: onError === undefined ? defaultErrorHandler : onError,
+    onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
     // $FlowFixMe[missing-this-annot]
     toJSON: function (key: string, value: ReactClientValue): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -297,8 +307,14 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     }
     case 'rejected': {
       const x = thenable.reason;
-      const digest = logRecoverableError(request, x);
-      emitErrorChunk(request, newTask.id, digest, x);
+      if (enablePostpone && (x: any).$$typeof === REACT_POSTPONE_TYPE) {
+        const postponeInstance: Postpone = (x: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, newTask.id, postponeInstance);
+      } else {
+        const digest = logRecoverableError(request, x);
+        emitErrorChunk(request, newTask.id, digest, x);
+      }
       return newTask.id;
     }
     default: {
@@ -907,6 +923,15 @@ function resolveModelToJSON(
         x.then(ping, ping);
         newTask.thenableState = getThenableStateAfterSuspending();
         return serializeLazyID(newTask.id);
+      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+        // Something postponed. We'll still send everything we have up until this point.
+        // We'll replace this element with a lazy reference that postpones on the client.
+        const postponeInstance: Postpone = (x: any);
+        request.pendingChunks++;
+        const postponeId = request.nextChunkId++;
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, postponeId, postponeInstance);
+        return serializeLazyID(postponeId);
       } else {
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
@@ -1146,6 +1171,11 @@ function resolveModelToJSON(
   );
 }
 
+function logPostpone(request: Request, reason: string): void {
+  const onPostpone = request.onPostpone;
+  onPostpone(reason);
+}
+
 function logRecoverableError(request: Request, error: mixed): string {
   const onError = request.onError;
   const errorDigest = onError(error);
@@ -1167,6 +1197,30 @@ function fatalError(request: Request, error: mixed): void {
     request.status = CLOSING;
     request.fatalError = error;
   }
+}
+
+function emitPostponeChunk(
+  request: Request,
+  id: number,
+  postponeInstance: Postpone,
+): void {
+  let row;
+  if (__DEV__) {
+    let reason = '';
+    let stack = '';
+    try {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      reason = String(postponeInstance.message);
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      stack = String(postponeInstance.stack);
+    } catch (x) {}
+    row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
+  } else {
+    // No reason included in prod.
+    row = serializeRowHeader('P', id) + '\n';
+  }
+  const processedChunk = stringToChunk(row);
+  request.completedErrorChunks.push(processedChunk);
 }
 
 function emitErrorChunk(
@@ -1328,6 +1382,10 @@ function retryTask(request: Request, task: Task): void {
       x.then(ping, ping);
       task.thenableState = getThenableStateAfterSuspending();
       return;
+    } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+      const postponeInstance: Postpone = (x: any);
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, task.id, postponeInstance);
     } else {
       request.abortableTasks.delete(task);
       task.status = ERRORED;
