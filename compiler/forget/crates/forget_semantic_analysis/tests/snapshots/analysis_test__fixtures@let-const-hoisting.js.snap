@@ -15,98 +15,156 @@ function Component() {
 
 
 Analysis:
-Scope {
-    id: ScopeId(
-        0,
-    ),
-    kind: Module,
-    declarations: {
-        "Component": Declaration {
-            id: DeclarationId(
+ScopeManager {
+    globals: [
+        (
+            "Array",
+            DeclarationId(
                 0,
             ),
-            kind: Function,
-            scope: ScopeId(
-                0,
-            ),
-        },
-    },
-    references: [],
-    children: [
-        Scope {
-            id: ScopeId(
+        ),
+        (
+            "Boolean",
+            DeclarationId(
                 1,
             ),
-            kind: Function,
-            declarations: {
-                "foo": Declaration {
-                    id: DeclarationId(
-                        1,
-                    ),
-                    kind: Function,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "a": Declaration {
-                    id: DeclarationId(
-                        2,
-                    ),
-                    kind: Let,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-                "b": Declaration {
-                    id: DeclarationId(
-                        3,
-                    ),
-                    kind: Const,
-                    scope: ScopeId(
-                        1,
-                    ),
-                },
-            },
-            references: [],
-            children: [
-                Scope {
-                    id: ScopeId(
-                        2,
-                    ),
-                    kind: Function,
-                    declarations: {},
-                    references: [
-                        Reference {
-                            id: ReferenceId(
-                                0,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                2,
-                            ),
-                            declaration (name): "a",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                        Reference {
-                            id: ReferenceId(
-                                1,
-                            ),
-                            kind: Read,
-                            declaration: DeclarationId(
-                                3,
-                            ),
-                            declaration (name): "b",
-                            scope: ScopeId(
-                                2,
-                            ),
-                        },
-                    ],
-                    children: [],
-                },
-            ],
-        },
+        ),
+        (
+            "console",
+            DeclarationId(
+                2,
+            ),
+        ),
+        (
+            "global",
+            DeclarationId(
+                3,
+            ),
+        ),
+        (
+            "Math",
+            DeclarationId(
+                4,
+            ),
+        ),
+        (
+            "Number",
+            DeclarationId(
+                5,
+            ),
+        ),
+        (
+            "setInterval",
+            DeclarationId(
+                6,
+            ),
+        ),
+        (
+            "setTimeout",
+            DeclarationId(
+                7,
+            ),
+        ),
+        (
+            "String",
+            DeclarationId(
+                8,
+            ),
+        ),
     ],
+    root: Scope {
+        id: ScopeId(
+            0,
+        ),
+        kind: Module,
+        declarations: {
+            "Component": Declaration {
+                id: DeclarationId(
+                    9,
+                ),
+                kind: Function,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+        },
+        references: [],
+        children: [
+            Scope {
+                id: ScopeId(
+                    1,
+                ),
+                kind: Function,
+                declarations: {
+                    "foo": Declaration {
+                        id: DeclarationId(
+                            10,
+                        ),
+                        kind: Function,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "a": Declaration {
+                        id: DeclarationId(
+                            11,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "b": Declaration {
+                        id: DeclarationId(
+                            12,
+                        ),
+                        kind: Const,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                },
+                references: [],
+                children: [
+                    Scope {
+                        id: ScopeId(
+                            2,
+                        ),
+                        kind: Function,
+                        declarations: {},
+                        references: [
+                            Reference {
+                                id: ReferenceId(
+                                    0,
+                                ),
+                                kind: Read,
+                                declaration: DeclarationId(
+                                    11,
+                                ),
+                                declaration (name): "a",
+                                scope: ScopeId(
+                                    2,
+                                ),
+                            },
+                            Reference {
+                                id: ReferenceId(
+                                    1,
+                                ),
+                                kind: Read,
+                                declaration: DeclarationId(
+                                    12,
+                                ),
+                                declaration (name): "b",
+                                scope: ScopeId(
+                                    2,
+                                ),
+                            },
+                        ],
+                        children: [],
+                    },
+                ],
+            },
+        ],
+    },
 }
 

@@ -6,6 +6,32 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
+pub struct ScopeManagerView<'m> {
+    pub(crate) manager: &'m ScopeManager,
+}
+
+impl<'m> ScopeManagerView<'m> {
+    pub fn root(&self) -> ScopeView<'m> {
+        ScopeView {
+            manager: &self.manager,
+            scope: self.manager.scope(self.manager.root_id()),
+        }
+    }
+
+    pub fn globals(&self) -> impl Iterator<Item = (&String, &DeclarationId)> {
+        self.manager.globals()
+    }
+}
+
+impl<'m> std::fmt::Debug for ScopeManagerView<'m> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ScopeManager")
+            .field("globals", &self.globals().collect::<Vec<_>>())
+            .field("root", &self.root())
+            .finish()
+    }
+}
+#[derive(Clone, Copy)]
 pub struct ScopeView<'m> {
     pub(crate) manager: &'m ScopeManager,
     pub(crate) scope: &'m Scope,

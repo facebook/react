@@ -7,9 +7,11 @@ use forget_utils::PointerAddress;
 use indexmap::IndexMap;
 
 use crate::scope_view::{DeclarationView, ReferenceView, ScopeView};
+use crate::ScopeManagerView;
 
 pub struct ScopeManager {
     root: ScopeId,
+    globals: IndexMap<String, DeclarationId>,
 
     // Storage of the semantic information
     scopes: Vec<Scope>,
@@ -33,14 +35,15 @@ impl std::fmt::Debug for ScopeManager {
 }
 
 impl ScopeManager {
-    pub(crate) fn new(source_type: SourceType) -> Self {
+    pub(crate) fn new(source_type: SourceType, globals: Vec<String>) -> Self {
         let root_id = ScopeId(0);
         let root_kind = match source_type {
             SourceType::Module => ScopeKind::Module,
             SourceType::Script => ScopeKind::Global,
         };
-        Self {
+        let mut manager = Self {
             root: root_id,
+            globals: IndexMap::with_capacity(globals.len()),
             scopes: vec![Scope {
                 id: root_id,
                 kind: root_kind,
@@ -57,19 +60,31 @@ impl ScopeManager {
             node_declarations: Default::default(),
             node_references: Default::default(),
             diagnostics: Default::default(),
+        };
+        for global in globals {
+            let id = DeclarationId(manager.declarations.len());
+            manager.globals.insert(global.clone(), id);
+            manager.declarations.push(Declaration {
+                id,
+                kind: DeclarationKind::Global,
+                name: global,
+                scope: manager.root,
+            });
         }
+
+        manager
     }
 
-    pub fn debug(&self) -> ScopeView<'_> {
-        let root = self.root();
-        ScopeView {
-            manager: self,
-            scope: root,
-        }
+    pub fn debug(&self) -> ScopeManagerView<'_> {
+        ScopeManagerView { manager: self }
     }
 
     pub fn diagnostics(&mut self) -> Vec<Diagnostic> {
         std::mem::take(&mut self.diagnostics)
+    }
+
+    pub fn globals(&self) -> impl Iterator<Item = (&String, &DeclarationId)> {
+        self.globals.iter()
     }
 
     pub fn root(&self) -> &Scope {
@@ -198,7 +213,7 @@ impl ScopeManager {
                         return None;
                     }
                 }
-                return Some(&self.declarations[id.0]);
+                return Some(declaration);
             }
             if let Some(parent) = current.parent {
                 // When leaving a function scope, clear the tdz limit.
@@ -210,6 +225,11 @@ impl ScopeManager {
                 }
                 current = &self.scopes[parent.0];
             } else {
+                // Maybe it's a global!
+                if let Some(id) = self.globals.get(name) {
+                    let declaration = self.declaration(*id);
+                    return Some(declaration);
+                }
                 return None;
             }
         }
@@ -322,6 +342,9 @@ impl ScopeManager {
                         .push(Diagnostic::invalid_syntax("Duplicate declaration", range));
                 }
             }
+            DeclarationKind::Global => {
+                unreachable!("Unexpected explicit declaration of global")
+            }
         }
 
         // Always create a new declaration and id...
@@ -369,6 +392,9 @@ impl ScopeManager {
                     }
                 }
             }
+            DeclarationKind::Global => {
+                unreachable!("Unexpected explicit declaration of global")
+            }
         }
     }
 
@@ -402,7 +428,7 @@ fn is_block_scoped_declaration(kind: DeclarationKind) -> bool {
         | DeclarationKind::Class
         | DeclarationKind::Function
         | DeclarationKind::CatchClause => true,
-        DeclarationKind::Var => false,
+        DeclarationKind::Var | DeclarationKind::Global => false,
     }
 }
 
@@ -457,6 +483,7 @@ pub struct Label {
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Copy, Clone)]
 pub enum DeclarationKind {
+    Global,
     Class,
     Const,
     Var,

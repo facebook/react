@@ -1,7 +1,7 @@
 use std::fmt::Write;
 
 use forget_hermes_parser::parse;
-use forget_semantic_analysis::analyze;
+use forget_semantic_analysis::{analyze, AnalyzeOptions};
 use insta::{assert_snapshot, glob};
 use miette::{NamedSource, Report};
 
@@ -11,7 +11,22 @@ fn fixtures() {
         println!("fixture {}", path.to_str().unwrap());
         let input = std::fs::read_to_string(path).unwrap();
         let ast = parse(&input, path.to_str().unwrap()).unwrap();
-        let mut analysis = analyze(&ast);
+        let mut analysis = analyze(
+            &ast,
+            AnalyzeOptions {
+                globals: vec![
+                    "Array".to_string(),
+                    "Boolean".to_string(),
+                    "console".to_string(),
+                    "global".to_string(),
+                    "Math".to_string(),
+                    "Number".to_string(),
+                    "setInterval".to_string(),
+                    "setTimeout".to_string(),
+                    "String".to_string(),
+                ],
+            },
+        );
 
         let mut output = String::new();
         writeln!(&mut output, "{:#?}", analysis.debug()).unwrap();

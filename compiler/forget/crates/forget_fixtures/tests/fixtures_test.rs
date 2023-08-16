@@ -21,7 +21,7 @@ fn fixtures() {
 
         let mut output = String::new();
 
-        let mut analysis = analyze(&ast);
+        let mut analysis = analyze(&ast, Default::default());
         let diagnostics = analysis.diagnostics();
         if !diagnostics.is_empty() {
             for diagnostic in diagnostics {

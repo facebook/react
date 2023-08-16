@@ -11,10 +11,15 @@ use crate::{
     ScopeKind, ScopeManager,
 };
 
-pub fn analyze(ast: &Program) -> ScopeManager {
-    let mut analyzer = Analyzer::new(ast);
+pub fn analyze(ast: &Program, options: AnalyzeOptions) -> ScopeManager {
+    let mut analyzer = Analyzer::new(ast, options);
     analyzer.visit_program(ast);
     analyzer.complete()
+}
+
+#[derive(Debug, Default)]
+pub struct AnalyzeOptions {
+    pub globals: Vec<String>,
 }
 
 struct Analyzer {
@@ -39,8 +44,8 @@ pub struct UnresolvedReference {
 }
 
 impl Analyzer {
-    fn new(program: &Program) -> Self {
-        let manager = ScopeManager::new(program.source_type);
+    fn new(program: &Program, options: AnalyzeOptions) -> Self {
+        let manager = ScopeManager::new(program.source_type, options.globals);
         let current = manager.root_id();
         let labels = Default::default();
         Self {
