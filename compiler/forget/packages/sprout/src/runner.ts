@@ -14,7 +14,7 @@ import * as readline from "readline";
 import * as RunnerWorker from "./runner-worker";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import SproutOnlyFilterTodoRemove from "./SproutOnlyFilterTodoRemove";
+import SproutTodoFilter from "./SproutTodoFilter";
 import { FILTER_FILENAME } from "fixture-test-utils";
 
 const WORKER_PATH = require.resolve("./runner-worker");
@@ -179,8 +179,8 @@ export async function main(opts: RunnerOptions): Promise<void> {
   let allFixtures: Map<string, TestFixture> = getFixtures(testFilter);
 
   allFixtures = new Map(
-    Array.from(allFixtures.entries()).filter(([filename, _]) =>
-      SproutOnlyFilterTodoRemove.has(filename)
+    Array.from(allFixtures.entries()).filter(
+      ([filename, _]) => !SproutTodoFilter.has(filename)
     )
   );
 
