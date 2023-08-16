@@ -10,6 +10,7 @@ function f() {
 export const FIXTURE_ENTRYPOINT = {
   fn: f,
   params: [],
+  isComponent: false,
 };
 
 ```
@@ -24,6 +25,7 @@ function f() {
 export const FIXTURE_ENTRYPOINT = {
   fn: f,
   params: [],
+  isComponent: false,
 };
 
 ```

@@ -8,4 +8,5 @@ function lowercasecomponent() {
 export const FIXTURE_ENTRYPOINT = {
   fn: lowercasecomponent,
   params: [],
+  isComponent: false,
 };

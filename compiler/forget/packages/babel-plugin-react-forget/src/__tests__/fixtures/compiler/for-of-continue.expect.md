@@ -17,6 +17,7 @@ function Component() {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
+  isComponent: false,
 };
 
 ```
@@ -55,6 +56,7 @@ function Component() {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
+  isComponent: false,
 };
 
 ```

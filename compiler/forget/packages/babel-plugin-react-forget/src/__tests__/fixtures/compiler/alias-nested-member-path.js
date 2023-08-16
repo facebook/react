@@ -10,4 +10,5 @@ function component() {
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
   params: [],
+  isComponent: false,
 };
