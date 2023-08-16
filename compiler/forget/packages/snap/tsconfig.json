@@ -16,5 +16,13 @@
     "sourceMap": true
   },
   "exclude": ["node_modules"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../fixture-test-utils"
+    },
+    {
+      "path": "../babel-plugin-react-forget"
+    }
+  ]
 }

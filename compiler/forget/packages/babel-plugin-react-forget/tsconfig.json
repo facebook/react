@@ -2,7 +2,10 @@
   "extends": "@tsconfig/node16-strictest/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
+    "rootDir": "src",
     "outDir": "dist",
+    // https://github.com/microsoft/TypeScript/issues/30925
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "jsx": "react-jsxdev",
 
     // weaken strictness from preset
@@ -13,7 +16,8 @@
     "target": "ES2015",
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "composite": true
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"]

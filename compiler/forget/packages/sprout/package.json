@@ -8,7 +8,7 @@
     "src"
   ],
   "scripts": {
-    "build": "yarn workspace babel-plugin-react-forget run build && yarn workspace fixture-test-utils run build && rimraf dist && tsc",
+    "build": "rimraf dist && tsc --build",
     "prettier": "prettier --write src",
     "test": "echo 'no tests'"
   },
@@ -22,6 +22,7 @@
     "@babel/types": "^7.19.0",
     "@parcel/watcher": "^2.1.0",
     "@testing-library/react": "^13.4.0",
+    "babel-plugin-react-forget": "*",
     "chalk": "4",
     "fixture-test-utils": "*",
     "jsdom": "^22.1.0",

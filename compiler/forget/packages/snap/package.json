@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "build": "yarn workspace fixture-test-utils run build && rimraf dist && tsc",
+    "build": "rimraf dist && tsc --build",
     "test": "echo 'no tests'",
     "lint": "yarn eslint src"
   },
