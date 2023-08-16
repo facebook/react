@@ -298,12 +298,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     case 'rejected': {
       const x = thenable.reason;
       const digest = logRecoverableError(request, x);
-      if (__DEV__) {
-        const {message, stack} = getErrorMessageAndStackDev(x);
-        emitErrorChunkDev(request, newTask.id, digest, message, stack);
-      } else {
-        emitErrorChunkProd(request, newTask.id, digest);
-      }
+      emitErrorChunk(request, newTask.id, digest, x);
       return newTask.id;
     }
     default: {
@@ -344,12 +339,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
       newTask.status = ERRORED;
       // TODO: We should ideally do this inside performWork so it's scheduled
       const digest = logRecoverableError(request, reason);
-      if (__DEV__) {
-        const {message, stack} = getErrorMessageAndStackDev(reason);
-        emitErrorChunkDev(request, newTask.id, digest, message, stack);
-      } else {
-        emitErrorChunkProd(request, newTask.id, digest);
-      }
+      emitErrorChunk(request, newTask.id, digest, reason);
       if (request.destination !== null) {
         flushCompletedChunks(request, request.destination);
       }
@@ -681,12 +671,7 @@ function serializeClientReference(
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
     const digest = logRecoverableError(request, x);
-    if (__DEV__) {
-      const {message, stack} = getErrorMessageAndStackDev(x);
-      emitErrorChunkDev(request, errorId, digest, message, stack);
-    } else {
-      emitErrorChunkProd(request, errorId, digest);
-    }
+    emitErrorChunk(request, errorId, digest, x);
     return serializeByValueID(errorId);
   }
 }
@@ -920,12 +905,7 @@ function resolveModelToJSON(
         request.pendingChunks++;
         const errorId = request.nextChunkId++;
         const digest = logRecoverableError(request, x);
-        if (__DEV__) {
-          const {message, stack} = getErrorMessageAndStackDev(x);
-          emitErrorChunkDev(request, errorId, digest, message, stack);
-        } else {
-          emitErrorChunkProd(request, errorId, digest);
-        }
+        emitErrorChunk(request, errorId, digest, x);
         return serializeLazyID(errorId);
       }
     }
@@ -1169,10 +1149,24 @@ function logRecoverableError(request: Request, error: mixed): string {
   return errorDigest || '';
 }
 
-function getErrorMessageAndStackDev(error: mixed): {
-  message: string,
-  stack: string,
-} {
+function fatalError(request: Request, error: mixed): void {
+  // This is called outside error handling code such as if an error happens in React internals.
+  if (request.destination !== null) {
+    request.status = CLOSED;
+    closeWithError(request.destination, error);
+  } else {
+    request.status = CLOSING;
+    request.fatalError = error;
+  }
+}
+
+function emitErrorChunk(
+  request: Request,
+  id: number,
+  digest: string,
+  error: mixed,
+): void {
+  let errorInfo: any;
   if (__DEV__) {
     let message;
     let stack = '';
@@ -1188,53 +1182,12 @@ function getErrorMessageAndStackDev(error: mixed): {
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
     }
-    return {
-      message,
-      stack,
-    };
+    errorInfo = {digest, message, stack};
   } else {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'getErrorMessageAndStackDev should never be called from production mode. This is a bug in React.',
-    );
+    errorInfo = {digest};
   }
-}
-
-function fatalError(request: Request, error: mixed): void {
-  // This is called outside error handling code such as if an error happens in React internals.
-  if (request.destination !== null) {
-    request.status = CLOSED;
-    closeWithError(request.destination, error);
-  } else {
-    request.status = CLOSING;
-    request.fatalError = error;
-  }
-}
-
-function emitErrorChunkProd(
-  request: Request,
-  id: number,
-  digest: string,
-): void {
-  const processedChunk = processErrorChunkProd(request, id, digest);
-  request.completedErrorChunks.push(processedChunk);
-}
-
-function emitErrorChunkDev(
-  request: Request,
-  id: number,
-  digest: string,
-  message: string,
-  stack: string,
-): void {
-  const processedChunk = processErrorChunkDev(
-    request,
-    id,
-    digest,
-    message,
-    stack,
-  );
+  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
+  const processedChunk = stringToChunk(row);
   request.completedErrorChunks.push(processedChunk);
 }
 
@@ -1362,12 +1315,7 @@ function retryTask(request: Request, task: Task): void {
       request.abortableTasks.delete(task);
       task.status = ERRORED;
       const digest = logRecoverableError(request, x);
-      if (__DEV__) {
-        const {message, stack} = getErrorMessageAndStackDev(x);
-        emitErrorChunkDev(request, task.id, digest, message, stack);
-      } else {
-        emitErrorChunkProd(request, task.id, digest);
-      }
+      emitErrorChunk(request, task.id, digest, x);
     }
   }
 }
@@ -1547,12 +1495,7 @@ export function abort(request: Request, reason: mixed): void {
       const digest = logRecoverableError(request, error);
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
-      if (__DEV__) {
-        const {message, stack} = getErrorMessageAndStackDev(error);
-        emitErrorChunkDev(request, errorId, digest, message, stack);
-      } else {
-        emitErrorChunkProd(request, errorId, digest);
-      }
+      emitErrorChunk(request, errorId, digest, error);
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
     }
@@ -1585,44 +1528,6 @@ function importServerContexts(
 
 function serializeRowHeader(tag: string, id: number) {
   return id.toString(16) + ':' + tag;
-}
-
-function processErrorChunkProd(
-  request: Request,
-  id: number,
-  digest: string,
-): Chunk {
-  if (__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'processErrorChunkProd should never be called while in development mode. Use processErrorChunkDev instead. This is a bug in React.',
-    );
-  }
-
-  const errorInfo: any = {digest};
-  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
-  return stringToChunk(row);
-}
-
-function processErrorChunkDev(
-  request: Request,
-  id: number,
-  digest: string,
-  message: string,
-  stack: string,
-): Chunk {
-  if (!__DEV__) {
-    // These errors should never make it into a build so we don't need to encode them in codes.json
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'processErrorChunkDev should never be called while in production mode. Use processErrorChunkProd instead. This is a bug in React.',
-    );
-  }
-
-  const errorInfo: any = {digest, message, stack};
-  const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
-  return stringToChunk(row);
 }
 
 function processModelChunk(
