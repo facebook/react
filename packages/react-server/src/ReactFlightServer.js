@@ -719,11 +719,9 @@ function serializeLargeTextString(request: Request, text: string): string {
   request.pendingChunks += 2;
   const textId = request.nextChunkId++;
   const textChunk = stringToChunk(text);
-  const headerChunk = processTextHeader(
-    request,
-    textId,
-    byteLengthOfChunk(textChunk),
-  );
+  const binaryLength = byteLengthOfChunk(textChunk);
+  const row = textId.toString(16) + ':T' + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
   request.completedRegularChunks.push(headerChunk, textChunk);
   return serializeByValueID(textId);
 }
@@ -750,12 +748,10 @@ function serializeTypedArray(
   const bufferId = request.nextChunkId++;
   // TODO: Convert to little endian if that's not the server default.
   const binaryChunk = typedArrayToBinaryChunk(typedArray);
-  const headerChunk = processBufferHeader(
-    request,
-    tag,
-    bufferId,
-    byteLengthOfBinaryChunk(binaryChunk),
-  );
+  const binaryLength = byteLengthOfBinaryChunk(binaryChunk);
+  const row =
+    bufferId.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
+  const headerChunk = stringToChunk(row);
   request.completedRegularChunks.push(headerChunk, binaryChunk);
   return serializeByValueID(bufferId);
 }
@@ -1196,21 +1192,18 @@ function emitImportChunk(
   id: number,
   clientReferenceMetadata: ClientReferenceMetadata,
 ): void {
-  const processedChunk = processImportChunk(
-    request,
-    id,
-    clientReferenceMetadata,
-  );
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(clientReferenceMetadata);
+  const row = serializeRowHeader('I', id) + json + '\n';
+  const processedChunk = stringToChunk(row);
   request.completedImportChunks.push(processedChunk);
 }
 
 function emitHintChunk(request: Request, code: string, model: HintModel): void {
-  const processedChunk = processHintChunk(
-    request,
-    request.nextChunkId++,
-    code,
-    model,
-  );
+  const json: string = stringify(model);
+  const id = request.nextChunkId++;
+  const row = serializeRowHeader('H' + code, id) + json + '\n';
+  const processedChunk = stringToChunk(row);
   request.completedHintChunks.push(processedChunk);
 }
 
@@ -1548,46 +1541,5 @@ function processReferenceChunk(
 ): Chunk {
   const json = stringify(reference);
   const row = id.toString(16) + ':' + json + '\n';
-  return stringToChunk(row);
-}
-
-function processImportChunk(
-  request: Request,
-  id: number,
-  clientReferenceMetadata: ReactClientValue,
-): Chunk {
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(clientReferenceMetadata);
-  const row = serializeRowHeader('I', id) + json + '\n';
-  return stringToChunk(row);
-}
-
-function processHintChunk(
-  request: Request,
-  id: number,
-  code: string,
-  model: JSONValue,
-): Chunk {
-  const json: string = stringify(model);
-  const row = serializeRowHeader('H' + code, id) + json + '\n';
-  return stringToChunk(row);
-}
-
-function processTextHeader(
-  request: Request,
-  id: number,
-  binaryLength: number,
-): Chunk {
-  const row = id.toString(16) + ':T' + binaryLength.toString(16) + ',';
-  return stringToChunk(row);
-}
-
-function processBufferHeader(
-  request: Request,
-  tag: string,
-  id: number,
-  binaryLength: number,
-): Chunk {
-  const row = id.toString(16) + ':' + tag + binaryLength.toString(16) + ',';
   return stringToChunk(row);
 }
