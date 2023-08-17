@@ -878,7 +878,7 @@ function resolvePostponeProd(response: Response, id: number): void {
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'resolveErrorProd should never be called in development mode. Use resolveErrorDev instead. This is a bug in React.',
+      'resolvePostponeProd should never be called in development mode. Use resolvePostponeDev instead. This is a bug in React.',
     );
   }
   const error = new Error(
@@ -907,7 +907,7 @@ function resolvePostponeDev(
     // These errors should never make it into a build so we don't need to encode them in codes.json
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
+      'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
     );
   }
   // eslint-disable-next-line react-internal/prod-error-codes
