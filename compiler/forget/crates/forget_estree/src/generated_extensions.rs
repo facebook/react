@@ -1,8 +1,8 @@
 // Manual extensions to generated types
 use crate::{
-    ArrowFunctionExpression, Function, FunctionDeclaration, FunctionExpression,
-    ImportDeclarationSpecifier, JSXElementName, JSXMemberExpression,
-    JSXMemberExpressionOrIdentifier, Pattern, SourceRange, SourceType,
+    ArrowFunctionExpression, Class, ClassDeclaration, ClassExpression, Function,
+    FunctionDeclaration, FunctionExpression, ImportDeclarationSpecifier, JSXElementName,
+    JSXMemberExpression, JSXMemberExpressionOrIdentifier, Pattern, SourceRange, SourceType,
 };
 
 /// Sentinel trait to distinguish AST *node* types
@@ -99,6 +99,44 @@ impl IntoFunction for Function {
     }
 
     fn into_function(self) -> Function {
+        self
+    }
+}
+
+pub trait IntoClass: ESTreeNode {
+    fn class(&self) -> &Class;
+
+    fn into_class(self) -> Class;
+}
+
+impl IntoClass for ClassDeclaration {
+    fn class(&self) -> &Class {
+        &self.class
+    }
+
+    fn into_class(self) -> Class {
+        self.class
+    }
+}
+
+impl IntoClass for ClassExpression {
+    fn class(&self) -> &Class {
+        &self.class
+    }
+
+    fn into_class(self) -> Class {
+        self.class
+    }
+}
+
+impl ESTreeNode for Class {}
+
+impl IntoClass for Class {
+    fn class(&self) -> &Class {
+        self
+    }
+
+    fn into_class(self) -> Class {
         self
     }
 }

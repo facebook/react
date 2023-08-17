@@ -1,9 +1,9 @@
 use forget_diagnostics::Diagnostic;
 use forget_estree::{
     AssignmentOperator, AssignmentPropertyOrRestElement, AssignmentTarget, Expression,
-    ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier, ImportDeclarationSpecifier,
-    IntoFunction, JSXElementName, Pattern, Program, SourceRange, Statement,
-    VariableDeclarationKind, Visitor,
+    ExpressionOrPrivateIdentifier, ExpressionOrSuper, ForInInit, ForInit, FunctionBody, Identifier,
+    ImportDeclarationSpecifier, IntoClass, IntoFunction, JSXElementName, Pattern, Program,
+    SourceRange, Statement, VariableDeclarationKind, Visitor,
 };
 
 use crate::{
@@ -186,6 +186,18 @@ impl Analyzer {
             .insert(AstNode::from(function), scope);
     }
 
+    fn visit_class<T: IntoClass>(&mut self, node: &T) {
+        let class = node.class();
+        let scope = self.enter(ScopeKind::Class, |visitor| {
+            if let Some(super_class) = &class.super_class {
+                visitor.visit_expression(super_class);
+            }
+
+            visitor.visit_class_body(&class.body);
+        });
+        self.manager.node_scopes.insert(AstNode::from(class), scope);
+    }
+
     fn visit_reference_identifier(
         &mut self,
         name: &str,
@@ -335,6 +347,64 @@ impl Visitor for Analyzer {
                 );
             }
         }
+    }
+
+    fn visit_class_declaration(&mut self, ast: &forget_estree::ClassDeclaration) {
+        if let Some(id) = &ast.class.id {
+            let declaration = self.manager.add_declaration(
+                self.current,
+                id.name.clone(),
+                DeclarationKind::Class,
+                id.range,
+            );
+            self.manager
+                .node_declarations
+                .insert(AstNode::from(id), declaration);
+        }
+        Analyzer::visit_class(self, ast);
+    }
+
+    fn visit_class_property(&mut self, ast: &forget_estree::ClassProperty) {
+        // Static (non-computed) property names do not introduce a new identifier
+        // into any scope
+        if ast.is_computed {
+            self.visit_expression(&ast.key);
+        }
+        if let Some(value) = &ast.value {
+            self.visit_expression(value)
+        }
+    }
+
+    fn visit_class_private_property(&mut self, ast: &forget_estree::ClassPrivateProperty) {
+        // Static (non-computed) property names do not introduce a new identifier
+        // into any scope
+        match &ast.key {
+            ExpressionOrPrivateIdentifier::Expression(key) => {
+                self.visit_expression(key);
+            }
+            ExpressionOrPrivateIdentifier::PrivateIdentifier(_)
+            | ExpressionOrPrivateIdentifier::PrivateName(_) => { /* no-op */ }
+        }
+        if let Some(value) = &ast.value {
+            self.visit_expression(value)
+        }
+    }
+
+    fn visit_static_block(&mut self, ast: &forget_estree::StaticBlock) {
+        self.enter(ScopeKind::StaticBlock, |visitor| {
+            for statement in &ast.body {
+                visitor.visit_statement(statement);
+            }
+        });
+    }
+
+    fn visit_method_definition(&mut self, ast: &forget_estree::MethodDefinition) {
+        // Static (non-computed) method names do not introduce a new identifier
+        // into any scope
+        if ast.is_computed {
+            self.visit_expression(&ast.key)
+        }
+        self.visit_function_expression(&ast.value);
     }
 
     fn visit_function_declaration(&mut self, ast: &forget_estree::FunctionDeclaration) {
