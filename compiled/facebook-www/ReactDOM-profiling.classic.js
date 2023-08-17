@@ -11207,21 +11207,22 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
             renderDidSuspendDelayIfPossible();
             break a;
           } else value = Error(formatProdErrorMessage(426));
-        } else if (
-          isHydrating &&
-          unitOfWork.mode & 1 &&
-          ((wakeable = suspenseHandlerStackCursor.current), null !== wakeable)
-        ) {
-          0 === (wakeable.flags & 65536) && (wakeable.flags |= 256);
-          markSuspenseBoundaryShouldCapture(
-            wakeable,
-            returnFiber,
-            unitOfWork,
-            root,
-            thrownValue
-          );
-          queueHydrationError(createCapturedValueAtFiber(value, unitOfWork));
-          break a;
+        }
+        if (isHydrating && unitOfWork.mode & 1) {
+          var suspenseBoundary$66 = suspenseHandlerStackCursor.current;
+          if (null !== suspenseBoundary$66) {
+            0 === (suspenseBoundary$66.flags & 65536) &&
+              (suspenseBoundary$66.flags |= 256);
+            markSuspenseBoundaryShouldCapture(
+              suspenseBoundary$66,
+              returnFiber,
+              unitOfWork,
+              root,
+              thrownValue
+            );
+            queueHydrationError(createCapturedValueAtFiber(value, unitOfWork));
+            break a;
+          }
         }
         root = value = createCapturedValueAtFiber(value, unitOfWork);
         4 !== workInProgressRootExitStatus &&
@@ -17348,7 +17349,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1885 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-dfca71a7",
+  version: "18.3.0-www-classic-8964de47",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17392,7 +17393,7 @@ var devToolsConfig$jscomp$inline_1885 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-dfca71a7"
+  reconcilerVersion: "18.3.0-www-classic-8964de47"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17607,7 +17608,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-dfca71a7";
+exports.version = "18.3.0-www-classic-8964de47";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

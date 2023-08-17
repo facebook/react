@@ -17748,216 +17748,214 @@ function throwException(
     }
   }
 
-  if (
-    value !== null &&
-    typeof value === "object" &&
-    typeof value.then === "function"
-  ) {
-    // This is a wakeable. The component suspended.
-    var wakeable = value;
-    resetSuspendedComponent(sourceFiber, rootRenderLanes);
+  if (value !== null && typeof value === "object") {
+    if (typeof value.then === "function") {
+      // This is a wakeable. The component suspended.
+      var wakeable = value;
+      resetSuspendedComponent(sourceFiber, rootRenderLanes);
 
-    {
-      if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-        markDidThrowWhileHydratingDEV();
-      }
-    }
-
-    {
-      if (enableDebugTracing) {
-        if (sourceFiber.mode & DebugTracingMode) {
-          var name = getComponentNameFromFiber(sourceFiber) || "Unknown";
-          logComponentSuspended(name, wakeable);
+      {
+        if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+          markDidThrowWhileHydratingDEV();
         }
       }
-    } // Mark the nearest Suspense boundary to switch to rendering a fallback.
 
-    var suspenseBoundary = getSuspenseHandler();
-
-    if (suspenseBoundary !== null) {
-      switch (suspenseBoundary.tag) {
-        case SuspenseComponent: {
-          // If this suspense boundary is not already showing a fallback, mark
-          // the in-progress render as suspended. We try to perform this logic
-          // as soon as soon as possible during the render phase, so the work
-          // loop can know things like whether it's OK to switch to other tasks,
-          // or whether it can wait for data to resolve before continuing.
-          // TODO: Most of these checks are already performed when entering a
-          // Suspense boundary. We should track the information on the stack so
-          // we don't have to recompute it on demand. This would also allow us
-          // to unify with `use` which needs to perform this logic even sooner,
-          // before `throwException` is called.
-          if (sourceFiber.mode & ConcurrentMode) {
-            if (getShellBoundary() === null) {
-              // Suspended in the "shell" of the app. This is an undesirable
-              // loading state. We should avoid committing this tree.
-              renderDidSuspendDelayIfPossible();
-            } else {
-              // If we suspended deeper than the shell, we don't need to delay
-              // the commmit. However, we still call renderDidSuspend if this is
-              // a new boundary, to tell the work loop that a new fallback has
-              // appeared during this render.
-              // TODO: Theoretically we should be able to delete this branch.
-              // It's currently used for two things: 1) to throttle the
-              // appearance of successive loading states, and 2) in
-              // SuspenseList, to determine whether the children include any
-              // pending fallbacks. For 1, we should apply throttling to all
-              // retries, not just ones that render an additional fallback. For
-              // 2, we should check subtreeFlags instead. Then we can delete
-              // this branch.
-              var current = suspenseBoundary.alternate;
-
-              if (current === null) {
-                renderDidSuspend();
-              }
-            }
+      {
+        if (enableDebugTracing) {
+          if (sourceFiber.mode & DebugTracingMode) {
+            var name = getComponentNameFromFiber(sourceFiber) || "Unknown";
+            logComponentSuspended(name, wakeable);
           }
-
-          suspenseBoundary.flags &= ~ForceClientRender;
-          markSuspenseBoundaryShouldCapture(
-            suspenseBoundary,
-            returnFiber,
-            sourceFiber,
-            root,
-            rootRenderLanes
-          ); // Retry listener
-          //
-          // If the fallback does commit, we need to attach a different type of
-          // listener. This one schedules an update on the Suspense boundary to
-          // turn the fallback state off.
-          //
-          // Stash the wakeable on the boundary fiber so we can access it in the
-          // commit phase.
-          //
-          // When the wakeable resolves, we'll attempt to render the boundary
-          // again ("retry").
-          // Check if this is a Suspensey resource. We do not attach retry
-          // listeners to these, because we don't actually need them for
-          // rendering. Only for committing. Instead, if a fallback commits
-          // and the only thing that suspended was a Suspensey resource, we
-          // retry immediately.
-          // TODO: Refactor throwException so that we don't have to do this type
-          // check. The caller already knows what the cause was.
-
-          var isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
-
-          if (isSuspenseyResource) {
-            suspenseBoundary.flags |= ScheduleRetry;
-          } else {
-            var retryQueue = suspenseBoundary.updateQueue;
-
-            if (retryQueue === null) {
-              suspenseBoundary.updateQueue = new Set([wakeable]);
-            } else {
-              retryQueue.add(wakeable);
-            }
-          }
-
-          break;
         }
+      } // Mark the nearest Suspense boundary to switch to rendering a fallback.
 
-        case OffscreenComponent: {
-          if (suspenseBoundary.mode & ConcurrentMode) {
-            suspenseBoundary.flags |= ShouldCapture;
+      var suspenseBoundary = getSuspenseHandler();
 
-            var _isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
-
-            if (_isSuspenseyResource) {
-              suspenseBoundary.flags |= ScheduleRetry;
-            } else {
-              var offscreenQueue = suspenseBoundary.updateQueue;
-
-              if (offscreenQueue === null) {
-                var newOffscreenQueue = {
-                  transitions: null,
-                  markerInstances: null,
-                  retryQueue: new Set([wakeable])
-                };
-                suspenseBoundary.updateQueue = newOffscreenQueue;
+      if (suspenseBoundary !== null) {
+        switch (suspenseBoundary.tag) {
+          case SuspenseComponent: {
+            // If this suspense boundary is not already showing a fallback, mark
+            // the in-progress render as suspended. We try to perform this logic
+            // as soon as soon as possible during the render phase, so the work
+            // loop can know things like whether it's OK to switch to other tasks,
+            // or whether it can wait for data to resolve before continuing.
+            // TODO: Most of these checks are already performed when entering a
+            // Suspense boundary. We should track the information on the stack so
+            // we don't have to recompute it on demand. This would also allow us
+            // to unify with `use` which needs to perform this logic even sooner,
+            // before `throwException` is called.
+            if (sourceFiber.mode & ConcurrentMode) {
+              if (getShellBoundary() === null) {
+                // Suspended in the "shell" of the app. This is an undesirable
+                // loading state. We should avoid committing this tree.
+                renderDidSuspendDelayIfPossible();
               } else {
-                var _retryQueue = offscreenQueue.retryQueue;
+                // If we suspended deeper than the shell, we don't need to delay
+                // the commmit. However, we still call renderDidSuspend if this is
+                // a new boundary, to tell the work loop that a new fallback has
+                // appeared during this render.
+                // TODO: Theoretically we should be able to delete this branch.
+                // It's currently used for two things: 1) to throttle the
+                // appearance of successive loading states, and 2) in
+                // SuspenseList, to determine whether the children include any
+                // pending fallbacks. For 1, we should apply throttling to all
+                // retries, not just ones that render an additional fallback. For
+                // 2, we should check subtreeFlags instead. Then we can delete
+                // this branch.
+                var current = suspenseBoundary.alternate;
 
-                if (_retryQueue === null) {
-                  offscreenQueue.retryQueue = new Set([wakeable]);
-                } else {
-                  _retryQueue.add(wakeable);
+                if (current === null) {
+                  renderDidSuspend();
                 }
               }
             }
 
+            suspenseBoundary.flags &= ~ForceClientRender;
+            markSuspenseBoundaryShouldCapture(
+              suspenseBoundary,
+              returnFiber,
+              sourceFiber,
+              root,
+              rootRenderLanes
+            ); // Retry listener
+            //
+            // If the fallback does commit, we need to attach a different type of
+            // listener. This one schedules an update on the Suspense boundary to
+            // turn the fallback state off.
+            //
+            // Stash the wakeable on the boundary fiber so we can access it in the
+            // commit phase.
+            //
+            // When the wakeable resolves, we'll attempt to render the boundary
+            // again ("retry").
+            // Check if this is a Suspensey resource. We do not attach retry
+            // listeners to these, because we don't actually need them for
+            // rendering. Only for committing. Instead, if a fallback commits
+            // and the only thing that suspended was a Suspensey resource, we
+            // retry immediately.
+            // TODO: Refactor throwException so that we don't have to do this type
+            // check. The caller already knows what the cause was.
+
+            var isSuspenseyResource = wakeable === noopSuspenseyCommitThenable;
+
+            if (isSuspenseyResource) {
+              suspenseBoundary.flags |= ScheduleRetry;
+            } else {
+              var retryQueue = suspenseBoundary.updateQueue;
+
+              if (retryQueue === null) {
+                suspenseBoundary.updateQueue = new Set([wakeable]);
+              } else {
+                retryQueue.add(wakeable);
+              }
+            }
+
             break;
-          } // Fall through
+          }
+
+          case OffscreenComponent: {
+            if (suspenseBoundary.mode & ConcurrentMode) {
+              suspenseBoundary.flags |= ShouldCapture;
+
+              var _isSuspenseyResource =
+                wakeable === noopSuspenseyCommitThenable;
+
+              if (_isSuspenseyResource) {
+                suspenseBoundary.flags |= ScheduleRetry;
+              } else {
+                var offscreenQueue = suspenseBoundary.updateQueue;
+
+                if (offscreenQueue === null) {
+                  var newOffscreenQueue = {
+                    transitions: null,
+                    markerInstances: null,
+                    retryQueue: new Set([wakeable])
+                  };
+                  suspenseBoundary.updateQueue = newOffscreenQueue;
+                } else {
+                  var _retryQueue = offscreenQueue.retryQueue;
+
+                  if (_retryQueue === null) {
+                    offscreenQueue.retryQueue = new Set([wakeable]);
+                  } else {
+                    _retryQueue.add(wakeable);
+                  }
+                }
+              }
+
+              break;
+            } // Fall through
+          }
+
+          default: {
+            throw new Error(
+              "Unexpected Suspense handler tag (" +
+                suspenseBoundary.tag +
+                "). This " +
+                "is a bug in React."
+            );
+          }
+        } // We only attach ping listeners in concurrent mode. Legacy Suspense always
+        // commits fallbacks synchronously, so there are no pings.
+
+        if (suspenseBoundary.mode & ConcurrentMode) {
+          attachPingListener(root, wakeable, rootRenderLanes);
         }
 
-        default: {
-          throw new Error(
-            "Unexpected Suspense handler tag (" +
-              suspenseBoundary.tag +
-              "). This " +
-              "is a bug in React."
-          );
-        }
-      } // We only attach ping listeners in concurrent mode. Legacy Suspense always
-      // commits fallbacks synchronously, so there are no pings.
-
-      if (suspenseBoundary.mode & ConcurrentMode) {
-        attachPingListener(root, wakeable, rootRenderLanes);
-      }
-
-      return;
-    } else {
-      // No boundary was found. Unless this is a sync update, this is OK.
-      // We can suspend and wait for more data to arrive.
-      if (root.tag === ConcurrentRoot) {
-        // In a concurrent root, suspending without a Suspense boundary is
-        // allowed. It will suspend indefinitely without committing.
-        //
-        // TODO: Should we have different behavior for discrete updates? What
-        // about flushSync? Maybe it should put the tree into an inert state,
-        // and potentially log a warning. Revisit this for a future release.
-        attachPingListener(root, wakeable, rootRenderLanes);
-        renderDidSuspendDelayIfPossible();
         return;
       } else {
-        // In a legacy root, suspending without a boundary is always an error.
-        var uncaughtSuspenseError = new Error(
-          "A component suspended while responding to synchronous input. This " +
-            "will cause the UI to be replaced with a loading indicator. To " +
-            "fix, updates that suspend should be wrapped " +
-            "with startTransition."
-        );
-        value = uncaughtSuspenseError;
+        // No boundary was found. Unless this is a sync update, this is OK.
+        // We can suspend and wait for more data to arrive.
+        if (root.tag === ConcurrentRoot) {
+          // In a concurrent root, suspending without a Suspense boundary is
+          // allowed. It will suspend indefinitely without committing.
+          //
+          // TODO: Should we have different behavior for discrete updates? What
+          // about flushSync? Maybe it should put the tree into an inert state,
+          // and potentially log a warning. Revisit this for a future release.
+          attachPingListener(root, wakeable, rootRenderLanes);
+          renderDidSuspendDelayIfPossible();
+          return;
+        } else {
+          // In a legacy root, suspending without a boundary is always an error.
+          var uncaughtSuspenseError = new Error(
+            "A component suspended while responding to synchronous input. This " +
+              "will cause the UI to be replaced with a loading indicator. To " +
+              "fix, updates that suspend should be wrapped " +
+              "with startTransition."
+          );
+          value = uncaughtSuspenseError;
+        }
       }
     }
-  } else {
-    // This is a regular error, not a Suspense wakeable.
-    if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
-      markDidThrowWhileHydratingDEV();
+  } // This is a regular error, not a Suspense wakeable.
 
-      var _suspenseBoundary = getSuspenseHandler(); // If the error was thrown during hydration, we may be able to recover by
-      // discarding the dehydrated content and switching to a client render.
-      // Instead of surfacing the error, find the nearest Suspense boundary
-      // and render it again without hydration.
+  if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+    markDidThrowWhileHydratingDEV();
 
-      if (_suspenseBoundary !== null) {
-        if ((_suspenseBoundary.flags & ShouldCapture) === NoFlags$1) {
-          // Set a flag to indicate that we should try rendering the normal
-          // children again, not the fallback.
-          _suspenseBoundary.flags |= ForceClientRender;
-        }
+    var _suspenseBoundary = getSuspenseHandler(); // If the error was thrown during hydration, we may be able to recover by
+    // discarding the dehydrated content and switching to a client render.
+    // Instead of surfacing the error, find the nearest Suspense boundary
+    // and render it again without hydration.
 
-        markSuspenseBoundaryShouldCapture(
-          _suspenseBoundary,
-          returnFiber,
-          sourceFiber,
-          root,
-          rootRenderLanes
-        ); // Even though the user may not be affected by this error, we should
-        // still log it so it can be fixed.
-
-        queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-        return;
+    if (_suspenseBoundary !== null) {
+      if ((_suspenseBoundary.flags & ShouldCapture) === NoFlags$1) {
+        // Set a flag to indicate that we should try rendering the normal
+        // children again, not the fallback.
+        _suspenseBoundary.flags |= ForceClientRender;
       }
+
+      markSuspenseBoundaryShouldCapture(
+        _suspenseBoundary,
+        returnFiber,
+        sourceFiber,
+        root,
+        rootRenderLanes
+      ); // Even though the user may not be affected by this error, we should
+      // still log it so it can be fixed.
+
+      queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+      return;
     }
   }
 
@@ -20585,7 +20583,8 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      var digest, message, stack;
+      var digest;
+      var message, stack;
 
       {
         var _getSuspenseInstanceF =
@@ -20596,21 +20595,26 @@ function updateDehydratedSuspenseComponent(
         stack = _getSuspenseInstanceF.stack;
       }
 
-      var error;
+      var capturedValue = null; // TODO: Figure out a better signal than encoding a magic digest value.
 
-      if (message) {
-        // eslint-disable-next-line react-internal/prod-error-codes
-        error = new Error(message);
-      } else {
-        error = new Error(
-          "The server could not finish this Suspense boundary, likely " +
-            "due to an error during server rendering. Switched to " +
-            "client rendering."
-        );
+      {
+        var error;
+
+        if (message) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          error = new Error(message);
+        } else {
+          error = new Error(
+            "The server could not finish this Suspense boundary, likely " +
+              "due to an error during server rendering. Switched to " +
+              "client rendering."
+          );
+        }
+
+        error.digest = digest;
+        capturedValue = createCapturedValue(error, digest, stack);
       }
 
-      error.digest = digest;
-      var capturedValue = createCapturedValue(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -34557,7 +34561,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-f1396fc3";
+var ReactVersion = "18.3.0-www-classic-a029c8fa";
 
 function createPortal$1(
   children,

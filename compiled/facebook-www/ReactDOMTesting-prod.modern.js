@@ -10687,21 +10687,22 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
             renderDidSuspendDelayIfPossible();
             break a;
           } else value = Error(formatProdErrorMessage(426));
-        } else if (
-          isHydrating &&
-          unitOfWork.mode & 1 &&
-          ((wakeable = suspenseHandlerStackCursor.current), null !== wakeable)
-        ) {
-          0 === (wakeable.flags & 65536) && (wakeable.flags |= 256);
-          markSuspenseBoundaryShouldCapture(
-            wakeable,
-            returnFiber,
-            unitOfWork,
-            root,
-            thrownValue
-          );
-          queueHydrationError(createCapturedValueAtFiber(value, unitOfWork));
-          break a;
+        }
+        if (isHydrating && unitOfWork.mode & 1) {
+          var suspenseBoundary$61 = suspenseHandlerStackCursor.current;
+          if (null !== suspenseBoundary$61) {
+            0 === (suspenseBoundary$61.flags & 65536) &&
+              (suspenseBoundary$61.flags |= 256);
+            markSuspenseBoundaryShouldCapture(
+              suspenseBoundary$61,
+              returnFiber,
+              unitOfWork,
+              root,
+              thrownValue
+            );
+            queueHydrationError(createCapturedValueAtFiber(value, unitOfWork));
+            break a;
+          }
         }
         root = value = createCapturedValueAtFiber(value, unitOfWork);
         4 !== workInProgressRootExitStatus &&
@@ -16488,7 +16489,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1788 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1d530573",
+  version: "18.3.0-www-modern-00d6344c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2157 = {
@@ -16519,7 +16520,7 @@ var internals$jscomp$inline_2157 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-1d530573"
+  reconcilerVersion: "18.3.0-www-modern-00d6344c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2158 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16826,4 +16827,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-1d530573";
+exports.version = "18.3.0-www-modern-00d6344c";

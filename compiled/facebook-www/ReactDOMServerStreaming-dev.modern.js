@@ -9202,7 +9202,8 @@ function createRequest(
   onAllReady,
   onShellReady,
   onShellError,
-  onFatalError
+  onFatalError,
+  onPostpone
 ) {
   prepareHostDispatcher();
   var pingedTasks = [];
@@ -9228,6 +9229,7 @@ function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
+    onPostpone: onPostpone === undefined ? noop : onPostpone,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
@@ -9541,7 +9543,13 @@ function renderSuspenseBoundary(request, task, props) {
   } catch (error) {
     contentRootSegment.status = ERRORED;
     newBoundary.forceClientRender = true;
-    newBoundary.errorDigest = logRecoverableError(request, error);
+    var errorDigest;
+
+    {
+      errorDigest = logRecoverableError(request, error);
+    }
+
+    newBoundary.errorDigest = errorDigest;
 
     {
       captureBoundaryErrorDetailsDev(newBoundary, error);
@@ -10484,7 +10492,11 @@ function renderNode(request, task, node) {
 
 function erroredTask(request, boundary, segment, error) {
   // Report the error to a global handler.
-  var errorDigest = logRecoverableError(request, error);
+  var errorDigest;
+
+  {
+    errorDigest = logRecoverableError(request, error);
+  }
 
   if (boundary === null) {
     fatalError(request, error);

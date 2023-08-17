@@ -2706,63 +2706,71 @@ function resolveDefaultProps(Component, baseProps) {
 function renderElement(request, task, prevThenableState, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
-      prevThenableState = emptyContextObject;
-      ref = type.contextType;
-      "object" === typeof ref &&
-        null !== ref &&
-        (prevThenableState = ref._currentValue);
-      prevThenableState = new type(props, prevThenableState);
-      var initialState =
-        void 0 !== prevThenableState.state ? prevThenableState.state : null;
-      prevThenableState.updater = classComponentUpdater;
-      prevThenableState.props = props;
-      prevThenableState.state = initialState;
-      ref = { queue: [], replace: !1 };
-      prevThenableState._reactInternals = ref;
+      var JSCompiler_inline_result = emptyContextObject;
+      prevThenableState = type.contextType;
+      "object" === typeof prevThenableState &&
+        null !== prevThenableState &&
+        (JSCompiler_inline_result = prevThenableState._currentValue);
+      JSCompiler_inline_result = new type(props, JSCompiler_inline_result);
+      ref =
+        void 0 !== JSCompiler_inline_result.state
+          ? JSCompiler_inline_result.state
+          : null;
+      JSCompiler_inline_result.updater = classComponentUpdater;
+      JSCompiler_inline_result.props = props;
+      JSCompiler_inline_result.state = ref;
+      prevThenableState = { queue: [], replace: !1 };
+      JSCompiler_inline_result._reactInternals = prevThenableState;
       var contextType = type.contextType;
-      prevThenableState.context =
+      JSCompiler_inline_result.context =
         "object" === typeof contextType && null !== contextType
           ? contextType._currentValue
           : emptyContextObject;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
-        ((contextType = contextType(props, initialState)),
-        (initialState =
+        ((contextType = contextType(props, ref)),
+        (ref =
           null === contextType || void 0 === contextType
-            ? initialState
-            : assign({}, initialState, contextType)),
-        (prevThenableState.state = initialState));
+            ? ref
+            : assign({}, ref, contextType)),
+        (JSCompiler_inline_result.state = ref));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
-        "function" !== typeof prevThenableState.getSnapshotBeforeUpdate &&
-        ("function" === typeof prevThenableState.UNSAFE_componentWillMount ||
-          "function" === typeof prevThenableState.componentWillMount)
+        "function" !==
+          typeof JSCompiler_inline_result.getSnapshotBeforeUpdate &&
+        ("function" ===
+          typeof JSCompiler_inline_result.UNSAFE_componentWillMount ||
+          "function" === typeof JSCompiler_inline_result.componentWillMount)
       )
         if (
-          ((type = prevThenableState.state),
-          "function" === typeof prevThenableState.componentWillMount &&
-            prevThenableState.componentWillMount(),
-          "function" === typeof prevThenableState.UNSAFE_componentWillMount &&
-            prevThenableState.UNSAFE_componentWillMount(),
-          type !== prevThenableState.state &&
+          ((type = JSCompiler_inline_result.state),
+          "function" === typeof JSCompiler_inline_result.componentWillMount &&
+            JSCompiler_inline_result.componentWillMount(),
+          "function" ===
+            typeof JSCompiler_inline_result.UNSAFE_componentWillMount &&
+            JSCompiler_inline_result.UNSAFE_componentWillMount(),
+          type !== JSCompiler_inline_result.state &&
             classComponentUpdater.enqueueReplaceState(
-              prevThenableState,
-              prevThenableState.state,
+              JSCompiler_inline_result,
+              JSCompiler_inline_result.state,
               null
             ),
-          null !== ref.queue && 0 < ref.queue.length)
+          null !== prevThenableState.queue &&
+            0 < prevThenableState.queue.length)
         )
           if (
-            ((type = ref.queue),
-            (contextType = ref.replace),
-            (ref.queue = null),
-            (ref.replace = !1),
+            ((type = prevThenableState.queue),
+            (contextType = prevThenableState.replace),
+            (prevThenableState.queue = null),
+            (prevThenableState.replace = !1),
             contextType && 1 === type.length)
           )
-            prevThenableState.state = type[0];
+            JSCompiler_inline_result.state = type[0];
           else {
-            ref = contextType ? type[0] : prevThenableState.state;
-            initialState = !0;
+            prevThenableState = contextType
+              ? type[0]
+              : JSCompiler_inline_result.state;
+            ref = !0;
             for (
               contextType = contextType ? 1 : 0;
               contextType < type.length;
@@ -2771,25 +2779,35 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
               var partial = type[contextType];
               partial =
                 "function" === typeof partial
-                  ? partial.call(prevThenableState, ref, props, void 0)
+                  ? partial.call(
+                      JSCompiler_inline_result,
+                      prevThenableState,
+                      props,
+                      void 0
+                    )
                   : partial;
               null != partial &&
-                (initialState
-                  ? ((initialState = !1), (ref = assign({}, ref, partial)))
-                  : assign(ref, partial));
+                (ref
+                  ? ((ref = !1),
+                    (prevThenableState = assign(
+                      {},
+                      prevThenableState,
+                      partial
+                    )))
+                  : assign(prevThenableState, partial));
             }
-            prevThenableState.state = ref;
+            JSCompiler_inline_result.state = prevThenableState;
           }
-        else ref.queue = null;
-      props = prevThenableState.render();
+        else prevThenableState.queue = null;
+      props = JSCompiler_inline_result.render();
       renderNodeDestructiveImpl(request, task, null, props);
     } else if (
       ((currentlyRenderingComponent = {}),
       (currentlyRenderingTask = task),
       (thenableIndexCounter = localIdCounter = 0),
       (thenableState = prevThenableState),
-      (prevThenableState = type(props, void 0)),
-      (props = finishHooks(type, props, prevThenableState, void 0)),
+      (JSCompiler_inline_result = type(props, void 0)),
+      (props = finishHooks(type, props, JSCompiler_inline_result, void 0)),
       0 !== localIdCounter)
     ) {
       type = task.treeContext;
@@ -2801,23 +2819,27 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       }
     } else renderNodeDestructiveImpl(request, task, null, props);
   else if ("string" === typeof type) {
-    prevThenableState = task.blockedSegment;
-    initialState = pushStartInstance(
-      prevThenableState.chunks,
+    JSCompiler_inline_result = task.blockedSegment;
+    ref = pushStartInstance(
+      JSCompiler_inline_result.chunks,
       type,
       props,
       request.resources,
       request.responseState,
-      prevThenableState.formatContext,
-      prevThenableState.lastPushedText
+      JSCompiler_inline_result.formatContext,
+      JSCompiler_inline_result.lastPushedText
     );
-    prevThenableState.lastPushedText = !1;
-    ref = prevThenableState.formatContext;
-    prevThenableState.formatContext = getChildFormatContext(ref, type, props);
-    renderNode(request, task, initialState);
-    prevThenableState.formatContext = ref;
+    JSCompiler_inline_result.lastPushedText = !1;
+    prevThenableState = JSCompiler_inline_result.formatContext;
+    JSCompiler_inline_result.formatContext = getChildFormatContext(
+      prevThenableState,
+      type,
+      props
+    );
+    renderNode(request, task, ref);
+    JSCompiler_inline_result.formatContext = prevThenableState;
     a: {
-      task = prevThenableState.chunks;
+      task = JSCompiler_inline_result.chunks;
       switch (type) {
         case "title":
         case "style":
@@ -2839,17 +2861,17 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         case "wbr":
           break a;
         case "body":
-          if (1 >= ref.insertionMode) {
+          if (1 >= prevThenableState.insertionMode) {
             request.responseState.hasBody = !0;
             break a;
           }
           break;
         case "html":
-          if (0 === ref.insertionMode) break a;
+          if (0 === prevThenableState.insertionMode) break a;
       }
       task.push("</", type, ">");
     }
-    prevThenableState.lastPushedText = !1;
+    JSCompiler_inline_result.lastPushedText = !1;
   } else {
     switch (type) {
       case REACT_LEGACY_HIDDEN_TYPE:
@@ -2875,8 +2897,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           prevThenableState = task.blockedSegment;
           ref = props.fallback;
           props = props.children;
-          initialState = new Set();
-          contextType = {
+          contextType = new Set();
+          partial = {
             id: null,
             rootSegmentID: -1,
             parentFlushed: !1,
@@ -2884,19 +2906,19 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             forceClientRender: !1,
             completedSegments: [],
             byteSize: 0,
-            fallbackAbortableTasks: initialState,
+            fallbackAbortableTasks: contextType,
             errorDigest: null,
             resources: new Set()
           };
-          partial = createPendingSegment(
+          var boundarySegment = createPendingSegment(
             request,
             prevThenableState.chunks.length,
-            contextType,
+            partial,
             prevThenableState.formatContext,
             !1,
             !1
           );
-          prevThenableState.children.push(partial);
+          prevThenableState.children.push(boundarySegment);
           prevThenableState.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
@@ -2907,9 +2929,9 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             !1
           );
           contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = contextType;
+          task.blockedBoundary = partial;
           task.blockedSegment = contentRootSegment;
-          request.resources.boundaryResources = contextType.resources;
+          request.resources.boundaryResources = partial.resources;
           try {
             if (
               (renderNode(request, task, props),
@@ -2917,14 +2939,15 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
-              queueCompletedSegment(contextType, contentRootSegment),
-              0 === contextType.pendingTasks)
+              queueCompletedSegment(partial, contentRootSegment),
+              0 === partial.pendingTasks)
             )
               break a;
           } catch (error) {
             (contentRootSegment.status = 4),
-              (contextType.forceClientRender = !0),
-              (contextType.errorDigest = logRecoverableError(request, error));
+              (partial.forceClientRender = !0),
+              (JSCompiler_inline_result = logRecoverableError(request, error)),
+              (partial.errorDigest = JSCompiler_inline_result);
           } finally {
             (request.resources.boundaryResources = type
               ? type.resources
@@ -2937,8 +2960,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             null,
             ref,
             type,
-            partial,
-            initialState,
+            boundarySegment,
+            contextType,
             task.legacyContext,
             task.context,
             task.treeContext
@@ -2955,8 +2978,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           currentlyRenderingTask = task;
           thenableIndexCounter = localIdCounter = 0;
           thenableState = prevThenableState;
-          prevThenableState = type(props, ref);
-          props = finishHooks(type, props, prevThenableState, ref);
+          JSCompiler_inline_result = type(props, ref);
+          props = finishHooks(type, props, JSCompiler_inline_result, ref);
           if (0 !== localIdCounter) {
             type = task.treeContext;
             task.treeContext = pushTreeContext(type, 1, 0);
@@ -2973,21 +2996,26 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           renderElement(request, task, prevThenableState, type, props, ref);
           return;
         case REACT_PROVIDER_TYPE:
-          prevThenableState = props.children;
+          JSCompiler_inline_result = props.children;
           type = type._context;
           props = props.value;
-          ref = type._currentValue;
+          prevThenableState = type._currentValue;
           type._currentValue = props;
-          initialState = currentActiveSnapshot;
+          ref = currentActiveSnapshot;
           currentActiveSnapshot = props = {
-            parent: initialState,
-            depth: null === initialState ? 0 : initialState.depth + 1,
+            parent: ref,
+            depth: null === ref ? 0 : ref.depth + 1,
             context: type,
-            parentValue: ref,
+            parentValue: prevThenableState,
             value: props
           };
           task.context = props;
-          renderNodeDestructiveImpl(request, task, null, prevThenableState);
+          renderNodeDestructiveImpl(
+            request,
+            task,
+            null,
+            JSCompiler_inline_result
+          );
           request = currentActiveSnapshot;
           if (null === request)
             throw Error(
@@ -3007,8 +3035,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           renderNodeDestructiveImpl(request, task, null, props);
           return;
         case REACT_LAZY_TYPE:
-          ref = type._init;
-          type = ref(type._payload);
+          JSCompiler_inline_result = type._init;
+          type = JSCompiler_inline_result(type._payload);
           props = resolveDefaultProps(type, props);
           renderElement(request, task, prevThenableState, type, props, void 0);
           return;
@@ -3867,9 +3895,10 @@ exports.renderNextChunk = function (stream) {
             } else {
               task.abortSet.delete(task);
               segment.status = 4;
-              var boundary = task.blockedBoundary,
-                error$jscomp$0 = x,
-                errorDigest = logRecoverableError(request, error$jscomp$0);
+              var errorDigest = void 0,
+                boundary = task.blockedBoundary,
+                error$jscomp$0 = x;
+              errorDigest = logRecoverableError(request, error$jscomp$0);
               null === boundary
                 ? fatalError(request, error$jscomp$0)
                 : (boundary.pendingTasks--,
@@ -4116,6 +4145,7 @@ exports.renderToStream = function (children, options) {
     completedBoundaries: [],
     partialBoundaries: [],
     onError: void 0 === streamingFormat ? defaultErrorHandler : streamingFormat,
+    onPostpone: noop,
     onAllReady: noop,
     onShellReady: noop,
     onShellError: noop,
