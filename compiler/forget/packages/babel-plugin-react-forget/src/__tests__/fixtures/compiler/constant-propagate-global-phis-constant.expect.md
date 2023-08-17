@@ -2,12 +2,24 @@
 ## Input
 
 ```javascript
+import { CONST_STRING0, Text } from "shared-runtime";
+function useFoo() {
+  "use no forget";
+  return { tab: CONST_STRING0 };
+}
+
 function Test() {
   const { tab } = useFoo();
-  const currentTab = tab === WAT ? WAT : WAT;
+  const currentTab = tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING0;
 
-  return <Foo value={currentTab} />;
+  return <Text value={currentTab} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [],
+  isComponent: true,
+};
 
 ```
 
@@ -15,19 +27,31 @@ function Test() {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { CONST_STRING0, Text } from "shared-runtime";
+function useFoo() {
+  "use no forget";
+  return { tab: CONST_STRING0 };
+}
+
 function Test() {
   const $ = useMemoCache(1);
   const { tab } = useFoo();
-  tab === WAT ? WAT : WAT;
+  tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING0;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Foo value={WAT} />;
+    t0 = <Text value={CONST_STRING0} />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
   return t0;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [],
+  isComponent: true,
+};
 
 ```
       

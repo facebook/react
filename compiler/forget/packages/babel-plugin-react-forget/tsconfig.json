@@ -19,6 +19,6 @@
     "sourceMap": true,
     "composite": true
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "src/__tests__/fixtures"],
   "include": ["src/**/*.ts"]
 }

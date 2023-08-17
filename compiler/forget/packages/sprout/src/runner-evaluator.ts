@@ -5,8 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// tslint:disable:no-unused-variable */
 import { JSDOM } from "jsdom";
+import { toJSON } from "./shared-runtime";
+import util from "util";
 const React = require("react");
 const render = require("@testing-library/react").render;
 
@@ -33,105 +34,113 @@ const PLACEHOLDER_VALUE = Symbol();
   params: Array<any>;
 }) {
   const result = props.fn(...props.params);
-  const seen = new Map();
 
-  return JSON.stringify(result, (_key, val) => {
-    if (typeof val === "function") {
-      return `[[ function params=${val.length} ]]`;
-    } else if (typeof val === "object") {
-      let id = seen.get(val);
-      if (id != null) {
-        return `[[ cyclic ref *${id} ]]`;
-      } else if (val instanceof Map) {
-        return {
-          kind: "Map",
-          value: Array.from(val.entries()), // or with spread: value: [...value]
-        };
-      } else if (val instanceof Set) {
-        return {
-          kind: "Set",
-          value: Array.from(val.values()), // or with spread: value: [...value]
-        };
-      }
-      seen.set(val, seen.size);
-    }
-    return val;
-  });
+  return toJSON(result);
 };
 
 export function doEval(source: string): EvaluatorResult {
   "use strict";
 
-  const originalConsoleLog = console.log.bind(console);
+  const originalConsole = globalThis.console;
   const logs: Array<string> = [];
-  global.console.log = (...args: Array<any>) => {
-    logs.push(`${args}`);
+  const mockedLog = (...args: Array<any>) => {
+    logs.push(`${args.map((arg) => util.inspect(arg))}`);
   };
 
-  // source needs to be evaluated in the same scope as invoke
-  const evalResult: any = eval(`
-  (() => {
-    // Exports should be overwritten by source
-    let exports = {
-      FIXTURE_ENTRYPOINT: {
-        fn: globalThis.placeholderFn,
-        params: [],
-        isComponent: false,
-      },
+  (globalThis.console as any) = {
+    info: mockedLog,
+    log: mockedLog,
+    warn: mockedLog,
+    error: mockedLog,
+    table: mockedLog,
+    trace: () => {},
+  };
+  try {
+    // source needs to be evaluated in the same scope as invoke
+    const evalResult: any = eval(`
+    (() => {
+      // Exports should be overwritten by source
+      let exports = {
+        FIXTURE_ENTRYPOINT: {
+          fn: globalThis.placeholderFn,
+          params: [],
+          isComponent: false,
+        },
+      };
+      let reachedInvoke = false;
+      try {
+        ${source}
+        reachedInvoke = true;
+        if (exports.FIXTURE_ENTRYPOINT == null ||
+          exports.FIXTURE_ENTRYPOINT.fn === globalThis.placeholderFn
+        ) {
+          return {
+            kind: "UnexpectedError",
+            value: 'FIXTURE_ENTRYPOINT not exported!',
+          };
+        } else if (
+          typeof exports.FIXTURE_ENTRYPOINT.fn !== "function" ||
+          !Array.isArray(exports.FIXTURE_ENTRYPOINT.params) ||
+          typeof exports.FIXTURE_ENTRYPOINT.isComponent !== "boolean"
+        ) {
+          return {
+            kind: "UnexpectedError",
+            value: 'Bad shape for FIXTURE_ENTRYPOINT.',
+          };
+        } else if (exports.FIXTURE_ENTRYPOINT.isComponent) {
+          // try to run fixture as a react component
+          const result = render(
+            React.createElement(
+              exports.FIXTURE_ENTRYPOINT.fn,
+              exports.FIXTURE_ENTRYPOINT.params[0])
+          ).container.innerHTML;
+
+          return {
+            kind: "ok",
+            value: result ?? 'null',
+          };
+        } else {
+          const result = render(
+            React.createElement(
+              WrapperTestComponent,
+              exports.FIXTURE_ENTRYPOINT
+            )
+          ).container.innerHTML;
+
+          return {
+            kind: "ok",
+            value: result ?? 'null',
+          };
+        }
+      } catch (e) {
+        if (!reachedInvoke) {
+          return {
+            kind: "UnexpectedError",
+            value: e.message,
+          };
+        } else {
+          return {
+            kind: "exception",
+            value: e.message,
+          };
+        }
+      }
+    })()`);
+
+    const result = {
+      ...evalResult,
+      logs,
     };
-    let reachedInvoke = false;
-    try {
-      ${source}
-      reachedInvoke = true;
-      if (exports.FIXTURE_ENTRYPOINT == null || exports.FIXTURE_ENTRYPOINT.fn === globalThis.placeholderFn) {
-        return {
-          kind: "UnexpectedError",
-          value: 'FIXTURE_ENTRYPOINT not exported!',
-        };
-      } else if (exports.FIXTURE_ENTRYPOINT.isComponent) {
-        // try to run fixture as a react component
-        const result = render(
-          React.createElement(
-            exports.FIXTURE_ENTRYPOINT.fn,
-            exports.FIXTURE_ENTRYPOINT.params)
-        ).container.innerHTML;
-
-        return {
-          kind: "ok",
-          value: result ?? 'null',
-        };
-      } else {
-        const result = render(
-          React.createElement(
-            WrapperTestComponent,
-            exports.FIXTURE_ENTRYPOINT
-          )
-        ).container.innerHTML;
-
-        return {
-          kind: "ok",
-          value: result ?? 'null',
-        };
-      }
-    } catch (e) {
-      if (!reachedInvoke) {
-        return {
-          kind: "UnexpectedError",
-          value: e.toString(),
-        };
-      } else {
-        return {
-          kind: "exception",
-          value: e.stack,
-        };
-      }
-    }
-  })()`);
-
-  globalThis.console.log = originalConsoleLog;
-  const result = {
-    ...evalResult,
-    logs,
-  };
-  return result;
+    return result;
+  } catch (e) {
+    // syntax errors will cause the eval to throw and bubble up here
+    return {
+      kind: "UnexpectedError",
+      value:
+        "Unexpected error during eval, possible syntax error?\n" + e.message,
+      logs,
+    };
+  } finally {
+    globalThis.console = originalConsole;
+  }
 }

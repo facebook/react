@@ -2,12 +2,25 @@
 ## Input
 
 ```javascript
+import { CONST_STRING0, CONST_STRING1, Text } from "shared-runtime";
+
+function useFoo() {
+  "use no forget";
+  return { tab: CONST_STRING1 };
+}
+
 function Test() {
   const { tab } = useFoo();
-  const currentTab = tab === WAT ? WAT : BAR;
+  const currentTab = tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING1;
 
-  return <Foo value={currentTab} />;
+  return <Text value={currentTab} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [],
+  isComponent: true,
+};
 
 ```
 
@@ -15,14 +28,21 @@ function Test() {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { CONST_STRING0, CONST_STRING1, Text } from "shared-runtime";
+
+function useFoo() {
+  "use no forget";
+  return { tab: CONST_STRING1 };
+}
+
 function Test() {
   const $ = useMemoCache(2);
   const { tab } = useFoo();
-  const currentTab = tab === WAT ? WAT : BAR;
+  const currentTab = tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING1;
   const c_0 = $[0] !== currentTab;
   let t0;
   if (c_0) {
-    t0 = <Foo value={currentTab} />;
+    t0 = <Text value={currentTab} />;
     $[0] = currentTab;
     $[1] = t0;
   } else {
@@ -30,6 +50,12 @@ function Test() {
   }
   return t0;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Test,
+  params: [],
+  isComponent: true,
+};
 
 ```
       

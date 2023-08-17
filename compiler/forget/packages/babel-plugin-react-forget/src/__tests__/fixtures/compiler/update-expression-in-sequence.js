@@ -1,4 +1,3 @@
-// @debug
 function Component(props) {
   let a = props.x;
   let b;
@@ -12,6 +11,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ x: 2, cond: true }],
+  isComponent: false,
 };

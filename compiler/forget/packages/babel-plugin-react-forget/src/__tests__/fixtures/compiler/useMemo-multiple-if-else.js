@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 function Component(props) {
   const x = useMemo(() => {
     let y = [];
@@ -15,6 +17,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ a: 1, b: 2, cond2: false }],
+  isComponent: true,
 };

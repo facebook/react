@@ -2,9 +2,11 @@
 ## Input
 
 ```javascript
+import { addOne, shallowCopy } from "shared-runtime";
+
 function foo(a, b, c) {
   // Construct and freeze x
-  const x = makeObject(a);
+  const x = shallowCopy(a);
   <div>{x}</div>;
 
   // y should depend on `x` and `b`
@@ -12,18 +14,26 @@ function foo(a, b, c) {
   return y;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [{ foo: addOne }, 3],
+  isComponent: false,
+};
+
 ```
 
 ## Code
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { addOne, shallowCopy } from "shared-runtime";
+
 function foo(a, b, c) {
   const $ = useMemoCache(5);
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
-    t0 = makeObject(a);
+    t0 = shallowCopy(a);
     $[0] = a;
     $[1] = t0;
   } else {
@@ -44,6 +54,12 @@ function foo(a, b, c) {
   const y = t1;
   return y;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: foo,
+  params: [{ foo: addOne }, 3],
+  isComponent: false,
+};
 
 ```
       

@@ -2,15 +2,23 @@
 ## Input
 
 ```javascript
+import { StaticText1, StaticText2 } from "shared-runtime";
+
 function Component(props) {
-  let Tag = View;
+  let Tag = StaticText1;
+
+  // Currently, Forget preserves jsx whitespace in the source text.
+  // prettier-ignore
   return (
-    <Tag>
-      {((Tag = HScroll), props.value)}
-      <Tag />
-    </Tag>
+    <Tag>{((Tag = StaticText2), props.value)}<Tag /></Tag>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ value: "string value 1" }],
+  isComponent: true,
+};
 
 ```
 
@@ -18,13 +26,15 @@ function Component(props) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { StaticText1, StaticText2 } from "shared-runtime";
+
 function Component(props) {
   const $ = useMemoCache(3);
 
   const t1 = props.value;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <HScroll />;
+    t0 = <StaticText2 />;
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -33,10 +43,10 @@ function Component(props) {
   let t2;
   if (c_1) {
     t2 = (
-      <View>
+      <StaticText1>
         {t1}
         {t0}
-      </View>
+      </StaticText1>
     );
     $[1] = t1;
     $[2] = t2;
@@ -45,6 +55,12 @@ function Component(props) {
   }
   return t2;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ value: "string value 1" }],
+  isComponent: true,
+};
 
 ```
       

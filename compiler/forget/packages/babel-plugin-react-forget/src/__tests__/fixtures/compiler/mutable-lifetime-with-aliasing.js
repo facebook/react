@@ -1,4 +1,13 @@
-function mutate(x, y) {}
+function mutate(x, y) {
+  "use no forget";
+  if (!Array.isArray(x.value)) {
+    x.value = [];
+  }
+  x.value.push(y);
+  if (y != null) {
+    y.value = x;
+  }
+}
 
 function Component(props) {
   const a = {};
@@ -27,4 +36,11 @@ function Component(props) {
 
   // could in theory mutate any of a/b/c/x/z, so the above should be inferred as mutable
   mutate(x, null);
+  return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+  isComponent: false,
+};

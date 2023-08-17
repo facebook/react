@@ -12,9 +12,10 @@ import {
   TestFixture,
   transformFixtureInput,
 } from "fixture-test-utils";
-import { transformFromAstSync } from "@babel/core";
+import { NodePath, PluginItem, transformFromAstSync } from "@babel/core";
 import fs from "fs/promises";
 import * as parser from "@babel/parser";
+import * as t from "@babel/types";
 import { doEval, EvaluatorResult } from "./runner-evaluator";
 
 const { runReactForgetBabelPlugin } = require(COMPILER_PATH) as {
@@ -44,11 +45,73 @@ type TransformResult =
       value: string;
     };
 
+function transformAST(
+  ast: t.File,
+  sourceCode: string,
+  filename: string,
+  language: "typescript" | "flow",
+  transformJSX: boolean
+): string {
+  // missing more transforms
+  const presets: Array<PluginItem> = [
+    language === "typescript"
+      ? "@babel/preset-typescript"
+      : "@babel/preset-flow",
+  ];
+
+  if (transformJSX) {
+    presets.push({
+      plugins: ["@babel/plugin-syntax-jsx"],
+    });
+  }
+  presets.push(
+    ["@babel/preset-react", { throwIfNamespace: false }],
+    {
+      plugins: ["@babel/plugin-transform-modules-commonjs"],
+    },
+    {
+      plugins: [
+        function BabelPluginRewriteRequirePath() {
+          return {
+            visitor: {
+              CallExpression(path: NodePath<t.CallExpression>) {
+                const { callee } = path.node;
+                if (callee.type === "Identifier" && callee.name === "require") {
+                  const arg = path.node.arguments[0];
+                  if (arg.type === "StringLiteral") {
+                    // rewrite to use relative import
+                    if (arg.value === "shared-runtime") {
+                      arg.value = "./shared-runtime";
+                    }
+                  }
+                }
+              },
+            },
+          };
+        },
+      ],
+    }
+  );
+  const transformResult = transformFromAstSync(ast, sourceCode, {
+    presets,
+    filename: filename,
+  });
+
+  const code = transformResult?.code;
+  if (code == null) {
+    throw new Error(
+      `Expected custom transform to codegen successfully, got: ${transformResult}`
+    );
+  }
+  return code;
+}
 function transformFixtureForget(
   input: string,
   basename: string
 ): TransformResult {
   try {
+    const language = parseLanguage(input.split("\n", 1)[0]);
+
     const forgetResult = transformFixtureInput(
       input,
       basename,
@@ -63,27 +126,13 @@ function transformFixtureForget(
       };
     }
 
-    // missing more transforms
-    const transformResult = transformFromAstSync(
+    const code = transformAST(
       forgetResult.ast,
       forgetResult.code,
-      {
-        presets: [
-          ["@babel/preset-react", { throwIfNamespace: false }],
-          {
-            plugins: ["@babel/plugin-transform-modules-commonjs"],
-          },
-        ],
-      }
+      basename,
+      language,
+      false
     );
-
-    const code = transformResult?.code;
-    if (code == null) {
-      return {
-        type: "UnexpectedError",
-        value: `Expected custom transform to codegen successfully, got: ${transformResult}`,
-      };
-    }
     return {
       type: "Ok",
       value: code,
@@ -91,7 +140,7 @@ function transformFixtureForget(
   } catch (e) {
     return {
       type: "UnexpectedError",
-      value: e.message,
+      value: "Error in Forget transform pipeline: " + e.message,
     };
   }
 }
@@ -108,25 +157,7 @@ function transformFixtureNoForget(
       sourceType: "module",
     });
 
-    const transformResult = transformFromAstSync(ast, input, {
-      presets: [
-        {
-          plugins: ["@babel/plugin-syntax-jsx"],
-        },
-        ["@babel/preset-react", { throwIfNamespace: false }],
-        {
-          plugins: ["@babel/plugin-transform-modules-commonjs"],
-        },
-      ],
-    });
-
-    const code = transformResult?.code;
-    if (code == null) {
-      return {
-        type: "UnexpectedError",
-        value: `Expected custom transform to codegen successfully, got: ${transformResult}`,
-      };
-    }
+    const code = transformAST(ast, input, basename, language, true);
     return {
       type: "Ok",
       value: code,
@@ -134,7 +165,7 @@ function transformFixtureNoForget(
   } catch (e) {
     return {
       type: "UnexpectedError",
-      value: e.message,
+      value: "Error in non-Forget transform pipeline: " + e.message,
     };
   }
 }

@@ -2,33 +2,44 @@
 ## Input
 
 ```javascript
+import { identity, sum } from "shared-runtime";
+
 // Check that we correctly resolve type and effect lookups on the javascript
 // global object.
 function Component(props) {
-  let neverAliasedOrMutated = foo(props.b);
+  let neverAliasedOrMutated = identity(props.b);
   let primitiveVal1 = Math.max(props.a, neverAliasedOrMutated);
   let primitiveVal2 = Infinity;
-  let primitiveVal3 = globaThis.globalThis.NaN;
+  let primitiveVal3 = globalThis.globalThis.NaN;
 
-  // Even though we don't know the function signature of foo,
+  // Even though we don't know the function signature of sum,
   // we should be able to infer that it does not mutate its inputs.
-  foo(primitiveVal1, primitiveVal2, primitiveVal3);
+  sum(primitiveVal1, primitiveVal2, primitiveVal3);
   return { primitiveVal1, primitiveVal2, primitiveVal3 };
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 1, b: 2 }],
+  isComponent: false,
+};
 
 ```
 
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // Check that we correctly resolve type and effect lookups on the javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+import { identity, sum } from "shared-runtime";
+
+// Check that we correctly resolve type and effect lookups on the javascript
 // global object.
 function Component(props) {
   const $ = useMemoCache(4);
   const c_0 = $[0] !== props.b;
   let t0;
   if (c_0) {
-    t0 = foo(props.b);
+    t0 = identity(props.b);
     $[0] = props.b;
     $[1] = t0;
   } else {
@@ -37,9 +48,9 @@ function Component(props) {
   const neverAliasedOrMutated = t0;
   const primitiveVal1 = Math.max(props.a, neverAliasedOrMutated);
 
-  const primitiveVal3 = globaThis.globalThis.NaN;
+  const primitiveVal3 = globalThis.globalThis.NaN;
 
-  foo(primitiveVal1, Infinity, primitiveVal3);
+  sum(primitiveVal1, Infinity, primitiveVal3);
   const c_2 = $[2] !== primitiveVal1;
   let t1;
   if (c_2) {
@@ -51,6 +62,12 @@ function Component(props) {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 1, b: 2 }],
+  isComponent: false,
+};
 
 ```
       

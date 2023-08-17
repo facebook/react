@@ -2,10 +2,18 @@
 ## Input
 
 ```javascript
+import { CONST_STRING0 } from "shared-runtime";
+
 function t(props) {
-  let x = [, foo, props];
+  let x = [, CONST_STRING0, props];
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: t,
+  params: [{ a: 1, b: 2 }],
+  isComponent: false,
+};
 
 ```
 
@@ -13,12 +21,14 @@ function t(props) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { CONST_STRING0 } from "shared-runtime";
+
 function t(props) {
   const $ = useMemoCache(2);
   const c_0 = $[0] !== props;
   let t0;
   if (c_0) {
-    t0 = [, foo, props];
+    t0 = [, CONST_STRING0, props];
     $[0] = props;
     $[1] = t0;
   } else {
@@ -27,6 +37,12 @@ function t(props) {
   const x = t0;
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: t,
+  params: [{ a: 1, b: 2 }],
+  isComponent: false,
+};
 
 ```
       

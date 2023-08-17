@@ -44,7 +44,7 @@ const opts: RunnerOptions = yargs
   .boolean("sync")
   .describe(
     "sync",
-    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false."
+    "Run compiler in main thread (instead of using worker threads)."
   )
   .default("sync", false)
   .boolean("filter")
@@ -54,7 +54,7 @@ const opts: RunnerOptions = yargs
   )
   .default("filter", false)
   .boolean("verbose")
-  .describe("verbose", "Print results of passing fixtures.")
+  .describe("verbose", "Print all fixture outputs and logs.")
   .default("verbose", false)
   .help("help")
   .strict()
@@ -148,10 +148,10 @@ function reportResults(
         console.log(
           chalk.red("Difference in forget and non-forget results.") +
             `\nExpected result: ${JSON.stringify(
-              forgetResult,
+              nonForgetResult,
               undefined,
               2
-            )}\nFound: ${JSON.stringify(nonForgetResult, undefined, 2)}`
+            )}\nFound: ${JSON.stringify(forgetResult, undefined, 2)}`
         );
       }
     }

@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @debug
 function Component(props) {
   let a = props.x;
   let b;
@@ -16,8 +15,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ x: 2, cond: true }],
+  isComponent: false,
 };
 
 ```
@@ -25,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @debug
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(5);
   let a = props.x;
@@ -55,8 +54,8 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ x: 2, cond: true }],
+  isComponent: false,
 };
 
 ```

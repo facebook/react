@@ -1,7 +1,18 @@
-function mutate(x, y) {}
-function cond(x) {}
+function mutate(x, y) {
+  "use no forget";
+  if (x != null) {
+    x.value = (x.value ?? 0) + 1;
+  }
+  if (y != null) {
+    y.value = (y.value ?? 0) + 1;
+  }
+}
+function cond(x) {
+  "use no forget";
+  return x.value > 5;
+}
 
-function Component(props) {
+function testFunction(props) {
   let a = {};
   let b = {};
   let c = {};
@@ -31,4 +42,11 @@ function Component(props) {
   }
 
   mutate(d, null);
+  return { a, b, c, d };
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: testFunction,
+  params: [{}],
+  isComponent: false,
+};

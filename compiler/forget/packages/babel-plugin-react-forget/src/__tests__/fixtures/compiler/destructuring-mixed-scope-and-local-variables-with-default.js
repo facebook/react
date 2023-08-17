@@ -1,3 +1,13 @@
+import { Stringify, graphql } from "shared-runtime";
+
+function useFragment(_arg1, _arg2) {
+  "use no forget";
+  return {
+    urls: ["url1", "url2", "url3"],
+    comments: ["comment1"],
+  };
+}
+
 function Component(props) {
   const post = useFragment(graphql`...`, props.post);
   const allUrls = [];
@@ -16,5 +26,11 @@ function Component(props) {
     console.log(comments.length);
   };
   allUrls.push(...urls);
-  return <Media media={media} onClick={onClick} />;
+  return <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ post: {} }],
+  isComponent: true,
+};
