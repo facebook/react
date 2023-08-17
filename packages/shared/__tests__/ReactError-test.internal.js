@@ -41,7 +41,7 @@ describe('ReactError', () => {
   it('should error with minified error code', () => {
     expect(() => ReactDOM.render('Hi', null)).toThrowError(
       'Minified React error #200; visit ' +
-        'https://reactjs.org/docs/error-decoder.html?invariant=200' +
+        'https://react.dev/errors/200' +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
