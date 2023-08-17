@@ -45,6 +45,15 @@ function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
   return false;
 }
 
+function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
+  for (const directive of directives) {
+    if (directive.value.value === "use no forget") {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Runs the Compiler pipeline and mutates the source AST to include the newly compiled function.
  * Returns a boolean denoting if the AST was mutated or not.
@@ -305,6 +314,13 @@ function shouldVisitNode(
   fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
   pass: CompilerPass
 ): boolean {
+  if (fn.node.body.type === "BlockStatement") {
+    const shouldSkip = hasAnyUseNoForgetDirectives(fn.node.body.directives);
+    if (shouldSkip) {
+      return false;
+    }
+  }
+
   if (pass.opts.enableOnlyOnReactScript && fn.isFunctionDeclaration()) {
     return isComponentDeclaration(fn.node);
   }
