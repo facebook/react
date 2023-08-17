@@ -2,8 +2,18 @@ name: Forget (Rust)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+    paths:
+      - .github/workflows/**
+      - forget/crates/**
+      - forget/Cargo.*
+      - forget/*.toml
   pull_request:
+    paths:
+      - .github/workflows/**
+      - forget/crates/**
+      - forget/Cargo.*
+      - forget/*.toml
 
 env:
   CARGO_TERM_COLOR: always
@@ -12,10 +22,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-      working-directory: forget
-    - name: Run tests
-      run: cargo test --verbose
-      working-directory: forget
+      - uses: actions/checkout@v3
+      - name: Build
+        run: cargo build --verbose
+        working-directory: forget
+      - name: Run tests
+        run: cargo test --verbose
+        working-directory: forget
