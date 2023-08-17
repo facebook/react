@@ -307,7 +307,12 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     }
     case 'rejected': {
       const x = thenable.reason;
-      if (enablePostpone && (x: any).$$typeof === REACT_POSTPONE_TYPE) {
+      if (
+        enablePostpone &&
+        typeof x === 'object' &&
+        x !== null &&
+        (x: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
         const postponeInstance: Postpone = (x: any);
         logPostpone(request, postponeInstance.message);
         emitPostponeChunk(request, newTask.id, postponeInstance);
@@ -909,39 +914,40 @@ function resolveModelToJSON(
             // later, once we deprecate the old API in favor of `use`.
             getSuspendedThenable()
           : thrownValue;
-      // $FlowFixMe[method-unbinding]
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new task and resolve it later.
-        request.pendingChunks++;
-        const newTask = createTask(
-          request,
-          value,
-          getActiveContext(),
-          request.abortableTasks,
-        );
-        const ping = newTask.ping;
-        x.then(ping, ping);
-        newTask.thenableState = getThenableStateAfterSuspending();
-        return serializeLazyID(newTask.id);
-      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-        // Something postponed. We'll still send everything we have up until this point.
-        // We'll replace this element with a lazy reference that postpones on the client.
-        const postponeInstance: Postpone = (x: any);
-        request.pendingChunks++;
-        const postponeId = request.nextChunkId++;
-        logPostpone(request, postponeInstance.message);
-        emitPostponeChunk(request, postponeId, postponeInstance);
-        return serializeLazyID(postponeId);
-      } else {
-        // Something errored. We'll still send everything we have up until this point.
-        // We'll replace this element with a lazy reference that throws on the client
-        // once it gets rendered.
-        request.pendingChunks++;
-        const errorId = request.nextChunkId++;
-        const digest = logRecoverableError(request, x);
-        emitErrorChunk(request, errorId, digest, x);
-        return serializeLazyID(errorId);
+      if (typeof x === 'object' && x !== null) {
+        // $FlowFixMe[method-unbinding]
+        if (typeof x.then === 'function') {
+          // Something suspended, we'll need to create a new task and resolve it later.
+          request.pendingChunks++;
+          const newTask = createTask(
+            request,
+            value,
+            getActiveContext(),
+            request.abortableTasks,
+          );
+          const ping = newTask.ping;
+          x.then(ping, ping);
+          newTask.thenableState = getThenableStateAfterSuspending();
+          return serializeLazyID(newTask.id);
+        } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+          // Something postponed. We'll still send everything we have up until this point.
+          // We'll replace this element with a lazy reference that postpones on the client.
+          const postponeInstance: Postpone = (x: any);
+          request.pendingChunks++;
+          const postponeId = request.nextChunkId++;
+          logPostpone(request, postponeInstance.message);
+          emitPostponeChunk(request, postponeId, postponeInstance);
+          return serializeLazyID(postponeId);
+        }
       }
+      // Something errored. We'll still send everything we have up until this point.
+      // We'll replace this element with a lazy reference that throws on the client
+      // once it gets rendered.
+      request.pendingChunks++;
+      const errorId = request.nextChunkId++;
+      const digest = logRecoverableError(request, x);
+      emitErrorChunk(request, errorId, digest, x);
+      return serializeLazyID(errorId);
     }
   }
 
@@ -1375,23 +1381,27 @@ function retryTask(request: Request, task: Task): void {
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
         : thrownValue;
-    // $FlowFixMe[method-unbinding]
-    if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-      // Something suspended again, let's pick it back up later.
-      const ping = task.ping;
-      x.then(ping, ping);
-      task.thenableState = getThenableStateAfterSuspending();
-      return;
-    } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-      const postponeInstance: Postpone = (x: any);
-      logPostpone(request, postponeInstance.message);
-      emitPostponeChunk(request, task.id, postponeInstance);
-    } else {
-      request.abortableTasks.delete(task);
-      task.status = ERRORED;
-      const digest = logRecoverableError(request, x);
-      emitErrorChunk(request, task.id, digest, x);
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        // Something suspended again, let's pick it back up later.
+        const ping = task.ping;
+        x.then(ping, ping);
+        task.thenableState = getThenableStateAfterSuspending();
+        return;
+      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+        request.abortableTasks.delete(task);
+        task.status = ERRORED;
+        const postponeInstance: Postpone = (x: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, task.id, postponeInstance);
+        return;
+      }
     }
+    request.abortableTasks.delete(task);
+    task.status = ERRORED;
+    const digest = logRecoverableError(request, x);
+    emitErrorChunk(request, task.id, digest, x);
   }
 }
 
