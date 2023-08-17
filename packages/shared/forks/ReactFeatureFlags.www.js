@@ -77,6 +77,8 @@ export const enableFormActions = false;
 
 export const enableBinaryFlight = true;
 
+export const enablePostpone = false;
+
 export const disableJavaScriptURLs = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
