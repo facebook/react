@@ -255,17 +255,7 @@ ScopeManager {
                                                                                     },
                                                                                 },
                                                                                 references: [],
-                                                                                children: [
-                                                                                    Scope {
-                                                                                        id: ScopeId(
-                                                                                            10,
-                                                                                        ),
-                                                                                        kind: Function,
-                                                                                        declarations: {},
-                                                                                        references: [],
-                                                                                        children: [],
-                                                                                    },
-                                                                                ],
+                                                                                children: [],
                                                                             },
                                                                         ],
                                                                     },

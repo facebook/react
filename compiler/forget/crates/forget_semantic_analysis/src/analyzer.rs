@@ -149,53 +149,49 @@ impl Analyzer {
     }
 
     fn visit_function<T: IntoFunction>(&mut self, node: &T) {
+        assert_eq!(self.manager.scope(self.current).kind, ScopeKind::Function);
         let function = node.function();
-        let scope = self.enter(ScopeKind::Function, |visitor| {
-            for param in &function.params {
-                // `this` parameters don't declare variables, nor can they have
-                // default values
-                if let Pattern::Identifier(param) = param {
-                    if &param.name == "this" {
-                        continue;
-                    }
+        for param in &function.params {
+            // `this` parameters don't declare variables, nor can they have
+            // default values
+            if let Pattern::Identifier(param) = param {
+                if &param.name == "this" {
+                    continue;
                 }
-                Analyzer::visit_declaration_pattern(
-                    visitor,
-                    param,
-                    Some(DeclarationKind::Function),
-                );
             }
+            Analyzer::visit_declaration_pattern(self, param, Some(DeclarationKind::Function));
+        }
 
-            if let Some(body) = &function.body {
-                match body {
-                    FunctionBody::BlockStatement(body) => {
-                        // Skip calling visit_block_statement to avoid creating an extra
-                        // block scope
-                        for item in &body.body {
-                            visitor.visit_statement(item);
-                        }
-                    }
-                    FunctionBody::Expression(body) => {
-                        visitor.visit_expression(body);
+        if let Some(body) = &function.body {
+            match body {
+                FunctionBody::BlockStatement(body) => {
+                    // Skip calling visit_block_statement to avoid creating an extra
+                    // block scope
+                    for item in &body.body {
+                        self.visit_statement(item);
                     }
                 }
+                FunctionBody::Expression(body) => {
+                    self.visit_expression(body);
+                }
             }
-        });
+        }
         self.manager
             .node_scopes
-            .insert(AstNode::from(function), scope);
+            .insert(AstNode::from(function), self.current);
     }
 
     fn visit_class<T: IntoClass>(&mut self, node: &T) {
+        assert_eq!(self.manager.scope(self.current).kind, ScopeKind::Class);
         let class = node.class();
-        let scope = self.enter(ScopeKind::Class, |visitor| {
-            if let Some(super_class) = &class.super_class {
-                visitor.visit_expression(super_class);
-            }
+        if let Some(super_class) = &class.super_class {
+            self.visit_expression(super_class);
+        }
 
-            visitor.visit_class_body(&class.body);
-        });
-        self.manager.node_scopes.insert(AstNode::from(class), scope);
+        self.visit_class_body(&class.body);
+        self.manager
+            .node_scopes
+            .insert(AstNode::from(class), self.current);
     }
 
     fn visit_reference_identifier(
@@ -361,7 +357,28 @@ impl Visitor for Analyzer {
                 .node_declarations
                 .insert(AstNode::from(id), declaration);
         }
-        Analyzer::visit_class(self, ast);
+        self.enter(ScopeKind::Class, |visitor| {
+            Analyzer::visit_class(visitor, ast);
+        });
+    }
+
+    fn visit_class_expression(&mut self, ast: &forget_estree::ClassExpression) {
+        self.enter(ScopeKind::Class, |visitor| {
+            if let Some(id) = &ast.class.id {
+                let declaration = visitor.manager.add_declaration(
+                    visitor.current,
+                    id.name.clone(),
+                    DeclarationKind::Function,
+                    id.range,
+                );
+                visitor
+                    .manager
+                    .node_declarations
+                    .insert(AstNode::from(id), declaration);
+            }
+
+            Analyzer::visit_class(visitor, ast);
+        });
     }
 
     fn visit_class_property(&mut self, ast: &forget_estree::ClassProperty) {
@@ -419,32 +436,34 @@ impl Visitor for Analyzer {
                 .node_declarations
                 .insert(AstNode::from(id), declaration);
         }
-        Analyzer::visit_function(self, ast);
+        self.enter(ScopeKind::Function, |visitor| {
+            Analyzer::visit_function(visitor, ast);
+        });
     }
 
     fn visit_function_expression(&mut self, ast: &forget_estree::FunctionExpression) {
-        let mut function_scope: Option<ScopeId> = None;
-        if let Some(id) = &ast.function.id {
-            function_scope = Some(self.enter_scope(ScopeKind::Function));
-            let declaration = self.manager.add_declaration(
-                self.current,
-                id.name.clone(),
-                DeclarationKind::Function,
-                id.range,
-            );
-            self.manager
-                .node_declarations
-                .insert(AstNode::from(id), declaration);
-        }
+        self.enter(ScopeKind::Function, |visitor| {
+            if let Some(id) = &ast.function.id {
+                let declaration = visitor.manager.add_declaration(
+                    visitor.current,
+                    id.name.clone(),
+                    DeclarationKind::Function,
+                    id.range,
+                );
+                visitor
+                    .manager
+                    .node_declarations
+                    .insert(AstNode::from(id), declaration);
+            }
 
-        Analyzer::visit_function(self, ast);
-        if let Some(function_scope) = function_scope {
-            self.close_scope(function_scope);
-        }
+            Analyzer::visit_function(visitor, ast);
+        });
     }
 
     fn visit_arrow_function_expression(&mut self, ast: &forget_estree::ArrowFunctionExpression) {
-        Analyzer::visit_function(self, ast);
+        self.enter(ScopeKind::Function, |visitor| {
+            Analyzer::visit_function(visitor, ast);
+        });
     }
 
     fn visit_assignment_expression(&mut self, ast: &forget_estree::AssignmentExpression) {
