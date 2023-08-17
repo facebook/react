@@ -16,6 +16,10 @@ pub struct PointerAddress(usize);
 
 impl PointerAddress {
     pub fn new<T>(ptr: &T) -> Self {
+        // SAFETY: We convert the pointer into a usize for use as an identifier.
+        // This is _safe_ but may lead to logical bugs if different values can
+        // be stored at the same memory address within the lifetime of the
+        // PointerAddress.
         let ptr_address: usize = unsafe { std::mem::transmute(ptr) };
         Self(ptr_address)
     }

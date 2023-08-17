@@ -31,7 +31,13 @@ pub struct Context {
 
 impl Context {
     pub fn new(parser: &NullTerminatedBuf) -> Self {
-        let start: usize = unsafe { parser.as_ptr() as usize };
+        // SAFETY: This function returns a pointer to the underlying
+        // buffer. It is safe to get the pointer, it is only unsafe to
+        // use that pointer in unsafe ways. We only use the value to
+        // calculate offsets (and only use safe APIs to access the string
+        // based on those offsets).
+        let ptr = unsafe { parser.as_ptr() };
+        let start = ptr as usize;
         Self { start }
     }
 }
