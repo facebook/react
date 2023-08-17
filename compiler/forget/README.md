@@ -111,3 +111,7 @@ cargo insta accept
 ```
 
 If this command fails, see the note in "first-time setup" about installing `cargo insta`.
+
+## CI Configuration
+
+GitHub CI is configured in `.github/workflows/rust.yml`.
