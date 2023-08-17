@@ -59,7 +59,9 @@ export {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
 } from '../shared/ReactDOMFloat';
 export {useFormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 

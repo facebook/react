@@ -12,7 +12,9 @@ import type {
   PrefetchDNSOptions,
   PreconnectOptions,
   PreloadOptions,
+  PreloadModuleOptions,
   PreinitOptions,
+  PreinitModuleOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
 import {
@@ -90,7 +92,9 @@ const ReactDOMServerDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
 };
 
 export function prepareHostDispatcher() {
@@ -4802,6 +4806,12 @@ type ScriptProps = {
   src: string,
   [string]: mixed,
 };
+type ModuleProps = {
+  async: true,
+  src: string,
+  type: 'module',
+  [string]: mixed,
+};
 type ScriptResource = TResource<'script', null>;
 
 type Resource =
@@ -5075,6 +5085,63 @@ function preload(href: string, options: PreloadOptions) {
   }
 }
 
+function preloadModule(href: string, options?: ?PreloadModuleOptions): void {
+  if (!enableFloat) {
+    return;
+  }
+  const request = resolveRequest();
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+  const resources = getResources(request);
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && typeof options.as !== 'string') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered,
+      );
+    }
+  }
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+    const key = getResourceKey(as, href);
+    let resource = resources.preloadsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preload',
+        chunks: [],
+        state: NoState,
+        props: preloadModulePropsFromPreloadModuleOptions(href, as, options),
+      };
+      resources.preloadsMap.set(key, resource);
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+    resources.bulkPreloads.add(resource);
+    flushResources(request);
+  }
+}
+
 function preinit(href: string, options: PreinitOptions): void {
   if (!enableFloat) {
     return;
@@ -5174,6 +5241,94 @@ function preinit(href: string, options: PreinitOptions): void {
           };
           resources.scriptsMap.set(key, resource);
           const resourceProps = scriptPropsFromPreinitOptions(src, options);
+          resources.scripts.add(resource);
+          pushScriptImpl(resource.chunks, resourceProps);
+          flushResources(request);
+        }
+        return;
+      }
+    }
+  }
+}
+
+function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
+  if (!enableFloat) {
+    return;
+  }
+  const request = resolveRequest();
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+  const resources = getResources(request);
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && options.as !== 'script') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingEnumForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s',
+        encountered,
+      );
+    } else {
+      const as =
+        options && typeof options.as === 'string' ? options.as : 'script';
+      switch (as) {
+        case 'script': {
+          break;
+        }
+
+        // We have an invalid as type and need to warn
+        default: {
+          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+          console.error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              ' module types will be supported, aligning with the import-attributes proposal. Learn more here:' +
+              ' (https://github.com/tc39/proposal-import-attributes)',
+            typeOfAs,
+            href,
+          );
+        }
+      }
+    }
+  }
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+    switch (as) {
+      case 'script': {
+        const src = href;
+        const key = getResourceKey(as, src);
+        let resource = resources.scriptsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'script',
+            chunks: [],
+            state: NoState,
+            props: null,
+          };
+          resources.scriptsMap.set(key, resource);
+          const resourceProps = modulePropsFromPreinitModuleOptions(
+            src,
+            options,
+          );
           resources.scripts.add(resource);
           pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
@@ -5314,6 +5469,20 @@ function preloadPropsFromPreloadOptions(
   };
 }
 
+function preloadModulePropsFromPreloadModuleOptions(
+  href: string,
+  as: string,
+  options: ?PreloadModuleOptions,
+): PreloadModuleProps {
+  return {
+    rel: 'modulepreload',
+    as: as !== 'script' ? as : undefined,
+    href,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
+  };
+}
+
 function preloadAsStylePropsFromProps(href: string, props: any): PreloadProps {
   return {
     rel: 'preload',
@@ -5372,6 +5541,19 @@ function scriptPropsFromPreinitOptions(
     integrity: options.integrity,
     nonce: options.nonce,
     fetchPriority: options.fetchPriority,
+  };
+}
+
+function modulePropsFromPreinitModuleOptions(
+  src: string,
+  options: ?PreinitModuleOptions,
+): ModuleProps {
+  return {
+    src,
+    type: 'module',
+    async: true,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
   };
 }
 
