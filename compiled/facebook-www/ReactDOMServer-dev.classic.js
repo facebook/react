@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-6c503419";
+var ReactVersion = "18.3.0-www-classic-f7f9d058";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -1871,7 +1871,9 @@ var ReactDOMServerDispatcher = {
   prefetchDNS: prefetchDNS,
   preconnect: preconnect,
   preload: preload,
-  preinit: preinit
+  preloadModule: preloadModule,
+  preinit: preinit,
+  preinitModule: preinitModule
 };
 function prepareHostDispatcher() {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
@@ -6564,6 +6566,71 @@ function preload(href, options) {
   }
 }
 
+function preloadModule(href, options) {
+  var request = resolveRequest();
+
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+
+  var resources = getResources(request);
+
+  {
+    var encountered = "";
+
+    if (typeof href !== "string" || !href) {
+      encountered +=
+        " The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options !== undefined && typeof options !== "object") {
+      encountered +=
+        " The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (options && "as" in options && typeof options.as !== "string") {
+      encountered +=
+        " The `as` option encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
+      error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered
+      );
+    }
+  }
+
+  if (typeof href === "string" && href) {
+    var as = options && typeof options.as === "string" ? options.as : "script";
+    var key = getResourceKey(as, href);
+    var resource = resources.preloadsMap.get(key);
+
+    if (!resource) {
+      resource = {
+        type: "preload",
+        chunks: [],
+        state: NoState,
+        props: preloadModulePropsFromPreloadModuleOptions(href, as, options)
+      };
+      resources.preloadsMap.set(key, resource);
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+
+    resources.bulkPreloads.add(resource);
+    flushResources(request);
+  }
+}
+
 function preinit(href, options) {
   var request = resolveRequest();
 
@@ -6679,6 +6746,102 @@ function preinit(href, options) {
           var resourceProps = scriptPropsFromPreinitOptions(src, options);
           resources.scripts.add(_resource);
           pushScriptImpl(_resource.chunks, resourceProps);
+          flushResources(request);
+        }
+
+        return;
+      }
+    }
+  }
+}
+
+function preinitModule(href, options) {
+  var request = resolveRequest();
+
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+
+  var resources = getResources(request);
+
+  {
+    var encountered = "";
+
+    if (typeof href !== "string" || !href) {
+      encountered +=
+        " The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options !== undefined && typeof options !== "object") {
+      encountered +=
+        " The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (options && "as" in options && options.as !== "script") {
+      encountered +=
+        " The `as` option encountered was " +
+        getValueDescriptorExpectingEnumForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
+      error(
+        "ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s",
+        encountered
+      );
+    } else {
+      var as =
+        options && typeof options.as === "string" ? options.as : "script";
+
+      switch (as) {
+        case "script": {
+          break;
+        }
+        // We have an invalid as type and need to warn
+
+        default: {
+          var typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+
+          error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              " module types will be supported, aligning with the import-attributes proposal. Learn more here:" +
+              " (https://github.com/tc39/proposal-import-attributes)",
+            typeOfAs,
+            href
+          );
+        }
+      }
+    }
+  }
+
+  if (typeof href === "string" && href) {
+    var _as = options && typeof options.as === "string" ? options.as : "script";
+
+    switch (_as) {
+      case "script": {
+        var src = href;
+        var key = getResourceKey(_as, src);
+        var resource = resources.scriptsMap.get(key);
+
+        if (!resource) {
+          resource = {
+            type: "script",
+            chunks: [],
+            state: NoState,
+            props: null
+          };
+          resources.scriptsMap.set(key, resource);
+          var resourceProps = modulePropsFromPreinitModuleOptions(src, options);
+          resources.scripts.add(resource);
+          pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
         }
 
@@ -6802,6 +6965,16 @@ function preloadPropsFromPreloadOptions(href, as, options) {
   };
 }
 
+function preloadModulePropsFromPreloadModuleOptions(href, as, options) {
+  return {
+    rel: "modulepreload",
+    as: as !== "script" ? as : undefined,
+    href: href,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined
+  };
+}
+
 function preloadAsStylePropsFromProps(href, props) {
   return {
     rel: "preload",
@@ -6849,6 +7022,16 @@ function scriptPropsFromPreinitOptions(src, options) {
     integrity: options.integrity,
     nonce: options.nonce,
     fetchPriority: options.fetchPriority
+  };
+}
+
+function modulePropsFromPreinitModuleOptions(src, options) {
+  return {
+    src: src,
+    type: "module",
+    async: true,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined
   };
 }
 

@@ -33789,7 +33789,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-2dcc215c";
+var ReactVersion = "18.3.0-www-modern-dc24a33c";
 
 function createPortal$1(
   children,
@@ -43875,7 +43875,9 @@ var ReactDOMClientDispatcher = {
   prefetchDNS: prefetchDNS$1,
   preconnect: preconnect$1,
   preload: preload$1,
-  preinit: preinit$1
+  preloadModule: preloadModule$1,
+  preinit: preinit$1,
+  preinitModule: preinitModule$1
 }; // We expect this to get inlined. It is a function mostly to communicate the special nature of
 // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
 // these methods outside of render there is no way to know which Document or ShadowRoot is 'scoped'
@@ -44093,6 +44095,95 @@ function preload$1(href, options) {
   }
 }
 
+function preloadModule$1(href, options) {
+  {
+    var encountered = "";
+
+    if (typeof href !== "string" || !href) {
+      encountered +=
+        " The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options !== undefined && typeof options !== "object") {
+      encountered +=
+        " The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (options && "as" in options && typeof options.as !== "string") {
+      encountered +=
+        " The `as` option encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
+      error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered
+      );
+    }
+  }
+
+  var ownerDocument = getDocumentForImperativeFloatMethods();
+
+  if (typeof href === "string" && href) {
+    var as = options && typeof options.as === "string" ? options.as : "script";
+    var preloadSelector =
+      'link[rel="modulepreload"][as="' +
+      escapeSelectorAttributeValueInsideDoubleQuotes(as) +
+      '"][href="' +
+      escapeSelectorAttributeValueInsideDoubleQuotes(href) +
+      '"]'; // Some preloads are keyed under their selector. This happens when the preload is for
+    // an arbitrary type. Other preloads are keyed under the resource key they represent a preload for.
+    // Here we figure out which key to use to determine if we have a preload already.
+
+    var key = preloadSelector;
+
+    switch (as) {
+      case "audioworklet":
+      case "paintworklet":
+      case "serviceworker":
+      case "sharedworker":
+      case "worker":
+      case "script": {
+        key = getScriptKey(href);
+        break;
+      }
+    }
+
+    if (!preloadPropsMap.has(key)) {
+      var preloadProps = preloadModulePropsFromPreloadModuleOptions(
+        href,
+        as,
+        options
+      );
+      preloadPropsMap.set(key, preloadProps);
+
+      if (null === ownerDocument.querySelector(preloadSelector)) {
+        switch (as) {
+          case "audioworklet":
+          case "paintworklet":
+          case "serviceworker":
+          case "sharedworker":
+          case "worker":
+          case "script": {
+            if (ownerDocument.querySelector(getScriptSelectorFromKey(key))) {
+              return;
+            }
+          }
+        }
+
+        var instance = ownerDocument.createElement("link");
+        setInitialProperties(instance, "link", preloadProps);
+        markNodeAsHoistable(instance);
+        ownerDocument.head.appendChild(instance);
+      }
+    }
+  }
+}
+
 function preloadPropsFromPreloadOptions(href, as, options) {
   return {
     rel: "preload",
@@ -44110,6 +44201,16 @@ function preloadPropsFromPreloadOptions(href, as, options) {
     imageSrcSet: options.imageSrcSet,
     imageSizes: options.imageSizes,
     referrerPolicy: options.referrerPolicy
+  };
+}
+
+function preloadModulePropsFromPreloadModuleOptions(href, as, options) {
+  return {
+    rel: "modulepreload",
+    as: as !== "script" ? as : undefined,
+    href: href,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined
   };
 }
 
@@ -44240,6 +44341,112 @@ function preinit$1(href, options) {
   }
 }
 
+function preinitModule$1(href, options) {
+  {
+    var encountered = "";
+
+    if (typeof href !== "string" || !href) {
+      encountered +=
+        " The `href` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(href) +
+        ".";
+    }
+
+    if (options !== undefined && typeof options !== "object") {
+      encountered +=
+        " The `options` argument encountered was " +
+        getValueDescriptorExpectingObjectForWarning(options) +
+        ".";
+    } else if (options && "as" in options && options.as !== "script") {
+      encountered +=
+        " The `as` option encountered was " +
+        getValueDescriptorExpectingEnumForWarning(options.as) +
+        ".";
+    }
+
+    if (encountered) {
+      error(
+        "ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s",
+        encountered
+      );
+    } else {
+      var as =
+        options && typeof options.as === "string" ? options.as : "script";
+
+      switch (as) {
+        case "script": {
+          break;
+        }
+        // We have an invalid as type and need to warn
+
+        default: {
+          var typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+
+          error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              " module types will be supported, aligning with the import-attributes proposal. Learn more here:" +
+              " (https://github.com/tc39/proposal-import-attributes)",
+            typeOfAs,
+            href
+          );
+        }
+      }
+    }
+  }
+
+  var ownerDocument = getDocumentForImperativeFloatMethods();
+
+  if (typeof href === "string" && href) {
+    var _as = options && typeof options.as === "string" ? options.as : "script";
+
+    switch (_as) {
+      case "script": {
+        var src = href;
+        var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts;
+        var key = getScriptKey(src); // Check if this resource already exists
+
+        var resource = scripts.get(key);
+
+        if (resource) {
+          // We can early return. The resource exists and there is nothing
+          // more to do
+          return;
+        } // Attempt to hydrate instance from DOM
+
+        var instance = ownerDocument.querySelector(
+          getScriptSelectorFromKey(key)
+        );
+
+        if (!instance) {
+          // Construct a new instance and insert it
+          var scriptProps = modulePropsFromPreinitModuleOptions(src, options); // Adopt certain preload props
+
+          var preloadProps = preloadPropsMap.get(key);
+
+          if (preloadProps) {
+            adoptPreloadPropsForScript(scriptProps, preloadProps);
+          }
+
+          instance = ownerDocument.createElement("script");
+          markNodeAsHoistable(instance);
+          setInitialProperties(instance, "link", scriptProps);
+          ownerDocument.head.appendChild(instance);
+        } // Construct a Resource and cache it
+
+        resource = {
+          type: "script",
+          instance: instance,
+          count: 1,
+          state: null
+        };
+        scripts.set(key, resource);
+        return;
+      }
+    }
+  }
+}
+
 function stylesheetPropsFromPreinitOptions(href, precedence, options) {
   return {
     rel: "stylesheet",
@@ -44259,6 +44466,16 @@ function scriptPropsFromPreinitOptions(src, options) {
     integrity: options.integrity,
     nonce: options.nonce,
     fetchPriority: options.fetchPriority
+  };
+}
+
+function modulePropsFromPreinitModuleOptions(src, options) {
+  return {
+    src: src,
+    async: true,
+    type: "module",
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined
   };
 } // This function is called in begin work and we should always have a currentDocument set
 
@@ -45746,11 +45963,29 @@ function preload(href, options) {
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
 }
+function preloadModule(href, options) {
+  var dispatcher = Dispatcher.current;
+
+  if (dispatcher) {
+    dispatcher.preloadModule(href, options);
+  } // We don't error because preload needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
 function preinit(href, options) {
   var dispatcher = Dispatcher.current;
 
   if (dispatcher) {
     dispatcher.preinit(href, options);
+  } // We don't error because preinit needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
+function preinitModule(href, options) {
+  var dispatcher = Dispatcher.current;
+
+  if (dispatcher) {
+    dispatcher.preinitModule(href, options);
   } // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
@@ -45880,7 +46115,9 @@ exports.hydrateRoot = hydrateRoot;
 exports.preconnect = preconnect;
 exports.prefetchDNS = prefetchDNS;
 exports.preinit = preinit;
+exports.preinitModule = preinitModule;
 exports.preload = preload;
+exports.preloadModule = preloadModule;
 exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;
 exports.unstable_runWithPriority = runWithPriority;

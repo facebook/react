@@ -180,7 +180,9 @@ var isArrayImpl = Array.isArray,
     prefetchDNS: prefetchDNS,
     preconnect: preconnect,
     preload: preload,
-    preinit: preinit
+    preloadModule: preloadModule,
+    preinit: preinit,
+    preinitModule: preinitModule
   },
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
@@ -2068,6 +2070,35 @@ function preload(href, options) {
     }
   }
 }
+function preloadModule(href, options) {
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
+    if ("string" === typeof href && href) {
+      var as =
+          options && "string" === typeof options.as ? options.as : "script",
+        key = "[" + as + "]" + href,
+        resource = resources.preloadsMap.get(key);
+      resource ||
+        ((resource = {
+          type: "preload",
+          chunks: [],
+          state: 0,
+          props: {
+            rel: "modulepreload",
+            as: "script" !== as ? as : void 0,
+            href: href,
+            crossOrigin: options ? options.crossOrigin : void 0,
+            integrity: options ? options.integrity : void 0
+          }
+        }),
+        resources.preloadsMap.set(key, resource),
+        pushLinkImpl(resource.chunks, resource.props));
+      resources.bulkPreloads.add(resource);
+      enqueueFlush(request);
+    }
+  }
+}
 function preinit(href, options) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
@@ -2135,6 +2166,34 @@ function preinit(href, options) {
               resources.scripts.add(as),
               pushScriptImpl(as.chunks, href),
               enqueueFlush(request));
+      }
+    }
+  }
+}
+function preinitModule(href, options) {
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resources = request.resources;
+    if ("string" === typeof href && href) {
+      var as =
+        options && "string" === typeof options.as ? options.as : "script";
+      switch (as) {
+        case "script":
+          var key = "[" + as + "]" + href;
+          as = resources.scriptsMap.get(key);
+          as ||
+            ((as = { type: "script", chunks: [], state: 0, props: null }),
+            resources.scriptsMap.set(key, as),
+            (href = {
+              src: href,
+              type: "module",
+              async: !0,
+              crossOrigin: options ? options.crossOrigin : void 0,
+              integrity: options ? options.integrity : void 0
+            }),
+            resources.scripts.add(as),
+            pushScriptImpl(as.chunks, href),
+            enqueueFlush(request));
       }
     }
   }
