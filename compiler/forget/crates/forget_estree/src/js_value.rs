@@ -15,7 +15,7 @@ impl JsValue {
         match &self {
             JsValue::Boolean(value) => *value,
             JsValue::Number(value) => value.is_truthy(),
-            JsValue::String(value) => value.len() != 0,
+            JsValue::String(value) => !value.is_empty(),
             JsValue::Null => false,
             JsValue::Undefined => false,
         }
@@ -102,7 +102,7 @@ impl<'de> Deserialize<'de> for JsValue {
 
             #[inline]
             fn visit_i64<E>(self, value: i64) -> Result<JsValue, E> {
-                if value >= MIN_SAFE_INT && value <= MAX_SAFE_INT {
+                if (MIN_SAFE_INT..=MAX_SAFE_INT).contains(&value) {
                     Ok(JsValue::Number((value as f64).into()))
                 } else {
                     panic!("Invalid number")
@@ -212,11 +212,7 @@ impl Number {
 
     pub fn is_truthy(self) -> bool {
         let value = f64::from(self);
-        if self.0 == f64::NAN.to_bits() || value == 0.0 || value == -0.0 {
-            false
-        } else {
-            true
-        }
+        !(self.0 == f64::NAN.to_bits() || value == 0.0 || value == -0.0)
     }
 }
 

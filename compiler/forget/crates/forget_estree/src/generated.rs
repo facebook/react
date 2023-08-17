@@ -3,6 +3,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(non_snake_case)]
+#![allow(clippy::enum_variant_names)]
 use std::num::NonZeroU32;
 use serde::ser::{Serializer, SerializeMap};
 use serde::{Serialize, Deserialize};

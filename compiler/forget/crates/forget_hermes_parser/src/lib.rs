@@ -23,7 +23,7 @@ pub fn parse(source: &str, _file: &str) -> Result<Program, Vec<Diagnostic>> {
     if result.has_errors() {
         let error_messages = result.messages();
         return Err(error_messages
-            .into_iter()
+            .iter()
             .map(|diag| {
                 let message = utf8_with_surrogates_to_string(diag.message.as_slice()).unwrap();
                 Diagnostic::invalid_syntax(message, None)

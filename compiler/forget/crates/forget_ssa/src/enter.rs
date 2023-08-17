@@ -38,9 +38,9 @@ pub fn enter_ssa_impl(
     Ok(())
 }
 
-fn visit_instructions<'e>(
+fn visit_instructions(
     env: &Environment,
-    builder: &mut Builder<'e>,
+    builder: &mut Builder<'_>,
     hir: &mut HIR,
 ) -> Result<(), Diagnostic> {
     let instructions = &mut hir.instructions;
@@ -175,7 +175,7 @@ impl<'e> Builder<'e> {
         Ok(())
     }
 
-    fn visit_param(&mut self, param: &mut IdentifierOperand) -> () {
+    fn visit_param(&mut self, param: &mut IdentifierOperand) {
         let old_identifier = &param.identifier;
         let new_identifier = self.make_identifier(old_identifier);
         let state = self.states.get_mut(&self.current).unwrap();
@@ -183,7 +183,7 @@ impl<'e> Builder<'e> {
         param.identifier = new_identifier;
     }
 
-    fn visit_load(&mut self, local: &mut IdentifierOperand) -> () {
+    fn visit_load(&mut self, local: &mut IdentifierOperand) {
         let new_identifier = self.get_id_at(self.current, &local.identifier);
         local.identifier = new_identifier;
     }
@@ -262,7 +262,7 @@ impl<'e> Builder<'e> {
         }
     }
 
-    fn fix_incomplete_phis(&mut self, block_id: BlockId) -> () {
+    fn fix_incomplete_phis(&mut self, block_id: BlockId) {
         let state = self.states.get_mut(&block_id).unwrap();
         let incomplete_phis = std::mem::take(&mut state.incomplete_phis);
         for phi in incomplete_phis {

@@ -92,6 +92,7 @@ impl Grammar {
             #![allow(dead_code)]
             #![allow(unused_variables)]
             #![allow(non_snake_case)]
+            #![allow(clippy::enum_variant_names)]
 
             use std::num::NonZeroU32;
             use serde::ser::{Serializer, SerializeMap};
@@ -137,9 +138,9 @@ impl Grammar {
         quote! {
             #![allow(dead_code)]
             #![allow(unused_variables)]
+            #![allow(clippy::enum_variant_names)]
 
             use forget_estree::*;
-            use hermes;
             use hermes::parser::{NodePtr, NodeKind, NodeLabel };
             use hermes::utf::{utf8_with_surrogates_to_string};
             use crate::generated_extension::*;
@@ -335,7 +336,7 @@ impl Node {
             .filter_map(|(name, field)| {
                 let (type_name_str, type_kind) = parse_type(&field.type_).unwrap();
                 if (!grammar.objects.contains_key(&type_name_str)
-                    || grammar.objects.get(&type_name_str).unwrap().visitor == false)
+                    || !grammar.objects.get(&type_name_str).unwrap().visitor)
                     && !grammar.nodes.contains_key(&type_name_str)
                     && !grammar.enums.contains_key(&type_name_str)
                 {
@@ -926,7 +927,7 @@ fn parse_type(type_: &str) -> Result<(String, TypeKind), String> {
         current = &current[7..current.len() - 1];
         is_option = true;
     }
-    if current.contains("<") {
+    if current.contains('<') {
         Err(format!(
             "Unsupported type `{current}` expected named type (`Identifier`), optional type (`Option<Identifier>`), list type (`Vec<Identifier>`), or optional list (`Vec<Option<Identifier>>`)"
         ))

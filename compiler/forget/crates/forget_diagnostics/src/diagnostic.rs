@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Debug, Display, Write};
 
 use forget_estree::SourceRange;
-use miette::{ByteOffset, SourceSpan};
+use miette::SourceSpan;
 use static_assertions::assert_impl_all;
 use thiserror::Error;
 
@@ -189,7 +189,7 @@ impl Diagnostic {
 
 impl Display for Diagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.message.to_string())
+        write!(f, "{}", self.0.message)
     }
 }
 
@@ -272,7 +272,7 @@ impl From<Diagnostic> for Diagnostics {
 
 fn source_span_from_range(range: SourceRange) -> SourceSpan {
     SourceSpan::new(
-        ByteOffset::from(range.start as usize).into(),
-        ByteOffset::from((u32::from(range.end) - range.start) as usize).into(),
+        (range.start as usize).into(),
+        ((u32::from(range.end) - range.start) as usize).into(),
     )
 }

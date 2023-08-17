@@ -220,15 +220,11 @@ fn apply_binary_operator(
             _ => None,
         },
         (left, right) => match operator {
-            BinaryOperator::Equals => left
-                .loosely_equals(&right)
-                .map(|value| JsValue::Boolean(value)),
-            BinaryOperator::NotEquals => left
-                .not_loosely_equals(&right)
-                .map(|value| JsValue::Boolean(value)),
-            BinaryOperator::StrictEquals => Some(JsValue::Boolean(left.strictly_equals(&right))),
+            BinaryOperator::Equals => left.loosely_equals(right).map(JsValue::Boolean),
+            BinaryOperator::NotEquals => left.not_loosely_equals(right).map(JsValue::Boolean),
+            BinaryOperator::StrictEquals => Some(JsValue::Boolean(left.strictly_equals(right))),
             BinaryOperator::NotStrictEquals => {
-                Some(JsValue::Boolean(left.not_strictly_equals(&right)))
+                Some(JsValue::Boolean(left.not_strictly_equals(right)))
             }
             _ => None,
         },

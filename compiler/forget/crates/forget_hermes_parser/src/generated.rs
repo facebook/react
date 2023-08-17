@@ -2,8 +2,8 @@
 #![cfg_attr(rustfmt, rustfmt_skip)]
 #![allow(dead_code)]
 #![allow(unused_variables)]
+#![allow(clippy::enum_variant_names)]
 use forget_estree::*;
-use hermes;
 use hermes::parser::{NodePtr, NodeKind, NodeLabel};
 use hermes::utf::utf8_with_surrogates_to_string;
 use crate::generated_extension::*;

@@ -32,7 +32,7 @@ pub struct HIR {
 }
 
 impl HIR {
-    pub fn inline(&mut self, other: FunctionExpression) -> () {
+    pub fn inline(&mut self, other: FunctionExpression) {
         let offset = self.instructions.len();
         for instr in other.lowered_function.body.instructions.into_iter() {
             self.instructions.push(instr);
@@ -197,7 +197,7 @@ impl<'blocks> BlockRewriter<'blocks> {
         }
     }
 
-    pub fn each_block<F>(&mut self, mut f: F) -> ()
+    pub fn each_block<F>(&mut self, mut f: F)
     where
         F: FnMut(Box<BasicBlock>, &mut Self) -> BlockRewriterAction,
     {

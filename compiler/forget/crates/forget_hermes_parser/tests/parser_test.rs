@@ -3,7 +3,6 @@ use std::env;
 use forget_estree::SourceType;
 use forget_hermes_parser::parse;
 use insta::{assert_snapshot, glob};
-use serde_json;
 
 #[test]
 fn fixtures() {

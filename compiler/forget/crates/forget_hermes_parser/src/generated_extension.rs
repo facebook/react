@@ -19,8 +19,8 @@ use hermes::parser::{
     hermes_get_FunctionExpression_generator, hermes_get_FunctionExpression_id,
     hermes_get_FunctionExpression_params, hermes_get_Property_computed, hermes_get_Property_key,
     hermes_get_Property_kind, hermes_get_Property_method, hermes_get_Property_shorthand,
-    hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef,
-    NodePtr, NodePtrOpt, NodeString, NodeStringOpt, SMRange,
+    hermes_get_Property_value, NodeKind, NodeLabel, NodeLabelOpt, NodeListRef, NodePtr, NodePtrOpt,
+    NodeString, NodeStringOpt, SMRange,
 };
 use hermes::utf::utf8_with_surrogates_to_string;
 use juno_support::NullTerminatedBuf;
@@ -31,7 +31,7 @@ pub struct Context {
 
 impl Context {
     pub fn new(parser: &NullTerminatedBuf) -> Self {
-        let start: usize = unsafe { std::mem::transmute(parser.as_ptr()) };
+        let start: usize = unsafe { parser.as_ptr() as usize };
         Self { start }
     }
 }
@@ -43,11 +43,11 @@ pub trait FromHermesLabel {
     fn convert(cx: &mut Context, label: NodeLabel) -> Self;
 }
 
-pub fn convert_option<F, T>(node: NodePtrOpt, mut f: F) -> Option<T>
+pub fn convert_option<F, T>(node: NodePtrOpt, f: F) -> Option<T>
 where
     F: FnMut(NodePtr) -> T,
 {
-    node.as_node_ptr().map(|node| f(node))
+    node.as_node_ptr().map(f)
 }
 
 pub fn convert_vec<F, T>(node: NodeListRef, mut f: F) -> Vec<T>
@@ -75,9 +75,9 @@ where
 
 pub fn convert_range(cx: &Context, node: NodePtr) -> SourceRange {
     let range = node.as_ref().source_range;
-    let absolute_start: usize = unsafe { std::mem::transmute(range.start.as_ptr()) };
+    let absolute_start: usize = range.start.as_ptr() as usize;
     let start = absolute_start - cx.start;
-    let absolute_end: usize = unsafe { std::mem::transmute(range.end.as_ptr()) };
+    let absolute_end: usize = range.end.as_ptr() as usize;
     let end = absolute_end - cx.start;
     SourceRange {
         start: start as u32,

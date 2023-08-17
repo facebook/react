@@ -15,7 +15,6 @@ pub use visit::*;
 #[cfg(test)]
 mod tests {
     use insta::{assert_snapshot, glob};
-    use serde_json;
 
     use super::*;
 

@@ -30,7 +30,7 @@ pub enum TerminalValue {
 }
 
 impl TerminalValue {
-    pub fn map_optional_fallthroughs<F>(&mut self, f: F) -> ()
+    pub fn map_optional_fallthroughs<F>(&mut self, f: F)
     where
         F: Fn(BlockId) -> Option<BlockId>,
     {
@@ -85,9 +85,9 @@ impl TerminalValue {
         }
     }
 
-    pub fn each_operand<F>(&mut self, mut f: F) -> ()
+    pub fn each_operand<F>(&mut self, mut f: F)
     where
-        F: FnMut(&mut IdentifierOperand) -> (),
+        F: FnMut(&mut IdentifierOperand),
     {
         match self {
             TerminalValue::Branch(terminal) => f(&mut terminal.test),

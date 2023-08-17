@@ -14,14 +14,14 @@ use crate::{
 pub trait Visitor_DEPRECATED<'ast> {
     fn visit_lvalue<F>(&mut self, f: F)
     where
-        F: FnOnce(&mut Self) -> (),
+        F: FnOnce(&mut Self),
     {
         f(self);
     }
 
     fn visit_rvalue<F>(&mut self, f: F)
     where
-        F: FnOnce(&mut Self) -> (),
+        F: FnOnce(&mut Self),
     {
         f(self);
     }

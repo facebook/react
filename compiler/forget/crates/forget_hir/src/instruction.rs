@@ -14,9 +14,9 @@ pub struct Instruction {
 }
 
 impl Instruction {
-    pub fn each_lvalue<F>(&mut self, mut f: F) -> ()
+    pub fn each_lvalue<F>(&mut self, mut f: F)
     where
-        F: FnMut(&mut IdentifierOperand) -> (),
+        F: FnMut(&mut IdentifierOperand),
     {
         match &mut self.value {
             InstructionValue::DeclareContext(instr) => {
@@ -75,9 +75,9 @@ impl Instruction {
         Ok(())
     }
 
-    pub fn each_rvalue<F>(&mut self, mut f: F) -> ()
+    pub fn each_rvalue<F>(&mut self, mut f: F)
     where
-        F: FnMut(&mut IdentifierOperand) -> (),
+        F: FnMut(&mut IdentifierOperand),
     {
         match &mut self.value {
             InstructionValue::Array(value) => {
@@ -303,9 +303,9 @@ impl DestructurePattern {
         }
         Ok(())
     }
-    pub fn each_operand<F>(&mut self, f: &mut F) -> ()
+    pub fn each_operand<F>(&mut self, f: &mut F)
     where
-        F: FnMut(&mut IdentifierOperand) -> (),
+        F: FnMut(&mut IdentifierOperand),
     {
         match self {
             Self::Array(elements) => {

@@ -79,7 +79,7 @@ impl Analyzer {
 
     fn enter_label<F>(&mut self, id: LabelId, mut f: F)
     where
-        F: FnMut(&mut Self) -> (),
+        F: FnMut(&mut Self),
     {
         self.labels.push(id);
         f(self);
@@ -127,7 +127,7 @@ impl Analyzer {
 
     fn enter<F>(&mut self, kind: ScopeKind, mut f: F) -> ScopeId
     where
-        F: FnMut(&mut Self) -> (),
+        F: FnMut(&mut Self),
     {
         let scope = self.enter_scope(kind);
         f(self);

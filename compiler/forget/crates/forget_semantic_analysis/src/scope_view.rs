@@ -13,7 +13,7 @@ pub struct ScopeManagerView<'m> {
 impl<'m> ScopeManagerView<'m> {
     pub fn root(&self) -> ScopeView<'m> {
         ScopeView {
-            manager: &self.manager,
+            manager: self.manager,
             scope: self.manager.scope(self.manager.root_id()),
         }
     }
@@ -50,7 +50,7 @@ impl<'m> ScopeView<'m> {
         self.scope.parent.map(|id| {
             let scope = self.manager.scope(id);
             ScopeView {
-                manager: &self.manager,
+                manager: self.manager,
                 scope,
             }
         })
@@ -64,7 +64,7 @@ impl<'m> ScopeView<'m> {
             .map(|id| {
                 let declaration = self.manager.declaration(id);
                 DeclarationView {
-                    manager: &self.manager,
+                    manager: self.manager,
                     declaration,
                 }
             })
@@ -79,7 +79,7 @@ impl<'m> ScopeView<'m> {
             .map(|id| {
                 let reference = self.manager.reference(id);
                 ReferenceView {
-                    manager: &self.manager,
+                    manager: self.manager,
                     reference,
                 }
             })
@@ -94,7 +94,7 @@ impl<'m> ScopeView<'m> {
             .map(|id| {
                 let scope = self.manager.scope(id);
                 ScopeView {
-                    manager: &self.manager,
+                    manager: self.manager,
                     scope,
                 }
             })
@@ -117,7 +117,7 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
                 (
                     name.clone(),
                     DeclarationView {
-                        manager: &self.manager,
+                        manager: self.manager,
                         declaration: self.manager.declaration(*declaration),
                     },
                 )
@@ -128,7 +128,7 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
             .references
             .iter()
             .map(|reference| ReferenceView {
-                manager: &self.manager,
+                manager: self.manager,
                 reference: self.manager.reference(*reference),
             })
             .collect();
@@ -137,7 +137,7 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
             .children
             .iter()
             .map(|child| ScopeView {
-                manager: &self.manager,
+                manager: self.manager,
                 scope: self.manager.scope(*child),
             })
             .collect();
@@ -190,7 +190,7 @@ impl<'m> DeclarationView<'m> {
     pub fn scope(&self) -> ScopeView<'m> {
         let scope = self.manager.scope(self.declaration.scope);
         ScopeView {
-            manager: &self.manager,
+            manager: self.manager,
             scope,
         }
     }
@@ -224,7 +224,7 @@ impl<'m> ReferenceView<'m> {
     pub fn scope(&self) -> ScopeView<'m> {
         let scope = self.manager.scope(self.reference.scope);
         ScopeView {
-            manager: &self.manager,
+            manager: self.manager,
             scope,
         }
     }
@@ -232,7 +232,7 @@ impl<'m> ReferenceView<'m> {
     pub fn declaration(&self) -> DeclarationView<'m> {
         let declaration = self.manager.declaration(self.reference.declaration);
         DeclarationView {
-            manager: &self.manager,
+            manager: self.manager,
             declaration,
         }
     }

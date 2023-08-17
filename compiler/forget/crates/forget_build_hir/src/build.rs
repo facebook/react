@@ -374,13 +374,13 @@ fn lower_expression(
         Expression::AssignmentExpression(expr) => match expr.operator {
             forget_estree::AssignmentOperator::Equals => {
                 let right = lower_expression(env, builder, &expr.right)?;
-                return Ok(lower_assignment(
+                return lower_assignment(
                     env,
                     builder,
                     InstructionKind::Reassign,
                     &expr.left,
                     right,
-                )?);
+                );
             }
             _ => todo!("lower assignment expr {:#?}", expr),
         },
@@ -418,7 +418,7 @@ fn lower_expression(
                 return Err(Diagnostic::todo("Support method calls", expr.range));
             }
 
-            let callee = lower_expression(env, builder, &callee_expr)?;
+            let callee = lower_expression(env, builder, callee_expr)?;
             let arguments = lower_arguments(env, builder, &expr.arguments)?;
             InstructionValue::Call(forget_hir::Call { callee, arguments })
         }
@@ -568,7 +568,7 @@ fn lower_assignment_pattern(
                     None => items.push(ArrayDestructureItem::Hole),
                     Some(Pattern::Identifier(element)) => {
                         let identifier =
-                            lower_identifier_for_assignment(env, builder, kind, &element)?;
+                            lower_identifier_for_assignment(env, builder, kind, element)?;
                         items.push(ArrayDestructureItem::Value(identifier));
                     }
                     Some(Pattern::RestElement(element)) => {
