@@ -14,14 +14,12 @@ import {
   isRefValueType,
   isSetStateType,
   isUseRefType,
-  mergeConsecutiveBlocks,
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
-import { constantPropagation, deadCodeElimination } from "../Optimization";
+import { deadCodeElimination } from "../Optimization";
 import { inferReactiveScopeVariables } from "../ReactiveScopes";
-import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
-import { inferTypes } from "../TypeInference";
+import { leaveSSA } from "../SSA";
 import { logHIRFunction } from "../Utils/logger";
 import { inferMutableContextVariables } from "./InferMutableContextVariables";
 import { inferMutableRanges } from "./InferMutableRanges";
@@ -104,14 +102,6 @@ export default function analyseFunctions(func: HIRFunction): void {
 }
 
 function lower(func: HIRFunction): void {
-  if (!func.env.enableOptimizeFunctionExpressions) {
-    mergeConsecutiveBlocks(func);
-    enterSSA(func);
-    eliminateRedundantPhi(func);
-    constantPropagation(func);
-    inferTypes(func);
-  }
-
   analyseFunctions(func);
   inferReferenceEffects(func, { isFunctionExpression: true });
   deadCodeElimination(func);

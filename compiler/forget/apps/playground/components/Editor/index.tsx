@@ -115,7 +115,6 @@ function parsePragma(pragma: string) {
   let disableAllMemoization = false;
   let validateRefAccessDuringRender = true;
   let enableEmitFreeze = null;
-  let enableOptimizeFunctionExpressions = true;
   let inlineUseMemo = true;
   let validateHooksUsage = true;
   let enableFunctionCallSignatureOptimizations = true;
@@ -136,9 +135,6 @@ function parsePragma(pragma: string) {
   }
   if (pragma.includes("@validateRefAccessDuringRender false")) {
     validateRefAccessDuringRender = false;
-  }
-  if (pragma.includes("@enableOptimizeFunctionExpressions false")) {
-    enableOptimizeFunctionExpressions = false;
   }
   if (pragma.includes("@enableEmitFreeze")) {
     enableEmitFreeze = {
@@ -173,7 +169,6 @@ function parsePragma(pragma: string) {
     validateRefAccessDuringRender,
     validateFrozenLambdas,
     enableEmitFreeze,
-    enableOptimizeFunctionExpressions,
     assertValidMutableRanges,
   };
 }

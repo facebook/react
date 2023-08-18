@@ -32,7 +32,6 @@ export function transformFixtureInput(
   let validateRefAccessDuringRender = true;
   let validateNoSetStateInRender = true;
   let enableEmitFreeze = null;
-  let enableOptimizeFunctionExpressions = true;
   let enableOnlyOnReactScript = false;
 
   if (firstLine.indexOf("@forgetDirective") !== -1) {
@@ -71,9 +70,6 @@ export function transformFixtureInput(
   if (firstLine.includes("@validateNoSetStateInRender false")) {
     validateNoSetStateInRender = false;
   }
-  if (firstLine.includes("@enableOptimizeFunctionExpressions false")) {
-    enableOptimizeFunctionExpressions = false;
-  }
   if (firstLine.includes("@enableEmitFreeze")) {
     enableEmitFreeze = {
       source: "react-forget-runtime",
@@ -111,7 +107,6 @@ export function transformFixtureInput(
         validateFrozenLambdas: true,
         validateNoSetStateInRender,
         enableEmitFreeze,
-        enableOptimizeFunctionExpressions,
         assertValidMutableRanges: true,
       },
       enableOnlyOnUseForgetDirective,

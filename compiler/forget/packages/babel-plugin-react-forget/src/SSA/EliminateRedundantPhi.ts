@@ -106,10 +106,7 @@ export function eliminateRedundantPhi(
           rewritePlace(place, rewrites);
         }
 
-        if (
-          instr.value.kind === "FunctionExpression" &&
-          fn.env.enableOptimizeFunctionExpressions
-        ) {
+        if (instr.value.kind === "FunctionExpression") {
           const { context } = instr.value.loweredFunc;
           for (const place of context) {
             rewritePlace(place, rewrites);

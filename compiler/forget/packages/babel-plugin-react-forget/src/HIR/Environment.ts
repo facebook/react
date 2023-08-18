@@ -160,15 +160,6 @@ export type EnvironmentConfig = Partial<{
   enableEmitFreeze: ExternalFunction | null;
 
   /**
-   * When enabled, function expression codegen uses a subset of the compiler pipeline
-   * to transform and optimize their contents. When disabled, function expression
-   * codegen uses the original, un-transformed function body.
-   *
-   * Defaults to false (use the un-transformed function body).
-   */
-  enableOptimizeFunctionExpressions: boolean;
-
-  /**
    * Enable validation of mutable ranges
    *
    * Defaults to false
@@ -190,7 +181,6 @@ export class Environment {
   enableTreatHooksAsFunctions: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
-  enableOptimizeFunctionExpressions: boolean;
   assertValidMutableRanges: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
@@ -237,8 +227,6 @@ export class Environment {
       config?.enableTreatHooksAsFunctions ?? true;
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
-    this.enableOptimizeFunctionExpressions =
-      config?.enableOptimizeFunctionExpressions ?? true;
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
     this.validateNoSetStateInRender =
       config?.validateNoSetStateInRender ?? false;

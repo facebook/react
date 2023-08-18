@@ -5,8 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from 'babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin';
-import { TestFixture, transformFixtureInput, writeOutputToString } from 'fixture-test-utils';
+import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
+import {
+  TestFixture,
+  transformFixtureInput,
+  writeOutputToString,
+} from "fixture-test-utils";
 import fs from "fs/promises";
 
 const originalConsoleError = console.error;
@@ -47,13 +51,10 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { inputPath, inputExists, outputPath, outputExists, basename } = fixture;
-  const input = inputExists
-    ? await fs.readFile(inputPath, "utf8")
-    : null;
-  const expected = outputExists
-    ? await fs.readFile(outputPath, "utf8")
-    : null;
+  const { inputPath, inputExists, outputPath, outputExists, basename } =
+    fixture;
+  const input = inputExists ? await fs.readFile(inputPath, "utf8") : null;
+  const expected = outputExists ? await fs.readFile(outputPath, "utf8") : null;
 
   // Input will be null if the input file did not exist, in which case the output file
   // is stale
@@ -72,14 +73,20 @@ export async function compile(
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const { runReactForgetBabelPlugin } = require(compilerPath) as { runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin };
+    const { runReactForgetBabelPlugin } = require(compilerPath) as {
+      runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
+    };
     const { toggleLogging } = require(loggerPath);
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
     const shouldLogPragma = input.split("\n")[0].includes("@debug");
     toggleLogging(isOnlyFixture && shouldLogPragma);
-    code = transformFixtureInput(input, basename, runReactForgetBabelPlugin).code;
+    code = transformFixtureInput(
+      input,
+      basename,
+      runReactForgetBabelPlugin
+    ).code;
   } catch (e) {
     error = e;
   }

@@ -131,12 +131,6 @@ function applyConstantPropagation(
         continue;
       }
       const instr = block.instructions[i]!;
-      if (!fn.env.enableOptimizeFunctionExpressions) {
-        // Don't propagate constants used as function expression dependencies
-        if (functionDependencies.has(instr.lvalue.identifier.id)) {
-          continue;
-        }
-      }
       const value = evaluateInstruction(fn.env, constants, instr);
       if (value !== null) {
         constants.set(instr.lvalue.identifier.id, value);
@@ -438,9 +432,7 @@ function evaluateInstruction(
       return placeValue;
     }
     case "FunctionExpression": {
-      if (env.enableOptimizeFunctionExpressions) {
-        constantPropagationImpl(value.loweredFunc, constants);
-      }
+      constantPropagationImpl(value.loweredFunc, constants);
       return null;
     }
     default: {

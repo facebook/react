@@ -68,10 +68,7 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       const { lvalue, value } = instr;
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
 
-      if (
-        value.kind === "FunctionExpression" &&
-        func.env.enableOptimizeFunctionExpressions
-      ) {
+      if (value.kind === "FunctionExpression") {
         apply(value.loweredFunc, unifier);
       }
     }
@@ -259,9 +256,7 @@ function* generateInstructionTypes(
     }
 
     case "FunctionExpression": {
-      if (env.enableOptimizeFunctionExpressions) {
-        yield* generate(value.loweredFunc);
-      }
+      yield* generate(value.loweredFunc);
       break;
     }
 

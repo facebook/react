@@ -993,34 +993,30 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      if (cx.env.enableOptimizeFunctionExpressions) {
-        const loweredFunc = instrValue.loweredFunc;
-        const reactiveFunction = buildReactiveFunction(loweredFunc);
-        pruneUnusedLabels(reactiveFunction);
-        pruneUnusedLValues(reactiveFunction);
-        renameVariables(reactiveFunction);
-        const fn = codegenReactiveFunction(reactiveFunction).unwrap();
-        if (instrValue.expr.type === "ArrowFunctionExpression") {
-          let body: t.BlockStatement | t.Expression = fn.body;
-          if (body.body.length === 1) {
-            const stmt = body.body[0]!;
-            if (stmt.type === "ReturnStatement" && stmt.argument != null) {
-              body = stmt.argument;
-            }
+      const loweredFunc = instrValue.loweredFunc;
+      const reactiveFunction = buildReactiveFunction(loweredFunc);
+      pruneUnusedLabels(reactiveFunction);
+      pruneUnusedLValues(reactiveFunction);
+      renameVariables(reactiveFunction);
+      const fn = codegenReactiveFunction(reactiveFunction).unwrap();
+      if (instrValue.expr.type === "ArrowFunctionExpression") {
+        let body: t.BlockStatement | t.Expression = fn.body;
+        if (body.body.length === 1) {
+          const stmt = body.body[0]!;
+          if (stmt.type === "ReturnStatement" && stmt.argument != null) {
+            body = stmt.argument;
           }
-          value = t.arrowFunctionExpression(fn.params, body, fn.async);
-        } else {
-          value = t.functionExpression(
-            fn.id ??
-              (instrValue.name != null ? t.identifier(instrValue.name) : null),
-            fn.params,
-            fn.body,
-            fn.generator,
-            fn.async
-          );
         }
+        value = t.arrowFunctionExpression(fn.params, body, fn.async);
       } else {
-        value = t.cloneNode(instrValue.expr, true, false);
+        value = t.functionExpression(
+          fn.id ??
+            (instrValue.name != null ? t.identifier(instrValue.name) : null),
+          fn.params,
+          fn.body,
+          fn.generator,
+          fn.async
+        );
       }
       break;
     }
