@@ -1,5 +1,5 @@
 {
-  "name": "ochang_js_fuzzer",
+  "name": "js-fuzzer",
   "version": "1.0.0",
   "description": "",
   "main": "run.js",

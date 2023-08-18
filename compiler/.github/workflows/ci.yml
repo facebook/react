@@ -6,8 +6,23 @@ on:
   pull_request:
 
 jobs:
-  forget:
+  discover_yarn_workspaces:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-matrix
+        run: echo "matrix=$(find forget/packages -mindepth 1 -maxdepth 1 -type d | sed 's!forget/packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
+
+  forget:
+    name: Test ${{ matrix.workspace_name }}
+    needs: discover_yarn_workspaces
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -22,5 +37,5 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
         working-directory: forget
-      - run: yarn test
+      - run: yarn workspace ${{ matrix.workspace_name }} test
         working-directory: forget

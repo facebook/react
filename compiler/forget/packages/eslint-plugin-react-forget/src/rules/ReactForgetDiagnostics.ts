@@ -13,7 +13,7 @@ import ReactForgetBabelPlugin, {
   type CompilerError,
   type CompilerErrorDetail,
   type PluginOptions,
-} from "babel-plugin-react-forget";
+} from "babel-plugin-react-forget/src";
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
