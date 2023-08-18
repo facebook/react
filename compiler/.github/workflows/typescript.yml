@@ -15,6 +15,28 @@ jobs:
       - id: set-matrix
         run: echo "matrix=$(find forget/packages -mindepth 1 -maxdepth 1 -type d | sed 's!forget/packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
 
+  lint:
+    name: Lint babel-plugin-react-forget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: forget/yarn.lock
+      - name: cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+        working-directory: forget
+      - run: yarn workspace babel-plugin-react-forget prettier:ci
+        working-directory: forget
+      - run: yarn workspace babel-plugin-react-forget lint
+        working-directory: forget
+
   test:
     name: Test ${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces
