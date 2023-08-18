@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "rimraf dist && tsc",
-    "test": "concurrently -g -n jest,snap,sprout \"yarn jest\" \"yarn snap:ci\" \"yarn sprout:ci\"",
+    "test": "concurrently -g -n snap,sprout \"yarn snap:ci\" \"yarn sprout:ci\"",
     "jest": "tsc && ts-node \"$(yarn --silent which jest)\"",
     "snap": "node ../snap/dist/main.js",
     "snap:build": "yarn workspace snap run build",
