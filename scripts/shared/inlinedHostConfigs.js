@@ -94,6 +94,28 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-browser-esm',
+    entryPoints: ['react-server-dom-esm/client.browser'],
+    paths: [
+      'react-dom',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom-bindings',
+      'react-server-dom-esm',
+      'react-server-dom-esm/client',
+      'react-server-dom-esm/client.browser',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-edge-webpack',
     entryPoints: [
       'react-dom/src/server/ReactDOMFizzServerEdge.js',
@@ -160,7 +182,6 @@ module.exports = [
   {
     shortName: 'dom-node-esm',
     entryPoints: [
-      'react-server-dom-esm/client.browser',
       'react-server-dom-esm/server.node',
       'react-server-dom-esm/client.node',
     ],
@@ -175,7 +196,6 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-esm',
-      'react-server-dom-esm/client.browser',
       'react-server-dom-esm/client.node',
       'react-server-dom-esm/server',
       'react-server-dom-esm/server.node',

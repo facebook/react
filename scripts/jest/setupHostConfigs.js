@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const nodePath = require('path');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 function resolveEntryFork(resolvedEntry, isFBBundle) {
@@ -117,7 +118,20 @@ function mockAllConfigs(rendererInfo) {
     jest.mock(path, () => {
       let idx = path.lastIndexOf('/');
       let forkPath = path.slice(0, idx) + '/forks' + path.slice(idx);
-      return jest.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
+      let parts = rendererInfo.shortName.split('-');
+      while (parts.length) {
+        try {
+          const candidate = `${forkPath}.${parts.join('-')}.js`;
+          fs.statSync(nodePath.join(process.cwd(), 'packages', candidate));
+          return jest.requireActual(candidate);
+        } catch (error) {
+          // try without a part
+        }
+        parts.pop();
+      }
+      throw new Error(
+        `Expected to find a fork for ${path} but did not find one.`
+      );
     });
   });
 }

@@ -42,10 +42,22 @@ export function dispatchHint(code: string, model: HintModel): void {
         dispatcher.preload(href, options);
         return;
       }
+      case 'm': {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        // $FlowFixMe[incompatible-call] options are not refined to their types by code
+        dispatcher.preloadModule(href, options);
+        return;
+      }
       case 'I': {
         // $FlowFixMe[prop-missing] options are not refined to their types by code
         // $FlowFixMe[incompatible-call] options are not refined to their types by code
         dispatcher.preinit(href, options);
+        return;
+      }
+      case 'M': {
+        // $FlowFixMe[prop-missing] options are not refined to their types by code
+        // $FlowFixMe[incompatible-call] options are not refined to their types by code
+        dispatcher.preinitModule(href, options);
         return;
       }
     }

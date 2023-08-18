@@ -12,7 +12,9 @@ import type {
   PrefetchDNSOptions,
   PreconnectOptions,
   PreloadOptions,
+  PreloadModuleOptions,
   PreinitOptions,
+  PreinitModuleOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
 import {
@@ -79,15 +81,6 @@ import {
 import {
   getValueDescriptorExpectingObjectForWarning,
   getValueDescriptorExpectingEnumForWarning,
-  describeDifferencesForStylesheets,
-  describeDifferencesForStylesheetOverPreinit,
-  describeDifferencesForScripts,
-  describeDifferencesForScriptOverPreinit,
-  describeDifferencesForPreinits,
-  describeDifferencesForPreinitOverStylesheet,
-  describeDifferencesForPreinitOverScript,
-  describeDifferencesForPreloads,
-  describeDifferencesForPreloadOverImplicitPreload,
 } from '../shared/ReactDOMResourceValidation';
 
 import {NotPending} from '../shared/ReactDOMFormActions';
@@ -99,7 +92,9 @@ const ReactDOMServerDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
 };
 
 export function prepareHostDispatcher() {
@@ -2004,55 +1999,6 @@ function pushLink(
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
         let resource = resources.stylesMap.get(key);
-        if (__DEV__) {
-          const devResource = getAsResourceDEV(resource);
-          if (devResource) {
-            switch (devResource.__provenance) {
-              case 'rendered': {
-                const differenceDescription = describeDifferencesForStylesheets(
-                  // Diff the props from the JSX element, not the derived resource props
-                  props,
-                  devResource.__originalProps,
-                );
-                if (differenceDescription) {
-                  console.error(
-                    'React encountered a <link rel="stylesheet" href="%s" .../> with a `precedence` prop that has props that conflict' +
-                      ' with another hoistable stylesheet with the same `href`. When using `precedence` with <link rel="stylsheet" .../>' +
-                      ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
-                      ' Update the props on either <link rel="stylesheet" .../> instance so they agree.%s',
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-              case 'preinit': {
-                const differenceDescription =
-                  describeDifferencesForStylesheetOverPreinit(
-                    // Diff the props from the JSX element, not the derived resource props
-                    props,
-                    devResource.__propsEquivalent,
-                  );
-                if (differenceDescription) {
-                  console.error(
-                    'React encountered a <link rel="stylesheet" precedence="%s" href="%s" .../> with props that conflict' +
-                      ' with the options provided to `ReactDOM.preinit("%s", { as: "style", ... })`. React will use the first props or preinitialization' +
-                      ' options encountered when rendering a hoistable stylesheet with a particular `href` and will ignore any newer props or' +
-                      ' options. The first instance of this stylesheet resource was created using the `ReactDOM.preinit()` function.' +
-                      ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
-                      ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
-                      ' <link> tags only.%s',
-                    precedence,
-                    href,
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-            }
-          }
-        }
         if (!resource) {
           const resourceProps = stylesheetPropsFromRawProps(props);
           const preloadResource = resources.preloadsMap.get(key);
@@ -2076,9 +2022,6 @@ function pushLink(
             props: resourceProps,
           };
           resources.stylesMap.set(key, resource);
-          if (__DEV__) {
-            markAsRenderedResourceDEV(resource, props);
-          }
           let precedenceSet = resources.precedences.get(precedence);
           if (!precedenceSet) {
             precedenceSet = new Set();
@@ -2443,9 +2386,6 @@ function pushImg(
         },
       };
       resources.preloadsMap.set(key, resource);
-      if (__DEV__) {
-        markAsRenderedResourceDEV(resource, props);
-      }
       pushLinkImpl(resource.chunks, resource.props);
     }
     if (
@@ -2790,54 +2730,6 @@ function pushScript(
     const key = getResourceKey('script', src);
     // We can make this <script> into a ScriptResource
     let resource = resources.scriptsMap.get(key);
-    if (__DEV__) {
-      const devResource = getAsResourceDEV(resource);
-      if (devResource) {
-        switch (devResource.__provenance) {
-          case 'rendered': {
-            const differenceDescription = describeDifferencesForScripts(
-              // Diff the props from the JSX element, not the derived resource props
-              props,
-              devResource.__originalProps,
-            );
-            if (differenceDescription) {
-              console.error(
-                'React encountered a <script async={true} src="%s" .../> that has props that conflict' +
-                  ' with another hoistable script with the same `src`. When rendering hoistable scripts (async scripts without any loading handlers)' +
-                  ' the props from the first encountered instance will be used and props from later instances will be ignored.' +
-                  ' Update the props on both <script async={true} .../> instance so they agree.%s',
-                src,
-                differenceDescription,
-              );
-            }
-            break;
-          }
-          case 'preinit': {
-            const differenceDescription =
-              describeDifferencesForScriptOverPreinit(
-                // Diff the props from the JSX element, not the derived resource props
-                props,
-                devResource.__propsEquivalent,
-              );
-            if (differenceDescription) {
-              console.error(
-                'React encountered a <script async={true} src="%s" .../> with props that conflict' +
-                  ' with the options provided to `ReactDOM.preinit("%s", { as: "script", ... })`. React will use the first props or preinitialization' +
-                  ' options encountered when rendering a hoistable script with a particular `src` and will ignore any newer props or' +
-                  ' options. The first instance of this script resource was created using the `ReactDOM.preinit()` function.' +
-                  ' Please note, `ReactDOM.preinit()` is modeled off of module import assertions capabilities and does not support' +
-                  ' arbitrary props. If you need to have props not included with the preinit options you will need to rely on rendering' +
-                  ' <script> tags only.%s',
-                src,
-                src,
-                differenceDescription,
-              );
-            }
-            break;
-          }
-        }
-      }
-    }
     if (!resource) {
       resource = {
         type: 'script',
@@ -2846,9 +2738,6 @@ function pushScript(
         props: null,
       };
       resources.scriptsMap.set(key, resource);
-      if (__DEV__) {
-        markAsRenderedResourceDEV(resource, props);
-      }
       // Add to the script flushing queue
       resources.scripts.add(resource);
 
@@ -4874,30 +4763,6 @@ type TResource<
   state: ResourceStateTag,
   props: P,
 };
-// Dev extensions.
-// Stylesheets and Scripts rendered with jsx
-type RenderedResourceDEV = {
-  __provenance: 'rendered',
-  __originalProps: any,
-};
-// Preloads, Stylesheets, and Scripts from ReactDOM.preload or ReactDOM.preinit
-type ImperativeResourceDEV = {
-  __provenance: 'preload' | 'preinit',
-  __originalHref: string,
-  __originalOptions: any,
-  __propsEquivalent: any,
-};
-// Preloads created for normal components we rendered but know we can preload early such as
-// sync Scripts and stylesheets without precedence or with onLoad/onError handlers
-type ImplicitResourceDEV = {
-  __provenance: 'implicit',
-  __underlyingProps: any,
-  __impliedProps: any,
-};
-type ResourceDEV =
-  | RenderedResourceDEV
-  | ImperativeResourceDEV
-  | ImplicitResourceDEV;
 
 type PreconnectProps = {
   rel: 'preconnect' | 'dns-prefetch',
@@ -4939,6 +4804,12 @@ type StyleResource = StylesheetResource | StyleTagResource;
 type ScriptProps = {
   async: true,
   src: string,
+  [string]: mixed,
+};
+type ModuleProps = {
+  async: true,
+  src: string,
+  type: 'module',
   [string]: mixed,
 };
 type ScriptResource = TResource<'script', null>;
@@ -5014,7 +4885,7 @@ function getResourceKey(as: string, href: string): string {
   return `[${as}]${href}`;
 }
 
-export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
+function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5073,7 +4944,7 @@ export function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
   }
 }
 
-export function preconnect(href: string, options?: ?PreconnectOptions) {
+function preconnect(href: string, options?: ?PreconnectOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5136,7 +5007,7 @@ export function preconnect(href: string, options?: ?PreconnectOptions) {
   }
 }
 
-export function preload(href: string, options: PreloadOptions) {
+function preload(href: string, options: PreloadOptions) {
   if (!enableFloat) {
     return;
   }
@@ -5193,61 +5064,6 @@ export function preload(href: string, options: PreloadOptions) {
       key = getResourceKey(as, href);
     }
     let resource = resources.preloadsMap.get(key);
-    if (__DEV__) {
-      const devResource = getAsResourceDEV(resource);
-      if (devResource) {
-        switch (devResource.__provenance) {
-          case 'preload': {
-            const differenceDescription = describeDifferencesForPreloads(
-              options,
-              devResource.__originalOptions,
-            );
-            if (differenceDescription) {
-              console.error(
-                'ReactDOM.preload(): The options provided conflict with another call to `ReactDOM.preload("%s", { as: "%s", ...})`.' +
-                  ' React will always use the options it first encounters when preloading a resource for a given `href` and `as` type, and any later options will be ignored if different.' +
-                  ' Try updating all calls to `ReactDOM.preload()` with the same `href` and `as` type to use the same options, or eliminate one of the calls.%s',
-                href,
-                as,
-                differenceDescription,
-              );
-            }
-            break;
-          }
-          case 'implicit': {
-            const differenceDescription =
-              describeDifferencesForPreloadOverImplicitPreload(
-                options,
-                devResource.__impliedProps,
-              );
-            if (differenceDescription) {
-              const elementDescription =
-                as === 'style'
-                  ? '<link rel="stylesheet" ... />'
-                  : as === 'script'
-                  ? '<script ... />'
-                  : null;
-              if (elementDescription) {
-                console.error(
-                  'ReactDOM.preload(): For `href` "%s", The options provided conflict with props on a matching %s element. When the preload' +
-                    ' options disagree with the underlying resource it usually means the browser will not be able to use the preload when the resource' +
-                    ' is fetched, negating any benefit the preload would provide. React will preload the resource using props derived from the resource instead' +
-                    ' and ignore the options provided to the `ReactDOM.preload()` call. In general, preloading is useful when you expect to' +
-                    ' render a resource soon but have not yet done so. In this case since the underlying resource was already rendered the preload call' +
-                    ' may be extraneous. Try removing the call, otherwise try adjusting both the props on the %s and the options' +
-                    ' passed to `ReactDOM.preload()` to agree.%s',
-                  href,
-                  elementDescription,
-                  elementDescription,
-                  differenceDescription,
-                );
-              }
-            }
-            break;
-          }
-        }
-      }
-    }
     if (!resource) {
       resource = {
         type: 'preload',
@@ -5256,16 +5072,6 @@ export function preload(href: string, options: PreloadOptions) {
         props: preloadPropsFromPreloadOptions(href, as, options),
       };
       resources.preloadsMap.set(key, resource);
-      if (__DEV__) {
-        markAsImperativeResourceDEV(
-          resource,
-          'preload',
-          href,
-          options,
-          resource.props,
-        );
-      }
-
       pushLinkImpl(resource.chunks, resource.props);
     }
     if (as === 'font') {
@@ -5275,6 +5081,63 @@ export function preload(href: string, options: PreloadOptions) {
     } else {
       resources.bulkPreloads.add(resource);
     }
+    flushResources(request);
+  }
+}
+
+function preloadModule(href: string, options?: ?PreloadModuleOptions): void {
+  if (!enableFloat) {
+    return;
+  }
+  const request = resolveRequest();
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+  const resources = getResources(request);
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && typeof options.as !== 'string') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered,
+      );
+    }
+  }
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+    const key = getResourceKey(as, href);
+    let resource = resources.preloadsMap.get(key);
+    if (!resource) {
+      resource = {
+        type: 'preload',
+        chunks: [],
+        state: NoState,
+        props: preloadModulePropsFromPreloadModuleOptions(href, as, options),
+      };
+      resources.preloadsMap.set(key, resource);
+      pushLinkImpl(resource.chunks, resource.props);
+    }
+    resources.bulkPreloads.add(resource);
     flushResources(request);
   }
 }
@@ -5323,64 +5186,6 @@ function preinit(href: string, options: PreinitOptions): void {
         const key = getResourceKey(as, href);
         let resource = resources.stylesMap.get(key);
         const precedence = options.precedence || 'default';
-        if (__DEV__) {
-          const devResource = getAsResourceDEV(resource);
-          if (devResource) {
-            const resourceProps = stylesheetPropsFromPreinitOptions(
-              href,
-              precedence,
-              options,
-            );
-            const propsEquivalent = {
-              ...resourceProps,
-              precedence: options.precedence,
-              ['data-precedence']: null,
-            };
-            switch (devResource.__provenance) {
-              case 'rendered': {
-                const differenceDescription =
-                  describeDifferencesForPreinitOverStylesheet(
-                    // Diff the props from the JSX element, not the derived resource props
-                    propsEquivalent,
-                    devResource.__originalProps,
-                  );
-                if (differenceDescription) {
-                  console.error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <link rel="stylesheet" precedence="%s" href="%s" .../> that was already rendered.' +
-                      ' React will always use the props or options it first encounters for a hoistable stylesheet for a given `href` and any later props or options will be ignored if different.' +
-                      ' Generally, ReactDOM.preinit() is useful when you are not yet rendering a stylesheet but you anticipate it will be used soon.' +
-                      ' In this case the stylesheet was already rendered so preinitializing it does not provide any additional benefit.' +
-                      ' To resolve, try making the props and options agree between the <link rel="stylesheet" .../> and the `ReactDOM.preinit()` call or' +
-                      ' remove the `ReactDOM.preinit()` call.%s',
-                    href,
-                    devResource.__originalProps.precedence,
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-              case 'preinit': {
-                const differenceDescription = describeDifferencesForPreinits(
-                  // Diff the props from the JSX element, not the derived resource props
-                  propsEquivalent,
-                  devResource.__propsEquivalent,
-                );
-                if (differenceDescription) {
-                  console.error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "style", ... })`.' +
-                      ' React will always use the options it first encounters when preinitializing a hoistable stylesheet for a given `href` and any later options will be ignored if different.' +
-                      ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
-                    href,
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-            }
-          }
-        }
         if (!resource) {
           let state = NoState;
           const preloadResource = resources.preloadsMap.get(key);
@@ -5394,13 +5199,6 @@ function preinit(href: string, options: PreinitOptions): void {
             props: stylesheetPropsFromPreinitOptions(href, precedence, options),
           };
           resources.stylesMap.set(key, resource);
-          if (__DEV__) {
-            markAsImperativeResourceDEV(resource, 'preinit', href, options, {
-              ...resource.props,
-              precedence,
-              ['data-precedence']: undefined,
-            });
-          }
           let precedenceSet = resources.precedences.get(precedence);
           if (!precedenceSet) {
             precedenceSet = new Set();
@@ -5434,53 +5232,6 @@ function preinit(href: string, options: PreinitOptions): void {
         const src = href;
         const key = getResourceKey(as, src);
         let resource = resources.scriptsMap.get(key);
-        if (__DEV__) {
-          const devResource = getAsResourceDEV(resource);
-          if (devResource) {
-            const propsEquivalent = scriptPropsFromPreinitOptions(src, options);
-            switch (devResource.__provenance) {
-              case 'rendered': {
-                const differenceDescription =
-                  describeDifferencesForPreinitOverScript(
-                    // Diff the props from the JSX element, not the derived resource props
-                    propsEquivalent,
-                    devResource.__originalProps,
-                  );
-                if (differenceDescription) {
-                  console.error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with props found on a <script async={true} src="%s" .../> that was already rendered.' +
-                      ' React will always use the props or options it first encounters for a hoistable script for a given `href` and any later props or options will be ignored if different.' +
-                      ' Generally, ReactDOM.preinit() is useful when you are not yet rendering a script but you anticipate it will be used soon and want to go beyond preloading it and have it' +
-                      ' execute early. In this case the script was already rendered so preinitializing it does not provide any additional benefit.' +
-                      ' To resolve, try making the props and options agree between the <script .../> and the `ReactDOM.preinit()` call or remove the `ReactDOM.preinit()` call.%s',
-                    href,
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-              case 'preinit': {
-                const differenceDescription = describeDifferencesForPreinits(
-                  // Diff the props from the JSX element, not the derived resource props
-                  propsEquivalent,
-                  devResource.__propsEquivalent,
-                );
-                if (differenceDescription) {
-                  console.error(
-                    'ReactDOM.preinit(): For `href` "%s", the options provided conflict with another call to `ReactDOM.preinit("%s", { as: "script", ... })`.' +
-                      ' React will always use the options it first encounters when preinitializing a hoistable script for a given `href` and any later options will be ignored if different.' +
-                      ' Try updating all calls to `ReactDOM.preinit()` for a given `href` to use the same options, or only call `ReactDOM.preinit()` once per `href`.%s',
-                    href,
-                    href,
-                    differenceDescription,
-                  );
-                }
-                break;
-              }
-            }
-          }
-        }
         if (!resource) {
           resource = {
             type: 'script',
@@ -5490,15 +5241,94 @@ function preinit(href: string, options: PreinitOptions): void {
           };
           resources.scriptsMap.set(key, resource);
           const resourceProps = scriptPropsFromPreinitOptions(src, options);
-          if (__DEV__) {
-            markAsImperativeResourceDEV(
-              resource,
-              'preinit',
-              href,
-              options,
-              resourceProps,
-            );
-          }
+          resources.scripts.add(resource);
+          pushScriptImpl(resource.chunks, resourceProps);
+          flushResources(request);
+        }
+        return;
+      }
+    }
+  }
+}
+
+function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
+  if (!enableFloat) {
+    return;
+  }
+  const request = resolveRequest();
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
+  }
+  const resources = getResources(request);
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && options.as !== 'script') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingEnumForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s',
+        encountered,
+      );
+    } else {
+      const as =
+        options && typeof options.as === 'string' ? options.as : 'script';
+      switch (as) {
+        case 'script': {
+          break;
+        }
+
+        // We have an invalid as type and need to warn
+        default: {
+          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+          console.error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              ' module types will be supported, aligning with the import-attributes proposal. Learn more here:' +
+              ' (https://github.com/tc39/proposal-import-attributes)',
+            typeOfAs,
+            href,
+          );
+        }
+      }
+    }
+  }
+  if (typeof href === 'string' && href) {
+    const as =
+      options && typeof options.as === 'string' ? options.as : 'script';
+    switch (as) {
+      case 'script': {
+        const src = href;
+        const key = getResourceKey(as, src);
+        let resource = resources.scriptsMap.get(key);
+        if (!resource) {
+          resource = {
+            type: 'script',
+            chunks: [],
+            state: NoState,
+            props: null,
+          };
+          resources.scriptsMap.set(key, resource);
+          const resourceProps = modulePropsFromPreinitModuleOptions(
+            src,
+            options,
+          );
           resources.scripts.add(resource);
           pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
@@ -5639,6 +5469,20 @@ function preloadPropsFromPreloadOptions(
   };
 }
 
+function preloadModulePropsFromPreloadModuleOptions(
+  href: string,
+  as: string,
+  options: ?PreloadModuleOptions,
+): PreloadModuleProps {
+  return {
+    rel: 'modulepreload',
+    as: as !== 'script' ? as : undefined,
+    href,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
+  };
+}
+
 function preloadAsStylePropsFromProps(href: string, props: any): PreloadProps {
   return {
     rel: 'preload',
@@ -5700,6 +5544,19 @@ function scriptPropsFromPreinitOptions(
   };
 }
 
+function modulePropsFromPreinitModuleOptions(
+  src: string,
+  options: ?PreinitModuleOptions,
+): ModuleProps {
+  return {
+    src,
+    type: 'module',
+    async: true,
+    crossOrigin: options ? options.crossOrigin : undefined,
+    integrity: options ? options.integrity : undefined,
+  };
+}
+
 function adoptPreloadPropsForScriptProps(
   resourceProps: ScriptProps,
   preloadProps: PreloadProps,
@@ -5721,74 +5578,6 @@ export function hoistResources(
   const currentBoundaryResources = resources.boundaryResources;
   if (currentBoundaryResources) {
     source.forEach(hoistStyleResource, currentBoundaryResources);
-  }
-}
-
-function markAsRenderedResourceDEV(
-  resource: Resource,
-  originalProps: any,
-): void {
-  if (__DEV__) {
-    const devResource: RenderedResourceDEV = (resource: any);
-    if (typeof devResource.__provenance === 'string') {
-      console.error(
-        'Resource already marked for DEV type. This is a bug in React.',
-      );
-    }
-    devResource.__provenance = 'rendered';
-    devResource.__originalProps = originalProps;
-  } else {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'markAsRenderedResourceDEV was included in a production build. This is a bug in React.',
-    );
-  }
-}
-
-function markAsImperativeResourceDEV(
-  resource: Resource,
-  provenance: 'preload' | 'preinit',
-  originalHref: string,
-  originalOptions: any,
-  propsEquivalent: any,
-): void {
-  if (__DEV__) {
-    const devResource: ImperativeResourceDEV = (resource: any);
-    if (typeof devResource.__provenance === 'string') {
-      console.error(
-        'Resource already marked for DEV type. This is a bug in React.',
-      );
-    }
-    devResource.__provenance = provenance;
-    devResource.__originalHref = originalHref;
-    devResource.__originalOptions = originalOptions;
-    devResource.__propsEquivalent = propsEquivalent;
-  } else {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'markAsImperativeResourceDEV was included in a production build. This is a bug in React.',
-    );
-  }
-}
-
-function getAsResourceDEV(
-  resource: null | void | Resource,
-): null | ResourceDEV {
-  if (__DEV__) {
-    if (resource) {
-      if (typeof (resource: any).__provenance === 'string') {
-        return (resource: any);
-      }
-      console.error(
-        'Resource was not marked for DEV type. This is a bug in React.',
-      );
-    }
-    return null;
-  } else {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      'getAsResourceDEV was included in a production build. This is a bug in React.',
-    );
   }
 }
 

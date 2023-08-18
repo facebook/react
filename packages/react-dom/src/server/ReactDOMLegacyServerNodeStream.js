@@ -86,6 +86,7 @@ function renderToNodeStreamImpl(
     onAllReady,
     undefined,
     undefined,
+    undefined,
   );
   destination.request = request;
   startWork(request);

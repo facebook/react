@@ -32,6 +32,7 @@ export {
   unstable_SuspenseList,
   unstable_getCacheSignal,
   unstable_getCacheForType,
+  unstable_postpone,
   useId,
   useCallback,
   useContext,

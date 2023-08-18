@@ -36,6 +36,7 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
@@ -99,6 +100,7 @@ function prerenderToNodeStreams(
       undefined,
       undefined,
       onFatalError,
+      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

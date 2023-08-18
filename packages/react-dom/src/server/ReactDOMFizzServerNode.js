@@ -49,6 +49,7 @@ type Options = {
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
   onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
@@ -80,6 +81,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onShellReady : undefined,
     options ? options.onShellError : undefined,
     undefined,
+    options ? options.onPostpone : undefined,
   );
 }
 

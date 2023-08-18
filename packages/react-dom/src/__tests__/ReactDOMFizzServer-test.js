@@ -6040,4 +6040,95 @@ describe('ReactDOMFizzServer', () => {
       console.error = originalConsoleError;
     }
   });
+
+  // @gate enablePostpone
+  it('client renders postponed boundaries without erroring', async () => {
+    function Postponed({isClient}) {
+      if (!isClient) {
+        React.unstable_postpone('testing postpone');
+      }
+      return 'client only';
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={'loading...'}>
+            <Postponed isClient={isClient} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App isClient={false} />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>loading...</div>);
+
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+    await waitForAll([]);
+    // Postponing should not be logged as a recoverable error since it's intentional.
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(<div>client only</div>);
+  });
+
+  // @gate enablePostpone
+  it('errors if trying to postpone outside a Suspense boundary', async () => {
+    function Postponed() {
+      React.unstable_postpone('testing postpone');
+      return 'client only';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Postponed />
+        </div>
+      );
+    }
+
+    const errors = [];
+    const fatalErrors = [];
+    const postponed = [];
+    let written = false;
+
+    const testWritable = new Stream.Writable();
+    testWritable._write = (chunk, encoding, next) => {
+      written = true;
+    };
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onPostpone(reason) {
+          postponed.push(reason);
+        },
+        onError(error) {
+          errors.push(error.message);
+        },
+        onShellError(error) {
+          fatalErrors.push(error.message);
+        },
+      });
+      pipe(testWritable);
+    });
+
+    expect(written).toBe(false);
+    // Postponing is not logged as an error but as a postponed reason.
+    expect(errors).toEqual([]);
+    expect(postponed).toEqual(['testing postpone']);
+    // However, it does error the shell.
+    expect(fatalErrors).toEqual(['testing postpone']);
+  });
 });
