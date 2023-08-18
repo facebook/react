@@ -22,6 +22,7 @@ function writeChunkAndReturn(destination, chunk) {
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
@@ -2218,12 +2219,76 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
+  REACT_CACHE_TYPE = Symbol.for("react.cache"),
+  REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
   REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
     "react.default_value"
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-  emptyContextObject = {},
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+function getIteratorFn(maybeIterable) {
+  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
+  maybeIterable =
+    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+    maybeIterable["@@iterator"];
+  return "function" === typeof maybeIterable ? maybeIterable : null;
+}
+function getComponentNameFromType(type) {
+  if (null == type) return null;
+  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return "Fragment";
+    case REACT_PORTAL_TYPE:
+      return "Portal";
+    case REACT_PROFILER_TYPE:
+      return "Profiler";
+    case REACT_STRICT_MODE_TYPE:
+      return "StrictMode";
+    case REACT_SUSPENSE_TYPE:
+      return "Suspense";
+    case REACT_SUSPENSE_LIST_TYPE:
+      return "SuspenseList";
+    case REACT_CACHE_TYPE:
+      return "Cache";
+    case REACT_TRACING_MARKER_TYPE:
+      if (enableTransitionTracing) return "TracingMarker";
+  }
+  if ("object" === typeof type)
+    switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return (type.displayName || "Context") + ".Consumer";
+      case REACT_PROVIDER_TYPE:
+        return (type._context.displayName || "Context") + ".Provider";
+      case REACT_FORWARD_REF_TYPE:
+        var innerType = type.render;
+        type = type.displayName;
+        type ||
+          ((type = innerType.displayName || innerType.name || ""),
+          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
+        return type;
+      case REACT_MEMO_TYPE:
+        return (
+          (innerType = type.displayName || null),
+          null !== innerType
+            ? innerType
+            : getComponentNameFromType(type.type) || "Memo"
+        );
+      case REACT_LAZY_TYPE:
+        innerType = type._payload;
+        type = type._init;
+        try {
+          return getComponentNameFromType(type(innerType));
+        } catch (x) {
+          break;
+        }
+      case REACT_SERVER_CONTEXT_TYPE:
+        return (type.displayName || type._globalName) + ".Provider";
+    }
+  return null;
+}
+var emptyContextObject = {},
   currentActiveSnapshot = null;
 function popToNearestCommonAncestor(prev, next) {
   if (prev !== next) {
@@ -2681,6 +2746,7 @@ function createTask(
   blockedBoundary,
   blockedSegment,
   abortSet,
+  keyPath,
   legacyContext,
   context,
   treeContext
@@ -2699,6 +2765,7 @@ function createTask(
     blockedBoundary: blockedBoundary,
     blockedSegment: blockedSegment,
     abortSet: abortSet,
+    keyPath: keyPath,
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
@@ -2859,7 +2926,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           }
         else prevThenableState.queue = null;
       props = JSCompiler_inline_result.render();
-      renderNodeDestructiveImpl(request, task, null, props);
+      renderNodeDestructiveImpl(request, task, null, props, 0);
     } else if (
       ((currentlyRenderingComponent = {}),
       (currentlyRenderingTask = task),
@@ -2872,11 +2939,11 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       type = task.treeContext;
       task.treeContext = pushTreeContext(type, 1, 0);
       try {
-        renderNodeDestructiveImpl(request, task, null, props);
+        renderNodeDestructiveImpl(request, task, null, props, 0);
       } finally {
         task.treeContext = type;
       }
-    } else renderNodeDestructiveImpl(request, task, null, props);
+    } else renderNodeDestructiveImpl(request, task, null, props, 0);
   else if ("string" === typeof type) {
     JSCompiler_inline_result = task.blockedSegment;
     ref = pushStartInstance(
@@ -2895,7 +2962,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       type,
       props
     );
-    renderNode(request, task, ref);
+    renderNode(request, task, ref, 0);
     JSCompiler_inline_result.formatContext = prevThenableState;
     a: {
       task = JSCompiler_inline_result.chunks;
@@ -2938,17 +3005,17 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       case REACT_STRICT_MODE_TYPE:
       case REACT_PROFILER_TYPE:
       case REACT_FRAGMENT_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children);
+        renderNodeDestructiveImpl(request, task, null, props.children, 0);
         return;
       case REACT_OFFSCREEN_TYPE:
         "hidden" !== props.mode &&
-          renderNodeDestructiveImpl(request, task, null, props.children);
+          renderNodeDestructiveImpl(request, task, null, props.children, 0);
         return;
       case REACT_SUSPENSE_LIST_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children);
+        renderNodeDestructiveImpl(request, task, null, props.children, 0);
         return;
       case REACT_SCOPE_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children);
+        renderNodeDestructiveImpl(request, task, null, props.children, 0);
         return;
       case REACT_SUSPENSE_TYPE:
         a: {
@@ -2993,7 +3060,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           request.resources.boundaryResources = partial.resources;
           try {
             if (
-              (renderNode(request, task, props),
+              (renderNode(request, task, props, 0),
               contentRootSegment.lastPushedText &&
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
@@ -3021,6 +3088,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             type,
             boundarySegment,
             contextType,
+            task.keyPath,
             task.legacyContext,
             task.context,
             task.treeContext
@@ -3043,11 +3111,11 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             type = task.treeContext;
             task.treeContext = pushTreeContext(type, 1, 0);
             try {
-              renderNodeDestructiveImpl(request, task, null, props);
+              renderNodeDestructiveImpl(request, task, null, props, 0);
             } finally {
               task.treeContext = type;
             }
-          } else renderNodeDestructiveImpl(request, task, null, props);
+          } else renderNodeDestructiveImpl(request, task, null, props, 0);
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
@@ -3073,7 +3141,8 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             request,
             task,
             null,
-            JSCompiler_inline_result
+            JSCompiler_inline_result,
+            0
           );
           request = currentActiveSnapshot;
           if (null === request)
@@ -3091,7 +3160,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         case REACT_CONTEXT_TYPE:
           props = props.children;
           props = props(type._currentValue);
-          renderNodeDestructiveImpl(request, task, null, props);
+          renderNodeDestructiveImpl(request, task, null, props, 0);
           return;
         case REACT_LAZY_TYPE:
           JSCompiler_inline_result = type._init;
@@ -3106,19 +3175,26 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
     );
   }
 }
-function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
+function renderNodeDestructiveImpl(
+  request,
+  task,
+  prevThenableState,
+  node,
+  childIndex
+) {
   task.node = node;
   if ("object" === typeof node && null !== node) {
     switch (node.$$typeof) {
       case REACT_ELEMENT_TYPE:
-        renderElement(
-          request,
-          task,
-          prevThenableState,
-          node.type,
-          node.props,
-          node.ref
-        );
+        var type = node.type,
+          key = node.key,
+          props = node.props;
+        node = node.ref;
+        var name = getComponentNameFromType(type),
+          prevKeyPath = task.keyPath;
+        task.keyPath = [task.keyPath, name, null == key ? childIndex : key];
+        renderElement(request, task, prevThenableState, type, props, node);
+        task.keyPath = prevKeyPath;
         return;
       case REACT_PORTAL_TYPE:
         throw Error(
@@ -3127,45 +3203,43 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
       case REACT_LAZY_TYPE:
         prevThenableState = node._init;
         node = prevThenableState(node._payload);
-        renderNodeDestructiveImpl(request, task, null, node);
+        renderNodeDestructiveImpl(request, task, null, node, childIndex);
         return;
     }
     if (isArrayImpl(node)) {
-      renderChildrenArray(request, task, node);
+      renderChildrenArray(request, task, node, childIndex);
       return;
     }
-    null === node || "object" !== typeof node
-      ? (prevThenableState = null)
-      : ((prevThenableState =
-          (MAYBE_ITERATOR_SYMBOL && node[MAYBE_ITERATOR_SYMBOL]) ||
-          node["@@iterator"]),
-        (prevThenableState =
-          "function" === typeof prevThenableState ? prevThenableState : null));
-    if (
-      prevThenableState &&
-      (prevThenableState = prevThenableState.call(node))
-    ) {
-      node = prevThenableState.next();
-      if (!node.done) {
-        var children = [];
-        do children.push(node.value), (node = prevThenableState.next());
-        while (!node.done);
-        renderChildrenArray(request, task, children);
+    if ((prevThenableState = getIteratorFn(node)))
+      if ((prevThenableState = prevThenableState.call(node))) {
+        node = prevThenableState.next();
+        if (!node.done) {
+          type = [];
+          do type.push(node.value), (node = prevThenableState.next());
+          while (!node.done);
+          renderChildrenArray(request, task, type, childIndex);
+        }
+        return;
       }
-      return;
-    }
     if ("function" === typeof node.then)
       return renderNodeDestructiveImpl(
         request,
         task,
         null,
-        unwrapThenable(node)
+        unwrapThenable(node),
+        childIndex
       );
     if (
       node.$$typeof === REACT_CONTEXT_TYPE ||
       node.$$typeof === REACT_SERVER_CONTEXT_TYPE
     )
-      return renderNodeDestructiveImpl(request, task, null, node._currentValue);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        null,
+        node._currentValue,
+        childIndex
+      );
     request = Object.prototype.toString.call(node);
     throw Error(
       "Objects are not valid as a React child (found: " +
@@ -3176,42 +3250,50 @@ function renderNodeDestructiveImpl(request, task, prevThenableState, node) {
     );
   }
   "string" === typeof node
-    ? ((prevThenableState = task.blockedSegment),
-      (prevThenableState.lastPushedText = pushTextInstance(
+    ? ((childIndex = task.blockedSegment),
+      (childIndex.lastPushedText = pushTextInstance(
         task.blockedSegment.chunks,
         node,
         request.responseState,
-        prevThenableState.lastPushedText
+        childIndex.lastPushedText
       )))
     : "number" === typeof node &&
-      ((prevThenableState = task.blockedSegment),
-      (prevThenableState.lastPushedText = pushTextInstance(
+      ((childIndex = task.blockedSegment),
+      (childIndex.lastPushedText = pushTextInstance(
         task.blockedSegment.chunks,
         "" + node,
         request.responseState,
-        prevThenableState.lastPushedText
+        childIndex.lastPushedText
       )));
 }
-function renderChildrenArray(request, task, children) {
-  for (var totalChildren = children.length, i = 0; i < totalChildren; i++) {
+function renderChildrenArray(request, task, children, childIndex) {
+  for (
+    var prevKeyPath = task.keyPath, totalChildren = children.length, i = 0;
+    i < totalChildren;
+    i++
+  ) {
     var prevTreeContext = task.treeContext;
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
     try {
-      renderNode(request, task, children[i]);
+      var node = children[i];
+      if (isArrayImpl(node) || getIteratorFn(node))
+        task.keyPath = [task.keyPath, "", childIndex];
+      renderNode(request, task, node, i);
     } finally {
-      task.treeContext = prevTreeContext;
+      (task.treeContext = prevTreeContext), (task.keyPath = prevKeyPath);
     }
   }
 }
-function renderNode(request, task, node) {
+function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
     childrenLength = segment.children.length,
     chunkLength = segment.chunks.length,
     previousFormatContext = task.blockedSegment.formatContext,
     previousLegacyContext = task.legacyContext,
-    previousContext = task.context;
+    previousContext = task.context,
+    previousKeyPath = task.keyPath;
   try {
-    return renderNodeDestructiveImpl(request, task, null, node);
+    return renderNodeDestructiveImpl(request, task, null, node, childIndex);
   } catch (thrownValue) {
     if (
       (resetHooksState(),
@@ -3225,25 +3307,26 @@ function renderNode(request, task, node) {
         null !== node &&
         "function" === typeof node.then)
     )
-      (segment = getThenableStateAfterSuspending()),
-        (childrenLength = task.blockedSegment),
-        (chunkLength = createPendingSegment(
+      (childIndex = getThenableStateAfterSuspending()),
+        (segment = task.blockedSegment),
+        (childrenLength = createPendingSegment(
           request,
-          childrenLength.chunks.length,
+          segment.chunks.length,
           null,
-          childrenLength.formatContext,
-          childrenLength.lastPushedText,
+          segment.formatContext,
+          segment.lastPushedText,
           !0
         )),
-        childrenLength.children.push(chunkLength),
-        (childrenLength.lastPushedText = !1),
+        segment.children.push(childrenLength),
+        (segment.lastPushedText = !1),
         (request = createTask(
           request,
-          segment,
+          childIndex,
           task.node,
           task.blockedBoundary,
-          chunkLength,
+          childrenLength,
           task.abortSet,
+          task.keyPath,
           task.legacyContext,
           task.context,
           task.treeContext
@@ -3252,12 +3335,14 @@ function renderNode(request, task, node) {
         (task.blockedSegment.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
+        (task.keyPath = previousKeyPath),
         switchContext(previousContext);
     else
       throw (
         ((task.blockedSegment.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
+        (task.keyPath = previousKeyPath),
         switchContext(previousContext),
         node)
       );
@@ -3927,7 +4012,8 @@ exports.renderNextChunk = function (stream) {
               request,
               task,
               prevThenableState,
-              task.node
+              task.node,
+              0
             );
             segment.lastPushedText &&
               segment.textEmbedded &&
@@ -4226,6 +4312,7 @@ exports.renderToStream = function (children, options) {
     null,
     bootstrapModules,
     identifierPrefix,
+    null,
     emptyContextObject,
     null,
     emptyTreeContext
