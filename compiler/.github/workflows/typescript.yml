@@ -1,4 +1,4 @@
-name: CI
+name: Forget (TypeScript)
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
       - id: set-matrix
         run: echo "matrix=$(find forget/packages -mindepth 1 -maxdepth 1 -type d | sed 's!forget/packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
 
-  forget:
+  test:
     name: Test ${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces
     runs-on: ubuntu-latest
