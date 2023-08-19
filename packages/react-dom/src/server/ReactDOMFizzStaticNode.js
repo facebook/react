@@ -63,7 +63,7 @@ function createFakeWritable(readable: any): Writable {
   }: any);
 }
 
-function prerenderToNodeStreams(
+function prerenderToNodeStream(
   children: ReactNodeList,
   options?: Options,
 ): Promise<StaticResult> {
@@ -120,4 +120,4 @@ function prerenderToNodeStreams(
   });
 }
 
-export {prerenderToNodeStreams, ReactVersion as version};
+export {prerenderToNodeStream, ReactVersion as version};

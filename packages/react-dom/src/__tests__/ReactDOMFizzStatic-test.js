@@ -218,7 +218,7 @@ describe('ReactDOMFizzStatic', () => {
       );
     }
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />);
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(<App />);
 
     resolveText('Hello');
 
