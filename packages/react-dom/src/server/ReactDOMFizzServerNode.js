@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Request} from 'react-server/src/ReactFizzServer';
+import type {Request, ResumableState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -17,6 +17,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
+  resumeRequest,
   startWork,
   startFlowing,
   abort,
@@ -51,6 +52,15 @@ type Options = {
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+type ResumeOptions = {
+  nonce?: string,
+  onShellReady?: () => void,
+  onShellError?: (error: mixed) => void,
+  onAllReady?: () => void,
+  onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
 };
 
 type PipeableStream = {
@@ -90,6 +100,59 @@ function renderToPipeableStream(
   options?: Options,
 ): PipeableStream {
   const request = createRequestImpl(children, options);
+  let hasStartedFlowing = false;
+  startWork(request);
+  return {
+    pipe<T: Writable>(destination: T): T {
+      if (hasStartedFlowing) {
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
+      }
+      hasStartedFlowing = true;
+      startFlowing(request, destination);
+      destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createAbortHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createAbortHandler(request, 'The destination stream closed early.'),
+      );
+      return destination;
+    },
+    abort(reason: mixed) {
+      abort(request, reason);
+    },
+  };
+}
+
+function resumeRequestImpl(children: ReactNodeList,
+  resumableState: ResumableState,
+  options: void | ResumeOptions) {
+  return resumeRequest(
+    children,
+    resumableState, // TODO: How to pass nonce?
+    options ? options.onError : undefined,
+    options ? options.onAllReady : undefined,
+    options ? options.onShellReady : undefined,
+    options ? options.onShellError : undefined,
+    undefined,
+    options ? options.onPostpone : undefined,
+  );
+}
+
+
+function resumeToPipeableStream(
+  children: ReactNodeList,
+  resumableState: ResumableState,
+  options?: ResumeOptions,
+): PipeableStream {
+  const request = resumeRequestImpl(children, resumableState, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {

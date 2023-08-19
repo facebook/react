@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ResumableState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -14,6 +15,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
+  resumeRequest,
   startWork,
   startFlowing,
   abort,
@@ -33,6 +35,14 @@ type Options = {
   bootstrapScripts?: Array<string | BootstrapScriptDescriptor>,
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+};
+
+type ResumeOptions = {
+  nonce?: string,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
@@ -96,6 +106,71 @@ function renderToReadableStream(
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
+      options ? options.onError : undefined,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+      options ? options.onPostpone : undefined,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
+}
+
+function resume(
+  children: ReactNodeList,
+  resumableState: ResumableState,
+  options?: ResumeOptions,
+): Promise<ReactDOMServerReadableStream> {
+  return new Promise((resolve, reject) => {
+    let onFatalError;
+    let onAllReady;
+    const allReady = new Promise<void>((res, rej) => {
+      onAllReady = res;
+      onFatalError = rej;
+    });
+
+    function onShellReady() {
+      const stream: ReactDOMServerReadableStream = (new ReadableStream(
+        {
+          type: 'bytes',
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            abort(request);
+          },
+        },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      ): any);
+      // TODO: Move to sub-classing ReadableStream.
+      stream.allReady = allReady;
+      resolve(stream);
+    }
+    function onShellError(error: mixed) {
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
+      reject(error);
+    }
+    const resources = createResources();
+    const request = resumeRequest(
+      children,
+      resumableState, // TODO: How to pass nonce?
       options ? options.onError : undefined,
       onAllReady,
       onShellReady,
