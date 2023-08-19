@@ -281,7 +281,7 @@ function defaultErrorHandler(error: mixed) {
 
 function noop(): void {}
 
-export function createRequest(
+function createRequestImpl(
   children: ReactNodeList,
   resources: Resources,
   responseState: ResponseState,
@@ -350,6 +350,85 @@ export function createRequest(
   );
   pingedTasks.push(rootTask);
   return request;
+}
+
+export function createRequest(
+  children: ReactNodeList,
+  resources: Resources,
+  responseState: ResponseState,
+  rootFormatContext: FormatContext,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
+): Request {
+  return createRequestImpl(
+    children,
+    resources,
+    responseState,
+    rootFormatContext,
+    progressiveChunkSize,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+  );
+}
+
+export function createPrerenderRequest(
+  children: ReactNodeList,
+  resources: Resources,
+  responseState: ResponseState,
+  rootFormatContext: FormatContext,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed) => ?string),
+  onAllReady: void | (() => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
+): Request {
+  return createRequestImpl(
+    children,
+    resources,
+    responseState,
+    rootFormatContext,
+    progressiveChunkSize,
+    onError,
+    onAllReady,
+    undefined,
+    undefined,
+    onFatalError,
+    onPostpone,
+  );
+}
+
+export function resumeRequest(
+  children: ReactNodeList,
+  resumableState: ResumableState,
+  onError: void | ((error: mixed) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
+): Request {
+  return createRequestImpl(
+    children,
+    resumableState.resources,
+    resumableState.responseState,
+    resumableState.rootFormatContext,
+    resumableState.progressiveChunkSize,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+  );
 }
 
 let currentRequest: null | Request = null;
@@ -2612,4 +2691,17 @@ export function flushResources(request: Request): void {
 
 export function getResources(request: Request): Resources {
   return request.resources;
+}
+
+export type ResumableState = {
+  nextSegmentId: number,
+  rootFormatContext: FormatContext,
+  progressiveChunkSize: number,
+  responseState: ResponseState,
+  resources: Resources,
+};
+
+// Returns the state of a postponed request or null if nothing was postponed.
+export function getPostponedState(request: Request): null | ResumableState {
+  return null;
 }

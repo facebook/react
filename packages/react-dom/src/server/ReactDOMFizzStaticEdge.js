@@ -9,14 +9,16 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {ResumableState} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
+  getPostponedState,
 } from 'react-server/src/ReactFizzServer';
 
 import {
@@ -39,6 +41,7 @@ type Options = {
 };
 
 type StaticResult = {
+  postponed: null | ResumableState,
   prelude: ReadableStream,
 };
 
@@ -62,12 +65,13 @@ function prerender(
       );
 
       const result = {
+        postponed: getPostponedState(request),
         prelude: stream,
       };
       resolve(result);
     }
     const resources = createResources();
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resources,
       createResponseState(
@@ -83,8 +87,6 @@ function prerender(
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
       onAllReady,
-      undefined,
-      undefined,
       onFatalError,
       options ? options.onPostpone : undefined,
     );

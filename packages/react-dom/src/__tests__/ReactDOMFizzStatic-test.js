@@ -224,6 +224,8 @@ describe('ReactDOMFizzStatic', () => {
 
     const result = await promise;
 
+    expect(result.postponed).toBe(null);
+
     await act(async () => {
       result.prelude.pipe(writable);
     });
