@@ -1,0 +1,21 @@
+[package]
+name = "forget_napi"
+version = "0.1.0"
+publish               = false
+authors.workspace     = true
+description.workspace = true
+edition.workspace     = true
+homepage.workspace    = true
+keywords.workspace    = true
+license.workspace     = true
+repository.workspace  = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi        = { version = "2.13.3", features = ["serde-json", "async"] }
+napi-derive = { version = "2.12" }
+
+[build-dependencies]
+napi-build = "2"
