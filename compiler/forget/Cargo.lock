@@ -285,9 +285,14 @@ dependencies = [
 name = "forget_napi"
 version = "0.1.0"
 dependencies = [
+ "forget_diagnostics",
+ "forget_estree",
+ "forget_hermes_parser",
+ "forget_semantic_analysis",
  "napi",
  "napi-build",
  "napi-derive",
+ "serde_json",
 ]
 
 [[package]]

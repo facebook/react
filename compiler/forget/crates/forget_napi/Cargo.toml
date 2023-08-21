@@ -14,8 +14,13 @@ repository.workspace  = true
 crate-type = ["cdylib"]
 
 [dependencies]
+forget_diagnostics = { workspace = true }
+forget_hermes_parser = { workspace = true }
+forget_estree = { workspace = true }
+forget_semantic_analysis = { workspace = true }
 napi        = { version = "2.13.3", features = ["serde-json", "async"] }
 napi-derive = { version = "2.12" }
+serde_json = { workspace = true }
 
 [build-dependencies]
 napi-build = "2"
