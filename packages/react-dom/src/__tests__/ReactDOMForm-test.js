@@ -922,4 +922,25 @@ describe('ReactDOMForm', () => {
     await act(() => resolveText('Wait'));
     assertLog(['Async action finished', 'No pending action']);
   });
+
+  // @gate enableFormActions || !__DEV__
+  it('warns when a button formAction is used outside a form', async () => {
+    let clicked = 0;
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(async () => {
+        root.render(
+          <button
+            formAction={() => {
+              clicked++;
+            }}
+          />,
+        );
+      });
+    }).toErrorDev(
+      'formAction has no effect when used without a <form>. Add a form around the button.',
+    );
+    container.querySelector('button').click();
+    expect(clicked).toBe(0);
+  });
 });
