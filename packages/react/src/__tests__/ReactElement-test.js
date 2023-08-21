@@ -129,7 +129,8 @@ describe('ReactElement', () => {
     const config = {foo: 1};
     const element = React.createElement(ComponentClass, config);
     expect(element.props.foo).toBe(1);
-    config.foo = 2;
+    expect(() => (config.foo = 2)).toThrow();
+
     expect(element.props.foo).toBe(1);
   });
 
@@ -150,8 +151,9 @@ describe('ReactElement', () => {
     expect(element.ref).toBe('34');
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
-      expect(Object.isFrozen(element.props)).toBe(true);
     }
+    expect(Object.isFrozen(element.props)).toBe(true);
+
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -333,25 +335,16 @@ describe('ReactElement', () => {
       render() {
         const el = <div className="moo" />;
 
-        if (__DEV__) {
-          expect(function () {
-            el.props.className = 'quack';
-          }).toThrow();
-          expect(el.props.className).toBe('moo');
-        } else {
+        expect(function () {
           el.props.className = 'quack';
-          expect(el.props.className).toBe('quack');
-        }
+        }).toThrow();
+        expect(el.props.className).toBe('moo');
 
         return el;
       }
     }
     const outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
-    if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
-    } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
-    }
+    expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
   });
 
   it('throws when adding a prop (in dev) after element creation', () => {
@@ -360,15 +353,10 @@ describe('ReactElement', () => {
       render() {
         const el = <div>{this.props.sound}</div>;
 
-        if (__DEV__) {
-          expect(function () {
-            el.props.className = 'quack';
-          }).toThrow();
-          expect(el.props.className).toBe(undefined);
-        } else {
+        expect(function () {
           el.props.className = 'quack';
-          expect(el.props.className).toBe('quack');
-        }
+        }).toThrow();
+        expect(el.props.className).toBe(undefined);
 
         return el;
       }
@@ -376,11 +364,7 @@ describe('ReactElement', () => {
     Outer.defaultProps = {sound: 'meow'};
     const outer = ReactDOM.render(<Outer />, container);
     expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
-    if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('');
-    } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
-    }
+    expect(ReactDOM.findDOMNode(outer).className).toBe('');
   });
 
   it('does not warn for NaN props', () => {
