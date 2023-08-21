@@ -7,16 +7,10 @@
  * @flow
  */
 
-import type {
-  Resources,
-  BootstrapScriptDescriptor,
-  ExternalRuntimeScript,
-  StreamingFormat,
-  InstructionState,
-} from './ReactFizzConfigDOM';
+import type {ResumableState, BoundaryResources} from './ReactFizzConfigDOM';
 
 import {
-  createResponseState as createResponseStateImpl,
+  createRenderState as createRenderStateImpl,
   pushTextInstance as pushTextInstanceImpl,
   pushSegmentFinale as pushSegmentFinaleImpl,
   writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
@@ -37,65 +31,44 @@ import {NotPending} from '../shared/ReactDOMFormActions';
 
 export const isPrimaryRenderer = false;
 
-export type ResponseState = {
+export type RenderState = {
   // Keep this in sync with ReactFizzConfigDOM
-  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  idPrefix: string,
-  nextSuspenseID: number,
-  streamingFormat: StreamingFormat,
   startInlineScript: PrecomputedChunk,
-  instructions: InstructionState,
-  externalRuntimeScript: null | ExternalRuntimeScript,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
-  hasBody: boolean,
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
+  boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
 
-export function createResponseState(
-  resources: Resources,
+export function createRenderState(
+  resumableState: ResumableState,
+  nonce: string | void,
   generateStaticMarkup: boolean,
-  identifierPrefix: string | void,
-  externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
-): ResponseState {
-  const responseState = createResponseStateImpl(
-    resources,
-    identifierPrefix,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    externalRuntimeConfig,
-  );
+): RenderState {
+  const renderState = createRenderStateImpl(resumableState, nonce);
   return {
     // Keep this in sync with ReactFizzConfigDOM
-    bootstrapChunks: responseState.bootstrapChunks,
-    placeholderPrefix: responseState.placeholderPrefix,
-    segmentPrefix: responseState.segmentPrefix,
-    boundaryPrefix: responseState.boundaryPrefix,
-    idPrefix: responseState.idPrefix,
-    nextSuspenseID: responseState.nextSuspenseID,
-    streamingFormat: responseState.streamingFormat,
-    startInlineScript: responseState.startInlineScript,
-    instructions: responseState.instructions,
-    externalRuntimeScript: responseState.externalRuntimeScript,
-    htmlChunks: responseState.htmlChunks,
-    headChunks: responseState.headChunks,
-    hasBody: responseState.hasBody,
-    charsetChunks: responseState.charsetChunks,
-    preconnectChunks: responseState.preconnectChunks,
-    preloadChunks: responseState.preloadChunks,
-    hoistableChunks: responseState.hoistableChunks,
-    stylesToHoist: responseState.stylesToHoist,
+    placeholderPrefix: renderState.placeholderPrefix,
+    segmentPrefix: renderState.segmentPrefix,
+    boundaryPrefix: renderState.boundaryPrefix,
+    startInlineScript: renderState.startInlineScript,
+    htmlChunks: renderState.htmlChunks,
+    headChunks: renderState.headChunks,
+    charsetChunks: renderState.charsetChunks,
+    preconnectChunks: renderState.preconnectChunks,
+    preloadChunks: renderState.preloadChunks,
+    hoistableChunks: renderState.hoistableChunks,
+    boundaryResources: renderState.boundaryResources,
+    stylesToHoist: renderState.stylesToHoist,
 
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
@@ -111,7 +84,7 @@ import {
 export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
 
 export type {
-  Resources,
+  ResumableState,
   BoundaryResources,
   FormatContext,
   SuspenseBoundaryID,
@@ -137,7 +110,7 @@ export {
   writePlaceholder,
   writeCompletedRoot,
   createRootFormatContext,
-  createResources,
+  createResumableState,
   createBoundaryResources,
   writePreamble,
   writeHoistables,
@@ -152,29 +125,29 @@ import escapeTextForBrowser from './escapeTextForBrowser';
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
-  responseState: ResponseState,
+  renderState: RenderState,
   textEmbedded: boolean,
 ): boolean {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
     return false;
   } else {
-    return pushTextInstanceImpl(target, text, responseState, textEmbedded);
+    return pushTextInstanceImpl(target, text, renderState, textEmbedded);
   }
 }
 
 export function pushSegmentFinale(
   target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
+  renderState: RenderState,
   lastPushedText: boolean,
   textEmbedded: boolean,
 ): void {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     return;
   } else {
     return pushSegmentFinaleImpl(
       target,
-      responseState,
+      renderState,
       lastPushedText,
       textEmbedded,
     );
@@ -183,31 +156,31 @@ export function pushSegmentFinale(
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     // A completed boundary is done and doesn't need a representation in the HTML
     // if we're not going to be hydrating it.
     return true;
   }
-  return writeStartCompletedSuspenseBoundaryImpl(destination, responseState);
+  return writeStartCompletedSuspenseBoundaryImpl(destination, renderState);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
   // flushing these error arguments are not currently supported in this legacy streaming format.
   errorDigest: ?string,
   errorMessage: ?string,
   errorComponentStack: ?string,
 ): boolean {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     // A client rendered boundary is done and doesn't need a representation in the HTML
     // since we'll never hydrate it. This is arguably an error in static generation.
     return true;
   }
   return writeStartClientRenderedSuspenseBoundaryImpl(
     destination,
-    responseState,
+    renderState,
     errorDigest,
     errorMessage,
     errorComponentStack,
@@ -215,21 +188,21 @@ export function writeStartClientRenderedSuspenseBoundary(
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndCompletedSuspenseBoundaryImpl(destination, responseState);
+  return writeEndCompletedSuspenseBoundaryImpl(destination, renderState);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     return true;
   }
-  return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
+  return writeEndClientRenderedSuspenseBoundaryImpl(destination, renderState);
 }
 
 export type TransitionStatus = FormStatus;

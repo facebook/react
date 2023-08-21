@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ResumableState} from 'react-server/src/ReactFizzServer';
+import type {PostponedState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -22,8 +22,8 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResources,
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -91,19 +91,18 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
-    const resources = createResources();
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+    );
     const request = createRequest(
       children,
-      resources,
-      createResponseState(
-        resources,
-        options ? options.identifierPrefix : undefined,
-        options ? options.nonce : undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
-        options ? options.unstable_externalRuntimeSrc : undefined,
-      ),
+      resumableState,
+      createRenderState(resumableState, options ? options.nonce : undefined),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
@@ -131,7 +130,7 @@ function renderToReadableStream(
 
 function resume(
   children: ReactNodeList,
-  resumableState: ResumableState,
+  postponedState: PostponedState,
   options?: ResumeOptions,
 ): Promise<ReactDOMServerReadableStream> {
   return new Promise((resolve, reject) => {
@@ -167,10 +166,13 @@ function resume(
       allReady.catch(() => {});
       reject(error);
     }
-    const resources = createResources();
     const request = resumeRequest(
       children,
-      resumableState, // TODO: How to pass nonce?
+      postponedState,
+      createRenderState(
+        postponedState.resumableState,
+        options ? options.nonce : undefined,
+      ),
       options ? options.onError : undefined,
       onAllReady,
       onShellReady,

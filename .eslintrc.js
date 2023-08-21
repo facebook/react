@@ -492,7 +492,6 @@ module.exports = {
     ReadableStreamController: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
-    ResponseState: 'readonly',
     StoreAsGlobal: 'readonly',
     symbol: 'readonly',
     SyntheticEvent: 'readonly',

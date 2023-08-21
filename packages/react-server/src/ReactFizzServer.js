@@ -23,9 +23,9 @@ import type {
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
   SuspenseBoundaryID,
-  ResponseState,
+  RenderState,
+  ResumableState,
   FormatContext,
-  Resources,
   BoundaryResources,
 } from './ReactFizzConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
@@ -100,8 +100,8 @@ import {
   checkDidRenderIdHook,
   resetHooksState,
   HooksDispatcher,
-  currentResponseState,
-  setCurrentResponseState,
+  currentResumableState,
+  setCurrentResumableState,
   getThenableStateAfterSuspending,
   unwrapThenable,
 } from './ReactFizzHooks';
@@ -222,14 +222,14 @@ const CLOSED = 2;
 export opaque type Request = {
   destination: null | Destination,
   flushScheduled: boolean,
-  +responseState: ResponseState,
+  +resumableState: ResumableState,
+  +renderState: RenderState,
   +progressiveChunkSize: number,
   status: 0 | 1 | 2,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
-  resources: Resources,
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
   abortableTasks: Set<Task>,
   pingedTasks: Array<Task>, // High priority tasks that should be worked on first.
@@ -283,8 +283,8 @@ function noop(): void {}
 
 function createRequestImpl(
   children: ReactNodeList,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed) => ?string),
@@ -300,7 +300,8 @@ function createRequestImpl(
   const request: Request = {
     destination: null,
     flushScheduled: false,
-    responseState,
+    resumableState,
+    renderState,
     progressiveChunkSize:
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
@@ -310,7 +311,6 @@ function createRequestImpl(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
-    resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
@@ -354,8 +354,8 @@ function createRequestImpl(
 
 export function createRequest(
   children: ReactNodeList,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed) => ?string),
@@ -367,8 +367,8 @@ export function createRequest(
 ): Request {
   return createRequestImpl(
     children,
-    resources,
-    responseState,
+    resumableState,
+    renderState,
     rootFormatContext,
     progressiveChunkSize,
     onError,
@@ -382,8 +382,8 @@ export function createRequest(
 
 export function createPrerenderRequest(
   children: ReactNodeList,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed) => ?string),
@@ -393,8 +393,8 @@ export function createPrerenderRequest(
 ): Request {
   return createRequestImpl(
     children,
-    resources,
-    responseState,
+    resumableState,
+    renderState,
     rootFormatContext,
     progressiveChunkSize,
     onError,
@@ -408,7 +408,8 @@ export function createPrerenderRequest(
 
 export function resumeRequest(
   children: ReactNodeList,
-  resumableState: ResumableState,
+  postponedState: PostponedState,
+  renderState: RenderState,
   onError: void | ((error: mixed) => ?string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
@@ -418,10 +419,10 @@ export function resumeRequest(
 ): Request {
   return createRequestImpl(
     children,
-    resumableState.resources,
-    resumableState.responseState,
-    resumableState.rootFormatContext,
-    resumableState.progressiveChunkSize,
+    postponedState.resumableState,
+    renderState,
+    postponedState.rootFormatContext,
+    postponedState.progressiveChunkSize,
     onError,
     onAllReady,
     onShellReady,
@@ -701,7 +702,7 @@ function renderSuspenseBoundary(
   task.blockedSegment = contentRootSegment;
   if (enableFloat) {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       newBoundary.resources,
     );
   }
@@ -710,7 +711,7 @@ function renderSuspenseBoundary(
     renderNode(request, task, content, 0);
     pushSegmentFinale(
       contentRootSegment.chunks,
-      request.responseState,
+      request.renderState,
       contentRootSegment.lastPushedText,
       contentRootSegment.textEmbedded,
     );
@@ -751,7 +752,7 @@ function renderSuspenseBoundary(
   } finally {
     if (enableFloat) {
       setCurrentlyRenderingBoundaryResourcesTarget(
-        request.resources,
+        request.renderState,
         parentBoundary ? parentBoundary.resources : null,
       );
     }
@@ -813,8 +814,8 @@ function renderHostElement(
     segment.chunks,
     type,
     props,
-    request.resources,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     segment.formatContext,
     segment.lastPushedText,
   );
@@ -833,7 +834,7 @@ function renderHostElement(
     segment.chunks,
     type,
     props,
-    request.responseState,
+    request.resumableState,
     prevContext,
   );
   segment.lastPushedText = false;
@@ -1647,7 +1648,7 @@ function renderNodeDestructiveImpl(
     segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       node,
-      request.responseState,
+      request.renderState,
       segment.lastPushedText,
     );
     return;
@@ -1658,7 +1659,7 @@ function renderNodeDestructiveImpl(
     segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       '' + node,
-      request.responseState,
+      request.renderState,
       segment.lastPushedText,
     );
     return;
@@ -2054,7 +2055,7 @@ function retryTask(request: Request, task: Task): void {
   if (enableFloat) {
     const blockedBoundary = task.blockedBoundary;
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       blockedBoundary ? blockedBoundary.resources : null,
     );
   }
@@ -2088,7 +2089,7 @@ function retryTask(request: Request, task: Task): void {
     renderNodeDestructive(request, task, prevThenableState, task.node, 0);
     pushSegmentFinale(
       segment.chunks,
-      request.responseState,
+      request.renderState,
       segment.lastPushedText,
       segment.textEmbedded,
     );
@@ -2126,7 +2127,7 @@ function retryTask(request: Request, task: Task): void {
     }
   } finally {
     if (enableFloat) {
-      setCurrentlyRenderingBoundaryResourcesTarget(request.resources, null);
+      setCurrentlyRenderingBoundaryResourcesTarget(request.renderState, null);
     }
     if (__DEV__) {
       currentTaskInDEV = prevTaskInDEV;
@@ -2155,8 +2156,8 @@ export function performWork(request: Request): void {
     prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
     ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
   }
-  const prevResponseState = currentResponseState;
-  setCurrentResponseState(request.responseState);
+  const prevResumableState = currentResumableState;
+  setCurrentResumableState(request.resumableState);
   try {
     const pingedTasks = request.pingedTasks;
     let i;
@@ -2172,7 +2173,7 @@ export function performWork(request: Request): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
-    setCurrentResponseState(prevResponseState);
+    setCurrentResumableState(prevResumableState);
     ReactCurrentDispatcher.current = prevDispatcher;
     if (enableCache) {
       ReactCurrentCache.current = prevCacheDispatcher;
@@ -2209,7 +2210,7 @@ function flushSubtree(
       // When this segment finally completes it won't be embedded in text since it will flush separately
       segment.lastPushedText = false;
       segment.textEmbedded = false;
-      return writePlaceholder(destination, request.responseState, segmentID);
+      return writePlaceholder(destination, request.renderState, segmentID);
     }
     case COMPLETED: {
       segment.status = FLUSHED;
@@ -2262,7 +2263,7 @@ function flushSegment(
 
     writeStartClientRenderedSuspenseBoundary(
       destination,
-      request.responseState,
+      request.renderState,
       boundary.errorDigest,
       boundary.errorMessage,
       boundary.errorComponentStack,
@@ -2272,7 +2273,7 @@ function flushSegment(
 
     return writeEndClientRenderedSuspenseBoundary(
       destination,
-      request.responseState,
+      request.renderState,
     );
   } else if (boundary.pendingTasks > 0) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
@@ -2285,14 +2286,17 @@ function flushSegment(
     }
 
     /// This is the first time we should have referenced this ID.
-    const id = (boundary.id = assignSuspenseBoundaryID(request.responseState));
+    const id = (boundary.id = assignSuspenseBoundaryID(
+      request.renderState,
+      request.resumableState,
+    ));
 
-    writeStartPendingSuspenseBoundary(destination, request.responseState, id);
+    writeStartPendingSuspenseBoundary(destination, request.renderState, id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else if (boundary.byteSize > request.progressiveChunkSize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
@@ -2307,20 +2311,20 @@ function flushSegment(
     // Emit a pending rendered suspense boundary wrapper.
     writeStartPendingSuspenseBoundary(
       destination,
-      request.responseState,
+      request.renderState,
       boundary.id,
     );
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    return writeEndPendingSuspenseBoundary(destination, request.responseState);
+    return writeEndPendingSuspenseBoundary(destination, request.renderState);
   } else {
     if (enableFloat) {
-      hoistResources(request.resources, boundary.resources);
+      hoistResources(request.renderState, boundary.resources);
     }
     // We can inline this boundary's content as a complete boundary.
-    writeStartCompletedSuspenseBoundary(destination, request.responseState);
+    writeStartCompletedSuspenseBoundary(destination, request.renderState);
 
     const completedSegments = boundary.completedSegments;
 
@@ -2333,10 +2337,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
 
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.responseState,
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 
@@ -2347,7 +2348,8 @@ function flushClientRenderedBoundary(
 ): boolean {
   return writeClientRenderBoundaryInstruction(
     destination,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     boundary.id,
     boundary.errorDigest,
     boundary.errorMessage,
@@ -2362,7 +2364,7 @@ function flushSegmentContainer(
 ): boolean {
   writeStartSegment(
     destination,
-    request.responseState,
+    request.renderState,
     segment.formatContext,
     segment.id,
   );
@@ -2377,7 +2379,7 @@ function flushCompletedBoundary(
 ): boolean {
   if (enableFloat) {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       boundary.resources,
     );
   }
@@ -2393,13 +2395,14 @@ function flushCompletedBoundary(
     writeResourcesForBoundary(
       destination,
       boundary.resources,
-      request.responseState,
+      request.renderState,
     );
   }
 
   return writeCompletedBoundaryInstruction(
     destination,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     boundary.id,
     boundary.rootSegmentID,
     boundary.resources,
@@ -2413,7 +2416,7 @@ function flushPartialBoundary(
 ): boolean {
   if (enableFloat) {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       boundary.resources,
     );
   }
@@ -2441,7 +2444,7 @@ function flushPartialBoundary(
     return writeResourcesForBoundary(
       destination,
       boundary.resources,
-      request.responseState,
+      request.renderState,
     );
   } else {
     return true;
@@ -2476,7 +2479,8 @@ function flushPartiallyCompletedSegment(
     flushSegmentContainer(request, destination, segment);
     return writeCompletedSegmentInstruction(
       destination,
-      request.responseState,
+      request.resumableState,
+      request.renderState,
       segmentID,
     );
   }
@@ -2500,15 +2504,15 @@ function flushCompletedQueues(
         if (enableFloat) {
           writePreamble(
             destination,
-            request.resources,
-            request.responseState,
+            request.resumableState,
+            request.renderState,
             request.allPendingTasks === 0,
           );
         }
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeCompletedRoot(destination, request.responseState);
+        writeCompletedRoot(destination, request.resumableState);
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
@@ -2519,7 +2523,7 @@ function flushCompletedQueues(
     }
 
     if (enableFloat) {
-      writeHoistables(destination, request.resources, request.responseState);
+      writeHoistables(destination, request.resumableState, request.renderState);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
@@ -2598,7 +2602,7 @@ function flushCompletedQueues(
     ) {
       request.flushScheduled = false;
       if (enableFloat) {
-        writePostamble(destination, request.responseState);
+        writePostamble(destination, request.resumableState);
       }
       completeWriting(destination);
       flushBuffered(destination);
@@ -2689,19 +2693,18 @@ export function flushResources(request: Request): void {
   enqueueFlush(request);
 }
 
-export function getResources(request: Request): Resources {
-  return request.resources;
+export function getResumableState(request: Request): ResumableState {
+  return request.resumableState;
 }
 
-export type ResumableState = {
+export type PostponedState = {
   nextSegmentId: number,
   rootFormatContext: FormatContext,
   progressiveChunkSize: number,
-  responseState: ResponseState,
-  resources: Resources,
+  resumableState: ResumableState,
 };
 
 // Returns the state of a postponed request or null if nothing was postponed.
-export function getPostponedState(request: Request): null | ResumableState {
+export function getPostponedState(request: Request): null | PostponedState {
   return null;
 }
