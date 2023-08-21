@@ -151,6 +151,13 @@ const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
+// Linked list representing the identity of a component given the component/tag name and key.
+// The name might be minified but we assume that it's going to be the same generated name. Typically
+// because it's just the same compiled output in practice.
+type KeyNode =
+  | null
+  | [KeyNode /* parent */, string | null /* name */, string | number /* key */];
+
 type LegacyContext = {
   [key: string]: any,
 };
@@ -176,6 +183,7 @@ export type Task = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
+  keyPath: KeyNode, // the path of all parent keys currently rendering
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
@@ -335,6 +343,7 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
+    null,
     emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
@@ -388,6 +397,7 @@ function createTask(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
+  keyPath: KeyNode,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
@@ -404,6 +414,7 @@ function createTask(
     blockedBoundary,
     blockedSegment,
     abortSet,
+    keyPath,
     legacyContext,
     context,
     treeContext,
@@ -617,7 +628,7 @@ function renderSuspenseBoundary(
   }
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
-    renderNode(request, task, content);
+    renderNode(request, task, content, 0);
     pushSegmentFinale(
       contentRootSegment.chunks,
       request.responseState,
@@ -678,6 +689,7 @@ function renderSuspenseBoundary(
     parentBoundary,
     boundarySegment,
     fallbackAbortSet,
+    task.keyPath,
     task.legacyContext,
     task.context,
     task.treeContext,
@@ -703,7 +715,7 @@ function renderBackupSuspenseBoundary(
   const segment = task.blockedSegment;
 
   pushStartCompletedSuspenseBoundary(segment.chunks);
-  renderNode(request, task, content);
+  renderNode(request, task, content, 0);
   pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
@@ -733,7 +745,7 @@ function renderHostElement(
 
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
-  renderNode(request, task, children);
+  renderNode(request, task, children, 0);
 
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
@@ -800,13 +812,13 @@ function finishClassComponent(
         childContextTypes,
       );
       task.legacyContext = mergedContext;
-      renderNodeDestructive(request, task, null, nextChildren);
+      renderNodeDestructive(request, task, null, nextChildren, 0);
       task.legacyContext = previousContext;
       return;
     }
   }
 
-  renderNodeDestructive(request, task, null, nextChildren);
+  renderNodeDestructive(request, task, null, nextChildren, 0);
 }
 
 function renderClassComponent(
@@ -957,12 +969,12 @@ function renderIndeterminateComponent(
       const index = 0;
       task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
       try {
-        renderNodeDestructive(request, task, null, value);
+        renderNodeDestructive(request, task, null, value, 0);
       } finally {
         task.treeContext = prevTreeContext;
       }
     } else {
-      renderNodeDestructive(request, task, null, value);
+      renderNodeDestructive(request, task, null, value, 0);
     }
   }
   popComponentStackInDEV(task);
@@ -1062,12 +1074,12 @@ function renderForwardRef(
     const index = 0;
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
     try {
-      renderNodeDestructive(request, task, null, children);
+      renderNodeDestructive(request, task, null, children, 0);
     } finally {
       task.treeContext = prevTreeContext;
     }
   } else {
-    renderNodeDestructive(request, task, null, children);
+    renderNodeDestructive(request, task, null, children, 0);
   }
   popComponentStackInDEV(task);
 }
@@ -1139,7 +1151,7 @@ function renderContextConsumer(
   const newValue = readContext(context);
   const newChildren = render(newValue);
 
-  renderNodeDestructive(request, task, null, newChildren);
+  renderNodeDestructive(request, task, null, newChildren, 0);
 }
 
 function renderContextProvider(
@@ -1156,7 +1168,7 @@ function renderContextProvider(
     prevSnapshot = task.context;
   }
   task.context = pushProvider(context, value);
-  renderNodeDestructive(request, task, null, children);
+  renderNodeDestructive(request, task, null, children, 0);
   task.context = popProvider(context);
   if (__DEV__) {
     if (prevSnapshot !== task.context) {
@@ -1199,7 +1211,7 @@ function renderOffscreen(request: Request, task: Task, props: Object): void {
   } else {
     // A visible Offscreen boundary is treated exactly like a fragment: a
     // pure indirection.
-    renderNodeDestructive(request, task, null, props.children);
+    renderNodeDestructive(request, task, null, props.children, 0);
   }
 }
 
@@ -1246,7 +1258,7 @@ function renderElement(
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
-      renderNodeDestructive(request, task, null, props.children);
+      renderNodeDestructive(request, task, null, props.children, 0);
       return;
     }
     case REACT_OFFSCREEN_TYPE: {
@@ -1256,13 +1268,13 @@ function renderElement(
     case REACT_SUSPENSE_LIST_TYPE: {
       pushBuiltInComponentStackInDEV(task, 'SuspenseList');
       // TODO: SuspenseList should control the boundaries.
-      renderNodeDestructive(request, task, null, props.children);
+      renderNodeDestructive(request, task, null, props.children, 0);
       popComponentStackInDEV(task);
       return;
     }
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {
-        renderNodeDestructive(request, task, null, props.children);
+        renderNodeDestructive(request, task, null, props.children, 0);
         return;
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
@@ -1368,13 +1380,20 @@ function renderNodeDestructive(
   // always null, except when called by retryTask.
   prevThenableState: ThenableState | null,
   node: ReactNodeList,
+  childIndex: number,
 ): void {
   if (__DEV__) {
     // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
     // a component stack at the right place in the tree. We don't do this in renderNode
     // becuase it is not called at every layer of the tree and we may lose frames
     try {
-      return renderNodeDestructiveImpl(request, task, prevThenableState, node);
+      return renderNodeDestructiveImpl(
+        request,
+        task,
+        prevThenableState,
+        node,
+        childIndex,
+      );
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // This is a Wakable, noop
@@ -1389,7 +1408,13 @@ function renderNodeDestructive(
       throw x;
     }
   } else {
-    return renderNodeDestructiveImpl(request, task, prevThenableState, node);
+    return renderNodeDestructiveImpl(
+      request,
+      task,
+      prevThenableState,
+      node,
+      childIndex,
+    );
   }
 }
 
@@ -1400,6 +1425,7 @@ function renderNodeDestructiveImpl(
   task: Task,
   prevThenableState: ThenableState | null,
   node: ReactNodeList,
+  childIndex: number,
 ): void {
   // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
@@ -1411,9 +1437,14 @@ function renderNodeDestructiveImpl(
       case REACT_ELEMENT_TYPE: {
         const element: React$Element<any> = (node: any);
         const type = element.type;
+        const key = element.key;
         const props = element.props;
         const ref = element.ref;
+        const name = getComponentNameFromType(type);
+        const prevKeyPath = task.keyPath;
+        task.keyPath = [task.keyPath, name, key == null ? childIndex : key];
         renderElement(request, task, prevThenableState, type, props, ref);
+        task.keyPath = prevKeyPath;
         return;
       }
       case REACT_PORTAL_TYPE:
@@ -1446,13 +1477,13 @@ function renderNodeDestructiveImpl(
         } else {
           resolvedNode = init(payload);
         }
-        renderNodeDestructive(request, task, null, resolvedNode);
+        renderNodeDestructive(request, task, null, resolvedNode, childIndex);
         return;
       }
     }
 
     if (isArray(node)) {
-      renderChildrenArray(request, task, node);
+      renderChildrenArray(request, task, node, childIndex);
       return;
     }
 
@@ -1476,7 +1507,7 @@ function renderNodeDestructiveImpl(
             children.push(step.value);
             step = iterator.next();
           } while (!step.done);
-          renderChildrenArray(request, task, children);
+          renderChildrenArray(request, task, children, childIndex);
           return;
         }
         return;
@@ -1500,6 +1531,7 @@ function renderNodeDestructiveImpl(
         task,
         null,
         unwrapThenable(thenable),
+        childIndex,
       );
     }
 
@@ -1513,6 +1545,7 @@ function renderNodeDestructiveImpl(
         task,
         null,
         readContext(context),
+        childIndex,
       );
     }
 
@@ -1567,17 +1600,26 @@ function renderChildrenArray(
   request: Request,
   task: Task,
   children: Array<any>,
+  childIndex: number,
 ) {
+  const prevKeyPath = task.keyPath;
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
     const prevTreeContext = task.treeContext;
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
     try {
+      const node = children[i];
+      if (isArray(node) || getIteratorFn(node)) {
+        // Nested arrays behave like a "fragment node" which is keyed.
+        // Therefore we need to add the current index as a parent key.
+        task.keyPath = [task.keyPath, '', childIndex];
+      }
       // We need to use the non-destructive form so that we can safely pop back
       // up and render the sibling if something suspends.
-      renderNode(request, task, children[i]);
+      renderNode(request, task, node, i);
     } finally {
       task.treeContext = prevTreeContext;
+      task.keyPath = prevKeyPath;
     }
   }
 }
@@ -1611,6 +1653,7 @@ function spawnNewSuspendedTask(
     task.blockedBoundary,
     newSegment,
     task.abortSet,
+    task.keyPath,
     task.legacyContext,
     task.context,
     task.treeContext,
@@ -1629,7 +1672,12 @@ function spawnNewSuspendedTask(
 
 // This is a non-destructive form of rendering a node. If it suspends it spawns
 // a new task and restores the context of this task to what it was before.
-function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+function renderNode(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+  childIndex: number,
+): void {
   // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
   const segment = task.blockedSegment;
@@ -1641,12 +1689,13 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   const previousFormatContext = task.blockedSegment.formatContext;
   const previousLegacyContext = task.legacyContext;
   const previousContext = task.context;
+  const previousKeyPath = task.keyPath;
   let previousComponentStack = null;
   if (__DEV__) {
     previousComponentStack = task.componentStack;
   }
   try {
-    return renderNodeDestructive(request, task, null, node);
+    return renderNodeDestructive(request, task, null, node, childIndex);
   } catch (thrownValue) {
     resetHooksState();
 
@@ -1675,6 +1724,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       task.blockedSegment.formatContext = previousFormatContext;
       task.legacyContext = previousLegacyContext;
       task.context = previousContext;
+      task.keyPath = previousKeyPath;
       // Restore all active ReactContexts to what they were before.
       switchContext(previousContext);
       if (__DEV__) {
@@ -1687,6 +1737,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       task.blockedSegment.formatContext = previousFormatContext;
       task.legacyContext = previousLegacyContext;
       task.context = previousContext;
+      task.keyPath = previousKeyPath;
       // Restore all active ReactContexts to what they were before.
       switchContext(previousContext);
       if (__DEV__) {
@@ -1955,7 +2006,7 @@ function retryTask(request: Request, task: Task): void {
     const prevThenableState = task.thenableState;
     task.thenableState = null;
 
-    renderNodeDestructive(request, task, prevThenableState, task.node);
+    renderNodeDestructive(request, task, prevThenableState, task.node, 0);
     pushSegmentFinale(
       segment.chunks,
       request.responseState,
