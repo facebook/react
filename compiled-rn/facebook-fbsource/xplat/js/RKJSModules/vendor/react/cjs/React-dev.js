@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-b27725923-20230821";
+var ReactVersion = "18.3.0-canary-7d1c3c158-20230821";
 
 // ATTENTION
 // When adding new symbols to this file,
