@@ -10,6 +10,7 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {PostponedState} from 'react-server/src/ReactFizzServer';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -38,6 +39,7 @@ type Options = {
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
 };
 
 type StaticResult = {
@@ -81,7 +83,11 @@ function prerender(
     const request = createRequest(
       children,
       resources,
-      createRenderState(resources, undefined),
+      createRenderState(
+        resources,
+        undefined, // nonce
+        options ? options.importMap : undefined,
+      ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
