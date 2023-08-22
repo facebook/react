@@ -371,11 +371,11 @@ export function createResponseState(
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
-const ROOT_HTML_MODE = 0; // Used for the root most element tag.
+export const ROOT_HTML_MODE = 0; // Used for the root most element tag.
 // We have a less than HTML_HTML_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
 const HTML_HTML_MODE = 1; // Used for the <html> if it is at the top level.
-export const HTML_MODE = 2;
+const HTML_MODE = 2;
 const SVG_MODE = 3;
 const MATHML_MODE = 4;
 const HTML_TABLE_MODE = 5;
@@ -3027,7 +3027,10 @@ function startChunkForTag(tag: string): PrecomputedChunk {
   return tagStartChunk;
 }
 
-const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
+export const doctypeChunk: PrecomputedChunk =
+  stringToPrecomputedChunk('<!DOCTYPE html>');
+
+import {doctypeChunk as DOCTYPE} from 'react-server/src/ReactFizzConfig';
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,

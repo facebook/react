@@ -11,7 +11,6 @@ import type {
   Resources,
   BootstrapScriptDescriptor,
   ExternalRuntimeScript,
-  FormatContext,
   StreamingFormat,
   InstructionState,
 } from './ReactFizzConfigDOM';
@@ -24,7 +23,6 @@ import {
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
-  HTML_MODE,
 } from './ReactFizzConfigDOM';
 
 import type {
@@ -104,13 +102,13 @@ export function createResponseState(
   };
 }
 
-export function createRootFormatContext(): FormatContext {
-  return {
-    insertionMode: HTML_MODE, // We skip the root mode because we don't want to emit the DOCTYPE in legacy mode.
-    selectedValue: null,
-    noscriptTagInScope: false,
-  };
-}
+import {
+  stringToChunk,
+  stringToPrecomputedChunk,
+} from 'react-server/src/ReactServerStreamConfig';
+
+// this chunk is empty on purpose because we do not want to emit the DOCTYPE in legacy mode
+export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
 
 export type {
   Resources,
@@ -138,6 +136,7 @@ export {
   writeResourcesForBoundary,
   writePlaceholder,
   writeCompletedRoot,
+  createRootFormatContext,
   createResources,
   createBoundaryResources,
   writePreamble,
@@ -147,8 +146,6 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareHostDispatcher,
 } from './ReactFizzConfigDOM';
-
-import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
 
